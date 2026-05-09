@@ -1,0 +1,204 @@
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:flutter/material.dart';
+
+import '../../../core/utils/haptics.dart';
+
+/// Bottom-sheet emoji picker used by the Sticker tool.
+///
+/// Wraps [EmojiPicker] so the user gets the full Unicode set,
+/// categorised tabs (Smileys, Animals, Food, …), live search, and
+/// recent-emojis tracking — all backed by the package's own
+/// `SharedPreferences` storage so recents survive across sessions.
+///
+/// Resolves to the chosen emoji glyph or `null` when dismissed.
+/// Caller is still responsible for inserting the layer (the
+/// presentation layer never touches the editor model).
+Future<String?> showStickerPickerSheet(BuildContext context) {
+  return showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) => const SafeArea(child: _StickerPickerSheet()),
+  );
+}
+
+class _StickerPickerSheet extends StatefulWidget {
+  const _StickerPickerSheet();
+
+  @override
+  State<_StickerPickerSheet> createState() => _StickerPickerSheetState();
+}
+
+class _StickerPickerSheetState extends State<_StickerPickerSheet> {
+  // Resolved on the first frame so we can land on Smileys for new
+  // users (empty Recent) and on Recent for returning users. Held
+  // in state so `EmojiPicker`'s `initCategory` only sees a fully
+  // resolved value and never flips after the first build.
+  late final Future<Category> _initialCategory =
+      EmojiPickerUtils().getRecentEmojis().then(
+            (recents) => recents.isEmpty ? Category.SMILEYS : Category.RECENT,
+          );
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final height = MediaQuery.sizeOf(context).height * 0.55;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: Text(
+              'STICKERS',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurfaceVariant,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ),
+          SizedBox(
+            height: height,
+            child: FutureBuilder<Category>(
+              future: _initialCategory,
+              builder: (ctx, snap) {
+                // Hold the picker until the recents lookup resolves
+                // so `initCategory` isn't applied with a stale value
+                // on rebuild. The lookup is a single SharedPrefs
+                // read — sub-frame on every device we ship to.
+                if (!snap.hasData) {
+                  return const SizedBox.shrink();
+                }
+                return _buildPicker(context, scheme, height, snap.data!);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPicker(
+    BuildContext context,
+    ColorScheme scheme,
+    double height,
+    Category initCategory,
+  ) {
+    return EmojiPicker(
+      onEmojiSelected: (category, emoji) {
+        EditorHaptics.tap();
+        Navigator.pop(context, emoji.emoji);
+      },
+      config: Config(
+        height: height,
+        emojiViewConfig: EmojiViewConfig(
+          emojiSizeMax: 30,
+          backgroundColor: scheme.surface,
+          columns: 8,
+          verticalSpacing: 2,
+          horizontalSpacing: 2,
+          gridPadding: const EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: 4,
+          ),
+          noRecents: _NoRecentsHint(scheme: scheme),
+        ),
+        viewOrderConfig: const ViewOrderConfig(
+          top: EmojiPickerItem.searchBar,
+          middle: EmojiPickerItem.categoryBar,
+          bottom: EmojiPickerItem.emojiView,
+        ),
+        searchViewConfig: SearchViewConfig(
+          backgroundColor: scheme.surface,
+          buttonIconColor: scheme.onSurfaceVariant,
+          hintText: 'Search emojis',
+        ),
+        categoryViewConfig: CategoryViewConfig(
+          backgroundColor: scheme.surface,
+          iconColor: scheme.onSurfaceVariant,
+          iconColorSelected: scheme.primary,
+          indicatorColor: scheme.primary,
+          dividerColor: scheme.outlineVariant.withValues(alpha: 0.3),
+          // Smileys for first-run users so the sheet never opens on
+          // an empty Recent tab; Recent thereafter once they've used
+          // at least one sticker.
+          initCategory: initCategory,
+        ),
+        bottomActionBarConfig: BottomActionBarConfig(
+          enabled: false,
+          showBackspaceButton: false,
+          backgroundColor: scheme.surface,
+          buttonColor: scheme.surface,
+          buttonIconColor: scheme.onSurfaceVariant,
+        ),
+        skinToneConfig: SkinToneConfig(
+          dialogBackgroundColor: scheme.surfaceContainerHigh,
+          indicatorColor: scheme.primary,
+        ),
+        // The plugin's compatibility check goes through a
+        // platform channel that isn't registered on a hot
+        // restart and crashes on older Android targets.
+        // The app already ships modern emoji fonts, so the
+        // value of the filter is marginal and the failure
+        // mode is severe — disable it.
+        checkPlatformCompatibility: false,
+      ),
+    );
+  }
+}
+
+/// Friendly placeholder shown when the user manually navigates to
+/// the Recent tab and has not yet used any sticker. Replaces the
+/// package's terse default ("No Recents") with a guiding line so
+/// the empty state never reads as broken.
+class _NoRecentsHint extends StatelessWidget {
+  const _NoRecentsHint({required this.scheme});
+
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.emoji_emotions_outlined,
+              size: 36,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'No recent stickers yet',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Your recently used stickers will appear here.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: scheme.onSurfaceVariant,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

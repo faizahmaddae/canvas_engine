@@ -1,0 +1,268 @@
+name: canvas_engine
+description: "Modular Flutter canvas editor engine."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.9
+  flutter_riverpod: ^3.3.1
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.11.0
+  uuid: ^4.5.3
+  collection: ^1.19.1
+  gal: ^2.3.2
+  share_plus: ^13.0.0
+  image: ^4.5.4
+  image_picker: ^1.2.1
+  path_provider: ^2.1.5
+  shared_preferences: ^2.5.5
+  emoji_picker_flutter: ^4.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.13.1
+  freezed: ^3.2.5
+  json_serializable: ^6.13.1
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Barriecito
+      fonts:
+        - asset: assets/fonts/english/Barriecito/Barriecito-Regular.ttf
+    - family: Bungee_Shade
+      fonts:
+        - asset: assets/fonts/english/Bungee_Shade/BungeeShade-Regular.ttf
+    - family: Chivo_Mono
+      fonts:
+        - asset: assets/fonts/english/Chivo_Mono/ChivoMono-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/english/Chivo_Mono/ChivoMono-Italic.ttf
+          style: italic
+        - asset: assets/fonts/english/Chivo_Mono/ChivoMono-Regular.ttf
+    - family: Dancing_Script
+      fonts:
+        - asset: assets/fonts/english/Dancing_Script/DancingScript-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/english/Dancing_Script/DancingScript-Regular.ttf
+    - family: Hanken_Grotesk
+      fonts:
+        - asset: assets/fonts/english/Hanken_Grotesk/HankenGrotesk-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/english/Hanken_Grotesk/HankenGrotesk-Regular.ttf
+    - family: Josefin_Sans
+      fonts:
+        - asset: assets/fonts/english/Josefin_Sans/JosefinSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/english/Josefin_Sans/JosefinSans-Italic.ttf
+          style: italic
+        - asset: assets/fonts/english/Josefin_Sans/JosefinSans-Regular.ttf
+    - family: Lato
+      fonts:
+        - asset: assets/fonts/english/Lato/Lato-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/english/Lato/Lato-Italic.ttf
+          style: italic
+        - asset: assets/fonts/english/Lato/Lato-Regular.ttf
+    - family: Lobster
+      fonts:
+        - asset: assets/fonts/english/Lobster/Lobster-Regular.ttf
+    - family: Playfair_Display
+      fonts:
+        - asset: assets/fonts/english/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf
+        - asset: assets/fonts/english/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf
+          weight: 500
+        - asset: assets/fonts/english/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf
+          weight: 600
+        - asset: assets/fonts/english/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf
+          weight: 700
+        - asset: assets/fonts/english/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf
+          weight: 800
+        - asset: assets/fonts/english/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf
+          weight: 900
+        - asset: assets/fonts/english/Playfair_Display/PlayfairDisplay-Italic-VariableFont_wght.ttf
+          style: italic
+    - family: Raleway
+      fonts:
+        - asset: assets/fonts/english/Raleway/Raleway-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/english/Raleway/Raleway-Italic.ttf
+          style: italic
+        - asset: assets/fonts/english/Raleway/Raleway-Regular.ttf
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/english/Roboto/Roboto-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/english/Roboto/Roboto-Italic.ttf
+          style: italic
+        - asset: assets/fonts/english/Roboto/Roboto-Regular.ttf
+    - family: Rubik_80s_Fade
+      fonts:
+        - asset: assets/fonts/english/Rubik_80s_Fade/Rubik80sFade-Regular.ttf
+    - family: Rubik_Gemstones
+      fonts:
+        - asset: assets/fonts/english/Rubik_Gemstones/RubikGemstones-Regular.ttf
+    - family: Rubik_Puddles
+      fonts:
+        - asset: assets/fonts/english/Rubik_Puddles/RubikPuddles-Regular.ttf
+    - family: Rubik_Storm
+      fonts:
+        - asset: assets/fonts/english/Rubik_Storm/RubikStorm-Regular.ttf
+    - family: Rubik_Vinyl
+      fonts:
+        - asset: assets/fonts/english/Rubik_Vinyl/RubikVinyl-Regular.ttf
+    - family: Rubik_Wet_Paint
+      fonts:
+        - asset: assets/fonts/english/Rubik_Wet_Paint/RubikWetPaint-Regular.ttf
+    - family: Sevillana
+      fonts:
+        - asset: assets/fonts/english/Sevillana/Sevillana-Regular.ttf
+    - family: Titillium_Web
+      fonts:
+        - asset: assets/fonts/english/Titillium_Web/TitilliumWeb-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/english/Titillium_Web/TitilliumWeb-Italic.ttf
+          style: italic
+        - asset: assets/fonts/english/Titillium_Web/TitilliumWeb-Regular.ttf
+    - family: Zen_Tokyo_Zoo
+      fonts:
+        - asset: assets/fonts/english/Zen_Tokyo_Zoo/ZenTokyoZoo-Regular.ttf
+    - family: A_Ordibehesht_shablon
+      fonts:
+        - asset: assets/fonts/farsi/A Ordibehesht shablon.TTF
+    - family: ANegaar
+      fonts:
+        - asset: assets/fonts/farsi/ANegaar.ttf
+    - family: ARezvan
+      fonts:
+        - asset: assets/fonts/farsi/ARezvan.ttf
+    - family: A_Soraya
+      fonts:
+        - asset: assets/fonts/farsi/A_Soraya.ttf
+    - family: Afsaneh
+      fonts:
+        - asset: assets/fonts/farsi/Afsaneh.ttf
+    - family: Araz
+      fonts:
+        - asset: assets/fonts/farsi/Araz.ttf
+    - family: B_Koodak_Bold_0
+      fonts:
+        - asset: assets/fonts/farsi/B Koodak Bold_0.ttf
+    - family: B_Koodak_Outline_0
+      fonts:
+        - asset: assets/fonts/farsi/B Koodak Outline_0.ttf
+    - family: B_Mitra_Bold
+      fonts:
+        - asset: assets/fonts/farsi/B Mitra Bold.ttf
+    - family: B_Yekan
+      fonts:
+        - asset: assets/fonts/farsi/B Yekan.ttf
+    - family: BNazanin
+      fonts:
+        - asset: assets/fonts/farsi/BNazanin.ttf
+    - family: BRoya
+      fonts:
+        - asset: assets/fonts/farsi/BRoya.ttf
+    - family: BTitrBd
+      fonts:
+        - asset: assets/fonts/farsi/BTitrBd.ttf
+    - family: BTraffic
+      fonts:
+        - asset: assets/fonts/farsi/BTraffic.ttf
+    - family: Casablanca
+      fonts:
+        - asset: assets/fonts/farsi/Casablanca.ttf
+    - family: Delbar_Bold
+      fonts:
+        - asset: assets/fonts/farsi/Delbar Bold.ttf
+    - family: DimaTahriri
+      fonts:
+        - asset: assets/fonts/farsi/DimaTahriri.ttf
+    - family: Dima_Shekaste
+      fonts:
+        - asset: assets/fonts/farsi/Dima_Shekaste.ttf
+    - family: Dirooz
+      fonts:
+        - asset: assets/fonts/farsi/Dirooz.ttf
+    - family: Eliya_Regular
+      fonts:
+        - asset: assets/fonts/farsi/Eliya Regular.ttf
+    - family: Far_Ferdowsi
+      fonts:
+        - asset: assets/fonts/farsi/Far_Ferdowsi.ttf
+    - family: Far_khodkar
+      fonts:
+        - asset: assets/fonts/farsi/Far_khodkar.ttf
+    - family: Fedra_Arabic_Display_AR_LT_Black
+      fonts:
+        - asset: assets/fonts/farsi/Fedra Arabic Display AR LT Black.ttf
+    - family: Gandom
+      fonts:
+        - asset: assets/fonts/farsi/Gandom.ttf
+    - family: Hekayat
+      fonts:
+        - asset: assets/fonts/farsi/Hekayat.ttf
+    - family: IranNastaliq
+      fonts:
+        - asset: assets/fonts/farsi/IranNastaliq.ttf
+    - family: IranianSans
+      fonts:
+        - asset: assets/fonts/farsi/IranianSans.ttf
+    - family: Lalezar
+      fonts:
+        - asset: assets/fonts/farsi/Lalezar.ttf
+    - family: MjGhalam2
+      fonts:
+        - asset: assets/fonts/farsi/MjGhalam2.ttf
+    - family: Mj_Dinar_Medium
+      fonts:
+        - asset: assets/fonts/farsi/Mj_Dinar_Medium.ttf
+    - family: Mj_Flow_Regular
+      fonts:
+        - asset: assets/fonts/farsi/Mj_Flow Regular.ttf
+    - family: Mj_SS_Three_Light
+      fonts:
+        - asset: assets/fonts/farsi/Mj_SS Three Light.ttf
+    - family: Mj_Sayeh_1
+      fonts:
+        - asset: assets/fonts/farsi/Mj_Sayeh_1.ttf
+    - family: Mosalas
+      fonts:
+        - asset: assets/fonts/farsi/Mosalas.ttf
+    - family: Neirizi
+      fonts:
+        - asset: assets/fonts/farsi/Neirizi.ttf
+    - family: SOGAND
+      fonts:
+        - asset: assets/fonts/farsi/SOGAND.ttf
+    - family: Samim_Bold
+      fonts:
+        - asset: assets/fonts/farsi/Samim_Bold.ttf
+    - family: Shabnam
+      fonts:
+        - asset: assets/fonts/farsi/Shabnam.ttf
+    - family: Shams
+      fonts:
+        - asset: assets/fonts/farsi/Shams.ttf
+    - family: Vazir_Regular
+      fonts:
+        - asset: assets/fonts/farsi/Vazir_Regular.ttf
+    - family: W_hesam
+      fonts:
+        - asset: assets/fonts/farsi/W_hesam.ttf
+    - family: leyla
+      fonts:
+        - asset: assets/fonts/farsi/leyla.ttf
+    - family: persian_khat_khati_02
+      fonts:
+        - asset: assets/fonts/farsi/persian_khat_khati_02.ttf
+    - family: persian_badkht2
+      fonts:
+        - asset: assets/fonts/farsi/persianـbadkht2.ttf

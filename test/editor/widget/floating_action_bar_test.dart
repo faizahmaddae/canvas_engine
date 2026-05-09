@@ -1,0 +1,157 @@
+import 'package:canvas_engine/features/editor/presentation/widgets/floating_action_bar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// Smoke tests for the shared floating-bar primitives. These widgets
+/// back the Paint and Shape floating toolbars; if their public API or
+/// the active-state colour rule regresses, both bars regress in
+/// lock-step. Keeping the contract pinned here is cheaper than two
+/// duplicated golden tests on the bars themselves.
+void main() {
+  Widget host(Widget child, {Brightness brightness = Brightness.light}) {
+    return MaterialApp(
+      theme: ThemeData(
+        brightness: brightness,
+        colorSchemeSeed: const Color(0xFF1976D2),
+      ),
+      home: Scaffold(body: Center(child: child)),
+    );
+  }
+
+  testWidgets('FloatingPillButton fires onTap and is wrapped in Semantics',
+      (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(host(
+      FloatingPillButton(
+        semanticLabel: 'Demo',
+        onTap: () => taps++,
+        child: const Text('hi'),
+      ),
+    ));
+    // Find the Semantics widget by its label property — proves the
+    // pill is reachable to a screen reader. We can't use
+    // `find.bySemanticsLabel` because the test environment doesn't
+    // mount the SemanticsService.
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Semantics && w.properties.label == 'Demo',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('hi'));
+    expect(taps, 1);
+  });
+
+  testWidgets(
+      'FloatingPillButton active=true tints fill with primary; idle stays '
+      'transparent', (tester) async {
+    Future<Color?> background(bool active) async {
+      await tester.pumpWidget(host(
+        FloatingPillButton(
+          semanticLabel: 'Toggle',
+          active: active,
+          onTap: () {},
+          child: const SizedBox(width: 1, height: 1),
+        ),
+      ));
+      // Settle the active-state animation.
+      await tester.pumpAndSettle();
+      final container = tester.widget<AnimatedContainer>(
+        find.byType(AnimatedContainer),
+      );
+      final decoration = container.decoration as BoxDecoration;
+      return decoration.color;
+    }
+
+    expect(await background(false), Colors.transparent);
+    final activeBg = await background(true);
+    // Idle vs active must differ (active = primary @16% alpha, idle =
+    // transparent). We don't pin the exact rgba so seed colour can
+    // change in the design system without breaking the test.
+    expect(activeBg, isNot(Colors.transparent));
+  });
+
+  testWidgets('FloatingGlassBar lays out its child without overflow',
+      (tester) async {
+    await tester.pumpWidget(host(
+      const SizedBox(
+        width: 200,
+        height: kFloatingBarHeight,
+        child: FloatingGlassBar(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [Text('a'), SizedBox(width: 4), Text('b')],
+          ),
+        ),
+      ),
+    ));
+    expect(tester.takeException(), isNull);
+    expect(find.text('a'), findsOneWidget);
+    expect(find.text('b'), findsOneWidget);
+  });
+
+  testWidgets('FloatingColorDot paints the requested colour as fill',
+      (tester) async {
+    const swatch = Color(0xFFFF3B30);
+    await tester.pumpWidget(host(const FloatingColorDot(color: swatch)));
+    final container = tester.widget<Container>(
+      find.byType(Container).first,
+    );
+    final decoration = container.decoration as BoxDecoration;
+    expect(decoration.color, swatch);
+    expect(decoration.shape, BoxShape.circle);
+  });
+
+  group('ResizeModePillContent', () {
+    testWidgets('renders Scale label + aspect_ratio icon when active',
+        (tester) async {
+      await tester.pumpWidget(host(
+        const ResizeModePillContent(
+          isScale: true,
+          foreground: Colors.black,
+          activeColor: Color(0xFF1976D2),
+        ),
+      ));
+      expect(find.text('Scale'), findsOneWidget);
+      expect(find.byIcon(Icons.aspect_ratio_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.crop_free_rounded), findsNothing);
+    });
+
+    testWidgets('renders Free label + crop_free icon when inactive',
+        (tester) async {
+      await tester.pumpWidget(host(
+        const ResizeModePillContent(
+          isScale: false,
+          foreground: Colors.black,
+          activeColor: Color(0xFF1976D2),
+        ),
+      ));
+      expect(find.text('Free'), findsOneWidget);
+      expect(find.byIcon(Icons.crop_free_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.aspect_ratio_rounded), findsNothing);
+    });
+
+    testWidgets('uses activeColor when isScale, foreground when free',
+        (tester) async {
+      const active = Color(0xFF1976D2);
+      const fg = Color(0xFF111111);
+
+      await tester.pumpWidget(host(const ResizeModePillContent(
+        isScale: true,
+        foreground: fg,
+        activeColor: active,
+      )));
+      var icon = tester.widget<Icon>(find.byIcon(Icons.aspect_ratio_rounded));
+      expect(icon.color, active);
+
+      await tester.pumpWidget(host(const ResizeModePillContent(
+        isScale: false,
+        foreground: fg,
+        activeColor: active,
+      )));
+      icon = tester.widget<Icon>(find.byIcon(Icons.crop_free_rounded));
+      expect(icon.color, fg);
+    });
+  });
+}

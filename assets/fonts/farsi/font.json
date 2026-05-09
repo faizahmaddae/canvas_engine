@@ -1,0 +1,310 @@
+[
+  {
+    "name": "نستعلیق",
+    "family": "IranNastaliq",
+    "style": "Regular",
+    "file_name": "IranNastaliq.ttf",
+    "height": 1.4
+  },
+  {
+    "name": "ایلیا",
+    "family": "Eliya",
+    "style": "Regular",
+    "file_name": "Eliya Regular.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "ثریا",
+    "family": "a_soraya",
+    "style": "Regular",
+    "file_name": "A_Soraya.ttf",
+    "height": 1.6
+  },
+  {
+    "name": "دلبر",
+    "family": "Delbar",
+    "style": "Bold",
+    "file_name": "Delbar Bold.ttf",
+    "height": 1.3
+  },
+  {
+    "name": "بد خط",
+    "family": "badkhat",
+    "style": "Regular",
+    "file_name": "persianـbadkht2.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "فدرا",
+    "family": "Fedra",
+    "style": "Regular",
+    "file_name": "Fedra Arabic Display AR LT Black.ttf",
+    "height": 1.4
+  },
+  {
+    "name": "فردوسی",
+    "family": "Ferdosi",
+    "style": "Regular",
+    "file_name": "Far_Ferdowsi.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "لیلا",
+    "family": "Leyla",
+    "style": "Regular",
+    "file_name": "leyla.ttf",
+    "height": 1.2
+  },
+  {
+    "name": "نازنین",
+    "family": "BNazanin",
+    "style": "Regular",
+    "file_name": "BNazanin.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "تیتر",
+    "family": "BTitrBd",
+    "style": "Regular",
+    "file_name": "BTitrBd.ttf",
+    "height": 1.2
+  },
+  {
+    "name": "ام جی",
+    "family": "MJ",
+    "style": "Regular",
+    "file_name": "Mj_SS Three Light.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "رویا",
+    "family": "BRoya",
+    "style": "Regular",
+    "file_name": "BRoya.ttf",
+    "height": 1.2
+  },
+  {
+    "name": "سوگند",
+    "family": "SOGAND",
+    "style": "Regular",
+    "file_name": "SOGAND.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "ترافیک",
+    "family": "BTraffic",
+    "style": "Regular",
+    "file_name": "BTraffic.ttf",
+    "height": 1.1
+  },
+  {
+    "name": "وزیر",
+    "family": "Vazir",
+    "style": "Regular",
+    "file_name": "Vazir_Regular.ttf",
+    "height": 1.2
+  },
+  {
+    "name": "افسانه",
+    "family": "Afsaneh",
+    "style": "Regular",
+    "file_name": "Afsaneh.ttf",
+    "height": 1.2
+  },
+  {
+    "name": "آراز",
+    "family": "Araz",
+    "style": "Regular",
+    "file_name": "Araz.ttf",
+    "height": 0.8
+  },
+  {
+    "name": "کازابلانکا",
+    "family": "Casablanca",
+    "style": "Regular",
+    "file_name": "Casablanca.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "دیما شکسته",
+    "family": "DimaShekaste",
+    "style": "Regular",
+    "file_name": "Dima_Shekaste.ttf",
+    "height": 2.6
+  },
+  {
+    "name": "دیما تحریری",
+    "family": "DimaTahriri",
+    "style": "Regular",
+    "file_name": "DimaTahriri.ttf",
+    "height": 1.2
+  },
+  {
+    "name": "دینار",
+    "family": "Mj_Dinar_Medium",
+    "style": "Regular",
+    "file_name": "Mj_Dinar_Medium.ttf",
+    "height": 1.2
+  },
+  {
+    "name": "فلو",
+    "family": "Flow",
+    "style": "Regular",
+    "file_name": "Mj_Flow Regular.ttf",
+    "height": 1.2
+  },
+  {
+    "name": "قلم",
+    "family": "Ghalam",
+    "style": "Regular",
+    "file_name": "MjGhalam2.ttf",
+    "height": 1.4
+  },
+  {
+    "name": "حسام",
+    "family": "Hesam",
+    "style": "Regular",
+    "file_name": "W_hesam.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "لاله زار",
+    "family": "Lalezar",
+    "style": "Regular",
+    "file_name": "Lalezar.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "مثلث",
+    "family": "Mosalas",
+    "style": "Regular",
+    "file_name": "Mosalas.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "نیریزی",
+    "family": "Neirizi",
+    "style": "Regular",
+    "file_name": "Neirizi.ttf",
+    "height": 1.4
+  },
+  {
+    "name": "اردیبهشت",
+    "family": "A Ordibehesht shablon",
+    "style": "Regular",
+    "file_name": "A Ordibehesht shablon.TTF",
+    "height": 1.2
+  },
+  {
+    "name": "سایه",
+    "family": "Mj_Sayeh_1",
+    "style": "Regular",
+    "file_name": "Mj_Sayeh_1.ttf",
+    "height": 0.9
+  },
+  {
+    "name": "حکایت",
+    "family": "Hekayat",
+    "style": "Regular",
+    "file_name": "Hekayat.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "نگار",
+    "family": "ANegaar",
+    "style": "Regular",
+    "file_name": "ANegaar.ttf",
+    "height": 1.3
+  },
+  {
+    "name": "میترا",
+    "family": "b_mitra",
+    "style": "Regular",
+    "file_name": "B Mitra Bold.ttf",
+    "height": 1.1
+  },
+  {
+    "name": "یکان",
+    "family": "Yekan",
+    "style": "Regular",
+    "file_name": "B Yekan.ttf",
+    "height": 1.1
+  },
+  {
+    "name": "رضوان",
+    "family": "ARezvan",
+    "style": "Regular",
+    "file_name": "ARezvan.ttf",
+    "height": 1.2
+  },
+  {
+    "name": "سانس",
+    "family": "Iranian Sans",
+    "style": "Regular",
+    "file_name": "IranianSans.ttf",
+    "height": 1.2
+  },
+  {
+    "name": "شبنم",
+    "family": "Shabnam",
+    "style": "Regular",
+    "file_name": "Shabnam.ttf",
+    "height": 1.1
+  },
+  {
+    "name": "خط خطی",
+    "family": "KhatKhati",
+    "style": "Regular",
+    "file_name": "persian_khat_khati_02.ttf",
+    "height": 1.4
+  },
+  {
+    "name": "کودک ۱  ",
+    "family": "Koodak_1",
+    "style": "Regular",
+    "file_name": "B Koodak Bold_0.ttf",
+    "height": 1.1
+  },
+  {
+    "name": "کودک ۲  ",
+    "family": "Koodak_2",
+    "style": "Regular",
+    "file_name": "B Koodak Outline_0.ttf",
+    "height": 1.1
+  },
+  {
+    "name": "شمس",
+    "family": "Shams",
+    "style": "Regular",
+    "file_name": "Shams.ttf",
+    "height": 1.1
+  },
+  {
+    "name": "خودکار",
+    "family": "Khodkar",
+    "style": "Regular",
+    "file_name": "Far_khodkar.ttf",
+    "height": 1.0
+  },
+  {
+    "name": "صمیم",
+    "family": "Samim_Bold",
+    "style": "Regular",
+    "file_name": "Samim_Bold.ttf",
+    "height": 1.3
+  },
+  {
+    "name": "گندم",
+    "family": "Gandom",
+    "style": "Regular",
+    "file_name": "Gandom.ttf",
+    "height": 1.4
+  },
+  {
+    "name": "دیروز",
+    "family": "Dirooz",
+    "style": "Regular",
+    "file_name": "Dirooz.ttf",
+    "height": 1.2
+  }
+]

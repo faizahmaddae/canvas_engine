@@ -1,0 +1,90 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/utils/haptics.dart';
+import '../../application/document_controller.dart';
+import '../../engine/commands/text_commands.dart';
+import '../../engine/modules/text/text_layer.dart';
+import '../../presentation/sticker_picker_sheet.dart';
+import 'sticker_panel_shell.dart';
+
+/// Body for the Sticker "Replace" tab. Big preview of the current
+/// glyph + a single centered CTA that re-opens the emoji picker
+/// and swaps the glyph in place. Preserves transform / id / style
+/// so the layer stays exactly where (and how big) it was.
+class StickerReplaceBody extends ConsumerWidget {
+  const StickerReplaceBody({super.key, required this.layer});
+
+  final TextLayer layer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    return StickerPanelShell(
+      title: 'Replace',
+      icon: Icons.swap_horiz_rounded,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header already says "Replace" — no duplicate SectionLabel.
+          Center(
+            child: Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: scheme.outlineVariant),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                layer.content,
+                style: const TextStyle(fontSize: 52),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: FilledButton.icon(
+              onPressed: () => _replace(context, ref),
+              icon: const Icon(Icons.swap_horiz_rounded),
+              label: const Text('Choose another sticker'),
+              style: FilledButton.styleFrom(
+                backgroundColor: scheme.primary,
+                foregroundColor: scheme.onPrimary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _replace(BuildContext context, WidgetRef ref) async {
+    EditorHaptics.tap();
+    final glyph = await showStickerPickerSheet(context);
+    if (glyph == null || glyph == layer.content) return;
+    // Re-use UpdateTextCommand so the swap participates in the
+    // standard undo stack and merges with later edits in the same
+    // way text edits do. Style is preserved verbatim.
+    ref.read(documentControllerProvider.notifier).execute(
+          UpdateTextCommand(
+            layerId: layer.id,
+            content: glyph,
+            style: layer.style,
+          ),
+        );
+  }
+}
