@@ -1,0 +1,124 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279310375,
+    "endColor": 4286328082,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "art",
+      "transform": {
+        "x": 120.0,
+        "y": 110.0,
+        "w": 840.0,
+        "h": 620.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294502324,
+        "endColor": 4289222135,
+        "angleDegrees": 135.0
+      },
+      "cornerRadius": 54.0,
+      "shadowOpacity": 0.25,
+      "shadowBlur": 42.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 22.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "art2",
+      "transform": {
+        "x": 465.0,
+        "y": 260.0,
+        "w": 210.0,
+        "h": 210.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "opacity": 0.82
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 150.0,
+        "y": 820.0,
+        "w": 760.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "افتتاحیه",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4294502324,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 145.0,
+        "y": 905.0,
+        "w": 790.0,
+        "h": 210.0,
+        "r": 0.0
+      },
+      "content": "گالری\nهنر",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 112.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.96,
+        "alignment": "right",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 160.0,
+        "y": 1150.0,
+        "w": 760.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "content": "مکان، تاریخ و نام هنرمند را برای رویداد خود تغییر دهید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4294829706,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

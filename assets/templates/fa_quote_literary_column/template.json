@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_quote_literary_column",
+  "title": {
+    "en": "Persian Literary Column Quote",
+    "fa": "ستون ادبی فارسی"
+  },
+  "category": "quote",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_quote_literary_column/thumbnail.png",
+  "document": "assets/templates/fa_quote_literary_column/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "quote",
+    "literary",
+    "column"
+  ],
+  "home": {
+    "sortOrder": 104
+  }
+}

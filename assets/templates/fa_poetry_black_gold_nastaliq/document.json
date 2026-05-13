@@ -1,0 +1,108 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4278322711,
+    "endColor": 4280031511,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "frame",
+      "transform": {
+        "x": 110.0,
+        "y": 110.0,
+        "w": 860.0,
+        "h": 860.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279179050,
+      "strokeWidth": 5.0,
+      "cornerRadius": 62.0,
+      "strokeColor": 4294502324,
+      "shadowOpacity": 0.28,
+      "shadowBlur": 42.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 22.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "orn-top",
+      "transform": {
+        "x": 480.0,
+        "y": 170.0,
+        "w": 120.0,
+        "h": 120.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4294502324,
+      "strokeWidth": 0.0,
+      "opacity": 0.9
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 170.0,
+        "y": 355.0,
+        "w": 740.0,
+        "h": 270.0,
+        "r": 0.0
+      },
+      "content": "به سکوت شب\nگفتم از تو\nروشن‌تر نیست",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 78.0,
+        "color": 4294502324,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.38,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule",
+      "transform": {
+        "x": 360.0,
+        "y": 700.0,
+        "w": 360.0,
+        "h": 6.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294502324,
+      "strokeWidth": 0.0,
+      "cornerRadius": 3.0
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 270.0,
+        "y": 745.0,
+        "w": 540.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "نام شاعر",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4293384358,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

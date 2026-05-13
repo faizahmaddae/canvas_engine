@@ -1,0 +1,167 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4278671749,
+    "endColor": 4294286859,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "sun",
+      "transform": {
+        "x": 710.0,
+        "y": 120.0,
+        "w": 230.0,
+        "h": 230.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294829706,
+      "strokeWidth": 0.0,
+      "opacity": 0.95
+    },
+    {
+      "type": "shape",
+      "id": "photo",
+      "transform": {
+        "x": 95.0,
+        "y": 95.0,
+        "w": 890.0,
+        "h": 690.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4281908728,
+        "endColor": 4294829706,
+        "angleDegrees": 170.0
+      },
+      "cornerRadius": 68.0,
+      "shadowOpacity": 0.24,
+      "shadowBlur": 44.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 22.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "mount1",
+      "transform": {
+        "x": 180.0,
+        "y": 470.0,
+        "w": 360.0,
+        "h": 260.0,
+        "r": 0.0
+      },
+      "kind": "triangle",
+      "fillColor": 4279203438,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "mount2",
+      "transform": {
+        "x": 455.0,
+        "y": 405.0,
+        "w": 440.0,
+        "h": 330.0,
+        "r": 0.0
+      },
+      "kind": "triangle",
+      "fillColor": 4279522093,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 145.0,
+        "y": 855.0,
+        "w": 790.0,
+        "h": 230.0,
+        "r": 0.0
+      },
+      "content": "سفر\nآخر هفته",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 116.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.96,
+        "alignment": "right",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 160.0,
+        "y": 1110.0,
+        "w": 760.0,
+        "h": 95.0,
+        "r": 0.0
+      },
+      "content": "مقصد، قیمت و تاریخ حرکت را برای تور خود ویرایش کنید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4293721855,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 285.0,
+        "y": 1228.0,
+        "w": 510.0,
+        "h": 86.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294829706,
+      "strokeWidth": 0.0,
+      "cornerRadius": 43.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 330.0,
+        "y": 1244.0,
+        "w": 420.0,
+        "h": 50.0,
+        "r": 0.0
+      },
+      "content": "رزرو تور",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 48.0,
+        "color": 4278671749,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

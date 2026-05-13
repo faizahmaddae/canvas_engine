@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_v1",
+  "title": {
+    "en": "پست شاعرانه",
+    "fa": "پست شاعرانه"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_v1/thumbnail.png",
+  "document": "assets/templates/fa_poetry_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "poetry",
+    "fa"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 120
+  }
+}

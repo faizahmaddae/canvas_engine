@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_event_concert",
+  "title": {
+    "en": "Concert poster",
+    "fa": "Concert poster"
+  },
+  "category": "event",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_event_concert/thumbnail.png",
+  "document": "assets/templates/en_event_concert/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "en",
+    "event"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 150
+  }
+}

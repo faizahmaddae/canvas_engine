@@ -1,0 +1,175 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294967295,
+    "endColor": 4294965492,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "story-panel",
+      "transform": {"x": 86.0, "y": 142.0, "w": 908.0, "h": 1400.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4279782727,
+      "strokeWidth": 0.0,
+      "cornerRadius": 76.0,
+      "shadowOpacity": 0.2,
+      "shadowBlur": 46.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 24.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "badge",
+      "transform": {"x": 650.0, "y": 214.0, "w": 220.0, "h": 74.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294099064,
+      "strokeWidth": 0.0,
+      "cornerRadius": 37.0
+    },
+    {
+      "type": "text",
+      "id": "badge-text",
+      "transform": {"x": 690.0, "y": 230.0, "w": 140.0, "h": 44.0, "r": 0.0},
+      "content": "امروز",
+      "style": {"fontFamily": "Lalezar", "fontSize": 42.0, "color": 4279782727, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "offer-card",
+      "transform": {"x": 154.0, "y": 330.0, "w": 772.0, "h": 568.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 58.0,
+      "shadowOpacity": 0.13,
+      "shadowBlur": 26.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 12.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "offer-header",
+      "transform": {"x": 154.0, "y": 330.0, "w": 772.0, "h": 112.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294099064,
+      "strokeWidth": 0.0,
+      "cornerRadius": 58.0
+    },
+    {
+      "type": "text",
+      "id": "offer-header-text",
+      "transform": {"x": 304.0, "y": 358.0, "w": 472.0, "h": 54.0, "r": 0.0},
+      "content": "پیشنهاد روزانه",
+      "style": {"fontFamily": "Lalezar", "fontSize": 50.0, "color": 4279782727, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "today-ticket",
+      "transform": {"x": 236.0, "y": 520.0, "w": 608.0, "h": 188.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294965492,
+      "strokeWidth": 0.0,
+      "cornerRadius": 42.0
+    },
+    {
+      "type": "shape",
+      "id": "ticket-dot-left",
+      "transform": {"x": 208.0, "y": 594.0, "w": 56.0, "h": 56.0, "r": 0.0},
+      "kind": "oval",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "ticket-dot-right",
+      "transform": {"x": 816.0, "y": 594.0, "w": 56.0, "h": 56.0, "r": 0.0},
+      "kind": "oval",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "ticket-title",
+      "transform": {"x": 326.0, "y": 552.0, "w": 428.0, "h": 68.0, "r": 0.0},
+      "content": "٪۳۰ تخفیف",
+      "style": {"fontFamily": "BTitrBd", "fontSize": 62.0, "color": 4279782727, "fontWeight": 800, "letterSpacing": 0.0, "lineHeight": 1.0, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "ticket-time",
+      "transform": {"x": 344.0, "y": 638.0, "w": 392.0, "h": 42.0, "r": 0.0},
+      "content": "تا پایان امروز",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 34.0, "color": 4279782727, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "price-strip",
+      "transform": {"x": 276.0, "y": 776.0, "w": 528.0, "h": 62.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294099064,
+      "strokeWidth": 0.0,
+      "cornerRadius": 31.0
+    },
+    {
+      "type": "text",
+      "id": "price-strip-text",
+      "transform": {"x": 324.0, "y": 790.0, "w": 432.0, "h": 36.0, "r": 0.0},
+      "content": "قیمت و محصول را ویرایش کنید",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 30.0, "color": 4279782727, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {"x": 132.0, "y": 980.0, "w": 816.0, "h": 158.0, "r": 0.0},
+      "content": "پیشنهاد امروز",
+      "style": {"fontFamily": "BTitrBd", "fontSize": 92.0, "color": 4294967295, "fontWeight": 800, "letterSpacing": 0.0, "lineHeight": 1.0, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "footer-strip",
+      "transform": {"x": 148.0, "y": 1180.0, "w": 784.0, "h": 132.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294965492,
+      "strokeWidth": 0.0,
+      "cornerRadius": 42.0
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {"x": 188.0, "y": 1209.0, "w": 704.0, "h": 74.0, "r": 0.0},
+      "content": "متن محصول، قیمت و زمان پایان را ویرایش کنید",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 36.0, "color": 4279782727, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.18, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {"x": 226.0, "y": 1608.0, "w": 628.0, "h": 110.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294099064,
+      "strokeWidth": 0.0,
+      "cornerRadius": 55.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {"x": 282.0, "y": 1631.0, "w": 516.0, "h": 62.0, "r": 0.0},
+      "content": "فقط تا امشب",
+      "style": {"fontFamily": "Lalezar", "fontSize": 58.0, "color": 4279782727, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    }
+  ]
+}

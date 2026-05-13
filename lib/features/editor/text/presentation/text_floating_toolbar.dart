@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/modules/text/text_layer.dart';
@@ -92,7 +93,7 @@ class TextFloatingToolbar extends ConsumerWidget {
           initial: original,
           recents: ref.read(recentColorsControllerProvider),
           onLiveChange: ctrl.setColor,
-          title: 'Text color',
+          title: context.l10n.textColorTitle,
         );
         if (picked == null) {
           ctrl.setColor(original);
@@ -171,19 +172,19 @@ class _BarContent extends StatelessWidget {
             children: [
               _PillButton(
                 onTap: onPickFont,
-                semanticLabel: 'Font',
+                semanticLabel: context.l10n.fontTool,
                 child: Icon(Icons.text_fields_rounded, size: 18, color: fg),
               ),
               const SizedBox(width: 4),
               _PillButton(
                 onTap: onPickColor,
-                semanticLabel: 'Text color',
+                semanticLabel: context.l10n.textColorTitle,
                 child: _ColorDot(color: style.color),
               ),
               const SizedBox(width: 4),
               _PillButton(
                 onTap: onPickSize,
-                semanticLabel: 'Font size',
+                semanticLabel: context.l10n.fontSizeSemantics,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -214,7 +215,7 @@ class _BarContent extends StatelessWidget {
               const SizedBox(width: 4),
               _PillButton(
                 onTap: onMore,
-                semanticLabel: 'More actions',
+                semanticLabel: context.l10n.moreActionsSemantics,
                 child: Icon(Icons.more_horiz_rounded, size: 20, color: fg),
               ),
             ],
@@ -301,6 +302,7 @@ class _TextMoreSheet extends StatelessWidget {
     final canForward = LayerActions.canBringForward(parentRef, layer);
     final canBackward = LayerActions.canSendBackward(parentRef, layer);
     final style = layer.style;
+    final l10n = context.l10n;
 
     return SafeArea(
       // The action list (Edit · B/I/U · Duplicate · Reorder · Lock ·
@@ -313,7 +315,7 @@ class _TextMoreSheet extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.edit_rounded),
-              title: const Text('Edit text'),
+              title: Text(l10n.editTextAction),
               onTap: () async {
                 Navigator.of(context).pop();
                 final ctrl = parentRef.read(
@@ -323,8 +325,8 @@ class _TextMoreSheet extends StatelessWidget {
                 final result = await showTextInputFlowSheet(
                   context,
                   initial: layer.content,
-                  title: 'Edit text',
-                  confirmLabel: 'Apply',
+                  title: l10n.editTextAction,
+                  confirmLabel: l10n.applyAction,
                   onLiveChange: ctrl.previewContent,
                 );
                 if (result == null) {
@@ -343,7 +345,7 @@ class _TextMoreSheet extends StatelessWidget {
                 Icons.format_bold_rounded,
                 color: style.isBold ? scheme.primary : null,
               ),
-              title: const Text('Bold'),
+              title: Text(l10n.boldAction),
               trailing: style.isBold
                   ? Icon(Icons.check_rounded, color: scheme.primary)
                   : null,
@@ -356,7 +358,7 @@ class _TextMoreSheet extends StatelessWidget {
                 Icons.format_italic_rounded,
                 color: style.italic ? scheme.primary : null,
               ),
-              title: const Text('Italic'),
+              title: Text(l10n.italicAction),
               trailing: style.italic
                   ? Icon(Icons.check_rounded, color: scheme.primary)
                   : null,
@@ -369,7 +371,7 @@ class _TextMoreSheet extends StatelessWidget {
                 Icons.format_underline_rounded,
                 color: style.underline ? scheme.primary : null,
               ),
-              title: const Text('Underline'),
+              title: Text(l10n.underlineAction),
               trailing: style.underline
                   ? Icon(Icons.check_rounded, color: scheme.primary)
                   : null,
@@ -380,7 +382,7 @@ class _TextMoreSheet extends StatelessWidget {
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.copy_all_outlined),
-              title: const Text('Duplicate'),
+              title: Text(l10n.duplicateAction),
               onTap: () {
                 Navigator.of(context).pop();
                 LayerActions.duplicate(parentRef, layer);
@@ -389,7 +391,7 @@ class _TextMoreSheet extends StatelessWidget {
             ListTile(
               enabled: canForward,
               leading: const Icon(Icons.flip_to_front_rounded),
-              title: const Text('Bring forward'),
+              title: Text(l10n.bringForwardAction),
               onTap: !canForward
                   ? null
                   : () {
@@ -400,7 +402,7 @@ class _TextMoreSheet extends StatelessWidget {
             ListTile(
               enabled: canBackward,
               leading: const Icon(Icons.flip_to_back_rounded),
-              title: const Text('Send backward'),
+              title: Text(l10n.sendBackwardAction),
               onTap: !canBackward
                   ? null
                   : () {
@@ -414,7 +416,9 @@ class _TextMoreSheet extends StatelessWidget {
                     ? Icons.lock_open_rounded
                     : Icons.lock_outline_rounded,
               ),
-              title: Text(layer.locked ? 'Unlock layer' : 'Lock layer'),
+              title: Text(
+                layer.locked ? l10n.unlockLayerAction : l10n.lockLayerAction,
+              ),
               onTap: () {
                 Navigator.of(context).pop();
                 LayerActions.toggleLock(parentRef, layer);
@@ -422,8 +426,10 @@ class _TextMoreSheet extends StatelessWidget {
             ),
             ListTile(
               leading: Icon(textResizeModeIcon(layer.resizeMode)),
-              title: const Text('Resize behavior'),
-              subtitle: Text(textResizeModeLabel(layer.resizeMode)),
+              title: Text(l10n.resizeBehaviorTitle),
+              subtitle: Text(
+                localizedTextResizeModeLabel(context, layer.resizeMode),
+              ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () async {
                 Navigator.of(context).pop();
@@ -439,7 +445,10 @@ class _TextMoreSheet extends StatelessWidget {
             const Divider(height: 1),
             ListTile(
               leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
-              title: Text('Delete', style: TextStyle(color: scheme.error)),
+              title: Text(
+                l10n.deleteAction,
+                style: TextStyle(color: scheme.error),
+              ),
               onTap: () async {
                 await LayerActions.delete(context, parentRef, layer);
                 if (context.mounted) Navigator.of(context).pop();

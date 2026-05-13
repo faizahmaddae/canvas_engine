@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_quote_minimal",
+  "title": {
+    "en": "نقل قول مینیمال",
+    "fa": "نقل قول مینیمال"
+  },
+  "category": "quote",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_quote_minimal/thumbnail.png",
+  "document": "assets/templates/fa_quote_minimal/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "quote",
+    "fa",
+    "minimal"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 100
+  }
+}

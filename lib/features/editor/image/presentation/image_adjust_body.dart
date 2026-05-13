@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/image_commands.dart';
+import '../../engine/effects/editor_effect.dart';
 import '../../engine/modules/image/image_layer.dart';
+import '../../presentation/widgets/inline_color_body.dart';
 import '../../presentation/widgets/panel_option_tile.dart';
+import '../../presentation/widgets/recent_colors_controller.dart';
 import 'image_panel_shell.dart';
 
 /// Expanded panel body for the Image sub-tool's "Adjust" tab.
@@ -40,6 +45,7 @@ class ImageAdjustBody extends ConsumerStatefulWidget {
 
 class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
   bool _adjustOpen = false;
+  bool _vignetteOpen = false;
 
   void _commit({
     double? brightness,
@@ -49,7 +55,9 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
     double? warmth,
     bool live = false,
   }) {
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           SetImageAdjustmentsCommand(
             layerId: widget.layer.id,
             brightness: brightness,
@@ -57,6 +65,25 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
             saturation: saturation,
             exposure: exposure,
             warmth: warmth,
+            live: live,
+          ),
+        );
+  }
+
+  void _commitVignette({
+    double? intensity,
+    double? feather,
+    Color? color,
+    bool live = false,
+  }) {
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
+          SetImageVignetteCommand(
+            layerId: widget.layer.id,
+            intensity: intensity,
+            feather: feather,
+            color: color,
             live: live,
           ),
         );
@@ -77,19 +104,17 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
   Widget build(BuildContext context) {
     final adj = widget.layer.adjustments;
     final activePreset = _matchPreset(adj);
+    final vignette = _activeVignette(widget.layer);
 
     return ImagePanelShell(
-      title: 'Adjust',
+      title: context.l10n.adjustTool,
       icon: Icons.tune_rounded,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header already says "Adjust" — no duplicate SectionLabel.
-          _PresetRow(
-            active: activePreset,
-            onPick: _applyPreset,
-          ),
+          _PresetRow(active: activePreset, onPick: _applyPreset),
           const SizedBox(height: 6),
           _AdjustHeader(
             open: _adjustOpen,
@@ -109,7 +134,7 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _LabeledSlider(
-                          label: 'Brightness',
+                          label: context.l10n.brightnessLabel,
                           value: adj.brightness,
                           min: -100,
                           max: 100,
@@ -117,7 +142,7 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                           onChange: (v) => _commit(brightness: v, live: true),
                         ),
                         _LabeledSlider(
-                          label: 'Contrast',
+                          label: context.l10n.contrastLabel,
                           value: adj.contrast,
                           min: 0,
                           max: 2,
@@ -125,16 +150,15 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                           onChange: (v) => _commit(contrast: v, live: true),
                         ),
                         _LabeledSlider(
-                          label: 'Saturation',
+                          label: context.l10n.saturationLabel,
                           value: adj.saturation,
                           min: 0,
                           max: 2,
                           format: (v) => '${(v * 100).round()}%',
-                          onChange: (v) =>
-                              _commit(saturation: v, live: true),
+                          onChange: (v) => _commit(saturation: v, live: true),
                         ),
                         _LabeledSlider(
-                          label: 'Exposure',
+                          label: context.l10n.exposureLabel,
                           value: adj.exposure,
                           min: -100,
                           max: 100,
@@ -142,12 +166,85 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                           onChange: (v) => _commit(exposure: v, live: true),
                         ),
                         _LabeledSlider(
-                          label: 'Warmth',
+                          label: context.l10n.warmthLabel,
                           value: adj.warmth,
                           min: -100,
                           max: 100,
                           format: (v) => v.round().toString(),
                           onChange: (v) => _commit(warmth: v, live: true),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          // Vignette is the first non-colour-matrix effect on the
+          // layer's effect stack \u2014 it lives in the same panel as
+          // the colour adjustments because users think of it as
+          // "one of the knobs", not as a separate tool.
+          _VignetteHeader(
+            open: _vignetteOpen,
+            onToggle: () {
+              EditorHaptics.tap();
+              setState(() => _vignetteOpen = !_vignetteOpen);
+            },
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: _vignetteOpen
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _LabeledSlider(
+                          label: context.l10n.intensityLabel,
+                          value: vignette.intensity,
+                          min: VignetteEffect.minIntensity,
+                          max: VignetteEffect.maxIntensity,
+                          format: (v) => '${(v * 100).round()}%',
+                          onChange: (v) =>
+                              _commitVignette(intensity: v, live: true),
+                        ),
+                        _LabeledSlider(
+                          label: context.l10n.featherLabel,
+                          value: vignette.feather,
+                          min: VignetteEffect.minFeather,
+                          max: VignetteEffect.maxFeather,
+                          format: (v) => '${(v * 100).round()}%',
+                          onChange: (v) =>
+                              _commitVignette(feather: v, live: true),
+                        ),
+                        const SizedBox(height: 8),
+                        InlineColorBody(
+                          current: vignette.color,
+                          recents: ref.watch(recentColorsControllerProvider),
+                          palette: InlineColorBody.defaultPalette,
+                          compactRecents: true,
+                          onPick: (picked) {
+                            EditorHaptics.toggle();
+                            _commitVignette(color: picked);
+                          },
+                          onCustom: () async {
+                            final original = vignette.color;
+                            final picked = await showColorPickerSheet(
+                              context,
+                              initial: original,
+                              recents: ref.read(recentColorsControllerProvider),
+                              onLiveChange: (c) =>
+                                  _commitVignette(color: c, live: true),
+                              title: context.l10n.vignetteColorTitle,
+                            );
+                            if (picked == null) {
+                              _commitVignette(color: original);
+                              return;
+                            }
+                            ref
+                                .read(recentColorsControllerProvider.notifier)
+                                .remember(picked);
+                          },
                         ),
                       ],
                     ),
@@ -290,11 +387,22 @@ class _PresetChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return PanelOptionTile(
       icon: preset.icon,
-      label: preset.label,
+      label: _adjustPresetLabel(context, preset),
       selected: selected,
       onTap: onTap,
     );
   }
+}
+
+String _adjustPresetLabel(BuildContext context, _AdjustPreset preset) {
+  return switch (preset.id) {
+    'original' => context.l10n.originalOption,
+    'pop' => context.l10n.popOption,
+    'soft' => context.l10n.softOption,
+    'warm' => context.l10n.warmOption,
+    'cool' => context.l10n.coolOption,
+    _ => preset.label,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -325,7 +433,7 @@ class _AdjustHeader extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Adjust precisely',
+                    context.l10n.adjustPrecisely,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -334,7 +442,7 @@ class _AdjustHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    'Brightness, contrast, saturation, exposure, warmth',
+                    context.l10n.adjustPreciselySubtitle,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -416,6 +524,87 @@ class _LabeledSlider extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Vignette section
+// ---------------------------------------------------------------------------
+
+/// Resolve the vignette currently on the layer's effect stack, or
+/// fall back to the identity defaults so the sliders always have
+/// a value to render. The renderer treats an identity vignette as
+/// "no effect" \u2014 see [SetImageVignetteCommand] for the round-trip
+/// guarantee.
+VignetteEffect _activeVignette(ImageLayer layer) {
+  for (final eff in layer.effects.effects) {
+    if (eff is VignetteEffect) return eff;
+  }
+  return const VignetteEffect(
+    intensity: VignetteEffect.defaultIntensity,
+    feather: VignetteEffect.defaultFeather,
+  );
+}
+
+/// Disclosure header for the Vignette section. Mirrors the visual
+/// grammar of [_AdjustHeader] so the panel reads as one consistent
+/// list rather than two unrelated tools.
+class _VignetteHeader extends StatelessWidget {
+  const _VignetteHeader({required this.open, required this.onToggle});
+
+  final bool open;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onToggle,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        child: Row(
+          children: [
+            Icon(Icons.vignette_outlined, size: 16, color: scheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.l10n.vignetteLabel,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    context.l10n.vignetteSubtitle,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            AnimatedRotation(
+              turns: open ? 0.25 : 0,
+              duration: const Duration(milliseconds: 180),
+              child: Icon(
+                Icons.chevron_right_rounded,
+                size: 22,
+                color: scheme.primary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

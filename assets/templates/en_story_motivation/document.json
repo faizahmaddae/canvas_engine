@@ -1,0 +1,121 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294966258,
+    "endColor": 4293849855,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "top-band",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "w": 1080.0,
+        "h": 300.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4279244840,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bot-band",
+      "transform": {
+        "x": 0.0,
+        "y": 1620.0,
+        "w": 1080.0,
+        "h": 300.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4279244840,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 80.0,
+        "y": 105.0,
+        "w": 920.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "DAY 03",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 54.0,
+        "color": 4294286859,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "center-rule",
+      "transform": {
+        "x": 360.0,
+        "y": 415.0,
+        "w": 360.0,
+        "h": 8.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294286859,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "big",
+      "transform": {
+        "x": 80.0,
+        "y": 500.0,
+        "w": 920.0,
+        "h": 820.0,
+        "r": 0.0
+      },
+      "content": "show\nup\nagain",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 264.0,
+        "color": 4279244840,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.98,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 80.0,
+        "y": 1725.0,
+        "w": 920.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "small reps. big results.",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 50.0,
+        "color": 4294286859,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

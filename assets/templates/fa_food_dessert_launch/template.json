@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_food_dessert_launch",
+  "title": {
+    "en": "Persian Dessert Launch Post",
+    "fa": "پست رونمایی دسر"
+  },
+  "category": "food",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_food_dessert_launch/thumbnail.png",
+  "document": "assets/templates/fa_food_dessert_launch/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "food",
+    "dessert",
+    "launch"
+  ],
+  "home": {
+    "sortOrder": 70
+  }
+}

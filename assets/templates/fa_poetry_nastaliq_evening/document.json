@@ -1,0 +1,143 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279310375,
+    "endColor": 4281413249,
+    "angleDegrees": 140.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "paper",
+      "transform": {
+        "x": 118.0,
+        "y": 120.0,
+        "w": 844.0,
+        "h": 840.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294966251,
+        "endColor": 4294174975,
+        "angleDegrees": 170.0
+      },
+      "cornerRadius": 56.0,
+      "shadowOpacity": 0.24,
+      "shadowBlur": 42.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 22.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "moon",
+      "transform": {
+        "x": 150.0,
+        "y": 155.0,
+        "w": 140.0,
+        "h": 140.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "radial",
+        "centerColor": 4294829706,
+        "edgeColor": 4294286859,
+        "focalX": -0.2,
+        "focalY": -0.2,
+        "radius": 0.9
+      },
+      "opacity": 0.9
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 175.0,
+        "y": 340.0,
+        "w": 730.0,
+        "h": 260.0,
+        "r": 0.0
+      },
+      "content": "هر شب\nبه امید\nصبحی روشن",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 80.0,
+        "color": 4281413249,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.35,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule",
+      "transform": {
+        "x": 360.0,
+        "y": 680.0,
+        "w": 360.0,
+        "h": 7.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4289170426,
+      "strokeWidth": 0.0,
+      "cornerRadius": 4.0
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 270.0,
+        "y": 725.0,
+        "w": 540.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "نام شاعر",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4285343961,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 205.0,
+        "y": 830.0,
+        "w": 670.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "متن شعر و امضا قابل ویرایش است",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 34.0,
+        "color": 4282865001,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

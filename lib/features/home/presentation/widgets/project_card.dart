@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../editor/engine/core/editor_document.dart';
 import '../../../editor/engine/rendering/document_thumbnail.dart';
 import '../../../editor/engine/serialization/document_codec.dart';
@@ -42,86 +44,139 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
     if (_pressed != v) setState(() => _pressed = v);
   }
 
+  /// Cached result of "does the PNG thumbnail file exist on disk?".
+  ///
+  /// We previously called `File(...).existsSync()` from `build()`,
+  /// which performs a synchronous stat per card per frame on the
+  /// UI thread — measurable jank when the Recent rail scrolls.
+  /// Now we resolve it once via async `exists()` in [initState]
+  /// and refresh whenever [Project.thumbnailPath] or
+  /// [Project.thumbnailVersion] change. Until the first probe
+  /// resolves the card falls back to the document-rendered preview,
+  /// which is the same render path used for projects whose PNG was
+  /// never written — so the user never sees a broken state.
+  bool _pngExists = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshPngExists();
+  }
+
+  @override
+  void didUpdateWidget(covariant ProjectCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldP = oldWidget.project;
+    final newP = widget.project;
+    if (oldP.thumbnailPath != newP.thumbnailPath ||
+        oldP.thumbnailVersion != newP.thumbnailVersion) {
+      _refreshPngExists();
+    }
+  }
+
+  Future<void> _refreshPngExists() async {
+    final p = widget.project;
+    final path = p.thumbnailPath;
+    if (path == null || p.thumbnailVersion < Project.currentThumbnailVersion) {
+      if (_pngExists) setState(() => _pngExists = false);
+      return;
+    }
+    final exists = await File(path).exists();
+    if (!mounted) return;
+    if (_pngExists != exists) setState(() => _pngExists = exists);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
     final p = widget.project;
-    final pngIsFresh = p.thumbnailPath != null &&
+    final relativeTime = _relativeTime(l10n, p.lastModified);
+    final pngIsFresh =
+        p.thumbnailPath != null &&
         p.thumbnailVersion >= Project.currentThumbnailVersion &&
-        File(p.thumbnailPath!).existsSync();
+        _pngExists;
 
-    return SizedBox(
-      width: widget.size,
-      child: AnimatedScale(
-        scale: _pressed ? 0.97 : 1,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Material(
-              color: scheme.surfaceContainerHigh,
-              elevation: 1,
-              shadowColor: Colors.black.withValues(alpha: 0.4),
-              surfaceTintColor: scheme.surfaceTint,
-              borderRadius: BorderRadius.circular(AppRadii.card),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: widget.onOpen,
-                onLongPress: () => _showActionsSheet(context),
-                onHighlightChanged: _setPressed,
-                splashColor: scheme.primary.withValues(alpha: 0.10),
-                highlightColor: scheme.primary.withValues(alpha: 0.05),
-                child: Ink(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppRadii.card),
-                    border: Border.all(
-                      color: scheme.outlineVariant.withValues(alpha: 0.35),
+    return Semantics(
+      button: true,
+      label: l10n.openProjectSemantics(p.name, relativeTime),
+      child: SizedBox(
+        width: widget.size,
+        child: AnimatedScale(
+          scale: _pressed ? 0.97 : 1,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Material(
+                color: scheme.surfaceContainerHigh,
+                elevation: 1,
+                shadowColor: Colors.black.withValues(alpha: 0.4),
+                surfaceTintColor: scheme.surfaceTint,
+                borderRadius: BorderRadius.circular(AppRadii.card),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: widget.onOpen,
+                  onLongPress: () => _showActionsSheet(context),
+                  onHighlightChanged: _setPressed,
+                  splashColor: scheme.primary.withValues(alpha: 0.10),
+                  highlightColor: scheme.primary.withValues(alpha: 0.05),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppRadii.card),
+                      border: Border.all(
+                        color: scheme.outlineVariant.withValues(alpha: 0.35),
+                      ),
                     ),
-                  ),
-                  child: SizedBox(
-                    width: widget.size,
-                    height: widget.size,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        _Thumb(project: p, usePng: pngIsFresh, scheme: scheme),
-                        if (widget.isLastOpened)
-                          PositionedDirectional(
-                            start: 6,
-                            top: 6,
-                            child: _LastOpenedDot(scheme: scheme),
+                    child: SizedBox(
+                      width: widget.size,
+                      height: widget.size,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          _Thumb(
+                            project: p,
+                            usePng: pngIsFresh,
+                            scheme: scheme,
                           ),
-                      ],
+                          if (widget.isLastOpened)
+                            PositionedDirectional(
+                              start: 6,
+                              top: 6,
+                              child: _LastOpenedDot(scheme: scheme),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              p.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.start,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.1,
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                p.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.1,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              _relativeTime(p.lastModified),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.start,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+              const SizedBox(height: 2),
+              Text(
+                relativeTime,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -129,6 +184,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
 
   Future<void> _showActionsSheet(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     final action = await showModalBottomSheet<_CardAction>(
       context: context,
       showDragHandle: true,
@@ -138,17 +194,17 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
           children: [
             ListTile(
               leading: const Icon(Icons.open_in_new_rounded),
-              title: const Text('Open'),
+              title: Text(l10n.openAction),
               onTap: () => Navigator.pop(ctx, _CardAction.open),
             ),
             ListTile(
               leading: const Icon(Icons.drive_file_rename_outline_rounded),
-              title: const Text('Rename'),
+              title: Text(l10n.renameAction),
               onTap: () => Navigator.pop(ctx, _CardAction.rename),
             ),
             ListTile(
               leading: const Icon(Icons.content_copy_rounded),
-              title: const Text('Duplicate'),
+              title: Text(l10n.duplicateAction),
               onTap: () => Navigator.pop(ctx, _CardAction.duplicate),
             ),
             ListTile(
@@ -157,9 +213,8 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                 color: Theme.of(ctx).colorScheme.error,
               ),
               title: Text(
-                'Delete',
-                style:
-                    TextStyle(color: Theme.of(ctx).colorScheme.error),
+                l10n.deleteAction,
+                style: TextStyle(color: Theme.of(ctx).colorScheme.error),
               ),
               onTap: () => Navigator.pop(ctx, _CardAction.delete),
             ),
@@ -181,7 +236,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
         if (newId != null) {
           messenger.showSnackBar(
             SnackBar(
-              content: Text('Duplicated "${widget.project.name}"'),
+              content: Text(l10n.duplicatedProject(widget.project.name)),
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 2),
             ),
@@ -194,24 +249,25 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
 
   Future<void> _renameFlow(ScaffoldMessengerState messenger) async {
     final controller = TextEditingController(text: widget.project.name);
+    final l10n = context.l10n;
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Rename project'),
+        title: Text(l10n.renameProjectTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(labelText: 'Project name'),
+          decoration: InputDecoration(labelText: l10n.projectNameLabel),
           onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancelAction),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Save'),
+            child: Text(l10n.saveAction),
           ),
         ],
       ),
@@ -223,7 +279,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
         .rename(widget.project.id, name);
     messenger.showSnackBar(
       SnackBar(
-        content: Text('Renamed to "$name"'),
+        content: Text(l10n.renamedProject(name)),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),
@@ -231,36 +287,33 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
   }
 
   Future<void> _confirmDelete(ScaffoldMessengerState messenger) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete project?'),
-        content: Text(
-          '"${widget.project.name}" will be permanently removed.',
-        ),
+        title: Text(l10n.deleteProjectTitle),
+        content: Text(l10n.deleteProjectBody(widget.project.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancelAction),
           ),
           FilledButton.tonal(
             style: FilledButton.styleFrom(
               foregroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
+            child: Text(l10n.deleteAction),
           ),
         ],
       ),
     );
     if (ok ?? false) {
       final name = widget.project.name;
-      await ref
-          .read(projectStoreProvider.notifier)
-          .delete(widget.project.id);
+      await ref.read(projectStoreProvider.notifier).delete(widget.project.id);
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Deleted "$name"'),
+          content: Text(l10n.deletedProject(name)),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
         ),
@@ -313,9 +366,7 @@ class _Thumb extends StatelessWidget {
           child: FittedBox(
             fit: BoxFit.contain,
             alignment: Alignment.center,
-            child: RepaintBoundary(
-              child: DocumentThumbnail(document: doc),
-            ),
+            child: RepaintBoundary(child: DocumentThumbnail(document: doc)),
           ),
         ),
       );
@@ -366,14 +417,14 @@ class _LastOpenedDot extends StatelessWidget {
   }
 }
 
-String _relativeTime(DateTime t) {
+String _relativeTime(AppLocalizations l10n, DateTime t) {
   final now = DateTime.now();
   final diff = now.difference(t);
-  if (diff.inMinutes < 1) return 'Just now';
-  if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-  if (diff.inHours < 24 && now.day == t.day) return '${diff.inHours}h ago';
-  if (diff.inDays < 2) return 'Yesterday';
-  if (diff.inDays < 7) return '${diff.inDays}d ago';
-  if (diff.inDays < 30) return '${(diff.inDays / 7).floor()}w ago';
-  return '${(diff.inDays / 30).floor()}mo ago';
+  if (diff.inMinutes < 1) return l10n.justNow;
+  if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
+  if (diff.inHours < 24 && now.day == t.day) return l10n.hoursAgo(diff.inHours);
+  if (diff.inDays < 2) return l10n.yesterday;
+  if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
+  if (diff.inDays < 30) return l10n.weeksAgo((diff.inDays / 7).floor());
+  return l10n.monthsAgo((diff.inDays / 30).floor());
 }

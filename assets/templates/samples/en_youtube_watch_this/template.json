@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "en_youtube_watch_this",
+  "title": {
+    "en": "Watch This",
+    "fa": "این ویدئو را ببینید"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/samples/en_youtube_watch_this/thumbnail.png",
+  "document": "assets/templates/samples/en_youtube_watch_this/document.json",
+  "tags": ["sample", "youtube", "english", "thumbnail"],
+  "home": {
+    "featured": false,
+    "sortOrder": 20
+  }
+}

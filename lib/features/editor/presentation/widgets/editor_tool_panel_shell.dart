@@ -18,8 +18,12 @@ import 'dock_sheet_chrome.dart';
 /// fully clear of the chip-strip's top border underneath the
 /// panel. Without this the final row reads as “tucked behind”
 /// the dock when scrolled to the end.
-const EdgeInsets kEditorPanelDefaultBodyPadding =
-    EdgeInsets.fromLTRB(12, 12, 12, 24);
+const EdgeInsets kEditorPanelDefaultBodyPadding = EdgeInsets.fromLTRB(
+  12,
+  12,
+  12,
+  24,
+);
 
 /// Body padding used by [SubToolSheet] (Text / Paint sub-tools).
 ///
@@ -30,8 +34,12 @@ const EdgeInsets kEditorPanelDefaultBodyPadding =
 /// rhythm (`12` top / `24` bottom + a touch extra) so the floating
 /// mode-exit pill above the panel and the chip strip below both
 /// have visible clearance from the scrolling content.
-const EdgeInsets kEditorSubToolBodyPadding =
-    EdgeInsets.fromLTRB(20, 14, 20, 28);
+const EdgeInsets kEditorSubToolBodyPadding = EdgeInsets.fromLTRB(
+  20,
+  14,
+  20,
+  28,
+);
 
 /// Unified shell for every sub-tool panel rendered inside the
 /// editor's bottom dock (`EditorToolDock`'s `expanded` slot).
@@ -83,10 +91,10 @@ class EditorToolPanelShell extends StatelessWidget {
     this.maxHeightDp = kEditorPanelMaxHeightDp,
     this.bodyPadding,
     this.maxBodyWidth,
-  })  : assert(
-          (onConfirm == null) == (confirmLabel == null),
-          'onConfirm and confirmLabel must be supplied together',
-        );
+  }) : assert(
+         (onConfirm == null) == (confirmLabel == null),
+         'onConfirm and confirmLabel must be supplied together',
+       );
 
   final String title;
   final IconData icon;

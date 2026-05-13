@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_quote_editorial_magazine",
+  "title": {
+    "en": "Persian Editorial Magazine Quote",
+    "fa": "نقل‌قول مجله‌ای فارسی"
+  },
+  "category": "quote",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_quote_editorial_magazine/thumbnail.png",
+  "document": "assets/templates/fa_quote_editorial_magazine/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "quote",
+    "editorial",
+    "magazine"
+  ],
+  "home": {
+    "sortOrder": 102
+  }
+}

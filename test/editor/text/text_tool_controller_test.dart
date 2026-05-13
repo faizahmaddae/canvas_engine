@@ -1,5 +1,6 @@
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/editing_controller.dart';
+import 'package:canvas_engine/features/editor/application/live_overlay_controller.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
@@ -167,7 +168,7 @@ void main() {
       final ctrl = c.read(textToolControllerProvider.notifier);
       final id = ctrl.beginAddText();
       final layer =
-          c.read(documentControllerProvider).layerById(id) as TextLayer;
+          c.read(renderedDocumentProvider).layerById(id) as TextLayer;
       // Default text colour is white -> shadow must be the
       // translucent-black halo from the resolver.
       expect(layer.style.shadowColor, isNotNull);
@@ -221,7 +222,7 @@ void main() {
       final ctrl = c.read(textToolControllerProvider.notifier);
       final id = ctrl.beginAddText();
       final layer =
-          c.read(documentControllerProvider).layerById(id) as TextLayer;
+          c.read(renderedDocumentProvider).layerById(id) as TextLayer;
       // Sanity: text colour was overridden away from white.
       expect(layer.style.color, isNot(const Color(0xFFFFFFFF)));
       // Shadow is computed from the FINAL colour.
@@ -250,7 +251,7 @@ void main() {
       );
       final id = notifier.beginAddText();
       final layer =
-          c.read(documentControllerProvider).layerById(id) as TextLayer;
+          c.read(renderedDocumentProvider).layerById(id) as TextLayer;
       expect(layer.style.shadowColor, const Color(0xFFFF00FF));
       expect(layer.style.shadowBlur, 20);
       expect(layer.style.shadowOffset, const Offset(4, 4));
@@ -316,7 +317,7 @@ void main() {
       // (modulo canvas-relative font scaling).
       final newId = ctrl.beginAddText();
       final staged =
-          c.read(documentControllerProvider).layerById(newId) as TextLayer;
+          c.read(renderedDocumentProvider).layerById(newId) as TextLayer;
       expect(staged.style.backgroundColor, isNull);
       expect(staged.style.fontWeight, initial.fontWeight);
       // Original Text A is preserved unchanged.
@@ -720,7 +721,7 @@ void main() {
         ctrl.beginEditText();
         ctrl.previewContent('one\ntwo\nthree');
 
-        final live = c.read(documentControllerProvider).layerById(original.id)
+        final live = c.read(renderedDocumentProvider).layerById(original.id)
             as TextLayer;
         expect(live.content, 'one\ntwo\nthree');
         // Bounding box auto-fits the natural text size: height grew to
@@ -900,11 +901,11 @@ void main() {
         // Layer is staged + selected immediately.
         expect(c.read(selectionControllerProvider).selectedId, id);
         var staged =
-            c.read(documentControllerProvider).layerById(id) as TextLayer;
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         expect(staged.content, '');
 
         ctrl.previewContent('hello\nworld');
-        staged = c.read(documentControllerProvider).layerById(id) as TextLayer;
+        staged = c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         expect(staged.content, 'hello\nworld');
 
         ctrl.commitLiveEdit('hello\nworld');
@@ -941,7 +942,7 @@ void main() {
 
         final id = ctrl.beginAddText();
         ctrl.previewContent('typing');
-        expect(c.read(documentControllerProvider).layerById(id), isNotNull);
+        expect(c.read(renderedDocumentProvider).layerById(id), isNotNull);
 
         ctrl.cancelLiveEdit();
         expect(c.read(documentControllerProvider).layerById(id), isNull);
@@ -982,7 +983,7 @@ void main() {
         ctrl.previewContent('done');
 
         final live =
-            c.read(documentControllerProvider).layerById(id) as TextLayer;
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         expect(live.content, 'done');
       });
 
@@ -995,7 +996,7 @@ void main() {
         ctrl.setFontSize(64);
         final id = ctrl.beginAddText();
         final staged =
-            c.read(documentControllerProvider).layerById(id) as TextLayer;
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         // Default style font sizes are authored against a 1080-px
         // reference canvas; on this 800-square canvas the staged
         // layer scales proportionally: 64 \u00d7 800/1080 \u2248 47.4.
@@ -1012,7 +1013,7 @@ void main() {
         ctrl.setFontSize(48);
         final id = ctrl.beginAddText();
         final staged =
-            c.read(documentControllerProvider).layerById(id) as TextLayer;
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         // 48 \u00d7 2160/1080 = 96 \u2014 a 2160-square poster gets 2\u00d7 the
         // visual font size of the 1080 baseline so proportions match.
         expect(staged.style.fontSize, closeTo(96, 0.5));
@@ -1027,7 +1028,7 @@ void main() {
         ctrl.setFontSize(48);
         final id = ctrl.beginAddText();
         final staged =
-            c.read(documentControllerProvider).layerById(id) as TextLayer;
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         // 48 \u00d7 100/1080 \u2248 4.4, clamped to the 8-px floor so the
         // text remains visible / hit-testable on a sticker canvas.
         expect(staged.style.fontSize, 8.0);
@@ -1046,7 +1047,7 @@ void main() {
         ctrl.setFontSize(48);
         final id = ctrl.beginAddText();
         final staged =
-            c.read(documentControllerProvider).layerById(id) as TextLayer;
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         expect(staged.style.fontSize, 64.0);
       });
 
@@ -1066,7 +1067,7 @@ void main() {
         ctrl.setFontSize(48);
         final id = ctrl.beginAddText();
         final staged =
-            c.read(documentControllerProvider).layerById(id) as TextLayer;
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         expect(staged.style.fontSize, 178.0);
       });
 
@@ -1082,7 +1083,7 @@ void main() {
         ctrl.setFontSize(48);
         final id = ctrl.beginAddText();
         final staged =
-            c.read(documentControllerProvider).layerById(id) as TextLayer;
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         expect(staged.style.fontSize, 31.0);
       });
 
@@ -1123,7 +1124,7 @@ void main() {
         // A long single "word" that, unwrapped at the default
         // ~96-pt-scaled font, would easily exceed 800 px wide.
         ctrl.previewContent('Hellohellohellohello');
-        final layer = c.read(documentControllerProvider).layerById(id)
+        final layer = c.read(renderedDocumentProvider).layerById(id)
             as TextLayer;
         final right = layer.transform.position.dx + layer.transform.size.width;
         final canvasWidth = c.read(documentControllerProvider).width;
@@ -1144,7 +1145,7 @@ void main() {
 
         for (final text in ['A', 'AB', 'ABC', 'A long line of text']) {
           ctrl.previewContent(text);
-          final layer = c.read(documentControllerProvider).layerById(id)
+          final layer = c.read(renderedDocumentProvider).layerById(id)
               as TextLayer;
           final cx = layer.transform.position.dx +
               layer.transform.size.width / 2;
@@ -1184,7 +1185,7 @@ void main() {
         final originalPos = layer.transform.position;
         ctrl.beginEditText();
         ctrl.previewContent('hi there a much longer string');
-        final after = c.read(documentControllerProvider).layerById(layer.id)
+        final after = c.read(renderedDocumentProvider).layerById(layer.id)
             as TextLayer;
         expect(after.transform.position, originalPos);
         ctrl.cancelLiveEdit();
@@ -1227,13 +1228,13 @@ void main() {
         final ctrl = c.read(textToolControllerProvider.notifier);
         final id = ctrl.beginAddText();
         ctrl.previewContent('Hi');
-        final beforeSize = (c.read(documentControllerProvider).layerById(id)
+        final beforeSize = (c.read(renderedDocumentProvider).layerById(id)
                 as TextLayer)
             .transform
             .size;
         // Drag the size slider mid-type.
         ctrl.setFontSize(200);
-        final after = c.read(documentControllerProvider).layerById(id)
+        final after = c.read(renderedDocumentProvider).layerById(id)
             as TextLayer;
         // Box re-measured to the new style.
         expect(after.style.fontSize, 200);
@@ -1485,7 +1486,7 @@ void main() {
         final ctrl = c.read(textToolControllerProvider.notifier);
         final id = ctrl.beginAddText();
         final staged =
-            c.read(documentControllerProvider).layerById(id) as TextLayer;
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         expect(staged.resizeMode, TextResizeMode.scaleText);
         expect(staged.capabilities.keepsAspectRatio, isTrue);
       });

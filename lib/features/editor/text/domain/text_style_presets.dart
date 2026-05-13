@@ -2,8 +2,18 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../engine/modules/text/text_direction_utils.dart';
 import '../../engine/modules/text/text_style_spec.dart';
 import 'font_catalog.dart';
+
+// Script-detection + writing-direction helpers used to live here.
+// They moved into the engine (text_direction_utils.dart) so
+// `TextLayer`'s render path can resolve `TextDirection` without
+// reaching into application/domain code. Re-exported here so the
+// presentation/application call sites that have always imported
+// these names from this file continue to compile unchanged.
+export '../../engine/modules/text/text_direction_utils.dart'
+    show textIsArabicScript, textDirectionForContent;
 
 /// One-tap *visual* style for a text layer.
 ///
@@ -333,29 +343,6 @@ TextStylePreset? textStylePresetById(String id) {
 // script" rule. Never used by the Styles sheet — Styles is purely
 // visual and must not touch font family.
 
-/// Heuristic: is [content] predominantly Arabic / Persian script?
-///
-/// Counts code points in the Arabic block (U+0600..U+06FF) plus
-/// the Arabic Presentation Forms ranges (U+FB50..U+FDFF, U+FE70..
-/// U+FEFF) and compares to the count of basic Latin letters. Empty
-/// or punctuation-only text returns false (defaults to Latin).
-bool textIsArabicScript(String content) {
-  var arabic = 0;
-  var latin = 0;
-  for (final rune in content.runes) {
-    if ((rune >= 0x0600 && rune <= 0x06FF) ||
-        (rune >= 0xFB50 && rune <= 0xFDFF) ||
-        (rune >= 0xFE70 && rune <= 0xFEFF)) {
-      arabic++;
-    } else if ((rune >= 0x0041 && rune <= 0x005A) ||
-        (rune >= 0x0061 && rune <= 0x007A)) {
-      latin++;
-    }
-  }
-  if (arabic == 0 && latin == 0) return false;
-  return arabic >= latin;
-}
-
 /// Default font family for freshly-typed text, picked by script:
 ///   * Arabic / Persian → Vazir (`Vazir_Regular`)
 ///   * Latin / fallback → Roboto
@@ -384,16 +371,6 @@ String defaultFontFamilyForContent(String content) {
 /// when the user hasn't explicitly chosen something else.
 bool isAutoDefaultFontFamily(String? family) {
   return family == 'Vazir_Regular' || family == 'Roboto';
-}
-
-/// Resolve the writing direction for [content] using the same
-/// Arabic-vs-Latin dominance heuristic as
-/// [defaultFontFamilyForContent]. Empty / punctuation-only text
-/// falls back to LTR.
-TextDirection textDirectionForContent(String content) {
-  return textIsArabicScript(content)
-      ? TextDirection.rtl
-      : TextDirection.ltr;
 }
 
 /// Merge the visual subset of [preset] onto [current], preserving

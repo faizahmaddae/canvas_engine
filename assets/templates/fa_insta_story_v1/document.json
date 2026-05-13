@@ -1,0 +1,130 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294297543,
+    "endColor": 4294636519,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "lower-right-accent",
+      "transform": {
+        "x": 700.0,
+        "y": 1370.0,
+        "w": 620.0,
+        "h": 620.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "fill": {
+        "type": "radial",
+        "centerColor": 4007172762,
+        "edgeColor": 14195354,
+        "focalX": -0.35,
+        "focalY": -0.35,
+        "radius": 0.9
+      },
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "story-card",
+      "transform": {
+        "x": 100.0,
+        "y": 820.0,
+        "w": 620.0,
+        "h": 300.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 44.0
+    },
+    {
+      "type": "shape",
+      "id": "story-card-rule",
+      "transform": {
+        "x": 520.0,
+        "y": 900.0,
+        "w": 120.0,
+        "h": 5.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4284172863,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "story-card-text",
+      "transform": {
+        "x": 145.0,
+        "y": 930.0,
+        "w": 530.0,
+        "h": 90.0,
+        "r": 0.0
+      },
+      "content": "ادامه داستان",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 64.0,
+        "color": 4281150765,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.1,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 100.0,
+        "y": 300.0,
+        "w": 880.0,
+        "h": 210.0,
+        "r": 0.0
+      },
+      "content": "داستان امروز",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 148.0,
+        "color": 4281150765,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "subtext",
+      "transform": {
+        "x": 100.0,
+        "y": 520.0,
+        "w": 880.0,
+        "h": 90.0,
+        "r": 0.0
+      },
+      "content": "اینجا کلیک کن",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 56.0,
+        "color": 4284172863,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

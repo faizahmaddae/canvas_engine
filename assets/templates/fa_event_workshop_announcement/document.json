@@ -1,0 +1,194 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294507260,
+    "endColor": 4292929535,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "poster",
+      "transform": {
+        "x": 95.0,
+        "y": 95.0,
+        "w": 890.0,
+        "h": 1160.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 60.0,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 38.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "top",
+      "transform": {
+        "x": 95.0,
+        "y": 95.0,
+        "w": 890.0,
+        "h": 300.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4282595530,
+        "endColor": 4286331629,
+        "angleDegrees": 120.0
+      },
+      "cornerRadius": 60.0
+    },
+    {
+      "type": "text",
+      "id": "top-text",
+      "transform": {
+        "x": 250.0,
+        "y": 185.0,
+        "w": 580.0,
+        "h": 84.0,
+        "r": 0.0
+      },
+      "content": "کارگاه حضوری",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 72.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 145.0,
+        "y": 480.0,
+        "w": 790.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "طراحی\nکمپین",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 110.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.98,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 160.0,
+        "y": 730.0,
+        "w": 760.0,
+        "h": 105.0,
+        "r": 0.0
+      },
+      "content": "برای اعلام رویداد، کارگاه یا جلسه آموزشی حرفه‌ای استفاده کنید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4282865001,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "date",
+      "transform": {
+        "x": 180.0,
+        "y": 940.0,
+        "w": 720.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 50.0
+    },
+    {
+      "type": "text",
+      "id": "date-text",
+      "transform": {
+        "x": 225.0,
+        "y": 960.0,
+        "w": 630.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "جمعه ۲۱ خرداد، ساعت ۱۶",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 52.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "location",
+      "transform": {
+        "x": 300.0,
+        "y": 1100.0,
+        "w": 480.0,
+        "h": 72.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4292929535,
+      "strokeWidth": 0.0,
+      "cornerRadius": 36.0
+    },
+    {
+      "type": "text",
+      "id": "loc-text",
+      "transform": {
+        "x": 340.0,
+        "y": 1114.0,
+        "w": 400.0,
+        "h": 42.0,
+        "r": 0.0
+      },
+      "content": "تهران / آنلاین",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4282595530,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

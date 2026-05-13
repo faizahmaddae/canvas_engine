@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_insta_story_bold_word_v1",
+  "title": {
+    "en": "کلمه جسور",
+    "fa": "کلمه جسور"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_insta_story_bold_word_v1/thumbnail.png",
+  "document": "assets/templates/fa_insta_story_bold_word_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "story",
+    "fa",
+    "insta",
+    "bold",
+    "word"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 150
+  }
+}

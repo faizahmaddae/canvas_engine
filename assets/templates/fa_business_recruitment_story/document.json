@@ -1,0 +1,290 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279179050,
+    "endColor": 4280110808,
+    "angleDegrees": 150.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "glow",
+      "transform": {
+        "x": -160.0,
+        "y": -120.0,
+        "w": 560.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "radial",
+        "centerColor": 4284524026,
+        "edgeColor": 4280171146,
+        "focalX": -0.25,
+        "focalY": -0.25,
+        "radius": 1.0
+      },
+      "opacity": 0.88
+    },
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 98.0,
+        "y": 330.0,
+        "w": 884.0,
+        "h": 1230.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294507260,
+        "endColor": 4292602622,
+        "angleDegrees": 170.0
+      },
+      "cornerRadius": 68.0,
+      "shadowOpacity": 0.26,
+      "shadowBlur": 52.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 28.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "badge",
+      "transform": {
+        "x": 618.0,
+        "y": 430.0,
+        "w": 280.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280110808,
+      "strokeWidth": 0.0,
+      "cornerRadius": 41.0
+    },
+    {
+      "type": "text",
+      "id": "badge-text",
+      "transform": {
+        "x": 655.0,
+        "y": 446.0,
+        "w": 205.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "استخدام",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 46.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 145.0,
+        "y": 570.0,
+        "w": 790.0,
+        "h": 270.0,
+        "r": 0.0
+      },
+      "content": "به تیم\nما بپیوند",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 132.0,
+        "color": 4279179050,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.96,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "role",
+      "transform": {
+        "x": 170.0,
+        "y": 920.0,
+        "w": 740.0,
+        "h": 112.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 40.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 18.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "role2",
+      "transform": {
+        "x": 170.0,
+        "y": 1062.0,
+        "w": 740.0,
+        "h": 112.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 40.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 18.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "role3",
+      "transform": {
+        "x": 170.0,
+        "y": 1204.0,
+        "w": 740.0,
+        "h": 112.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 40.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 18.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "role-text",
+      "transform": {
+        "x": 215.0,
+        "y": 945.0,
+        "w": 655.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "طراح گرافیک ارشد",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 50.0,
+        "color": 4280171146,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "role2-text",
+      "transform": {
+        "x": 215.0,
+        "y": 1087.0,
+        "w": 655.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "کارشناس فروش",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 48.0,
+        "color": 4281549141,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "role3-text",
+      "transform": {
+        "x": 215.0,
+        "y": 1229.0,
+        "w": 655.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "ارسال رزومه تا جمعه",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 48.0,
+        "color": 4281549141,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 250.0,
+        "y": 1420.0,
+        "w": 580.0,
+        "h": 102.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294286859,
+        "endColor": 4293870660,
+        "angleDegrees": 100.0
+      },
+      "cornerRadius": 51.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 295.0,
+        "y": 1440.0,
+        "w": 490.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "رزومه بفرست",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 58.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

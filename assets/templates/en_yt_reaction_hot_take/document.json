@@ -1,0 +1,153 @@
+{
+  "version": 2,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279310375,
+    "endColor": 4290646588,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "reaction-card",
+      "transform": {
+        "x": 790.0,
+        "y": 90.0,
+        "w": 390.0,
+        "h": 540.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294967295,
+        "endColor": 4294764531,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 48.0,
+      "shadowOpacity": 0.32,
+      "shadowBlur": 36.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "face",
+      "transform": {
+        "x": 895.0,
+        "y": 190.0,
+        "w": 185.0,
+        "h": 185.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294551764,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "mouth",
+      "transform": {
+        "x": 930.0,
+        "y": 400.0,
+        "w": 120.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4290646588,
+      "strokeWidth": 0.0,
+      "cornerRadius": 24.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 70.0,
+        "y": 120.0,
+        "w": 690.0,
+        "h": 235.0,
+        "r": 0.0
+      },
+      "content": "I DID NOT\nEXPECT THIS",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 86.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.96,
+        "alignment": "left",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "tag",
+      "transform": {
+        "x": 78.0,
+        "y": 420.0,
+        "w": 370.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0,
+      "cornerRadius": 41.0
+    },
+    {
+      "type": "text",
+      "id": "tag-text",
+      "transform": {
+        "x": 115.0,
+        "y": 438.0,
+        "w": 295.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "HOT TAKE",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 40.0,
+        "color": 4279310375,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 78.0,
+        "y": 545.0,
+        "w": 620.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "A sharp reaction thumbnail",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 40.0,
+        "color": 4294764531,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

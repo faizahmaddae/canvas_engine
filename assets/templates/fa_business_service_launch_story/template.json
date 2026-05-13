@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_business_service_launch_story",
+  "title": {
+    "en": "Persian Service Launch Story",
+    "fa": "استوری لانچ خدمت"
+  },
+  "category": "business",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_business_service_launch_story/thumbnail.png",
+  "document": "assets/templates/fa_business_service_launch_story/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "business",
+    "service",
+    "launch"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 106
+  }
+}

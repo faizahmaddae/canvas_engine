@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_sale_flash",
+  "title": {
+    "en": "فروش لحظه‌ای",
+    "fa": "فروش لحظه‌ای"
+  },
+  "category": "sale",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_sale_flash/thumbnail.png",
+  "document": "assets/templates/fa_sale_flash/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "fa",
+    "sale"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 270
+  }
+}

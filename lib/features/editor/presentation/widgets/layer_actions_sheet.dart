@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../text/application/text_tool_controller.dart';
@@ -58,13 +59,13 @@ class _LayerActionsSheet extends StatelessWidget {
     // while the sheet is open.
     final canForward = LayerActions.canBringForward(parentRef, layer);
     final canBackward = LayerActions.canSendBackward(parentRef, layer);
+    final l10n = context.l10n;
     // Only true text layers expose the resize-mode toggle. Emoji
     // stickers are stored as TextLayer but the scaleText / resizeBox
     // distinction is meaningless for a single emoji glyph.
-    final textLayer =
-        (layer is TextLayer && !(layer as TextLayer).isSticker)
-            ? layer as TextLayer
-            : null;
+    final textLayer = (layer is TextLayer && !(layer as TextLayer).isSticker)
+        ? layer as TextLayer
+        : null;
 
     return SafeArea(
       child: Column(
@@ -72,7 +73,7 @@ class _LayerActionsSheet extends StatelessWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.copy_all_outlined),
-            title: const Text('Duplicate'),
+            title: Text(l10n.duplicateAction),
             onTap: () {
               Navigator.of(context).pop();
               LayerActions.duplicate(parentRef, layer);
@@ -81,7 +82,7 @@ class _LayerActionsSheet extends StatelessWidget {
           ListTile(
             enabled: canForward,
             leading: const Icon(Icons.flip_to_front_rounded),
-            title: const Text('Bring forward'),
+            title: Text(l10n.bringForwardAction),
             onTap: !canForward
                 ? null
                 : () {
@@ -92,7 +93,7 @@ class _LayerActionsSheet extends StatelessWidget {
           ListTile(
             enabled: canBackward,
             leading: const Icon(Icons.flip_to_back_rounded),
-            title: const Text('Send backward'),
+            title: Text(l10n.sendBackwardAction),
             onTap: !canBackward
                 ? null
                 : () {
@@ -101,10 +102,14 @@ class _LayerActionsSheet extends StatelessWidget {
                   },
           ),
           ListTile(
-            leading: Icon(layer.locked
-                ? Icons.lock_open_rounded
-                : Icons.lock_outline_rounded),
-            title: Text(layer.locked ? 'Unlock layer' : 'Lock layer'),
+            leading: Icon(
+              layer.locked
+                  ? Icons.lock_open_rounded
+                  : Icons.lock_outline_rounded,
+            ),
+            title: Text(
+              layer.locked ? l10n.unlockLayerAction : l10n.lockLayerAction,
+            ),
             onTap: () {
               Navigator.of(context).pop();
               LayerActions.toggleLock(parentRef, layer);
@@ -117,7 +122,7 @@ class _LayerActionsSheet extends StatelessWidget {
           if (textLayer != null)
             ListTile(
               leading: Icon(textResizeModeIcon(textLayer.resizeMode)),
-              title: const Text('Resize behavior'),
+              title: Text(l10n.resizeBehaviorTitle),
               subtitle: Text(textResizeModeLabel(textLayer.resizeMode)),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () async {
@@ -138,7 +143,7 @@ class _LayerActionsSheet extends StatelessWidget {
               color: Theme.of(context).colorScheme.error,
             ),
             title: Text(
-              'Delete',
+              l10n.deleteAction,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
             onTap: () async {

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_event_market",
+  "title": {
+    "en": "Event market",
+    "fa": "Event market"
+  },
+  "category": "event",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_event_market/thumbnail.png",
+  "document": "assets/templates/en_event_market/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "en",
+    "event"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 50
+  }
+}

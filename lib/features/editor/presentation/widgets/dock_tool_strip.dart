@@ -109,8 +109,10 @@ class _DockToolStripState extends State<DockToolStrip> {
                   // ConstrainedBox so the centered Row aligns to the
                   // visible content area, not the raw viewport edge.
                   final minWidth =
-                      (constraints.maxWidth - widget.padding.horizontal)
-                          .clamp(0.0, double.infinity);
+                      (constraints.maxWidth - widget.padding.horizontal).clamp(
+                        0.0,
+                        double.infinity,
+                      );
                   return SingleChildScrollView(
                     controller: widget.controller,
                     scrollDirection: Axis.horizontal,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -74,6 +75,17 @@ class ProjectSaveService {
         ?.where((p) => p.id == id)
         .cast<Project?>()
         .firstWhere((_) => true, orElse: () => null);
+    // Best-effort cleanup of the previous thumbnail PNG. Each save
+    // writes under a fresh UUID; without this the
+    // app-documents/project_thumbs/ directory accumulates one
+    // orphaned file per save. Cleanup is fire-and-forget; a failure
+    // here costs at most a few KB on disk.
+    final priorThumb = existing?.thumbnailPath;
+    if (thumbPath != null &&
+        priorThumb != null &&
+        priorThumb != thumbPath) {
+      unawaited(File(priorThumb).delete().catchError(_swallowFile));
+    }
     final now = DateTime.now();
     final project = Project(
       id: id,
@@ -124,3 +136,8 @@ class ProjectSaveService {
 final projectSaveServiceProvider = Provider<ProjectSaveService>(
   ProjectSaveService.new,
 );
+
+/// Catches and discards errors from a fire-and-forget [File] op.
+/// Returns the file unchanged so the static-typed
+/// `Future<File>.catchError` signature is satisfied.
+File _swallowFile(Object _, StackTrace _) => File('');

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "en_yt_reaction_v1",
+  "title": {
+    "en": "Reaction shock",
+    "fa": "Reaction shock"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_yt_reaction_v1/thumbnail.png",
+  "document": "assets/templates/en_yt_reaction_v1/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "en",
+    "youtube",
+    "thumbnail"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 430
+  }
+}

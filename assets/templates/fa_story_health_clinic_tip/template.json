@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_health_clinic_tip",
+  "title": {
+    "en": "Persian Clinic Tip Story",
+    "fa": "استوری نکته سلامت"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_health_clinic_tip/thumbnail.png",
+  "document": "assets/templates/fa_story_health_clinic_tip/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "clinic",
+    "health",
+    "story"
+  ],
+  "home": {
+    "sortOrder": 92
+  }
+}

@@ -1,0 +1,339 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
+import '../../application/document_controller.dart';
+import '../../engine/commands/image_commands.dart';
+import '../../engine/effects/editor_effect.dart';
+import '../../engine/modules/image/image_layer.dart';
+import '../application/image_tool_controller.dart';
+import 'image_panel_shell.dart';
+
+/// Expanded panel body for the Image sub-tool's "Effects" tab.
+///
+/// Surface for the layer's [EffectStack]: drag-to-reorder, tap to
+/// toggle enabled, swipe / trailing button to delete, tap-to-edit
+/// jumps to the originating panel (Adjust today; future per-effect
+/// edit sheets land here without changing the data path).
+///
+/// All three structural mutations route through the engine commands
+/// added in Phase 3 Step 2:
+///   * [ReorderEffectCommand]   — drag handle
+///   * [ToggleEffectEnabledCommand] — eyeball
+///   * [DeleteEffectCommand]    — trash button
+///
+/// Display order matches `EffectStack.effects` index — bottom of the
+/// list is the first applied (`effects[0]`), top of the list is the
+/// last applied (`effects[last]`). That matches the Photoshop /
+/// Lightroom adjustment-stack convention so users with that mental
+/// model don't have to invert anything.
+class ImageEffectsBody extends ConsumerWidget {
+  const ImageEffectsBody({super.key, required this.layer});
+
+  final ImageLayer layer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final effects = layer.effects.effects;
+    return ImagePanelShell(
+      title: context.l10n.effectsTool,
+      icon: Icons.layers_rounded,
+      child: effects.isEmpty ? const _EmptyState() : _EffectList(layer: layer),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.auto_awesome_outlined,
+            size: 28,
+            color: cs.onSurfaceVariant,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.noEffectsApplied,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            context.l10n.openAdjustOrVignetteHint,
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EffectList extends ConsumerWidget {
+  const _EffectList({required this.layer});
+
+  final ImageLayer layer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // We render the list visually top-down (most-recently-applied
+    // first) because that matches every photo-editor users have
+    // touched. The underlying `effects` list is bottom-up
+    // (effects[0] = first applied), so the visual ↔ data mapping
+    // is `dataIndex = length - 1 - visualIndex`.
+    final effects = layer.effects.effects;
+    final length = effects.length;
+    int toData(int visual) => length - 1 - visual;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 280),
+      child: ReorderableListView.builder(
+        shrinkWrap: true,
+        buildDefaultDragHandles: false,
+        physics: const ClampingScrollPhysics(),
+        itemCount: length,
+        itemBuilder: (context, visual) {
+          final dataIndex = toData(visual);
+          final effect = effects[dataIndex];
+          return _EffectRow(
+            key: ValueKey('effect-row-$dataIndex-${effect.type}'),
+            visualIndex: visual,
+            dataIndex: dataIndex,
+            effect: effect,
+            layer: layer,
+          );
+        },
+        onReorder: (oldVisual, newVisual) {
+          // ReorderableListView reports newVisual as the index AFTER
+          // the item is removed for indices > oldVisual. Convert
+          // back to a stable destination index in the data list.
+          var fromVisual = oldVisual;
+          var toVisual = newVisual;
+          if (toVisual > fromVisual) toVisual -= 1;
+          final fromData = toData(fromVisual);
+          final toData2 = toData(toVisual);
+          if (fromData == toData2) return;
+          EditorHaptics.tap();
+          ref
+              .read(documentControllerProvider.notifier)
+              .execute(
+                ReorderEffectCommand(
+                  layerId: layer.id,
+                  oldIndex: fromData,
+                  newIndex: toData2,
+                ),
+              );
+        },
+      ),
+    );
+  }
+}
+
+class _EffectRow extends ConsumerWidget {
+  const _EffectRow({
+    super.key,
+    required this.visualIndex,
+    required this.dataIndex,
+    required this.effect,
+    required this.layer,
+  });
+
+  final int visualIndex;
+  final int dataIndex;
+  final EditorEffect effect;
+  final ImageLayer layer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cs = Theme.of(context).colorScheme;
+    final view = effectDisplay(context, effect);
+    final dim = !effect.enabled;
+    final tt = Theme.of(context).textTheme;
+
+    return Padding(
+      key: key,
+      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+      child: Material(
+        color: cs.surfaceContainerHighest.withValues(alpha: dim ? 0.4 : 1),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () {
+            EditorHaptics.tap();
+            // Tap-to-edit: jump to the panel that owns this effect
+            // type. Today both colour-matrix and vignette live in
+            // Adjust; per-effect edit sheets land here later with
+            // no engine change required.
+            ref
+                .read(imageToolControllerProvider.notifier)
+                .toggleSlot(ImageToolSlot.adjust);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              children: [
+                ReorderableDragStartListener(
+                  index: visualIndex,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.drag_handle_rounded,
+                      size: 18,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  view.icon,
+                  size: 18,
+                  color: dim ? cs.onSurfaceVariant : cs.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        view.name,
+                        style: tt.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          decoration: dim
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                          color: dim ? cs.onSurfaceVariant : cs.onSurface,
+                        ),
+                      ),
+                      if (view.summary.isNotEmpty)
+                        Text(
+                          view.summary,
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: effect.enabled
+                      ? context.l10n.hideAction
+                      : context.l10n.showAction,
+                  icon: Icon(
+                    effect.enabled
+                        ? Icons.visibility_rounded
+                        : Icons.visibility_off_rounded,
+                    size: 18,
+                  ),
+                  onPressed: () {
+                    EditorHaptics.toggle();
+                    ref
+                        .read(documentControllerProvider.notifier)
+                        .execute(
+                          ToggleEffectEnabledCommand(
+                            layerId: layer.id,
+                            index: dataIndex,
+                          ),
+                        );
+                  },
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: context.l10n.deleteAction,
+                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                  onPressed: () {
+                    EditorHaptics.tap();
+                    ref
+                        .read(documentControllerProvider.notifier)
+                        .execute(
+                          DeleteEffectCommand(
+                            layerId: layer.id,
+                            index: dataIndex,
+                          ),
+                        );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Presentation-layer view-model for an [EditorEffect] row.
+/// Lives here (not on the engine type) because icon + display strings
+/// are presentation concerns; the engine stays Material-free.
+class EffectDisplay {
+  const EffectDisplay({
+    required this.icon,
+    required this.name,
+    required this.summary,
+  });
+  final IconData icon;
+  final String name;
+  final String summary;
+}
+
+EffectDisplay effectDisplay(BuildContext context, EditorEffect e) =>
+    switch (e) {
+      BrightnessEffect(:final amount) => EffectDisplay(
+        icon: Icons.brightness_6_rounded,
+        name: context.l10n.brightnessLabel,
+        summary: _signed(amount),
+      ),
+      ContrastEffect(:final amount) => EffectDisplay(
+        icon: Icons.contrast_rounded,
+        name: context.l10n.contrastLabel,
+        summary: '${(amount * 100).round()}%',
+      ),
+      SaturationEffect(:final amount) => EffectDisplay(
+        icon: Icons.color_lens_outlined,
+        name: context.l10n.saturationLabel,
+        summary: '${(amount * 100).round()}%',
+      ),
+      ExposureEffect(:final amount) => EffectDisplay(
+        icon: Icons.wb_sunny_outlined,
+        name: context.l10n.exposureLabel,
+        summary: _signed(amount),
+      ),
+      WarmthEffect(:final amount) => EffectDisplay(
+        icon: Icons.thermostat_rounded,
+        name: context.l10n.warmthLabel,
+        summary: _signed(amount),
+      ),
+      VignetteEffect(:final intensity) => EffectDisplay(
+        icon: Icons.vignette_outlined,
+        name: context.l10n.vignetteLabel,
+        summary: '${(intensity * 100).round()}%',
+      ),
+      UnknownEffect() => EffectDisplay(
+        // Forward-compat carrier for an effect type written by a
+        // newer build than this binary understands. The codec
+        // preserves its raw JSON so resaving doesn't drop data;
+        // surface a generic row in the panel so the user can see
+        // (and remove) the entry instead of a crash or silent gap.
+        icon: Icons.help_outline_rounded,
+        name: context.l10n.unknownEffectLabel(e.type),
+        summary: context.l10n.inactiveLabel,
+      ),
+    };
+
+String _signed(double v) {
+  final r = v.round();
+  return r > 0 ? '+$r' : '$r';
+}

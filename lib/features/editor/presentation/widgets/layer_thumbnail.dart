@@ -30,11 +30,7 @@ import '../../engine/modules/text/text_layer.dart';
 /// * Anything else → falls back to a generic icon so unknown layer
 ///   types keep rendering.
 class LayerThumbnail extends StatelessWidget {
-  const LayerThumbnail({
-    super.key,
-    required this.layer,
-    this.size = 40,
-  });
+  const LayerThumbnail({super.key, required this.layer, this.size = 40});
 
   final EditorLayer layer;
   final double size;
@@ -113,7 +109,8 @@ class _ImageThumb extends StatelessWidget {
       width: size,
       height: size,
       gaplessPlayback: true,
-      errorBuilder: (_, _, _) => const _Fallback(icon: Icons.broken_image_outlined),
+      errorBuilder: (_, _, _) =>
+          const _Fallback(icon: Icons.broken_image_outlined),
     );
 
     final crop = layer.cropRect;
@@ -152,16 +149,10 @@ class _ImageThumb extends StatelessWidget {
     }
 
     // Subtle dark backing so transparent PNGs are visible.
-    final backed = ColoredBox(
-      color: const Color(0x22000000),
-      child: visual,
-    );
+    final backed = ColoredBox(color: const Color(0x22000000), child: visual);
 
     if (layer.mask == ImageMask.original) return backed;
-    return ClipPath(
-      clipper: _MaskPathClipper(layer.mask),
-      child: backed,
-    );
+    return ClipPath(clipper: _MaskPathClipper(layer.mask), child: backed);
   }
 }
 
@@ -287,10 +278,7 @@ class _TextThumb extends StatelessWidget {
           raw,
           maxLines: 1,
           overflow: TextOverflow.clip,
-          style: TextStyle(
-            fontSize: size * 0.7,
-            height: 1.0,
-          ),
+          style: TextStyle(fontSize: size * 0.7, height: 1.0),
         ),
       );
     }
@@ -311,9 +299,7 @@ class _TextThumb extends StatelessWidget {
             fontFamily: layer.style.fontFamily,
             color: layer.style.color,
             fontWeight: layer.style.fontWeight,
-            fontStyle: layer.style.italic
-                ? FontStyle.italic
-                : FontStyle.normal,
+            fontStyle: layer.style.italic ? FontStyle.italic : FontStyle.normal,
             // Use a small, fixed thumbnail size — the layer's own
             // fontSize is canvas-relative (often 96+) so it would
             // never fit. 11px is comfortably readable inside 40px.
@@ -330,6 +316,5 @@ class _Fallback extends StatelessWidget {
   const _Fallback({required this.icon});
   final IconData icon;
   @override
-  Widget build(BuildContext context) =>
-      Center(child: Icon(icon, size: 18));
+  Widget build(BuildContext context) => Center(child: Icon(icon, size: 18));
 }

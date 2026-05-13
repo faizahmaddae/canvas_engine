@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4293870660,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "bolt",
+      "transform": {
+        "x": 840.0,
+        "y": 80.0,
+        "w": 160.0,
+        "h": 160.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 80.0,
+        "y": 140.0,
+        "w": 740.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "فلاش",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 64.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 80.0,
+        "y": 320.0,
+        "w": 920.0,
+        "h": 480.0,
+        "r": 0.0
+      },
+      "content": "۲۴ ساعت\nفقط",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 220.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "bar",
+      "transform": {
+        "x": 80.0,
+        "y": 880.0,
+        "w": 920.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 50.0
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 80.0,
+        "y": 900.0,
+        "w": 920.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "کد:  ⚡  FLASH50",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4294626325,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

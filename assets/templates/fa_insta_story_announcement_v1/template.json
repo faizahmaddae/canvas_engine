@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_insta_story_announcement_v1",
+  "title": {
+    "en": "اعلان شبانه",
+    "fa": "اعلان شبانه"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_insta_story_announcement_v1/thumbnail.png",
+  "document": "assets/templates/fa_insta_story_announcement_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "story",
+    "fa",
+    "insta",
+    "announcement"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 200
+  }
+}

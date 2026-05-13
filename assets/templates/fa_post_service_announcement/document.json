@@ -1,0 +1,186 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4293588216,
+    "endColor": 4294967295,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "main-panel",
+      "transform": {"x": 70.0, "y": 70.0, "w": 940.0, "h": 940.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 64.0,
+      "shadowOpacity": 0.17,
+      "shadowBlur": 36.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "top-label",
+      "transform": {"x": 662.0, "y": 124.0, "w": 246.0, "h": 64.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4279135076,
+      "strokeWidth": 0.0,
+      "cornerRadius": 32.0
+    },
+    {
+      "type": "text",
+      "id": "top-label-text",
+      "transform": {"x": 694.0, "y": 138.0, "w": 182.0, "h": 38.0, "r": 0.0},
+      "content": "معرفی محصول",
+      "style": {"fontFamily": "Lalezar", "fontSize": 36.0, "color": 4294967295, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "feature-stage",
+      "transform": {"x": 120.0, "y": 210.0, "w": 840.0, "h": 438.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4292866282,
+      "strokeWidth": 0.0,
+      "cornerRadius": 48.0
+    },
+    {
+      "type": "shape",
+      "id": "product-card",
+      "transform": {"x": 176.0, "y": 268.0, "w": 728.0, "h": 326.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 42.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 22.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 10.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "product-icon",
+      "transform": {"x": 694.0, "y": 320.0, "w": 142.0, "h": 142.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4279135076,
+      "strokeWidth": 0.0,
+      "cornerRadius": 36.0
+    },
+    {
+      "type": "shape",
+      "id": "product-icon-line-one",
+      "transform": {"x": 726.0, "y": 364.0, "w": 78.0, "h": 12.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294099064,
+      "strokeWidth": 0.0,
+      "cornerRadius": 6.0
+    },
+    {
+      "type": "shape",
+      "id": "product-icon-line-two",
+      "transform": {"x": 726.0, "y": 402.0, "w": 78.0, "h": 12.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294099064,
+      "strokeWidth": 0.0,
+      "cornerRadius": 6.0
+    },
+    {
+      "type": "text",
+      "id": "product-card-title",
+      "transform": {"x": 310.0, "y": 304.0, "w": 344.0, "h": 56.0, "r": 0.0},
+      "content": "کارت ویژگی محصول",
+      "style": {"fontFamily": "Lalezar", "fontSize": 48.0, "color": 4279382087, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "chip-one",
+      "transform": {"x": 450.0, "y": 400.0, "w": 204.0, "h": 56.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4293588216,
+      "strokeWidth": 0.0,
+      "cornerRadius": 28.0
+    },
+    {
+      "type": "text",
+      "id": "chip-one-text",
+      "transform": {"x": 474.0, "y": 412.0, "w": 156.0, "h": 32.0, "r": 0.0},
+      "content": "✓ گزارش سریع",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 27.0, "color": 4279135076, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "chip-two",
+      "transform": {"x": 232.0, "y": 400.0, "w": 194.0, "h": 56.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4293588216,
+      "strokeWidth": 0.0,
+      "cornerRadius": 28.0
+    },
+    {
+      "type": "text",
+      "id": "chip-two-text",
+      "transform": {"x": 258.0, "y": 412.0, "w": 142.0, "h": 32.0, "r": 0.0},
+      "content": "✓ سفارش ساده",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 27.0, "color": 4279135076, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "chip-three",
+      "transform": {"x": 232.0, "y": 490.0, "w": 422.0, "h": 58.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294099064,
+      "strokeWidth": 0.0,
+      "cornerRadius": 29.0
+    },
+    {
+      "type": "text",
+      "id": "chip-three-text",
+      "transform": {"x": 274.0, "y": 503.0, "w": 338.0, "h": 34.0, "r": 0.0},
+      "content": "✓ پشتیبانی کامل برای مشتری",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 28.0, "color": 4279382087, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {"x": 120.0, "y": 684.0, "w": 840.0, "h": 96.0, "r": 0.0},
+      "content": "نسخه تازه از راه رسید",
+      "style": {"fontFamily": "BTitrBd", "fontSize": 70.0, "color": 4279382087, "fontWeight": 800, "letterSpacing": 0.0, "lineHeight": 1.0, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {"x": 150.0, "y": 798.0, "w": 780.0, "h": 72.0, "r": 0.0},
+      "content": "مدیریت سفارش‌ها سریع‌تر و ساده‌تر شد",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 36.0, "color": 4279135076, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.16, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {"x": 270.0, "y": 910.0, "w": 540.0, "h": 82.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4279135076,
+      "strokeWidth": 0.0,
+      "cornerRadius": 41.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {"x": 320.0, "y": 926.0, "w": 440.0, "h": 48.0, "r": 0.0},
+      "content": "بیشتر بدانید",
+      "style": {"fontFamily": "Lalezar", "fontSize": 46.0, "color": 4294967295, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    }
+  ]
+}

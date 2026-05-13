@@ -1,0 +1,215 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294507260,
+    "endColor": 4293721855,
+    "angleDegrees": 160.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 90.0,
+        "y": 90.0,
+        "w": 900.0,
+        "h": 900.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 54.0,
+      "shadowOpacity": 0.16,
+      "shadowBlur": 36.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "metric",
+      "transform": {
+        "x": 655.0,
+        "y": 145.0,
+        "w": 270.0,
+        "h": 270.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4278630100,
+        "endColor": 4280640491,
+        "angleDegrees": 135.0
+      }
+    },
+    {
+      "type": "text",
+      "id": "metric-text",
+      "transform": {
+        "x": 690.0,
+        "y": 228.0,
+        "w": 200.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "content": "42%",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 80.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 150.0,
+        "y": 165.0,
+        "w": 420.0,
+        "h": 50.0,
+        "r": 0.0
+      },
+      "content": "CASE STUDY",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 34.0,
+        "color": 4278751666,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 150.0,
+        "y": 270.0,
+        "w": 600.0,
+        "h": 180.0,
+        "r": 0.0
+      },
+      "content": "How we lifted\ntrial signups",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 74.0,
+        "color": 4279179050,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "item1",
+      "transform": {
+        "x": 150.0,
+        "y": 560.0,
+        "w": 780.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293721855,
+      "strokeWidth": 0.0,
+      "cornerRadius": 28.0
+    },
+    {
+      "type": "shape",
+      "id": "item2",
+      "transform": {
+        "x": 150.0,
+        "y": 670.0,
+        "w": 780.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293916415,
+      "strokeWidth": 0.0,
+      "cornerRadius": 28.0
+    },
+    {
+      "type": "text",
+      "id": "i1",
+      "transform": {
+        "x": 190.0,
+        "y": 580.0,
+        "w": 690.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "01  New landing page story",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 38.0,
+        "color": 4279590517,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "i2",
+      "transform": {
+        "x": 190.0,
+        "y": 690.0,
+        "w": 690.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "02  Better onboarding emails",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 38.0,
+        "color": 4280171146,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 150.0,
+        "y": 855.0,
+        "w": 760.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "content": "Replace with your own metric and result",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 34.0,
+        "color": 4282865001,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

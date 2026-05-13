@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_webinar_growth_masterclass",
+  "title": {
+    "en": "Growth Webinar Social Poster",
+    "fa": "پوستر وبینار رشد"
+  },
+  "category": "event",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_webinar_growth_masterclass/thumbnail.png",
+  "document": "assets/templates/en_webinar_growth_masterclass/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "english",
+    "webinar",
+    "course",
+    "event"
+  ],
+  "home": {
+    "sortOrder": 79
+  }
+}

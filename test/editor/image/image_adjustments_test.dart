@@ -51,26 +51,26 @@ void main() {
 
   group('ImageAdjustments exposure & warmth', () {
     test('default values are identity', () {
-      const a = ImageAdjustments();
+      final a = ImageAdjustments();
       expect(a.exposure, 0);
       expect(a.warmth, 0);
       expect(a.isIdentity, isTrue);
     });
 
     test('non-zero exposure breaks identity and emits a matrix', () {
-      const a = ImageAdjustments(exposure: 25);
+      final a = ImageAdjustments(exposure: 25);
       expect(a.isIdentity, isFalse);
-      expect(a.toMatrix().length, 20);
+      expect(a.colorMatrix.length, 20);
     });
 
     test('non-zero warmth breaks identity and emits a matrix', () {
-      const a = ImageAdjustments(warmth: -40);
+      final a = ImageAdjustments(warmth: -40);
       expect(a.isIdentity, isFalse);
-      expect(a.toMatrix().length, 20);
+      expect(a.colorMatrix.length, 20);
     });
 
     test('JSON round-trip preserves all five fields', () {
-      const a = ImageAdjustments(
+      final a = ImageAdjustments(
         brightness: 12,
         contrast: 1.4,
         saturation: 0.8,
@@ -82,7 +82,7 @@ void main() {
     });
 
     test('JSON omits fields at their identity values', () {
-      const a = ImageAdjustments(exposure: 10);
+      final a = ImageAdjustments(exposure: 10);
       final j = a.toJson();
       expect(j.containsKey('exposure'), isTrue);
       expect(j.containsKey('warmth'), isFalse);
@@ -92,7 +92,7 @@ void main() {
     });
 
     test('copyWith only overwrites passed fields', () {
-      const base = ImageAdjustments(exposure: 5, warmth: 10);
+      final base = ImageAdjustments(exposure: 5, warmth: 10);
       final next = base.copyWith(exposure: -5);
       expect(next.exposure, -5);
       expect(next.warmth, 10);

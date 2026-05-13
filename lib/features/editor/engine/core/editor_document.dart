@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
@@ -66,7 +68,7 @@ const CanvasBackgroundMode kDefaultCanvasBackgroundMode =
 @immutable
 class EditorDocument {
   EditorDocument({
-    required this.layers,
+    required List<EditorLayer> layers,
     this.width = 1080,
     this.height = 1080,
     BackgroundFill? background,
@@ -79,10 +81,32 @@ class EditorDocument {
             (backgroundColor != null
                 ? SolidBackground(color: backgroundColor)
                 : kDefaultCanvasBackgroundFill),
+        // Skip the wrap if the caller already handed us an
+        // unmodifiable view (the common path: copyWith re-passes
+        // `this.layers`, which is already wrapped). This preserves
+        // reference identity so `next.layers == doc.layers` stays
+        // an `identical` match for unchanged copies — a real
+        // performance contract relied on by hot equality checks.
+        //
+        // Wrap with `UnmodifiableListView` rather than
+        // `List.unmodifiable` so the wrap is O(1) and the wrapper
+        // type is publicly named — production callers always hand
+        // us a freshly built list (`[...layers, x]`) that no other
+        // code retains a reference to, so the view's read-through
+        // semantics are not a leak.
+        layers = layers is UnmodifiableListView<EditorLayer>
+            ? layers
+            : UnmodifiableListView<EditorLayer>(layers),
         _layerIndex = {
           for (var i = 0; i < layers.length; i++) layers[i].id: i,
         };
 
+  /// Z-ordered list of layers (bottom = 0, top = last). The list is
+  /// wrapped with [List.unmodifiable] at construction so callers
+  /// cannot mutate the document state behind its back — every change
+  /// must flow through [copyWith] / [addLayer] / [removeLayer] /
+  /// [replaceLayer] and produce a new [EditorDocument]. See AGENTS.md
+  /// "EditorDocument is immutable" for the rationale.
   final List<EditorLayer> layers;
   final double width;
   final double height;

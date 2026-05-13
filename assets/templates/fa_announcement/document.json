@@ -1,0 +1,110 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4280171146,
+    "edgeColor": 4279179050,
+    "focalX": 0.4,
+    "focalY": -0.5,
+    "radius": 1.25
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "kicker-pill",
+      "transform": {
+        "x": 710.0,
+        "y": 135.0,
+        "w": 290.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294829706,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 710.0,
+        "y": 154.0,
+        "w": 290.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "خبر تازه",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4279179050,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 80.0,
+        "y": 295.0,
+        "w": 920.0,
+        "h": 500.0,
+        "r": 0.0
+      },
+      "content": "به‌زودی\nمی‌آییم",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 188.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "underline",
+      "transform": {
+        "x": 720.0,
+        "y": 805.0,
+        "w": 280.0,
+        "h": 8.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294829706,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 80.0,
+        "y": 860.0,
+        "w": 920.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "برای اطلاع بیشتر منتظر باشید",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

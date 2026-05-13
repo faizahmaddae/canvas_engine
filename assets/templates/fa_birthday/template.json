@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_birthday",
+  "title": {
+    "en": "تولدت مبارک",
+    "fa": "تولدت مبارک"
+  },
+  "category": "greeting",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_birthday/thumbnail.png",
+  "document": "assets/templates/fa_birthday/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "fa",
+    "greeting"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 190
+  }
+}

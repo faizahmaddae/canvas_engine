@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "en_business_product_update",
+  "title": {
+    "en": "Product Update Business Post",
+    "fa": "پست به‌روزرسانی محصول"
+  },
+  "category": "business",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_business_product_update/thumbnail.png",
+  "document": "assets/templates/en_business_product_update/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "english",
+    "business",
+    "product",
+    "announcement"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 78
+  }
+}

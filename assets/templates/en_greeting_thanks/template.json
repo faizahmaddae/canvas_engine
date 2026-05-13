@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_greeting_thanks",
+  "title": {
+    "en": "Thank you",
+    "fa": "Thank you"
+  },
+  "category": "greeting",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_greeting_thanks/thumbnail.png",
+  "document": "assets/templates/en_greeting_thanks/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "en",
+    "greeting"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 130
+  }
+}

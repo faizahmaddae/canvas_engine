@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
-import '../../application/document_controller.dart';
+import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../presentation/widgets/recent_colors_controller.dart';
@@ -22,8 +23,8 @@ import '../domain/text_style_presets.dart'
 Future<String?> showTextInputFlowSheet(
   BuildContext context, {
   String initial = '',
-  String title = 'Add text',
-  String confirmLabel = 'Done',
+  String? title,
+  String? confirmLabel,
   ValueChanged<String>? onLiveChange,
 }) {
   return showModalBottomSheet<String>(
@@ -33,8 +34,8 @@ Future<String?> showTextInputFlowSheet(
     backgroundColor: Colors.transparent,
     builder: (_) => _TextInputFlowSheet(
       initial: initial,
-      title: title,
-      confirmLabel: confirmLabel,
+      title: title ?? context.l10n.addTextTitle,
+      confirmLabel: confirmLabel ?? context.l10n.doneAction,
       onLiveChange: onLiveChange,
     ),
   );
@@ -167,7 +168,7 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                         vertical: 6,
                       ),
                     ),
-                    child: const Text('Cancel'),
+                    child: Text(context.l10n.cancelAction),
                   ),
                   const SizedBox(width: 6),
                   FilledButton(
@@ -221,9 +222,9 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                 textDirection: textDirectionForContent(_controller.text),
                 textAlign:
                     textDirectionForContent(_controller.text) ==
-                            TextDirection.rtl
-                        ? TextAlign.right
-                        : TextAlign.left,
+                        TextDirection.rtl
+                    ? TextAlign.right
+                    : TextAlign.left,
                 style: TextStyle(
                   fontFamily: defaultFontFamilyForContent(_controller.text),
                   fontSize: 18,
@@ -237,21 +238,20 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                   widget.onLiveChange?.call(value);
                 },
                 decoration: InputDecoration(
-                  hintText: 'Type something…',
+                  hintText: context.l10n.typeSomethingHint,
                   // Hint follows the same direction + font as the
                   // input itself so the empty-state visual matches
                   // what the user will see once they start typing.
-                  hintTextDirection:
-                      textDirectionForContent(_controller.text),
+                  hintTextDirection: textDirectionForContent(_controller.text),
                   hintStyle: TextStyle(
-                    fontFamily:
-                        defaultFontFamilyForContent(_controller.text),
+                    fontFamily: defaultFontFamilyForContent(_controller.text),
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
                   isDense: true,
                   filled: true,
-                  fillColor:
-                      scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                  fillColor: scheme.surfaceContainerHighest.withValues(
+                    alpha: 0.45,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide(
@@ -309,8 +309,7 @@ class _AddTextQuickStyleBar extends ConsumerStatefulWidget {
       _AddTextQuickStyleBarState();
 }
 
-class _AddTextQuickStyleBarState
-    extends ConsumerState<_AddTextQuickStyleBar> {
+class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
   bool _paletteOpen = false;
   // Snapshot of `recents` taken when the tray opens. Selecting a
   // swatch updates the live recents list (so it persists across
@@ -356,7 +355,7 @@ class _AddTextQuickStyleBarState
       initial: original,
       recents: ref.read(recentColorsControllerProvider),
       onLiveChange: ctrl.setColor,
-      title: 'Text color',
+      title: context.l10n.textColorTitle,
     );
     if (!mounted) return;
     if (picked == null) {
@@ -374,13 +373,13 @@ class _AddTextQuickStyleBarState
     final ctrl = ref.read(textToolControllerProvider.notifier);
     // Bind UI state to the staged layer's *current* style when one
     // is selected (live add session) — _applyStyle writes through
-    // to the layer, not defaultStyle, so reading defaultStyle here
-    // would leave Bold/Color toggles stuck on stale state. Watch
-    // the document + selection so the bar rebuilds on every mutation.
-    final doc = ref.watch(documentControllerProvider);
+    // to the layer (via liveOverlay), not defaultStyle, so reading
+    // defaultStyle here would leave Bold/Color toggles stuck on
+    // stale state. Watch the merged view + selection so the bar
+    // rebuilds whenever the staged layer changes.
+    final doc = ref.watch(renderedDocumentProvider);
     final selectedId = ref.watch(selectionControllerProvider).selectedId;
-    final selectedLayer =
-        selectedId == null ? null : doc.layerById(selectedId);
+    final selectedLayer = selectedId == null ? null : doc.layerById(selectedId);
     final style = (selectedLayer is TextLayer)
         ? selectedLayer.style
         : session.defaultStyle;
@@ -397,10 +396,10 @@ class _AddTextQuickStyleBarState
         Row(
           children: [
             _QuickPill(
-              tooltip: 'Bold',
+              tooltip: context.l10n.boldAction,
               active: style.isBold,
               leading: _BoldGlyph(active: style.isBold),
-              label: 'Bold',
+              label: context.l10n.boldAction,
               onTap: () {
                 EditorHaptics.toggle();
                 ctrl.setBold(!style.isBold);
@@ -408,10 +407,10 @@ class _AddTextQuickStyleBarState
             ),
             const SizedBox(width: 10),
             _QuickPill(
-              tooltip: 'Color',
+              tooltip: context.l10n.colorLabel,
               active: _paletteOpen,
               leading: _ColorDot(color: style.color),
-              label: 'Color',
+              label: context.l10n.colorLabel,
               onTap: () {
                 EditorHaptics.tap();
                 setState(() {
@@ -461,9 +460,7 @@ class _AddTextQuickStyleBarState
                         // tap doesn't wipe a previously-dialed-in
                         // opacity. Custom picker remains the
                         // authoritative entry for alpha changes.
-                        ctrl.setColor(
-                          c.withValues(alpha: style.color.a),
-                        );
+                        ctrl.setColor(c.withValues(alpha: style.color.a));
                         ctrl.rememberRecentColor(c);
                       },
                       onCustom: _openCustomPicker,
@@ -506,8 +503,9 @@ class _ColorTray extends StatelessWidget {
     // De-dupe palette against recents so the same swatch doesn't
     // appear twice. Recents win the slot.
     final recentArgbs = recents.map((c) => c.toARGB32()).toSet();
-    final dedupedPalette =
-        palette.where((c) => !recentArgbs.contains(c.toARGB32())).toList();
+    final dedupedPalette = palette
+        .where((c) => !recentArgbs.contains(c.toARGB32()))
+        .toList();
     return Container(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
       decoration: BoxDecoration(
@@ -521,12 +519,12 @@ class _ColorTray extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 12),
             child: Text(
-              'Colors',
+              context.l10n.colorsLabel,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -621,9 +619,7 @@ class _PaletteDotState extends State<_PaletteDot> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: widget.selected
-                  ? scheme.primary
-                  : Colors.transparent,
+              color: widget.selected ? scheme.primary : Colors.transparent,
               width: widget.selected ? 2 : 0,
             ),
             boxShadow: widget.selected
@@ -680,7 +676,7 @@ class _MoreColorButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Tooltip(
-      message: 'More colors',
+      message: context.l10n.moreColorsTooltip,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
@@ -690,10 +686,7 @@ class _MoreColorButton extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: scheme.outlineVariant,
-              width: 1.2,
-            ),
+            border: Border.all(color: scheme.outlineVariant, width: 1.2),
           ),
           child: Icon(
             Icons.add_rounded,

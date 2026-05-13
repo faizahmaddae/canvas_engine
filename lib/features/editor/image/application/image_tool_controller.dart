@@ -20,6 +20,7 @@ enum ImageToolSlot {
   border,
   shadow,
   adjust,
+  effects,
   filters,
   replace(isPanel: false);
 
@@ -53,6 +54,7 @@ const List<ImageToolSlot> kImagePanelSlotOrder = <ImageToolSlot>[
   ImageToolSlot.border,
   ImageToolSlot.shadow,
   ImageToolSlot.adjust,
+  ImageToolSlot.effects,
   ImageToolSlot.filters,
 ];
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 
 /// Reusable "Done" pill chrome.
 ///
@@ -16,12 +17,12 @@ class ModeDoneButton extends StatelessWidget {
   const ModeDoneButton({
     super.key,
     required this.onPressed,
-    this.label = 'Done',
+    this.label,
     this.icon = Icons.check_rounded,
   });
 
   final VoidCallback onPressed;
-  final String label;
+  final String? label;
   final IconData icon;
 
   @override
@@ -59,7 +60,7 @@ class ModeDoneButton extends StatelessWidget {
               Icon(icon, size: 16, color: scheme.primary),
               const SizedBox(width: 6),
               Text(
-                label,
+                label ?? context.l10n.doneAction,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,

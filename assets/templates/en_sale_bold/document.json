@@ -1,0 +1,152 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294898631,
+    "endColor": 4294964144,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "tag",
+      "transform": {
+        "x": 80.0,
+        "y": 105.0,
+        "w": 300.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0
+    },
+    {
+      "type": "text",
+      "id": "tag-text",
+      "transform": {
+        "x": 80.0,
+        "y": 124.0,
+        "w": 300.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "LIMITED",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 40.0,
+        "color": 4294964144,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 80.0,
+        "y": 250.0,
+        "w": 920.0,
+        "h": 420.0,
+        "r": 0.0
+      },
+      "content": "BIG\nSALE",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 300.0,
+        "color": 4279310375,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.92,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "discount-badge",
+      "transform": {
+        "x": 740.0,
+        "y": 640.0,
+        "w": 260.0,
+        "h": 260.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4292617766,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "discount-number",
+      "transform": {
+        "x": 755.0,
+        "y": 692.0,
+        "w": 230.0,
+        "h": 88.0,
+        "r": 0.0
+      },
+      "content": "50%",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 74.0,
+        "color": 4294966251,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "discount-label",
+      "transform": {
+        "x": 755.0,
+        "y": 780.0,
+        "w": 230.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "OFF",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 30.0,
+        "color": 4294966251,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 80.0,
+        "y": 900.0,
+        "w": 620.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "Weekend only · Shop now",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 42.0,
+        "color": 4281549141,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

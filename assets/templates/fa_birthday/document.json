@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294764531,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "dot1",
+      "transform": {
+        "x": 120.0,
+        "y": 120.0,
+        "w": 60.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293675161,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot2",
+      "transform": {
+        "x": 880.0,
+        "y": 880.0,
+        "w": 80.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4289222135,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "star1",
+      "transform": {
+        "x": 80.0,
+        "y": 880.0,
+        "w": 90.0,
+        "h": 90.0,
+        "r": 0.0
+      },
+      "kind": "star",
+      "fillColor": 4294286859,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "heart",
+      "transform": {
+        "x": 880.0,
+        "y": 140.0,
+        "w": 80.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "kind": "heart",
+      "fillColor": 4293675161,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "tavalod",
+      "transform": {
+        "x": 80.0,
+        "y": 380.0,
+        "w": 920.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "تولدت",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 220.0,
+        "color": 4292552567,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "mobarak",
+      "transform": {
+        "x": 80.0,
+        "y": 600.0,
+        "w": 920.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "مبارک",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 220.0,
+        "color": 4279310375,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 80.0,
+        "y": 840.0,
+        "w": 920.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "بهترین‌ها برایت",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 56.0,
+        "color": 4285211048,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_sale_retail_clearance",
+  "title": {
+    "en": "Persian Retail Clearance Sale",
+    "fa": "حراج پایان فصل"
+  },
+  "category": "sale",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_sale_retail_clearance/thumbnail.png",
+  "document": "assets/templates/fa_sale_retail_clearance/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "sale",
+    "retail",
+    "clearance"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 96
+  }
+}

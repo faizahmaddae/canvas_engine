@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_launch_v1",
+  "title": {
+    "en": "معرفی محصول",
+    "fa": "معرفی محصول"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_launch_v1/thumbnail.png",
+  "document": "assets/templates/fa_promo_launch_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "promo",
+    "fa",
+    "launch"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 240
+  }
+}

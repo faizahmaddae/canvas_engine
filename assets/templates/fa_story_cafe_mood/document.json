@@ -1,0 +1,224 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4280948752,
+    "endColor": 4288766471,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "cream-card",
+      "transform": {
+        "x": 94.0,
+        "y": 250.0,
+        "w": 892.0,
+        "h": 1240.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294965229,
+        "endColor": 4294829706,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 72.0,
+      "shadowOpacity": 0.3,
+      "shadowBlur": 54.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 30.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "photo-window",
+      "transform": {
+        "x": 150.0,
+        "y": 330.0,
+        "w": 780.0,
+        "h": 620.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4282326283,
+        "endColor": 4290007817,
+        "angleDegrees": 135.0
+      },
+      "cornerRadius": 52.0
+    },
+    {
+      "type": "shape",
+      "id": "cup",
+      "transform": {
+        "x": 360.0,
+        "y": 520.0,
+        "w": 360.0,
+        "h": 260.0,
+        "r": 0.0
+      },
+      "kind": "oval",
+      "fillColor": 4294898631,
+      "strokeWidth": 0.0,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 30.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 16.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "coffee",
+      "transform": {
+        "x": 405.0,
+        "y": 565.0,
+        "w": 270.0,
+        "h": 148.0,
+        "r": 0.0
+      },
+      "kind": "oval",
+      "fillColor": 4286328082,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "steam-1",
+      "transform": {
+        "x": 455.0,
+        "y": 445.0,
+        "w": 80.0,
+        "h": 140.0,
+        "r": -12.0
+      },
+      "kind": "line",
+      "fillColor": 4294829706,
+      "strokeWidth": 14.0
+    },
+    {
+      "type": "shape",
+      "id": "steam-2",
+      "transform": {
+        "x": 560.0,
+        "y": 430.0,
+        "w": 70.0,
+        "h": 150.0,
+        "r": 10.0
+      },
+      "kind": "line",
+      "fillColor": 4294829706,
+      "strokeWidth": 14.0
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 160.0,
+        "y": 1035.0,
+        "w": 760.0,
+        "h": 76.0,
+        "r": 0.0
+      },
+      "content": "کافه امروز",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 52.0,
+        "color": 4287774734,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 145.0,
+        "y": 1138.0,
+        "w": 800.0,
+        "h": 260.0,
+        "r": 0.0
+      },
+      "content": "قهوه\nو گفتگو",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 138.0,
+        "color": 4282586119,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.98,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 165.0,
+        "y": 1405.0,
+        "w": 730.0,
+        "h": 110.0,
+        "r": 0.0
+      },
+      "content": "برای منو، تخفیف یا رویداد کافه متن را تغییر دهید",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4286067983,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.24,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "footer-pill",
+      "transform": {
+        "x": 300.0,
+        "y": 1625.0,
+        "w": 480.0,
+        "h": 94.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4282586119,
+      "strokeWidth": 0.0,
+      "cornerRadius": 47.0
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 330.0,
+        "y": 1642.0,
+        "w": 420.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "رزرو میز",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 52.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

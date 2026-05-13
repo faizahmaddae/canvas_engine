@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_clinic_checkup",
+  "title": {
+    "en": "Persian Clinic Checkup Promo",
+    "fa": "پروموی چکاپ کلینیک"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_clinic_checkup/thumbnail.png",
+  "document": "assets/templates/fa_promo_clinic_checkup/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "clinic",
+    "promo",
+    "health"
+  ],
+  "home": {
+    "sortOrder": 97
+  }
+}

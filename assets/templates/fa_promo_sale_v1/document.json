@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": 4294956554,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "black-block",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "w": 1080.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4278848010,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "transform": {
+        "x": 110.0,
+        "y": 110.0,
+        "w": 860.0,
+        "h": 84.0,
+        "r": 0.0
+      },
+      "content": "حراج آخر فصل",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 54.0,
+        "color": 4294956554,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "percent",
+      "transform": {
+        "x": 70.0,
+        "y": 210.0,
+        "w": 940.0,
+        "h": 310.0,
+        "r": 0.0
+      },
+      "content": "۷۰٪",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 250.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "center",
+        "shadowColor": 2566914048,
+        "shadowBlur": 4.0,
+        "shadowDx": 0.0,
+        "shadowDy": 2.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 90.0,
+        "y": 680.0,
+        "w": 900.0,
+        "h": 130.0,
+        "r": 0.0
+      },
+      "content": "تخفیف برای همه محصولات",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 68.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta-bg",
+      "transform": {
+        "x": 90.0,
+        "y": 1015.0,
+        "w": 560.0,
+        "h": 126.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4278848010,
+      "strokeWidth": 0.0,
+      "cornerRadius": 63.0
+    },
+    {
+      "type": "text",
+      "id": "cta",
+      "transform": {
+        "x": 90.0,
+        "y": 1040.0,
+        "w": 560.0,
+        "h": 76.0,
+        "r": 0.0
+      },
+      "content": "همین حالا",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 58.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,189 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4280236639,
+    "endColor": 4278519565,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "date-card",
+      "transform": {
+        "x": 640.0,
+        "y": 120.0,
+        "w": 300.0,
+        "h": 300.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 32.0
+    },
+    {
+      "type": "text",
+      "id": "day",
+      "transform": {
+        "x": 640.0,
+        "y": 154.0,
+        "w": 300.0,
+        "h": 130.0,
+        "r": 0.0
+      },
+      "content": "۲۴",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 100.0,
+        "color": 4280236639,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "month",
+      "transform": {
+        "x": 640.0,
+        "y": 302.0,
+        "w": 300.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "خرداد",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 36.0,
+        "color": 4291059002,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 90.0,
+        "y": 490.0,
+        "w": 900.0,
+        "h": 270.0,
+        "r": 0.0
+      },
+      "content": "همایش طراحی\nو خلاقیت",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 90.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.18,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "venue",
+      "transform": {
+        "x": 90.0,
+        "y": 790.0,
+        "w": 900.0,
+        "h": 72.0,
+        "r": 0.0
+      },
+      "content": "سالن اصلی · ساعت ۱۸",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4293449136,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "accent-line",
+      "transform": {
+        "x": 90.0,
+        "y": 955.0,
+        "w": 900.0,
+        "h": 5.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4291059002,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 90.0,
+        "y": 1010.0,
+        "w": 900.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "ثبت‌نام از امروز آغاز شد",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4294967295,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 90.0,
+        "y": 1150.0,
+        "w": 420.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4291059002,
+      "strokeWidth": 0.0,
+      "cornerRadius": 41.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 90.0,
+        "y": 1168.0,
+        "w": 420.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "ثبت‌نام",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 36.0,
+        "color": 4280236639,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

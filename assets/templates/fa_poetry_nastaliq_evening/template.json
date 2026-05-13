@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_nastaliq_evening",
+  "title": {
+    "en": "Persian Nastaliq Evening Poem",
+    "fa": "شعر نستعلیق شبانه"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_nastaliq_evening/thumbnail.png",
+  "document": "assets/templates/fa_poetry_nastaliq_evening/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "poetry",
+    "nastaliq",
+    "evening"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 42
+  }
+}

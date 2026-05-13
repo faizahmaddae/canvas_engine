@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "en_birthday_confetti",
+  "title": {
+    "en": "Birthday confetti",
+    "fa": "Birthday confetti"
+  },
+  "category": "greeting",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_birthday_confetti/thumbnail.png",
+  "document": "assets/templates/en_birthday_confetti/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "greeting",
+    "en",
+    "birthday",
+    "confetti"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 340
+  }
+}

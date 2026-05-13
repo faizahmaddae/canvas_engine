@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_post_event_countdown",
+  "title": {
+    "en": "Persian Event Countdown Post",
+    "fa": "پست شمارش معکوس رویداد"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_post_event_countdown/thumbnail.png",
+  "document": "assets/templates/fa_post_event_countdown/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "post",
+    "event",
+    "countdown"
+  ],
+  "home": {
+    "sortOrder": 36
+  }
+}

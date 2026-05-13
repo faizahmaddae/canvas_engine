@@ -1,0 +1,157 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294898631,
+    "endColor": 4294966251,
+    "angleDegrees": 120.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "slide",
+      "transform": {
+        "x": 115.0,
+        "y": 100.0,
+        "w": 850.0,
+        "h": 880.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 62.0,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 38.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "topbar",
+      "transform": {
+        "x": 115.0,
+        "y": 100.0,
+        "w": 850.0,
+        "h": 170.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294538006,
+        "endColor": 4293870660,
+        "angleDegrees": 100.0
+      },
+      "cornerRadius": 62.0
+    },
+    {
+      "type": "text",
+      "id": "top",
+      "transform": {
+        "x": 220.0,
+        "y": 145.0,
+        "w": 640.0,
+        "h": 76.0,
+        "r": 0.0
+      },
+      "content": "درس کوتاه",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 64.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 170.0,
+        "y": 345.0,
+        "w": 740.0,
+        "h": 205.0,
+        "r": 0.0
+      },
+      "content": "یک مفهوم را\nبا مثال توضیح بده",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 86.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.04,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 180.0,
+        "y": 610.0,
+        "w": 720.0,
+        "h": 120.0,
+        "r": 0.0
+      },
+      "content": "این قالب برای پست‌های آموزشی، اسلاید اول کاروسل یا معرفی دوره مناسب است.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4283913038,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "page",
+      "transform": {
+        "x": 390.0,
+        "y": 825.0,
+        "w": 300.0,
+        "h": 66.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 33.0
+    },
+    {
+      "type": "text",
+      "id": "page-text",
+      "transform": {
+        "x": 435.0,
+        "y": 837.0,
+        "w": 210.0,
+        "h": 40.0,
+        "r": 0.0
+      },
+      "content": "۱ / ۵",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 38.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -71,6 +71,62 @@ class EngineConstants {
   static const double rotationCardinalSnapThreshold = 7 * math.pi / 180;
 
   // ---------------------------------------------------------------------
+  // History
+  // ---------------------------------------------------------------------
+
+  /// Soft byte budget for the undo (and redo) stack. When exceeded the
+  /// oldest entries are evicted on the next push until the running
+  /// total fits under this cap. Counted as the sum of each entry's
+  /// `forward.estimatedByteSize + inverse.estimatedByteSize`.
+  ///
+  /// Sized for "mid-range Android device with 4 GB RAM" — generous
+  /// enough that ordinary photo-editing sessions never trigger
+  /// eviction, but tight enough that runaway paint-stroke history can
+  /// no longer silently OOM the app during PNG export. The budget is
+  /// soft: a single command larger than the budget is still kept (we
+  /// would rather lose older history than corrupt the most-recent
+  /// undo). Tune later from real device traces.
+  static const int kHistoryByteBudget = 256 * 1024 * 1024; // 256 MB
+
+  /// Per-entry structural overhead added to every command's reported
+  /// `estimatedByteSize`. Accounts for the command object header,
+  /// inline scalar fields, and the [_HistoryEntry] wrapper itself.
+  /// Without this baseline a stream of millions of "no payload"
+  /// commands would cost zero on paper but tens of MB in practice.
+  static const int kHistoryEntryOverheadBytes = 64;
+
+  // ---------------------------------------------------------------------
+  // Effect cache (docs/effects.md §10)
+  // ---------------------------------------------------------------------
+
+  /// Maximum cached effected pictures retained per layer. Sized for
+  /// "current params + last two for fast undo preview" so a quick
+  /// undo / redo flick on a slider repaint hits the cache instead of
+  /// re-baking. Older entries evicted on insert. Mirrors the per-key
+  /// LRU shape used elsewhere in the engine.
+  static const int kEffectCachePerLayerLruCap = 3;
+
+  /// Soft global byte budget for the **committed** effect-picture
+  /// cache (post-stroke / post-slider-release renders). Half the
+  /// history budget because effects are larger than commands; an
+  /// effected `ui.Picture` rasterises to a `ui.Image` whose footprint
+  /// is `width * height * 4` bytes, easily into the megabytes for a
+  /// full-canvas adjustment layer. Soft: a single picture exceeding
+  /// the budget is still cached for one frame to avoid a flash, then
+  /// evicted by the next insert. Tune from real device traces.
+  ///
+  /// Source of truth for §10 of docs/effects.md.
+  static const int kEffectCacheByteBudget = 128 * 1024 * 1024; // 128 MB
+
+  /// Soft global byte budget for the **transient** in-gesture
+  /// (LiveOverlay) effect cache. Smaller than [kEffectCacheByteBudget]
+  /// because only one gesture stream can be active at a time, so the
+  /// working-set is bounded by per-frame churn rather than session
+  /// history. Cleared wholesale on `LiveOverlay.clear()` — no LRU
+  /// needed across gesture boundaries.
+  static const int kEffectOverlayCacheByteBudget = 32 * 1024 * 1024; // 32 MB
+
+  // ---------------------------------------------------------------------
   // Debug
   // ---------------------------------------------------------------------
 

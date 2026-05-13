@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import '../core/background_fill.dart';
 import '../core/editor_document.dart';
 import '../core/editor_layer.dart';
 import '../modules/image/image_layer.dart';
@@ -42,12 +41,18 @@ class DocumentCodec {
   /// bare ARGB int (solid colour only); v2 also accepts a tagged map
   /// for [LinearGradientBackground] / [RadialGradientBackground].
   /// Solid backgrounds are still written as ints in v2 so v1 readers
-  /// can open any document that doesn't use a gradient.
-  static const int schemaVersion = 2;
+  /// can open any document that doesn't use a gradient. v3 adds the
+  /// optional `effects` array on every layer (Phase 2 effects). An
+  /// *empty* stack is omitted, so every legacy v1/v2 layer
+  /// re-encodes to byte-identical bytes — the version bump is purely
+  /// a forward-compat marker for newer readers.
+  static const int schemaVersion = 3;
 
   /// Lowest schema version we still know how to read. v1 docs may
   /// arrive from older app installs and from on-disk projects saved
-  /// before the gradient engine landed.
+  /// before the gradient engine landed. The Phase 2 effects field is
+  /// purely additive (omitted when empty) so v1/v2 readers in older
+  /// builds will silently drop it; nothing else changes.
   static const int minSupportedSchemaVersion = 1;
 
   /// Built-in layer factories. Keyed by the same string returned from
@@ -74,18 +79,46 @@ class DocumentCodec {
       LinearGradientBackground() || RadialGradientBackground() => fill.toJson(),
     };
     return <String, dynamic>{
-      'version': schemaVersion,
+      'version': _writerVersion(doc, backgroundJson),
       'width': doc.width,
       'height': doc.height,
-      if (backgroundJson != null) 'background': backgroundJson,
+      'background': ?backgroundJson,
       if (doc.backgroundMode != kDefaultCanvasBackgroundMode)
         'backgroundMode': doc.backgroundMode.name,
-      if (doc.basePhotoLayerId != null)
-        'basePhotoLayerId': doc.basePhotoLayerId,
+      'basePhotoLayerId': ?doc.basePhotoLayerId,
       if (doc.projectKind != kDefaultProjectKind)
         'projectKind': doc.projectKind.name,
       'layers': doc.layers.map((l) => l.toJson()).toList(growable: false),
     };
+  }
+
+  /// Picks the *minimum* schema version a reader needs in order to
+  /// fully understand this document.
+  ///
+  /// Why this exists: simply stamping every save with [schemaVersion]
+  /// would change the bytes of every legacy document the moment a new
+  /// optional field landed, breaking byte-identity guarantees the
+  /// undo / template / cache systems depend on. Instead we promote
+  /// version per-feature:
+  ///
+  ///   * v1 — solid background only.
+  ///   * v2 — gradient backgrounds (linear / radial).
+  ///   * v3 — per-layer effect stacks (Phase 2).
+  ///
+  /// A v3-aware reader handles all three; a v2-only reader can still
+  /// open a doc stamped v2 even if this build wrote it.
+  static int _writerVersion(EditorDocument doc, Object? backgroundJson) {
+    var version = 1;
+    // v2: gradient background uses the tagged-map shape.
+    if (backgroundJson is Map) version = 2;
+    // v3: any layer carries a non-empty effect stack.
+    for (final layer in doc.layers) {
+      if (layer.effects.isNotEmpty) {
+        version = 3;
+        break;
+      }
+    }
+    return version;
   }
 
   /// Encode a document as a JSON string. Pretty-printed with two-space

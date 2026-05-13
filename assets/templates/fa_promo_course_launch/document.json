@@ -1,0 +1,267 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279179050,
+    "endColor": 4280171146,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 92.0,
+        "y": 100.0,
+        "w": 896.0,
+        "h": 1150.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294507260,
+        "endColor": 4292602622,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 62.0,
+      "shadowOpacity": 0.26,
+      "shadowBlur": 48.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 26.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "top-tag",
+      "transform": {
+        "x": 610.0,
+        "y": 170.0,
+        "w": 300.0,
+        "h": 78.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280640491,
+      "strokeWidth": 0.0,
+      "cornerRadius": 39.0
+    },
+    {
+      "type": "text",
+      "id": "top-tag-text",
+      "transform": {
+        "x": 650.0,
+        "y": 184.0,
+        "w": 220.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "جدید",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 44.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 150.0,
+        "y": 270.0,
+        "w": 760.0,
+        "h": 240.0,
+        "r": 0.0
+      },
+      "content": "دوره\nآنلاین",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 126.0,
+        "color": 4279179050,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "module",
+      "transform": {
+        "x": 150.0,
+        "y": 600.0,
+        "w": 780.0,
+        "h": 104.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 34.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 20.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 10.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "module2",
+      "transform": {
+        "x": 150.0,
+        "y": 730.0,
+        "w": 780.0,
+        "h": 104.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 34.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 20.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 10.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "module3",
+      "transform": {
+        "x": 150.0,
+        "y": 860.0,
+        "w": 780.0,
+        "h": 104.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 34.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 20.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 10.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "m1",
+      "transform": {
+        "x": 190.0,
+        "y": 622.0,
+        "w": 700.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "آموزش کاربردی + پروژه",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 46.0,
+        "color": 4280171146,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "m2",
+      "transform": {
+        "x": 190.0,
+        "y": 752.0,
+        "w": 700.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "پشتیبانی و فایل تمرین",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4281549141,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "m3",
+      "transform": {
+        "x": 190.0,
+        "y": 882.0,
+        "w": 700.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "گواهی پایان دوره",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4281549141,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta-text",
+      "transform": {
+        "x": 210.0,
+        "y": 1085.0,
+        "w": 660.0,
+        "h": 104.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294286859,
+        "endColor": 4293870660,
+        "angleDegrees": 100.0
+      },
+      "cornerRadius": 52.0
+    },
+    {
+      "type": "text",
+      "id": "cta",
+      "transform": {
+        "x": 255.0,
+        "y": 1106.0,
+        "w": 570.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "شروع ثبت‌نام",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 58.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

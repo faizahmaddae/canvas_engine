@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 
 import 'package:canvas_engine/features/editor/engine/export/document_jpg_exporter.dart';
 
@@ -82,5 +83,40 @@ void main() {
       expect(tooHigh, isA<Uint8List>());
       expect(tooHigh, isNotEmpty);
     });
+
+    test(
+      'round-trip: decoded RGB matches source within JPEG tolerance',
+      () async {
+        // The audit (May 2026) flagged JPEG round-trip pixel coverage
+        // as a gap: SOI/EOI + size-vs-quality verifies the encoder is
+        // wired, but only decoding-and-comparing-pixels catches a
+        // channel-order regression (RGBA-vs-BGRA) or a colour-space
+        // misinterpretation. Solid-fill source keeps the chroma
+        // subsampling tolerance tight (~3/255 per channel at q=95).
+        const w = 16;
+        const h = 16;
+        const src = Color(0xFF3060A0); // R=48, G=96, B=160
+        final image = await _solidImage(w, h, src);
+        final bytes =
+            await DocumentJpgExporter.encodeImageAsJpg(image, quality: 95);
+        image.dispose();
+
+        final decoded = img.decodeJpg(bytes);
+        expect(decoded, isNotNull);
+        expect(decoded!.width, w);
+        expect(decoded.height, h);
+
+        // Sample the centre pixel — JPEG block boundaries can perturb
+        // edge pixels by a couple of LSBs even on a solid image.
+        final px = decoded.getPixel(w ~/ 2, h ~/ 2);
+        const tolerance = 3; // ~1.2% per channel; safe for q=95 solid.
+        expect((px.r - 0x30).abs(), lessThanOrEqualTo(tolerance),
+            reason: 'red channel drifted: got ${px.r}');
+        expect((px.g - 0x60).abs(), lessThanOrEqualTo(tolerance),
+            reason: 'green channel drifted: got ${px.g}');
+        expect((px.b - 0xA0).abs(), lessThanOrEqualTo(tolerance),
+            reason: 'blue channel drifted: got ${px.b}');
+      },
+    );
   });
 }

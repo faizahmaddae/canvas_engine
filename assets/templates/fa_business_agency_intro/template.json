@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_business_agency_intro",
+  "title": {
+    "en": "Persian Agency Intro Post",
+    "fa": "پست معرفی آژانس"
+  },
+  "category": "business",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_business_agency_intro/thumbnail.png",
+  "document": "assets/templates/fa_business_agency_intro/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "business",
+    "agency",
+    "post"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 61
+  }
+}

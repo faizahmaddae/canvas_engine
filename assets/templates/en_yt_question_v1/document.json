@@ -1,0 +1,97 @@
+{
+  "version": 2,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279179050,
+    "endColor": 4280171146,
+    "angleDegrees": 90.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "question-disc",
+      "transform": {
+        "x": 850.0,
+        "y": 74.0,
+        "w": 340.0,
+        "h": 340.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294956554,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "question-mark",
+      "transform": {
+        "x": 850.0,
+        "y": 100.0,
+        "w": 340.0,
+        "h": 292.0,
+        "r": 0.0
+      },
+      "content": "?",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 236.0,
+        "color": 4279179050,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 68.0,
+        "y": 88.0,
+        "w": 745.0,
+        "h": 300.0,
+        "r": 0.0
+      },
+      "content": "WHY DOES\nTHIS HAPPEN?",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 114.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "left",
+        "shadowColor": 2566914048,
+        "shadowBlur": 4.0,
+        "shadowDx": 0.0,
+        "shadowDy": 2.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "transform": {
+        "x": 76.0,
+        "y": 425.0,
+        "w": 720.0,
+        "h": 84.0,
+        "r": 0.0
+      },
+      "content": "the answer is weird",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 60.0,
+        "color": 4294956554,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

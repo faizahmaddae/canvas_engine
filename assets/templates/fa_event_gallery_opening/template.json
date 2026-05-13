@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_event_gallery_opening",
+  "title": {
+    "en": "Persian Gallery Opening Event",
+    "fa": "افتتاحیه گالری"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_event_gallery_opening/thumbnail.png",
+  "document": "assets/templates/fa_event_gallery_opening/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "event",
+    "gallery",
+    "opening"
+  ],
+  "home": {
+    "sortOrder": 105
+  }
+}

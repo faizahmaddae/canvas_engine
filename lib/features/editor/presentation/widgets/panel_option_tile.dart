@@ -34,9 +34,9 @@ class PanelOptionTile extends StatefulWidget {
     this.label,
     this.width,
   }) : assert(
-          icon == null || preview == null,
-          'Provide either icon or preview, not both.',
-        );
+         icon == null || preview == null,
+         'Provide either icon or preview, not both.',
+       );
 
   /// Whether this tile represents the currently active option.
   final bool selected;
@@ -126,11 +126,7 @@ class _PanelOptionTileState extends State<PanelOptionTile> {
       content = Center(child: glyph);
     } else {
       content = Center(
-        child: _Label(
-          text: widget.label ?? '',
-          color: fg,
-          selected: selected,
-        ),
+        child: _Label(text: widget.label ?? '', color: fg, selected: selected),
       );
     }
 

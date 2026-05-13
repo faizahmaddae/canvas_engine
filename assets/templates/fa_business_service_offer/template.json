@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_business_service_offer",
+  "title": {
+    "en": "Persian Service Offer Poster",
+    "fa": "پوستر پیشنهاد خدمات"
+  },
+  "category": "business",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_business_service_offer/thumbnail.png",
+  "document": "assets/templates/fa_business_service_offer/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "business",
+    "service",
+    "offer"
+  ],
+  "home": {
+    "sortOrder": 62
+  }
+}

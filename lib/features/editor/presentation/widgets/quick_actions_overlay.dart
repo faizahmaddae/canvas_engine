@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../engine/core/viewport_state.dart';
@@ -51,7 +52,6 @@ class QuickActionsOverlay extends ConsumerWidget {
   // for the clamp; covers four 44 dp pills + 3 dividers + padding.
   static const double _estWidth = 224;
 
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final media = MediaQuery.of(context);
@@ -65,8 +65,7 @@ class QuickActionsOverlay extends ConsumerWidget {
     // stable across selections — the pill doesn't flicker in and out
     // of existence as the user reorders layers.
     final index = doc.indexOf(layer.id);
-    final canBringForward =
-        index != null && index < doc.layers.length - 1;
+    final canBringForward = index != null && index < doc.layers.length - 1;
 
     final anchor = FloatingToolbarPositioner.resolve(
       layerPosition: layer.transform.position,
@@ -109,10 +108,7 @@ class QuickActionsOverlay extends ConsumerWidget {
       // layer.id so a fresh selection always re-plays the entrance.
       child: SizedBox(
         height: _barHeight,
-        child: _PopIn(
-          key: ValueKey(layer.id),
-          child: bar,
-        ),
+        child: _PopIn(key: ValueKey(layer.id), child: bar),
       ),
     );
   }
@@ -159,8 +155,9 @@ class _BarContent extends StatelessWidget {
         ? Colors.black.withValues(alpha: 0.72)
         : Colors.white.withValues(alpha: 0.92);
     final fg = isDark ? Colors.white : scheme.onSurface;
-    final dividerColor = (isDark ? Colors.white : Colors.black)
-        .withValues(alpha: 0.08);
+    final dividerColor = (isDark ? Colors.white : Colors.black).withValues(
+      alpha: 0.08,
+    );
 
     return Material(
       color: Colors.transparent,
@@ -169,8 +166,9 @@ class _BarContent extends StatelessWidget {
           color: bg,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: (isDark ? Colors.white : Colors.black)
-                .withValues(alpha: 0.06),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.06,
+            ),
           ),
           boxShadow: const [
             BoxShadow(
@@ -185,16 +183,16 @@ class _BarContent extends StatelessWidget {
           children: [
             _ActionPill(
               icon: Icons.content_copy_rounded,
-              tooltip: 'Duplicate',
+              tooltip: context.l10n.duplicateAction,
               color: fg,
               onTap: onDuplicate,
             ),
             _Divider(color: dividerColor),
             _ActionPill(
-              icon: isLocked
-                  ? Icons.lock_rounded
-                  : Icons.lock_open_rounded,
-              tooltip: isLocked ? 'Unlock' : 'Lock',
+              icon: isLocked ? Icons.lock_rounded : Icons.lock_open_rounded,
+              tooltip: isLocked
+                  ? context.l10n.unlockAction
+                  : context.l10n.lockAction,
               // Locked state tints the pill primary so the user
               // sees the lock is engaged at a glance — matches the
               // layers panel highlight semantics.
@@ -204,7 +202,7 @@ class _BarContent extends StatelessWidget {
             _Divider(color: dividerColor),
             _ActionPill(
               icon: Icons.flip_to_front_rounded,
-              tooltip: 'Bring forward',
+              tooltip: context.l10n.bringForwardAction,
               color: fg,
               enabled: canBringForward,
               onTap: onBringForward,
@@ -212,7 +210,7 @@ class _BarContent extends StatelessWidget {
             _Divider(color: dividerColor),
             _ActionPill(
               icon: Icons.delete_outline_rounded,
-              tooltip: 'Delete',
+              tooltip: context.l10n.deleteAction,
               // Destructive action — tint red so it's visually
               // distinct from the neutral pills and the user has a
               // beat of recognition before committing.
@@ -246,8 +244,7 @@ class _ActionPill extends StatelessWidget {
     // 44 dp touch target — satisfies both Material (48) in spirit and
     // Apple HIG (44). Visually the icon is 20 dp; the remaining area
     // is invisible hit-box.
-    final effectiveColor =
-        enabled ? color : color.withValues(alpha: 0.35);
+    final effectiveColor = enabled ? color : color.withValues(alpha: 0.35);
     return Tooltip(
       message: tooltip,
       waitDuration: const Duration(milliseconds: 600),
@@ -270,11 +267,7 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 20,
-      color: color,
-    );
+    return Container(width: 1, height: 20, color: color);
   }
 }
 
@@ -291,8 +284,7 @@ class _PopIn extends StatefulWidget {
   State<_PopIn> createState() => _PopInState();
 }
 
-class _PopInState extends State<_PopIn>
-    with SingleTickerProviderStateMixin {
+class _PopInState extends State<_PopIn> with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _scale;
   late final Animation<double> _fade;
@@ -304,9 +296,10 @@ class _PopInState extends State<_PopIn>
       vsync: this,
       duration: const Duration(milliseconds: 180),
     );
-    _scale = Tween<double>(begin: 0.85, end: 1.0)
-        .chain(CurveTween(curve: Curves.easeOutBack))
-        .animate(_ctrl);
+    _scale = Tween<double>(
+      begin: 0.85,
+      end: 1.0,
+    ).chain(CurveTween(curve: Curves.easeOutBack)).animate(_ctrl);
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
     _ctrl.forward();
   }

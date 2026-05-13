@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "en_sale_modern_gradient",
+  "title": {
+    "en": "Modern sale",
+    "fa": "Modern sale"
+  },
+  "category": "sale",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_sale_modern_gradient/thumbnail.png",
+  "document": "assets/templates/en_sale_modern_gradient/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "sale",
+    "en",
+    "modern",
+    "gradient"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 250
+  }
+}

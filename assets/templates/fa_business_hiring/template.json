@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_business_hiring",
+  "title": {
+    "en": "استخدام",
+    "fa": "استخدام"
+  },
+  "category": "business",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_business_hiring/thumbnail.png",
+  "document": "assets/templates/fa_business_hiring/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "fa",
+    "business"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 240
+  }
+}

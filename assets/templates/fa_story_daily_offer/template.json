@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_daily_offer",
+  "title": {
+    "en": "Persian Daily Offer Story",
+    "fa": "استوری پیشنهاد امروز"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_daily_offer/thumbnail.png",
+  "document": "assets/templates/fa_story_daily_offer/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "story",
+    "sale",
+    "daily"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 31
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "en_yt_explainer_framework",
+  "title": {
+    "en": "Explainer Framework YouTube Thumbnail",
+    "fa": "تامبنیل چارچوب توضیحی"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_yt_explainer_framework/thumbnail.png",
+  "document": "assets/templates/en_yt_explainer_framework/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "english",
+    "youtube",
+    "explainer",
+    "framework"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 82
+  }
+}

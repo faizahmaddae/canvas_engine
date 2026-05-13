@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4281413249,
+    "endColor": 4290648157,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "image",
+      "transform": {
+        "x": 105.0,
+        "y": 105.0,
+        "w": 870.0,
+        "h": 760.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294829706,
+        "endColor": 4294551764,
+        "angleDegrees": 145.0
+      },
+      "cornerRadius": 70.0,
+      "shadowOpacity": 0.25,
+      "shadowBlur": 44.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 22.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "sun",
+      "transform": {
+        "x": 705.0,
+        "y": 180.0,
+        "w": 165.0,
+        "h": 165.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294965229,
+      "strokeWidth": 0.0,
+      "opacity": 0.9
+    },
+    {
+      "type": "shape",
+      "id": "horizon",
+      "transform": {
+        "x": 175.0,
+        "y": 670.0,
+        "w": 730.0,
+        "h": 75.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4286781507,
+      "strokeWidth": 0.0,
+      "cornerRadius": 38.0,
+      "opacity": 0.68
+    },
+    {
+      "type": "shape",
+      "id": "paper",
+      "transform": {
+        "x": 145.0,
+        "y": 800.0,
+        "w": 790.0,
+        "h": 420.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294965229,
+      "strokeWidth": 0.0,
+      "cornerRadius": 56.0,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 32.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 16.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 190.0,
+        "y": 875.0,
+        "w": 700.0,
+        "h": 165.0,
+        "r": 0.0
+      },
+      "content": "هر تصویر\nروایتی از دل دارد",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 70.0,
+        "color": 4286781507,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.35,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 250.0,
+        "y": 1078.0,
+        "w": 580.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "نام شاعر یا برند",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4285343961,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

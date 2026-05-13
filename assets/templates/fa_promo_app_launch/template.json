@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_app_launch",
+  "title": {
+    "en": "Persian App Launch Promo",
+    "fa": "پوستر رونمایی اپلیکیشن"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_app_launch/thumbnail.png",
+  "document": "assets/templates/fa_promo_app_launch/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "app",
+    "launch",
+    "promo"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 100
+  }
+}

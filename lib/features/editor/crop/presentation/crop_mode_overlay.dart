@@ -3,6 +3,7 @@ import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../application/document_controller.dart';
 import '../../engine/modules/image/image_layer.dart';
@@ -38,8 +39,9 @@ class CropModeOverlay extends ConsumerWidget {
     if (!session.active || session.layerId == null) {
       return const SizedBox.shrink();
     }
-    final layer = ref.watch(documentControllerProvider
-        .select((d) => d.layerById(session.layerId!)));
+    final layer = ref.watch(
+      documentControllerProvider.select((d) => d.layerById(session.layerId!)),
+    );
     if (layer is! ImageLayer) {
       // Layer was deleted while crop was open — close cleanly.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -102,11 +104,11 @@ class _CropTopBar extends ConsumerWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.cancelAction),
             ),
             const Spacer(),
-            const Text(
-              'Crop',
+            Text(
+              context.l10n.cropTool,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 17,
@@ -133,7 +135,7 @@ class _CropTopBar extends ConsumerWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              child: const Text('Done'),
+              child: Text(context.l10n.doneAction),
             ),
           ],
         ),
@@ -157,8 +159,14 @@ class _CropCanvas extends ConsumerWidget {
     // never visually crowds the control panel below it.
     const paddingSide = 28.0;
     const paddingBottom = 48.0;
-    final paneW = (available.width - paddingSide * 2).clamp(0.0, double.infinity);
-    final paneH = (available.height - paddingSide - paddingBottom).clamp(0.0, double.infinity);
+    final paneW = (available.width - paddingSide * 2).clamp(
+      0.0,
+      double.infinity,
+    );
+    final paneH = (available.height - paddingSide - paddingBottom).clamp(
+      0.0,
+      double.infinity,
+    );
     final layerW = layer.transform.size.width.abs();
     final layerH = layer.transform.size.height.abs();
     if (paneW <= 0 || paneH <= 0 || layerW <= 0 || layerH <= 0) {
@@ -285,10 +293,7 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
           child: HandleDragDetector(
             onDrag: (gp, phase) => _onHandle(_Handle.t, gp, phase),
             child: const Center(
-              child: _EdgeBar(
-                width: edgeBarMain,
-                height: edgeBarCross,
-              ),
+              child: _EdgeBar(width: edgeBarMain, height: edgeBarCross),
             ),
           ),
         ),
@@ -300,10 +305,7 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
           child: HandleDragDetector(
             onDrag: (gp, phase) => _onHandle(_Handle.b, gp, phase),
             child: const Center(
-              child: _EdgeBar(
-                width: edgeBarMain,
-                height: edgeBarCross,
-              ),
+              child: _EdgeBar(width: edgeBarMain, height: edgeBarCross),
             ),
           ),
         ),
@@ -315,10 +317,7 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
           child: HandleDragDetector(
             onDrag: (gp, phase) => _onHandle(_Handle.l, gp, phase),
             child: const Center(
-              child: _EdgeBar(
-                width: edgeBarCross,
-                height: edgeBarMain,
-              ),
+              child: _EdgeBar(width: edgeBarCross, height: edgeBarMain),
             ),
           ),
         ),
@@ -330,10 +329,7 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
           child: HandleDragDetector(
             onDrag: (gp, phase) => _onHandle(_Handle.r, gp, phase),
             child: const Center(
-              child: _EdgeBar(
-                width: edgeBarCross,
-                height: edgeBarMain,
-              ),
+              child: _EdgeBar(width: edgeBarCross, height: edgeBarMain),
             ),
           ),
         ),
@@ -421,18 +417,18 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
   }
 
   static CropHandle _toPublicHandle(_Handle h) => switch (h) {
-        _Handle.tl => CropHandle.tl,
-        _Handle.tr => CropHandle.tr,
-        _Handle.bl => CropHandle.bl,
-        _Handle.br => CropHandle.br,
-        _Handle.t => CropHandle.t,
-        _Handle.b => CropHandle.b,
-        _Handle.l => CropHandle.l,
-        _Handle.r => CropHandle.r,
-        // body has no public handle counterpart; callers must
-        // route body drags to CropController.translate directly.
-        _Handle.body => CropHandle.tl,
-      };
+    _Handle.tl => CropHandle.tl,
+    _Handle.tr => CropHandle.tr,
+    _Handle.bl => CropHandle.bl,
+    _Handle.br => CropHandle.br,
+    _Handle.t => CropHandle.t,
+    _Handle.b => CropHandle.b,
+    _Handle.l => CropHandle.l,
+    _Handle.r => CropHandle.r,
+    // body has no public handle counterpart; callers must
+    // route body drags to CropController.translate directly.
+    _Handle.body => CropHandle.tl,
+  };
 }
 
 /// Visual edge-handle bar. Small white pill anchored on the crop
@@ -472,10 +468,7 @@ class _CropMaskPainter extends CustomPainter {
     final dim = Paint()..color = const Color(0xB3000000);
     final outer = Path()..addRect(Offset.zero & size);
     final inner = Path()..addRect(frame);
-    canvas.drawPath(
-      Path.combine(PathOperation.difference, outer, inner),
-      dim,
-    );
+    canvas.drawPath(Path.combine(PathOperation.difference, outer, inner), dim);
     final stroke = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
@@ -510,12 +503,10 @@ class _CropBottomBar extends ConsumerWidget {
     final session = ref.watch(cropControllerProvider);
     final ctrl = ref.read(cropControllerProvider.notifier);
     final layerH = layer.transform.size.height;
-    final layerAspect = layerH == 0
-        ? 1.0
-        : layer.transform.size.width / layerH;
+    final layerAspect = layerH == 0 ? 1.0 : layer.transform.size.width / layerH;
     final presets = <_AspectChip>[
-      const _AspectChip(label: 'Free', aspect: null),
-      _AspectChip(label: 'Original', aspect: layerAspect),
+      _AspectChip(label: context.l10n.freeOption, aspect: null),
+      _AspectChip(label: context.l10n.originalOption, aspect: layerAspect),
       const _AspectChip(label: '1:1', aspect: 1),
       const _AspectChip(label: '4:5', aspect: 4 / 5),
       const _AspectChip(label: '5:4', aspect: 5 / 4),
@@ -529,9 +520,7 @@ class _CropBottomBar extends ConsumerWidget {
     return Container(
       decoration: const BoxDecoration(
         color: Color(0xFF0D0D0D),
-        border: Border(
-          top: BorderSide(color: Color(0xFF2A2A2A), width: 1),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFF2A2A2A), width: 1)),
       ),
       child: SafeArea(
         top: false,
@@ -552,8 +541,10 @@ class _CropBottomBar extends ConsumerWidget {
                   separatorBuilder: (_, _) => const SizedBox(width: 10),
                   itemBuilder: (_, i) {
                     final p = presets[i];
-                    final selected =
-                        _aspectMatches(session.aspectRatio, p.aspect);
+                    final selected = _aspectMatches(
+                      session.aspectRatio,
+                      p.aspect,
+                    );
                     return _ChipButton(
                       label: p.label,
                       selected: selected,
@@ -573,17 +564,14 @@ class _CropBottomBar extends ConsumerWidget {
                   ctrl.resetCrop();
                 },
                 icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Reset crop'),
+                label: Text(context.l10n.resetCropAction),
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xD9FFFFFF), // ~white85
                   minimumSize: const Size(140, 44),
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(22),
-                    side: const BorderSide(
-                      color: Color(0xFF3A3A3A),
-                      width: 1,
-                    ),
+                    side: const BorderSide(color: Color(0xFF3A3A3A), width: 1),
                   ),
                   textStyle: const TextStyle(
                     fontSize: 13,

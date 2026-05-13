@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
@@ -39,23 +40,24 @@ class StickerModeToolbar extends ConsumerWidget {
       stickerToolControllerProvider.select((s) => s.openSlot),
     );
     final ctrl = ref.read(stickerToolControllerProvider.notifier);
+    final l10n = context.l10n;
     final slots = <ToolbarSlot>[
       ToolbarSlot(
         id: StickerToolSlot.style.name,
         icon: Icons.auto_awesome_outlined,
-        label: 'Style',
+        label: l10n.styleTool,
         onTap: () => ctrl.toggleSlot(StickerToolSlot.style),
       ),
       ToolbarSlot(
         id: StickerToolSlot.size.name,
         icon: Icons.photo_size_select_large_rounded,
-        label: 'Size',
+        label: l10n.sizeTool,
         onTap: () => ctrl.toggleSlot(StickerToolSlot.size),
       ),
       ToolbarSlot(
         id: StickerToolSlot.replace.name,
         icon: Icons.swap_horiz_rounded,
-        label: 'Replace',
+        label: l10n.replaceTool,
         onTap: () => ctrl.toggleSlot(StickerToolSlot.replace),
       ),
     ];

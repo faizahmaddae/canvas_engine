@@ -1,0 +1,169 @@
+{
+  "version": 2,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4278322711,
+    "endColor": 4279137424,
+    "angleDegrees": 120.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "grid",
+      "transform": {
+        "x": 760.0,
+        "y": 105.0,
+        "w": 420.0,
+        "h": 510.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4293721855,
+        "endColor": 4294967295,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 46.0,
+      "shadowOpacity": 0.3,
+      "shadowBlur": 34.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "step1",
+      "transform": {
+        "x": 815.0,
+        "y": 175.0,
+        "w": 310.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279137424,
+      "strokeWidth": 0.0,
+      "cornerRadius": 24.0
+    },
+    {
+      "type": "shape",
+      "id": "step2",
+      "transform": {
+        "x": 815.0,
+        "y": 295.0,
+        "w": 310.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4278751666,
+      "strokeWidth": 0.0,
+      "cornerRadius": 24.0
+    },
+    {
+      "type": "shape",
+      "id": "step3",
+      "transform": {
+        "x": 815.0,
+        "y": 415.0,
+        "w": 310.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280472558,
+      "strokeWidth": 0.0,
+      "cornerRadius": 24.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 70.0,
+        "y": 120.0,
+        "w": 650.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "BUILD THIS\nSTEP BY STEP",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 82.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.98,
+        "alignment": "left",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "tag",
+      "transform": {
+        "x": 78.0,
+        "y": 410.0,
+        "w": 430.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0,
+      "cornerRadius": 41.0
+    },
+    {
+      "type": "text",
+      "id": "tag-text",
+      "transform": {
+        "x": 112.0,
+        "y": 428.0,
+        "w": 360.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "FULL TUTORIAL",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 38.0,
+        "color": 4279310375,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 78.0,
+        "y": 545.0,
+        "w": 610.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "Beginner friendly workflow",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 40.0,
+        "color": 4289197008,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

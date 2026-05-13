@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_sale_bold",
+  "title": {
+    "en": "حراج ویژه",
+    "fa": "حراج ویژه"
+  },
+  "category": "sale",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_sale_bold/thumbnail.png",
+  "document": "assets/templates/fa_sale_bold/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "sale",
+    "fa",
+    "bold"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 270
+  }
+}

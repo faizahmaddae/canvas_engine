@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../application/export_format.dart';
 import '../../application/image_export_service.dart';
 import '../../canvas/presentation/widgets/canvas_checkerboard.dart';
@@ -41,9 +42,9 @@ class ExportPreviewScreen extends ConsumerStatefulWidget {
     required this.pixelHeight,
     this.jpgQuality,
   }) : assert(
-          format != ExportFormat.jpg || jpgQuality != null,
-          'jpgQuality is required when format is JPG',
-        );
+         format != ExportFormat.jpg || jpgQuality != null,
+         'jpgQuality is required when format is JPG',
+       );
 
   /// Encoded bytes — the exact buffer that will be saved/shared.
   final Uint8List bytes;
@@ -147,10 +148,10 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Preview export'),
+        title: Text(context.l10n.previewExportTitle),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
-          tooltip: 'Cancel',
+          tooltip: context.l10n.cancelAction,
           onPressed: _busy ? null : _onCancel,
         ),
       ),
@@ -237,8 +238,9 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                       widget.jpgQuality != null)
                     _InfoChip(
                       icon: Icons.tune_rounded,
-                      text:
-                          'Quality ${(widget.jpgQuality! * 100).round()}%',
+                      text: context.l10n.qualityPercent(
+                        (widget.jpgQuality! * 100).round(),
+                      ),
                     ),
                   _InfoChip(
                     icon: Icons.sd_storage_outlined,
@@ -256,7 +258,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _busy ? null : _onCancel,
                       icon: const Icon(Icons.close_rounded),
-                      label: const Text('Cancel'),
+                      label: Text(context.l10n.cancelAction),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: BorderSide(
@@ -274,7 +276,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _busy ? null : _onShare,
                       icon: const Icon(Icons.ios_share_outlined),
-                      label: const Text('Share'),
+                      label: Text(context.l10n.shareAction),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: BorderSide(
@@ -292,7 +294,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                     child: FilledButton.icon(
                       onPressed: _busy ? null : _onSave,
                       icon: const Icon(Icons.download_rounded),
-                      label: const Text('Save'),
+                      label: Text(context.l10n.saveAction),
                       style: FilledButton.styleFrom(
                         backgroundColor: scheme.primary,
                         foregroundColor: scheme.onPrimary,
@@ -314,9 +316,9 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
   }
 
   void _onCancel() {
-    Navigator.of(context).pop(
-      const ExportPreviewOutcome(action: ExportPreviewAction.cancel),
-    );
+    Navigator.of(
+      context,
+    ).pop(const ExportPreviewOutcome(action: ExportPreviewAction.cancel));
   }
 
   Future<void> _onSave() async {
@@ -325,10 +327,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
     final result = await svc.saveToGallery(widget.bytes, format: widget.format);
     if (!mounted) return;
     Navigator.of(context).pop(
-      ExportPreviewOutcome(
-        action: ExportPreviewAction.save,
-        result: result,
-      ),
+      ExportPreviewOutcome(action: ExportPreviewAction.save, result: result),
     );
   }
 
@@ -342,16 +341,13 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
     final svc = ref.read(imageExportServiceProvider);
     final result = await svc.share(
       widget.bytes,
-      subject: 'Design export',
+      subject: context.l10n.designExportSubject,
       shareOrigin: origin,
       format: widget.format,
     );
     if (!mounted) return;
     Navigator.of(context).pop(
-      ExportPreviewOutcome(
-        action: ExportPreviewAction.share,
-        result: result,
-      ),
+      ExportPreviewOutcome(action: ExportPreviewAction.share, result: result),
     );
   }
 
@@ -401,4 +397,3 @@ class _InfoChip extends StatelessWidget {
 /// Tiled checkerboard so PNG transparency is visible in the preview.
 /// Now provided by the shared [CanvasCheckerboard] widget — see the
 /// preview pane builder above.
-

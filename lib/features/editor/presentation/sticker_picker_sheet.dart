@@ -2,6 +2,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/haptics.dart';
+import '../../../l10n/l10n.dart';
 
 /// Bottom-sheet emoji picker used by the Sticker tool.
 ///
@@ -38,10 +39,9 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
   // users (empty Recent) and on Recent for returning users. Held
   // in state so `EmojiPicker`'s `initCategory` only sees a fully
   // resolved value and never flips after the first build.
-  late final Future<Category> _initialCategory =
-      EmojiPickerUtils().getRecentEmojis().then(
-            (recents) => recents.isEmpty ? Category.SMILEYS : Category.RECENT,
-          );
+  late final Future<Category> _initialCategory = EmojiPickerUtils()
+      .getRecentEmojis()
+      .then((recents) => recents.isEmpty ? Category.SMILEYS : Category.RECENT);
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +56,7 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
             child: Text(
-              'STICKERS',
+              context.l10n.stickersTitle.toUpperCase(),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
@@ -105,10 +105,7 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
           columns: 8,
           verticalSpacing: 2,
           horizontalSpacing: 2,
-          gridPadding: const EdgeInsets.symmetric(
-            horizontal: 4,
-            vertical: 4,
-          ),
+          gridPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           noRecents: _NoRecentsHint(scheme: scheme),
         ),
         viewOrderConfig: const ViewOrderConfig(
@@ -119,7 +116,7 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
         searchViewConfig: SearchViewConfig(
           backgroundColor: scheme.surface,
           buttonIconColor: scheme.onSurfaceVariant,
-          hintText: 'Search emojis',
+          hintText: context.l10n.searchEmojisHint,
         ),
         categoryViewConfig: CategoryViewConfig(
           backgroundColor: scheme.surface,
@@ -179,7 +176,7 @@ class _NoRecentsHint extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'No recent stickers yet',
+              context.l10n.noRecentStickersYet,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -188,7 +185,7 @@ class _NoRecentsHint extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Your recently used stickers will appear here.',
+              context.l10n.recentStickersHint,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,

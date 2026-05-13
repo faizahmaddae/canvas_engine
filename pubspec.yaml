@@ -9,9 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.9
   flutter_riverpod: ^3.3.1
   freezed_annotation: ^3.1.0
+  intl: any
   json_annotation: ^4.11.0
   uuid: ^4.5.3
   collection: ^1.19.1
@@ -32,7 +35,126 @@ dev_dependencies:
   json_serializable: ^6.13.1
 
 flutter:
+  generate: true
   uses-material-design: true
+  assets:
+    - assets/templates/
+    - assets/templates/samples/fa_story_today/
+    - assets/templates/samples/en_youtube_watch_this/
+    - assets/templates/fa_insta_story_v1/
+    - assets/templates/fa_promo_v1/
+    - assets/templates/fa_poetry_overlay_v1/
+    - assets/templates/en_yt_thumb_v1/
+    - assets/templates/en_announcement/
+    - assets/templates/fa_quote_minimal/
+    - assets/templates/en_quote_editorial_gradient/
+    - assets/templates/fa_poetry_v1/
+    - assets/templates/en_quote_minimal/
+    - assets/templates/fa_story_warm_pastel/
+    - assets/templates/fa_insta_story_bold_word_v1/
+    - assets/templates/fa_poetry_minimal_v1/
+    - assets/templates/fa_promo_sale_v1/
+    - assets/templates/fa_insta_story_announcement_v1/
+    - assets/templates/fa_insta_story_frame_v1/
+    - assets/templates/fa_poetry_traditional_v1/
+    - assets/templates/fa_promo_event_v1/
+    - assets/templates/fa_promo_launch_v1/
+    - assets/templates/en_sale_modern_gradient/
+    - assets/templates/en_story_quote/
+    - assets/templates/fa_sale_bold/
+    - assets/templates/fa_insta_story_minimal_v1/
+    - assets/templates/en_yt_question_v1/
+    - assets/templates/en_yt_list_v1/
+    - assets/templates/en_sale_bold/
+    - assets/templates/en_birthday_confetti/
+    - assets/templates/fa_story_quote/
+    - assets/templates/fa_announcement/
+    - assets/templates/en_quote_editorial/
+    - assets/templates/fa_quote_editorial/
+    - assets/templates/en_story_motivation/
+    - assets/templates/en_event_market/
+    - assets/templates/en_motivation_sunrise/
+    - assets/templates/en_business_card_post/
+    - assets/templates/fa_birthday/
+    - assets/templates/fa_event/
+    - assets/templates/fa_motivation_sunrise/
+    - assets/templates/en_yt_reaction_v1/
+    - assets/templates/en_yt_tutorial_v1/
+    - assets/templates/fa_business_hiring/
+    - assets/templates/fa_food_menu/
+    - assets/templates/en_food_menu/
+    - assets/templates/en_food_coffee/
+    - assets/templates/en_sale_flash/
+    - assets/templates/en_greeting_thanks/
+    - assets/templates/en_business_quote/
+    - assets/templates/en_event_concert/
+    - assets/templates/fa_food_coffee/
+    - assets/templates/fa_sale_flash/
+    - assets/templates/fa_thanks/
+    - assets/templates/fa_concert/
+    - assets/templates/fa_story_product_reveal/
+    - assets/templates/fa_story_daily_offer/
+    - assets/templates/fa_story_cafe_mood/
+    - assets/templates/fa_story_course_signup/
+    - assets/templates/fa_post_brand_intro/
+    - assets/templates/fa_post_minimal_tip/
+    - assets/templates/fa_post_event_countdown/
+    - assets/templates/fa_post_culture_seasonal/
+    - assets/templates/fa_sale_luxury_drop/
+    - assets/templates/fa_sale_market_weekend/
+    - assets/templates/fa_promo_restaurant_special/
+    - assets/templates/fa_promo_course_launch/
+    - assets/templates/fa_poetry_nastaliq_evening/
+    - assets/templates/fa_quote_modern_dark/
+    - assets/templates/fa_poetry_gallery_card/
+    - assets/templates/en_yt_ai_tools_2026/
+    - assets/templates/en_yt_before_after_design/
+    - assets/templates/en_social_launch_checklist/
+    - assets/templates/fa_business_recruitment_story/
+    - assets/templates/fa_business_agency_intro/
+    - assets/templates/fa_business_service_offer/
+    - assets/templates/fa_business_job_fair/
+    - assets/templates/fa_business_team_hiring/
+    - assets/templates/fa_business_consulting_post/
+    - assets/templates/fa_food_modern_menu_board/
+    - assets/templates/fa_food_delivery_story/
+    - assets/templates/fa_cafe_breakfast_special/
+    - assets/templates/fa_restaurant_live_night/
+    - assets/templates/fa_food_dessert_launch/
+    - assets/templates/fa_edu_webinar_story/
+    - assets/templates/fa_edu_workshop_poster/
+    - assets/templates/fa_edu_exam_prep_post/
+    - assets/templates/fa_edu_course_tip_carousel/
+    - assets/templates/fa_season_nowruz_greeting/
+    - assets/templates/fa_season_iftar_invite/
+    - assets/templates/fa_cultural_book_night/
+    - assets/templates/en_business_product_update/
+    - assets/templates/en_webinar_growth_masterclass/
+    - assets/templates/en_event_startup_pitch/
+    - assets/templates/en_social_case_study/
+    - assets/templates/en_yt_explainer_framework/
+    - assets/templates/fa_story_fashion_drop/
+    - assets/templates/fa_story_beauty_booking/
+    - assets/templates/fa_story_health_clinic_tip/
+    - assets/templates/fa_post_product_carousel_cover/
+    - assets/templates/fa_post_service_announcement/
+    - assets/templates/fa_post_personal_brand_quote/
+    - assets/templates/fa_sale_retail_clearance/
+    - assets/templates/fa_promo_clinic_checkup/
+    - assets/templates/fa_promo_travel_tour/
+    - assets/templates/fa_sale_beauty_package/
+    - assets/templates/fa_promo_app_launch/
+    - assets/templates/fa_poetry_black_gold_nastaliq/
+    - assets/templates/fa_quote_editorial_magazine/
+    - assets/templates/fa_poetry_photo_frame_premium/
+    - assets/templates/fa_quote_literary_column/
+    - assets/templates/fa_event_gallery_opening/
+    - assets/templates/fa_business_service_launch_story/
+    - assets/templates/fa_event_workshop_announcement/
+    - assets/templates/en_yt_tutorial_blueprint/
+    - assets/templates/en_yt_reaction_hot_take/
+    - assets/templates/en_yt_podcast_interview/
+    - assets/templates/en_social_business_announcement/
   fonts:
     - family: Barriecito
       fonts:

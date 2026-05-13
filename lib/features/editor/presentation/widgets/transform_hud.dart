@@ -46,8 +46,7 @@ class TransformHud extends StatelessWidget {
       centerCanvas.dx + dx * c - dy * s,
       centerCanvas.dy + dx * s + dy * c,
     );
-    final topMidScreen =
-        topMidCanvas * viewport.scale + viewport.translation;
+    final topMidScreen = topMidCanvas * viewport.scale + viewport.translation;
 
     const chipWidth = 120.0;
     const chipHeight = 24.0;

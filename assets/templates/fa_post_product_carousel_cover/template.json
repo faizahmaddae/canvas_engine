@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_post_product_carousel_cover",
+  "title": {
+    "en": "Persian Product Carousel Cover",
+    "fa": "کاور کاروسل محصول"
+  },
+  "category": "social",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_post_product_carousel_cover/thumbnail.png",
+  "document": "assets/templates/fa_post_product_carousel_cover/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "instagram",
+    "post",
+    "product"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 93
+  }
+}

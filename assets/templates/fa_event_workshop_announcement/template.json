@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_event_workshop_announcement",
+  "title": {
+    "en": "Persian Workshop Announcement",
+    "fa": "اعلامیه کارگاه حضوری"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_event_workshop_announcement/thumbnail.png",
+  "document": "assets/templates/fa_event_workshop_announcement/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "event",
+    "workshop",
+    "announcement"
+  ],
+  "home": {
+    "sortOrder": 107
+  }
+}

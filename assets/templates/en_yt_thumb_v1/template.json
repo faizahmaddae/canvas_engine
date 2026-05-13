@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_yt_thumb_v1",
+  "title": {
+    "en": "Watch this",
+    "fa": "Watch this"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_yt_thumb_v1/thumbnail.png",
+  "document": "assets/templates/en_yt_thumb_v1/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "youtube",
+    "thumbnail"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 40
+  }
+}

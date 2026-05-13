@@ -1,0 +1,1509 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Persian (`fa`).
+class AppLocalizationsFa extends AppLocalizations {
+  AppLocalizationsFa([String locale = 'fa']) : super(locale);
+
+  @override
+  String get appName => 'کانواس';
+
+  @override
+  String get settingsTitle => 'تنظیمات';
+
+  @override
+  String get appearanceSection => 'ظاهر';
+
+  @override
+  String get themeTitle => 'پوسته';
+
+  @override
+  String get themeSystem => 'سیستم';
+
+  @override
+  String get themeLight => 'روشن';
+
+  @override
+  String get themeDark => 'تیره';
+
+  @override
+  String get languageTitle => 'زبان';
+
+  @override
+  String get languageSystem => 'سیستم';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languagePersian => 'فارسی';
+
+  @override
+  String get onboardingWelcomeTitle => 'زیبا طراحی کن، به هر زبان';
+
+  @override
+  String get onboardingWelcomeTagline =>
+      'استوری، پست، کاور و طرح‌های متنی را با قالب‌های آماده بساز.';
+
+  @override
+  String get onboardingGetStarted => 'شروع کنیم';
+
+  @override
+  String get onboardingSkip => 'رد کردن';
+
+  @override
+  String get onboardingGoalTitle => 'چی می‌خوای بسازی؟';
+
+  @override
+  String get onboardingGoalSubtitle =>
+      'چند گزینه انتخاب کن تا قالب‌های مناسب‌تری ببینی.';
+
+  @override
+  String get onboardingGoalInstagram => 'استوری اینستاگرام';
+
+  @override
+  String get onboardingGoalYoutube => 'تامنیل یوتیوب';
+
+  @override
+  String get onboardingGoalPoetry => 'شعر و نقل قول';
+
+  @override
+  String get onboardingGoalPoster => 'پست و تبلیغات';
+
+  @override
+  String get onboardingGoalTextOnPhoto => 'متن روی عکس';
+
+  @override
+  String get onboardingGoalBlankCanvas => 'بوم خالی';
+
+  @override
+  String get onboardingContinue => 'ادامه';
+
+  @override
+  String get onboardingFinish => 'پایان';
+
+  @override
+  String get onboardingReadyTitle => 'قالب‌ها آماده‌اند';
+
+  @override
+  String get onboardingReadySubtitle =>
+      'از یک طرح شروع کن، متن را تغییر بده و خروجی بگیر.';
+
+  @override
+  String get onboardingReadyCta => 'شروع طراحی';
+
+  @override
+  String get onboardingReadyGreetingDefault => 'خوش اومدی، خلّاق';
+
+  @override
+  String get onboardingReadyGreetingStoryteller => 'خوش اومدی، قصه‌گو';
+
+  @override
+  String get onboardingReadyGreetingCreator => 'خوش اومدی، ویدیوساز';
+
+  @override
+  String get onboardingReadyGreetingPoet => 'خوش اومدی، شاعر';
+
+  @override
+  String get onboardingReadyGreetingMarketer => 'خوش اومدی، بازاریاب';
+
+  @override
+  String get onboardingArtTypography => 'تایپوگرافی';
+
+  @override
+  String get onboardingArtPersian => 'فارسی';
+
+  @override
+  String get onboardingArtStory => 'استوری';
+
+  @override
+  String get onboardingArtTemplate => 'قالب';
+
+  @override
+  String get onboardingArtPersianLetters => 'حروف فارسی';
+
+  @override
+  String get onboardingArtReadyText => 'متن آماده';
+
+  @override
+  String get onboardingArtLayers => 'لایه‌ها';
+
+  @override
+  String get onboardingArtAlphabet => 'الفبا';
+
+  @override
+  String get onboardingArtBeautiful => 'زیبا';
+
+  @override
+  String get settingsContentLanguagesTitle => 'زبان محتوای قالب‌ها';
+
+  @override
+  String get settingsEnabledCategoriesTitle => 'قالب‌های صفحه خانه';
+
+  @override
+  String get settingsResetOnboarding => 'بازنشانی شروع اولیه';
+
+  @override
+  String get canvasInteractionSection => 'تعامل با بوم';
+
+  @override
+  String get enableCanvasPanTitle => 'جابجایی بوم';
+
+  @override
+  String get enableCanvasPanSubtitle => 'برای جابجایی، بوم را بکشید';
+
+  @override
+  String get enableCanvasZoomTitle => 'بزرگنمایی بوم';
+
+  @override
+  String get enableCanvasZoomSubtitle =>
+      'برای بزرگنمایی، دو انگشت را جمع یا باز کنید';
+
+  @override
+  String get enableCanvasRotationTitle => 'چرخش بوم';
+
+  @override
+  String get enableCanvasRotationSubtitle =>
+      'برای ژست چرخش دو انگشتی آینده رزرو شده است';
+
+  @override
+  String get exportSection => 'خروجی';
+
+  @override
+  String get defaultExportQualityTitle => 'کیفیت پیش‌فرض خروجی';
+
+  @override
+  String get exportQualityOriginal => 'اندازه اصلی';
+
+  @override
+  String get exportQualityHigh => 'کیفیت بالا';
+
+  @override
+  String get exportQualityUltra => 'کیفیت فوق‌العاده';
+
+  @override
+  String get editorSection => 'ویرایشگر';
+
+  @override
+  String get snapToGuidesTitle => 'چسبیدن به راهنماها';
+
+  @override
+  String get snapToGuidesSubtitle =>
+      'لایه‌ها را با لبه‌ها و مرکزهای نزدیک هم‌راستا می‌کند';
+
+  @override
+  String get showSpacingGuidesTitle => 'نمایش راهنمای فاصله‌ها';
+
+  @override
+  String get showSpacingGuidesSubtitle =>
+      'فاصله‌های برابر بین لایه‌ها را هنگام کشیدن نشان می‌دهد';
+
+  @override
+  String get multiFingerUndoRedoTitle => 'واگرد / بازانجام چندانگشتی';
+
+  @override
+  String get multiFingerUndoRedoSubtitle =>
+      'ضربه دو انگشتی برای واگرد و سه انگشتی برای بازانجام. پیش‌فرض خاموش است چون ممکن است با ژست‌های نیشگون تداخل داشته باشد.';
+
+  @override
+  String get rightHandedToolbarTitle => 'نوار ابزار راست‌دست';
+
+  @override
+  String get rightHandedToolbarSubtitle =>
+      'نوار پایینی را به لبه راست می‌برد تا ابزارها به انگشت شست راست نزدیک‌تر باشند. ترتیب ابزارها تغییر نمی‌کند.';
+
+  @override
+  String get cancelAction => 'لغو';
+
+  @override
+  String get saveAction => 'ذخیره';
+
+  @override
+  String get createAction => 'ایجاد';
+
+  @override
+  String get deleteAction => 'حذف';
+
+  @override
+  String get openAction => 'باز کردن';
+
+  @override
+  String get renameAction => 'تغییر نام';
+
+  @override
+  String get duplicateAction => 'تکثیر';
+
+  @override
+  String get addAction => 'افزودن';
+
+  @override
+  String get applyAction => 'اعمال';
+
+  @override
+  String get doneAction => 'انجام شد';
+
+  @override
+  String get shareAction => 'اشتراک‌گذاری';
+
+  @override
+  String get keepAction => 'نگه داشتن';
+
+  @override
+  String get removeAction => 'حذف';
+
+  @override
+  String get settingsTooltip => 'تنظیمات';
+
+  @override
+  String get homeBrandTitle => 'کانواس';
+
+  @override
+  String get homeWelcomeTitle => 'امروز چی می‌سازی؟';
+
+  @override
+  String get homeWelcomeSubtitle =>
+      'از قالب آماده شروع کن یا عکس خودت را ویرایش کن.';
+
+  @override
+  String get homeHeroTitle => 'با قالب آماده شروع کن';
+
+  @override
+  String get homeHeroSubtitle => 'متن را تغییر بده و طرح زیبا بساز.';
+
+  @override
+  String get homeChooseTemplateAction => 'انتخاب قالب';
+
+  @override
+  String get homeQuickActionsTitle => 'شروع سریع';
+
+  @override
+  String get editPhotoCta => 'ویرایش عکس';
+
+  @override
+  String get editPhotoSubtitle => 'یک تصویر باز کنید و ویرایش را شروع کنید';
+
+  @override
+  String get blankCanvasCta => 'طرح جدید';
+
+  @override
+  String get blankCanvasSubtitle => 'از صفر شروع کن';
+
+  @override
+  String get homeTextOnPhotoCta => 'متن روی عکس';
+
+  @override
+  String get homeTextOnPhotoSubtitle => 'با یک چیدمان متنی آماده شروع کن';
+
+  @override
+  String get recentTitle => 'اخیر';
+
+  @override
+  String get seeAllAction => 'مشاهده همه';
+
+  @override
+  String get recentProjectsTitle => 'پروژه‌های اخیر';
+
+  @override
+  String get lastOpenedLabel => 'آخرین بازشده';
+
+  @override
+  String get emptyProjectsTitle => 'هنوز طرحی نداری';
+
+  @override
+  String get emptyProjectsBody => 'از یک قالب شروع کن یا طرح جدید بساز.';
+
+  @override
+  String get emptyProjectsCta => 'پروژه جدید';
+
+  @override
+  String get trySampleAction => 'امتحان نمونه';
+
+  @override
+  String get moreTooltip => 'بیشتر';
+
+  @override
+  String get moreOptionsTooltip => 'گزینه‌های بیشتر';
+
+  @override
+  String get collapseTooltip => 'جمع کردن';
+
+  @override
+  String get dismissPanelSemantics => 'بستن پنل';
+
+  @override
+  String get undoLastChangeSemantics => 'واگرد آخرین تغییر';
+
+  @override
+  String get closePanelSemantics => 'بستن پنل';
+
+  @override
+  String get bringForwardAction => 'آوردن به جلو';
+
+  @override
+  String get sendBackwardAction => 'فرستادن به عقب';
+
+  @override
+  String get lockAction => 'قفل';
+
+  @override
+  String get unlockAction => 'باز کردن قفل';
+
+  @override
+  String get lockLayerAction => 'قفل کردن لایه';
+
+  @override
+  String get unlockLayerAction => 'باز کردن قفل لایه';
+
+  @override
+  String get hideAction => 'پنهان کردن';
+
+  @override
+  String get showAction => 'نمایش';
+
+  @override
+  String get protectedBasePhotoTooltip => 'عکس پایه محافظت‌شده';
+
+  @override
+  String get basePhotoLabel => 'عکس پایه';
+
+  @override
+  String multiSelectCount(int count) {
+    return 'چندانتخاب · $count';
+  }
+
+  @override
+  String get noLayersEmpty =>
+      'هنوز لایه‌ای ندارید.\nبرای شروع متن، تصویر یا شکل اضافه کنید.';
+
+  @override
+  String get removeBasePhotoCommand => 'حذف عکس پایه';
+
+  @override
+  String get removeBasePhotoBody =>
+      'این همان عکسی است که پروژه بر اساس آن ساخته شده. با حذف آن، پروژه به یک طرح خالی تبدیل می‌شود. می‌توانید این کار را واگرد کنید.';
+
+  @override
+  String get recentLabel => 'اخیر';
+
+  @override
+  String get paletteLabel => 'پالت';
+
+  @override
+  String get customLabel => 'سفارشی';
+
+  @override
+  String get scaleLabel => 'مقیاس';
+
+  @override
+  String get freeLabel => 'آزاد';
+
+  @override
+  String get projectNameLabel => 'نام پروژه';
+
+  @override
+  String get renameProjectTitle => 'تغییر نام پروژه';
+
+  @override
+  String get deleteProjectTitle => 'حذف پروژه؟';
+
+  @override
+  String deleteProjectBody(String name) {
+    return '«$name» برای همیشه حذف می‌شود.';
+  }
+
+  @override
+  String duplicatedProject(String name) {
+    return '«$name» تکثیر شد';
+  }
+
+  @override
+  String renamedProject(String name) {
+    return 'به «$name» تغییر نام داد';
+  }
+
+  @override
+  String deletedProject(String name) {
+    return '«$name» حذف شد';
+  }
+
+  @override
+  String openProjectSemantics(String name, String time) {
+    return 'باز کردن $name، آخرین ویرایش $time';
+  }
+
+  @override
+  String openTemplateSemantics(String name) {
+    return 'باز کردن قالب $name';
+  }
+
+  @override
+  String get createCustomAction => 'ایجاد اندازه سفارشی';
+
+  @override
+  String get widthLabel => 'عرض';
+
+  @override
+  String get heightLabel => 'ارتفاع';
+
+  @override
+  String get widthPxLabel => 'عرض (px)';
+
+  @override
+  String get heightPxLabel => 'ارتفاع (px)';
+
+  @override
+  String get newDesignTitle => 'طرح جدید';
+
+  @override
+  String get newDesignName => 'طرح جدید';
+
+  @override
+  String get importedImageName => 'تصویر واردشده';
+
+  @override
+  String get importPhotoCommand => 'ورود عکس';
+
+  @override
+  String get sampleName => 'نمونه';
+
+  @override
+  String get sampleCommand => 'نمونه';
+
+  @override
+  String get pickCanvasSizeBody => 'برای شروع، اندازه بوم را انتخاب کنید.';
+
+  @override
+  String get squareGroup => 'مربع';
+
+  @override
+  String get portraitGroup => 'عمودی';
+
+  @override
+  String get landscapeGroup => 'افقی';
+
+  @override
+  String get storyGroup => 'استوری';
+
+  @override
+  String get printGroup => 'چاپ';
+
+  @override
+  String get customGroup => 'سفارشی';
+
+  @override
+  String get instagramPostPreset => 'پست اینستاگرام';
+
+  @override
+  String get squarePreset => 'مربع';
+
+  @override
+  String get square2048Preset => 'مربع ۲۰۴۸';
+
+  @override
+  String get portrait45Preset => 'عمودی ۴:۵';
+
+  @override
+  String get youtubeThumbnailPreset => 'تامبنیل یوتیوب';
+
+  @override
+  String get linkedInPostPreset => 'پست لینکدین';
+
+  @override
+  String get twitterPostPreset => 'پست توییتر (۱۶:۹)';
+
+  @override
+  String get facebookCoverPreset => 'کاور فیسبوک';
+
+  @override
+  String get hd1080pPreset => 'HD 1080p';
+
+  @override
+  String get storyPreset => 'استوری';
+
+  @override
+  String get instagramStory916Preset => 'استوری اینستاگرام (۹:۱۶)';
+
+  @override
+  String get a4Portrait300Preset => 'A4 عمودی (۳۰۰ dpi)';
+
+  @override
+  String get a4Landscape300Preset => 'A4 افقی (۳۰۰ dpi)';
+
+  @override
+  String get customSizeValidation => 'عرض و ارتفاع باید بین ۱۶ تا ۱۶۳۸۴ باشد.';
+
+  @override
+  String get enterImageUrlValidation => 'نشانی تصویر را وارد کنید.';
+
+  @override
+  String get imageUrlLabel => 'نشانی تصویر';
+
+  @override
+  String get imageSizingHint =>
+      'اندازه بوم بر اساس ابعاد واقعی تصویر تنظیم می‌شود و تصویر به‌عنوان یک لایه افزوده خواهد شد.';
+
+  @override
+  String get noProjectsYet => 'هنوز پروژه‌ای ندارید';
+
+  @override
+  String get startByCreatingOne => 'با ساختن یک پروژه شروع کنید';
+
+  @override
+  String get justNow => 'همین حالا';
+
+  @override
+  String minutesAgo(int count) {
+    return '$count دقیقه پیش';
+  }
+
+  @override
+  String hoursAgo(int count) {
+    return '$count ساعت پیش';
+  }
+
+  @override
+  String get yesterday => 'دیروز';
+
+  @override
+  String daysAgo(int count) {
+    return '$count روز پیش';
+  }
+
+  @override
+  String weeksAgo(int count) {
+    return '$count هفته پیش';
+  }
+
+  @override
+  String monthsAgo(int count) {
+    return '$count ماه پیش';
+  }
+
+  @override
+  String get templatesTitle => 'قالب‌ها';
+
+  @override
+  String get templatesBrowseSubtitle =>
+      'قالب مناسب را بر اساس زبان و دسته‌بندی پیدا کن.';
+
+  @override
+  String get templatesBrowseCategorySubtitle =>
+      'یک قالب انتخاب کن و طراحی را شروع کن.';
+
+  @override
+  String get templatesCategoryFilterAction => 'دسته‌بندی';
+
+  @override
+  String get templatesSearchHint => 'جستجوی قالب‌ها';
+
+  @override
+  String get templatesLanguageFilterLabel => 'زبان';
+
+  @override
+  String get templatesCategoryChipStories => 'استوری';
+
+  @override
+  String get templatesCategoryChipAds => 'پست تبلیغاتی';
+
+  @override
+  String get templatesCategoryChipThumbnails => 'تامنیل';
+
+  @override
+  String get templatesCategoryChipQuotes => 'شعر';
+
+  @override
+  String get templatesCategoryChipText => 'متن';
+
+  @override
+  String get homeTemplateLanguageAll => 'همه';
+
+  @override
+  String get homeTemplateLanguagePersian => 'فارسی';
+
+  @override
+  String get homeTemplateLanguageEnglish => 'انگلیسی';
+
+  @override
+  String get homeTemplateLanguageMixed => 'ترکیبی';
+
+  @override
+  String get homeTemplatesRecommended => 'پیشنهادی برای شروع';
+
+  @override
+  String get homeTemplatesInstagramStories => 'استوری اینستاگرام';
+
+  @override
+  String get homeTemplatesTextTypography => 'متن و تایپوگرافی';
+
+  @override
+  String get homeTemplatesAdvertisingPosts => 'پست تبلیغاتی';
+
+  @override
+  String get homeTemplatesYoutubeThumbnails => 'تامبنیل یوتیوب';
+
+  @override
+  String get homeTemplatesQuotesPoems => 'شعر و نقل‌قول';
+
+  @override
+  String get allFilter => 'همه';
+
+  @override
+  String get noTemplatesFoundTitle => 'قالبی پیدا نشد';
+
+  @override
+  String get noTemplatesFoundSubtitle =>
+      'فیلترها را تغییر بده یا همه قالب‌ها را ببین.';
+
+  @override
+  String get noTemplatesInCategory => 'هنوز قالبی در این دسته نیست.';
+
+  @override
+  String get categoryInstagramStory => 'استوری اینستاگرام';
+
+  @override
+  String get categoryYoutubeThumbnail => 'تامبنیل یوتیوب';
+
+  @override
+  String get categoryPoetryPost => 'پست شعر';
+
+  @override
+  String get categoryPromotionalPoster => 'پوستر تبلیغاتی';
+
+  @override
+  String get categorySocial => 'اجتماعی';
+
+  @override
+  String get categoryStory => 'استوری';
+
+  @override
+  String get categoryQuote => 'نقل‌قول';
+
+  @override
+  String get categorySale => 'حراج';
+
+  @override
+  String get categoryGreeting => 'تبریک';
+
+  @override
+  String get categoryBusiness => 'کسب‌وکار';
+
+  @override
+  String get categoryEvent => 'رویداد';
+
+  @override
+  String get categoryFood => 'غذا';
+
+  @override
+  String get categoryMotivational => 'انگیزشی';
+
+  @override
+  String get templateLanguageEnglish => 'انگلیسی';
+
+  @override
+  String get templateLanguagePersian => 'فارسی';
+
+  @override
+  String get editorSaveProject => 'ذخیره پروژه';
+
+  @override
+  String get editorExport => 'خروجی';
+
+  @override
+  String get editorFitToScreen => 'اندازه صفحه';
+
+  @override
+  String get editorNewDocument => 'سند جدید';
+
+  @override
+  String get centerSelectedLayerTooltip =>
+      'لایه انتخاب‌شده را در مرکز بوم قرار بده';
+
+  @override
+  String get centerLayerCommand => 'مرکز کردن لایه';
+
+  @override
+  String get layersTooltip => 'لایه‌ها';
+
+  @override
+  String get undoTooltip => 'واگرد';
+
+  @override
+  String get redoTooltip => 'بازانجام';
+
+  @override
+  String get photoTool => 'عکس';
+
+  @override
+  String get textTool => 'متن';
+
+  @override
+  String get stickerTool => 'استیکر';
+
+  @override
+  String get shapeTool => 'شکل';
+
+  @override
+  String get drawTool => 'طراحی';
+
+  @override
+  String get cropTool => 'برش';
+
+  @override
+  String get adjustTool => 'تنظیم';
+
+  @override
+  String get filtersTool => 'فیلترها';
+
+  @override
+  String get canvasTool => 'بوم';
+
+  @override
+  String get addTextTitle => 'افزودن متن';
+
+  @override
+  String get galleryAction => 'گالری';
+
+  @override
+  String get cameraAction => 'دوربین';
+
+  @override
+  String get replaceShapeTitle => 'جایگزینی شکل';
+
+  @override
+  String get replaceShapeSubtitle =>
+      'یک شکل تازه انتخاب کنید — رنگ‌ها و اندازه حفظ می‌شوند.';
+
+  @override
+  String get addShapeTitle => 'افزودن شکل';
+
+  @override
+  String get addShapeSubtitle =>
+      'یک شکل انتخاب کنید — بعدا می‌توانید استایل آن را تغییر دهید.';
+
+  @override
+  String get shapeSectionBasic => 'پایه';
+
+  @override
+  String get shapeSectionBubbles => 'حباب‌ها';
+
+  @override
+  String get shapeSectionSymbols => 'نمادها';
+
+  @override
+  String get shapeSectionLinesArrows => 'خط‌ها و فلش‌ها';
+
+  @override
+  String get shapeKindRectangle => 'مستطیل';
+
+  @override
+  String get shapeKindRoundedRectangle => 'گوشه‌گرد';
+
+  @override
+  String get shapeKindOval => 'بیضی';
+
+  @override
+  String get shapeKindTriangle => 'مثلث';
+
+  @override
+  String get shapeKindDiamond => 'لوزی';
+
+  @override
+  String get shapeKindHexagon => 'شش‌ضلعی';
+
+  @override
+  String get shapeKindSpeechBubble => 'گفتگو';
+
+  @override
+  String get shapeKindQuoteBubble => 'نقل‌قول';
+
+  @override
+  String get shapeKindPlus => 'به‌علاوه';
+
+  @override
+  String get shapeKindCheck => 'تیک';
+
+  @override
+  String get shapeKindCross => 'ضربدر';
+
+  @override
+  String get shapeKindLine => 'خط';
+
+  @override
+  String get shapeKindArrowRight => 'فلش راست';
+
+  @override
+  String get shapeKindArrowLeft => 'فلش چپ';
+
+  @override
+  String get shapeKindArrowUp => 'فلش بالا';
+
+  @override
+  String get shapeKindArrowDown => 'فلش پایین';
+
+  @override
+  String get addPhotoAction => 'افزودن عکس';
+
+  @override
+  String importPhotoToAction(String action) {
+    return 'برای $action یک عکس وارد کنید.';
+  }
+
+  @override
+  String pickImageToAction(String action) {
+    return 'یک تصویر برای $action انتخاب کنید';
+  }
+
+  @override
+  String get cropActionVerb => 'برش';
+
+  @override
+  String get applyFilterActionVerb => 'اعمال فیلتر';
+
+  @override
+  String get adjustActionVerb => 'تنظیم';
+
+  @override
+  String savedProject(String name) {
+    return '«$name» ذخیره شد';
+  }
+
+  @override
+  String imageLayerTitle(int index) {
+    return 'تصویر $index';
+  }
+
+  @override
+  String get shareUnavailableMessage =>
+      'اشتراک‌گذاری روی این دستگاه در دسترس نیست.';
+
+  @override
+  String get newDocumentTitle => 'سند جدید';
+
+  @override
+  String get presetTab => 'پیش‌فرض';
+
+  @override
+  String get customTab => 'سفارشی';
+
+  @override
+  String get imageTab => 'تصویر';
+
+  @override
+  String get removeBasePhotoTitle => 'عکس پایه حذف شود؟';
+
+  @override
+  String get resizeBehaviorTitle => 'رفتار تغییر اندازه';
+
+  @override
+  String get resizeBehaviorScaleSemantics =>
+      'رفتار تغییر اندازه: مقیاس شکل (برای حالت آزاد بزنید)';
+
+  @override
+  String get resizeBehaviorFreeSemantics =>
+      'رفتار تغییر اندازه: تغییر اندازه آزاد (برای مقیاس بزنید)';
+
+  @override
+  String get resizeBehaviorScaleObjectSemantics =>
+      'رفتار تغییر اندازه: مقیاس شیء (برای حالت آزاد بزنید)';
+
+  @override
+  String get strokeSizeSemantics => 'اندازه خط';
+
+  @override
+  String get styleTool => 'استایل';
+
+  @override
+  String get sizeTool => 'اندازه';
+
+  @override
+  String get borderTool => 'کادر';
+
+  @override
+  String get shadowTool => 'سایه';
+
+  @override
+  String get effectsTool => 'افکت‌ها';
+
+  @override
+  String get replaceTool => 'جایگزینی';
+
+  @override
+  String get backgroundTool => 'پس‌زمینه';
+
+  @override
+  String get colorLabel => 'رنگ';
+
+  @override
+  String get fillLabel => 'پرکردن';
+
+  @override
+  String get fontTool => 'فونت';
+
+  @override
+  String get stylesTool => 'استایل‌ها';
+
+  @override
+  String get layoutTool => 'چیدمان';
+
+  @override
+  String get resizeTool => 'تغییر اندازه';
+
+  @override
+  String get bgShortLabel => 'پس‌زمینه';
+
+  @override
+  String get textColorTitle => 'رنگ متن';
+
+  @override
+  String get fontSizeSemantics => 'اندازه فونت';
+
+  @override
+  String get moreActionsSemantics => 'اقدام‌های بیشتر';
+
+  @override
+  String get editTextAction => 'ویرایش متن';
+
+  @override
+  String get boldAction => 'پررنگ';
+
+  @override
+  String get italicAction => 'کج';
+
+  @override
+  String get underlineAction => 'زیرخط';
+
+  @override
+  String get scaleTextTitle => 'مقیاس متن';
+
+  @override
+  String get scaleTextSubtitle =>
+      'کشیدن گوشه، کل متن را یکنواخت مقیاس می‌کند. کادر همیشه اندازه متن می‌ماند.';
+
+  @override
+  String get resizeBoxTitle => 'تغییر اندازه کادر';
+
+  @override
+  String get resizeBoxSubtitle =>
+      'کشیدن گوشه، عرض شکست خط را تغییر می‌دهد. اندازه فونت ثابت می‌ماند و ارتفاع خودکار تنظیم می‌شود.';
+
+  @override
+  String get scaleTextSummary =>
+      'مقیاس متن — کشیدن گوشه کل متن را مقیاس می‌کند';
+
+  @override
+  String get resizeBoxSummary =>
+      'تغییر اندازه کادر — کشیدن گوشه عرض شکست خط را تغییر می‌دهد';
+
+  @override
+  String get typeSomethingHint => 'چیزی بنویسید…';
+
+  @override
+  String get colorsLabel => 'رنگ‌ها';
+
+  @override
+  String get moreColorsTooltip => 'رنگ‌های بیشتر';
+
+  @override
+  String get hueLabel => 'فام';
+
+  @override
+  String get opacityLabel => 'شفافیت';
+
+  @override
+  String get blurLabel => 'محو';
+
+  @override
+  String get thicknessLabel => 'ضخامت';
+
+  @override
+  String get fillColorTitle => 'رنگ پرکردن';
+
+  @override
+  String get shadowColorTitle => 'رنگ سایه';
+
+  @override
+  String get blurDirectionOpacitySubtitle => 'محو، جهت، شفافیت';
+
+  @override
+  String get backgroundColorTitle => 'رنگ پس‌زمینه';
+
+  @override
+  String get borderColorTitle => 'رنگ کادر';
+
+  @override
+  String get shapeLabel => 'شکل';
+
+  @override
+  String get styleLabel => 'استایل';
+
+  @override
+  String get directionLabel => 'جهت';
+
+  @override
+  String get behaviorLabel => 'رفتار';
+
+  @override
+  String get noneOption => 'هیچ‌کدام';
+
+  @override
+  String get pillOption => 'کپسولی';
+
+  @override
+  String get cardOption => 'کارت';
+
+  @override
+  String get tagOption => 'برچسب';
+
+  @override
+  String get hairlineOption => 'نازک';
+
+  @override
+  String get solidOption => 'یکدست';
+
+  @override
+  String get softOption => 'نرم';
+
+  @override
+  String get hardOption => 'سخت';
+
+  @override
+  String get glowOption => 'درخشش';
+
+  @override
+  String get liftOption => 'برجسته';
+
+  @override
+  String get reflowBoxTitle => 'بازچینی کادر';
+
+  @override
+  String get cornerDragScalesTextHint => 'کشیدن گوشه متن را مقیاس می‌کند';
+
+  @override
+  String get cornerDragWrapWidthHint =>
+      'کشیدن گوشه عرض شکست خط را تغییر می‌دهد';
+
+  @override
+  String get lineHeightLabel => 'ارتفاع خط';
+
+  @override
+  String get letterSpacingLabel => 'فاصله حروف';
+
+  @override
+  String get tightOption => 'فشرده';
+
+  @override
+  String get normalOption => 'معمولی';
+
+  @override
+  String get relaxedOption => 'راحت';
+
+  @override
+  String get looseOption => 'باز';
+
+  @override
+  String get wideOption => 'گسترده';
+
+  @override
+  String get roundnessLabel => 'گردی';
+
+  @override
+  String get verticalPaddingLabel => 'فاصله عمودی';
+
+  @override
+  String get horizontalPaddingLabel => 'فاصله افقی';
+
+  @override
+  String get hidePreciseControls => 'پنهان کردن کنترل‌های دقیق';
+
+  @override
+  String get adjustPrecisely => 'تنظیم دقیق';
+
+  @override
+  String get systemDefaultFont => 'فونت پیش‌فرض سیستم';
+
+  @override
+  String get allFontsTitle => 'همه فونت‌ها';
+
+  @override
+  String get recommendedFontsLabel => 'پیشنهادی';
+
+  @override
+  String get presetsLabel => 'پیش‌فرض‌ها';
+
+  @override
+  String get fontScriptEnglish => 'انگلیسی';
+
+  @override
+  String get fontScriptPersian => 'فارسی';
+
+  @override
+  String get fontCategorySans => 'سنس';
+
+  @override
+  String get fontCategoryModern => 'مدرن';
+
+  @override
+  String get fontCategoryDisplay => 'نمایشی';
+
+  @override
+  String get fontCategoryScript => 'دست‌نویس';
+
+  @override
+  String get fontCategoryMono => 'تک‌عرض';
+
+  @override
+  String get fontCategoryTraditional => 'سنتی';
+
+  @override
+  String get fontCategoryNastaliq => 'نستعلیق';
+
+  @override
+  String get hexLabel => 'کد رنگ';
+
+  @override
+  String get invalidLabel => 'نامعتبر';
+
+  @override
+  String get toolLabel => 'ابزار';
+
+  @override
+  String get chooseToolTitle => 'انتخاب ابزار';
+
+  @override
+  String get thinOption => 'نازک';
+
+  @override
+  String get mediumOption => 'متوسط';
+
+  @override
+  String get thickOption => 'ضخیم';
+
+  @override
+  String get heavyOption => 'خیلی ضخیم';
+
+  @override
+  String get lightOption => 'ملایم';
+
+  @override
+  String get strongOption => 'قوی';
+
+  @override
+  String get offOption => 'خاموش';
+
+  @override
+  String get onOption => 'روشن';
+
+  @override
+  String get sidesTool => 'ضلع‌ها';
+
+  @override
+  String sidesCount(int count) {
+    return '$count ضلع';
+  }
+
+  @override
+  String get drawGroup => 'طراحی';
+
+  @override
+  String get shapesGroup => 'شکل‌ها';
+
+  @override
+  String get effectsGroup => 'افکت‌ها';
+
+  @override
+  String get penTool => 'قلم';
+
+  @override
+  String get lineTool => 'خط';
+
+  @override
+  String get arrowTool => 'فلش';
+
+  @override
+  String get dashedOption => 'خط‌چین';
+
+  @override
+  String get dottedOption => 'نقطه‌چین';
+
+  @override
+  String get dashDotOption => 'خط و نقطه';
+
+  @override
+  String get eraserTool => 'پاک‌کن';
+
+  @override
+  String get squareLabel => 'مربع';
+
+  @override
+  String get circleLabel => 'دایره';
+
+  @override
+  String get hexagonLabel => 'شش‌ضلعی';
+
+  @override
+  String get polygonLabel => 'چندضلعی';
+
+  @override
+  String get strokeColorTitle => 'رنگ خط';
+
+  @override
+  String get strokeWidthLabel => 'ضخامت خط';
+
+  @override
+  String get noFillOption => 'بدون پرکردن';
+
+  @override
+  String get sameColorOption => 'هم‌رنگ خط';
+
+  @override
+  String get polygonSidesLabel => 'تعداد ضلع‌های چندضلعی';
+
+  @override
+  String get cornerRadiusLabel => 'گردی گوشه';
+
+  @override
+  String get brightnessLabel => 'روشنایی';
+
+  @override
+  String get contrastLabel => 'کنتراست';
+
+  @override
+  String get saturationLabel => 'اشباع';
+
+  @override
+  String get exposureLabel => 'نوردهی';
+
+  @override
+  String get warmthLabel => 'گرمی رنگ';
+
+  @override
+  String get intensityLabel => 'شدت';
+
+  @override
+  String get featherLabel => 'نرمی لبه';
+
+  @override
+  String get vignetteColorTitle => 'رنگ وینیت';
+
+  @override
+  String get popOption => 'برجسته';
+
+  @override
+  String get outlineOption => 'خط دور';
+
+  @override
+  String get chooseAnotherStickerAction => 'انتخاب استیکر دیگر';
+
+  @override
+  String get stickersTitle => 'استیکرها';
+
+  @override
+  String get searchEmojisHint => 'جستجوی ایموجی‌ها';
+
+  @override
+  String get noRecentStickersYet => 'هنوز استیکر اخیری ندارید';
+
+  @override
+  String get recentStickersHint =>
+      'استیکرهای استفاده‌شده اخیر شما اینجا نمایش داده می‌شوند.';
+
+  @override
+  String get warmOption => 'گرم';
+
+  @override
+  String get coolOption => 'سرد';
+
+  @override
+  String get vividOption => 'زنده';
+
+  @override
+  String get monoOption => 'تک‌رنگ';
+
+  @override
+  String get fadeOption => 'محو';
+
+  @override
+  String get dramaticOption => 'دراماتیک';
+
+  @override
+  String get vintageOption => 'قدیمی';
+
+  @override
+  String get dramaOption => 'دراما';
+
+  @override
+  String get vignetteLabel => 'وینیت';
+
+  @override
+  String get adjustPreciselySubtitle =>
+      'روشنایی، کنتراست، اشباع، نوردهی، گرمی رنگ';
+
+  @override
+  String get vignetteSubtitle => 'تیره‌سازی شعاعی نرم از مرکز';
+
+  @override
+  String get noEffectsApplied => 'هیچ افکتی اعمال نشده است.';
+
+  @override
+  String get openAdjustOrVignetteHint =>
+      'برای اضافه کردن، Adjust یا Vignette را باز کنید.';
+
+  @override
+  String unknownEffectLabel(String type) {
+    return 'افکت ناشناخته ($type)';
+  }
+
+  @override
+  String get inactiveLabel => 'غیرفعال';
+
+  @override
+  String get roundedOption => 'گرد';
+
+  @override
+  String get squircleOption => 'اسکوئرکل';
+
+  @override
+  String get starOption => 'ستاره';
+
+  @override
+  String get heartOption => 'قلب';
+
+  @override
+  String get canvasBackgroundTitle => 'پس‌زمینه بوم';
+
+  @override
+  String get transparentOption => 'شفاف';
+
+  @override
+  String get photoBackgroundHint =>
+      'پس‌زمینه فقط پشت بخش‌های شفاف یا پوشانده‌نشده عکس دیده می‌شود.';
+
+  @override
+  String get resetCropAction => 'بازنشانی برش';
+
+  @override
+  String get freeOption => 'آزاد';
+
+  @override
+  String get exportDesignTitle => 'خروجی گرفتن از طرح';
+
+  @override
+  String get previewExportTitle => 'پیش‌نمایش خروجی';
+
+  @override
+  String canvasDimensions(int width, int height) {
+    return 'بوم $width × $height';
+  }
+
+  @override
+  String get formatLabel => 'فرمت';
+
+  @override
+  String get previewShareAction => 'پیش‌نمایش و اشتراک';
+
+  @override
+  String get previewSaveAction => 'پیش‌نمایش و ذخیره';
+
+  @override
+  String get savedToPhotoLibrary => 'در گالری عکس ذخیره شد';
+
+  @override
+  String get sharedMessage => 'اشتراک‌گذاری شد';
+
+  @override
+  String get reducedResolutionWarning =>
+      'برای سازگاری با حافظه دستگاه، خروجی با وضوح کمتر ساخته می‌شود.';
+
+  @override
+  String get qualityLabel => 'کیفیت';
+
+  @override
+  String qualityPercent(int percent) {
+    return 'کیفیت $percent٪';
+  }
+
+  @override
+  String outputPixels(int width, int height) {
+    return 'خروجی: $width × $height px';
+  }
+
+  @override
+  String get matchesCanvasAspect => 'با نسبت بوم شما هماهنگ است.';
+
+  @override
+  String get letterboxExportHint =>
+      'طرح شما وسط‌چین می‌شود و نوارهای خالی با پس‌زمینه بوم پر می‌شوند؛ بدون کشیدگی.';
+
+  @override
+  String get customSizeTitle => 'اندازه سفارشی';
+
+  @override
+  String get enterPositiveWholeNumbers => 'عددهای صحیح و مثبت وارد کنید.';
+
+  @override
+  String maximumDimensionEitherSide(int dimension) {
+    return 'حداکثر مقدار برای هر ضلع $dimension است.';
+  }
+
+  @override
+  String get useSizeAction => 'استفاده از اندازه';
+
+  @override
+  String customSizeChip(int width, int height) {
+    return 'سفارشی · $width×$height';
+  }
+
+  @override
+  String get originalSizeQuality => 'اندازه اصلی';
+
+  @override
+  String get highQuality => 'کیفیت بالا';
+
+  @override
+  String get ultraQuality => 'کیفیت خیلی بالا';
+
+  @override
+  String get useCanvasSizeSubtitle => 'استفاده از اندازه بوم';
+
+  @override
+  String get storyLabel => 'استوری';
+
+  @override
+  String get portraitLabel => 'عمودی';
+
+  @override
+  String get pickExactPixelsSubtitle => 'انتخاب دقیق پیکسل‌ها';
+
+  @override
+  String get designExportSubject => 'خروجی طرح';
+
+  @override
+  String get originalOption => 'اصلی';
+
+  @override
+  String get circleOption => 'دایره';
+
+  @override
+  String get widthSettingLabel => 'عرض';
+
+  @override
+  String get shapePanelTitle => 'شکل';
+
+  @override
+  String get couldntOpenPhoto =>
+      'این عکس باز نشد. دوباره تلاش کنید یا عکس دیگری انتخاب کنید.';
+
+  @override
+  String get couldntLoadProjects =>
+      'پروژه‌ها بارگیری نشدند. برای تلاش دوباره صفحه را پایین بکشید.';
+
+  @override
+  String get somethingWentWrong => 'مشکلی پیش آمد. دوباره تلاش کنید.';
+
+  @override
+  String get allowPhotoAccessSettings =>
+      'برای ادامه، دسترسی عکس را در تنظیمات فعال کنید.';
+}

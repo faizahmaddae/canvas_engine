@@ -147,7 +147,8 @@ class _TextValueSheetState extends State<_TextValueSheet> {
                 children: [
                   for (final p in widget.presets)
                     PresetChip(
-                      label: '${p.toStringAsFixed(widget.decimals)}'
+                      label:
+                          '${p.toStringAsFixed(widget.decimals)}'
                           '${widget.unit}',
                       selected: (p - _value).abs() < 0.001,
                       onTap: () => _set(p),
@@ -161,4 +162,3 @@ class _TextValueSheetState extends State<_TextValueSheet> {
     );
   }
 }
-

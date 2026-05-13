@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_warm_pastel",
+  "title": {
+    "en": "استوری پاستلی",
+    "fa": "استوری پاستلی"
+  },
+  "category": "story",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_warm_pastel/thumbnail.png",
+  "document": "assets/templates/fa_story_warm_pastel/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "story",
+    "fa",
+    "warm",
+    "pastel"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 140
+  }
+}

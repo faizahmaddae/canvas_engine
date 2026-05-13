@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_edu_workshop_poster",
+  "title": {
+    "en": "Persian Workshop Poster",
+    "fa": "پوستر ورکشاپ فارسی"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_edu_workshop_poster/thumbnail.png",
+  "document": "assets/templates/fa_edu_workshop_poster/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "education",
+    "workshop",
+    "poster"
+  ],
+  "home": {
+    "sortOrder": 72
+  }
+}

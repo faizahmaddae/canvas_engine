@@ -1,0 +1,206 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294636519,
+    "endColor": 4293449136,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "outer-frame",
+      "transform": {
+        "x": 120.0,
+        "y": 120.0,
+        "w": 840.0,
+        "h": 840.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294504152,
+      "strokeWidth": 0.0,
+      "cornerRadius": 42.0
+    },
+    {
+      "type": "shape",
+      "id": "left-rule",
+      "transform": {
+        "x": 168.0,
+        "y": 190.0,
+        "w": 4.0,
+        "h": 700.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "right-rule",
+      "transform": {
+        "x": 908.0,
+        "y": 190.0,
+        "w": 4.0,
+        "h": 700.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "top-rule",
+      "transform": {
+        "x": 210.0,
+        "y": 226.0,
+        "w": 660.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bottom-rule",
+      "transform": {
+        "x": 210.0,
+        "y": 850.0,
+        "w": 660.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "ornament-top",
+      "transform": {
+        "x": 512.0,
+        "y": 190.0,
+        "w": 56.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "ornament-bottom",
+      "transform": {
+        "x": 512.0,
+        "y": 826.0,
+        "w": 56.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "ornament-left",
+      "transform": {
+        "x": 148.0,
+        "y": 512.0,
+        "w": 44.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "ornament-right",
+      "transform": {
+        "x": 888.0,
+        "y": 512.0,
+        "w": 44.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 210.0,
+        "y": 270.0,
+        "w": 660.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "مثنوی معنوی",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 34.0,
+        "color": 4292125260,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 170.0,
+        "y": 395.0,
+        "w": 740.0,
+        "h": 225.0,
+        "r": 0.0
+      },
+      "content": "بشنو از نی چون حکایت می‌کند\nاز جدایی‌ها شکایت می‌کند",
+      "style": {
+        "fontFamily": "BNazanin",
+        "fontSize": 66.0,
+        "color": 4282198559,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.48,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 170.0,
+        "y": 680.0,
+        "w": 740.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "— مولوی",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 36.0,
+        "color": 4287328071,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

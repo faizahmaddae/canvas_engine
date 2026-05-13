@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
@@ -40,23 +41,24 @@ class ShapeModeToolbar extends ConsumerWidget {
       shapeToolControllerProvider.select((s) => s.openSlot),
     );
     final ctrl = ref.read(shapeToolControllerProvider.notifier);
+    final l10n = context.l10n;
     final slots = <ToolbarSlot>[
       ToolbarSlot(
         id: ShapeToolSlot.style.name,
         icon: Icons.palette_rounded,
-        label: 'Style',
+        label: l10n.styleTool,
         onTap: () => ctrl.toggleSlot(ShapeToolSlot.style),
       ),
       ToolbarSlot(
         id: ShapeToolSlot.border.name,
         icon: Icons.border_outer_rounded,
-        label: 'Border',
+        label: l10n.borderTool,
         onTap: () => ctrl.toggleSlot(ShapeToolSlot.border),
       ),
       ToolbarSlot(
         id: ShapeToolSlot.shadow.name,
         icon: Icons.blur_on_rounded,
-        label: 'Shadow',
+        label: l10n.shadowTool,
         onTap: () => ctrl.toggleSlot(ShapeToolSlot.shadow),
       ),
       // Replace is a one-shot action (opens the picker) rather than
@@ -66,7 +68,7 @@ class ShapeModeToolbar extends ConsumerWidget {
       ToolbarSlot(
         id: ShapeToolSlot.replace.name,
         icon: Icons.swap_horiz_rounded,
-        label: 'Replace',
+        label: l10n.replaceTool,
         onTap: onReplaceTap,
       ),
     ];

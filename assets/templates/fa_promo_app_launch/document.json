@@ -1,0 +1,203 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279968832,
+    "endColor": 4278225546,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "top-glow",
+      "transform": {"x": -150.0, "y": -135.0, "w": 560.0, "h": 560.0, "r": 0.0},
+      "kind": "circle",
+      "fillColor": 4287231956,
+      "strokeWidth": 0.0,
+      "opacity": 0.34
+    },
+    {
+      "type": "shape",
+      "id": "bottom-glow",
+      "transform": {"x": 725.0, "y": 720.0, "w": 420.0, "h": 420.0, "r": 0.0},
+      "kind": "circle",
+      "fillColor": 4294929239,
+      "strokeWidth": 0.0,
+      "opacity": 0.32
+    },
+    {
+      "type": "shape",
+      "id": "phone-shadow",
+      "transform": {"x": 588.0, "y": 158.0, "w": 330.0, "h": 698.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4278190080,
+      "strokeWidth": 0.0,
+      "cornerRadius": 60.0,
+      "opacity": 0.25
+    },
+    {
+      "type": "shape",
+      "id": "phone-body",
+      "transform": {"x": 555.0, "y": 122.0, "w": 332.0, "h": 700.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294507260,
+      "strokeWidth": 4.0,
+      "strokeColor": 1728053247,
+      "cornerRadius": 62.0
+    },
+    {
+      "type": "shape",
+      "id": "phone-screen",
+      "transform": {"x": 589.0, "y": 176.0, "w": 264.0, "h": 586.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4279179050,
+      "strokeWidth": 0.0,
+      "cornerRadius": 42.0
+    },
+    {
+      "type": "shape",
+      "id": "phone-notch",
+      "transform": {"x": 672.0, "y": 149.0, "w": 98.0, "h": 24.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4279179050,
+      "strokeWidth": 0.0,
+      "cornerRadius": 12.0
+    },
+    {
+      "type": "shape",
+      "id": "app-icon",
+      "transform": {"x": 655.0, "y": 234.0, "w": 124.0, "h": 124.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294929239,
+      "strokeWidth": 0.0,
+      "cornerRadius": 32.0,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 22.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 12.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "app-icon-dot",
+      "transform": {"x": 692.0, "y": 270.0, "w": 50.0, "h": 50.0, "r": 0.0},
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "screen-card-one",
+      "transform": {"x": 626.0, "y": 414.0, "w": 190.0, "h": 72.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294507260,
+      "strokeWidth": 0.0,
+      "cornerRadius": 24.0
+    },
+    {
+      "type": "shape",
+      "id": "screen-card-two",
+      "transform": {"x": 626.0, "y": 510.0, "w": 190.0, "h": 72.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4287231956,
+      "strokeWidth": 0.0,
+      "cornerRadius": 24.0
+    },
+    {
+      "type": "shape",
+      "id": "screen-card-three",
+      "transform": {"x": 626.0, "y": 606.0, "w": 190.0, "h": 72.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294507260,
+      "strokeWidth": 0.0,
+      "cornerRadius": 24.0
+    },
+    {
+      "type": "shape",
+      "id": "badge",
+      "transform": {"x": 92.0, "y": 105.0, "w": 220.0, "h": 66.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 520093695,
+      "strokeWidth": 2.0,
+      "strokeColor": 1291845631,
+      "cornerRadius": 33.0
+    },
+    {
+      "type": "text",
+      "id": "launch-badge-text",
+      "transform": {"x": 118.0, "y": 119.0, "w": 168.0, "h": 40.0, "r": 0.0},
+      "content": "لانچ رسمی",
+      "style": {"fontFamily": "Lalezar", "fontSize": 38.0, "color": 4294967295, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {"x": 82.0, "y": 222.0, "w": 430.0, "h": 252.0, "r": 0.0},
+      "content": "اپلیکیشن\nجدید",
+      "style": {"fontFamily": "BTitrBd", "fontSize": 96.0, "color": 4294967295, "fontWeight": 800, "letterSpacing": 0.0, "lineHeight": 0.98, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {"x": 90.0, "y": 500.0, "w": 420.0, "h": 112.0, "r": 0.0},
+      "content": "همه خدمات برند را سریع‌تر، ساده‌تر و یک‌جا شروع کنید.",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 34.0, "color": 3858759679, "fontWeight": 600, "letterSpacing": 0.0, "lineHeight": 1.26, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "feature-one",
+      "transform": {"x": 92.0, "y": 654.0, "w": 190.0, "h": 78.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 24.0
+    },
+    {
+      "type": "shape",
+      "id": "feature-two",
+      "transform": {"x": 306.0, "y": 654.0, "w": 190.0, "h": 78.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 24.0
+    },
+    {
+      "type": "text",
+      "id": "feature-one-text",
+      "transform": {"x": 112.0, "y": 674.0, "w": 150.0, "h": 38.0, "r": 0.0},
+      "content": "ثبت‌نام سریع",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 25.0, "color": 4279968832, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "feature-two-text",
+      "transform": {"x": 326.0, "y": 674.0, "w": 150.0, "h": 38.0, "r": 0.0},
+      "content": "شروع رایگان",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 25.0, "color": 4279968832, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {"x": 92.0, "y": 790.0, "w": 330.0, "h": 90.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294929239,
+      "strokeWidth": 0.0,
+      "cornerRadius": 45.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {"x": 132.0, "y": 809.0, "w": 250.0, "h": 52.0, "r": 0.0},
+      "content": "دانلود کنید",
+      "style": {"fontFamily": "Lalezar", "fontSize": 48.0, "color": 4279968832, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    }
+  ]
+}

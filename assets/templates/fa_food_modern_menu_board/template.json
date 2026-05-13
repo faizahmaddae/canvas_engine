@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_food_modern_menu_board",
+  "title": {
+    "en": "Persian Modern Menu Board",
+    "fa": "منوی مدرن فارسی"
+  },
+  "category": "food",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_food_modern_menu_board/thumbnail.png",
+  "document": "assets/templates/fa_food_modern_menu_board/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "food",
+    "menu",
+    "restaurant"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 66
+  }
+}

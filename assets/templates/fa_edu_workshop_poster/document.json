@@ -1,0 +1,205 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279179050,
+    "endColor": 4281413249,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 92.0,
+        "y": 105.0,
+        "w": 896.0,
+        "h": 1140.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294507260,
+        "endColor": 4292929535,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 64.0,
+      "shadowOpacity": 0.26,
+      "shadowBlur": 48.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 26.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "label",
+      "transform": {
+        "x": 650.0,
+        "y": 170.0,
+        "w": 250.0,
+        "h": 76.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4286331629,
+      "strokeWidth": 0.0,
+      "cornerRadius": 38.0
+    },
+    {
+      "type": "text",
+      "id": "label-text",
+      "transform": {
+        "x": 695.0,
+        "y": 186.0,
+        "w": 160.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "content": "حضوری",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 42.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 145.0,
+        "y": 290.0,
+        "w": 790.0,
+        "h": 230.0,
+        "r": 0.0
+      },
+      "content": "ورکشاپ\nطراحی",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 118.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.96,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 165.0,
+        "y": 560.0,
+        "w": 750.0,
+        "h": 105.0,
+        "r": 0.0
+      },
+      "content": "برای آموزش، کارگاه و کلاس تخصصی با جزئیات قابل ویرایش.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4282595530,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "schedule",
+      "transform": {
+        "x": 170.0,
+        "y": 760.0,
+        "w": 740.0,
+        "h": 130.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 40.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 18.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "schedule-text",
+      "transform": {
+        "x": 215.0,
+        "y": 790.0,
+        "w": 650.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "۵ جلسه کاربردی + تمرین",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 50.0,
+        "color": 4280163147,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 250.0,
+        "y": 1055.0,
+        "w": 580.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294286859,
+        "endColor": 4293870660,
+        "angleDegrees": 100.0
+      },
+      "cornerRadius": 50.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 290.0,
+        "y": 1075.0,
+        "w": 500.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "ثبت‌نام ورکشاپ",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 54.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

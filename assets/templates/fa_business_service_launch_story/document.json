@@ -1,0 +1,147 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279179050,
+    "endColor": 4279137424,
+    "angleDegrees": 150.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "dashboard-card",
+      "transform": {"x": 110.0, "y": 230.0, "w": 860.0, "h": 760.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {"type": "linear", "startColor": 4293721855, "endColor": 4294967295, "angleDegrees": 160.0},
+      "cornerRadius": 72.0,
+      "shadowOpacity": 0.25,
+      "shadowBlur": 46.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 24.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "service-icon",
+      "transform": {"x": 675.0, "y": 350.0, "w": 185.0, "h": 185.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4279137424,
+      "strokeWidth": 0.0,
+      "cornerRadius": 48.0
+    },
+    {
+      "type": "shape",
+      "id": "service-spark",
+      "transform": {"x": 721.0, "y": 396.0, "w": 92.0, "h": 92.0, "r": 0.0},
+      "kind": "star",
+      "fillColor": 4294829706,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "check-one",
+      "transform": {"x": 190.0, "y": 380.0, "w": 390.0, "h": 76.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 32.0,
+      "shadowOpacity": 0.1,
+      "shadowBlur": 16.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "check-one-text",
+      "transform": {"x": 220.0, "y": 398.0, "w": 330.0, "h": 42.0, "r": 0.0},
+      "content": "مشاوره اولیه",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 34.0, "color": 4279179050, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "check-two",
+      "transform": {"x": 190.0, "y": 500.0, "w": 390.0, "h": 76.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294829706,
+      "strokeWidth": 0.0,
+      "cornerRadius": 32.0
+    },
+    {
+      "type": "text",
+      "id": "check-two-text",
+      "transform": {"x": 220.0, "y": 518.0, "w": 330.0, "h": 42.0, "r": 0.0},
+      "content": "شروع همکاری",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 34.0, "color": 4279179050, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "check-three",
+      "transform": {"x": 190.0, "y": 620.0, "w": 390.0, "h": 76.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 32.0,
+      "shadowOpacity": 0.1,
+      "shadowBlur": 16.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "check-three-text",
+      "transform": {"x": 220.0, "y": 638.0, "w": 330.0, "h": 42.0, "r": 0.0},
+      "content": "اجرای کامل",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 34.0, "color": 4279179050, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {"x": 150.0, "y": 1110.0, "w": 780.0, "h": 68.0, "r": 0.0},
+      "content": "خدمت تازه",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 50.0, "color": 4294829706, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {"x": 130.0, "y": 1205.0, "w": 820.0, "h": 255.0, "r": 0.0},
+      "content": "خدمت تازه\nشروع شد",
+      "style": {"fontFamily": "BTitrBd", "fontSize": 126.0, "color": 4294967295, "fontWeight": 800, "letterSpacing": 0.0, "lineHeight": 0.95, "alignment": "right", "shadowColor": 2600468480, "shadowBlur": 18.0, "shadowDx": 0.0, "shadowDy": 8.0},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {"x": 155.0, "y": 1505.0, "w": 770.0, "h": 100.0, "r": 0.0},
+      "content": "برای معرفی سرویس جدید، ثبت‌نام اولیه یا بسته مشاوره",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 46.0, "color": 4291820286, "fontWeight": 600, "letterSpacing": 0.0, "lineHeight": 1.12, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {"x": 255.0, "y": 1688.0, "w": 570.0, "h": 96.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294829706,
+      "strokeWidth": 0.0,
+      "cornerRadius": 48.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {"x": 305.0, "y": 1707.0, "w": 470.0, "h": 56.0, "r": 0.0},
+      "content": "جزئیات بیشتر",
+      "style": {"fontFamily": "Lalezar", "fontSize": 52.0, "color": 4279179050, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/utils/haptics.dart';
+import '../../../../../l10n/l10n.dart';
 import 'preset_chip.dart';
 
 /// Canonical "presets-first, slider-secondary" control for any
@@ -21,15 +22,15 @@ class PresetSliderControl extends StatefulWidget {
     required this.onCommit,
     required this.presets,
     required this.formatValue,
-    this.label = 'Presets',
+    this.label,
     this.fineTuneLabel = '',
     this.presetEpsilon = 0.01,
     this.leading,
     this.presetLabels,
   }) : assert(
-          presetLabels == null || presetLabels.length == presets.length,
-          'presetLabels must be 1:1 with presets',
-        );
+         presetLabels == null || presetLabels.length == presets.length,
+         'presetLabels must be 1:1 with presets',
+       );
 
   /// Committed value (read from controller).
   final double value;
@@ -48,7 +49,7 @@ class PresetSliderControl extends StatefulWidget {
 
   /// Section label rendered above the chip row. Pass an empty
   /// string to hide.
-  final String label;
+  final String? label;
 
   /// Optional caption above the slider. Default empty (the divider
   /// alone signals demotion).
@@ -115,22 +116,24 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final label = widget.label ?? context.l10n.presetsLabel;
     final live = _liveValue;
-    final onPreset =
-        widget.presets.any((p) => (live - p).abs() < widget.presetEpsilon);
+    final onPreset = widget.presets.any(
+      (p) => (live - p).abs() < widget.presetEpsilon,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         // ── Header: section label + live readout ──────────────
-        if (widget.label.isNotEmpty) ...[
+        if (label.isNotEmpty) ...[
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Expanded(
                 child: Text(
-                  widget.label,
+                  label,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -212,8 +215,9 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
                     enabledThumbRadius: 8,
                   ),
                   activeTrackColor: scheme.primary.withValues(alpha: 0.85),
-                  inactiveTrackColor:
-                      scheme.outlineVariant.withValues(alpha: 0.5),
+                  inactiveTrackColor: scheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                 ),
                 // [Listener] catches pointer-cancel events the
                 // [Slider] swallows (no `onChangeEnd` fires on
@@ -239,5 +243,3 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
     );
   }
 }
-
-

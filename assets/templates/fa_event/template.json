@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_event",
+  "title": {
+    "en": "رویداد جمعه",
+    "fa": "رویداد جمعه"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_event/thumbnail.png",
+  "document": "assets/templates/fa_event/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "fa",
+    "event"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 210
+  }
+}

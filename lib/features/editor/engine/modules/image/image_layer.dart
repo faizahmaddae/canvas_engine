@@ -1,11 +1,19 @@
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
 import '../../core/editor_layer.dart';
 import '../../core/layer_capabilities.dart';
 import '../../core/layer_transform.dart';
+import '../../effects/color_matrix_ops.dart';
+import '../../effects/editor_effect.dart';
+
+// Re-export so existing imports of `image_layer.dart` keep resolving
+// `composeColorMatrices` after the symbol moved into the shared
+// effects module.
+export '../../effects/color_matrix_ops.dart' show composeColorMatrices;
 
 /// Visual mask applied to an [ImageLayer]'s pixels. The transform
 /// (position / size / rotation) is unaffected — the mask only
@@ -86,6 +94,16 @@ class ImageSource {
       'ImageSource requires either "asset", "url" or "file"',
     );
   }
+
+  /// Approximate retained size in bytes — just the cost of the one
+  /// short identifier string. Pixels live in the OS image cache, not
+  /// here, so an [ImageSource] is cheap to keep in undo history.
+  int get estimatedByteSize {
+    final n = (assetName?.length ?? 0) +
+        (networkUrl?.length ?? 0) +
+        (filePath?.length ?? 0);
+    return n * 2; // 2 bytes per UTF-16 code unit.
+  }
 }
 
 /// Per-pixel colour grading parameters for an [ImageLayer]. Stored
@@ -106,7 +124,12 @@ class ImageSource {
 ///   ITU-R BT.601 luma weights (0.299 / 0.587 / 0.114).
 @immutable
 class ImageAdjustments {
-  const ImageAdjustments({
+  // Non-const because of `late final colorMatrix` cache. The performance
+  // win on the per-frame render path outweighs compile-time canonicalization,
+  // which was unused in practice (only [ImageAdjustments.identity] was ever
+  // const-constructed).
+  // ignore: prefer_const_constructors_in_immutables
+  ImageAdjustments({
     this.brightness = 0,
     this.contrast = 1,
     this.saturation = 1,
@@ -131,7 +154,9 @@ class ImageAdjustments {
   /// channel offsets at the extremes so it never burns out highlights.
   final double warmth;
 
-  static const ImageAdjustments identity = ImageAdjustments();
+  // `static final` (not `const`) because the constructor is no longer const;
+  // a single shared instance is still preserved.
+  static final ImageAdjustments identity = ImageAdjustments();
 
   /// True when the configured values are visually a no-op so the
   /// renderer can skip the [ColorFiltered] wrapper entirely —
@@ -166,7 +191,15 @@ class ImageAdjustments {
   /// so the multiplicative camera stages run first, the colour
   /// shift lands on the gained pixels, and the user-facing
   /// brightness/contrast sliders trim the final tonal range.
-  List<double> toMatrix() {
+  ///
+  /// Cached on first read: matrix composition is a pure function of the
+  /// five fields, and slider drags hold a value steady across many frames
+  /// once the user releases. Recomputing per frame burned measurable CPU.
+  /// `ImageAdjustments` is immutable, so the cache can never go stale —
+  /// `copyWith` returns a new instance with its own fresh cache slot.
+  late final List<double> colorMatrix = _computeMatrix();
+
+  List<double> _computeMatrix() {
     // 1) Exposure: pure RGB gain. Mid-grey passes through scaled.
     final ex = 1 + exposure / 100;
     final expM = <double>[
@@ -248,6 +281,95 @@ class ImageAdjustments {
       warmth: (json['warmth'] as num?)?.toDouble() ?? 0,
     );
   }
+
+  /// Project this adjustments value to the equivalent
+  /// [EditorEffect] sequence, in the legacy fixed render order
+  /// (exposure → warmth → saturation → contrast → brightness).
+  ///
+  /// Identity-valued fields are *omitted* — the renderer would
+  /// short-circuit them anyway, and skipping keeps the stack minimal
+  /// (smaller JSON, cheaper equality, less per-frame work).
+  ///
+  /// Bridge for the soft-retire migration: the layer no longer
+  /// stores [ImageAdjustments] as a field. UI panels read the
+  /// current per-knob values via [fromEffectStack], commit edits
+  /// via [SetImageAdjustmentsCommand] (which writes effects
+  /// directly), and legacy on-disk documents are lifted into the
+  /// effect form on decode.
+  List<EditorEffect> toEffectStack() {
+    final out = <EditorEffect>[];
+    if (exposure != 0) out.add(ExposureEffect(amount: exposure));
+    if (warmth != 0) out.add(WarmthEffect(amount: warmth));
+    if (saturation != 1) out.add(SaturationEffect(amount: saturation));
+    if (contrast != 1) out.add(ContrastEffect(amount: contrast));
+    if (brightness != 0) out.add(BrightnessEffect(amount: brightness));
+    return out;
+  }
+
+  /// Reverse of [toEffectStack]: read the five canonical
+  /// colour-adjustment effect amounts off [stack] and pack them
+  /// into a value object the legacy UI panels can drive sliders
+  /// against. Effects of other types and effects with masks /
+  /// disabled flags are *ignored* — those don't have a
+  /// representation in the flat-struct form.
+  ///
+  /// If [stack] contains multiple effects of the same derived type
+  /// (which the dual-write canonical form never produces, but a
+  /// future tool might), the **last** wins. That matches the
+  /// renderer's stack-order semantics: the topmost matrix is the
+  /// one the user sees in the slider value.
+  static ImageAdjustments fromEffectStack(EffectStack stack) {
+    double brightness = 0;
+    double contrast = 1;
+    double saturation = 1;
+    double exposure = 0;
+    double warmth = 0;
+    for (final eff in stack.effects) {
+      if (!eff.enabled || eff.mask != null) continue;
+      switch (eff) {
+        case BrightnessEffect():
+          brightness = eff.amount;
+        case ContrastEffect():
+          contrast = eff.amount;
+        case SaturationEffect():
+          saturation = eff.amount;
+        case ExposureEffect():
+          exposure = eff.amount;
+        case WarmthEffect():
+          warmth = eff.amount;
+        case VignetteEffect():
+          // Vignette is a custom-paint effect; it does not feed
+          // back into the legacy adjustments struct.
+          break;
+        case UnknownEffect():
+          // Forward-compat carrier for an effect type unknown to
+          // this binary (a newer build wrote it). It contributes
+          // nothing to the legacy adjustments struct; the codec
+          // round-trips its raw JSON so the data survives a resave.
+          break;
+      }
+    }
+    return ImageAdjustments(
+      brightness: brightness,
+      contrast: contrast,
+      saturation: saturation,
+      exposure: exposure,
+      warmth: warmth,
+    );
+  }
+
+  /// The five effect type discriminators an [ImageAdjustments]
+  /// expands into. Used by the dual-write helper to strip the
+  /// previous derived effects from a layer's stack before
+  /// re-projecting the new value, so user-added effects of *other*
+  /// types survive the rebuild.
+  static const Set<String> derivedEffectTypes = <String>{
+    'brightness',
+    'contrast',
+    'saturation',
+    'exposure',
+    'warmth',
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -340,33 +462,20 @@ List<double>? imageFilterMatrix(ImageFilterPreset preset) {
   }
 }
 
-/// Composes two affine 4×5 colour matrices ([a] applied after [b])
-/// into a single equivalent 4×5 matrix. Treats each as the top
-/// four rows of a 5×5 with `[0,0,0,0,1]` appended, then multiplies.
-///
-/// Exposed (non-private) so the filter pipeline can compose preset
-/// matrices with the user-tuned [ImageAdjustments] matrix into a
-/// single `ColorFilter` per paint.
-List<double> composeColorMatrices(List<double> a, List<double> b) {
-  final out = List<double>.filled(20, 0);
-  for (var i = 0; i < 4; i++) {
-    for (var j = 0; j < 5; j++) {
-      double sum = 0;
-      for (var k = 0; k < 4; k++) {
-        sum += a[i * 5 + k] * b[k * 5 + j];
-      }
-      if (j == 4) sum += a[i * 5 + 4];
-      out[i * 5 + j] = sum;
-    }
-  }
-  return out;
-}
+/// Sentinel used by [ImageLayer.copyAll] to distinguish "leave the
+/// nullable [EditorLayer.name] field alone" from "explicitly clear it
+/// to null". `null` cannot serve as the default for that purpose.
+const Object _kCopySentinel = Object();
 
 /// Concrete layer rendering a raster image inside its [transform] bounds.
 /// Declares its own [LayerCapabilities] (aspect-locked, non-editable) and
 /// participates in the generic interaction pipeline without modifying it.
 class ImageLayer extends EditorLayer {
-  const ImageLayer({
+  // Non-const because the default value of [adjustments] is
+  // [ImageAdjustments.identity], which is now `static final` rather than
+  // `static const` (see the note on the [ImageAdjustments] constructor).
+  // ignore: prefer_const_constructors_in_immutables
+  ImageLayer({
     required super.id,
     required super.transform,
     required this.source,
@@ -378,13 +487,13 @@ class ImageLayer extends EditorLayer {
     this.shadowBlur = 0,
     this.shadowOffset = Offset.zero,
     this.shadowOpacity = 0,
-    this.adjustments = ImageAdjustments.identity,
     this.cropRect = fullCrop,
     this.filterPreset = ImageFilterPreset.none,
     super.name,
     super.visible,
     super.locked,
     super.opacity,
+    super.effects,
   }) : super(capabilities: _imageCaps);
 
   final ImageSource source;
@@ -421,10 +530,12 @@ class ImageLayer extends EditorLayer {
   final double shadowOpacity;
 
   /// Per-pixel colour adjustments (brightness / contrast /
-  /// saturation) applied to the raw image before clipping. Defaults
-  /// to [ImageAdjustments.identity] so existing layers and freshly
-  /// inserted images render unchanged.
-  final ImageAdjustments adjustments;
+  /// saturation / exposure / warmth) projected from the layer's
+  /// [EffectStack]. Derived (not stored) so the canonical state
+  /// lives in [effects] and the legacy slider UI keeps reading a
+  /// flat value object.
+  ImageAdjustments get adjustments =>
+      ImageAdjustments.fromEffectStack(effects);
 
   /// Normalised crop window into the post-fit image, expressed in
   /// the layer's own coordinate system (0..1 on each axis). Defaults
@@ -459,93 +570,90 @@ class ImageLayer extends EditorLayer {
   @override
   String get type => 'image';
 
-  @override
-  EditorLayer withTransform(LayerTransform transform) => ImageLayer(
-        id: id,
-        transform: transform,
-        source: source,
-        fit: fit,
-        mask: mask,
-        borderColor: borderColor,
-        borderWidth: borderWidth,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffset: shadowOffset,
-        shadowOpacity: shadowOpacity,
-        adjustments: adjustments,
-        cropRect: cropRect,
-        filterPreset: filterPreset,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  /// Single source of truth for cloning an [ImageLayer] with one or
+  /// more fields replaced. Every `with*` override in this class
+  /// delegates here so adding a new field to [ImageLayer] is a
+  /// **one-line** change (parameter + delegation) instead of editing
+  /// every per-field copy method individually.
+  ///
+  /// Semantics:
+  /// * Omitted parameters preserve the receiver's value verbatim.
+  /// * [name] uses a sentinel so callers can both *leave it alone*
+  ///   (omit) and *clear it* (pass `null`) — without the sentinel
+  ///   `name: null` would be indistinguishable from "leave alone".
+  /// * [opacity] is clamped to `0..1` only when the caller explicitly
+  ///   passes it. `this.opacity` is never re-clamped, so a no-op
+  ///   `copyAll()` is identity (preserves equality + serialization
+  ///   round-trip guarantees the undo system depends on).
+  /// * A debug-only assert catches programmer error pre-clamp; the
+  ///   clamp itself is the production safety net.
+  ImageLayer copyAll({
+    String? id,
+    LayerTransform? transform,
+    ImageSource? source,
+    BoxFit? fit,
+    ImageMask? mask,
+    Color? borderColor,
+    double? borderWidth,
+    Color? shadowColor,
+    double? shadowBlur,
+    Offset? shadowOffset,
+    double? shadowOpacity,
+    Rect? cropRect,
+    ImageFilterPreset? filterPreset,
+    Object? name = _kCopySentinel,
+    bool? visible,
+    bool? locked,
+    double? opacity,
+    EffectStack? effects,
+  }) {
+    assert(
+      opacity == null || (opacity >= 0.0 && opacity <= 1.0),
+      'opacity must be in 0..1 (got $opacity)',
+    );
+    return ImageLayer(
+      id: id ?? this.id,
+      transform: transform ?? this.transform,
+      source: source ?? this.source,
+      fit: fit ?? this.fit,
+      mask: mask ?? this.mask,
+      borderColor: borderColor ?? this.borderColor,
+      borderWidth: borderWidth ?? this.borderWidth,
+      shadowColor: shadowColor ?? this.shadowColor,
+      shadowBlur: shadowBlur ?? this.shadowBlur,
+      shadowOffset: shadowOffset ?? this.shadowOffset,
+      shadowOpacity: shadowOpacity ?? this.shadowOpacity,
+      cropRect: cropRect ?? this.cropRect,
+      filterPreset: filterPreset ?? this.filterPreset,
+      name: identical(name, _kCopySentinel) ? this.name : name as String?,
+      visible: visible ?? this.visible,
+      locked: locked ?? this.locked,
+      opacity: opacity == null ? this.opacity : opacity.clamp(0.0, 1.0),
+      effects: effects ?? this.effects,
+    );
+  }
 
   @override
-  EditorLayer withVisibility(bool visible) => ImageLayer(
-        id: id,
-        transform: transform,
-        source: source,
-        fit: fit,
-        mask: mask,
-        borderColor: borderColor,
-        borderWidth: borderWidth,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffset: shadowOffset,
-        shadowOpacity: shadowOpacity,
-        adjustments: adjustments,
-        cropRect: cropRect,
-        filterPreset: filterPreset,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  EditorLayer withTransform(LayerTransform transform) =>
+      copyAll(transform: transform);
 
   @override
-  EditorLayer withLocked(bool locked) => ImageLayer(
-        id: id,
-        transform: transform,
-        source: source,
-        fit: fit,
-        mask: mask,
-        borderColor: borderColor,
-        borderWidth: borderWidth,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffset: shadowOffset,
-        shadowOpacity: shadowOpacity,
-        adjustments: adjustments,
-        cropRect: cropRect,
-        filterPreset: filterPreset,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  EditorLayer withVisibility(bool visible) => copyAll(visible: visible);
 
   @override
-  EditorLayer withOpacity(double opacity) => ImageLayer(
-        id: id,
-        transform: transform,
-        source: source,
-        fit: fit,
-        mask: mask,
-        borderColor: borderColor,
-        borderWidth: borderWidth,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffset: shadowOffset,
-        shadowOpacity: shadowOpacity,
-        adjustments: adjustments,
-        cropRect: cropRect,
-        filterPreset: filterPreset,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity.clamp(0.0, 1.0),
-      );
+  EditorLayer withLocked(bool locked) => copyAll(locked: locked);
+
+  @override
+  EditorLayer withOpacity(double opacity) =>
+      copyAll(opacity: opacity.clamp(0.0, 1.0));
+
+  @override
+  // Pixel data is NOT held by the layer — it lives in the OS image
+  // cache, keyed by asset / file path / URL. The layer only retains
+  // those small string identifiers, so an undo entry pinning an
+  // `ImageLayer` is cheap regardless of how big the photo is.
+  int get estimatedByteSize =>
+      EditorLayer.kLayerBaseBytes + source.estimatedByteSize;
 
   @override
   Widget buildContent(BuildContext context) {
@@ -577,14 +685,15 @@ class ImageLayer extends EditorLayer {
         Image.file(File(filePath), fit: fit, cacheWidth: cacheWidth),
       _ => const ColoredBox(color: Color(0x22FFFFFF)),
     };
-    // Compose filter preset and user adjustments into a single
-    // colour matrix so we only pay the [ColorFiltered] cost once.
-    // The filter is applied first (acts on the raw pixels), then
-    // adjustments fine-tune the result — matches Instagram-style
-    // "pick a look, then trim it" mental model. Wrapping inside
-    // the clip means border and shadow keep their own colours.
+    // Compose filter preset and the layer's effect stack into a
+    // single colour matrix so we only pay the [ColorFiltered] cost
+    // once. The filter is applied first (acts on the raw pixels),
+    // then the effect stack fine-tunes the result \u2014 matches
+    // Instagram-style "pick a look, then trim it" mental model.
+    // Wrapping inside the clip means border and shadow keep their
+    // own colours.
     final filterMatrix = imageFilterMatrix(filterPreset);
-    final adjMatrix = adjustments.isIdentity ? null : adjustments.toMatrix();
+    final adjMatrix = effects.composedColorMatrix;
     final List<double>? combined;
     if (filterMatrix == null) {
       combined = adjMatrix;
@@ -605,7 +714,30 @@ class ImageLayer extends EditorLayer {
     // border, and the shadow stay anchored to the layer bounds —
     // exactly like cropping in any photo editor.
     final pixels = isFullCrop ? adjusted : _applyCrop(adjusted);
-    final clipped = _maskClip(mask, pixels);
+    // Custom-paint effect overlay (vignette, future grain, etc.).
+    // Painted *over* the pixels but *inside* the mask clip so it
+    // tracks every silhouette shape for free \u2014 same trick the
+    // border / shadow painters use. When no custom-paint effect
+    // contributes, we omit the wrapping `Stack` entirely so the
+    // widget tree is byte-identical to a pre-effect document
+    // (this is what keeps the v3 byte-identity gate green for
+    // documents whose vignette intensity is 0).
+    final painted = effects.hasContributingCustomPaint
+        ? Stack(
+            fit: StackFit.expand,
+            children: [
+              pixels,
+              IgnorePointer(
+                child: CustomPaint(
+                  painter: _CustomPaintEffectsPainter(
+                    effects: effects.customPaintEffects.toList(growable: false),
+                  ),
+                ),
+              ),
+            ],
+          )
+        : pixels;
+    final clipped = _maskClip(mask, painted);
     final hasBorder = borderWidth > 0;
     final body = hasBorder
         ? Stack(
@@ -724,7 +856,6 @@ class ImageLayer extends EditorLayer {
           other.shadowBlur == shadowBlur &&
           other.shadowOffset == shadowOffset &&
           other.shadowOpacity == shadowOpacity &&
-          other.adjustments == adjustments &&
           other.cropRect == cropRect &&
           other.filterPreset == filterPreset;
 
@@ -740,7 +871,6 @@ class ImageLayer extends EditorLayer {
         shadowBlur,
         shadowOffset,
         shadowOpacity,
-        adjustments,
         cropRect,
         filterPreset,
       );
@@ -758,7 +888,6 @@ class ImageLayer extends EditorLayer {
         if (shadowOpacity > 0) 'shadowOffsetX': shadowOffset.dx,
         if (shadowOpacity > 0) 'shadowOffsetY': shadowOffset.dy,
         if (shadowOpacity > 0) 'shadowColor': shadowColor.toARGB32(),
-        if (!adjustments.isIdentity) 'adjustments': adjustments.toJson(),
         if (!isFullCrop) 'cropL': cropRect.left,
         if (!isFullCrop) 'cropT': cropRect.top,
         if (!isFullCrop) 'cropR': cropRect.right,
@@ -815,15 +944,6 @@ class ImageLayer extends EditorLayer {
         (json['shadowOffsetY'] as num?)?.toDouble() ?? 0,
       ),
       shadowOpacity: (json['shadowOpacity'] as num?)?.toDouble() ?? 0,
-      adjustments: () {
-        final a = json['adjustments'];
-        if (a is Map) {
-          return ImageAdjustments.fromJson(
-            Map<String, dynamic>.from(a),
-          );
-        }
-        return ImageAdjustments.identity;
-      }(),
       cropRect: () {
         final l = (json['cropL'] as num?)?.toDouble();
         final t = (json['cropT'] as num?)?.toDouble();
@@ -846,7 +966,35 @@ class ImageLayer extends EditorLayer {
       visible: json['visible'] as bool? ?? true,
       locked: json['locked'] as bool? ?? false,
       opacity: ((json['opacity'] as num?)?.toDouble() ?? 1.0).clamp(0.0, 1.0),
+      effects: _readEffectsWithLegacyLift(json),
     );
+  }
+
+  /// Decode the layer's effect stack with one-shot upgrade for the
+  /// legacy `adjustments: {...}` slot.
+  ///
+  /// * v3+ docs: pure `effects: [...]` decode; legacy slot ignored
+  ///   (effects-array entries are the canonical form on read).
+  /// * v2 docs: no `effects` key, but possibly an `adjustments`
+  ///   map. Lift the five-knob struct into its equivalent
+  ///   [EditorEffect] sequence so the in-memory layer carries no
+  ///   trace of the retired field.
+  ///
+  /// The lift is read-only: re-encoding writes the v3 `effects`
+  /// shape, never the legacy key. That re-shapes any v2 doc the
+  /// user opens-and-saves, but the wire-format change is *to* the
+  /// current schema \u2014 no on-disk doc becomes unreadable.
+  static EffectStack _readEffectsWithLegacyLift(Map<String, dynamic> json) {
+    final fromArray = EditorLayer.parseEffects(json);
+    if (fromArray.isNotEmpty) return fromArray;
+    final legacy = json['adjustments'];
+    if (legacy is! Map) return fromArray;
+    final adj = ImageAdjustments.fromJson(
+      Map<String, dynamic>.from(legacy),
+    );
+    final lifted = adj.toEffectStack();
+    if (lifted.isEmpty) return EffectStack.empty;
+    return EffectStack(List<EditorEffect>.unmodifiable(lifted));
   }
 }
 
@@ -1023,6 +1171,32 @@ class _MaskShadowPainter extends CustomPainter {
       old.opacity != opacity ||
       old.blur != blur ||
       old.offset != offset;
+}
+
+/// Runs every contributing custom-paint [EditorEffect] (vignette,
+/// future grain, …) over the layer's local bounds, in stack order.
+/// Painted *inside* the layer mask clip so each effect inherits the
+/// silhouette without having to know the mask shape.
+///
+/// Repaints only when the *list* of contributing effects changes
+/// (`==` comparison), so a stable stack pays nothing per frame.
+class _CustomPaintEffectsPainter extends CustomPainter {
+  const _CustomPaintEffectsPainter({required this.effects});
+
+  final List<EditorEffect> effects;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final bounds = Offset.zero & size;
+    for (final eff in effects) {
+      eff.paint(canvas, bounds);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CustomPaintEffectsPainter old) =>
+      !listEquals(old.effects, effects);
 }
 
 /// Inscribed circle whose diameter is the layer's shortest side, so a

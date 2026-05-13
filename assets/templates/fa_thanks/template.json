@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_thanks",
+  "title": {
+    "en": "سپاسگزارم",
+    "fa": "سپاسگزارم"
+  },
+  "category": "greeting",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_thanks/thumbnail.png",
+  "document": "assets/templates/fa_thanks/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "fa",
+    "greeting"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 280
+  }
+}

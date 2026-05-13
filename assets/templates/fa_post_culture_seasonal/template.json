@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_post_culture_seasonal",
+  "title": {
+    "en": "Persian Cultural Seasonal Post",
+    "fa": "پست مناسبتی فرهنگی"
+  },
+  "category": "greeting",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_post_culture_seasonal/thumbnail.png",
+  "document": "assets/templates/fa_post_culture_seasonal/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "post",
+    "cultural",
+    "seasonal"
+  ],
+  "home": {
+    "sortOrder": 37
+  }
+}

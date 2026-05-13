@@ -1,0 +1,156 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4293721855,
+    "endColor": 4294507260,
+    "angleDegrees": 160.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "hero",
+      "transform": {
+        "x": 90.0,
+        "y": 90.0,
+        "w": 900.0,
+        "h": 500.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4279137424,
+        "endColor": 4280472558,
+        "angleDegrees": 135.0
+      },
+      "cornerRadius": 62.0,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 34.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "cross",
+      "transform": {
+        "x": 440.0,
+        "y": 220.0,
+        "w": 200.0,
+        "h": 200.0,
+        "r": 0.0
+      },
+      "kind": "plus",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 150.0,
+        "y": 680.0,
+        "w": 780.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "طرح ویژه سلامت",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4279137424,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 145.0,
+        "y": 765.0,
+        "w": 790.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "چکاپ\nکامل",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 118.0,
+        "color": 4279179050,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.96,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 160.0,
+        "y": 1015.0,
+        "w": 760.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "content": "برای کلینیک، آزمایشگاه یا کمپین پیشگیری استفاده کنید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4281549141,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 250.0,
+        "y": 1165.0,
+        "w": 580.0,
+        "h": 94.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279137424,
+      "strokeWidth": 0.0,
+      "cornerRadius": 47.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 295.0,
+        "y": 1182.0,
+        "w": 490.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "رزرو نوبت",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 52.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

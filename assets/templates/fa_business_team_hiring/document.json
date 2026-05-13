@@ -1,0 +1,188 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4283964551,
+    "endColor": 4290646588,
+    "angleDegrees": 155.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "photo",
+      "transform": {
+        "x": 110.0,
+        "y": 210.0,
+        "w": 860.0,
+        "h": 660.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294764531,
+        "endColor": 4294829706,
+        "angleDegrees": 140.0
+      },
+      "cornerRadius": 68.0,
+      "shadowOpacity": 0.24,
+      "shadowBlur": 42.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 22.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "person1",
+      "transform": {
+        "x": 240.0,
+        "y": 360.0,
+        "w": 180.0,
+        "h": 180.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4290646588,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "person2",
+      "transform": {
+        "x": 455.0,
+        "y": 320.0,
+        "w": 220.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4286331629,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "person3",
+      "transform": {
+        "x": 700.0,
+        "y": 380.0,
+        "w": 160.0,
+        "h": 160.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294286859,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 145.0,
+        "y": 1000.0,
+        "w": 790.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "ما در حال رشدیم",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 50.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 130.0,
+        "y": 1095.0,
+        "w": 820.0,
+        "h": 270.0,
+        "r": 0.0
+      },
+      "content": "جای تو\nاینجاست",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 140.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "right",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 150.0,
+        "y": 1410.0,
+        "w": 780.0,
+        "h": 110.0,
+        "r": 0.0
+      },
+      "content": "برای موقعیت‌های باز، مهارت‌ها و شرایط همکاری متن را ویرایش کنید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 46.0,
+        "color": 4294764531,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 250.0,
+        "y": 1640.0,
+        "w": 580.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294829706,
+      "strokeWidth": 0.0,
+      "cornerRadius": 48.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 295.0,
+        "y": 1658.0,
+        "w": 490.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "ارسال رزومه",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 54.0,
+        "color": 4283964551,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

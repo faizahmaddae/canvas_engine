@@ -34,10 +34,7 @@ const _uuid = Uuid();
 /// → [AddLayerCommand] / [RemoveLayerCommand], producing exactly one
 /// undo step per finished gesture.
 class PaintGestureSurface extends ConsumerStatefulWidget {
-  const PaintGestureSurface({
-    super.key,
-    required this.docSize,
-  });
+  const PaintGestureSurface({super.key, required this.docSize});
 
   final Size docSize;
 
@@ -79,11 +76,7 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
 
   // ---------------------------------------------------------------- gestures
 
-  void _onPanStart(
-    PaintToolType tool,
-    PaintSession session,
-    Offset local,
-  ) {
+  void _onPanStart(PaintToolType tool, PaintSession session, Offset local) {
     if (tool == PaintToolType.eraser) {
       _eraseAt(local);
       return;
@@ -135,10 +128,7 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
   void _onPanEnd() {
     final draft = _draft;
     if (draft == null) return;
-    final layer = draft.toLayer(
-      id: _uuid.v4(),
-      docSize: widget.docSize,
-    );
+    final layer = draft.toLayer(id: _uuid.v4(), docSize: widget.docSize);
     setState(() => _draft = null);
     if (layer == null) return; // degenerate (zero-area) gesture
     ref
@@ -214,10 +204,7 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
     final s = math.sin(-t.rotation);
     final lx = dx * c - dy * s + t.size.width / 2;
     final ly = dx * s + dy * c + t.size.height / 2;
-    return lx >= 0 &&
-        ly >= 0 &&
-        lx <= t.size.width &&
-        ly <= t.size.height;
+    return lx >= 0 && ly >= 0 && lx <= t.size.width && ly <= t.size.height;
   }
 
   PaintKind _kindFor(PaintToolType tool) {

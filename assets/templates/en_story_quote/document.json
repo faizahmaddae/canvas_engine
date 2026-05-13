@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4279179050,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "accent",
+      "transform": {
+        "x": -200.0,
+        "y": 1300.0,
+        "w": 900.0,
+        "h": 900.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4284704497,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "accent2",
+      "transform": {
+        "x": 700.0,
+        "y": -200.0,
+        "w": 600.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293675161,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "quote-panel",
+      "transform": {
+        "x": 80.0,
+        "y": 620.0,
+        "w": 920.0,
+        "h": 760.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 571807274,
+      "strokeWidth": 0.0,
+      "cornerRadius": 56.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 80.0,
+        "y": 670.0,
+        "w": 920.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "TODAY",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 40.0,
+        "color": 4294626325,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 80.0,
+        "y": 760.0,
+        "w": 920.0,
+        "h": 520.0,
+        "r": 0.0
+      },
+      "content": "Make\nsomething\nyou love.",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 132.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.08,
+        "alignment": "left",
+        "shadowColor": 1711276032,
+        "shadowBlur": 4.0,
+        "shadowDx": 0.0,
+        "shadowDy": 2.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 80.0,
+        "y": 1305.0,
+        "w": 920.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "START WITH ONE SMALL THING",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 34.0,
+        "color": 4294626325,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

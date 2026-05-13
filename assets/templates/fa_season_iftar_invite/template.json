@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_season_iftar_invite",
+  "title": {
+    "en": "Persian Iftar Invite",
+    "fa": "دعوت افطار"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_season_iftar_invite/thumbnail.png",
+  "document": "assets/templates/fa_season_iftar_invite/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "seasonal",
+    "iftar",
+    "event"
+  ],
+  "home": {
+    "sortOrder": 76
+  }
+}

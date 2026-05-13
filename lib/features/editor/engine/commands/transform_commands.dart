@@ -15,6 +15,11 @@ class AddLayerCommand extends EditorCommand {
 
   @override
   EditorCommand invert(EditorDocument _) => RemoveLayerCommand(layer.id);
+
+  // Holds a full layer reference — the dominant cost is the layer
+  // itself (paint strokes, text content, image source string).
+  @override
+  int get estimatedByteSize => layer.estimatedByteSize;
 }
 
 class RemoveLayerCommand extends EditorCommand {
@@ -179,5 +184,18 @@ class CompositeCommand extends EditorCommand {
       inverses.reversed.toList(),
       labelOverride: labelOverride,
     );
+  }
+
+  // Sum of children. Recursion terminates because real construction
+  // sites never nest CompositeCommands (verified by grep across the
+  // codebase); even if a future caller did, depth is bounded by
+  // user-action structure, not by data size.
+  @override
+  int get estimatedByteSize {
+    var n = 0;
+    for (final c in commands) {
+      n += c.estimatedByteSize;
+    }
+    return n;
   }
 }

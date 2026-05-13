@@ -25,5 +25,5 @@ class AddTextComposerOpenController extends Notifier<bool> {
 
 final addTextComposerOpenProvider =
     NotifierProvider<AddTextComposerOpenController, bool>(
-  AddTextComposerOpenController.new,
-);
+      AddTextComposerOpenController.new,
+    );

@@ -1,0 +1,150 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294832888,
+    "endColor": 4292932350,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "dot1",
+      "transform": {
+        "x": 120.0,
+        "y": 120.0,
+        "w": 68.0,
+        "h": 68.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293675161,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot2",
+      "transform": {
+        "x": 880.0,
+        "y": 850.0,
+        "w": 92.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4280640491,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot3",
+      "transform": {
+        "x": 870.0,
+        "y": 155.0,
+        "w": 54.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294286859,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "star1",
+      "transform": {
+        "x": 82.0,
+        "y": 880.0,
+        "w": 100.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "kind": "star",
+      "fillColor": 4294538006,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "message-card",
+      "transform": {
+        "x": 100.0,
+        "y": 285.0,
+        "w": 880.0,
+        "h": 610.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294966251,
+      "strokeWidth": 0.0,
+      "cornerRadius": 56.0
+    },
+    {
+      "type": "text",
+      "id": "happy",
+      "transform": {
+        "x": 90.0,
+        "y": 320.0,
+        "w": 900.0,
+        "h": 185.0,
+        "r": 0.0
+      },
+      "content": "happy",
+      "style": {
+        "fontFamily": "Dancing_Script",
+        "fontSize": 176.0,
+        "color": 4293675161,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "birthday",
+      "transform": {
+        "x": 90.0,
+        "y": 500.0,
+        "w": 900.0,
+        "h": 190.0,
+        "r": 0.0
+      },
+      "content": "BIRTHDAY",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 166.0,
+        "color": 4279310375,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "name",
+      "transform": {
+        "x": 90.0,
+        "y": 710.0,
+        "w": 900.0,
+        "h": 90.0,
+        "r": 0.0
+      },
+      "content": "make a wish",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 58.0,
+        "color": 4281549141,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.1,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

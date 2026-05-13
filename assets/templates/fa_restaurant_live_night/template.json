@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_restaurant_live_night",
+  "title": {
+    "en": "Persian Restaurant Live Night",
+    "fa": "شب زنده رستوران"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_restaurant_live_night/thumbnail.png",
+  "document": "assets/templates/fa_restaurant_live_night/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "restaurant",
+    "event",
+    "night"
+  ],
+  "home": {
+    "sortOrder": 69
+  }
+}

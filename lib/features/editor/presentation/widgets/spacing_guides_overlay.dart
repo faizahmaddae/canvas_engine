@@ -221,15 +221,9 @@ class _SpacingGuidesPainter extends CustomPainter {
       pillW,
       pillH,
     );
-    final rrect = RRect.fromRectAndRadius(
-      pillRect,
-      const Radius.circular(3),
-    );
+    final rrect = RRect.fromRectAndRadius(pillRect, const Radius.circular(3));
     canvas.drawRRect(rrect, Paint()..color = labelBackground);
-    tp.paint(
-      canvas,
-      Offset(pillTopLeft.dx + padX, pillTopLeft.dy + padY),
-    );
+    tp.paint(canvas, Offset(pillTopLeft.dx + padX, pillTopLeft.dy + padY));
     canvas.restore();
   }
 

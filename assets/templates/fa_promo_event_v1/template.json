@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_event_v1",
+  "title": {
+    "en": "اعلان رویداد",
+    "fa": "اعلان رویداد"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_event_v1/thumbnail.png",
+  "document": "assets/templates/fa_promo_event_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "promo",
+    "fa",
+    "event"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 230
+  }
+}

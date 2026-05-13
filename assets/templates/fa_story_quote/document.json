@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4279179050,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "accent",
+      "transform": {
+        "x": -200.0,
+        "y": 1300.0,
+        "w": 900.0,
+        "h": 900.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4284704497,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "accent2",
+      "transform": {
+        "x": 700.0,
+        "y": -200.0,
+        "w": 600.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293675161,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "quote-panel",
+      "transform": {
+        "x": 80.0,
+        "y": 620.0,
+        "w": 920.0,
+        "h": 760.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 571807274,
+      "strokeWidth": 0.0,
+      "cornerRadius": 56.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 80.0,
+        "y": 675.0,
+        "w": 920.0,
+        "h": 64.0,
+        "r": 0.0
+      },
+      "content": "امروز",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 46.0,
+        "color": 4294829706,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 80.0,
+        "y": 760.0,
+        "w": 920.0,
+        "h": 500.0,
+        "r": 0.0
+      },
+      "content": "چیزی بساز\nکه دوستش داری.",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 136.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.08,
+        "alignment": "right",
+        "shadowColor": 1711276032,
+        "shadowBlur": 4.0,
+        "shadowDx": 0.0,
+        "shadowDy": 2.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 80.0,
+        "y": 1280.0,
+        "w": 920.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "از یک قدم کوچک شروع کن",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

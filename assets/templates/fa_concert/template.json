@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_concert",
+  "title": {
+    "en": "پوستر کنسرت",
+    "fa": "پوستر کنسرت"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_concert/thumbnail.png",
+  "document": "assets/templates/fa_concert/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "fa",
+    "event"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 290
+  }
+}

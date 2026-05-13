@@ -1,0 +1,212 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4278322711,
+    "endColor": 4282058596,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "glow",
+      "transform": {
+        "x": 610.0,
+        "y": -100.0,
+        "w": 560.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "radial",
+        "centerColor": 4294829706,
+        "edgeColor": 4289222135,
+        "focalX": -0.2,
+        "focalY": -0.2,
+        "radius": 1.0
+      },
+      "opacity": 0.64
+    },
+    {
+      "type": "shape",
+      "id": "frame",
+      "transform": {
+        "x": 84.0,
+        "y": 96.0,
+        "w": 912.0,
+        "h": 1158.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279179050,
+      "strokeWidth": 5.0,
+      "cornerRadius": 56.0,
+      "strokeColor": 4294502324,
+      "shadowOpacity": 0.34,
+      "shadowBlur": 52.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 28.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 154.0,
+        "y": 180.0,
+        "w": 760.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "فروش ویژه",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 46.0,
+        "color": 4294502324,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 140.0,
+        "y": 285.0,
+        "w": 800.0,
+        "h": 250.0,
+        "r": 0.0
+      },
+      "content": "کالکشن\nجدید",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 132.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "right",
+        "shadowColor": 2516582400,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "discount",
+      "transform": {
+        "x": 170.0,
+        "y": 620.0,
+        "w": 740.0,
+        "h": 250.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294286859,
+        "endColor": 4290646588,
+        "angleDegrees": 115.0
+      },
+      "cornerRadius": 58.0,
+      "shadowOpacity": 0.28,
+      "shadowBlur": 34.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "discount-text",
+      "transform": {
+        "x": 205.0,
+        "y": 665.0,
+        "w": 670.0,
+        "h": 138.0,
+        "r": 0.0
+      },
+      "content": "تا ۴۰٪",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 124.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 160.0,
+        "y": 945.0,
+        "w": 760.0,
+        "h": 86.0,
+        "r": 0.0
+      },
+      "content": "برای پوشاک، اکسسوری یا محصول پریمیوم",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4292728574,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 300.0,
+        "y": 1100.0,
+        "w": 480.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294502324,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 335.0,
+        "y": 1117.0,
+        "w": 410.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "خرید آنلاین",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 52.0,
+        "color": 4280163147,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

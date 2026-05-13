@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../home/application/project_store.dart';
 import 'document_controller.dart';
+import 'edit_journal.dart';
 import 'editor_session.dart';
 
 /// Listens to [documentCommitVersionProvider] and persists the
@@ -40,10 +41,19 @@ class AutosaveController extends Notifier<void> {
 
   Timer? _timer;
 
+  /// Per-project journal handle. Lazily opened on the first write
+  /// for a given session — cheap (one mkdir-if-needed + a struct
+  /// allocation), but wasteful to do on every flush.
+  EditJournal? _journal;
+  String? _journalProjectId;
+
   @override
   void build() {
     // Subscribe once; the listener fires on every commit.
-    ref.listen<int>(documentCommitVersionProvider, (_, _) => _schedule());
+    ref.listen<int>(documentCommitVersionProvider, (_, _) {
+      _schedule();
+      _scheduleJournal();
+    });
     ref.onDispose(() {
       _timer?.cancel();
       _timer = null;
@@ -53,6 +63,30 @@ class AutosaveController extends Notifier<void> {
   void _schedule() {
     _timer?.cancel();
     _timer = Timer(debounce, _flush);
+  }
+
+  /// Schedule a journal write. Independent of the autosave timer
+  /// because the journal is meant to capture in-flight state at a
+  /// finer cadence than the autosave write — a crash between the
+  /// last journal write and the next autosave must still be
+  /// recoverable.
+  void _scheduleJournal() {
+    final session = ref.read(editorSessionProvider);
+    final projectId = session?.projectId;
+    if (projectId == null) return;
+    if (_journalProjectId != projectId) {
+      _journal = null;
+      _journalProjectId = projectId;
+      EditJournal.open(projectId).then((j) {
+        if (_journalProjectId != projectId) return;
+        _journal = j;
+        _journal!.scheduleWrite(ref.read(documentControllerProvider));
+      }).catchError((_) {/* swallow */});
+      return;
+    }
+    final journal = _journal;
+    if (journal == null) return;
+    journal.scheduleWrite(ref.read(documentControllerProvider));
   }
 
   /// Force any pending autosave to run immediately. Intended for
@@ -84,6 +118,15 @@ class AutosaveController extends Notifier<void> {
       width: doc.width,
       height: doc.height,
       lastModified: DateTime.now(),
+      // Mark the cached thumbnail PNG as stale. Autosave does not
+      // re-render the thumbnail (it would need a BuildContext +
+      // Overlay we don't have here), so the bytes on disk are
+      // out-of-date the moment the document JSON has changed. By
+      // setting `thumbnailVersion: 0` (< currentThumbnailVersion),
+      // the home grid's `pngIsFresh` gate flips to false and the
+      // card live-renders the document until the user performs a
+      // manual save (which regenerates the PNG).
+      thumbnailVersion: 0,
       // createdAt + thumbnailPath preserved via copyWith defaults.
     );
     // Skip the write if the encoded payload matches what's on disk:
@@ -97,6 +140,13 @@ class AutosaveController extends Notifier<void> {
       return;
     }
     await ref.read(projectStoreProvider.notifier).upsert(updated);
+    // The persisted save now matches what's on disk; the journal's
+    // pending entry is redundant. Clearing it avoids a stale
+    // "recover?" prompt on next launch when the user has actually
+    // saved cleanly.
+    if (_journalProjectId == projectId) {
+      await _journal?.clear();
+    }
   }
 }
 

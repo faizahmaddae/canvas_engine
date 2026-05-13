@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_today",
+  "title": {
+    "en": "Today Story",
+    "fa": "استوری امروز"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/samples/fa_story_today/thumbnail.png",
+  "document": "assets/templates/samples/fa_story_today/document.json",
+  "tags": ["sample", "story", "persian", "vertical"],
+  "home": {
+    "featured": false,
+    "sortOrder": 10
+  }
+}

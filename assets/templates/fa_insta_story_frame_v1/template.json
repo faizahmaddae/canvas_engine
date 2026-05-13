@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_insta_story_frame_v1",
+  "title": {
+    "en": "قاب تصویر",
+    "fa": "قاب تصویر"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_insta_story_frame_v1/thumbnail.png",
+  "document": "assets/templates/fa_insta_story_frame_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "story",
+    "fa",
+    "insta",
+    "frame"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 210
+  }
+}

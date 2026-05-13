@@ -1,0 +1,268 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4281413249,
+    "endColor": 4286328082,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "panel",
+      "transform": {
+        "x": 95.0,
+        "y": 100.0,
+        "w": 890.0,
+        "h": 1145.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294965229,
+      "strokeWidth": 0.0,
+      "cornerRadius": 62.0,
+      "shadowOpacity": 0.28,
+      "shadowBlur": 48.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 26.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "date",
+      "transform": {
+        "x": 670.0,
+        "y": 165.0,
+        "w": 220.0,
+        "h": 190.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294538006,
+        "endColor": 4290646588,
+        "angleDegrees": 135.0
+      },
+      "cornerRadius": 48.0
+    },
+    {
+      "type": "text",
+      "id": "day",
+      "transform": {
+        "x": 700.0,
+        "y": 190.0,
+        "w": 160.0,
+        "h": 90.0,
+        "r": 0.0
+      },
+      "content": "۲۸",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 86.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "month",
+      "transform": {
+        "x": 696.0,
+        "y": 285.0,
+        "w": 168.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "content": "اردیبهشت",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 36.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 150.0,
+        "y": 210.0,
+        "w": 500.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "روز\nمصاحبه",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 112.0,
+        "color": 4280163147,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 160.0,
+        "y": 520.0,
+        "w": 760.0,
+        "h": 112.0,
+        "r": 0.0
+      },
+      "content": "فرصت ملاقات با تیم منابع انسانی و معرفی توانایی‌های شما",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4286328082,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.28,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "item1",
+      "transform": {
+        "x": 170.0,
+        "y": 720.0,
+        "w": 740.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 34.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 18.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "item2",
+      "transform": {
+        "x": 170.0,
+        "y": 845.0,
+        "w": 740.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 34.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 18.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "item3",
+      "transform": {
+        "x": 170.0,
+        "y": 970.0,
+        "w": 740.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 34.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 18.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "it1",
+      "transform": {
+        "x": 210.0,
+        "y": 742.0,
+        "w": 660.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "رزومه همراه داشته باشید",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4280163147,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "it2",
+      "transform": {
+        "x": 210.0,
+        "y": 867.0,
+        "w": 660.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "مصاحبه حضوری و آنلاین",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4282865001,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "it3",
+      "transform": {
+        "x": 210.0,
+        "y": 992.0,
+        "w": 660.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "ثبت‌نام رایگان",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4282865001,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4280166715,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "badge",
+      "transform": {
+        "x": 640.0,
+        "y": 120.0,
+        "w": 360.0,
+        "h": 88.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280468830,
+      "strokeWidth": 0.0,
+      "cornerRadius": 44.0
+    },
+    {
+      "type": "text",
+      "id": "badge-text",
+      "transform": {
+        "x": 640.0,
+        "y": 138.0,
+        "w": 360.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "استخدام",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 44.0,
+        "color": 4278529558,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 80.0,
+        "y": 280.0,
+        "w": 920.0,
+        "h": 540.0,
+        "r": 0.0
+      },
+      "content": "برنامه‌نویس\nارشد\nفلاتر",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 150.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "divider",
+      "transform": {
+        "x": 880.0,
+        "y": 880.0,
+        "w": 100.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4280468830,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "meta",
+      "transform": {
+        "x": 80.0,
+        "y": 910.0,
+        "w": 920.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "دورکاری · تمام‌وقت · مهلت ۳۱ خرداد",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 36.0,
+        "color": 4291548641,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

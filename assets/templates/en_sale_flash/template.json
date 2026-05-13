@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_sale_flash",
+  "title": {
+    "en": "Flash sale",
+    "fa": "Flash sale"
+  },
+  "category": "sale",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_sale_flash/thumbnail.png",
+  "document": "assets/templates/en_sale_flash/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "en",
+    "sale"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 110
+  }
+}

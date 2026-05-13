@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_insta_story_minimal_v1",
+  "title": {
+    "en": "استوری خلوت",
+    "fa": "استوری خلوت"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_insta_story_minimal_v1/thumbnail.png",
+  "document": "assets/templates/fa_insta_story_minimal_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "story",
+    "fa",
+    "insta",
+    "minimal",
+    "v1"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 300
+  }
+}

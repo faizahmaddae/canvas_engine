@@ -1,0 +1,180 @@
+{
+  "version": 2,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279179050,
+    "endColor": 4283178389,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "guest",
+      "transform": {
+        "x": 760.0,
+        "y": 105.0,
+        "w": 190.0,
+        "h": 470.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294829706,
+        "endColor": 4294538006,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 95.0,
+      "shadowOpacity": 0.28,
+      "shadowBlur": 32.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 16.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "host",
+      "transform": {
+        "x": 980.0,
+        "y": 105.0,
+        "w": 190.0,
+        "h": 470.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4289197008,
+        "endColor": 4278630100,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 95.0,
+      "shadowOpacity": 0.28,
+      "shadowBlur": 32.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 16.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "mic1",
+      "transform": {
+        "x": 840.0,
+        "y": 430.0,
+        "w": 45.0,
+        "h": 130.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 22.0
+    },
+    {
+      "type": "shape",
+      "id": "mic2",
+      "transform": {
+        "x": 1060.0,
+        "y": 430.0,
+        "w": 45.0,
+        "h": 130.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 22.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 70.0,
+        "y": 95.0,
+        "w": 650.0,
+        "h": 275.0,
+        "r": 0.0
+      },
+      "content": "THE INTERVIEW\nTHAT CHANGED\nMY MIND",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 70.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.96,
+        "alignment": "left",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "tag",
+      "transform": {
+        "x": 78.0,
+        "y": 430.0,
+        "w": 455.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0,
+      "cornerRadius": 41.0
+    },
+    {
+      "type": "text",
+      "id": "tag-text",
+      "transform": {
+        "x": 112.0,
+        "y": 448.0,
+        "w": 390.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "PODCAST EP. 12",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 38.0,
+        "color": 4279310375,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 78.0,
+        "y": 555.0,
+        "w": 600.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "Replace names and topic",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 38.0,
+        "color": 4292728574,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

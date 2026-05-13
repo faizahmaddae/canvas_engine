@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../core/utils/haptics.dart';
 
 /// Default fraction of screen height a panel may consume before
@@ -56,10 +57,10 @@ class DockSheetChrome extends StatefulWidget {
     this.confirmLabel,
     this.maxHeightFraction = kEditorPanelMaxHeightFraction,
     this.maxHeightDp = kEditorPanelMaxHeightDp,
-  })  : assert(
-          confirmLabel == null || headerAction != null,
-          'confirmLabel requires headerAction to be set',
-        );
+  }) : assert(
+         confirmLabel == null || headerAction != null,
+         'confirmLabel requires headerAction to be set',
+       );
 
   final String title;
   final IconData icon;
@@ -163,8 +164,10 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
     final media = MediaQuery.of(context);
     // Effective max height: fraction of screen, clamped by the dp
     // ceiling so landscape phones / tablets stay sane.
-    final maxHeight = (media.size.height * widget.maxHeightFraction)
-        .clamp(0.0, widget.maxHeightDp);
+    final maxHeight = (media.size.height * widget.maxHeightFraction).clamp(
+      0.0,
+      widget.maxHeightDp,
+    );
     final hasLateral = widget.onPrev != null || widget.onNext != null;
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxHeight),
@@ -204,90 +207,84 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
           onHorizontalDragUpdate: hasLateral ? _onHDragUpdate : null,
           onHorizontalDragEnd: hasLateral ? _onHDragEnd : null,
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Drag handle (swipe-down to dismiss) ─────────────
-            // Slimmed 18→14dp. Pill is the *only* close affordance —
-            // we removed the redundant ✕ in the header to reclaim
-            // ~40dp of horizontal chrome and signal one canonical
-            // dismiss gesture (swipe down OR tap the strip tile
-            // again).
-            Semantics(
-              label: 'Dismiss panel',
-              button: true,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onVerticalDragUpdate: _onDragUpdate,
-                onVerticalDragEnd: _onDragEnd,
-                onTap: () {
-                  EditorHaptics.sheet();
-                  widget.onClose();
-                },
-                child: SizedBox(
-                  height: 14,
-                  child: Center(
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color:
-                            scheme.outlineVariant.withValues(alpha: 0.8),
-                        borderRadius: BorderRadius.circular(2),
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── Drag handle (swipe-down to dismiss) ─────────────
+              // Slimmed 18→14dp. Pill is the *only* close affordance —
+              // we removed the redundant ✕ in the header to reclaim
+              // ~40dp of horizontal chrome and signal one canonical
+              // dismiss gesture (swipe down OR tap the strip tile
+              // again).
+              Semantics(
+                label: context.l10n.dismissPanelSemantics,
+                button: true,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onVerticalDragUpdate: _onDragUpdate,
+                  onVerticalDragEnd: _onDragEnd,
+                  onTap: () {
+                    EditorHaptics.sheet();
+                    widget.onClose();
+                  },
+                  child: SizedBox(
+                    height: 14,
+                    child: Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: scheme.outlineVariant.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            // ── Header ─────────────────────────────────────────
-            // Compact: inline 20dp icon (no chip), tight title, undo
-            // chip when applicable. The previous 32dp gradient chip
-            // + ✕ stole ~25 % of the panel's vertical budget on
-            // small phones; pros want density.
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 12, 6),
-              child: Row(
-                children: [
-                  Icon(widget.icon, size: 20, color: scheme.primary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      widget.title,
-                      style:
-                          Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.1,
-                              ),
+              // ── Header ─────────────────────────────────────────
+              // Compact: inline 20dp icon (no chip), tight title, undo
+              // chip when applicable. The previous 32dp gradient chip
+              // + ✕ stole ~25 % of the panel's vertical budget on
+              // small phones; pros want density.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 12, 6),
+                child: Row(
+                  children: [
+                    Icon(widget.icon, size: 20, color: scheme.primary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        widget.title,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.1,
+                        ),
+                      ),
                     ),
-                  ),
-                  if (widget.onUndo != null)
-                    _UndoChip(onUndo: widget.onUndo!),
-                  if (widget.headerAction != null) ...[
-                    if (widget.onUndo != null) const SizedBox(width: 8),
-                    if (widget.confirmLabel != null)
-                      _ConfirmChip(
-                        label: widget.confirmLabel!,
-                        onConfirm: widget.headerAction!,
-                      )
-                    else
-                      _CloseChip(onClose: widget.headerAction!),
+                    if (widget.onUndo != null)
+                      _UndoChip(onUndo: widget.onUndo!),
+                    if (widget.headerAction != null) ...[
+                      if (widget.onUndo != null) const SizedBox(width: 8),
+                      if (widget.confirmLabel != null)
+                        _ConfirmChip(
+                          label: widget.confirmLabel!,
+                          onConfirm: widget.headerAction!,
+                        )
+                      else
+                        _CloseChip(onClose: widget.headerAction!),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            // ── Body ───────────────────────────────────────────
-            // No padding here: the owning shell
-            // (`EditorToolPanelShell`) is the single source of
-            // truth for body padding. Adding any here would stack
-            // additively with the shell's bodyPadding.
-            Flexible(
-              child: SingleChildScrollView(
-                child: widget.child,
-              ),
-            ),
-          ],
+              // ── Body ───────────────────────────────────────────
+              // No padding here: the owning shell
+              // (`EditorToolPanelShell`) is the single source of
+              // truth for body padding. Adding any here would stack
+              // additively with the shell's bodyPadding.
+              Flexible(child: SingleChildScrollView(child: widget.child)),
+            ],
           ),
         ),
       ),
@@ -306,7 +303,7 @@ class _UndoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Semantics(
-      label: 'Undo last change',
+      label: context.l10n.undoLastChangeSemantics,
       button: true,
       child: GestureDetector(
         // Long-press collapses to a single undo (same as tap).
@@ -342,13 +339,12 @@ class _UndoChip extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Undo',
-                  style:
-                      Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onSurfaceVariant,
-                          ),
+                  context.l10n.undoTooltip,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -372,7 +368,7 @@ class _CloseChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Semantics(
-      label: 'Close panel',
+      label: context.l10n.closePanelSemantics,
       button: true,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -440,11 +436,11 @@ class _ConfirmChip extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: scheme.onPrimary,
-                  letterSpacing: 0.2,
-                ),
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: scheme.onPrimary,
+              letterSpacing: 0.2,
+            ),
           ),
         ),
       ),

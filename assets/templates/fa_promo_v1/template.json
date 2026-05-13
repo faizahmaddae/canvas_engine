@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_v1",
+  "title": {
+    "en": "پوستر تبلیغاتی",
+    "fa": "پوستر تبلیغاتی"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_v1/thumbnail.png",
+  "document": "assets/templates/fa_promo_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "promotional",
+    "poster"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 20
+  }
+}

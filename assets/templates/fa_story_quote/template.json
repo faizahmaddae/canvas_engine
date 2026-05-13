@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_quote",
+  "title": {
+    "en": "استوری انگیزشی",
+    "fa": "استوری انگیزشی"
+  },
+  "category": "story",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_quote/thumbnail.png",
+  "document": "assets/templates/fa_story_quote/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "story",
+    "fa",
+    "quote"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 350
+  }
+}

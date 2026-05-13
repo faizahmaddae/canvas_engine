@@ -1,0 +1,181 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4293916415,
+    "endColor": 4294507260,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 92.0,
+        "y": 92.0,
+        "w": 896.0,
+        "h": 896.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 56.0,
+      "shadowOpacity": 0.16,
+      "shadowBlur": 38.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "badge",
+      "transform": {
+        "x": 150.0,
+        "y": 155.0,
+        "w": 315.0,
+        "h": 76.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279179050,
+      "strokeWidth": 0.0,
+      "cornerRadius": 38.0
+    },
+    {
+      "type": "text",
+      "id": "badge-text",
+      "transform": {
+        "x": 180.0,
+        "y": 172.0,
+        "w": 255.0,
+        "h": 42.0,
+        "r": 0.0
+      },
+      "content": "PRODUCT UPDATE",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 34.0,
+        "color": 4284999929,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 150.0,
+        "y": 290.0,
+        "w": 780.0,
+        "h": 190.0,
+        "r": 0.0
+      },
+      "content": "New dashboard\nfor faster teams",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 76.0,
+        "color": 4279179050,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "ui",
+      "transform": {
+        "x": 150.0,
+        "y": 545.0,
+        "w": 780.0,
+        "h": 245.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 3.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4292602622,
+        "endColor": 4294967295,
+        "angleDegrees": 150.0
+      },
+      "cornerRadius": 36.0,
+      "strokeColor": 4287874557
+    },
+    {
+      "type": "shape",
+      "id": "bar1",
+      "transform": {
+        "x": 195.0,
+        "y": 600.0,
+        "w": 260.0,
+        "h": 34.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280640491,
+      "strokeWidth": 0.0,
+      "cornerRadius": 17.0
+    },
+    {
+      "type": "shape",
+      "id": "bar2",
+      "transform": {
+        "x": 195.0,
+        "y": 665.0,
+        "w": 500.0,
+        "h": 34.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4284524026,
+      "strokeWidth": 0.0,
+      "cornerRadius": 17.0
+    },
+    {
+      "type": "shape",
+      "id": "bar3",
+      "transform": {
+        "x": 195.0,
+        "y": 730.0,
+        "w": 390.0,
+        "h": 34.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4287874557,
+      "strokeWidth": 0.0,
+      "cornerRadius": 17.0
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 155.0,
+        "y": 860.0,
+        "w": 760.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "content": "Edit headline, feature list, and CTA",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 34.0,
+        "color": 4282865001,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

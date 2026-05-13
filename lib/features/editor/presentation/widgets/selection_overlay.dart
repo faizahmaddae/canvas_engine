@@ -44,12 +44,7 @@ List<Offset> outsetSelectionQuad(
   final down = downVec / downLen;
   final dx = right * d;
   final dy = down * d;
-  return [
-    tl - dx - dy,
-    tr + dx - dy,
-    bl - dx + dy,
-    br + dx + dy,
-  ];
+  return [tl - dx - dy, tr + dx - dy, bl - dx + dy, br + dx + dy];
 }
 
 /// Snapshot of an in-flight body gesture, emitted by
@@ -78,11 +73,12 @@ class BodyGestureUpdate {
 
 typedef BodyGestureCallback = void Function(BodyGestureUpdate update);
 
-typedef HandleDragCallback = void Function(
-  InteractionHandle handle,
-  Offset globalPointerCanvas,
-  DragPhase phase,
-);
+typedef HandleDragCallback =
+    void Function(
+      InteractionHandle handle,
+      Offset globalPointerCanvas,
+      DragPhase phase,
+    );
 
 /// Selection chrome rendered in **screen space**, above the viewport
 /// transform.
@@ -209,10 +205,7 @@ class LayerSelectionOverlay extends StatelessWidget {
     final s = math.sin(angle);
     final dx = point.dx - pivot.dx;
     final dy = point.dy - pivot.dy;
-    return Offset(
-      pivot.dx + dx * c - dy * s,
-      pivot.dy + dx * s + dy * c,
-    );
+    return Offset(pivot.dx + dx * c - dy * s, pivot.dy + dx * s + dy * c);
   }
 
   @override
@@ -225,12 +218,13 @@ class LayerSelectionOverlay extends StatelessWidget {
 
     // Layer corners in canvas-space (rotated around the layer centre).
     final tlCanvas = _rotate(pos, centerCanvas, rot);
-    final trCanvas =
-        _rotate(pos + Offset(size.width, 0), centerCanvas, rot);
-    final blCanvas =
-        _rotate(pos + Offset(0, size.height), centerCanvas, rot);
-    final brCanvas =
-        _rotate(pos + Offset(size.width, size.height), centerCanvas, rot);
+    final trCanvas = _rotate(pos + Offset(size.width, 0), centerCanvas, rot);
+    final blCanvas = _rotate(pos + Offset(0, size.height), centerCanvas, rot);
+    final brCanvas = _rotate(
+      pos + Offset(size.width, size.height),
+      centerCanvas,
+      rot,
+    );
 
     // Map to screen space.
     final tlRaw = _toScreen(tlCanvas);
@@ -245,7 +239,10 @@ class LayerSelectionOverlay extends StatelessWidget {
     // the InteractionEngine drives the *real* transform via pointer
     // deltas, not handle-to-corner geometry.
     final outset = outsetSelectionQuad(
-      tlRaw, trRaw, blRaw, brRaw,
+      tlRaw,
+      trRaw,
+      blRaw,
+      brRaw,
       EngineConstants.selectionOutset,
     );
     final tl = outset[0];
@@ -437,10 +434,7 @@ class _PositionedHandle extends StatelessWidget {
         cursor: SystemMouseCursors.grab,
         child: HandleDragDetector(
           onDrag: onDrag,
-          child: _HitBoxVisual(
-            debugLabel: debugLabel,
-            child: child,
-          ),
+          child: _HitBoxVisual(debugLabel: debugLabel, child: child),
         ),
       ),
     );
@@ -478,6 +472,7 @@ class _LogGlobalBounds extends StatelessWidget {
     return Builder(
       builder: (ctx) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!kDebugMode) return;
           final ro = ctx.findRenderObject() as RenderBox?;
           if (ro == null || !ro.attached) return;
           final tl = ro.localToGlobal(Offset.zero);
@@ -503,7 +498,8 @@ class _CornerGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = EngineConstants.handleVisualSize *
+    final size =
+        EngineConstants.handleVisualSize *
         (active ? EngineConstants.handleActiveScale : 1);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 120),
@@ -626,16 +622,15 @@ class _BodyDragSurface extends StatelessWidget {
         behavior: HitTestBehavior.translucent,
         gestures: <Type, GestureRecognizerFactory>{
           _BodyMultiTouchRecognizer:
-              GestureRecognizerFactoryWithHandlers<
-                  _BodyMultiTouchRecognizer>(
-            () => _BodyMultiTouchRecognizer(),
-            (instance) => instance
-              ..onUpdate = onDrag
-              ..onTap = onTap
-              ..onLongPress = onLongPress
-              ..shouldClaim = shouldClaim
-              ..shouldDeferStart = shouldDeferStart,
-          ),
+              GestureRecognizerFactoryWithHandlers<_BodyMultiTouchRecognizer>(
+                () => _BodyMultiTouchRecognizer(),
+                (instance) => instance
+                  ..onUpdate = onDrag
+                  ..onTap = onTap
+                  ..onLongPress = onLongPress
+                  ..shouldClaim = shouldClaim
+                  ..shouldDeferStart = shouldDeferStart,
+              ),
         },
         child: const SizedBox.expand(),
       ),
@@ -816,8 +811,8 @@ class _BodyMultiTouchRecognizer extends OneSequenceGestureRecognizer {
       // claim-on-down-and-start behaviour that on-body drags depend
       // on). Otherwise wait for promotion via slop or a second
       // finger — see [shouldDeferStart] for rationale.
-      final defer = shouldDeferStart != null &&
-          shouldDeferStart!(event.position);
+      final defer =
+          shouldDeferStart != null && shouldDeferStart!(event.position);
       if (!defer) {
         _sessionStarted = true;
         _emit(DragPhase.start);
@@ -987,13 +982,15 @@ class _BodyMultiTouchRecognizer extends OneSequenceGestureRecognizer {
       scale = d / _baseDistance;
       rotation = math.atan2(dy, dx) - _baseAngle;
     }
-    onUpdate?.call(BodyGestureUpdate(
-      phase: phase,
-      focalGlobal: _focal(),
-      scale: scale,
-      rotation: rotation,
-      pointerCount: _pointers.length,
-    ));
+    onUpdate?.call(
+      BodyGestureUpdate(
+        phase: phase,
+        focalGlobal: _focal(),
+        scale: scale,
+        rotation: rotation,
+        pointerCount: _pointers.length,
+      ),
+    );
   }
 
   @override
@@ -1013,13 +1010,15 @@ class _BodyMultiTouchRecognizer extends OneSequenceGestureRecognizer {
         _cancelLongPressTimer();
         if (_sessionStarted) {
           _sessionStarted = false;
-          onUpdate?.call(const BodyGestureUpdate(
-            phase: DragPhase.end,
-            focalGlobal: Offset.zero,
-            scale: 1.0,
-            rotation: 0.0,
-            pointerCount: 0,
-          ));
+          onUpdate?.call(
+            const BodyGestureUpdate(
+              phase: DragPhase.end,
+              focalGlobal: Offset.zero,
+              scale: 1.0,
+              rotation: 0.0,
+              pointerCount: 0,
+            ),
+          );
         }
         _resetSequenceTracking();
       }
@@ -1157,7 +1156,10 @@ class GroupSelectionOverlay extends StatelessWidget {
     // [LayerSelectionOverlay.build]) so groups feel consistent with
     // individual selections.
     final outset = outsetSelectionQuad(
-      tlRaw, trRaw, blRaw, brRaw,
+      tlRaw,
+      trRaw,
+      blRaw,
+      brRaw,
       EngineConstants.selectionOutset,
     );
     final tl = outset[0];
@@ -1206,8 +1208,7 @@ class GroupSelectionOverlay extends StatelessWidget {
           _PositionedHandle(
             center: tl,
             debugLabel: 'group-topLeft',
-            onDrag: (p, phase) =>
-                onHandle(InteractionHandle.topLeft, p, phase),
+            onDrag: (p, phase) => onHandle(InteractionHandle.topLeft, p, phase),
             child: _CornerGlyph(
               color: color,
               active: activeHandle == InteractionHandle.topLeft,
@@ -1216,8 +1217,7 @@ class GroupSelectionOverlay extends StatelessWidget {
           _PositionedHandle(
             center: tr,
             debugLabel: 'group-topRightRotate',
-            onDrag: (p, phase) =>
-                onHandle(InteractionHandle.rotate, p, phase),
+            onDrag: (p, phase) => onHandle(InteractionHandle.rotate, p, phase),
             child: _RotateGlyph(
               color: color,
               active: activeHandle == InteractionHandle.rotate,
@@ -1286,7 +1286,12 @@ class GroupMemberOutlinePainter extends CustomPainter {
       canvas.rotate(t.rotation);
       canvas.translate(-centre.dx, -centre.dy);
       canvas.drawRect(
-        Rect.fromLTWH(t.position.dx, t.position.dy, t.size.width, t.size.height),
+        Rect.fromLTWH(
+          t.position.dx,
+          t.position.dy,
+          t.size.width,
+          t.size.height,
+        ),
         paint,
       );
       canvas.restore();

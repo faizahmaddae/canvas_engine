@@ -1,0 +1,161 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4280232247,
+    "edgeColor": 4278322711,
+    "focalX": -0.3,
+    "focalY": -0.3,
+    "radius": 1.2
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "accent",
+      "transform": {
+        "x": 780.0,
+        "y": 90.0,
+        "w": 96.0,
+        "h": 900.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4280472558,
+        "endColor": 4289170426,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 48.0,
+      "opacity": 0.95
+    },
+    {
+      "type": "shape",
+      "id": "quote-card",
+      "transform": {
+        "x": 112.0,
+        "y": 160.0,
+        "w": 720.0,
+        "h": 760.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 3.0,
+      "cornerRadius": 54.0,
+      "strokeColor": 4281549141,
+      "shadowOpacity": 0.3,
+      "shadowBlur": 42.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 24.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "mark",
+      "transform": {
+        "x": 640.0,
+        "y": 190.0,
+        "w": 130.0,
+        "h": 120.0,
+        "r": 0.0
+      },
+      "content": "”",
+      "style": {
+        "fontFamily": "Playfair_Display",
+        "fontSize": 118.0,
+        "color": 4280472558,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 165.0,
+        "y": 355.0,
+        "w": 610.0,
+        "h": 290.0,
+        "r": 0.0
+      },
+      "content": "تمرکز یعنی\nنه گفتن به\nصد چیز خوب",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 82.0,
+        "color": 4294507260,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.08,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 180.0,
+        "y": 720.0,
+        "w": 580.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "content": "برای تیم‌های خلاق",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4291548641,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "save",
+      "transform": {
+        "x": 425.0,
+        "y": 820.0,
+        "w": 340.0,
+        "h": 66.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280472558,
+      "strokeWidth": 0.0,
+      "cornerRadius": 33.0
+    },
+    {
+      "type": "text",
+      "id": "save-text",
+      "transform": {
+        "x": 455.0,
+        "y": 832.0,
+        "w": 280.0,
+        "h": 38.0,
+        "r": 0.0
+      },
+      "content": "ذخیره کن",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 38.0,
+        "color": 4279179050,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

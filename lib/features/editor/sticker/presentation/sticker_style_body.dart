@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/text_commands.dart';
 import '../../engine/modules/text/text_layer.dart';
@@ -19,13 +20,7 @@ import 'sticker_panel_shell.dart';
 ///     as a true halo around the glyph silhouette.
 ///   * `color` is ignored by color emoji, so a "tint" preset would
 ///     only affect non-emoji fallback text — skipped for v1.
-enum StickerStylePreset {
-  original,
-  softShadow,
-  pop,
-  glow,
-  outline,
-}
+enum StickerStylePreset { original, softShadow, pop, glow, outline }
 
 extension StickerStylePresetX on StickerStylePreset {
   String get label {
@@ -123,7 +118,7 @@ class StickerStyleBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     return StickerPanelShell(
-      title: 'Style',
+      title: context.l10n.styleTool,
       icon: Icons.auto_awesome_outlined,
       // Full-bleed body: zero horizontal gutter so the preset
       // carousel runs from the panel's left edge to its right
@@ -178,10 +173,12 @@ class StickerStyleBody extends ConsumerWidget {
     EditorHaptics.tap();
     final next = preset.apply(layer.style);
     if (next == layer.style) return;
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           UpdateTextCommand(
             layerId: layer.id,
-            content: layer.content,
+            // style-only edit (sticker style preset).
             style: next,
           ),
         );
@@ -240,7 +237,7 @@ class _StyleTile extends StatelessWidget {
               Icon(preset.icon, size: 22, color: fg),
               const SizedBox(height: 6),
               Text(
-                preset.label,
+                _stickerPresetLabel(context, preset),
                 style: TextStyle(
                   color: fg,
                   fontWeight: FontWeight.w700,
@@ -252,5 +249,20 @@ class _StyleTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+String _stickerPresetLabel(BuildContext context, StickerStylePreset preset) {
+  switch (preset) {
+    case StickerStylePreset.original:
+      return context.l10n.originalOption;
+    case StickerStylePreset.softShadow:
+      return context.l10n.shadowTool;
+    case StickerStylePreset.pop:
+      return context.l10n.popOption;
+    case StickerStylePreset.glow:
+      return context.l10n.glowOption;
+    case StickerStylePreset.outline:
+      return context.l10n.outlineOption;
   }
 }

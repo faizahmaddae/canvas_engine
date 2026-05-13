@@ -1,0 +1,109 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4294507260,
+    "edgeColor": 4293849855,
+    "focalX": -0.3,
+    "focalY": -0.5,
+    "radius": 1.2
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "sidebar",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "w": 96.0,
+        "h": 1080.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 140.0,
+        "y": 150.0,
+        "w": 800.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "FIELD NOTE · 02",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 30.0,
+        "color": 4281549141,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 140.0,
+        "y": 250.0,
+        "w": 850.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "content": "“The future\nis here.\nIt just arrives\nunevenly.”",
+      "style": {
+        "fontFamily": "Playfair_Display",
+        "fontSize": 104.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "attrib-rule",
+      "transform": {
+        "x": 140.0,
+        "y": 825.0,
+        "w": 220.0,
+        "h": 6.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294538006,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "attrib",
+      "transform": {
+        "x": 140.0,
+        "y": 860.0,
+        "w": 860.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "WILLIAM GIBSON",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 34.0,
+        "color": 4281549141,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

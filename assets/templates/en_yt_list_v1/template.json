@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "en_yt_list_v1",
+  "title": {
+    "en": "Five things",
+    "fa": "Five things"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_yt_list_v1/thumbnail.png",
+  "document": "assets/templates/en_yt_list_v1/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "youtube",
+    "en",
+    "yt",
+    "list",
+    "v1"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 320
+  }
+}

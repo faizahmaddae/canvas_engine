@@ -20,15 +20,18 @@
 //   $ open build/test_exports/
 
 import 'dart:io';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:canvas_engine/features/editor/engine/export/document_png_exporter.dart';
 import 'package:canvas_engine/features/editor/engine/rendering/document_view.dart';
+import 'package:canvas_engine/features/templates/data/asset_template_repository.dart';
+import 'package:canvas_engine/features/templates/data/template_manifest.dart';
 import 'package:canvas_engine/features/templates/domain/template.dart';
-import 'package:canvas_engine/features/templates/domain/template_catalog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show FontLoader, rootBundle;
+import 'package:flutter/services.dart'
+    show CachingAssetBundle, FontLoader, rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -79,6 +82,19 @@ void main() {
     'fa_quote_minimal',
     'fa_event',
     'fa_announcement',
+    'fa_insta_story_v1',
+    'fa_insta_story_bold_word_v1',
+    'fa_insta_story_announcement_v1',
+    'fa_insta_story_frame_v1',
+    'fa_insta_story_minimal_v1',
+    'fa_poetry_v1',
+    'fa_poetry_minimal_v1',
+    'fa_poetry_traditional_v1',
+    'fa_poetry_overlay_v1',
+    'fa_promo_v1',
+    'fa_promo_sale_v1',
+    'fa_promo_event_v1',
+    'fa_promo_launch_v1',
   ];
 
   // English controls, rendered the same way, so a reviewer can
@@ -87,18 +103,24 @@ void main() {
   const englishControlIds = <String>[
     'en_birthday_confetti',
     'en_quote_minimal',
+    'en_yt_thumb_v1',
   ];
 
   final outputDir = Directory('build/test_exports');
+  late final Map<String, Template> templatesById;
 
   setUpAll(() async {
     if (!outputDir.existsSync()) {
       outputDir.createSync(recursive: true);
     }
     await _loadAppFonts();
+    final templates = await AssetTemplateRepository(
+      bundle: _assetBundle(),
+    ).loadTemplates();
+    templatesById = {for (final template in templates) template.id: template};
   });
 
-  Future<Uint8List> _exportTemplate(WidgetTester tester, Template t) async {
+  Future<Uint8List> exportTemplate(WidgetTester tester, Template t) async {
     final boundaryKey = GlobalKey();
     final doc = t.build();
 
@@ -131,7 +153,11 @@ void main() {
                   height: doc.height,
                   child: RepaintBoundary(
                     key: boundaryKey,
-                    child: DocumentView(document: doc),
+                    child: DocumentView(
+                      document: doc,
+                      backgroundFill: doc.background,
+                      honorTransparentMode: true,
+                    ),
                   ),
                 ),
               ),
@@ -151,7 +177,7 @@ void main() {
     return bytes!;
   }
 
-  Future<ui.Image> _decodePng(WidgetTester tester, Uint8List bytes) async {
+  Future<ui.Image> decodePng(WidgetTester tester, Uint8List bytes) async {
     final image = await tester.runAsync(() async {
       final codec = await ui.instantiateImageCodec(bytes);
       final frame = await codec.getNextFrame();
@@ -161,15 +187,15 @@ void main() {
   }
 
   for (final id in [...persianIds, ...englishControlIds]) {
-    testWidgets('exports $id to a valid PNG and writes it to disk',
-        (tester) async {
-      final template = TemplateCatalog.all.firstWhere(
-        (t) => t.id == id,
-        orElse: () => throw StateError('Template $id missing from catalog'),
-      );
+    testWidgets('exports $id to a valid PNG and writes it to disk', (
+      tester,
+    ) async {
+      final template =
+          templatesById[id] ??
+          (throw StateError('Template $id missing from asset catalog'));
       final doc = template.build();
 
-      final bytes = await _exportTemplate(tester, template);
+      final bytes = await exportTemplate(tester, template);
 
       // PNG magic number — proves the bytes are a real PNG, not a
       // truncated buffer or an empty surface.
@@ -179,11 +205,13 @@ void main() {
         reason: '$id did not produce valid PNG bytes',
       );
 
-      final image = await _decodePng(tester, bytes);
-      expect(image.width, doc.width.round(),
-          reason: '$id PNG width mismatch');
-      expect(image.height, doc.height.round(),
-          reason: '$id PNG height mismatch');
+      final image = await decodePng(tester, bytes);
+      expect(image.width, doc.width.round(), reason: '$id PNG width mismatch');
+      expect(
+        image.height,
+        doc.height.round(),
+        reason: '$id PNG height mismatch',
+      );
       image.dispose();
 
       final file = File('${outputDir.path}/$id.png');
@@ -191,8 +219,61 @@ void main() {
       // Print path so the reviewer can find the artefact even
       // when the test runs in CI.
       // ignore: avoid_print
-      print('  → wrote ${file.path} (${bytes.length} bytes, '
-          '${doc.width.round()}×${doc.height.round()})');
+      print(
+        '  → wrote ${file.path} (${bytes.length} bytes, '
+        '${doc.width.round()}×${doc.height.round()})',
+      );
     });
   }
+}
+
+class _MemoryAssetBundle extends CachingAssetBundle {
+  _MemoryAssetBundle(this.assets);
+
+  final Map<String, String> assets;
+
+  @override
+  Future<ByteData> load(String key) async {
+    final source = assets[key];
+    if (source == null) {
+      throw StateError('Missing test asset $key');
+    }
+    return ByteData.sublistView(Uint8List.fromList(utf8.encode(source)));
+  }
+
+  @override
+  Future<String> loadString(String key, {bool cache = true}) async {
+    final source = assets[key];
+    if (source == null) {
+      throw StateError('Missing test asset $key');
+    }
+    return source;
+  }
+}
+
+_MemoryAssetBundle _assetBundle() {
+  final manifestSource = _assetText(
+    AssetTemplateRepository.defaultManifestPath,
+  );
+  final manifest = TemplateAssetManifest.fromJson(_jsonObject(manifestSource));
+  final assets = <String, String>{
+    AssetTemplateRepository.defaultManifestPath: manifestSource,
+  };
+
+  for (final metadataPath in manifest.templates) {
+    final metadataSource = _assetText(metadataPath);
+    final metadata = TemplateAssetMetadata.fromJson(
+      _jsonObject(metadataSource),
+    );
+    assets[metadataPath] = metadataSource;
+    assets[metadata.documentPath] = _assetText(metadata.documentPath);
+  }
+
+  return _MemoryAssetBundle(assets);
+}
+
+String _assetText(String path) => File(path).readAsStringSync();
+
+Map<String, dynamic> _jsonObject(String source) {
+  return Map<String, dynamic>.from(jsonDecode(source) as Map);
 }

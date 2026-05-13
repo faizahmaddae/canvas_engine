@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/utils/user_error.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../editor/engine/core/editor_document.dart';
 import '../../../editor/engine/rendering/document_thumbnail.dart';
 import '../../../editor/engine/serialization/document_codec.dart';
@@ -51,11 +54,11 @@ class RecentProjectsGrid extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
     final projects = ref.watch(projectStoreProvider);
     final lastOpened = ref.watch(lastOpenedProjectIdProvider).value;
     final count = projects.value?.length ?? 0;
-    final showSeeAll =
-        onSeeAll != null && limit != null && count > limit!;
+    final showSeeAll = onSeeAll != null && limit != null && count > limit!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +70,7 @@ class RecentProjectsGrid extends ConsumerWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                'Recent',
+                l10n.recentTitle,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.2,
@@ -94,11 +97,11 @@ class RecentProjectsGrid extends ConsumerWidget {
                     ),
                     foregroundColor: scheme.primary,
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'See all',
+                        l10n.seeAllAction,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           letterSpacing: -0.1,
@@ -127,7 +130,12 @@ class RecentProjectsGrid extends ConsumerWidget {
             );
           },
           loading: () => const _ProjectsSkeleton(),
-          error: (e, _) => _ErrorBox(message: '$e'),
+          error: (e, st) {
+            debugLogError('recentProjectsGrid/load', e, st);
+            return _ErrorBox(
+              message: userMessageFor(e, fallback: l10n.couldntLoadProjects),
+            );
+          },
         ),
       ],
     );
@@ -210,12 +218,15 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
     final p = widget.project;
+    final relativeTime = _relativeTime(l10n, p.lastModified);
     final thumb = p.thumbnailPath;
     // Only trust a cached PNG if it exists AND was produced by the
     // current renderer. Older PNGs baked an opaque white backdrop
     // and would mis-represent any coloured/transparent canvas.
-    final pngIsFresh = thumb != null &&
+    final pngIsFresh =
+        thumb != null &&
         p.thumbnailVersion >= Project.currentThumbnailVersion &&
         File(thumb).existsSync();
 
@@ -251,11 +262,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      _Thumb(
-                        project: p,
-                        usePng: pngIsFresh,
-                        scheme: scheme,
-                      ),
+                      _Thumb(project: p, usePng: pngIsFresh, scheme: scheme),
                       if (widget.isLastOpened)
                         Positioned(
                           left: 8,
@@ -290,8 +297,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                             // separator keeps it compact and reads
                             // well in light/dark.
                             Text(
-                              '${_formatSize(p.width, p.height)}  \u00B7  '
-                              '${_relativeTime(p.lastModified)}',
+                              '${_formatSize(p.width, p.height)}  \u00B7  $relativeTime',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
                                 fontSize: 11,
@@ -304,7 +310,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                       IconButton(
                         iconSize: 18,
                         visualDensity: VisualDensity.compact,
-                        tooltip: 'More',
+                        tooltip: l10n.moreTooltip,
                         icon: const Icon(Icons.more_horiz_rounded),
                         onPressed: () => _showActionsSheet(context),
                       ),
@@ -324,6 +330,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
     // if this card unmounts before any of the action handlers run
     // (e.g. delete, or the user navigating away mid-sheet).
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     final action = await showModalBottomSheet<_CardAction>(
       context: context,
       showDragHandle: true,
@@ -333,17 +340,17 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
           children: [
             ListTile(
               leading: const Icon(Icons.open_in_new_rounded),
-              title: const Text('Open'),
+              title: Text(l10n.openAction),
               onTap: () => Navigator.pop(ctx, _CardAction.open),
             ),
             ListTile(
               leading: const Icon(Icons.drive_file_rename_outline_rounded),
-              title: const Text('Rename'),
+              title: Text(l10n.renameAction),
               onTap: () => Navigator.pop(ctx, _CardAction.rename),
             ),
             ListTile(
               leading: const Icon(Icons.content_copy_rounded),
-              title: const Text('Duplicate'),
+              title: Text(l10n.duplicateAction),
               onTap: () => Navigator.pop(ctx, _CardAction.duplicate),
             ),
             ListTile(
@@ -352,10 +359,8 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                 color: Theme.of(ctx).colorScheme.error,
               ),
               title: Text(
-                'Delete',
-                style: TextStyle(
-                  color: Theme.of(ctx).colorScheme.error,
-                ),
+                l10n.deleteAction,
+                style: TextStyle(color: Theme.of(ctx).colorScheme.error),
               ),
               onTap: () => Navigator.pop(ctx, _CardAction.delete),
             ),
@@ -377,7 +382,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
         if (newId != null) {
           messenger.showSnackBar(
             SnackBar(
-              content: Text('Duplicated "${widget.project.name}"'),
+              content: Text(l10n.duplicatedProject(widget.project.name)),
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 2),
             ),
@@ -390,26 +395,25 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
 
   Future<void> _renameFlow(ScaffoldMessengerState messenger) async {
     final controller = TextEditingController(text: widget.project.name);
+    final l10n = context.l10n;
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Rename project'),
+        title: Text(l10n.renameProjectTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Project name',
-          ),
+          decoration: InputDecoration(labelText: l10n.projectNameLabel),
           onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancelAction),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Save'),
+            child: Text(l10n.saveAction),
           ),
         ],
       ),
@@ -421,7 +425,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
         .rename(widget.project.id, name);
     messenger.showSnackBar(
       SnackBar(
-        content: Text('Renamed to "$name"'),
+        content: Text(l10n.renamedProject(name)),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),
@@ -429,36 +433,33 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
   }
 
   Future<void> _confirmDelete(ScaffoldMessengerState messenger) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete project?'),
-        content: Text(
-          '"${widget.project.name}" will be permanently removed.',
-        ),
+        title: Text(l10n.deleteProjectTitle),
+        content: Text(l10n.deleteProjectBody(widget.project.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancelAction),
           ),
           FilledButton.tonal(
             style: FilledButton.styleFrom(
               foregroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
+            child: Text(l10n.deleteAction),
           ),
         ],
       ),
     );
     if (ok ?? false) {
       final name = widget.project.name;
-      await ref
-          .read(projectStoreProvider.notifier)
-          .delete(widget.project.id);
+      await ref.read(projectStoreProvider.notifier).delete(widget.project.id);
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Deleted "$name"'),
+          content: Text(l10n.deletedProject(name)),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
         ),
@@ -531,9 +532,7 @@ class _Thumb extends StatelessWidget {
           child: FittedBox(
             fit: BoxFit.contain,
             alignment: Alignment.center,
-            child: RepaintBoundary(
-              child: DocumentThumbnail(document: doc),
-            ),
+            child: RepaintBoundary(child: DocumentThumbnail(document: doc)),
           ),
         ),
       );
@@ -583,14 +582,10 @@ class _LastOpenedBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.history_rounded,
-            size: 12,
-            color: scheme.onPrimary,
-          ),
+          Icon(Icons.history_rounded, size: 12, color: scheme.onPrimary),
           const SizedBox(width: 4),
           Text(
-            'Last opened',
+            context.l10n.lastOpenedLabel,
             style: TextStyle(
               color: scheme.onPrimary,
               fontSize: 10,
@@ -724,6 +719,7 @@ class _CompactEmpty extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -748,7 +744,7 @@ class _CompactEmpty extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'No projects yet',
+                  l10n.noProjectsYet,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.1,
@@ -756,7 +752,7 @@ class _CompactEmpty extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Start by creating one',
+                  l10n.startByCreatingOne,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -772,7 +768,7 @@ class _CompactEmpty extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text('Create'),
+            child: Text(l10n.createAction),
           ),
         ],
       ),
@@ -789,10 +785,7 @@ class _ErrorBox extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Text(
-        'Failed to load projects: $message',
-        style: TextStyle(color: scheme.error),
-      ),
+      child: Text(message, style: TextStyle(color: scheme.error)),
     );
   }
 }
@@ -801,20 +794,19 @@ class _ErrorBox extends StatelessWidget {
 /// values are whole numbers (the common case — preset sizes are all
 /// integers). Used by [ProjectCard]'s metadata line.
 String _formatSize(double w, double h) {
-  String fmt(double v) => v == v.roundToDouble()
-      ? v.toInt().toString()
-      : v.toStringAsFixed(1);
+  String fmt(double v) =>
+      v == v.roundToDouble() ? v.toInt().toString() : v.toStringAsFixed(1);
   return '${fmt(w)} \u00D7 ${fmt(h)}';
 }
 
-String _relativeTime(DateTime t) {
+String _relativeTime(AppLocalizations l10n, DateTime t) {
   final now = DateTime.now();
   final diff = now.difference(t);
-  if (diff.inMinutes < 1) return 'Just now';
-  if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-  if (diff.inHours < 24 && now.day == t.day) return '${diff.inHours}h ago';
-  if (diff.inDays < 2) return 'Yesterday';
-  if (diff.inDays < 7) return '${diff.inDays}d ago';
-  if (diff.inDays < 30) return '${(diff.inDays / 7).floor()}w ago';
-  return '${(diff.inDays / 30).floor()}mo ago';
+  if (diff.inMinutes < 1) return l10n.justNow;
+  if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
+  if (diff.inHours < 24 && now.day == t.day) return l10n.hoursAgo(diff.inHours);
+  if (diff.inDays < 2) return l10n.yesterday;
+  if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
+  if (diff.inDays < 30) return l10n.weeksAgo((diff.inDays / 7).floor());
+  return l10n.monthsAgo((diff.inDays / 30).floor());
 }

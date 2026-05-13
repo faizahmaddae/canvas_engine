@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_post_service_announcement",
+  "title": {
+    "en": "Persian Service Announcement Post",
+    "fa": "پست معرفی خدمت"
+  },
+  "category": "social",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_post_service_announcement/thumbnail.png",
+  "document": "assets/templates/fa_post_service_announcement/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "instagram",
+    "service",
+    "announcement"
+  ],
+  "home": {
+    "sortOrder": 94
+  }
+}

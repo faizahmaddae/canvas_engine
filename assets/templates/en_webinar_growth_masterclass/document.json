@@ -1,0 +1,160 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279310375,
+    "endColor": 4282595530,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "screen",
+      "transform": {
+        "x": 120.0,
+        "y": 130.0,
+        "w": 840.0,
+        "h": 500.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4293849855,
+        "endColor": 4294967295,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 54.0,
+      "shadowOpacity": 0.26,
+      "shadowBlur": 40.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "play",
+      "transform": {
+        "x": 480.0,
+        "y": 300.0,
+        "w": 130.0,
+        "h": 130.0,
+        "r": 90.0
+      },
+      "kind": "triangle",
+      "fillColor": 4282595530,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 150.0,
+        "y": 735.0,
+        "w": 760.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "LIVE WEBINAR",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 42.0,
+        "color": 4289049852,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 145.0,
+        "y": 815.0,
+        "w": 790.0,
+        "h": 190.0,
+        "r": 0.0
+      },
+      "content": "Growth systems\nthat scale",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 78.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "left",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 150.0,
+        "y": 1040.0,
+        "w": 760.0,
+        "h": 78.0,
+        "r": 0.0
+      },
+      "content": "A professional event template for courses, webinars, and masterclasses.",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 36.0,
+        "color": 4292929535,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "date",
+      "transform": {
+        "x": 150.0,
+        "y": 1170.0,
+        "w": 560.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0,
+      "cornerRadius": 41.0
+    },
+    {
+      "type": "text",
+      "id": "date-text",
+      "transform": {
+        "x": 185.0,
+        "y": 1188.0,
+        "w": 490.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "THU 7 PM",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 40.0,
+        "color": 4279310375,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

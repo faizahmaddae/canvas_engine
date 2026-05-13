@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_edu_exam_prep_post",
+  "title": {
+    "en": "Persian Exam Prep Post",
+    "fa": "پست آمادگی آزمون"
+  },
+  "category": "social",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_edu_exam_prep_post/thumbnail.png",
+  "document": "assets/templates/fa_edu_exam_prep_post/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "education",
+    "exam",
+    "post"
+  ],
+  "home": {
+    "sortOrder": 73
+  }
+}

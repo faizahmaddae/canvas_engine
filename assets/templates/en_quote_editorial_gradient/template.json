@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "en_quote_editorial_gradient",
+  "title": {
+    "en": "Editorial gradient",
+    "fa": "Editorial gradient"
+  },
+  "category": "quote",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_quote_editorial_gradient/thumbnail.png",
+  "document": "assets/templates/en_quote_editorial_gradient/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "quote",
+    "en",
+    "editorial",
+    "gradient"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 110
+  }
+}

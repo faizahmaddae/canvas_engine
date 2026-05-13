@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "en_yt_ai_tools_2026",
+  "title": {
+    "en": "AI Tools YouTube Thumbnail",
+    "fa": "تامبنیل ابزارهای هوش مصنوعی"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_yt_ai_tools_2026/thumbnail.png",
+  "document": "assets/templates/en_yt_ai_tools_2026/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "english",
+    "youtube",
+    "thumbnail",
+    "tech"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 45
+  }
+}

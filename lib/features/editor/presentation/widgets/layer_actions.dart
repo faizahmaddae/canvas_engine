@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/editor_command.dart';
@@ -102,21 +103,20 @@ class LayerActions {
       final fresh = ref.read(documentControllerProvider);
       if (!fresh.isProtectedBasePhoto(layer.id)) return;
       HapticFeedback.selectionClick().catchError((_) {});
-      ref.read(documentControllerProvider.notifier).execute(
-            CompositeCommand(
-              [
-                // Explicit base-photo clear FIRST so its inverse
-                // re-points to `layer.id` on undo. (RemoveLayer
-                // alone clears the pointer as a side effect, but
-                // its inverse re-adds the layer without restoring
-                // the pointer -- which would leave the project in a
-                // half-restored state after a single undo.)
-                const SetBasePhotoCommand(null),
-                RemoveLayerCommand(layer.id),
-                const SetProjectKindCommand(ProjectKind.design),
-              ],
-              labelOverride: 'Remove base photo',
-            ),
+      ref
+          .read(documentControllerProvider.notifier)
+          .execute(
+            CompositeCommand([
+              // Explicit base-photo clear FIRST so its inverse
+              // re-points to `layer.id` on undo. (RemoveLayer
+              // alone clears the pointer as a side effect, but
+              // its inverse re-adds the layer without restoring
+              // the pointer -- which would leave the project in a
+              // half-restored state after a single undo.)
+              const SetBasePhotoCommand(null),
+              RemoveLayerCommand(layer.id),
+              const SetProjectKindCommand(ProjectKind.design),
+            ], labelOverride: context.l10n.removeBasePhotoCommand),
           );
     } else {
       HapticFeedback.selectionClick().catchError((_) {});
@@ -135,22 +135,19 @@ class LayerActions {
     return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove base photo?'),
-        content: const Text(
-          'This is the photo your project was built from. Removing it '
-          'turns this into a blank design project. You can undo this.',
-        ),
+        title: Text(ctx.l10n.removeBasePhotoTitle),
+        content: Text(ctx.l10n.removeBasePhotoBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Keep'),
+            child: Text(ctx.l10n.keepAction),
           ),
           FilledButton.tonal(
             style: FilledButton.styleFrom(
               foregroundColor: Theme.of(ctx).colorScheme.error,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Remove'),
+            child: Text(ctx.l10n.removeAction),
           ),
         ],
       ),
@@ -165,9 +162,9 @@ class LayerActions {
     final index = doc.indexOf(layer.id);
     if (index == null || index >= doc.layers.length - 1) return;
     HapticFeedback.selectionClick().catchError((_) {});
-    ref.read(documentControllerProvider.notifier).execute(
-          ReorderLayerCommand(from: index, to: index + 1),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(ReorderLayerCommand(from: index, to: index + 1));
   }
 
   /// Move [layer] one step down the z-order. Silent no-op when
@@ -177,9 +174,9 @@ class LayerActions {
     final index = doc.indexOf(layer.id);
     if (index == null || index <= 0) return;
     HapticFeedback.selectionClick().catchError((_) {});
-    ref.read(documentControllerProvider.notifier).execute(
-          ReorderLayerCommand(from: index, to: index - 1),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(ReorderLayerCommand(from: index, to: index - 1));
   }
 
   /// Flip the lock flag. The layer stays selected (locked layers can
@@ -188,9 +185,9 @@ class LayerActions {
   /// `editor_canvas.dart`).
   static void toggleLock(WidgetRef ref, EditorLayer layer) {
     HapticFeedback.selectionClick().catchError((_) {});
-    ref.read(documentControllerProvider.notifier).execute(
-          SetLayerLockCommand(layerId: layer.id, locked: !layer.locked),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(SetLayerLockCommand(layerId: layer.id, locked: !layer.locked));
   }
 
   static bool canBringForward(WidgetRef ref, EditorLayer layer) {

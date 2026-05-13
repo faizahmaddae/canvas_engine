@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_social_case_study",
+  "title": {
+    "en": "Case Study Social Post",
+    "fa": "پست مطالعه موردی"
+  },
+  "category": "social",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_social_case_study/thumbnail.png",
+  "document": "assets/templates/en_social_case_study/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "english",
+    "social",
+    "case-study",
+    "business"
+  ],
+  "home": {
+    "sortOrder": 81
+  }
+}

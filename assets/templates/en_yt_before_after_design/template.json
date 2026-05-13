@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_yt_before_after_design",
+  "title": {
+    "en": "Before After Design Thumbnail",
+    "fa": "تامبنیل قبل و بعد طراحی"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_yt_before_after_design/thumbnail.png",
+  "document": "assets/templates/en_yt_before_after_design/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "english",
+    "youtube",
+    "design",
+    "before-after"
+  ],
+  "home": {
+    "sortOrder": 46
+  }
+}

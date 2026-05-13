@@ -1,0 +1,159 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4294832888,
+    "edgeColor": 4281413249,
+    "focalX": -0.15,
+    "focalY": -0.25,
+    "radius": 1.2
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "paper",
+      "transform": {
+        "x": 120.0,
+        "y": 135.0,
+        "w": 840.0,
+        "h": 810.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 70.0,
+      "shadowOpacity": 0.22,
+      "shadowBlur": 38.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "accent",
+      "transform": {
+        "x": 760.0,
+        "y": 205.0,
+        "w": 76.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4289222135,
+        "endColor": 4294538006,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 38.0
+    },
+    {
+      "type": "text",
+      "id": "mark",
+      "transform": {
+        "x": 640.0,
+        "y": 180.0,
+        "w": 130.0,
+        "h": 110.0,
+        "r": 0.0
+      },
+      "content": "”",
+      "style": {
+        "fontFamily": "Playfair_Display",
+        "fontSize": 112.0,
+        "color": 4289222135,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 170.0,
+        "y": 315.0,
+        "w": 610.0,
+        "h": 280.0,
+        "r": 0.0
+      },
+      "content": "مسیر حرفه‌ای\nبا انتخاب‌های\nکوچک ساخته می‌شود",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 76.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.1,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 180.0,
+        "y": 680.0,
+        "w": 560.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "نام شما / تخصص شما",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4285343961,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "handle",
+      "transform": {
+        "x": 300.0,
+        "y": 805.0,
+        "w": 480.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 35.0
+    },
+    {
+      "type": "text",
+      "id": "handle-text",
+      "transform": {
+        "x": 335.0,
+        "y": 818.0,
+        "w": 410.0,
+        "h": 42.0,
+        "r": 0.0
+      },
+      "content": "@yourname",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 38.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_social_business_announcement",
+  "title": {
+    "en": "Premium Business Announcement Post",
+    "fa": "پست اعلامیه تجاری انگلیسی"
+  },
+  "category": "business",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_social_business_announcement/thumbnail.png",
+  "document": "assets/templates/en_social_business_announcement/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "english",
+    "business",
+    "social",
+    "announcement"
+  ],
+  "home": {
+    "sortOrder": 111
+  }
+}

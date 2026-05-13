@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294965229,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "plate",
+      "transform": {
+        "x": 660.0,
+        "y": 80.0,
+        "w": 360.0,
+        "h": 360.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294891434,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "yolk",
+      "transform": {
+        "x": 800.0,
+        "y": 220.0,
+        "w": 80.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294286859,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 60.0,
+        "y": 140.0,
+        "w": 600.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "TODAY'S MENU",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 36.0,
+        "color": 4288295954,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 60.0,
+        "y": 220.0,
+        "w": 600.0,
+        "h": 280.0,
+        "r": 0.0
+      },
+      "content": "Brunch\nspecials",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 120.0,
+        "color": 4286328082,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "list",
+      "transform": {
+        "x": 60.0,
+        "y": 580.0,
+        "w": 960.0,
+        "h": 360.0,
+        "r": 0.0
+      },
+      "content": "Avocado toast — $8\nButtermilk pancakes — $10\nEggs benedict — $12\nFrench press coffee — $4",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 44.0,
+        "color": 4280232247,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "foot",
+      "transform": {
+        "x": 60.0,
+        "y": 980.0,
+        "w": 960.0,
+        "h": 50.0,
+        "r": 0.0
+      },
+      "content": "served 9 am – 2 pm",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 30.0,
+        "color": 4288295954,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/modules/image/image_layer.dart';
@@ -36,7 +37,9 @@ class ImageStyleBody extends ConsumerWidget {
 
     void apply(_StylePreset p) {
       EditorHaptics.toggle();
-      ref.read(documentControllerProvider.notifier).execute(
+      ref
+          .read(documentControllerProvider.notifier)
+          .execute(
             SetImageAdjustmentsCommand(
               layerId: layer.id,
               brightness: p.brightness,
@@ -47,7 +50,7 @@ class ImageStyleBody extends ConsumerWidget {
     }
 
     return ImagePanelShell(
-      title: 'Style',
+      title: context.l10n.styleTool,
       icon: Icons.auto_awesome_outlined,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -100,10 +103,10 @@ class _StylePreset {
   final double saturation;
 
   ImageAdjustments get adjustments => ImageAdjustments(
-        brightness: brightness,
-        contrast: contrast,
-        saturation: saturation,
-      );
+    brightness: brightness,
+    contrast: contrast,
+    saturation: saturation,
+  );
 
   static const original = _StylePreset(
     id: 'original',
@@ -178,6 +181,19 @@ _StylePreset? _matchStyle(ImageAdjustments adj) {
   return null;
 }
 
+String _stylePresetLabel(BuildContext context, _StylePreset preset) {
+  return switch (preset.id) {
+    'original' => context.l10n.originalOption,
+    'vivid' => context.l10n.vividOption,
+    'warm' => context.l10n.warmOption,
+    'cool' => context.l10n.coolOption,
+    'mono' => context.l10n.monoOption,
+    'fade' => context.l10n.fadeOption,
+    'dramatic' => context.l10n.dramaticOption,
+    _ => preset.label,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Tile
 // ---------------------------------------------------------------------------
@@ -237,7 +253,7 @@ class _StyleTile extends StatelessWidget {
                     children: [
                       ColorFiltered(
                         colorFilter: ColorFilter.matrix(
-                          preset.adjustments.toMatrix(),
+                          preset.adjustments.colorMatrix,
                         ),
                         child: _thumb(source, scheme),
                       ),
@@ -268,7 +284,7 @@ class _StyleTile extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            preset.label,
+            _stylePresetLabel(context, preset),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

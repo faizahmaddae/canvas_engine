@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294636520,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "paper",
+      "transform": {
+        "x": 100.0,
+        "y": 160.0,
+        "w": 880.0,
+        "h": 760.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294965229,
+      "strokeWidth": 0.0,
+      "cornerRadius": 42.0
+    },
+    {
+      "type": "shape",
+      "id": "top-rule",
+      "transform": {
+        "x": 220.0,
+        "y": 280.0,
+        "w": 640.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4290272312,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 160.0,
+        "y": 215.0,
+        "w": 760.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "گزیده شعر",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 34.0,
+        "color": 4290272312,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 150.0,
+        "y": 365.0,
+        "w": 780.0,
+        "h": 250.0,
+        "r": 0.0
+      },
+      "content": "از صدای سخن عشق ندیدم خوشتر\nیادگاری که در این گنبد دوار بماند",
+      "style": {
+        "fontFamily": "BNazanin",
+        "fontSize": 62.0,
+        "color": 4281146134,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.45,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 120.0,
+        "y": 665.0,
+        "w": 840.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "— حافظ",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 36.0,
+        "color": 4290272312,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "quiet-dot",
+      "transform": {
+        "x": 523.0,
+        "y": 790.0,
+        "w": 40.0,
+        "h": 40.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4292728780,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bottom-rule",
+      "transform": {
+        "x": 360.0,
+        "y": 835.0,
+        "w": 360.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4290272312,
+      "strokeWidth": 0.0
+    }
+  ]
+}

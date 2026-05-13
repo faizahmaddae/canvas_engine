@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_food_menu",
+  "title": {
+    "en": "Daily menu",
+    "fa": "Daily menu"
+  },
+  "category": "food",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_food_menu/thumbnail.png",
+  "document": "assets/templates/en_food_menu/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "en",
+    "food"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 90
+  }
+}

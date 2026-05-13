@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_business_job_fair",
+  "title": {
+    "en": "Persian Job Fair Poster",
+    "fa": "پوستر رویداد کاریابی"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_business_job_fair/thumbnail.png",
+  "document": "assets/templates/fa_business_job_fair/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "business",
+    "hiring",
+    "event"
+  ],
+  "home": {
+    "sortOrder": 63
+  }
+}

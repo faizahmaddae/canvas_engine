@@ -1,0 +1,217 @@
+{
+  "version": 2,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4278322711,
+    "endColor": 4280171146,
+    "angleDegrees": 120.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "glow",
+      "transform": {
+        "x": 760.0,
+        "y": -180.0,
+        "w": 600.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "radial",
+        "centerColor": 4284524026,
+        "edgeColor": 4286331629,
+        "focalX": -0.2,
+        "focalY": -0.2,
+        "radius": 1.0
+      },
+      "opacity": 0.86
+    },
+    {
+      "type": "shape",
+      "id": "diagram",
+      "transform": {
+        "x": 770.0,
+        "y": 120.0,
+        "w": 405.0,
+        "h": 455.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294967295,
+        "endColor": 4292602622,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 44.0,
+      "shadowOpacity": 0.3,
+      "shadowBlur": 34.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "node1",
+      "transform": {
+        "x": 845.0,
+        "y": 205.0,
+        "w": 96.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4280640491,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "node2",
+      "transform": {
+        "x": 995.0,
+        "y": 330.0,
+        "w": 96.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4286331629,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "node3",
+      "transform": {
+        "x": 850.0,
+        "y": 455.0,
+        "w": 96.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "line1",
+      "transform": {
+        "x": 925.0,
+        "y": 270.0,
+        "w": 145.0,
+        "h": 85.0,
+        "r": 25.0
+      },
+      "kind": "line",
+      "fillColor": 4279179050,
+      "strokeWidth": 10.0
+    },
+    {
+      "type": "shape",
+      "id": "line2",
+      "transform": {
+        "x": 930.0,
+        "y": 420.0,
+        "w": 145.0,
+        "h": 80.0,
+        "r": -25.0
+      },
+      "kind": "line",
+      "fillColor": 4279179050,
+      "strokeWidth": 10.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 70.0,
+        "y": 120.0,
+        "w": 660.0,
+        "h": 215.0,
+        "r": 0.0
+      },
+      "content": "EXPLAIN\nANYTHING",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 88.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.96,
+        "alignment": "left",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "tag",
+      "transform": {
+        "x": 78.0,
+        "y": 405.0,
+        "w": 470.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0,
+      "cornerRadius": 41.0
+    },
+    {
+      "type": "text",
+      "id": "tag-text",
+      "transform": {
+        "x": 110.0,
+        "y": 423.0,
+        "w": 405.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "3-PART FRAMEWORK",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 38.0,
+        "color": 4279310375,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 78.0,
+        "y": 535.0,
+        "w": 610.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "Make complex ideas click",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 40.0,
+        "color": 4290763774,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

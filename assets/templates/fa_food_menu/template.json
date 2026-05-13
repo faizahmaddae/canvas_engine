@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_food_menu",
+  "title": {
+    "en": "منوی روز",
+    "fa": "منوی روز"
+  },
+  "category": "food",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_food_menu/thumbnail.png",
+  "document": "assets/templates/fa_food_menu/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "fa",
+    "food"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 250
+  }
+}

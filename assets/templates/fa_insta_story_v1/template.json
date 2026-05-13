@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_insta_story_v1",
+  "title": {
+    "en": "داستان امروز",
+    "fa": "داستان امروز"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_insta_story_v1/thumbnail.png",
+  "document": "assets/templates/fa_insta_story_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "story",
+    "instagram"
+  ],
+  "home": {
+    "featured": false
+  }
+}

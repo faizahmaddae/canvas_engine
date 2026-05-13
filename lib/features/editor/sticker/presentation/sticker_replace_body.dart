@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/text_commands.dart';
 import '../../engine/modules/text/text_layer.dart';
@@ -21,7 +22,7 @@ class StickerReplaceBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     return StickerPanelShell(
-      title: 'Replace',
+      title: context.l10n.replaceTool,
       icon: Icons.swap_horiz_rounded,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -38,10 +39,7 @@ class StickerReplaceBody extends ConsumerWidget {
                 border: Border.all(color: scheme.outlineVariant),
               ),
               alignment: Alignment.center,
-              child: Text(
-                layer.content,
-                style: const TextStyle(fontSize: 52),
-              ),
+              child: Text(layer.content, style: const TextStyle(fontSize: 52)),
             ),
           ),
           const SizedBox(height: 12),
@@ -49,7 +47,7 @@ class StickerReplaceBody extends ConsumerWidget {
             child: FilledButton.icon(
               onPressed: () => _replace(context, ref),
               icon: const Icon(Icons.swap_horiz_rounded),
-              label: const Text('Choose another sticker'),
+              label: Text(context.l10n.chooseAnotherStickerAction),
               style: FilledButton.styleFrom(
                 backgroundColor: scheme.primary,
                 foregroundColor: scheme.onPrimary,
@@ -79,11 +77,14 @@ class StickerReplaceBody extends ConsumerWidget {
     // Re-use UpdateTextCommand so the swap participates in the
     // standard undo stack and merges with later edits in the same
     // way text edits do. Style is preserved verbatim.
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           UpdateTextCommand(
             layerId: layer.id,
+            // content-only edit (sticker glyph swap). Style preserved
+            // implicitly by the apply() fallback to layer.style.
             content: glyph,
-            style: layer.style,
           ),
         );
   }

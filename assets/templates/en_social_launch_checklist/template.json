@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_social_launch_checklist",
+  "title": {
+    "en": "Launch Checklist Social Post",
+    "fa": "پست چک‌لیست لانچ"
+  },
+  "category": "social",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_social_launch_checklist/thumbnail.png",
+  "document": "assets/templates/en_social_launch_checklist/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "english",
+    "social",
+    "launch",
+    "checklist"
+  ],
+  "home": {
+    "sortOrder": 47
+  }
+}

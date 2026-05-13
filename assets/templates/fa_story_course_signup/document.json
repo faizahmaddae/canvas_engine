@@ -1,0 +1,273 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279706964,
+    "endColor": 4281413249,
+    "angleDegrees": 155.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "grid-card",
+      "transform": {
+        "x": 92.0,
+        "y": 310.0,
+        "w": 896.0,
+        "h": 1120.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4293849855,
+        "endColor": 4292602622,
+        "angleDegrees": 135.0
+      },
+      "cornerRadius": 58.0,
+      "shadowOpacity": 0.26,
+      "shadowBlur": 50.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 28.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "number-block",
+      "transform": {
+        "x": 156.0,
+        "y": 400.0,
+        "w": 252.0,
+        "h": 252.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4280640491,
+        "endColor": 4286331629,
+        "angleDegrees": 135.0
+      },
+      "cornerRadius": 52.0
+    },
+    {
+      "type": "text",
+      "id": "number",
+      "transform": {
+        "x": 188.0,
+        "y": 445.0,
+        "w": 188.0,
+        "h": 134.0,
+        "r": 0.0
+      },
+      "content": "۴",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 128.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 440.0,
+        "y": 410.0,
+        "w": 470.0,
+        "h": 250.0,
+        "r": 0.0
+      },
+      "content": "ثبت‌نام\nدوره",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 118.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.96,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "lesson-1",
+      "transform": {
+        "x": 165.0,
+        "y": 760.0,
+        "w": 750.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0,
+      "shadowOpacity": 0.1,
+      "shadowBlur": 16.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "lesson-2",
+      "transform": {
+        "x": 165.0,
+        "y": 884.0,
+        "w": 750.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0,
+      "shadowOpacity": 0.1,
+      "shadowBlur": 16.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "lesson-3",
+      "transform": {
+        "x": 165.0,
+        "y": 1008.0,
+        "w": 750.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0,
+      "shadowOpacity": 0.1,
+      "shadowBlur": 16.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 8.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "lesson-text",
+      "transform": {
+        "x": 205.0,
+        "y": 779.0,
+        "w": 670.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "شروع از هفته آینده",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 46.0,
+        "color": 4280171146,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "lesson-text-2",
+      "transform": {
+        "x": 205.0,
+        "y": 903.0,
+        "w": 670.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "کلاس آنلاین + فایل تمرین",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4282595530,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "lesson-text-3",
+      "transform": {
+        "x": 205.0,
+        "y": 1027.0,
+        "w": 670.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "ظرفیت محدود",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4285343961,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 240.0,
+        "y": 1220.0,
+        "w": 600.0,
+        "h": 110.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294286859,
+        "endColor": 4293870660,
+        "angleDegrees": 90.0
+      },
+      "cornerRadius": 55.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 280.0,
+        "y": 1242.0,
+        "w": 520.0,
+        "h": 66.0,
+        "r": 0.0
+      },
+      "content": "ثبت‌نام کنید",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 64.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -138,8 +138,9 @@ class LastOpenedProjectController extends AsyncNotifier<String?> {
 
 final lastOpenedProjectIdProvider =
     AsyncNotifierProvider<LastOpenedProjectController, String?>(
-  LastOpenedProjectController.new,
-);
+      LastOpenedProjectController.new,
+    );
 
-final projectStoreProvider =
-    AsyncNotifierProvider<ProjectStore, List<Project>>(ProjectStore.new);
+final projectStoreProvider = AsyncNotifierProvider<ProjectStore, List<Project>>(
+  ProjectStore.new,
+);

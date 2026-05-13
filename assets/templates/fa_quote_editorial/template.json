@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_quote_editorial",
+  "title": {
+    "en": "نقل قول مجله‌ای",
+    "fa": "نقل قول مجله‌ای"
+  },
+  "category": "quote",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_quote_editorial/thumbnail.png",
+  "document": "assets/templates/fa_quote_editorial/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "quote",
+    "fa",
+    "editorial"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 380
+  }
+}

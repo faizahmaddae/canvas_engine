@@ -1,0 +1,154 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4294764531,
+    "edgeColor": 4290648157,
+    "focalX": -0.25,
+    "focalY": -0.3,
+    "radius": 1.1
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 95.0,
+        "y": 95.0,
+        "w": 890.0,
+        "h": 890.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294965229,
+      "strokeWidth": 0.0,
+      "cornerRadius": 70.0,
+      "shadowOpacity": 0.2,
+      "shadowBlur": 40.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 22.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "dessert",
+      "transform": {
+        "x": 350.0,
+        "y": 185.0,
+        "w": 380.0,
+        "h": 380.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294551764,
+        "endColor": 4294829706,
+        "angleDegrees": 145.0
+      },
+      "shadowOpacity": 0.18,
+      "shadowBlur": 28.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 14.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "berry1",
+      "transform": {
+        "x": 460.0,
+        "y": 270.0,
+        "w": 66.0,
+        "h": 66.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4290646588,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "berry2",
+      "transform": {
+        "x": 570.0,
+        "y": 350.0,
+        "w": 58.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4290646588,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 170.0,
+        "y": 610.0,
+        "w": 740.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "آیتم جدید منو",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4290648157,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 150.0,
+        "y": 690.0,
+        "w": 780.0,
+        "h": 190.0,
+        "r": 0.0
+      },
+      "content": "دسر\nجدید",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 110.0,
+        "color": 4286781507,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 180.0,
+        "y": 895.0,
+        "w": 700.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "برای رونمایی محصول، مزه جدید یا پیشنهاد کافه",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 36.0,
+        "color": 4288485197,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

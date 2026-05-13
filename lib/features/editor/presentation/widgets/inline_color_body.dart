@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../../core/utils/haptics.dart';
 
 /// Shared compact color body used by **every** colour-bearing
@@ -112,7 +113,7 @@ class InlineColorBody extends StatelessWidget {
         SizedBox(height: compactRecents && showRecents ? 8 : 14),
         if (showRecents) ...[
           if (!compactRecents) ...[
-            const _GroupLabel('Recent'),
+            _GroupLabel(context.l10n.recentLabel),
             const SizedBox(height: 8),
           ],
           SizedBox(
@@ -123,18 +124,14 @@ class InlineColorBody extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(left: 4, right: 10),
                     child: Text(
-                      'Recent',
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelSmall
-                          ?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant
-                                .withValues(alpha: 0.75),
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.2,
-                          ),
+                      context.l10n.recentLabel,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ),
                 ],
@@ -158,7 +155,7 @@ class InlineColorBody extends StatelessWidget {
           ),
           SizedBox(height: compactRecents ? 12 : 14),
         ],
-        const _GroupLabel('Palette'),
+        _GroupLabel(context.l10n.paletteLabel),
         const SizedBox(height: 8),
         Wrap(
           spacing: 10,
@@ -234,8 +231,8 @@ class _PolishedSwatchState extends State<_PolishedSwatch> {
     final color = widget.color;
     final checkColor =
         ThemeData.estimateBrightnessForColor(color) == Brightness.dark
-            ? Colors.white
-            : Colors.black;
+        ? Colors.white
+        : Colors.black;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => setState(() => _down = true),
@@ -400,7 +397,7 @@ class _CustomColorPill extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                'Custom',
+                context.l10n.customLabel,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: scheme.onSurface,

@@ -4,6 +4,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/user_error.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
 import '../../application/document_controller.dart';
 import '../../application/export_controller.dart';
@@ -47,8 +50,9 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
   /// Default mirrors the user's saved preference from Settings; falls
   /// back to [ExportQuality.original] when settings are still loading
   /// or have never been customised.
-  late ExportQuality _quality =
-      ref.read(appSettingsProvider).defaultExportQuality;
+  late ExportQuality _quality = ref
+      .read(appSettingsProvider)
+      .defaultExportQuality;
   ExportFormat _format = ExportFormat.png;
 
   /// Selected output-size preset. Defaults to [ExportSize.original]
@@ -61,7 +65,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
   /// JPG compression as a 0..1 fraction. Defaults to 0.9 per spec
   /// (90% quality is the industry-standard sweet spot for JPEG).
   /// Range exposed in the UI is 0.7 → 1.0.
-  double _jpgQuality = 0.9;
+  double _jpgQuality = 0.95;
   bool _busy = false;
 
   @override
@@ -70,6 +74,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
     final doc = ref.watch(documentControllerProvider);
     final canvasW = doc.width.round();
     final canvasH = doc.height.round();
+    final l10n = context.l10n;
 
     return SafeArea(
       child: Padding(
@@ -85,7 +90,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
               child: Row(
                 children: [
                   Text(
-                    'Export design',
+                    l10n.exportDesignTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -102,7 +107,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      'Canvas $canvasW × $canvasH',
+                      l10n.canvasDimensions(canvasW, canvasH),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                         fontFeatures: const [FontFeature.tabularFigures()],
@@ -113,7 +118,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            const SectionLabel('Size'),
+            SectionLabel(l10n.sizeTool),
             const SizedBox(height: 8),
             _SizePickerRow(
               value: _size,
@@ -131,8 +136,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                   enabled: !_busy,
                   onTap: () => setState(() => _quality = q),
                 ),
-                if (q != ExportQuality.values.last)
-                  const SizedBox(height: 8),
+                if (q != ExportQuality.values.last) const SizedBox(height: 8),
               ],
             ] else
               _PresetOutputSummary(
@@ -144,7 +148,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
             // Format section. Compact segmented row keeps both the
             // current selection and the alternative visible at a
             // glance — no hidden state.
-            const SectionLabel('Format'),
+            SectionLabel(l10n.formatLabel),
             const SizedBox(height: 8),
             _FormatSegmented(
               value: _format,
@@ -168,7 +172,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                   child: OutlinedButton.icon(
                     onPressed: _busy ? null : () => _openPreview(),
                     icon: const Icon(Icons.visibility_outlined),
-                    label: const Text('Preview & Share'),
+                    label: Text(l10n.previewShareAction),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -182,7 +186,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                   child: FilledButton.icon(
                     onPressed: _busy ? null : () => _openPreview(),
                     icon: const Icon(Icons.image_search_rounded),
-                    label: const Text('Preview & Save'),
+                    label: Text(l10n.previewSaveAction),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -240,7 +244,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
           _showOutcome(
             messenger,
             outcome.result!,
-            successMsg: 'Saved to your photo library',
+            successMsg: context.l10n.savedToPhotoLibrary,
           );
         }
       case ExportPreviewAction.share:
@@ -249,7 +253,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
           _showOutcome(
             messenger,
             outcome.result!,
-            successMsg: 'Shared',
+            successMsg: context.l10n.sharedMessage,
           );
         }
     }
@@ -275,26 +279,34 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
       );
       if (willReduce && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Exporting at reduced resolution to fit device memory.',
-            ),
+          SnackBar(
+            content: Text(context.l10n.reducedResolutionWarning),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
       return await exporter.exportImage(
-            context: context,
-            format: _format,
-            pixelRatio: _quality.pixelRatio,
-            jpgQuality: _jpgQuality,
-            targetSize: _size.target,
-          );
-    } catch (e) {
+        context: context,
+        format: _format,
+        pixelRatio: _quality.pixelRatio,
+        jpgQuality: _jpgQuality,
+        targetSize: _size.target,
+      );
+    } catch (e, st) {
+      debugLogError('exportSheet/_run', e, st);
       if (!mounted) return null;
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Export failed: $e')),
+        SnackBar(
+          content: Text(
+            userMessageFor(
+              e,
+              fallback: context.l10n.somethingWentWrong,
+              permissionDeniedMessage: context.l10n.allowPhotoAccessSettings,
+              genericMessage: context.l10n.somethingWentWrong,
+            ),
+          ),
+        ),
       );
       return null;
     } finally {
@@ -312,17 +324,12 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
       case ImageExportOutcome.success:
         text = successMsg;
       case ImageExportOutcome.permissionDenied:
-        text = result.message ?? 'Permission denied';
+        text = context.l10n.allowPhotoAccessSettings;
       case ImageExportOutcome.failed:
-        text = result.message != null
-            ? 'Failed: ${result.message}'
-            : 'Failed';
+        text = context.l10n.somethingWentWrong;
     }
     messenger.showSnackBar(
-      SnackBar(
-        content: Text(text),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -335,10 +342,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
       setState(() => _size = next);
       return;
     }
-    final picked = await _CustomSizeDialog.show(
-      context,
-      initial: _size.target,
-    );
+    final picked = await _CustomSizeDialog.show(context, initial: _size.target);
     if (!mounted || picked == null) return;
     setState(() => _size = picked);
   }
@@ -419,7 +423,7 @@ class _QualityCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      quality.label,
+                      _qualityLabel(context.l10n, quality),
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -477,9 +481,7 @@ class _FormatSegmented extends StatelessWidget {
       child: Row(
         children: [
           for (final f in ExportFormat.values)
-            Expanded(
-              child: _segmentItem(theme, scheme, f),
-            ),
+            Expanded(child: _segmentItem(theme, scheme, f)),
         ],
       ),
     );
@@ -537,7 +539,7 @@ class _JpgQualitySlider extends StatelessWidget {
           child: Row(
             children: [
               Text(
-                'Quality',
+                context.l10n.qualityLabel,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w700,
@@ -601,13 +603,14 @@ class _SizePickerRow extends StatelessWidget {
           // For "Custom" the chip is selected only when the active
           // value is itself a custom one (matched via isCustom flag,
           // since the typed dimensions create a fresh instance).
-          final selected = preset.isCustom
-              ? value.isCustom
-              : preset == value;
+          final selected = preset.isCustom ? value.isCustom : preset == value;
           return _SizeChip(
             label: selected && preset.isCustom
-                ? 'Custom · ${value.target?.width.round()}×${value.target?.height.round()}'
-                : preset.label,
+                ? context.l10n.customSizeChip(
+                    value.target?.width.round() ?? 0,
+                    value.target?.height.round() ?? 0,
+                  )
+                : _sizeLabel(context.l10n, preset),
             selected: selected,
             enabled: enabled,
             onTap: () => onChanged(preset),
@@ -707,9 +710,7 @@ class _PresetOutputSummary extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -724,7 +725,7 @@ class _PresetOutputSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Output: $tw × $th px',
+                  context.l10n.outputPixels(tw, th),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -733,10 +734,8 @@ class _PresetOutputSummary extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   aspectMatches
-                      ? 'Matches your canvas aspect.'
-                      : 'Your design will be centred and the bands '
-                          'filled with the canvas background — never '
-                          'stretched.',
+                      ? context.l10n.matchesCanvasAspect
+                      : context.l10n.letterboxExportHint,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -758,10 +757,7 @@ class _CustomSizeDialog extends StatefulWidget {
 
   final ui.Size? initial;
 
-  static Future<ExportSize?> show(
-    BuildContext context, {
-    ui.Size? initial,
-  }) {
+  static Future<ExportSize?> show(BuildContext context, {ui.Size? initial}) {
     return showDialog<ExportSize>(
       context: context,
       builder: (_) => _CustomSizeDialog(initial: initial),
@@ -797,11 +793,13 @@ class _CustomSizeDialogState extends State<_CustomSizeDialog> {
     final w = int.tryParse(_w.text.trim());
     final h = int.tryParse(_h.text.trim());
     if (w == null || h == null || w <= 0 || h <= 0) {
-      setState(() => _error = 'Enter positive whole numbers.');
+      setState(() => _error = context.l10n.enterPositiveWholeNumbers);
       return;
     }
     if (w > _maxDimension || h > _maxDimension) {
-      setState(() => _error = 'Maximum is $_maxDimension on either side.');
+      setState(
+        () => _error = context.l10n.maximumDimensionEitherSide(_maxDimension),
+      );
       return;
     }
     Navigator.of(context).pop(ExportSize.customSize(w, h));
@@ -810,7 +808,7 @@ class _CustomSizeDialogState extends State<_CustomSizeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Custom size'),
+      title: Text(context.l10n.customSizeTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -821,9 +819,9 @@ class _CustomSizeDialogState extends State<_CustomSizeDialog> {
                 child: TextField(
                   controller: _w,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Width (px)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.widthPxLabel,
+                    border: const OutlineInputBorder(),
                     isDense: true,
                   ),
                   onSubmitted: (_) => _commit(),
@@ -834,9 +832,9 @@ class _CustomSizeDialogState extends State<_CustomSizeDialog> {
                 child: TextField(
                   controller: _h,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Height (px)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.heightPxLabel,
+                    border: const OutlineInputBorder(),
                     isDense: true,
                   ),
                   onSubmitted: (_) => _commit(),
@@ -856,13 +854,32 @@ class _CustomSizeDialogState extends State<_CustomSizeDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancelAction),
         ),
         FilledButton(
           onPressed: _commit,
-          child: const Text('Use size'),
+          child: Text(context.l10n.useSizeAction),
         ),
       ],
     );
   }
+}
+
+String _qualityLabel(AppLocalizations l10n, ExportQuality quality) {
+  return switch (quality) {
+    ExportQuality.original => l10n.originalSizeQuality,
+    ExportQuality.high => l10n.highQuality,
+    ExportQuality.ultra => l10n.ultraQuality,
+  };
+}
+
+String _sizeLabel(AppLocalizations l10n, ExportSize size) {
+  if (size.isCustom) return l10n.customLabel;
+  return switch (size.id) {
+    'original' => l10n.originalOption,
+    'square_1080' => l10n.squareLabel,
+    'story_1080x1920' => l10n.storyLabel,
+    'portrait_1080x1350' => l10n.portraitLabel,
+    _ => size.label,
+  };
 }

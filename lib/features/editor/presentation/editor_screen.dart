@@ -8,8 +8,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/utils/haptics.dart';
+import '../../../core/utils/user_error.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/l10n.dart';
 import '../application/autosave_controller.dart';
 import '../application/document_controller.dart';
+import '../application/live_overlay_controller.dart';
 import '../application/editor_lifecycle.dart';
 import '../application/editor_session.dart';
 import '../application/project_save_service.dart';
@@ -37,6 +41,7 @@ import '../image/presentation/image_border_body.dart';
 import '../image/presentation/image_filters_body.dart';
 import '../image/presentation/image_mode_toolbar.dart';
 import '../image/presentation/image_adjust_body.dart';
+import '../image/presentation/image_effects_body.dart';
 import '../image/presentation/image_style_body.dart';
 import 'sticker_picker_sheet.dart';
 import '../image/presentation/image_shadow_body.dart';
@@ -72,8 +77,16 @@ class EditorScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final selection = ref.watch(selectionControllerProvider);
-    ref.watch(documentControllerProvider);
+    // Subscribe to commit ticks only. The screen-level rebuild is
+    // a defensive lifecycle pump — it must fire when the document
+    // truly changes (execute / undo / redo) but stay silent during
+    // mid-gesture overlay previews. Reading committed-doc directly
+    // worked only because nothing routes through liveReplace today;
+    // commit-version makes the contract explicit so the next
+    // accidental in-place mutation can't regress this.
+    ref.watch(documentCommitVersionProvider);
     // Selection-change seam: when the user picks a different layer
     // (or deselects to empty), collapse every object-tool's
     // currently-open sub-panel (Image/Shape/Sticker `openSlot`).
@@ -107,319 +120,323 @@ class EditorScreen extends ConsumerWidget {
 
     return _AutosaveLifecycleScope(
       child: PopScope(
-      canPop: !cropActive,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && cropActive) {
-          ref.read(cropControllerProvider.notifier).cancelCrop();
-          return;
-        }
-        if (didPop) {
-          // User is leaving the editor — flush any pending
-          // debounced autosave so the last <=1.5 s of edits
-          // survive the navigation pop. Fire-and-forget; the
-          // widget tree is already on its way out.
-          // The dispose() in [_AutosaveLifecycleScopeState] also
-          // flushes as a final safety net, but doing it here is
-          // earlier and lets the write race with route teardown
-          // rather than after it.
-          unawaited(
-            ref.read(autosaveControllerProvider.notifier).flushNow(),
-          );
-        }
-      },
-      child: Scaffold(
-        appBar: cropActive
-            ? null
-            : AppBar(
-        title: _DocumentTitle(),
-        actions: [
-          if (_canCenterSelected(ref))
-            IconButton(
-              tooltip: 'Center selected layer in canvas',
-              onPressed: () => _centerSelected(ref),
-              icon: const Icon(Icons.filter_center_focus),
-            ),
-          if (_canDeleteSelected(ref))
-            Builder(
-              builder: (ctx) => IconButton(
-                tooltip: 'Delete',
-                onPressed: () {
-                  final id = selection.selectedId;
-                  if (id == null) return;
-                  final layer =
-                      ref.read(documentControllerProvider).layerById(id);
-                  if (layer == null) return;
-                  // Routes through LayerActions.delete so the
-                  // photo-mode base-photo confirm dialog applies
-                  // here too.
-                  LayerActions.delete(ctx, ref, layer);
-                },
-                icon: const Icon(Icons.delete_outline),
-              ),
-            ),
-          Builder(
-            builder: (ctx) => IconButton(
-              tooltip: 'Layers',
-              onPressed: () => Scaffold.of(ctx).openEndDrawer(),
-              icon: const Icon(Icons.layers_outlined),
-            ),
+        canPop: !cropActive,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && cropActive) {
+            ref.read(cropControllerProvider.notifier).cancelCrop();
+            return;
+          }
+          if (didPop) {
+            // User is leaving the editor — flush any pending
+            // debounced autosave so the last <=1.5 s of edits
+            // survive the navigation pop. Fire-and-forget; the
+            // widget tree is already on its way out.
+            // The dispose() in [_AutosaveLifecycleScopeState] also
+            // flushes as a final safety net, but doing it here is
+            // earlier and lets the write race with route teardown
+            // rather than after it.
+            unawaited(ref.read(autosaveControllerProvider.notifier).flushNow());
+          }
+        },
+        child: Scaffold(
+          appBar: cropActive
+              ? null
+              : AppBar(
+                  title: _DocumentTitle(),
+                  actions: [
+                    if (_canCenterSelected(ref))
+                      IconButton(
+                        tooltip: l10n.centerSelectedLayerTooltip,
+                        onPressed: () => _centerSelected(context, ref),
+                        icon: const Icon(Icons.filter_center_focus),
+                      ),
+                    if (_canDeleteSelected(ref))
+                      Builder(
+                        builder: (ctx) => IconButton(
+                          tooltip: l10n.deleteAction,
+                          onPressed: () {
+                            final id = selection.selectedId;
+                            if (id == null) return;
+                            final layer = ref
+                                .read(documentControllerProvider)
+                                .layerById(id);
+                            if (layer == null) return;
+                            // Routes through LayerActions.delete so the
+                            // photo-mode base-photo confirm dialog applies
+                            // here too.
+                            LayerActions.delete(ctx, ref, layer);
+                          },
+                          icon: const Icon(Icons.delete_outline),
+                        ),
+                      ),
+                    Builder(
+                      builder: (ctx) => IconButton(
+                        tooltip: l10n.layersTooltip,
+                        onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+                        icon: const Icon(Icons.layers_outlined),
+                      ),
+                    ),
+                    Builder(
+                      builder: (ctx) => PopupMenuButton<_OverflowAction>(
+                        tooltip: l10n.moreTooltip,
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (action) =>
+                            _handleOverflowAction(ctx, ref, action),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: _OverflowAction.save,
+                            child: ListTile(
+                              leading: const Icon(Icons.bookmark_add_outlined),
+                              title: Text(l10n.editorSaveProject),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: _OverflowAction.export,
+                            child: ListTile(
+                              leading: const Icon(Icons.ios_share_outlined),
+                              title: Text(l10n.editorExport),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                          const PopupMenuDivider(),
+                          PopupMenuItem(
+                            value: _OverflowAction.fit,
+                            child: ListTile(
+                              leading: const Icon(Icons.fit_screen_outlined),
+                              title: Text(l10n.editorFitToScreen),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: _OverflowAction.newDoc,
+                            child: ListTile(
+                              leading: const Icon(Icons.note_add_outlined),
+                              title: Text(l10n.editorNewDocument),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                ),
+          endDrawer: const LayersPanel(),
+          body: Stack(
+            children: [
+              const EditorCanvas(),
+              // Floating undo/redo rail anchored top-left of the
+              // canvas — keeps the AppBar slim while giving the two
+              // most-used commands a permanent, thumb-reachable home
+              // that mirrors the Done pill's top-right anchor for
+              // visual symmetry. Hidden in Crop Mode.
+              if (!cropActive)
+                const Positioned(
+                  top: 8,
+                  left: 8,
+                  child: SafeArea(child: _UndoRedoRail()),
+                ),
+              // Always-visible exit pill anchored top-right of the
+              // canvas. Shows whenever a tool mode (paint / text) is
+              // active so the user has a permanent, discoverable way
+              // out — replaces reliance on the invisible
+              // canvas-tap-to-deselect gesture for new users while
+              // keeping that gesture as the pro shortcut. Hidden in
+              // Crop Mode.
+              if (!cropActive)
+                const Positioned(
+                  top: 8,
+                  right: 8,
+                  child: SafeArea(child: _ModeExitPill()),
+                ),
+              // Centralised Crop Mode overlay — full-screen, owns the
+              // entire scaffold body when active. Mounted **last** so
+              // it paints above any residual floating rails / chrome.
+              const Positioned.fill(child: CropModeOverlay()),
+            ],
           ),
-          Builder(
-            builder: (ctx) => PopupMenuButton<_OverflowAction>(
-              tooltip: 'More',
-              icon: const Icon(Icons.more_vert),
-              onSelected: (action) => _handleOverflowAction(ctx, ref, action),
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: _OverflowAction.save,
-                  child: ListTile(
-                    leading: Icon(Icons.bookmark_add_outlined),
-                    title: Text('Save project'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: _OverflowAction.export,
-                  child: ListTile(
-                    leading: Icon(Icons.ios_share_outlined),
-                    title: Text('Export'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuDivider(),
-                PopupMenuItem(
-                  value: _OverflowAction.fit,
-                  child: ListTile(
-                    leading: Icon(Icons.fit_screen_outlined),
-                    title: Text('Fit to screen'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                PopupMenuItem(
-                  value: _OverflowAction.newDoc,
-                  child: ListTile(
-                    leading: Icon(Icons.note_add_outlined),
-                    title: Text('New document'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      endDrawer: const LayersPanel(),
-      body: Stack(
-        children: [
-          const EditorCanvas(),
-          // Floating undo/redo rail anchored top-left of the
-          // canvas — keeps the AppBar slim while giving the two
-          // most-used commands a permanent, thumb-reachable home
-          // that mirrors the Done pill's top-right anchor for
-          // visual symmetry. Hidden in Crop Mode.
-          if (!cropActive)
-            const Positioned(
-              top: 8,
-              left: 8,
-              child: SafeArea(child: _UndoRedoRail()),
-            ),
-          // Always-visible exit pill anchored top-right of the
-          // canvas. Shows whenever a tool mode (paint / text) is
-          // active so the user has a permanent, discoverable way
-          // out — replaces reliance on the invisible
-          // canvas-tap-to-deselect gesture for new users while
-          // keeping that gesture as the pro shortcut. Hidden in
-          // Crop Mode.
-          if (!cropActive)
-            const Positioned(
-              top: 8,
-              right: 8,
-              child: SafeArea(child: _ModeExitPill()),
-            ),
-          // Centralised Crop Mode overlay — full-screen, owns the
-          // entire scaffold body when active. Mounted **last** so
-          // it paints above any residual floating rails / chrome.
-          const Positioned.fill(child: CropModeOverlay()),
-        ],
-      ),
-      bottomNavigationBar: Builder(
-        builder: (_) {
-          // Crop Mode owns the screen — hide the regular dock so
-          // the Crop bottom bar is the only chrome the user sees.
-          final cropActive = ref.watch(
-            cropControllerProvider.select((s) => s.active),
-          );
-          if (cropActive) return const SizedBox.shrink();
-          final paintOpen = ref.watch(
-            paintToolControllerProvider.select((s) => s.panelOpen),
-          );
-          final textOpen = ref.watch(
-            textToolControllerProvider.select((s) => s.panelOpen),
-          );
-          final paintOpenSlot = ref.watch(
-            paintToolControllerProvider.select((s) => s.openSlot),
-          );
-          final textOpenSheet = ref.watch(
-            textToolControllerProvider.select((s) => s.openSheet),
-          );
-          final selectedTextLayer = _selectedTextLayer(ref);
-          final textSelected = selectedTextLayer != null;
-          final selectedStickerLayer = _selectedStickerLayer(ref);
-          final stickerSelected = selectedStickerLayer != null &&
-              !paintOpen &&
-              !textOpen &&
-              !textSelected;
-          final selectedImageLayer = _selectedImageLayer(ref);
-          final imageSelected = selectedImageLayer != null &&
-              !paintOpen &&
-              !textOpen &&
-              !textSelected &&
-              !stickerSelected;
-          final selectedShapeLayer = _selectedShapeLayer(ref);
-          final shapeSelected = selectedShapeLayer != null &&
-              !paintOpen &&
-              !textOpen &&
-              !textSelected &&
-              !stickerSelected &&
-              !imageSelected;
-          final modeKey = paintOpen
-              ? 'paint'
-              : (textOpen || textSelected)
+          bottomNavigationBar: Builder(
+            builder: (_) {
+              // Crop Mode owns the screen — hide the regular dock so
+              // the Crop bottom bar is the only chrome the user sees.
+              final cropActive = ref.watch(
+                cropControllerProvider.select((s) => s.active),
+              );
+              if (cropActive) return const SizedBox.shrink();
+              final paintOpen = ref.watch(
+                paintToolControllerProvider.select((s) => s.panelOpen),
+              );
+              final textOpen = ref.watch(
+                textToolControllerProvider.select((s) => s.panelOpen),
+              );
+              final paintOpenSlot = ref.watch(
+                paintToolControllerProvider.select((s) => s.openSlot),
+              );
+              final textOpenSheet = ref.watch(
+                textToolControllerProvider.select((s) => s.openSheet),
+              );
+              final selectedTextLayer = _selectedTextLayer(ref);
+              final textSelected = selectedTextLayer != null;
+              final selectedStickerLayer = _selectedStickerLayer(ref);
+              final stickerSelected =
+                  selectedStickerLayer != null &&
+                  !paintOpen &&
+                  !textOpen &&
+                  !textSelected;
+              final selectedImageLayer = _selectedImageLayer(ref);
+              final imageSelected =
+                  selectedImageLayer != null &&
+                  !paintOpen &&
+                  !textOpen &&
+                  !textSelected &&
+                  !stickerSelected;
+              final selectedShapeLayer = _selectedShapeLayer(ref);
+              final shapeSelected =
+                  selectedShapeLayer != null &&
+                  !paintOpen &&
+                  !textOpen &&
+                  !textSelected &&
+                  !stickerSelected &&
+                  !imageSelected;
+              final modeKey = paintOpen
+                  ? 'paint'
+                  : (textOpen || textSelected)
                   ? 'text'
                   : stickerSelected
-                      ? 'sticker'
-                      : imageSelected
-                          ? 'image'
-                          : shapeSelected
-                              ? 'shape'
-                              : 'main';
+                  ? 'sticker'
+                  : imageSelected
+                  ? 'image'
+                  : shapeSelected
+                  ? 'shape'
+                  : 'main';
 
-          // Resolve the dock's `expanded` slot. Text mode renders
-          // its tool sheets here (Canva-style: canvas reflows above
-          // the dock instead of being overlaid). Paint still uses
-          // its small inline expansion row.
-          Widget? expanded;
-          Object? expandedKey;
-          if ((textOpen || textSelected) &&
-              textSelected &&
-              textOpenSheet != null) {
-            expanded = const TextModeSheetPanel();
-            expandedKey = 'text-sheet:$textOpenSheet';
-          } else if (paintOpen && paintOpenSlot != null) {
-            expanded = const PaintModeInlineExpansion();
-            expandedKey = 'paint-inline:$paintOpenSlot';
-          } else if (stickerSelected) {
-            final stickerOpenSlot = ref.watch(
-              stickerToolControllerProvider.select((s) => s.openSlot),
-            );
-            switch (stickerOpenSlot) {
-              case StickerToolSlot.size:
-                expanded = StickerSizeBody(layer: selectedStickerLayer);
-                expandedKey = 'sticker-size:${selectedStickerLayer.id}';
-              case StickerToolSlot.replace:
-                expanded = StickerReplaceBody(layer: selectedStickerLayer);
-                expandedKey =
-                    'sticker-replace:${selectedStickerLayer.id}';
-              case StickerToolSlot.style:
-                expanded = StickerStyleBody(layer: selectedStickerLayer);
-                expandedKey =
-                    'sticker-style:${selectedStickerLayer.id}';
-              case null:
-                break;
-            }
-          } else if (imageSelected) {
-            final imageOpenSlot = ref.watch(
-              imageToolControllerProvider.select((s) => s.openSlot),
-            );
-            switch (imageOpenSlot) {
-              case ImageToolSlot.shape:
-                expanded = ImageShapeBody(layer: selectedImageLayer);
-                expandedKey = 'image-shape:${selectedImageLayer.id}';
-              case ImageToolSlot.style:
-                expanded = ImageStyleBody(layer: selectedImageLayer);
-                expandedKey = 'image-style:${selectedImageLayer.id}';
-              case ImageToolSlot.border:
-                expanded = ImageBorderBody(layer: selectedImageLayer);
-                expandedKey = 'image-border:${selectedImageLayer.id}';
-              case ImageToolSlot.shadow:
-                expanded = ImageShadowBody(layer: selectedImageLayer);
-                expandedKey = 'image-shadow:${selectedImageLayer.id}';
-              case ImageToolSlot.adjust:
-                expanded = ImageAdjustBody(layer: selectedImageLayer);
-                expandedKey = 'image-adjust:${selectedImageLayer.id}';
-              case ImageToolSlot.filters:
-                expanded = ImageFiltersBody(layer: selectedImageLayer);
-                expandedKey = 'image-filters:${selectedImageLayer.id}';
-              case ImageToolSlot.crop:
-              case ImageToolSlot.replace:
-              case null:
-                // 'crop' opens the full-screen CropModeOverlay;
-                // 'replace' is a one-shot picker. Neither owns an
-                // inline dock body.
-                break;
-            }
-          } else if (shapeSelected) {
-            final shapeOpenSlot = ref.watch(
-              shapeToolControllerProvider.select((s) => s.openSlot),
-            );
-            switch (shapeOpenSlot) {
-              case ShapeToolSlot.style:
-                expanded = ShapeStyleBody(layer: selectedShapeLayer);
-                expandedKey = 'shape-style:${selectedShapeLayer.id}';
-              case ShapeToolSlot.border:
-                expanded = ShapeBorderBody(layer: selectedShapeLayer);
-                expandedKey = 'shape-border:${selectedShapeLayer.id}';
-              case ShapeToolSlot.shadow:
-                expanded = ShapeShadowBody(layer: selectedShapeLayer);
-                expandedKey = 'shape-shadow:${selectedShapeLayer.id}';
-              case ShapeToolSlot.replace:
-              case null:
-                break;
-            }
-          } else {
-            // No layer selected. The Canvas tool is the only entry
-            // that opens a panel from this state — it edits the
-            // document itself, not a layer.
-            final canvasOpen = ref.watch(
-              canvasToolControllerProvider.select((s) => s.panelOpen),
-            );
-            if (canvasOpen) {
-              expanded = const CanvasPanelBody();
-              expandedKey = 'canvas-panel';
-            }
-          }
+              // Resolve the dock's `expanded` slot. Text mode renders
+              // its tool sheets here (Canva-style: canvas reflows above
+              // the dock instead of being overlaid). Paint still uses
+              // its small inline expansion row.
+              Widget? expanded;
+              Object? expandedKey;
+              if ((textOpen || textSelected) &&
+                  textSelected &&
+                  textOpenSheet != null) {
+                expanded = const TextModeSheetPanel();
+                expandedKey = 'text-sheet:$textOpenSheet';
+              } else if (paintOpen && paintOpenSlot != null) {
+                expanded = const PaintModeInlineExpansion();
+                expandedKey = 'paint-inline:$paintOpenSlot';
+              } else if (stickerSelected) {
+                final stickerOpenSlot = ref.watch(
+                  stickerToolControllerProvider.select((s) => s.openSlot),
+                );
+                switch (stickerOpenSlot) {
+                  case StickerToolSlot.size:
+                    expanded = StickerSizeBody(layer: selectedStickerLayer);
+                    expandedKey = 'sticker-size:${selectedStickerLayer.id}';
+                  case StickerToolSlot.replace:
+                    expanded = StickerReplaceBody(layer: selectedStickerLayer);
+                    expandedKey = 'sticker-replace:${selectedStickerLayer.id}';
+                  case StickerToolSlot.style:
+                    expanded = StickerStyleBody(layer: selectedStickerLayer);
+                    expandedKey = 'sticker-style:${selectedStickerLayer.id}';
+                  case null:
+                    break;
+                }
+              } else if (imageSelected) {
+                final imageOpenSlot = ref.watch(
+                  imageToolControllerProvider.select((s) => s.openSlot),
+                );
+                switch (imageOpenSlot) {
+                  case ImageToolSlot.shape:
+                    expanded = ImageShapeBody(layer: selectedImageLayer);
+                    expandedKey = 'image-shape:${selectedImageLayer.id}';
+                  case ImageToolSlot.style:
+                    expanded = ImageStyleBody(layer: selectedImageLayer);
+                    expandedKey = 'image-style:${selectedImageLayer.id}';
+                  case ImageToolSlot.border:
+                    expanded = ImageBorderBody(layer: selectedImageLayer);
+                    expandedKey = 'image-border:${selectedImageLayer.id}';
+                  case ImageToolSlot.shadow:
+                    expanded = ImageShadowBody(layer: selectedImageLayer);
+                    expandedKey = 'image-shadow:${selectedImageLayer.id}';
+                  case ImageToolSlot.adjust:
+                    expanded = ImageAdjustBody(layer: selectedImageLayer);
+                    expandedKey = 'image-adjust:${selectedImageLayer.id}';
+                  case ImageToolSlot.effects:
+                    expanded = ImageEffectsBody(layer: selectedImageLayer);
+                    expandedKey = 'image-effects:${selectedImageLayer.id}';
+                  case ImageToolSlot.filters:
+                    expanded = ImageFiltersBody(layer: selectedImageLayer);
+                    expandedKey = 'image-filters:${selectedImageLayer.id}';
+                  case ImageToolSlot.crop:
+                  case ImageToolSlot.replace:
+                  case null:
+                    // 'crop' opens the full-screen CropModeOverlay;
+                    // 'replace' is a one-shot picker. Neither owns an
+                    // inline dock body.
+                    break;
+                }
+              } else if (shapeSelected) {
+                final shapeOpenSlot = ref.watch(
+                  shapeToolControllerProvider.select((s) => s.openSlot),
+                );
+                switch (shapeOpenSlot) {
+                  case ShapeToolSlot.style:
+                    expanded = ShapeStyleBody(layer: selectedShapeLayer);
+                    expandedKey = 'shape-style:${selectedShapeLayer.id}';
+                  case ShapeToolSlot.border:
+                    expanded = ShapeBorderBody(layer: selectedShapeLayer);
+                    expandedKey = 'shape-border:${selectedShapeLayer.id}';
+                  case ShapeToolSlot.shadow:
+                    expanded = ShapeShadowBody(layer: selectedShapeLayer);
+                    expandedKey = 'shape-shadow:${selectedShapeLayer.id}';
+                  case ShapeToolSlot.replace:
+                  case null:
+                    break;
+                }
+              } else {
+                // No layer selected. The Canvas tool is the only entry
+                // that opens a panel from this state — it edits the
+                // document itself, not a layer.
+                final canvasOpen = ref.watch(
+                  canvasToolControllerProvider.select((s) => s.panelOpen),
+                );
+                if (canvasOpen) {
+                  expanded = const CanvasPanelBody();
+                  expandedKey = 'canvas-panel';
+                }
+              }
 
-          return EditorToolDock(
-            modeKey: modeKey,
-            expanded: expanded,
-            expandedKey: expandedKey,
-            child: paintOpen
-                ? const PaintModeToolbar()
-                : (textOpen || textSelected)
+              return EditorToolDock(
+                modeKey: modeKey,
+                expanded: expanded,
+                expandedKey: expandedKey,
+                child: paintOpen
+                    ? const PaintModeToolbar()
+                    : (textOpen || textSelected)
                     ? const TextModeToolbar()
                     : stickerSelected
-                        ? StickerModeToolbar(layer: selectedStickerLayer)
-                        : imageSelected
-                            ? ImageModeToolbar(layer: selectedImageLayer)
-                            : shapeSelected
-                                ? ShapeModeToolbar(
-                                    layer: selectedShapeLayer,
-                                    onReplaceTap: () => _openReplaceShapePicker(
-                                      context,
-                                      ref,
-                                      selectedShapeLayer,
-                                    ),
-                                  )
-                                : EditorToolbar(
-                                    activeId: _activeToolId(ref),
-                                    items: _buildToolbarItems(context, ref),
-                                  ),
-          );
-        },
+                    ? StickerModeToolbar(layer: selectedStickerLayer)
+                    : imageSelected
+                    ? ImageModeToolbar(layer: selectedImageLayer)
+                    : shapeSelected
+                    ? ShapeModeToolbar(
+                        layer: selectedShapeLayer,
+                        onReplaceTap: () => _openReplaceShapePicker(
+                          context,
+                          ref,
+                          selectedShapeLayer,
+                        ),
+                      )
+                    : EditorToolbar(
+                        activeId: _activeToolId(ref),
+                        items: _buildToolbarItems(context, ref),
+                      ),
+              );
+            },
+          ),
+        ),
       ),
-      ),
-    ),
     );
   }
 
@@ -445,36 +462,37 @@ class EditorScreen extends ConsumerWidget {
   /// grouping makes the photo flow obvious to a user who imported
   /// a photo and the design flow obvious to one who started blank.
   List<ToolbarItem> _buildToolbarItems(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     return [
       // ── tier 1 — Add ────────────────────────────────────────────
       ToolbarItem(
         id: 'image',
         icon: Icons.add_photo_alternate_outlined,
-        label: 'Photo',
+        label: l10n.photoTool,
         onTap: () => _addImage(context, ref),
       ),
       ToolbarItem(
         id: 'text',
         icon: Icons.text_fields_rounded,
-        label: 'Text',
+        label: l10n.textTool,
         onTap: () => _startTextInputFlow(context, ref),
       ),
       ToolbarItem(
         id: 'sticker',
         icon: Icons.emoji_emotions_outlined,
-        label: 'Sticker',
+        label: l10n.stickerTool,
         onTap: () => _addSticker(context, ref),
       ),
       ToolbarItem(
         id: 'shape',
         icon: Icons.category_outlined,
-        label: 'Shape',
+        label: l10n.shapeTool,
         onTap: () => _openShapePicker(context, ref),
       ),
       ToolbarItem(
         id: 'paint',
         icon: Icons.brush_outlined,
-        label: 'Draw',
+        label: l10n.drawTool,
         onTap: () {
           final ctrl = ref.read(paintToolControllerProvider.notifier);
           final session = ref.read(paintToolControllerProvider);
@@ -492,21 +510,21 @@ class EditorScreen extends ConsumerWidget {
       ToolbarItem(
         id: 'crop',
         icon: Icons.crop_rotate_rounded,
-        label: 'Crop',
+        label: l10n.cropTool,
         tier: SlotTier.tier2,
         onTap: () => _openCrop(context, ref),
       ),
       ToolbarItem(
         id: 'adjust',
         icon: Icons.tune_rounded,
-        label: 'Adjust',
+        label: l10n.adjustTool,
         tier: SlotTier.tier2,
         onTap: () => _openAdjust(context, ref),
       ),
       ToolbarItem(
         id: 'filters',
         icon: Icons.auto_fix_high_outlined,
-        label: 'Filters',
+        label: l10n.filtersTool,
         tier: SlotTier.tier2,
         onTap: () => _openFilters(context, ref),
       ),
@@ -514,7 +532,7 @@ class EditorScreen extends ConsumerWidget {
       ToolbarItem(
         id: 'canvas',
         icon: Icons.aspect_ratio_rounded,
-        label: 'Canvas',
+        label: l10n.canvasTool,
         tier: SlotTier.tier3,
         onTap: () => _openCanvas(ref),
       ),
@@ -524,18 +542,22 @@ class EditorScreen extends ConsumerWidget {
   bool _canDeleteSelected(WidgetRef ref) {
     final selection = ref.read(selectionControllerProvider);
     if (!selection.hasSelection) return false;
-    final layer = ref.read(documentControllerProvider).layerById(selection.selectedId!);
+    final layer = ref
+        .read(documentControllerProvider)
+        .layerById(selection.selectedId!);
     return layer?.capabilities.deletable ?? false;
   }
 
   bool _canCenterSelected(WidgetRef ref) {
     final selection = ref.read(selectionControllerProvider);
     if (!selection.hasSelection) return false;
-    final layer = ref.read(documentControllerProvider).layerById(selection.selectedId!);
+    final layer = ref
+        .read(documentControllerProvider)
+        .layerById(selection.selectedId!);
     return layer != null && !layer.locked && layer.capabilities.movable;
   }
 
-  void _centerSelected(WidgetRef ref) {
+  void _centerSelected(BuildContext context, WidgetRef ref) {
     final selection = ref.read(selectionControllerProvider);
     final id = selection.selectedId;
     if (id == null) return;
@@ -552,11 +574,13 @@ class EditorScreen extends ConsumerWidget {
     );
     if (centred.position == t.position) return;
 
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           SetLayerTransformCommand(
             layerId: id,
             transform: centred,
-            labelOverride: 'Center layer',
+            labelOverride: context.l10n.centerLayerCommand,
           ),
         );
   }
@@ -564,7 +588,9 @@ class EditorScreen extends ConsumerWidget {
   TextLayer? _selectedTextLayer(WidgetRef ref) {
     final selection = ref.watch(selectionControllerProvider);
     if (!selection.hasSelection) return null;
-    final layer = ref.watch(documentControllerProvider).layerById(selection.selectedId!);
+    final layer = ref
+        .watch(renderedDocumentProvider)
+        .layerById(selection.selectedId!);
     // Emoji-sticker text layers are visually text but conceptually
     // stickers — routing them to the Text toolbar would expose
     // font/color/layout controls that don't apply to a single
@@ -580,7 +606,9 @@ class EditorScreen extends ConsumerWidget {
   ImageLayer? _selectedImageLayer(WidgetRef ref) {
     final selection = ref.watch(selectionControllerProvider);
     if (!selection.hasSelection) return null;
-    final layer = ref.watch(documentControllerProvider).layerById(selection.selectedId!);
+    final layer = ref
+        .watch(renderedDocumentProvider)
+        .layerById(selection.selectedId!);
     return layer is ImageLayer ? layer : null;
   }
 
@@ -589,7 +617,9 @@ class EditorScreen extends ConsumerWidget {
   ShapeLayer? _selectedShapeLayer(WidgetRef ref) {
     final selection = ref.watch(selectionControllerProvider);
     if (!selection.hasSelection) return null;
-    final layer = ref.watch(documentControllerProvider).layerById(selection.selectedId!);
+    final layer = ref
+        .watch(renderedDocumentProvider)
+        .layerById(selection.selectedId!);
     return layer is ShapeLayer ? layer : null;
   }
 
@@ -599,7 +629,9 @@ class EditorScreen extends ConsumerWidget {
   TextLayer? _selectedStickerLayer(WidgetRef ref) {
     final selection = ref.watch(selectionControllerProvider);
     if (!selection.hasSelection) return null;
-    final layer = ref.watch(documentControllerProvider).layerById(selection.selectedId!);
+    final layer = ref
+        .watch(renderedDocumentProvider)
+        .layerById(selection.selectedId!);
     return (layer is TextLayer && layer.isSticker) ? layer : null;
   }
 
@@ -625,8 +657,8 @@ class EditorScreen extends ConsumerWidget {
     try {
       content = await showTextInputFlowSheet(
         context,
-        title: 'Add text',
-        confirmLabel: 'Add',
+        title: context.l10n.addTextTitle,
+        confirmLabel: context.l10n.addAction,
         onLiveChange: textCtrl.previewContent,
       );
     } finally {
@@ -644,10 +676,14 @@ class EditorScreen extends ConsumerWidget {
 
   Offset _centerInDoc(WidgetRef ref, Size size) {
     final doc = ref.read(documentControllerProvider);
-    return Offset(doc.width / 2 - size.width / 2, doc.height / 2 - size.height / 2);
+    return Offset(
+      doc.width / 2 - size.width / 2,
+      doc.height / 2 - size.height / 2,
+    );
   }
 
   Future<void> _addImage(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
     final source = await _pickImageSource(context);
     if (source == null || !context.mounted) return;
 
@@ -655,11 +691,19 @@ class EditorScreen extends ConsumerWidget {
     final picker.XFile? picked;
     try {
       picked = await pick.pickImage(source: source, imageQuality: 92);
-    } catch (e) {
+    } catch (e, st) {
+      debugLogError('editor/_addImage/pickImage', e, st);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not pick image: $e'),
+          content: Text(
+            userMessageFor(
+              e,
+              fallback: l10n.couldntOpenPhoto,
+              permissionDeniedMessage: l10n.allowPhotoAccessSettings,
+              genericMessage: l10n.somethingWentWrong,
+            ),
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -670,11 +714,19 @@ class EditorScreen extends ConsumerWidget {
     final Size dims;
     try {
       dims = await _resolveImageSize(File(picked.path));
-    } catch (e) {
+    } catch (e, st) {
+      debugLogError('editor/_addImage/_resolveImageSize', e, st);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not read image: $e'),
+          content: Text(
+            userMessageFor(
+              e,
+              fallback: l10n.couldntOpenPhoto,
+              permissionDeniedMessage: l10n.allowPhotoAccessSettings,
+              genericMessage: l10n.somethingWentWrong,
+            ),
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -707,11 +759,13 @@ class EditorScreen extends ConsumerWidget {
       locked: lockAsBasePhoto,
     );
     if (shouldClaimBase) {
-      ref.read(documentControllerProvider.notifier).execute(
-            CompositeCommand(
-              [AddLayerCommand(layer), SetBasePhotoCommand(id)],
-              labelOverride: 'Import photo',
-            ),
+      ref
+          .read(documentControllerProvider.notifier)
+          .execute(
+            CompositeCommand([
+              AddLayerCommand(layer),
+              SetBasePhotoCommand(id),
+            ], labelOverride: l10n.importPhotoCommand),
           );
     } else {
       ref
@@ -724,6 +778,7 @@ class EditorScreen extends ConsumerWidget {
   /// Bottom sheet asking the user where the image should come from.
   /// Returns `null` on dismiss/back so the caller can bail cleanly.
   Future<picker.ImageSource?> _pickImageSource(BuildContext context) {
+    final l10n = context.l10n;
     return showModalBottomSheet<picker.ImageSource>(
       context: context,
       showDragHandle: true,
@@ -734,7 +789,7 @@ class EditorScreen extends ConsumerWidget {
             children: [
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Gallery'),
+                title: Text(l10n.galleryAction),
                 onTap: () {
                   EditorHaptics.tap();
                   Navigator.pop(ctx, picker.ImageSource.gallery);
@@ -742,7 +797,7 @@ class EditorScreen extends ConsumerWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Camera'),
+                title: Text(l10n.cameraAction),
                 onTap: () {
                   EditorHaptics.tap();
                   Navigator.pop(ctx, picker.ImageSource.camera);
@@ -823,8 +878,8 @@ class EditorScreen extends ConsumerWidget {
     // treat the backdrop as light and pick a dark fill.
     final canvasBackground =
         liveDoc.backgroundMode == CanvasBackgroundMode.transparent
-            ? kDefaultCanvasBackground
-            : liveDoc.backgroundColor;
+        ? kDefaultCanvasBackground
+        : liveDoc.backgroundColor;
     final layer = ShapeLayer(
       id: id,
       transform: LayerTransform(position: _centerInDoc(ref, size), size: size),
@@ -848,7 +903,9 @@ class EditorScreen extends ConsumerWidget {
           ? CanvasSizing.scaleDimension(6, liveDoc)
           : 0,
     );
-    ref.read(documentControllerProvider.notifier).execute(AddLayerCommand(layer));
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(AddLayerCommand(layer));
     ref.read(selectionControllerProvider.notifier).select(id);
     // No auto-open: the shape is fully formed on insert, so the user
     // typically wants to position / resize first. The Shape toolbar
@@ -918,10 +975,7 @@ class EditorScreen extends ConsumerWidget {
     final size = CanvasSizing.scaleSize(const Size(240, 240), liveDoc);
     final layer = TextLayer(
       id: id,
-      transform: LayerTransform(
-        position: _centerInDoc(ref, size),
-        size: size,
-      ),
+      transform: LayerTransform(position: _centerInDoc(ref, size), size: size),
       content: glyph,
       kind: TextLayerKind.emojiSticker,
       style: const TextStyleSpec(
@@ -932,19 +986,27 @@ class EditorScreen extends ConsumerWidget {
         color: Colors.white,
       ),
     );
-    ref.read(documentControllerProvider.notifier).execute(AddLayerCommand(layer));
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(AddLayerCommand(layer));
     ref.read(selectionControllerProvider.notifier).select(id);
   }
 
   String? _activeToolId(WidgetRef ref) {
-    final paintOpen = ref.watch(paintToolControllerProvider.select((s) => s.panelOpen));
+    final paintOpen = ref.watch(
+      paintToolControllerProvider.select((s) => s.panelOpen),
+    );
     if (paintOpen) return 'paint';
-    final textOpen = ref.watch(textToolControllerProvider.select((s) => s.panelOpen));
+    final textOpen = ref.watch(
+      textToolControllerProvider.select((s) => s.panelOpen),
+    );
     if (textOpen) return 'text';
 
     final selection = ref.watch(selectionControllerProvider);
     if (!selection.hasSelection) return null;
-    final layer = ref.watch(documentControllerProvider).layerById(selection.selectedId!);
+    final layer = ref
+        .watch(renderedDocumentProvider)
+        .layerById(selection.selectedId!);
     // Emoji-sticker text layers route to the Sticker tab so the
     // Text mode pill doesn't light up for what the user perceives
     // as a sticker. Normal text continues to map to the Text tab.
@@ -971,23 +1033,24 @@ class EditorScreen extends ConsumerWidget {
   ) async {
     final kind = await _pickShapeKind(
       context,
-      title: 'Replace shape',
-      subtitle: 'Pick a new shape — colours and size are kept.',
+      title: context.l10n.replaceShapeTitle,
+      subtitle: context.l10n.replaceShapeSubtitle,
       currentKind: layer.kind,
     );
     if (kind == null || kind == layer.kind || !context.mounted) return;
     EditorHaptics.confirm();
-    ref.read(documentControllerProvider.notifier).execute(
-          ReplaceShapeKindCommand(layerId: layer.id, kind: kind),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(ReplaceShapeKindCommand(layerId: layer.id, kind: kind));
   }
 
   Future<ShapeKind?> _pickShapeKind(
     BuildContext context, {
-    String title = 'Add shape',
-    String subtitle = 'Pick a shape — you can restyle it after.',
+    String? title,
+    String? subtitle,
     ShapeKind? currentKind,
   }) {
+    final l10n = context.l10n;
     return showModalBottomSheet<ShapeKind>(
       context: context,
       showDragHandle: true,
@@ -996,9 +1059,7 @@ class EditorScreen extends ConsumerWidget {
         final scheme = Theme.of(ctx).colorScheme;
         final mq = MediaQuery.of(ctx);
         return ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: mq.size.height * 0.75,
-          ),
+          constraints: BoxConstraints(maxHeight: mq.size.height * 0.75),
           child: SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -1010,7 +1071,7 @@ class EditorScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(left: 4, bottom: 4),
                     child: Text(
-                      title,
+                      title ?? l10n.addShapeTitle,
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -1022,7 +1083,7 @@ class EditorScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(left: 4, bottom: 12),
                     child: Text(
-                      subtitle,
+                      subtitle ?? l10n.addShapeSubtitle,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -1035,14 +1096,12 @@ class EditorScreen extends ConsumerWidget {
                   // scannable now that the catalogue spans bubbles,
                   // symbols and four arrow directions on top of the
                   // basic primitives.
-                  for (var s = 0;
-                      s < kShapeCatalogueSections.length;
-                      s++) ...[
+                  for (var s = 0; s < kShapeCatalogueSections.length; s++) ...[
                     if (s > 0) const SizedBox(height: 18),
                     Padding(
                       padding: const EdgeInsets.only(left: 4, bottom: 8),
                       child: Text(
-                        kShapeCatalogueSections[s].title.toUpperCase(),
+                        _shapeSectionLabel(l10n, s).toUpperCase(),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1059,8 +1118,11 @@ class EditorScreen extends ConsumerWidget {
                       crossAxisSpacing: 12,
                       childAspectRatio: 0.95,
                       children: [
-                        for (final entry
-                            in _pickerEntriesForSection(scheme, s))
+                        for (final entry in _pickerEntriesForSection(
+                          l10n,
+                          scheme,
+                          s,
+                        ))
                           _ShapePickerTile(
                             kind: entry.kind,
                             label: entry.label,
@@ -1088,6 +1150,7 @@ class EditorScreen extends ConsumerWidget {
   /// as visually coherent. The flat [_pickerEntries] is kept for any
   /// callers that need a single ungrouped list.
   List<_ShapePickerEntry> _pickerEntriesForSection(
+    AppLocalizations l10n,
     ColorScheme scheme,
     int sectionIndex,
   ) {
@@ -1098,10 +1161,44 @@ class EditorScreen extends ConsumerWidget {
       for (var i = 0; i < entries.length; i++)
         _ShapePickerEntry(
           entries[i].kind,
-          entries[i].label,
+          _shapeKindLabel(l10n, entries[i].kind),
           i.isEven ? [a, b] : [b, a],
         ),
     ];
+  }
+
+  String _shapeSectionLabel(AppLocalizations l10n, int sectionIndex) {
+    return switch (sectionIndex) {
+      0 => l10n.shapeSectionBasic,
+      1 => l10n.shapeSectionBubbles,
+      2 => l10n.shapeSectionSymbols,
+      3 => l10n.shapeSectionLinesArrows,
+      _ => kShapeCatalogueSections[sectionIndex].title,
+    };
+  }
+
+  String _shapeKindLabel(AppLocalizations l10n, ShapeKind kind) {
+    return switch (kind) {
+      ShapeKind.rectangle => l10n.shapeKindRectangle,
+      ShapeKind.roundedRectangle => l10n.shapeKindRoundedRectangle,
+      ShapeKind.circle => l10n.circleOption,
+      ShapeKind.oval => l10n.shapeKindOval,
+      ShapeKind.triangle => l10n.shapeKindTriangle,
+      ShapeKind.diamond => l10n.shapeKindDiamond,
+      ShapeKind.hexagon => l10n.shapeKindHexagon,
+      ShapeKind.star => l10n.starOption,
+      ShapeKind.heart => l10n.heartOption,
+      ShapeKind.speechBubble => l10n.shapeKindSpeechBubble,
+      ShapeKind.quoteBubble => l10n.shapeKindQuoteBubble,
+      ShapeKind.plus => l10n.shapeKindPlus,
+      ShapeKind.check => l10n.shapeKindCheck,
+      ShapeKind.cross => l10n.shapeKindCross,
+      ShapeKind.line => l10n.shapeKindLine,
+      ShapeKind.arrow => l10n.shapeKindArrowRight,
+      ShapeKind.arrowLeft => l10n.shapeKindArrowLeft,
+      ShapeKind.arrowUp => l10n.shapeKindArrowUp,
+      ShapeKind.arrowDown => l10n.shapeKindArrowDown,
+    };
   }
 
   /// Resolves which [ImageLayer] a main-toolbar image action should
@@ -1139,10 +1236,10 @@ class EditorScreen extends ConsumerWidget {
         messenger.hideCurrentSnackBar();
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Import a photo to $actionVerb.'),
+            content: Text(context.l10n.importPhotoToAction(actionVerb)),
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
-              label: 'Add photo',
+              label: context.l10n.addPhotoAction,
               onPressed: () => _addImage(context, ref),
             ),
           ),
@@ -1183,7 +1280,7 @@ class EditorScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
                 child: Text(
-                  'Pick an image to $actionVerb',
+                  context.l10n.pickImageToAction(actionVerb),
                   style: theme.textTheme.titleMedium,
                 ),
               ),
@@ -1196,7 +1293,7 @@ class EditorScreen extends ConsumerWidget {
                     final layer = candidates[i];
                     return ListTile(
                       leading: const Icon(Icons.image_outlined),
-                      title: Text('Image ${i + 1}'),
+                      title: Text(context.l10n.imageLayerTitle(i + 1)),
                       subtitle: Text(
                         '${layer.transform.size.width.round()} '
                         '\u00d7 ${layer.transform.size.height.round()}',
@@ -1225,15 +1322,17 @@ class EditorScreen extends ConsumerWidget {
   /// from the main toolbar lands the user back on the main toolbar
   /// instead of stranding them in the image sub-tools.
   Future<void> _openCrop(BuildContext context, WidgetRef ref) async {
-    final priorSelectionId =
-        ref.read(selectionControllerProvider).selectedId;
-    final layer = await _resolveImageTarget(context, ref, actionVerb: 'crop');
+    final priorSelectionId = ref.read(selectionControllerProvider).selectedId;
+    final layer = await _resolveImageTarget(
+      context,
+      ref,
+      actionVerb: context.l10n.cropActionVerb,
+    );
     if (layer == null) return;
     EditorHaptics.tap();
-    ref.read(cropControllerProvider.notifier).openCrop(
-          layer.id,
-          priorSelectionId: priorSelectionId,
-        );
+    ref
+        .read(cropControllerProvider.notifier)
+        .openCrop(layer.id, priorSelectionId: priorSelectionId);
   }
 
   /// Opens the Filters dock panel for the resolved [ImageLayer].
@@ -1244,7 +1343,7 @@ class EditorScreen extends ConsumerWidget {
     final layer = await _resolveImageTarget(
       context,
       ref,
-      actionVerb: 'apply a filter',
+      actionVerb: context.l10n.applyFilterActionVerb,
     );
     if (layer == null) return;
     EditorHaptics.tap();
@@ -1257,8 +1356,11 @@ class EditorScreen extends ConsumerWidget {
 
   /// Opens the Adjust dock panel for the resolved [ImageLayer].
   Future<void> _openAdjust(BuildContext context, WidgetRef ref) async {
-    final layer =
-        await _resolveImageTarget(context, ref, actionVerb: 'adjust');
+    final layer = await _resolveImageTarget(
+      context,
+      ref,
+      actionVerb: context.l10n.adjustActionVerb,
+    );
     if (layer == null) return;
     EditorHaptics.tap();
     final ctrl = ref.read(imageToolControllerProvider.notifier);
@@ -1278,7 +1380,11 @@ class EditorScreen extends ConsumerWidget {
     ref.read(canvasToolControllerProvider.notifier).togglePanel();
   }
 
-  void _handleOverflowAction(BuildContext context, WidgetRef ref, _OverflowAction action) {
+  void _handleOverflowAction(
+    BuildContext context,
+    WidgetRef ref,
+    _OverflowAction action,
+  ) {
     switch (action) {
       case _OverflowAction.save:
         _saveProject(context, ref);
@@ -1293,25 +1399,30 @@ class EditorScreen extends ConsumerWidget {
 
   Future<void> _saveProject(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     try {
       final project = await ref.read(projectSaveServiceProvider).save(context);
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Saved “${project.name}”'),
+          content: Text(l10n.savedProject(project.name)),
           behavior: SnackBarBehavior.floating,
         ),
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugLogError('editor/save', e, st);
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Save failed: $e'),
+          content: Text(userMessageFor(e, fallback: l10n.somethingWentWrong)),
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
 
-  Future<void> _openNewDocumentDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _openNewDocumentDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final choice = await showDialog<NewDocumentChoice>(
       context: context,
       builder: (_) => const NewDocumentDialog(),
@@ -1363,10 +1474,9 @@ class EditorScreen extends ConsumerWidget {
       media.size.width,
       media.size.height - appBar - media.padding.bottom,
     );
-    ref.read(viewportControllerProvider.notifier).fit(
-          screenSize: screen,
-          canvasSize: Size(doc.width, doc.height),
-        );
+    ref
+        .read(viewportControllerProvider.notifier)
+        .fit(screenSize: screen, canvasSize: Size(doc.width, doc.height));
   }
 }
 
@@ -1464,11 +1574,13 @@ class _DocumentTitle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final size = ref.watch(
-      documentControllerProvider.select((EditorDocument d) => Size(d.width, d.height)),
+      documentControllerProvider.select(
+        (EditorDocument d) => Size(d.width, d.height),
+      ),
     );
     final scale = ref.watch(viewportControllerProvider.select((v) => v.scale));
     final session = ref.watch(editorSessionProvider);
-    final title = session?.name ?? 'Canvas Engine';
+    final title = session?.name ?? context.l10n.appName;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1499,7 +1611,10 @@ class _UndoRedoRail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(documentControllerProvider);
+    // Undo/redo button enable state only changes on real commits —
+    // never on overlay previews. Subscribe to the commit counter so
+    // a 60-fps slider drag doesn't repaint this rail.
+    ref.watch(documentCommitVersionProvider);
     final doc = ref.read(documentControllerProvider.notifier);
     final scheme = Theme.of(context).colorScheme;
 
@@ -1537,7 +1652,7 @@ class _UndoRedoRail extends ConsumerWidget {
         children: [
           _RailButton(
             icon: Icons.undo_rounded,
-            tooltip: 'Undo',
+            tooltip: context.l10n.undoTooltip,
             enabled: doc.canUndo,
             onTap: () {
               EditorHaptics.tap();
@@ -1552,7 +1667,7 @@ class _UndoRedoRail extends ConsumerWidget {
           ),
           _RailButton(
             icon: Icons.redo_rounded,
-            tooltip: 'Redo',
+            tooltip: context.l10n.redoTooltip,
             enabled: doc.canRedo,
             onTap: () {
               EditorHaptics.tap();
@@ -1610,10 +1725,8 @@ class _RailButtonState extends State<_RailButton> {
               child: ShaderMask(
                 shaderCallback: (bounds) {
                   if (!widget.enabled) {
-                    final c = scheme.onSurfaceVariant
-                        .withValues(alpha: 0.32);
-                    return LinearGradient(colors: [c, c])
-                        .createShader(bounds);
+                    final c = scheme.onSurfaceVariant.withValues(alpha: 0.32);
+                    return LinearGradient(colors: [c, c]).createShader(bounds);
                   }
                   return LinearGradient(
                     begin: Alignment.topLeft,
@@ -1654,15 +1767,18 @@ class _ModeExitPill extends ConsumerWidget {
     final selectionId = ref.watch(
       selectionControllerProvider.select((s) => s.selectedId),
     );
-    final doc = ref.watch(documentControllerProvider);
-    final selectedLayer =
-        selectionId == null ? null : doc.layerById(selectionId);
-    final hasTextSelection = selectedLayer is TextLayer && !selectedLayer.isSticker;
+    final doc = ref.watch(renderedDocumentProvider);
+    final selectedLayer = selectionId == null
+        ? null
+        : doc.layerById(selectionId);
+    final hasTextSelection =
+        selectedLayer is TextLayer && !selectedLayer.isSticker;
     // Protected base photo (photo project) is the canvas itself --
     // it is intentionally selectable for tool targeting but never
     // shows object-selection chrome (frame, quick actions). Done
     // belongs to that chrome family, so suppress it here too.
-    final hasObjectSelection = selectedLayer != null &&
+    final hasObjectSelection =
+        selectedLayer != null &&
         !(selectionId != null && doc.isProtectedBasePhoto(selectionId));
     final inMode = paintOpen || textOpen || hasObjectSelection;
     if (!inMode) return const SizedBox.shrink();

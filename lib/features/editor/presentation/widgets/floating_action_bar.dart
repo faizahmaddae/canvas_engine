@@ -22,6 +22,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/l10n.dart';
+
 /// Standard height of a single-row floating glass bar. Kept in sync
 /// with the value Paint and Shape pass to [FloatingToolbarPositioner].
 const double kFloatingBarHeight = 40;
@@ -50,8 +52,9 @@ class FloatingGlassBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final borderColor =
-        (isDark ? Colors.white : Colors.black).withValues(alpha: 0.10);
+    final borderColor = (isDark ? Colors.white : Colors.black).withValues(
+      alpha: 0.10,
+    );
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -209,7 +212,7 @@ class ResizeModePillContent extends StatelessWidget {
         ),
         const SizedBox(width: 5),
         Text(
-          isScale ? 'Scale' : 'Free',
+          isScale ? context.l10n.scaleLabel : context.l10n.freeLabel,
           style: TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w700,

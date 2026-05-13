@@ -1,0 +1,160 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4280163147,
+    "endColor": 4280640491,
+    "angleDegrees": 155.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "screen",
+      "transform": {
+        "x": 120.0,
+        "y": 260.0,
+        "w": 840.0,
+        "h": 620.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4293849855,
+        "endColor": 4294967295,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 64.0,
+      "shadowOpacity": 0.24,
+      "shadowBlur": 42.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 22.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "play",
+      "transform": {
+        "x": 470.0,
+        "y": 470.0,
+        "w": 160.0,
+        "h": 160.0,
+        "r": 90.0
+      },
+      "kind": "triangle",
+      "fillColor": 4280640491,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 155.0,
+        "y": 1010.0,
+        "w": 760.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "وبینار رایگان",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 50.0,
+        "color": 4290438909,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 140.0,
+        "y": 1105.0,
+        "w": 800.0,
+        "h": 250.0,
+        "r": 0.0
+      },
+      "content": "مسیر\nیادگیری",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 132.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "right",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 160.0,
+        "y": 1395.0,
+        "w": 760.0,
+        "h": 110.0,
+        "r": 0.0
+      },
+      "content": "موضوع، مدرس و زمان برگزاری را برای دوره خود ویرایش کنید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 46.0,
+        "color": 4292602622,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "date",
+      "transform": {
+        "x": 250.0,
+        "y": 1635.0,
+        "w": 580.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294829706,
+      "strokeWidth": 0.0,
+      "cornerRadius": 48.0
+    },
+    {
+      "type": "text",
+      "id": "date-text",
+      "transform": {
+        "x": 295.0,
+        "y": 1653.0,
+        "w": 490.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "سه‌شنبه ساعت ۱۸",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 52.0,
+        "color": 4280163147,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,230 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4293721855,
+    "endColor": 4294507260,
+    "angleDegrees": 140.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 96.0,
+        "y": 96.0,
+        "w": 888.0,
+        "h": 888.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 56.0,
+      "shadowOpacity": 0.16,
+      "shadowBlur": 36.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "number",
+      "transform": {
+        "x": 155.0,
+        "y": 155.0,
+        "w": 180.0,
+        "h": 180.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4278630100,
+        "endColor": 4280640491,
+        "angleDegrees": 135.0
+      }
+    },
+    {
+      "type": "text",
+      "id": "num",
+      "transform": {
+        "x": 205.0,
+        "y": 195.0,
+        "w": 80.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "content": "۷",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 92.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 390.0,
+        "y": 170.0,
+        "w": 520.0,
+        "h": 180.0,
+        "r": 0.0
+      },
+      "content": "نکته\nبرای آزمون",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 88.0,
+        "color": 4279179050,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "tip1",
+      "transform": {
+        "x": 165.0,
+        "y": 465.0,
+        "w": 750.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293721855,
+      "strokeWidth": 0.0,
+      "cornerRadius": 28.0
+    },
+    {
+      "type": "shape",
+      "id": "tip2",
+      "transform": {
+        "x": 165.0,
+        "y": 575.0,
+        "w": 750.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293916415,
+      "strokeWidth": 0.0,
+      "cornerRadius": 28.0
+    },
+    {
+      "type": "shape",
+      "id": "tip3",
+      "transform": {
+        "x": 165.0,
+        "y": 685.0,
+        "w": 750.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293983732,
+      "strokeWidth": 0.0,
+      "cornerRadius": 28.0
+    },
+    {
+      "type": "text",
+      "id": "t1",
+      "transform": {
+        "x": 205.0,
+        "y": 483.0,
+        "w": 670.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "برنامه مطالعه را کوتاه و دقیق بنویس",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4279590517,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "t2",
+      "transform": {
+        "x": 205.0,
+        "y": 593.0,
+        "w": 670.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "مرورهای آخر هفته را فراموش نکن",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4280171146,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "t3",
+      "transform": {
+        "x": 205.0,
+        "y": 703.0,
+        "w": 670.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "سؤال‌های پرتکرار را علامت بزن",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4279657780,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 300.0,
+        "y": 850.0,
+        "w": 480.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "ذخیره کن برای بعد",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 50.0,
+        "color": 4279179050,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

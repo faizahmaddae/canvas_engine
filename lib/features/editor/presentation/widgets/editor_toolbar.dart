@@ -12,11 +12,7 @@ import '../../toolbar/presentation/slot_strip.dart';
 /// other mode. The mode-specific paint/text toolbars migrate onto
 /// [SlotStrip] in later phases.
 class EditorToolbar extends StatelessWidget {
-  const EditorToolbar({
-    super.key,
-    required this.items,
-    this.activeId,
-  });
+  const EditorToolbar({super.key, required this.items, this.activeId});
 
   /// Tools shown in the dock (left → right).
   final List<ToolbarSlot> items;

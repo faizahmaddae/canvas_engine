@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294901888,
+    "endColor": 4286130378,
+    "angleDegrees": 90.0
+  },
+  "layers": []
+}

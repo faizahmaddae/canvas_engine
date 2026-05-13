@@ -141,6 +141,16 @@ class ViewportController extends Notifier<ViewportState> {
 
   void reset() => state = ViewportState.identity;
 
+  /// Apply a previously-captured [viewport] verbatim. Used by the
+  /// canvas to restore a per-project saved viewport on reopen
+  /// without recomputing the fit. Does not seed [_lastFitContext];
+  /// the canvas is responsible for calling [fit] separately if it
+  /// wants the user-facing "Fit to screen" action to have geometry
+  /// to replay against.
+  void restore(ViewportState viewport) {
+    state = viewport;
+  }
+
   /// Picks sensible per-axis "fit" padding for [screenSize] using its
   /// shortest side as the form-factor signal.
   ///

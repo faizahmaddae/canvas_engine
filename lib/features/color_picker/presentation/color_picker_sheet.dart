@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../editor/presentation/widgets/color_swatch_dot.dart';
 import '../../editor/presentation/widgets/section_label.dart';
 
@@ -15,7 +16,7 @@ Future<Color?> showColorPickerSheet(
   required Color initial,
   List<Color> recents = const [],
   ValueChanged<Color>? onLiveChange,
-  String title = 'Color',
+  String? title,
 }) {
   return showModalBottomSheet<Color>(
     context: context,
@@ -27,7 +28,7 @@ Future<Color?> showColorPickerSheet(
       initial: initial,
       recents: recents,
       onLiveChange: onLiveChange,
-      title: title,
+      title: title ?? context.l10n.colorLabel,
     ),
   );
 }
@@ -38,7 +39,7 @@ class ColorPickerSheet extends StatefulWidget {
     required this.initial,
     this.recents = const [],
     this.onLiveChange,
-    this.title = 'Color',
+    required this.title,
   });
 
   final Color initial;
@@ -107,11 +108,14 @@ class _ColorPickerSheetState extends State<ColorPickerSheet> {
     // An explicit 8-char `#AARRGGBB` is treated as an opt-in alpha
     // edit (the user typed the alpha bytes themselves), so its
     // alpha is honoured verbatim.
-    final cleanLen =
-        raw.trim().toUpperCase().replaceAll('#', '').replaceAll(' ', '').length;
+    final cleanLen = raw
+        .trim()
+        .toUpperCase()
+        .replaceAll('#', '')
+        .replaceAll(' ', '')
+        .length;
     final next = HSVColor.fromColor(parsed);
-    final adjusted =
-        cleanLen == 8 ? next : next.withAlpha(_hsv.alpha);
+    final adjusted = cleanLen == 8 ? next : next.withAlpha(_hsv.alpha);
     _emit(adjusted, syncHex: false);
   }
 
@@ -185,7 +189,7 @@ class _ColorPickerSheetState extends State<ColorPickerSheet> {
                       ),
                       if (widget.recents.isNotEmpty) ...[
                         const SizedBox(height: 22),
-                        const SectionLabel('Recent'),
+                        SectionLabel(context.l10n.recentLabel),
                         const SizedBox(height: 4),
                         _RecentsRow(
                           recents: widget.recents,
@@ -231,10 +235,7 @@ class _GrabHandle extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({
-    required this.title,
-    required this.onDone,
-  });
+  const _Header({required this.title, required this.onDone});
 
   final String title;
   final VoidCallback onDone;
@@ -270,7 +271,7 @@ class _Header extends StatelessWidget {
                 letterSpacing: -0.1,
               ),
             ),
-            child: const Text('Done'),
+            child: Text(context.l10n.doneAction),
           ),
         ],
       ),
@@ -324,8 +325,12 @@ class _SaturationValueField extends StatelessWidget {
                     left: saturation * size.width - 13,
                     top: (1 - value) * size.height - 13,
                     child: _Reticle(
-                      color: HSVColor.fromAHSV(1, hue, saturation, value)
-                          .toColor(),
+                      color: HSVColor.fromAHSV(
+                        1,
+                        hue,
+                        saturation,
+                        value,
+                      ).toColor(),
                     ),
                   ),
                 ],
@@ -345,17 +350,15 @@ class _SVFieldPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final satGradient = ui.Gradient.linear(
-      rect.topLeft,
-      rect.topRight,
-      [Colors.white, HSVColor.fromAHSV(1, hue, 1, 1).toColor()],
-    );
+    final satGradient = ui.Gradient.linear(rect.topLeft, rect.topRight, [
+      Colors.white,
+      HSVColor.fromAHSV(1, hue, 1, 1).toColor(),
+    ]);
     canvas.drawRect(rect, Paint()..shader = satGradient);
-    final valGradient = ui.Gradient.linear(
-      rect.topLeft,
-      rect.bottomLeft,
-      [Colors.transparent, Colors.black],
-    );
+    final valGradient = ui.Gradient.linear(rect.topLeft, rect.bottomLeft, [
+      Colors.transparent,
+      Colors.black,
+    ]);
     canvas.drawRect(rect, Paint()..shader = valGradient);
   }
 
@@ -383,10 +386,7 @@ class _Reticle extends StatelessWidget {
         ],
       ),
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-        ),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
       ),
     );
   }
@@ -404,7 +404,7 @@ class _HueSlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _LabeledSlider(
-      label: 'Hue',
+      label: context.l10n.hueLabel,
       readout: '${hue.round()}°',
       child: _GradientTrack(
         gradient: const LinearGradient(
@@ -439,7 +439,7 @@ class _OpacitySlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _LabeledSlider(
-      label: 'Opacity',
+      label: context.l10n.opacityLabel,
       readout: '${(alpha * 100).round()}%',
       child: _GradientTrack(
         gradient: LinearGradient(
@@ -648,8 +648,8 @@ class _HexLineState extends State<_HexLine> {
     final accent = widget.invalid
         ? scheme.error
         : (_focused
-            ? scheme.onSurface
-            : scheme.onSurface.withValues(alpha: 0.10));
+              ? scheme.onSurface
+              : scheme.onSurface.withValues(alpha: 0.10));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -658,7 +658,7 @@ class _HexLineState extends State<_HexLine> {
           child: Row(
             children: [
               Text(
-                'Hex',
+                context.l10n.hexLabel,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -673,7 +673,7 @@ class _HexLineState extends State<_HexLine> {
                     FadeTransition(opacity: a, child: c),
                 child: widget.invalid
                     ? Text(
-                        'Invalid',
+                        context.l10n.invalidLabel,
                         key: const ValueKey('inv'),
                         style: TextStyle(
                           fontSize: 12,
@@ -791,10 +791,7 @@ class _CheckerPainter extends CustomPainter {
       for (var x = 0.0; x < size.width; x += _square) {
         final isDark = (((x / _square) + (y / _square)).floor() % 2) == 0;
         if (isDark) {
-          canvas.drawRect(
-            Rect.fromLTWH(x, y, _square, _square),
-            darkPaint,
-          );
+          canvas.drawRect(Rect.fromLTWH(x, y, _square, _square), darkPaint);
         }
       }
     }
@@ -815,8 +812,11 @@ String _formatHex(Color c) {
 }
 
 Color? _parseHex(String raw) {
-  final clean =
-      raw.trim().toUpperCase().replaceAll('#', '').replaceAll(' ', '');
+  final clean = raw
+      .trim()
+      .toUpperCase()
+      .replaceAll('#', '')
+      .replaceAll(' ', '');
   if (clean.isEmpty) return null;
   final int? n = int.tryParse(clean, radix: 16);
   if (n == null) return null;

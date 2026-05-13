@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../../settings/application/settings_controller.dart';
-import '../../application/document_controller.dart';
+import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/core/editor_document.dart';
 import '../../engine/modules/text/text_layer.dart';
@@ -68,7 +70,6 @@ class TextModeToolbar extends ConsumerStatefulWidget {
       id: 'font',
       icon: Icons.text_fields_rounded,
       label: 'Font',
-      dynamicLabel: (style, font) => font?.label ?? 'Font',
       bodyBuilder: _TextBodies.fontBody,
     ),
     _ToolSpec(
@@ -159,7 +160,7 @@ class TextModeToolbar extends ConsumerStatefulWidget {
     final selection = ref.watch(selectionControllerProvider);
     if (!selection.hasSelection) return null;
     final layer = ref
-        .watch(documentControllerProvider)
+        .watch(renderedDocumentProvider)
         .layerById(selection.selectedId!);
     // Emoji stickers are TextLayer instances but must not surface
     // the Text floating toolbar / font / colour controls.
@@ -235,9 +236,9 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
     final fontEntry = style.fontFamily == null
         ? null
         : kFontCatalog
-            .where((e) => e.family == style.fontFamily)
-            .cast<FontEntry?>()
-            .firstWhere((_) => true, orElse: () => null);
+              .where((e) => e.family == style.fontFamily)
+              .cast<FontEntry?>()
+              .firstWhere((_) => true, orElse: () => null);
 
     // When the open sheet changes (from anywhere — tile tap or
     // sibling swipe inside the sheet) scroll the matching tile
@@ -246,8 +247,7 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
     if (open != _lastOpen) {
       _lastOpen = open;
       if (open != null) {
-        final idx =
-            TextModeToolbar._tools.indexWhere((s) => s.id == open);
+        final idx = TextModeToolbar._tools.indexWhere((s) => s.id == open);
         if (idx >= 0) {
           WidgetsBinding.instance.addPostFrameCallback(
             (_) => _ensureVisible(idx),
@@ -271,14 +271,16 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
             : MainAxisAlignment.center,
         children: [
           for (final i in _toolOrder(context, ref)) ...[
-            if (_isTierBoundary(context, ref, i))
-              const _TierGap(),
+            if (_isTierBoundary(context, ref, i)) const _TierGap(),
             DockToolTile(
               icon: TextModeToolbar._tools[i].icon,
-              label: TextModeToolbar._tools[i].dockLabel ??
-                  TextModeToolbar._tools[i].label,
-              valueText:
-                  TextModeToolbar._tools[i].dynamicLabel?.call(style, fontEntry),
+              label: _localizedToolDockLabel(
+                context.l10n,
+                TextModeToolbar._tools[i],
+              ),
+              valueText: TextModeToolbar._tools[i].id == 'font'
+                  ? fontEntry?.label
+                  : null,
               fontFamily: TextModeToolbar._tools[i].id == 'font'
                   ? fontEntry?.family
                   : null,
@@ -312,8 +314,7 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
   // ── Layout helpers ──────────────────────────────────────────────
   bool _isCompact(BuildContext ctx) {
     final m = MediaQuery.of(ctx);
-    return m.size.shortestSide < 380 ||
-        m.orientation == Orientation.landscape;
+    return m.size.shortestSide < 380 || m.orientation == Orientation.landscape;
   }
 
   double _stripHeight(BuildContext ctx) => _isCompact(ctx) ? 64 : 80;
@@ -323,10 +324,7 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
   /// mode only shifts the row's alignment (handled by the parent
   /// [DockToolStrip] via `fitAlignment`); it never reverses tools.
   List<int> _toolOrder(BuildContext ctx, WidgetRef ref) {
-    return List<int>.generate(
-      TextModeToolbar._tools.length,
-      (i) => i,
-    );
+    return List<int>.generate(TextModeToolbar._tools.length, (i) => i);
   }
 
   bool _isTierBoundary(BuildContext ctx, WidgetRef ref, int rawIndex) {
@@ -360,8 +358,7 @@ class TextModeSheetPanel extends ConsumerWidget {
     // Sibling navigation — swipe left/right inside the sheet
     // jumps to the next/prev tool in the strip order, wrapping
     // around so the user can cycle without hitting a dead end.
-    final swipe =
-        SiblingSwipeStrategy<String>(order: TextModeToolbar.toolIds);
+    final swipe = SiblingSwipeStrategy<String>(order: TextModeToolbar.toolIds);
     final prevId = swipe.prev(sheetId);
     final nextId = swipe.next(sheetId);
     final ctrl = ref.read(textToolControllerProvider.notifier);
@@ -372,7 +369,7 @@ class TextModeSheetPanel extends ConsumerWidget {
     // Body widget is unchanged; only the surrounding chrome is
     // unified.
     final subTool = WidgetSubTool(
-      headerTitle: spec.label,
+      headerTitle: _localizedToolLabel(context.l10n, spec),
       headerIcon: spec.icon,
       builder: (ctx, _) => spec.bodyBuilder!(ctx, ref, layer),
     );
@@ -400,7 +397,6 @@ class _ToolSpec {
     required this.icon,
     required this.label,
     this.dockLabel,
-    this.dynamicLabel,
     this.bodyBuilder,
   });
 
@@ -417,14 +413,50 @@ class _ToolSpec {
   /// Falls back to [label] when null.
   final String? dockLabel;
 
-  /// Optional override that lets the tile show live state
-  /// (e.g. the current font name on the Font tile).
-  final String Function(TextStyleSpec style, FontEntry? font)? dynamicLabel;
-
   /// Body builder rendered by [TextModeSheetPanel] when this
   /// tool's sheet is open. `null` for tools that handle their
   /// interaction via a modal picker (Font, Color).
   final Widget Function(BuildContext, WidgetRef, TextLayer)? bodyBuilder;
+}
+
+String _localizedToolDockLabel(AppLocalizations l10n, _ToolSpec spec) {
+  if (spec.id == 'background' && spec.dockLabel != null) {
+    return l10n.bgShortLabel;
+  }
+  return _localizedToolLabel(l10n, spec);
+}
+
+String _localizedToolLabel(AppLocalizations l10n, _ToolSpec spec) {
+  return switch (spec.id) {
+    'font' => l10n.fontTool,
+    'styles' => l10n.stylesTool,
+    'color' => l10n.colorLabel,
+    'size' => l10n.sizeTool,
+    'layout' => l10n.layoutTool,
+    'background' => l10n.backgroundTool,
+    'border' => l10n.borderTool,
+    'shadow' => l10n.shadowTool,
+    'behavior' => l10n.resizeTool,
+    _ => spec.label,
+  };
+}
+
+String _localizedFontCategoryLabel(
+  AppLocalizations l10n,
+  FontScript script,
+  FontCategory category,
+) {
+  return switch (category) {
+    FontCategory.sans =>
+      script == FontScript.arabic
+          ? l10n.fontCategoryModern
+          : l10n.fontCategorySans,
+    FontCategory.display => l10n.fontCategoryDisplay,
+    FontCategory.script => l10n.fontCategoryScript,
+    FontCategory.mono => l10n.fontCategoryMono,
+    FontCategory.traditional => l10n.fontCategoryTraditional,
+    FontCategory.nastaliq => l10n.fontCategoryNastaliq,
+  };
 }
 
 /// Holder for the per-category body builders. Each method takes
@@ -441,11 +473,7 @@ class _TextBodies {
   // only when the user actually needs it. Keeps the canvas
   // visible for the most common case — picking from the last few
   // fonts used or the top of the catalog.
-  static Widget fontBody(
-    BuildContext context,
-    WidgetRef ref,
-    TextLayer layer,
-  ) {
+  static Widget fontBody(BuildContext context, WidgetRef ref, TextLayer layer) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final current = layer.style.fontFamily;
     return _InlineFontBody(
@@ -505,7 +533,7 @@ class _TextBodies {
           initial: original,
           recents: ref.read(recentColorsControllerProvider),
           onLiveChange: ctrl.setColor,
-          title: 'Text color',
+          title: context.l10n.textColorTitle,
         );
         if (picked == null) {
           ctrl.setColor(original);
@@ -617,18 +645,18 @@ class _TextBodies {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _PanelSectionLabel('Shape'),
+        _PanelSectionLabel(context.l10n.shapeLabel),
         _StyleTileRow(
           tiles: [
             _StyleTile(
               icon: Icons.block_rounded,
-              label: 'None',
+              label: context.l10n.noneOption,
               selected: !hasBg,
               onTap: () => ctrl.setBackgroundEnabled(false),
             ),
             _StyleTile(
               icon: Icons.crop_16_9_rounded,
-              label: 'Pill',
+              label: context.l10n.pillOption,
               selected: hasBg && _bgMatches(style, _backgroundPresets[1]),
               onTap: () {
                 enableIfNeeded();
@@ -637,7 +665,7 @@ class _TextBodies {
             ),
             _StyleTile(
               icon: Icons.crop_square_rounded,
-              label: 'Card',
+              label: context.l10n.cardOption,
               selected: hasBg && _bgMatches(style, _backgroundPresets[2]),
               onTap: () {
                 enableIfNeeded();
@@ -646,7 +674,7 @@ class _TextBodies {
             ),
             _StyleTile(
               icon: Icons.local_offer_outlined,
-              label: 'Tag',
+              label: context.l10n.tagOption,
               selected: hasBg && _bgMatches(style, _backgroundPresets[3]),
               onTap: () {
                 enableIfNeeded();
@@ -679,7 +707,7 @@ class _TextBodies {
                 initial: original,
                 recents: ref.read(recentColorsControllerProvider),
                 onLiveChange: ctrl.setBackgroundColor,
-                title: 'Background color',
+                title: context.l10n.backgroundColorTitle,
               );
               if (picked == null) {
                 ctrl.setBackgroundColor(original);
@@ -701,7 +729,11 @@ class _TextBodies {
   // Style-first: 4 thickness tiles (None / Hairline / Solid / Bold)
   // commit width in one tap, then a swatch row picks the colour.
   // Exact width + opacity live under Advanced.
-  static Widget borderBody(BuildContext context, WidgetRef ref, TextLayer layer) {
+  static Widget borderBody(
+    BuildContext context,
+    WidgetRef ref,
+    TextLayer layer,
+  ) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final style = layer.style;
     final hasOutline = style.outlineColor != null;
@@ -721,18 +753,18 @@ class _TextBodies {
         // label so the STYLE header is not pinned to the sheet edge,
         // especially when the Adjust-precisely disclosure is open.
         const SizedBox(height: 6),
-        const _PanelSectionLabel('Style'),
+        _PanelSectionLabel(context.l10n.styleLabel),
         _StyleTileRow(
           tiles: [
             _StyleTile(
               icon: Icons.block_rounded,
-              label: 'None',
+              label: context.l10n.noneOption,
               selected: !hasOutline,
               onTap: () => ctrl.setOutlineEnabled(false),
             ),
             _StyleTile(
               icon: Icons.horizontal_rule_rounded,
-              label: 'Hairline',
+              label: context.l10n.hairlineOption,
               iconSize: 16,
               selected: widthMatches(0.5),
               onTap: () {
@@ -742,7 +774,7 @@ class _TextBodies {
             ),
             _StyleTile(
               icon: Icons.horizontal_rule_rounded,
-              label: 'Solid',
+              label: context.l10n.solidOption,
               iconSize: 22,
               selected: widthMatches(2),
               onTap: () {
@@ -752,7 +784,7 @@ class _TextBodies {
             ),
             _StyleTile(
               icon: Icons.horizontal_rule_rounded,
-              label: 'Bold',
+              label: context.l10n.boldAction,
               iconSize: 30,
               selected: widthMatches(4),
               onTap: () {
@@ -784,7 +816,7 @@ class _TextBodies {
                 initial: original,
                 recents: ref.read(recentColorsControllerProvider),
                 onLiveChange: ctrl.setOutlineColor,
-                title: 'Border color',
+                title: context.l10n.borderColorTitle,
               );
               if (picked == null) {
                 ctrl.setOutlineColor(original);
@@ -807,7 +839,11 @@ class _TextBodies {
   // commit blur+opacity macros, a 3×3 direction pad replaces the two
   // numeric Offset sliders, swatches pick colour. Numeric blur /
   // distance / opacity sit under Advanced.
-  static Widget shadowBody(BuildContext context, WidgetRef ref, TextLayer layer) {
+  static Widget shadowBody(
+    BuildContext context,
+    WidgetRef ref,
+    TextLayer layer,
+  ) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final style = layer.style;
     final hasShadow = style.shadowColor != null;
@@ -822,21 +858,20 @@ class _TextBodies {
       children: [
         // Match Background/Border breathing room above first label.
         const SizedBox(height: 6),
-        const _PanelSectionLabel('Style'),
+        _PanelSectionLabel(context.l10n.styleLabel),
         _StyleTileRow(
           tiles: [
             _StyleTile(
               icon: Icons.block_rounded,
-              label: 'None',
+              label: context.l10n.noneOption,
               selected: !hasShadow,
               onTap: () => ctrl.setShadowEnabled(false),
             ),
             for (int i = 0; i < _shadowPresets.length; i++)
               _StyleTile(
                 icon: _shadowPresetIcons[i],
-                label: _shadowPresets[i].label,
-                selected:
-                    hasShadow && _shadowMatches(style, _shadowPresets[i]),
+                label: _shadowPresetLabel(context.l10n, _shadowPresets[i]),
+                selected: hasShadow && _shadowMatches(style, _shadowPresets[i]),
                 onTap: () {
                   enableIfNeeded();
                   _applyShadowPreset(
@@ -873,7 +908,7 @@ class _TextBodies {
                 initial: original,
                 recents: ref.read(recentColorsControllerProvider),
                 onLiveChange: ctrl.setShadowColor,
-                title: 'Shadow color',
+                title: context.l10n.shadowColorTitle,
               );
               if (picked == null) {
                 ctrl.setShadowColor(original);
@@ -884,7 +919,7 @@ class _TextBodies {
             },
           ),
           const SizedBox(height: 10),
-          const _PanelSectionLabel('Direction'),
+          _PanelSectionLabel(context.l10n.directionLabel),
           // Constrain width so the pad reads as a secondary control,
           // not a hero element. Centred to keep the panel balanced.
           Align(
@@ -916,7 +951,11 @@ class _TextBodies {
   //     duplicated rows. Only one slider may be expanded at a
   //     time — opening one closes the other so the canvas never
   //     loses real estate to unused sliders.
-  static Widget layoutBody(BuildContext context, WidgetRef ref, TextLayer layer) {
+  static Widget layoutBody(
+    BuildContext context,
+    WidgetRef ref,
+    TextLayer layer,
+  ) {
     return _LayoutPanel(layer: layer);
   }
 
@@ -926,7 +965,11 @@ class _TextBodies {
   // — same spacing rhythm as Background/Border/Shadow. Plain-language
   // labels: "Scale text" / "Reflow box", with corner-drag subtitles
   // so the user understands what the gesture will do.
-  static Widget behaviorBody(BuildContext context, WidgetRef ref, TextLayer layer) {
+  static Widget behaviorBody(
+    BuildContext context,
+    WidgetRef ref,
+    TextLayer layer,
+  ) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final mode = layer.resizeMode;
     final isScale = mode == TextResizeMode.scaleText;
@@ -935,11 +978,11 @@ class _TextBodies {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 6),
-        const _PanelSectionLabel('Behavior'),
+        _PanelSectionLabel(context.l10n.behaviorLabel),
         _ResizeOptionTile(
           icon: Icons.zoom_out_map_rounded,
-          title: 'Scale text',
-          hint: 'Corner drag scales text',
+          title: context.l10n.scaleTextTitle,
+          hint: context.l10n.cornerDragScalesTextHint,
           selected: isScale,
           onTap: () {
             if (mode == TextResizeMode.scaleText) return;
@@ -949,8 +992,8 @@ class _TextBodies {
         const SizedBox(height: 2),
         _ResizeOptionTile(
           icon: Icons.crop_landscape_rounded,
-          title: 'Reflow box',
-          hint: 'Corner drag changes wrap width',
+          title: context.l10n.reflowBoxTitle,
+          hint: context.l10n.cornerDragWrapWidthHint,
           selected: !isScale,
           onTap: () {
             if (mode == TextResizeMode.resizeBox) return;
@@ -991,11 +1034,11 @@ class _LayoutPanelState extends ConsumerState<_LayoutPanel> {
   Widget build(BuildContext context) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final style = widget.layer.style;
-    final isLeft = style.alignment == TextAlign.left ||
-        style.alignment == TextAlign.start;
+    final isLeft =
+        style.alignment == TextAlign.left || style.alignment == TextAlign.start;
     final isCenter = style.alignment == TextAlign.center;
-    final isRight = style.alignment == TextAlign.right ||
-        style.alignment == TextAlign.end;
+    final isRight =
+        style.alignment == TextAlign.right || style.alignment == TextAlign.end;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1022,14 +1065,14 @@ class _LayoutPanelState extends ConsumerState<_LayoutPanel> {
         // line-height vs letter-spacing at a glance.
         _LayoutSliderCard(
           icon: Icons.format_line_spacing_rounded,
-          label: 'Line height',
+          label: context.l10n.lineHeightLabel,
           value: style.lineHeight,
           format: (v) => v.toStringAsFixed(2),
-          presets: const [
-            (label: 'Tight', value: 1.0),
-            (label: 'Normal', value: 1.25),
-            (label: 'Relaxed', value: 1.6),
-            (label: 'Loose', value: 2.0),
+          presets: [
+            (label: context.l10n.tightOption, value: 1.0),
+            (label: context.l10n.normalOption, value: 1.25),
+            (label: context.l10n.relaxedOption, value: 1.6),
+            (label: context.l10n.looseOption, value: 2.0),
           ],
           min: 0.8,
           max: 3.0,
@@ -1039,14 +1082,14 @@ class _LayoutPanelState extends ConsumerState<_LayoutPanel> {
         ),
         _LayoutSliderCard(
           icon: Icons.space_bar_rounded,
-          label: 'Letter spacing',
+          label: context.l10n.letterSpacingLabel,
           value: style.letterSpacing,
           format: (v) => v.toStringAsFixed(1),
-          presets: const [
-            (label: 'Tight', value: -0.5),
-            (label: 'Normal', value: 0.0),
-            (label: 'Wide', value: 1.5),
-            (label: 'Loose', value: 4.0),
+          presets: [
+            (label: context.l10n.tightOption, value: -0.5),
+            (label: context.l10n.normalOption, value: 0.0),
+            (label: context.l10n.wideOption, value: 1.5),
+            (label: context.l10n.looseOption, value: 4.0),
           ],
           min: -5,
           max: 20,
@@ -1193,8 +1236,7 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final muted = scheme.onSurfaceVariant;
-    final clampedValue =
-        widget.value.clamp(widget.min, widget.max).toDouble();
+    final clampedValue = widget.value.clamp(widget.min, widget.max).toDouble();
     final selectedIndex = _selectedPresetIndex();
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1210,10 +1252,7 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
               widget.onExpandedChanged(!widget.expanded);
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
               child: Row(
                 children: [
                   Icon(
@@ -1244,8 +1283,9 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
                       borderRadius: BorderRadius.circular(999),
                       color: widget.expanded
                           ? scheme.primary.withValues(alpha: 0.1)
-                          : scheme.surfaceContainerHighest
-                              .withValues(alpha: 0.5),
+                          : scheme.surfaceContainerHighest.withValues(
+                              alpha: 0.5,
+                            ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1253,12 +1293,9 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
                         Text(
                           widget.format(clampedValue),
                           style: theme.textTheme.labelMedium?.copyWith(
-                            color:
-                                widget.expanded ? scheme.primary : muted,
+                            color: widget.expanded ? scheme.primary : muted,
                             fontWeight: FontWeight.w700,
-                            fontFeatures: const [
-                              FontFeature.tabularFigures(),
-                            ],
+                            fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                         const SizedBox(width: 2),
@@ -1268,9 +1305,7 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
                           child: Icon(
                             Icons.chevron_right_rounded,
                             size: 16,
-                            color: widget.expanded
-                                ? scheme.primary
-                                : muted,
+                            color: widget.expanded ? scheme.primary : muted,
                           ),
                         ),
                       ],
@@ -1505,8 +1540,7 @@ class _FlatSliderRowState extends ConsumerState<_FlatSliderRow> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final muted = scheme.onSurfaceVariant;
-    final clampedValue =
-        widget.value.clamp(widget.min, widget.max).toDouble();
+    final clampedValue = widget.value.clamp(widget.min, widget.max).toDouble();
     // Single-row inline layout: [label] [slider] [value]. Each row
     // collapses from a stacked ~52dp to a single ~36dp line, so the
     // 4-slider Background block drops from ~208dp to ~144dp +
@@ -1534,10 +1568,8 @@ class _FlatSliderRowState extends ConsumerState<_FlatSliderRow> {
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
                 trackHeight: 2,
-                overlayShape:
-                    const RoundSliderOverlayShape(overlayRadius: 10),
-                thumbShape:
-                    const RoundSliderThumbShape(enabledThumbRadius: 7),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
                 padding: EdgeInsets.zero,
               ),
               child: Listener(
@@ -1622,15 +1654,14 @@ class _BackgroundPrecisionAdvancedState
               setState(() => _open = !_open);
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      _open ? 'Hide precise controls' : 'Adjust precisely',
+                      _open
+                          ? context.l10n.hidePreciseControls
+                          : context.l10n.adjustPrecisely,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurface,
                         fontWeight: FontWeight.w600,
@@ -1663,7 +1694,7 @@ class _BackgroundPrecisionAdvancedState
                   children: [
                     _PrecisionDivider(scheme: scheme),
                     _FlatSliderRow(
-                      label: 'Roundness',
+                      label: context.l10n.roundnessLabel,
                       // backgroundRadius is a percent (0..1) of the
                       // box's shorter side; UI drives 0..100 directly.
                       value: (style.backgroundRadius * 100).clamp(0.0, 100.0),
@@ -1673,7 +1704,7 @@ class _BackgroundPrecisionAdvancedState
                       unit: '%',
                     ),
                     _FlatSliderRow(
-                      label: 'Vertical padding',
+                      label: context.l10n.verticalPaddingLabel,
                       value: style.backgroundPaddingY,
                       min: 0,
                       max: 64,
@@ -1681,7 +1712,7 @@ class _BackgroundPrecisionAdvancedState
                       unit: 'px',
                     ),
                     _FlatSliderRow(
-                      label: 'Horizontal padding',
+                      label: context.l10n.horizontalPaddingLabel,
                       value: style.backgroundPaddingX,
                       min: 0,
                       max: 64,
@@ -1690,7 +1721,7 @@ class _BackgroundPrecisionAdvancedState
                     ),
                     if (bg != null)
                       _FlatSliderRow(
-                        label: 'Opacity',
+                        label: context.l10n.opacityLabel,
                         value: bg.a * 100,
                         min: 0,
                         max: 100,
@@ -1747,15 +1778,14 @@ class _BorderPrecisionAdvancedState
               setState(() => _open = !_open);
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      _open ? 'Hide precise controls' : 'Adjust precisely',
+                      _open
+                          ? context.l10n.hidePreciseControls
+                          : context.l10n.adjustPrecisely,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurface,
                         fontWeight: FontWeight.w600,
@@ -1788,7 +1818,7 @@ class _BorderPrecisionAdvancedState
                   children: [
                     _PrecisionDivider(scheme: scheme),
                     _FlatSliderRow(
-                      label: 'Thickness',
+                      label: context.l10n.thicknessLabel,
                       value: style.outlineWidth,
                       min: 0,
                       max: 12,
@@ -1797,7 +1827,7 @@ class _BorderPrecisionAdvancedState
                     ),
                     if (outline != null)
                       _FlatSliderRow(
-                        label: 'Opacity',
+                        label: context.l10n.opacityLabel,
                         value: outline.a * 100,
                         min: 0,
                         max: 100,
@@ -1853,15 +1883,14 @@ class _ShadowPrecisionAdvancedState
               setState(() => _open = !_open);
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      _open ? 'Hide precise controls' : 'Adjust precisely',
+                      _open
+                          ? context.l10n.hidePreciseControls
+                          : context.l10n.adjustPrecisely,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurface,
                         fontWeight: FontWeight.w600,
@@ -1894,7 +1923,7 @@ class _ShadowPrecisionAdvancedState
                   children: [
                     _PrecisionDivider(scheme: scheme),
                     _FlatSliderRow(
-                      label: 'Blur',
+                      label: context.l10n.blurLabel,
                       value: style.shadowBlur,
                       min: 0,
                       max: 40,
@@ -1903,7 +1932,7 @@ class _ShadowPrecisionAdvancedState
                     ),
                     if (shadow != null)
                       _FlatSliderRow(
-                        label: 'Opacity',
+                        label: context.l10n.opacityLabel,
                         value: shadow.a * 100,
                         min: 0,
                         max: 100,
@@ -1929,8 +1958,7 @@ bool _bgMatches(TextStyleSpec style, _BgPreset p) {
   // Radius is a percent (0..1) now — "Pill" matches anything at
   // (or essentially at) full roundness.
   final pillish = p.label == 'Pill' && style.backgroundRadius >= 0.99;
-  final radiusEq =
-      pillish || (style.backgroundRadius - p.radius).abs() < 0.02;
+  final radiusEq = pillish || (style.backgroundRadius - p.radius).abs() < 0.02;
   return radiusEq &&
       (style.backgroundPaddingX - p.padX).abs() < 0.5 &&
       (style.backgroundPaddingY - p.padY).abs() < 0.5;
@@ -2069,10 +2097,7 @@ Future<_FontPickResult> _showFontPickerSheet(
 /// tab so the user can browse one language at a time without
 /// dismissing — initialised to the tab the inline panel was on.
 class _FontPickerSheet extends StatefulWidget {
-  const _FontPickerSheet({
-    required this.current,
-    required this.initialScript,
-  });
+  const _FontPickerSheet({required this.current, required this.initialScript});
 
   final String? current;
   final FontScript initialScript;
@@ -2120,9 +2145,10 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'All fonts',
-                  style: Theme.of(context).textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  context.l10n.allFontsTitle,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               InkWell(
@@ -2156,10 +2182,7 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
         ),
         const SizedBox(height: 8),
         Flexible(
-          child: _FontPickerList(
-            current: widget.current,
-            script: _script,
-          ),
+          child: _FontPickerList(current: widget.current, script: _script),
         ),
       ],
     );
@@ -2176,6 +2199,7 @@ class _FontPickerList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     // Sectioned list scoped to a single script:
     //   System default            (Latin tab only — no Persian system font)
     //     Sans                    (category header, small)
@@ -2191,12 +2215,15 @@ class _FontPickerList extends StatelessWidget {
       // would silently clear the Persian font.
       if (script == FontScript.latin) const _PickerItem.system(),
     ];
-    final inScript =
-        kFontCatalog.where((e) => e.script == script).toList();
+    final inScript = kFontCatalog.where((e) => e.script == script).toList();
     for (final category in FontCategory.values) {
       final inCat = inScript.where((e) => e.category == category).toList();
       if (inCat.isEmpty) continue;
-      items.add(_PickerItem.categoryHeader(categoryLabel(script, category)));
+      items.add(
+        _PickerItem.categoryHeader(
+          _localizedFontCategoryLabel(l10n, script, category),
+        ),
+      );
       items.addAll(inCat.map(_PickerItem.entry));
     }
 
@@ -2221,7 +2248,7 @@ class _FontPickerList extends StatelessWidget {
           );
         }
         final family = item.entry?.family;
-        final label = item.entry?.label ?? 'System default';
+        final label = item.entry?.label ?? ctx.l10n.systemDefaultFont;
         final selected = family == current;
         return Material(
           color: selected
@@ -2236,10 +2263,7 @@ class _FontPickerList extends StatelessWidget {
                   : _FontPickResult._(family, false),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Row(
                 children: [
                   Expanded(
@@ -2273,15 +2297,15 @@ enum _PickerItemKind { entry, categoryHeader }
 
 class _PickerItem {
   const _PickerItem.system()
-      : entry = null,
-        headerLabel = null,
-        kind = _PickerItemKind.entry;
+    : entry = null,
+      headerLabel = null,
+      kind = _PickerItemKind.entry;
   const _PickerItem.entry(FontEntry this.entry)
-      : headerLabel = null,
-        kind = _PickerItemKind.entry;
+    : headerLabel = null,
+      kind = _PickerItemKind.entry;
   const _PickerItem.categoryHeader(String this.headerLabel)
-      : entry = null,
-        kind = _PickerItemKind.categoryHeader;
+    : entry = null,
+      kind = _PickerItemKind.categoryHeader;
 
   final FontEntry? entry;
   final String? headerLabel;
@@ -2298,7 +2322,6 @@ class _PickerItem {
 // zone — a thin (~56 dp) row above the capsule. Tapping a value
 // applies it instantly without opening the full panel, so the
 // canvas barely shrinks for the most common edits.
-
 
 /// Horizontal slider for font size with live preview. Drags update
 
@@ -2443,6 +2466,16 @@ const List<_ShadowPreset> _shadowPresets = [
   _ShadowPreset(label: 'Lift', blur: 8, opacity: 0.50),
 ];
 
+String _shadowPresetLabel(AppLocalizations l10n, _ShadowPreset preset) {
+  return switch (preset.label) {
+    'Soft' => l10n.softOption,
+    'Hard' => l10n.hardOption,
+    'Glow' => l10n.glowOption,
+    'Lift' => l10n.liftOption,
+    _ => preset.label,
+  };
+}
+
 // ─── Canva-style sub-tool helpers ───────────────────────────────────
 //
 // Shared widgets for the "presets-first, advanced-hidden" sub-tool
@@ -2454,10 +2487,7 @@ const List<_ShadowPreset> _shadowPresets = [
 /// surface stays uncluttered. Caller passes the children that
 /// should appear when the section is expanded.
 class _AdvancedSection extends StatefulWidget {
-  const _AdvancedSection({
-    required this.children,
-    required this.label,
-  });
+  const _AdvancedSection({required this.children, required this.label});
 
   final List<Widget> children;
 
@@ -2491,12 +2521,10 @@ class _AdvancedSectionState extends State<_AdvancedSection> {
               setState(() => _open = !_open);
             },
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               child: Row(
                 children: [
-                  Icon(Icons.tune_rounded,
-                      size: 20, color: scheme.primary),
+                  Icon(Icons.tune_rounded, size: 20, color: scheme.primary),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -2512,8 +2540,11 @@ class _AdvancedSectionState extends State<_AdvancedSection> {
                   AnimatedRotation(
                     turns: _open ? 0.25 : 0,
                     duration: const Duration(milliseconds: 180),
-                    child: Icon(Icons.chevron_right_rounded,
-                        size: 18, color: scheme.onSurfaceVariant),
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -2603,10 +2634,7 @@ class _StyleTile {
 /// a sensible default of 6 px. One spatial choice replaces 2 numeric
 /// sliders (Offset X + Offset Y).
 class _ShadowDirectionPad extends StatelessWidget {
-  const _ShadowDirectionPad({
-    required this.offset,
-    required this.onSet,
-  });
+  const _ShadowDirectionPad({required this.offset, required this.onSet});
 
   final Offset offset;
   final ValueChanged<Offset> onSet;
@@ -2655,11 +2683,13 @@ class _ShadowDirectionPad extends StatelessWidget {
                 },
                 child: Center(
                   child: isCenter
-                      ? Icon(Icons.circle_outlined,
+                      ? Icon(
+                          Icons.circle_outlined,
                           size: 14,
                           color: selected
                               ? scheme.primary
-                              : scheme.onSurfaceVariant)
+                              : scheme.onSurfaceVariant,
+                        )
                       : Icon(
                           _arrowIconFor(dx, dy),
                           size: 16,
@@ -2721,13 +2751,14 @@ class _SizeBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final style = layer.style;
-    final doc = ref.watch(documentControllerProvider);
+    final doc = ref.watch(renderedDocumentProvider);
     final pin = ref.watch(
       textToolControllerProvider.select((s) => s.selectedSizePreset),
     );
     final presets = _TextBodies._canvasAwareSizePresets(doc, layer.content);
-    final selectedLabel =
-        (pin != null && pin.layerId == layer.id) ? pin.label : null;
+    final selectedLabel = (pin != null && pin.layerId == layer.id)
+        ? pin.label
+        : null;
 
     // Tolerance scales with current size so the nearest-fallback
     // selection feels right at 12 px and at 200 px alike. Only
@@ -2854,8 +2885,7 @@ class _SizePrecisionAdvancedState
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final muted = scheme.onSurfaceVariant;
-    final clampedValue =
-        widget.value.clamp(widget.min, widget.max).toDouble();
+    final clampedValue = widget.value.clamp(widget.min, widget.max).toDouble();
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2871,15 +2901,14 @@ class _SizePrecisionAdvancedState
               setState(() => _open = !_open);
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      _open ? 'Hide precise controls' : 'Adjust precisely',
+                      _open
+                          ? context.l10n.hidePreciseControls
+                          : context.l10n.adjustPrecisely,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurface,
                         fontWeight: FontWeight.w600,
@@ -3017,10 +3046,7 @@ class _SizeStepperRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    Widget btn({
-      required IconData icon,
-      required VoidCallback onTap,
-    }) {
+    Widget btn({required IconData icon, required VoidCallback onTap}) {
       return Material(
         color: scheme.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(12),
@@ -3030,9 +3056,7 @@ class _SizeStepperRow extends StatelessWidget {
           child: SizedBox(
             width: 56,
             height: 44,
-            child: Center(
-              child: Icon(icon, size: 22, color: scheme.primary),
-            ),
+            child: Center(child: Icon(icon, size: 22, color: scheme.primary)),
           ),
         ),
       );
@@ -3040,10 +3064,7 @@ class _SizeStepperRow extends StatelessWidget {
 
     return Row(
       children: [
-        btn(
-          icon: Icons.text_decrease_rounded,
-          onTap: () => _bump(-1),
-        ),
+        btn(icon: Icons.text_decrease_rounded, onTap: () => _bump(-1)),
         // Live value pill in the middle — same vocabulary as the
         // Layout panel's value pill so the two panels feel like
         // one family. Tabular figures so 12 → 24 → 120 doesn't
@@ -3051,10 +3072,7 @@ class _SizeStepperRow extends StatelessWidget {
         Expanded(
           child: Center(
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(999),
@@ -3070,10 +3088,7 @@ class _SizeStepperRow extends StatelessWidget {
             ),
           ),
         ),
-        btn(
-          icon: Icons.text_increase_rounded,
-          onTap: () => _bump(1),
-        ),
+        btn(icon: Icons.text_increase_rounded, onTap: () => _bump(1)),
       ],
     );
   }
@@ -3182,289 +3197,10 @@ const List<Color> _curatedSwatches = [
   Color(0xFF8D6E63), // Brown
 ];
 
-/// `Slider` + preset chips under the row header; the chevron rotates
-/// to signal the open/closed state.
-///
-/// Why inline expansion (over `showTextValueSheet`)?
-///   * No nested-modal stacking — Material spec discourages it and
-///     dismiss flow is confusing (back drops to canvas, not parent).
-///   * Multi-edit is fast: open Style → tweak Opacity → tap Shadow
-///     blur → tweak — all without leaving the sheet.
-///   * Parent state (scroll, other expansion) is preserved.
-class _InlineSliderRow extends ConsumerStatefulWidget {
-  const _InlineSliderRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChange,
-    // Retained for API parity with the old call sites; the panels now
-    // route through `_FlatSliderRow` so the optional chip/unit knobs
-    // here have no live caller. Kept to avoid a noisy delete diff.
-    // ignore: unused_element_parameter
-    this.presets = const <double>[],
-    // ignore: unused_element_parameter
-    this.unit = '',
-  });
-
-  final IconData icon;
-  final String label;
-  final double value;
-  final double min;
-  final double max;
-  final ValueChanged<double> onChange;
-  final List<double> presets;
-  final String unit;
-  static const int _decimals = 0;
-
-  @override
-  ConsumerState<_InlineSliderRow> createState() => _InlineSliderRowState();
-}
-
-class _InlineSliderRowState extends ConsumerState<_InlineSliderRow> {
-  bool _expanded = false;
-
-  /// True between `onChangeStart` and either `onChangeEnd` or a
-  /// pointer-cancel cleanup. Used to guard the cleanup path so it
-  /// runs exactly once per drag — cancel-then-end (or vice-versa)
-  /// must not double-commit.
-  bool _dragInFlight = false;
-
-  /// Last value we fired a snap-tick haptic at. Drives the
-  /// in-drag periodic tick so the slider feels physical without
-  /// buzzing every pointer event.
-  double? _lastTickValue;
-
-  String _format(double v) =>
-      '${v.toStringAsFixed(_InlineSliderRow._decimals)}${widget.unit}';
-
-  void _set(double v) {
-    final clamped = v.clamp(widget.min, widget.max).toDouble();
-    widget.onChange(clamped);
-  }
-
-  /// Ticks every ~5% of the value range so users feel they're
-  /// scrubbing across detents. Skipped on the first call (set in
-  /// onChangeStart) and on tiny pointer jiggle.
-  void _maybeTick(double v) {
-    final span = widget.max - widget.min;
-    if (span <= 0) return;
-    final step = span / 20.0;
-    final last = _lastTickValue;
-    if (last == null || (v - last).abs() >= step) {
-      _lastTickValue = v;
-      EditorHaptics.snap();
-    }
-  }
-
-  void _endDrag() {
-    if (!_dragInFlight) return;
-    _dragInFlight = false;
-    _lastTickValue = null;
-    ref.read(textToolControllerProvider.notifier).endStyleDrag();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final muted = scheme.onSurfaceVariant;
-    final fg = scheme.onSurface;
-    final clampedValue = widget.value
-        .clamp(widget.min, widget.max)
-        .toDouble();
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: () => setState(() => _expanded = !_expanded),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Row(
-                children: [
-                  Icon(widget.icon, size: 22, color: muted),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      widget.label,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 12,
-                        color: fg,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    _format(clampedValue),
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: _expanded ? scheme.primary : muted,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  AnimatedRotation(
-                    turns: _expanded ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          alignment: Alignment.topCenter,
-          child: _expanded
-              ? Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Preset chips FIRST — 90% of edits land on a
-                      // preset, so they sit at the thumb and the
-                      // slider becomes the "fine tune" secondary row.
-                      if (widget.presets.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              for (final p in widget.presets)
-                                _InlinePresetChip(
-                                  label: _format(p),
-                                  selected:
-                                      (p - clampedValue).abs() < 0.001,
-                                  onTap: () => _set(p),
-                                ),
-                            ],
-                          ),
-                        ),
-                      Row(
-                        children: [
-                          Text(
-                            'Fine tune',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: muted,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          trackHeight: 3,
-                          overlayShape: const RoundSliderOverlayShape(
-                            overlayRadius: 16,
-                          ),
-                        ),
-                        // [Listener] catches pointer-cancel events the
-                        // [Slider] swallows (no `onChangeEnd` fires on
-                        // gesture-arena loss / system back gesture /
-                        // sheet dismissed mid-drag). Without this the
-                        // style-drag undo session never closes.
-                        child: Listener(
-                          onPointerCancel: (_) => _endDrag(),
-                          child: Slider(
-                            value: clampedValue,
-                            min: widget.min,
-                            max: widget.max,
-                            // Begin/end a style-drag session on the
-                            // text controller so per-tick style writes
-                            // collapse to ONE undo entry on release
-                            // (matches paint slider semantics).
-                            onChangeStart: (v) {
-                              _dragInFlight = true;
-                              _lastTickValue = v;
-                              EditorHaptics.toggle();
-                              ref
-                                  .read(textToolControllerProvider.notifier)
-                                  .beginStyleDrag();
-                            },
-                            onChanged: (v) {
-                              _set(v);
-                              _maybeTick(v);
-                            },
-                            onChangeEnd: (_) {
-                              if (!_dragInFlight) return;
-                              EditorHaptics.confirm();
-                              _endDrag();
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : const SizedBox.shrink(),
-        ),
-      ],
-    );
-  }
-}
-
-class _InlinePresetChip extends StatelessWidget {
-  const _InlinePresetChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: selected
-          ? scheme.primary.withValues(alpha: 0.12)
-          : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: selected
-              ? scheme.primary.withValues(alpha: 0.4)
-              : Colors.transparent,
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          EditorHaptics.snap();
-          onTap();
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected ? scheme.primary : scheme.onSurface,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+// _InlineSliderRow / _InlineSliderRowState / _InlinePresetChip removed
+// 2026-05: panels now route exclusively through `_FlatSliderRow`. The
+// inline-expand variant had no live call site and the only thing
+// keeping it alive was a pair of `// ignore: unused_element*` markers.
 
 // ─────────────────────────────────────────────────────────────────────
 // Inline color body + secondary More grid
@@ -3506,6 +3242,7 @@ class _InlineFontBody extends StatefulWidget {
   final String? current;
   final String content;
   final ValueChanged<String?> onPick;
+
   /// Invoked when the user taps the trailing "All fonts" card.
   /// Receives the currently-active script tab so the full picker
   /// can open scoped to the same language the user was browsing.
@@ -3545,9 +3282,8 @@ class _InlineFontBodyState extends State<_InlineFontBody> {
   /// (e.g. English text in a Persian face must still open English).
   /// Empty / punctuation-only content falls through to Latin via
   /// `textIsArabicScript`.
-  FontScript get _autoTab => textIsArabicScript(widget.content)
-      ? FontScript.arabic
-      : FontScript.latin;
+  FontScript get _autoTab =>
+      textIsArabicScript(widget.content) ? FontScript.arabic : FontScript.latin;
 
   @override
   void initState() {
@@ -3581,8 +3317,7 @@ class _InlineFontBodyState extends State<_InlineFontBody> {
   /// when [_filter] is null). Vazir is always surfaced first on the
   /// Farsi tab so the default is one tap away.
   List<FontEntry> _entriesForCurrentTab() {
-    final inScript =
-        kFontCatalog.where((e) => e.script == _tab).toList();
+    final inScript = kFontCatalog.where((e) => e.script == _tab).toList();
     final List<FontEntry> base;
     if (_filter == null) {
       base = recommendedFontEntries(_tab);
@@ -3721,25 +3456,24 @@ class _InlineFontBodyState extends State<_InlineFontBody> {
 /// reachable via the category filter or "All fonts".
 List<FontEntry> recommendedFontEntries(FontScript script) {
   const latin = <String>[
-    'Roboto',          // neutral workhorse sans
-    'Hanken_Grotesk',  // modern editorial sans
-    'Lobster',         // classic display script
-    'Lato',            // friendly humanist sans
-    'Bungee_Shade',    // statement display
-    'Dancing_Script',  // handwritten flourish
+    'Roboto', // neutral workhorse sans
+    'Hanken_Grotesk', // modern editorial sans
+    'Lobster', // classic display script
+    'Lato', // friendly humanist sans
+    'Bungee_Shade', // statement display
+    'Dancing_Script', // handwritten flourish
   ];
   const arabic = <String>[
-    'Vazir_Regular',   // modern Persian default
-    'Shabnam',         // clean Persian sans
-    'Lalezar',         // bold poster face
-    'BNazanin',        // traditional Naskh
+    'Vazir_Regular', // modern Persian default
+    'Shabnam', // clean Persian sans
+    'Lalezar', // bold poster face
+    'BNazanin', // traditional Naskh
     'B_Koodak_Bold_0', // friendly chunky
-    'Samim_Bold',      // strong sans
+    'Samim_Bold', // strong sans
   ];
   final wanted = script == FontScript.latin ? latin : arabic;
   final byFamily = {
-    for (final e in kFontCatalog.where((e) => e.script == script))
-      e.family: e,
+    for (final e in kFontCatalog.where((e) => e.script == script)) e.family: e,
   };
   return [
     for (final f in wanted)
@@ -3835,7 +3569,7 @@ class _ScriptTabSwitcher extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           pill(
-            label: 'فارسی',
+            label: context.l10n.fontScriptPersian,
             selected: value == FontScript.arabic,
             onTap: () => onChanged(FontScript.arabic),
             textDirection: TextDirection.rtl,
@@ -3847,7 +3581,7 @@ class _ScriptTabSwitcher extends StatelessWidget {
           ),
           const SizedBox(width: 2),
           pill(
-            label: 'English',
+            label: context.l10n.fontScriptEnglish,
             selected: value == FontScript.latin,
             onTap: () => onChanged(FontScript.latin),
             textDirection: TextDirection.ltr,
@@ -3894,12 +3628,16 @@ class _FontCategoryFilter extends StatelessWidget {
       FontCategory.display,
     ];
     final order = s == FontScript.latin ? latinOrder : arabicOrder;
-    return [for (final c in order) if (present.contains(c)) c];
+    return [
+      for (final c in order)
+        if (present.contains(c)) c,
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final cats = _categoriesFor(script);
     // Secondary-weight chips: no resting border (the chip row used
     // to wear an outlineVariant border on every entry, which made
@@ -3957,14 +3695,14 @@ class _FontCategoryFilter extends StatelessWidget {
       itemBuilder: (_, i) {
         if (i == 0) {
           return chip(
-            label: 'Recommended',
+            label: l10n.recommendedFontsLabel,
             selected: value == null,
             onTap: () => onChanged(null),
           );
         }
         final cat = cats[i - 1];
         return chip(
-          label: categoryLabel(script, cat),
+          label: _localizedFontCategoryLabel(l10n, script, cat),
           selected: value == cat,
           onTap: () => onChanged(cat),
         );
@@ -4122,8 +3860,7 @@ class _FontCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color:
-                      selected ? scheme.primary : scheme.onSurfaceVariant,
+                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
                   letterSpacing: 0.1,
                 ),
               ),
@@ -4177,7 +3914,7 @@ class _AllFontsCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'All fonts',
+                context.l10n.allFontsTitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -4217,35 +3954,6 @@ class _TierGap extends StatelessWidget {
         decoration: BoxDecoration(
           color: scheme.outlineVariant.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(0.5),
-        ),
-      ),
-    );
-  }
-}
-
-/// Sub-section header rendered inside [_AdvancedSection] to break
-/// flat lists of slider rows into scannable groups (e.g. Background
-/// → Shape / Spacing / Appearance). Subtle by design — labelSmall,
-/// muted, generous top padding so it reads as a divider, not a row.
-// ignore: unused_element
-class _AdvancedGroupHeader extends StatelessWidget {
-  const _AdvancedGroupHeader(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 12, 4, 4),
-      child: Text(
-        label.toUpperCase(),
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: scheme.onSurfaceVariant,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
-          fontSize: 10.5,
         ),
       ),
     );
@@ -4314,8 +4022,7 @@ class _ResizeOptionTile extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
-                        color:
-                            selected ? scheme.primary : scheme.onSurface,
+                        color: selected ? scheme.primary : scheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 1),
@@ -4436,11 +4143,7 @@ class _StylesBodyState extends ConsumerState<_StylesBody> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
-      child: _StylesRow(
-        presets: presets,
-        activeId: activeId,
-        onPick: apply,
-      ),
+      child: _StylesRow(presets: presets, activeId: activeId, onPick: apply),
     );
   }
 }
@@ -4535,10 +4238,7 @@ class _StyleChip extends StatelessWidget {
               SizedBox(
                 width: _tileSize,
                 height: _tileSize,
-                child: _StylePreviewTile(
-                  spec: preset.spec,
-                  selected: selected,
-                ),
+                child: _StylePreviewTile(spec: preset.spec, selected: selected),
               ),
               const SizedBox(height: 8),
               Text(
@@ -4547,11 +4247,8 @@ class _StyleChip extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: selected
-                      ? scheme.primary
-                      : scheme.onSurfaceVariant,
-                  fontWeight:
-                      selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
             ],
@@ -4575,10 +4272,7 @@ class _StyleChip extends StatelessWidget {
 /// preset is actually used on a real canvas — no preview lies, no
 /// "row of dark boxes" feeling.
 class _StylePreviewTile extends StatelessWidget {
-  const _StylePreviewTile({
-    required this.spec,
-    this.selected = false,
-  });
+  const _StylePreviewTile({required this.spec, this.selected = false});
 
   final TextStyleSpec spec;
   final bool selected;
@@ -4594,8 +4288,9 @@ class _StylePreviewTile extends StatelessWidget {
 
   // WCAG relative luminance.
   static double _luminance(Color c) {
-    double channel(double v) =>
-        v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
+    double channel(double v) => v <= 0.03928
+        ? v / 12.92
+        : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
     return 0.2126 * channel(c.r) +
         0.7152 * channel(c.g) +
         0.0722 * channel(c.b);
@@ -4686,9 +4381,7 @@ class _StylePreviewTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: selected
-            ? Border.all(color: scheme.primary, width: 1.5)
-            : null,
+        border: selected ? Border.all(color: scheme.primary, width: 1.5) : null,
       ),
       alignment: Alignment.center,
       child: tileContent,

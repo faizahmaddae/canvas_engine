@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4282329629,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "cup",
+      "transform": {
+        "x": 120.0,
+        "y": 600.0,
+        "w": 330.0,
+        "h": 330.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293380003,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "foam",
+      "transform": {
+        "x": 175.0,
+        "y": 655.0,
+        "w": 220.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 80.0,
+        "y": 160.0,
+        "w": 920.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "BREW BAR",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 40.0,
+        "color": 4294626325,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 520.0,
+        "y": 245.0,
+        "w": 500.0,
+        "h": 610.0,
+        "r": 0.0
+      },
+      "content": "BUY 1\nGET 1\nFREE",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 168.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.06,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 80.0,
+        "y": 970.0,
+        "w": 920.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "TUESDAY · 7-10 AM",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 42.0,
+        "color": 4293380003,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

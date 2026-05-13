@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_business_card_post",
+  "title": {
+    "en": "Now hiring",
+    "fa": "Now hiring"
+  },
+  "category": "business",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_business_card_post/thumbnail.png",
+  "document": "assets/templates/en_business_card_post/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "en",
+    "business"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 80
+  }
+}

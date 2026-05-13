@@ -32,9 +32,9 @@ class FloatingToolbarAnchor {
 
   /// Convenience constructor for the hidden state.
   const FloatingToolbarAnchor.hidden()
-      : left = 0,
-        top = 0,
-        placement = FloatingToolbarPlacement.hidden;
+    : left = 0,
+      top = 0,
+      placement = FloatingToolbarPlacement.hidden;
 
   final double left;
   final double top;
@@ -156,8 +156,7 @@ class FloatingToolbarPositioner {
     // 'above' must clear both the top safe area AND not extend into
     // the bottom reserved zone (relevant when the layer itself is
     // sitting low on screen behind a tall panel).
-    final fitsAbove =
-        topAbove >= topSafe && topAbove + barHeight <= bottomSafe;
+    final fitsAbove = topAbove >= topSafe && topAbove + barHeight <= bottomSafe;
     final fitsBelow = topBelow + barHeight <= bottomSafe;
 
     double top;
@@ -189,11 +188,7 @@ class FloatingToolbarPositioner {
       left = left.clamp(minLeft, maxLeft);
     }
 
-    return FloatingToolbarAnchor(
-      left: left,
-      top: top,
-      placement: placement,
-    );
+    return FloatingToolbarAnchor(left: left, top: top, placement: placement);
   }
 
   /// Estimated bottom-dock height in logical pixels, matching the
@@ -209,8 +204,8 @@ class FloatingToolbarPositioner {
     required Size screen,
     required Orientation orientation,
   }) {
-    final compact = screen.shortestSide < 380 ||
-        orientation == Orientation.landscape;
+    final compact =
+        screen.shortestSide < 380 || orientation == Orientation.landscape;
     return compact ? 64.0 : 80.0;
   }
 

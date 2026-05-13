@@ -5,16 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gal/gal.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/utils/user_error.dart';
 import 'export_format.dart';
 
 /// Outcome of a save-or-share request, surfaced to presentation as a
 /// flat sealed enum so the UI can render success/error/permission
 /// messaging without needing to catch typed exceptions.
-enum ImageExportOutcome {
-  success,
-  permissionDenied,
-  failed,
-}
+enum ImageExportOutcome { success, permissionDenied, failed }
 
 class ImageExportResult {
   const ImageExportResult(this.outcome, [this.message]);
@@ -47,7 +44,10 @@ class ImageExportService {
   /// Build a deterministic, sortable filename — `design_YYYYMMDD_HHmmss.<ext>`.
   /// Uses the local clock so users see filenames that match when they
   /// saved/shared the design. Extension comes from [format].
-  String buildFilename({DateTime? now, ExportFormat format = ExportFormat.png}) {
+  String buildFilename({
+    DateTime? now,
+    ExportFormat format = ExportFormat.png,
+  }) {
     final dt = now ?? DateTime.now();
     String two(int n) => n.toString().padLeft(2, '0');
     final stamp =
@@ -75,10 +75,7 @@ class ImageExportService {
       if (!hasAccess) {
         final granted = await Gal.requestAccess(toAlbum: true);
         if (!granted) {
-          return const ImageExportResult(
-            ImageExportOutcome.permissionDenied,
-            'Photo library permission denied.',
-          );
+          return const ImageExportResult(ImageExportOutcome.permissionDenied);
         }
       }
       // gal infers the file type from the name's extension and adds
@@ -86,24 +83,20 @@ class ImageExportService {
       // gal doesn't end up with `design_….png.png`.
       final dotIdx = name.lastIndexOf('.');
       final bareName = dotIdx > 0 ? name.substring(0, dotIdx) : name;
-      await Gal.putImageBytes(
-        bytes,
-        album: albumName,
-        name: bareName,
-      );
+      await Gal.putImageBytes(bytes, album: albumName, name: bareName);
       return const ImageExportResult(ImageExportOutcome.success);
-    } on GalException catch (e) {
-      // GalException covers permission, IO, not-supported. Map the
-      // permission case explicitly so the UI can offer "Open Settings".
+    } on GalException catch (e, st) {
+      debugLogError('imageExport/saveToGallery/gal', e, st);
+      // GalException covers permission, IO and not-supported cases.
+      // Presentation owns the friendly text; this service only reports
+      // the outcome type and logs details for debugging.
       if (e.type == GalExceptionType.accessDenied) {
-        return ImageExportResult(
-          ImageExportOutcome.permissionDenied,
-          e.type.message,
-        );
+        return const ImageExportResult(ImageExportOutcome.permissionDenied);
       }
-      return ImageExportResult(ImageExportOutcome.failed, e.type.message);
-    } catch (e) {
-      return ImageExportResult(ImageExportOutcome.failed, e.toString());
+      return const ImageExportResult(ImageExportOutcome.failed);
+    } catch (e, st) {
+      debugLogError('imageExport/saveToGallery', e, st);
+      return const ImageExportResult(ImageExportOutcome.failed);
     }
   }
 
@@ -148,8 +141,9 @@ class ImageExportService {
             'Sharing is unavailable on this device.',
           );
       }
-    } catch (e) {
-      return ImageExportResult(ImageExportOutcome.failed, e.toString());
+    } catch (e, st) {
+      debugLogError('imageExport/share', e, st);
+      return const ImageExportResult(ImageExportOutcome.failed);
     }
   }
 }

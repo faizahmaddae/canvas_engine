@@ -1,26 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/shell/presentation/root_shell.dart';
+import '../features/home/presentation/home_screen.dart';
+import '../features/onboarding/application/onboarding_complete_provider.dart';
+import '../features/onboarding/presentation/onboarding_flow.dart';
+import '../features/settings/application/settings_controller.dart';
+import '../l10n/app_localizations.dart';
+import '../l10n/l10n.dart';
 import 'theme/app_theme.dart';
 
-/// Root MaterialApp. Owns the light/dark theme pair and hosts the
-/// app shell (bottom navigation + tabs). Locale is intentionally
-/// not set yet — adding `flutter_localizations` + a `locale: fa`
-/// override is the future RTL/Persian milestone, and the entire
-/// widget tree is already written with directional primitives so
-/// that switch will be a single line here.
-class CanvasEngineApp extends StatelessWidget {
+/// Root MaterialApp. Owns locale, theme, and the direct Home mount.
+class CanvasEngineApp extends ConsumerWidget {
   const CanvasEngineApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appLocale = ref.watch(appLocaleProvider);
+    final onboardingComplete = ref.watch(onboardingCompleteProvider);
+    final themeLocale =
+        appLocale ?? WidgetsBinding.instance.platformDispatcher.locale;
     return MaterialApp(
-      title: 'Canvas',
+      onGenerateTitle: (context) => context.l10n.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.dark,
-      home: const RootShell(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: appLocale,
+      theme: AppTheme.light(locale: themeLocale),
+      darkTheme: AppTheme.dark(locale: themeLocale),
+      themeMode: ref.watch(themeModeProvider),
+      home: onboardingComplete ? const HomeScreen() : const OnboardingFlow(),
     );
   }
 }

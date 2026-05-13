@@ -1,6 +1,6 @@
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image/image.dart' as img;
 
@@ -23,9 +23,15 @@ import 'document_png_exporter.dart';
 class DocumentJpgExporter {
   DocumentJpgExporter._();
 
-  /// Engine-side default JPEG quality (90 / 100). Mirrors the UI
+  /// Engine-side default JPEG quality (95 / 100). Mirrors the UI
   /// default but lives here so the exporter is usable without UI.
-  static const int defaultQuality = 90;
+  ///
+  /// Picked at 95 because below ~92 visible blocking artefacts
+  /// appear on smooth gradients (skin tones, sky) at typical
+  /// screen viewing distances; pro editors (Lightroom, Affinity)
+  /// default in the 95–98 range. The marginal file-size cost
+  /// 90—95 is small relative to the perceptual gain.
+  static const int defaultQuality = 95;
 
   /// Render [document] to JPEG bytes.
   ///
@@ -60,6 +66,14 @@ class DocumentJpgExporter {
   /// Encode an existing [ui.Image] as JPEG. Exposed so tests and
   /// custom hosts can drive their own rasterisation while reusing the
   /// JPEG encode pipeline.
+  ///
+  /// **Off-thread.** The actual JPEG encode runs on a background
+  /// isolate via [compute]. JPEG encoding is a CPU-bound DCT pass
+  /// over every pixel; for a 12 MP image this can take 200–400 ms
+  /// on a mid-range phone — long enough to drop frames if it ran on
+  /// the UI thread. The raw RGBA bytes are copied across the
+  /// isolate boundary (~48 MB for 12 MP), which costs a few extra
+  /// ms but is far cheaper than the encode itself.
   static Future<Uint8List> encodeImageAsJpg(
     ui.Image image, {
     int quality = defaultQuality,
@@ -68,16 +82,46 @@ class DocumentJpgExporter {
         await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (byteData == null) {
       throw const DocumentExportException(
-        'toByteData returned null — render produced no pixels',
+        'toImage returned null — render produced no pixels',
       );
     }
-    final imgImage = img.Image.fromBytes(
-      width: image.width,
-      height: image.height,
-      bytes: byteData.buffer,
-      numChannels: 4,
-      order: img.ChannelOrder.rgba,
+    return compute(
+      _encodeJpgIsolate,
+      _JpgEncodePayload(
+        rgba: byteData.buffer.asUint8List(),
+        width: image.width,
+        height: image.height,
+        quality: quality.clamp(1, 100),
+      ),
     );
-    return img.encodeJpg(imgImage, quality: quality.clamp(1, 100));
   }
+}
+
+/// Top-level isolate-friendly args for [_encodeJpgIsolate]. Has to
+/// be a simple data carrier because Flutter's [compute] argument
+/// must be transferable across isolate boundaries.
+class _JpgEncodePayload {
+  const _JpgEncodePayload({
+    required this.rgba,
+    required this.width,
+    required this.height,
+    required this.quality,
+  });
+  final Uint8List rgba;
+  final int width;
+  final int height;
+  final int quality;
+}
+
+/// Top-level so it can be sent to a background isolate. Decodes the
+/// raw RGBA buffer into an [img.Image] and runs the JPEG encoder.
+Uint8List _encodeJpgIsolate(_JpgEncodePayload p) {
+  final imgImage = img.Image.fromBytes(
+    width: p.width,
+    height: p.height,
+    bytes: p.rgba.buffer,
+    numChannels: 4,
+    order: img.ChannelOrder.rgba,
+  );
+  return img.encodeJpg(imgImage, quality: p.quality);
 }

@@ -1,0 +1,165 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279831342,
+    "endColor": 4286520605,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "moon",
+      "transform": {
+        "x": 760.0,
+        "y": 80.0,
+        "w": 230.0,
+        "h": 230.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "radial",
+        "centerColor": 4294829706,
+        "edgeColor": 4294538006,
+        "focalX": -0.3,
+        "focalY": -0.3,
+        "radius": 0.9
+      },
+      "opacity": 0.95
+    },
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 98.0,
+        "y": 200.0,
+        "w": 884.0,
+        "h": 740.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294967295,
+        "endColor": 4294960358,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 60.0,
+      "shadowOpacity": 0.28,
+      "shadowBlur": 46.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 24.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 170.0,
+        "y": 280.0,
+        "w": 740.0,
+        "h": 68.0,
+        "r": 0.0
+      },
+      "content": "تا شروع رویداد",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 46.0,
+        "color": 4290646588,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 155.0,
+        "y": 360.0,
+        "w": 760.0,
+        "h": 230.0,
+        "r": 0.0
+      },
+      "content": "۳ روز\nمانده",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 126.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.96,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "date",
+      "transform": {
+        "x": 188.0,
+        "y": 635.0,
+        "w": 700.0,
+        "h": 104.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 52.0
+    },
+    {
+      "type": "text",
+      "id": "date-text",
+      "transform": {
+        "x": 220.0,
+        "y": 656.0,
+        "w": 640.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "پنجشنبه ۲۸ اردیبهشت",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 55.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 175.0,
+        "y": 780.0,
+        "w": 725.0,
+        "h": 95.0,
+        "r": 0.0
+      },
+      "content": "نام رویداد، مکان و ساعت را برای دعوت مخاطبان ویرایش کنید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4286520605,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

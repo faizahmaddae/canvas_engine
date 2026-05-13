@@ -1,0 +1,109 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4294505450,
+    "edgeColor": 4294962645,
+    "focalX": 0.35,
+    "focalY": -0.55,
+    "radius": 1.2
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "sidebar",
+      "transform": {
+        "x": 984.0,
+        "y": 0.0,
+        "w": 96.0,
+        "h": 1080.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4281146134,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 80.0,
+        "y": 150.0,
+        "w": 840.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "content": "یادداشت ۰۲",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 34.0,
+        "color": 4290272312,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 80.0,
+        "y": 255.0,
+        "w": 840.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "content": "«هر روز\nقدم کوچکی\nبردار؛ قله‌ها\nساخته می‌شوند.»",
+      "style": {
+        "fontFamily": "BNazanin",
+        "fontSize": 78.0,
+        "color": 4281146134,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.34,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "attrib-rule",
+      "transform": {
+        "x": 700.0,
+        "y": 820.0,
+        "w": 220.0,
+        "h": 6.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4290272312,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "attrib",
+      "transform": {
+        "x": 80.0,
+        "y": 855.0,
+        "w": 840.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "سعدی شیرازی",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4282068783,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

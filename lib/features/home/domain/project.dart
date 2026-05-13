@@ -70,30 +70,29 @@ class Project {
     String? documentJson,
     String? thumbnailPath,
     int? thumbnailVersion,
-  }) =>
-      Project(
-        id: id,
-        name: name ?? this.name,
-        width: width ?? this.width,
-        height: height ?? this.height,
-        createdAt: createdAt ?? this.createdAt,
-        lastModified: lastModified ?? this.lastModified,
-        documentJson: documentJson ?? this.documentJson,
-        thumbnailPath: thumbnailPath ?? this.thumbnailPath,
-        thumbnailVersion: thumbnailVersion ?? this.thumbnailVersion,
-      );
+  }) => Project(
+    id: id,
+    name: name ?? this.name,
+    width: width ?? this.width,
+    height: height ?? this.height,
+    createdAt: createdAt ?? this.createdAt,
+    lastModified: lastModified ?? this.lastModified,
+    documentJson: documentJson ?? this.documentJson,
+    thumbnailPath: thumbnailPath ?? this.thumbnailPath,
+    thumbnailVersion: thumbnailVersion ?? this.thumbnailVersion,
+  );
 
   Map<String, Object?> toJson() => {
-        'id': id,
-        'name': name,
-        'width': width,
-        'height': height,
-        'createdAt': createdAt.toIso8601String(),
-        'lastModified': lastModified.toIso8601String(),
-        'documentJson': documentJson,
-        if (thumbnailPath != null) 'thumbnailPath': thumbnailPath,
-        'thumbnailVersion': thumbnailVersion,
-      };
+    'id': id,
+    'name': name,
+    'width': width,
+    'height': height,
+    'createdAt': createdAt.toIso8601String(),
+    'lastModified': lastModified.toIso8601String(),
+    'documentJson': documentJson,
+    if (thumbnailPath != null) 'thumbnailPath': thumbnailPath,
+    'thumbnailVersion': thumbnailVersion,
+  };
 
   factory Project.fromJson(Map<String, Object?> json) {
     final lastModified = DateTime.parse(json['lastModified']! as String);
@@ -101,8 +100,9 @@ class Project {
     // introduced fall back to `lastModified`. Any new save will
     // immediately stamp the real createdAt going forward.
     final createdRaw = json['createdAt'] as String?;
-    final createdAt =
-        createdRaw == null ? lastModified : DateTime.parse(createdRaw);
+    final createdAt = createdRaw == null
+        ? lastModified
+        : DateTime.parse(createdRaw);
     return Project(
       id: json['id']! as String,
       name: json['name']! as String,

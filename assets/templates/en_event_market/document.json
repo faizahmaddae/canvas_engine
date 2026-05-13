@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4279310375,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "frame",
+      "transform": {
+        "x": 80.0,
+        "y": 310.0,
+        "w": 920.0,
+        "h": 1280.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294286859,
+      "strokeWidth": 0.0,
+      "cornerRadius": 32.0
+    },
+    {
+      "type": "text",
+      "id": "date",
+      "transform": {
+        "x": 80.0,
+        "y": 420.0,
+        "w": 920.0,
+        "h": 68.0,
+        "r": 0.0
+      },
+      "content": "FRI · JUN 14",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 46.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 80.0,
+        "y": 545.0,
+        "w": 920.0,
+        "h": 500.0,
+        "r": 0.0
+      },
+      "content": "SUMMER\nMARKET",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 192.0,
+        "color": 4279310375,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.02,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "divider",
+      "transform": {
+        "x": 460.0,
+        "y": 1098.0,
+        "w": 160.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "where",
+      "transform": {
+        "x": 80.0,
+        "y": 1150.0,
+        "w": 920.0,
+        "h": 210.0,
+        "r": 0.0
+      },
+      "content": "11 AM – 6 PM\nDolores Park",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 64.0,
+        "color": 4280232247,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta-bg",
+      "transform": {
+        "x": 300.0,
+        "y": 1446.0,
+        "w": 480.0,
+        "h": 104.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 52.0
+    },
+    {
+      "type": "text",
+      "id": "cta",
+      "transform": {
+        "x": 300.0,
+        "y": 1470.0,
+        "w": 480.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "TAP FOR TICKETS",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 34.0,
+        "color": 4294286859,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

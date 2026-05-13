@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "en_story_motivation",
+  "title": {
+    "en": "Story motivation",
+    "fa": "Story motivation"
+  },
+  "category": "story",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_story_motivation/thumbnail.png",
+  "document": "assets/templates/en_story_motivation/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "story",
+    "en",
+    "motivation"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 390
+  }
+}

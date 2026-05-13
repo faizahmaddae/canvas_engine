@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
+import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/layer_state_commands.dart';
 import '../../engine/core/editor_layer.dart';
@@ -85,14 +87,11 @@ class _PanelHeader extends StatelessWidget {
           const Icon(Icons.layers_outlined, size: 20),
           const SizedBox(width: 8),
           Text(
-            'Layers',
+            context.l10n.layersTooltip,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const Spacer(),
-          Text(
-            '$count',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text('$count', style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
@@ -108,11 +107,11 @@ class _EmptyState extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Text(
-          'No layers yet.\nAdd text, image or shape to begin.',
+          context.l10n.noLayersEmpty,
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).hintColor,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).hintColor),
         ),
       ),
     );
@@ -177,82 +176,94 @@ class _LayerTile extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
-            children: [
-              ReorderableDragStartListener(
-                index: displayIndex,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4),
-                  child: Icon(Icons.drag_indicator,
-                      size: 18, color: Colors.grey),
-                ),
-              ),
-              LayerThumbnail(layer: layer),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _displayName(layer, modelIndex),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: isSelected ? FontWeight.w600 : null,
-                        color:
-                            layer.visible ? null : theme.disabledColor,
+                children: [
+                  ReorderableDragStartListener(
+                    index: displayIndex,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(
+                        Icons.drag_indicator,
+                        size: 18,
+                        color: Colors.grey,
                       ),
                     ),
-                    Text(
-                      layer.type,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.hintColor,
-                      ),
+                  ),
+                  LayerThumbnail(layer: layer),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _displayName(layer, modelIndex),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: isSelected ? FontWeight.w600 : null,
+                            color: layer.visible ? null : theme.disabledColor,
+                          ),
+                        ),
+                        Text(
+                          layer.type,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              _IconAction(
-                icon: layer.locked ? Icons.lock : Icons.lock_open,
-                tooltip: layer.locked ? 'Unlock' : 'Lock',
-                highlighted: layer.locked,
-                onTap: () {
-                  ref.read(documentControllerProvider.notifier).execute(
-                        SetLayerLockCommand(
-                          layerId: layer.id,
-                          locked: !layer.locked,
-                        ),
-                      );
-                },
-              ),
-              _IconAction(
-                icon: layer.visible
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                tooltip: layer.visible ? 'Hide' : 'Show',
-                highlighted: !layer.visible,
-                onTap: () {
-                  ref.read(documentControllerProvider.notifier).execute(
-                        SetLayerVisibilityCommand(
-                          layerId: layer.id,
-                          visible: !layer.visible,
-                        ),
-                      );
-                },
-              ),
-              _IconAction(
-                icon: Icons.delete_outline,
-                tooltip: protected ? 'Protected base photo' : 'Delete',
-                enabled: canDelete,
-                onTap: () {
-                  // Route through the shared facade so confirm /
-                  // selection-promotion / project-kind flip stay
-                  // in one place. Direct `RemoveLayerCommand`
-                  // dispatch from here would bypass the
-                  // base-photo protection in `LayerActions.delete`
-                  // (the previous bug).
-                  LayerActions.delete(context, ref, layer);
-                },
-              ),
+                  ),
+                  _IconAction(
+                    icon: layer.locked ? Icons.lock : Icons.lock_open,
+                    tooltip: layer.locked
+                        ? context.l10n.unlockAction
+                        : context.l10n.lockAction,
+                    highlighted: layer.locked,
+                    onTap: () {
+                      ref
+                          .read(documentControllerProvider.notifier)
+                          .execute(
+                            SetLayerLockCommand(
+                              layerId: layer.id,
+                              locked: !layer.locked,
+                            ),
+                          );
+                    },
+                  ),
+                  _IconAction(
+                    icon: layer.visible
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    tooltip: layer.visible
+                        ? context.l10n.hideAction
+                        : context.l10n.showAction,
+                    highlighted: !layer.visible,
+                    onTap: () {
+                      ref
+                          .read(documentControllerProvider.notifier)
+                          .execute(
+                            SetLayerVisibilityCommand(
+                              layerId: layer.id,
+                              visible: !layer.visible,
+                            ),
+                          );
+                    },
+                  ),
+                  _IconAction(
+                    icon: Icons.delete_outline,
+                    tooltip: protected
+                        ? context.l10n.protectedBasePhotoTooltip
+                        : context.l10n.deleteAction,
+                    enabled: canDelete,
+                    onTap: () {
+                      // Route through the shared facade so confirm /
+                      // selection-promotion / project-kind flip stay
+                      // in one place. Direct `RemoveLayerCommand`
+                      // dispatch from here would bypass the
+                      // base-photo protection in `LayerActions.delete`
+                      // (the previous bug).
+                      LayerActions.delete(context, ref, layer);
+                    },
+                  ),
                 ],
               ),
               // Opacity slider — only shown for the selected layer to
@@ -262,8 +273,7 @@ class _LayerTile extends ConsumerWidget {
               // committed via `execute(SetLayerOpacityCommand)` on
               // change-end so undo/redo and autosave see exactly one
               // entry per drag gesture.
-              if (isSelected)
-                _OpacitySlider(layer: layer),
+              if (isSelected) _OpacitySlider(layer: layer),
             ],
           ),
         ),
@@ -302,8 +312,8 @@ class _IconAction extends StatelessWidget {
     final color = !enabled
         ? Theme.of(context).disabledColor
         : highlighted
-            ? Theme.of(context).colorScheme.primary
-            : null;
+        ? Theme.of(context).colorScheme.primary
+        : null;
     return IconButton(
       tooltip: tooltip,
       iconSize: 18,
@@ -349,12 +359,8 @@ class _OpacitySliderState extends ConsumerState<_OpacitySlider> {
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
                 trackHeight: 2,
-                thumbShape: const RoundSliderThumbShape(
-                  enabledThumbRadius: 7,
-                ),
-                overlayShape: const RoundSliderOverlayShape(
-                  overlayRadius: 14,
-                ),
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
               ),
               child: Slider(
                 value: value,
@@ -362,18 +368,29 @@ class _OpacitySliderState extends ConsumerState<_OpacitySlider> {
                 max: 1,
                 onChanged: (v) {
                   setState(() => _dragValue = v);
-                  // Live preview: replace the layer in-place
-                  // without going through history.
+                  // Live preview: publish an in-flight override on
+                  // the live overlay so the canvas reflects the new
+                  // opacity at 60 fps without rebuilding every panel
+                  // / thumbnail / undo-rail consumer that watches the
+                  // committed document.
                   final doc = ref.read(documentControllerProvider);
                   final layer = doc.layerById(widget.layer.id);
                   if (layer == null) return;
                   ref
-                      .read(documentControllerProvider.notifier)
-                      .liveReplace(doc.replaceLayer(layer.withOpacity(v)));
+                      .read(liveOverlayProvider.notifier)
+                      .replaceLayer(layer.withOpacity(v));
                 },
                 onChangeEnd: (v) {
                   setState(() => _dragValue = null);
-                  ref.read(documentControllerProvider.notifier).execute(
+                  // Clear the overlay BEFORE committing so the merge
+                  // result transitions atomically from "committed +
+                  // override" to "committed (with new opacity)" in a
+                  // single Riverpod tick — no flicker back to the
+                  // pre-drag opacity in between.
+                  ref.read(liveOverlayProvider.notifier).clear();
+                  ref
+                      .read(documentControllerProvider.notifier)
+                      .execute(
                         SetLayerOpacityCommand(
                           layerId: widget.layer.id,
                           opacity: v,

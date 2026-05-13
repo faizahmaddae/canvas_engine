@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294963698,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "heart",
+      "transform": {
+        "x": 440.0,
+        "y": 140.0,
+        "w": 200.0,
+        "h": 200.0,
+        "r": 0.0
+      },
+      "kind": "heart",
+      "fillColor": 4292943176,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "thank",
+      "transform": {
+        "x": 80.0,
+        "y": 380.0,
+        "w": 920.0,
+        "h": 240.0,
+        "r": 0.0
+      },
+      "content": "سپاس",
+      "style": {
+        "fontFamily": "Eliya_Regular",
+        "fontSize": 240.0,
+        "color": 4287107895,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "you",
+      "transform": {
+        "x": 80.0,
+        "y": 620.0,
+        "w": 920.0,
+        "h": 240.0,
+        "r": 0.0
+      },
+      "content": "از تو",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 220.0,
+        "color": 4279310375,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 80.0,
+        "y": 900.0,
+        "w": 920.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "که همراه ما هستی",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4285231744,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

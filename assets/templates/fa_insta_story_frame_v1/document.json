@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4294307814,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "photo-frame",
+      "transform": {
+        "x": 100.0,
+        "y": 320.0,
+        "w": 880.0,
+        "h": 1120.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293449136,
+      "strokeWidth": 0.0,
+      "cornerRadius": 56.0
+    },
+    {
+      "type": "shape",
+      "id": "photo-wash",
+      "transform": {
+        "x": 140.0,
+        "y": 360.0,
+        "w": 800.0,
+        "h": 1040.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "fill": {
+        "type": "linear",
+        "startColor": 4289247388,
+        "endColor": 4294297543,
+        "angleDegrees": 135.0
+      },
+      "strokeWidth": 0.0,
+      "cornerRadius": 42.0
+    },
+    {
+      "type": "shape",
+      "id": "photo-glow",
+      "transform": {
+        "x": 360.0,
+        "y": 690.0,
+        "w": 360.0,
+        "h": 360.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 1442840575,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "frame-top",
+      "transform": {
+        "x": 180.0,
+        "y": 430.0,
+        "w": 720.0,
+        "h": 5.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "frame-bottom",
+      "transform": {
+        "x": 180.0,
+        "y": 1325.0,
+        "w": 720.0,
+        "h": 5.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "frame-left",
+      "transform": {
+        "x": 180.0,
+        "y": 430.0,
+        "w": 5.0,
+        "h": 900.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "frame-right",
+      "transform": {
+        "x": 895.0,
+        "y": 430.0,
+        "w": 5.0,
+        "h": 900.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "story-label",
+      "transform": {
+        "x": 220.0,
+        "y": 1180.0,
+        "w": 640.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 3439329279,
+      "strokeWidth": 0.0,
+      "cornerRadius": 48.0
+    },
+    {
+      "type": "text",
+      "id": "story-label-text",
+      "transform": {
+        "x": 240.0,
+        "y": 1198.0,
+        "w": 600.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "لحظه‌های روشن",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 52.0,
+        "color": 4282198559,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 100.0,
+        "y": 1515.0,
+        "w": 880.0,
+        "h": 110.0,
+        "r": 0.0
+      },
+      "content": "قاب امروز",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 76.0,
+        "color": 4282198559,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 120.0,
+        "y": 1640.0,
+        "w": 840.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "تصویرت را اینجا بگذار",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 46.0,
+        "color": 4287328071,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

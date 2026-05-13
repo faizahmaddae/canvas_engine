@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_overlay_v1",
+  "title": {
+    "en": "شعر روی تصویر",
+    "fa": "شعر روی تصویر"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_overlay_v1/thumbnail.png",
+  "document": "assets/templates/fa_poetry_overlay_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "poetry",
+    "overlay"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 30
+  }
+}

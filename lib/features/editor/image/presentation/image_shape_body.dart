@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/modules/image/image_layer.dart';
@@ -33,7 +34,7 @@ class ImageShapeBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ImagePanelShell(
-      title: 'Shape',
+      title: context.l10n.shapeTool,
       icon: Icons.crop_square_rounded,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -54,7 +55,7 @@ class ImageShapeBody extends ConsumerWidget {
                 return PanelOptionTile(
                   width: 76,
                   selected: selected,
-                  label: option.label,
+                  label: _shapeOptionLabel(context, option),
                   preview: SizedBox(
                     height: 32,
                     width: 32,
@@ -62,7 +63,8 @@ class ImageShapeBody extends ConsumerWidget {
                       builder: (ctx) => CustomPaint(
                         painter: _MaskPreviewPainter(
                           mask: option.mask,
-                          color: IconTheme.of(ctx).color ??
+                          color:
+                              IconTheme.of(ctx).color ??
                               Theme.of(ctx).colorScheme.onSurfaceVariant,
                         ),
                       ),
@@ -71,7 +73,9 @@ class ImageShapeBody extends ConsumerWidget {
                   onTap: () {
                     if (layer.mask == option.mask) return;
                     EditorHaptics.toggle();
-                    ref.read(documentControllerProvider.notifier).execute(
+                    ref
+                        .read(documentControllerProvider.notifier)
+                        .execute(
                           SetImageMaskCommand(
                             layerId: layer.id,
                             mask: option.mask,
@@ -92,6 +96,17 @@ class _ShapeOption {
   const _ShapeOption({required this.mask, required this.label});
   final ImageMask mask;
   final String label;
+}
+
+String _shapeOptionLabel(BuildContext context, _ShapeOption option) {
+  return switch (option.mask) {
+    ImageMask.original => context.l10n.originalOption,
+    ImageMask.rounded => context.l10n.roundedOption,
+    ImageMask.circle => context.l10n.circleLabel,
+    ImageMask.squircle => context.l10n.squircleOption,
+    ImageMask.star => context.l10n.starOption,
+    ImageMask.heart => context.l10n.heartOption,
+  };
 }
 
 /// Filled silhouette of an [ImageMask] used inside the shape tile.
@@ -120,11 +135,7 @@ class _MaskPreviewPainter extends CustomPainter {
         );
         break;
       case ImageMask.circle:
-        canvas.drawCircle(
-          rect.center,
-          size.shortestSide / 2,
-          paint,
-        );
+        canvas.drawCircle(rect.center, size.shortestSide / 2, paint);
         break;
       case ImageMask.squircle:
         final path = ContinuousRectangleBorder(

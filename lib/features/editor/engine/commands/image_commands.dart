@@ -1,6 +1,7 @@
 import 'package:flutter/painting.dart';
 
 import '../core/editor_document.dart';
+import '../effects/editor_effect.dart';
 import '../modules/image/image_layer.dart';
 import 'editor_command.dart';
 
@@ -17,46 +18,6 @@ class _NoopCommand extends EditorCommand {
   EditorDocument apply(EditorDocument doc) => doc;
   @override
   EditorCommand invert(EditorDocument before) => this;
-}
-
-/// Builds a fresh [ImageLayer] from [base], overwriting only the
-/// fields explicitly passed in. Centralises the verbose constructor
-/// call so adding a new field to [ImageLayer] is a one-line change
-/// here, not eight identical edits across the command classes.
-ImageLayer _rebuild(
-  ImageLayer base, {
-  ImageSource? source,
-  BoxFit? fit,
-  ImageMask? mask,
-  Color? borderColor,
-  double? borderWidth,
-  Color? shadowColor,
-  double? shadowBlur,
-  Offset? shadowOffset,
-  double? shadowOpacity,
-  ImageAdjustments? adjustments,
-  Rect? cropRect,
-  ImageFilterPreset? filterPreset,
-}) {
-  return ImageLayer(
-    id: base.id,
-    transform: base.transform,
-    source: source ?? base.source,
-    fit: fit ?? base.fit,
-    mask: mask ?? base.mask,
-    borderColor: borderColor ?? base.borderColor,
-    borderWidth: borderWidth ?? base.borderWidth,
-    shadowColor: shadowColor ?? base.shadowColor,
-    shadowBlur: shadowBlur ?? base.shadowBlur,
-    shadowOffset: shadowOffset ?? base.shadowOffset,
-    shadowOpacity: shadowOpacity ?? base.shadowOpacity,
-    adjustments: adjustments ?? base.adjustments,
-    cropRect: cropRect ?? base.cropRect,
-    filterPreset: filterPreset ?? base.filterPreset,
-    name: base.name,
-    visible: base.visible,
-    locked: base.locked,
-  );
 }
 
 /// Swap an [ImageLayer]'s [ImageSource] in a single undoable step.
@@ -86,8 +47,7 @@ class ReplaceImageSourceCommand extends EditorCommand {
     // the wrong sub-region (the new image has different framing /
     // composition / aspect), and a silent off-centre zoom is much
     // harder to recover from than a crop the user can re-apply.
-    return doc.replaceLayer(_rebuild(
-      layer,
+    return doc.replaceLayer(layer.copyAll(
       source: source,
       cropRect: ImageLayer.fullCrop,
     ));
@@ -97,8 +57,64 @@ class ReplaceImageSourceCommand extends EditorCommand {
   EditorCommand invert(EditorDocument before) {
     final layer = before.layerById(layerId);
     if (layer is! ImageLayer) return _noop;
+    // Capture the pre-apply [cropRect] alongside the source so undo
+    // restores BOTH atomically. `apply` deliberately resets crop to
+    // [ImageLayer.fullCrop]; without restoring it here, undo would
+    // bring back the source but silently leave the user's crop wiped.
+    return _RestoreImageSourceCommand(
+      layerId: layerId,
+      source: layer.source,
+      cropRect: layer.cropRect,
+    );
+  }
+
+  @override
+  int get estimatedByteSize => source.estimatedByteSize;
+}
+
+/// Internal inverse of [ReplaceImageSourceCommand]. Restores both
+/// [ImageLayer.source] and [ImageLayer.cropRect] in one step so the
+/// pre-apply state is fully recovered. Not exposed publicly because
+/// callers should never want to "set source AND crop" as a forward
+/// edit — the only legitimate use is undoing a replace.
+class _RestoreImageSourceCommand extends EditorCommand {
+  const _RestoreImageSourceCommand({
+    required this.layerId,
+    required this.source,
+    required this.cropRect,
+  });
+
+  final String layerId;
+  final ImageSource source;
+  final Rect cropRect;
+
+  @override
+  String get label => 'Restore image';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer is! ImageLayer) return doc;
+    if (layer.source == source && layer.cropRect == cropRect) return doc;
+    return doc.replaceLayer(layer.copyAll(
+      source: source,
+      cropRect: cropRect,
+    ));
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) {
+    final layer = before.layerById(layerId);
+    if (layer is! ImageLayer) return _noop;
+    // The forward of this restore is just a public replace — its own
+    // apply will reset crop back to fullCrop, matching the original
+    // ReplaceImageSourceCommand behaviour. Redo therefore round-trips
+    // exactly, including the crop reset.
     return ReplaceImageSourceCommand(layerId: layerId, source: layer.source);
   }
+
+  @override
+  int get estimatedByteSize => source.estimatedByteSize;
 }
 
 /// Swap an [ImageLayer]'s [ImageMask] (visible silhouette) in a
@@ -122,7 +138,7 @@ class SetImageMaskCommand extends EditorCommand {
     final layer = doc.layerById(layerId);
     if (layer is! ImageLayer) return doc;
     if (layer.mask == mask) return doc;
-    return doc.replaceLayer(_rebuild(layer, mask: mask));
+    return doc.replaceLayer(layer.copyAll(mask: mask));
   }
 
   @override
@@ -137,16 +153,30 @@ class SetImageMaskCommand extends EditorCommand {
 /// undoable step. Either field may be left `null` to keep its
 /// current value (e.g. changing colour shouldn't reset width). All
 /// other fields (source, transform, fit, mask) are preserved.
+///
+/// Set [live] to `true` for streaming slider / colour-picker
+/// updates: consecutive `live` commands targeting the same layer
+/// + same field-set are coalesced into a single undo entry by
+/// [mergeWith]. Discrete edits (palette taps, thickness chips)
+/// should leave [live] at its default `false` so each becomes its
+/// own history entry.
 class SetImageBorderCommand extends EditorCommand {
   const SetImageBorderCommand({
     required this.layerId,
     this.color,
     this.width,
+    this.live = false,
   });
 
   final String layerId;
   final Color? color;
   final double? width;
+
+  /// When true, marks this command as part of a live drag stream
+  /// (slider / colour-picker live preview). Successive `live`
+  /// commands of the same field-set against the same layer
+  /// collapse into a single history entry instead of N-per-frame.
+  final bool live;
 
   @override
   String get label => 'Image border';
@@ -160,8 +190,7 @@ class SetImageBorderCommand extends EditorCommand {
     if (newColor == layer.borderColor && newWidth == layer.borderWidth) {
       return doc;
     }
-    return doc.replaceLayer(_rebuild(
-      layer,
+    return doc.replaceLayer(layer.copyAll(
       borderColor: newColor,
       borderWidth: newWidth,
     ));
@@ -177,6 +206,21 @@ class SetImageBorderCommand extends EditorCommand {
       width: layer.borderWidth,
     );
   }
+
+  @override
+  EditorCommand? mergeWith(EditorCommand previous) {
+    if (!live) return null;
+    if (previous is! SetImageBorderCommand) return null;
+    if (!previous.live) return null;
+    if (previous.layerId != layerId) return null;
+    // Field-set must match across the whole stream so a colour
+    // drag never silently swallows the trailing edge of a width
+    // drag the user just released. Mirrors
+    // SetImageAdjustmentsCommand.mergeWith.
+    if ((color == null) != (previous.color == null)) return null;
+    if ((width == null) != (previous.width == null)) return null;
+    return this;
+  }
 }
 
 /// Swap an [ImageLayer]'s drop-shadow fields in a single undoable
@@ -187,6 +231,13 @@ class SetImageBorderCommand extends EditorCommand {
 ///
 /// All other layer fields (source/transform/mask/border) are
 /// preserved so toggling shadow leaves the rest of the image alone.
+///
+/// Set [live] to `true` for streaming slider / colour-picker
+/// updates: consecutive `live` commands targeting the same layer
+/// + same field-set are coalesced into a single undo entry by
+/// [mergeWith]. Discrete edits (preset taps, palette taps,
+/// direction-pad taps) should leave [live] at its default
+/// `false` so each becomes its own history entry.
 class SetImageShadowCommand extends EditorCommand {
   const SetImageShadowCommand({
     required this.layerId,
@@ -194,6 +245,7 @@ class SetImageShadowCommand extends EditorCommand {
     this.blur,
     this.offset,
     this.opacity,
+    this.live = false,
   });
 
   final String layerId;
@@ -201,6 +253,12 @@ class SetImageShadowCommand extends EditorCommand {
   final double? blur;
   final Offset? offset;
   final double? opacity;
+
+  /// When true, marks this command as part of a live drag stream
+  /// (blur / opacity slider, colour-picker live preview).
+  /// Successive `live` commands of the same field-set against the
+  /// same layer collapse into a single history entry.
+  final bool live;
 
   @override
   String get label => 'Image shadow';
@@ -219,8 +277,7 @@ class SetImageShadowCommand extends EditorCommand {
         newOpacity == layer.shadowOpacity) {
       return doc;
     }
-    return doc.replaceLayer(_rebuild(
-      layer,
+    return doc.replaceLayer(layer.copyAll(
       shadowColor: newColor,
       shadowBlur: newBlur,
       shadowOffset: newOffset,
@@ -239,6 +296,22 @@ class SetImageShadowCommand extends EditorCommand {
       offset: layer.shadowOffset,
       opacity: layer.shadowOpacity,
     );
+  }
+
+  @override
+  EditorCommand? mergeWith(EditorCommand previous) {
+    if (!live) return null;
+    if (previous is! SetImageShadowCommand) return null;
+    if (!previous.live) return null;
+    if (previous.layerId != layerId) return null;
+    // Field-set must match across the whole stream so a blur drag
+    // never silently swallows an opacity drag (or vice versa).
+    // Mirrors SetImageAdjustmentsCommand.mergeWith.
+    if ((color == null) != (previous.color == null)) return null;
+    if ((blur == null) != (previous.blur == null)) return null;
+    if ((offset == null) != (previous.offset == null)) return null;
+    if ((opacity == null) != (previous.opacity == null)) return null;
+    return this;
   }
 }
 
@@ -288,7 +361,12 @@ class SetImageAdjustmentsCommand extends EditorCommand {
   EditorDocument apply(EditorDocument doc) {
     final layer = doc.layerById(layerId);
     if (layer is! ImageLayer) return doc;
-    final current = layer.adjustments;
+    // Read the current per-knob values off the effect stack so an
+    // omitted parameter preserves whatever the user already had.
+    // This is the moral equivalent of the old
+    // `current.copyWith(...)`, just sourced from the canonical
+    // location instead of a sibling field.
+    final current = ImageAdjustments.fromEffectStack(layer.effects);
     final next = current.copyWith(
       brightness: brightness,
       contrast: contrast,
@@ -297,14 +375,29 @@ class SetImageAdjustmentsCommand extends EditorCommand {
       warmth: warmth,
     );
     if (next == current) return doc;
-    return doc.replaceLayer(_rebuild(layer, adjustments: next));
+    // Strip the previous derived (color-adjustment) effects from
+    // the stack and re-project the new value, preserving any
+    // user-added effects of *other* types layered on top.
+    final keep = layer.effects.effects
+        .where((e) => !ImageAdjustments.derivedEffectTypes.contains(e.type))
+        .toList(growable: true);
+    final derived = next.toEffectStack();
+    final merged = <EditorEffect>[...derived, ...keep];
+    final nextEffects = merged.isEmpty
+        ? EffectStack.empty
+        : EffectStack(List<EditorEffect>.unmodifiable(merged));
+    return doc.replaceLayer(layer.copyAll(effects: nextEffects));
   }
 
   @override
   EditorCommand invert(EditorDocument before) {
     final layer = before.layerById(layerId);
     if (layer is! ImageLayer) return _noop;
-    final adj = layer.adjustments;
+    // Capture every knob's prior value (matches the pre-soft-retire
+    // behaviour). The other four are unchanged from `before`, so a
+    // five-knob restore is equivalent to a one-knob restore in
+    // outcome but simpler to reason about for history readers.
+    final adj = ImageAdjustments.fromEffectStack(layer.effects);
     return SetImageAdjustmentsCommand(
       layerId: layerId,
       brightness: adj.brightness,
@@ -329,6 +422,120 @@ class SetImageAdjustmentsCommand extends EditorCommand {
     if ((saturation == null) != (previous.saturation == null)) return null;
     if ((exposure == null) != (previous.exposure == null)) return null;
     if ((warmth == null) != (previous.warmth == null)) return null;
+    return this;
+  }
+}
+
+/// Set or update the [VignetteEffect] on an [ImageLayer]. Each
+/// field is nullable so callers can change one knob at a time
+/// without resetting the others — the same convention as
+/// [SetImageAdjustmentsCommand].
+///
+/// Vignette is the first non-colour-matrix effect on the stack, so
+/// its lifecycle is slightly different: when the resulting effect
+/// is the identity (`intensity == 0`), it is *removed* from the
+/// stack entirely so byte-identity with a vignette-free document
+/// is preserved. Bringing the slider back above 0 inserts a fresh
+/// effect at the *end* of the stack (top of the visual order),
+/// which matches Snapseed / Lightroom: vignette always renders on
+/// top of every other effect.
+///
+/// [live] follows the same merge rules as
+/// [SetImageAdjustmentsCommand]: live drags collapse into a single
+/// undo entry per stream as long as the field-set is stable.
+class SetImageVignetteCommand extends EditorCommand {
+  const SetImageVignetteCommand({
+    required this.layerId,
+    this.intensity,
+    this.feather,
+    this.color,
+    this.live = false,
+  });
+
+  final String layerId;
+  final double? intensity;
+  final double? feather;
+  final Color? color;
+  final bool live;
+
+  @override
+  String get label => 'Vignette';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer is! ImageLayer) return doc;
+    // Locate any existing vignette on the stack. Per the doc-comment
+    // above, vignette always sits at the top (= last entry) of the
+    // stack; if the user has somehow pushed other effects on top,
+    // we still address it positionally and leave the rest alone.
+    final existing = layer.effects.effects
+        .whereType<VignetteEffect>()
+        .cast<VignetteEffect?>()
+        .firstWhere((_) => true, orElse: () => null);
+    final base = existing ??
+        const VignetteEffect(
+          intensity: VignetteEffect.defaultIntensity,
+          feather: VignetteEffect.defaultFeather,
+        );
+    final next = base.copyWith(
+      intensity: intensity,
+      feather: feather,
+      color: color,
+    );
+    if (existing != null && next == existing) return doc;
+    final keep = layer.effects.effects
+        .where((e) => e is! VignetteEffect)
+        .toList(growable: true);
+    // Identity vignette = no effect on the stack. This is what keeps
+    // a "drag the slider then drag it back to 0" round-trip
+    // byte-identical to never having touched the slider.
+    final List<EditorEffect> merged = next.contributes
+        ? <EditorEffect>[...keep, next]
+        : keep;
+    if (existing == null && !next.contributes) return doc;
+    final nextEffects = merged.isEmpty
+        ? EffectStack.empty
+        : EffectStack(List<EditorEffect>.unmodifiable(merged));
+    if (nextEffects == layer.effects) return doc;
+    return doc.replaceLayer(layer.copyAll(effects: nextEffects));
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) {
+    final layer = before.layerById(layerId);
+    if (layer is! ImageLayer) return _noop;
+    final existing = layer.effects.effects
+        .whereType<VignetteEffect>()
+        .cast<VignetteEffect?>()
+        .firstWhere((_) => true, orElse: () => null);
+    // Restore every knob's prior value (including default values
+    // when no vignette existed) so undo is a single atomic restore
+    // even if the forward command only touched one field.
+    final prior = existing ??
+        const VignetteEffect(
+          intensity: VignetteEffect.defaultIntensity,
+          feather: VignetteEffect.defaultFeather,
+        );
+    return SetImageVignetteCommand(
+      layerId: layerId,
+      intensity: prior.intensity,
+      feather: prior.feather,
+      color: prior.color,
+    );
+  }
+
+  @override
+  EditorCommand? mergeWith(EditorCommand previous) {
+    if (!live) return null;
+    if (previous is! SetImageVignetteCommand) return null;
+    if (!previous.live) return null;
+    if (previous.layerId != layerId) return null;
+    // Field-set must match across the stream so a feather drag
+    // never silently swallows an in-flight intensity drag.
+    if ((intensity == null) != (previous.intensity == null)) return null;
+    if ((feather == null) != (previous.feather == null)) return null;
+    if ((color == null) != (previous.color == null)) return null;
     return this;
   }
 }
@@ -373,7 +580,7 @@ class SetImageCropCommand extends EditorCommand {
     if (layer is! ImageLayer) return doc;
     final next = _sanitise(cropRect);
     if (next == layer.cropRect) return doc;
-    return doc.replaceLayer(_rebuild(layer, cropRect: next));
+    return doc.replaceLayer(layer.copyAll(cropRect: next));
   }
 
   @override
@@ -404,7 +611,7 @@ class SetImageFitCommand extends EditorCommand {
     final layer = doc.layerById(layerId);
     if (layer is! ImageLayer) return doc;
     if (layer.fit == fit) return doc;
-    return doc.replaceLayer(_rebuild(layer, fit: fit));
+    return doc.replaceLayer(layer.copyAll(fit: fit));
   }
 
   @override
@@ -441,7 +648,7 @@ class SetImageFilterCommand extends EditorCommand {
     final layer = doc.layerById(layerId);
     if (layer is! ImageLayer) return doc;
     if (layer.filterPreset == filterPreset) return doc;
-    return doc.replaceLayer(_rebuild(layer, filterPreset: filterPreset));
+    return doc.replaceLayer(layer.copyAll(filterPreset: filterPreset));
   }
 
   @override
@@ -454,3 +661,176 @@ class SetImageFilterCommand extends EditorCommand {
     );
   }
 }
+
+/// Move an effect on an [ImageLayer]'s effect stack from
+/// [oldIndex] to [newIndex]. Out-of-range indices and "no-op"
+/// moves (`oldIndex == newIndex`) return the document unchanged so
+/// the command stream stays clean and undo never grows phantom
+/// entries.
+///
+/// Order matters: colour-matrix effects compose in stack order and
+/// custom-paint effects render in stack order, so reordering is a
+/// real semantic change — not a cosmetic UI re-sort.
+class ReorderEffectCommand extends EditorCommand {
+  const ReorderEffectCommand({
+    required this.layerId,
+    required this.oldIndex,
+    required this.newIndex,
+  });
+
+  final String layerId;
+  final int oldIndex;
+  final int newIndex;
+
+  @override
+  String get label => 'Reorder effect';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer is! ImageLayer) return doc;
+    final effects = layer.effects.effects;
+    if (oldIndex < 0 || oldIndex >= effects.length) return doc;
+    if (newIndex < 0 || newIndex >= effects.length) return doc;
+    if (oldIndex == newIndex) return doc;
+    final next = List<EditorEffect>.of(effects);
+    final moved = next.removeAt(oldIndex);
+    next.insert(newIndex, moved);
+    return doc.replaceLayer(layer.copyAll(
+      effects: EffectStack(List<EditorEffect>.unmodifiable(next)),
+    ));
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) {
+    final layer = before.layerById(layerId);
+    if (layer is! ImageLayer) return _noop;
+    final len = layer.effects.length;
+    if (oldIndex < 0 || oldIndex >= len) return _noop;
+    if (newIndex < 0 || newIndex >= len) return _noop;
+    return ReorderEffectCommand(
+      layerId: layerId,
+      oldIndex: newIndex,
+      newIndex: oldIndex,
+    );
+  }
+}
+
+/// Flip the [EditorEffect.enabled] flag on the effect at [index].
+/// Out-of-range index → no-op (returns the document unchanged).
+class ToggleEffectEnabledCommand extends EditorCommand {
+  const ToggleEffectEnabledCommand({
+    required this.layerId,
+    required this.index,
+  });
+
+  final String layerId;
+  final int index;
+
+  @override
+  String get label => 'Toggle effect';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer is! ImageLayer) return doc;
+    final effects = layer.effects.effects;
+    if (index < 0 || index >= effects.length) return doc;
+    final eff = effects[index];
+    final flipped = eff.withEnabled(!eff.enabled);
+    final next = List<EditorEffect>.of(effects);
+    next[index] = flipped;
+    return doc.replaceLayer(layer.copyAll(
+      effects: EffectStack(List<EditorEffect>.unmodifiable(next)),
+    ));
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) {
+    final layer = before.layerById(layerId);
+    if (layer is! ImageLayer) return _noop;
+    if (index < 0 || index >= layer.effects.length) return _noop;
+    // Toggling twice is the identity, so the inverse is the same
+    // command — no need for a dedicated restore variant.
+    return ToggleEffectEnabledCommand(layerId: layerId, index: index);
+  }
+}
+
+/// Remove the effect at [index] from an [ImageLayer]'s effect
+/// stack. Inverse re-inserts the captured effect at the same index
+/// so undo restores both the value AND its position.
+class DeleteEffectCommand extends EditorCommand {
+  const DeleteEffectCommand({
+    required this.layerId,
+    required this.index,
+  });
+
+  final String layerId;
+  final int index;
+
+  @override
+  String get label => 'Delete effect';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer is! ImageLayer) return doc;
+    final effects = layer.effects.effects;
+    if (index < 0 || index >= effects.length) return doc;
+    final next = List<EditorEffect>.of(effects)..removeAt(index);
+    return doc.replaceLayer(layer.copyAll(
+      effects: next.isEmpty
+          ? EffectStack.empty
+          : EffectStack(List<EditorEffect>.unmodifiable(next)),
+    ));
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) {
+    final layer = before.layerById(layerId);
+    if (layer is! ImageLayer) return _noop;
+    if (index < 0 || index >= layer.effects.length) return _noop;
+    return _InsertEffectCommand(
+      layerId: layerId,
+      index: index,
+      effect: layer.effects.effects[index],
+    );
+  }
+}
+
+/// Internal inverse of [DeleteEffectCommand]: re-inserts a captured
+/// effect at the original index. Not exposed publicly because
+/// callers should add new effects through their own typed commands
+/// (Set...Command), not through a generic insert — this exists only
+/// to make undo round-trip cleanly.
+class _InsertEffectCommand extends EditorCommand {
+  const _InsertEffectCommand({
+    required this.layerId,
+    required this.index,
+    required this.effect,
+  });
+
+  final String layerId;
+  final int index;
+  final EditorEffect effect;
+
+  @override
+  String get label => 'Restore effect';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer is! ImageLayer) return doc;
+    final effects = layer.effects.effects;
+    final clamped = index.clamp(0, effects.length);
+    final next = List<EditorEffect>.of(effects)..insert(clamped, effect);
+    return doc.replaceLayer(layer.copyAll(
+      effects: EffectStack(List<EditorEffect>.unmodifiable(next)),
+    ));
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) =>
+      DeleteEffectCommand(layerId: layerId, index: index);
+}
+

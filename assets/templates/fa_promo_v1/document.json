@@ -1,0 +1,135 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279244839,
+    "endColor": 4278519565,
+    "angleDegrees": 150.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "diagonal-accent",
+      "transform": {
+        "x": 670.0,
+        "y": -140.0,
+        "w": 230.0,
+        "h": 1640.0,
+        "r": -0.36
+      },
+      "kind": "rectangle",
+      "fillColor": 4293278022,
+      "fillOpacity": 0.9,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "transform": {
+        "x": 120.0,
+        "y": 160.0,
+        "w": 840.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "تخفیف ویژه",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4294956554,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "hero",
+      "transform": {
+        "x": 120.0,
+        "y": 340.0,
+        "w": 840.0,
+        "h": 280.0,
+        "r": 0.0
+      },
+      "content": "۵۰٪ تخفیف",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 198.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "right",
+        "shadowColor": 2566914048,
+        "shadowBlur": 4.0,
+        "shadowDx": 0.0,
+        "shadowDy": 2.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "subtext",
+      "transform": {
+        "x": 120.0,
+        "y": 650.0,
+        "w": 840.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "content": "فقط تا پایان هفته",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 54.0,
+        "color": 4294829706,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta-bg",
+      "transform": {
+        "x": 120.0,
+        "y": 1015.0,
+        "w": 460.0,
+        "h": 118.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293278022,
+      "strokeWidth": 0.0,
+      "cornerRadius": 56.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 120.0,
+        "y": 1038.0,
+        "w": 460.0,
+        "h": 74.0,
+        "r": 0.0
+      },
+      "content": "خرید کنید",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 56.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -106,8 +106,12 @@ class PaintDraft {
       ),
       kind: kind,
       // Blur is bbox-only; storing the drag points wastes JSON space
-      // since the painter never reads them.
-      normalizedPoints: kind == PaintKind.blur ? const <Offset>[] : norm,
+      // since the painter never reads them. Wrap the runtime list so
+      // PaintLayer's normalizedPoints stays unmodifiable for the life
+      // of the document.
+      normalizedPoints: kind == PaintKind.blur
+          ? const <Offset>[]
+          : List.unmodifiable(norm),
       strokeColor: strokeColor,
       strokeWidth: strokeWidth,
       fillColor: _shouldFill ? fillColor : null,

@@ -1,0 +1,156 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294636519,
+    "endColor": 4294297543,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "bar",
+      "transform": {
+        "x": 1000.0,
+        "y": 0.0,
+        "w": 80.0,
+        "h": 1920.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4289247388,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 80.0,
+        "y": 500.0,
+        "w": 840.0,
+        "h": 900.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294967295,
+        "endColor": 4294636519,
+        "angleDegrees": 200.0
+      },
+      "strokeWidth": 0.0,
+      "cornerRadius": 56.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 80.0,
+        "y": 610.0,
+        "w": 840.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "صبح بخیر",
+      "style": {
+        "fontFamily": "Eliya_Regular",
+        "fontSize": 58.0,
+        "color": 4287396718,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 80.0,
+        "y": 735.0,
+        "w": 840.0,
+        "h": 450.0,
+        "r": 0.0
+      },
+      "content": "هر روز\nیک شروع\nتازه است",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 150.0,
+        "color": 4281150765,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.08,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 80.0,
+        "y": 1255.0,
+        "w": 840.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "با لبخند آغاز کن",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 58.0,
+        "color": 4292385434,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "dot1",
+      "transform": {
+        "x": 400.0,
+        "y": 1510.0,
+        "w": 60.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4292385434,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot2",
+      "transform": {
+        "x": 490.0,
+        "y": 1510.0,
+        "w": 60.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4289247388,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot3",
+      "transform": {
+        "x": 580.0,
+        "y": 1510.0,
+        "w": 60.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294297543,
+      "strokeWidth": 0.0
+    }
+  ]
+}

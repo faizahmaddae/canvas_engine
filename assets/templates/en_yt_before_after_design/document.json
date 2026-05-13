@@ -1,0 +1,195 @@
+{
+  "version": 2,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4280163147,
+    "endColor": 4292552567,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "before",
+      "transform": {
+        "x": 70.0,
+        "y": 125.0,
+        "w": 500.0,
+        "h": 470.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 38.0,
+      "shadowOpacity": 0.28,
+      "shadowBlur": 28.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 14.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "after",
+      "transform": {
+        "x": 710.0,
+        "y": 95.0,
+        "w": 500.0,
+        "h": 530.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294967295,
+        "endColor": 4294764531,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 42.0,
+      "shadowOpacity": 0.28,
+      "shadowBlur": 32.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 16.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "before-label",
+      "transform": {
+        "x": 122.0,
+        "y": 155.0,
+        "w": 395.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "BEFORE",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 42.0,
+        "color": 4294747557,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "after-label",
+      "transform": {
+        "x": 782.0,
+        "y": 130.0,
+        "w": 360.0,
+        "h": 64.0,
+        "r": 0.0
+      },
+      "content": "AFTER",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 48.0,
+        "color": 4290648157,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "bad-box",
+      "transform": {
+        "x": 150.0,
+        "y": 285.0,
+        "w": 340.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4281549141,
+      "strokeWidth": 0.0,
+      "cornerRadius": 10.0
+    },
+    {
+      "type": "shape",
+      "id": "good-box",
+      "transform": {
+        "x": 780.0,
+        "y": 275.0,
+        "w": 360.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4292552567,
+      "strokeWidth": 0.0,
+      "cornerRadius": 26.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 410.0,
+        "y": 26.0,
+        "w": 460.0,
+        "h": 74.0,
+        "r": 0.0
+      },
+      "content": "MAKE IT PRO",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 62.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center",
+        "shadowColor": 2516582400,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "arrow",
+      "transform": {
+        "x": 555.0,
+        "y": 330.0,
+        "w": 170.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "kind": "arrow",
+      "fillColor": 4294626325,
+      "strokeWidth": 18.0
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 760.0,
+        "y": 475.0,
+        "w": 390.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "Design fix in 12 minutes",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 38.0,
+        "color": 4286781507,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

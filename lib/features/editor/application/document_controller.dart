@@ -52,8 +52,18 @@ class DocumentController extends Notifier<EditorDocument> {
   }
 
   /// Replace the current document state without pushing onto the undo
-  /// stack. Used for transient previews (live drag, live text editing)
-  /// where the final committed state is pushed via [execute] on commit.
+  /// stack. Used historically for transient previews (live drag, live
+  /// text editing) where the final committed state was pushed via
+  /// [execute] on commit.
+  ///
+  /// **Deprecated.** Replaced by `liveOverlayProvider` — every
+  /// in-flight UI change now stages onto an in-memory overlay and the
+  /// canvas reads the merged view via `renderedDocumentProvider`.
+  /// That keeps the committed document instance stable during
+  /// gestures, so non-canvas widgets (layers panel, undo rail,
+  /// autosave) stop rebuilding at 60 fps. See
+  /// `live_overlay_controller.dart` for migration patterns.
+  @Deprecated('Use liveOverlayProvider instead — see live_overlay_controller.dart')
   void liveReplace(EditorDocument document) {
     state = document;
   }

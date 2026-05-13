@@ -6,28 +6,23 @@ import '../../editor/engine/core/layer_transform.dart';
 import '../../editor/engine/modules/shape/shape_layer.dart';
 import '../../editor/engine/modules/text/text_layer.dart';
 import 'template.dart';
+import 'template_tokens.dart';
 
-/// Built-in starter designs shown on Home + the browse screen.
+/// Deprecated legacy Dart template catalog.
 ///
-/// Each entry uses only the public engine layer constructors so a
-/// template is just a function from `() -> EditorDocument`. No new
-/// codec entries, no asset registry — adding a template is a single
-/// list addition here.
+/// JSON asset templates listed in `assets/templates/manifest.json` are now the
+/// production source of truth. This catalog is retained temporarily for
+/// explicit migration/test audit coverage and legacy fallback fixtures. Normal
+/// runtime providers and UI should not read it.
 ///
-/// Templates are split into two top-level language sections —
-/// English and Persian — so users can find culturally relevant
-/// starters fast. Within each language, every category (quote,
-/// sale, story, …) is represented by at least one design so the
-/// browse-screen filter chips never land on an empty grid.
-///
-/// Keep ids stable: they're used as cache keys for the rendered
-/// thumbnail and (later) for analytics on which templates open.
+/// Do not add new templates here. Add or update JSON asset templates instead,
+/// then remove this catalog in a later cleanup phase once tests no longer
+/// depend on it.
 class TemplateCatalog {
   TemplateCatalog._();
 
-  /// Master list. Order matters — first ~6 are surfaced on Home so
-  /// put high-impact, broadly-appealing designs at the top of each
-  /// language block.
+  /// Legacy master list. Order is preserved for fallback and migration-audit
+  /// comparisons only; production ordering comes from the JSON asset manifest.
   static final List<Template> all = <Template>[
     // ───────── English ─────────
     Template(
@@ -269,6 +264,136 @@ class TemplateCatalog {
       language: TemplateLanguage.persian,
       build: _faStoryWarmPastel,
     ),
+
+    // ───────── Phase A — Focused Use-Case Templates ─────────
+    Template(
+      id: 'fa_insta_story_v1',
+      name: 'داستان امروز',
+      category: TemplateCategory.instagramStory,
+      language: TemplateLanguage.persian,
+      build: _faInstaStoryV1,
+    ),
+    Template(
+      id: 'en_yt_thumb_v1',
+      name: 'Watch this',
+      category: TemplateCategory.youtubeThumbnail,
+      language: TemplateLanguage.english,
+      build: _enYoutubeThumbnailV1,
+    ),
+    Template(
+      id: 'fa_poetry_v1',
+      name: 'پست شاعرانه',
+      category: TemplateCategory.poetryPost,
+      language: TemplateLanguage.persian,
+      build: _faPoetryV1,
+    ),
+    Template(
+      id: 'fa_promo_v1',
+      name: 'پوستر تبلیغاتی',
+      category: TemplateCategory.promotionalPoster,
+      language: TemplateLanguage.persian,
+      build: _faPromoV1,
+    ),
+
+    // ───────── Phase C — Focused Category Depth ─────────
+    Template(
+      id: 'fa_insta_story_bold_word_v1',
+      name: 'کلمه جسور',
+      category: TemplateCategory.instagramStory,
+      language: TemplateLanguage.persian,
+      build: _faInstaStoryBoldWordV1,
+    ),
+    Template(
+      id: 'fa_insta_story_announcement_v1',
+      name: 'اعلان شبانه',
+      category: TemplateCategory.instagramStory,
+      language: TemplateLanguage.persian,
+      build: _faInstaStoryAnnouncementV1,
+    ),
+    Template(
+      id: 'fa_insta_story_frame_v1',
+      name: 'قاب تصویر',
+      category: TemplateCategory.instagramStory,
+      language: TemplateLanguage.persian,
+      build: _faInstaStoryFrameV1,
+    ),
+    Template(
+      id: 'fa_insta_story_minimal_v1',
+      name: 'استوری خلوت',
+      category: TemplateCategory.instagramStory,
+      language: TemplateLanguage.persian,
+      build: _faInstaStoryMinimalV1,
+    ),
+    Template(
+      id: 'en_yt_question_v1',
+      name: 'Question hook',
+      category: TemplateCategory.youtubeThumbnail,
+      language: TemplateLanguage.english,
+      build: _enYoutubeQuestionV1,
+    ),
+    Template(
+      id: 'en_yt_list_v1',
+      name: 'Five things',
+      category: TemplateCategory.youtubeThumbnail,
+      language: TemplateLanguage.english,
+      build: _enYoutubeListV1,
+    ),
+    Template(
+      id: 'en_yt_reaction_v1',
+      name: 'Reaction shock',
+      category: TemplateCategory.youtubeThumbnail,
+      language: TemplateLanguage.english,
+      build: _enYoutubeReactionV1,
+    ),
+    Template(
+      id: 'en_yt_tutorial_v1',
+      name: 'Fast tutorial',
+      category: TemplateCategory.youtubeThumbnail,
+      language: TemplateLanguage.english,
+      build: _enYoutubeTutorialV1,
+    ),
+    Template(
+      id: 'fa_poetry_minimal_v1',
+      name: 'شعر مینیمال',
+      category: TemplateCategory.poetryPost,
+      language: TemplateLanguage.persian,
+      build: _faPoetryMinimalV1,
+    ),
+    Template(
+      id: 'fa_poetry_traditional_v1',
+      name: 'قاب کلاسیک',
+      category: TemplateCategory.poetryPost,
+      language: TemplateLanguage.persian,
+      build: _faPoetryTraditionalV1,
+    ),
+    Template(
+      id: 'fa_poetry_overlay_v1',
+      name: 'شعر روی تصویر',
+      category: TemplateCategory.poetryPost,
+      language: TemplateLanguage.persian,
+      build: _faPoetryOverlayV1,
+    ),
+    Template(
+      id: 'fa_promo_sale_v1',
+      name: 'حراج پررنگ',
+      category: TemplateCategory.promotionalPoster,
+      language: TemplateLanguage.persian,
+      build: _faPromoSaleV1,
+    ),
+    Template(
+      id: 'fa_promo_event_v1',
+      name: 'اعلان رویداد',
+      category: TemplateCategory.promotionalPoster,
+      language: TemplateLanguage.persian,
+      build: _faPromoEventV1,
+    ),
+    Template(
+      id: 'fa_promo_launch_v1',
+      name: 'معرفی محصول',
+      category: TemplateCategory.promotionalPoster,
+      language: TemplateLanguage.persian,
+      build: _faPromoLaunchV1,
+    ),
   ];
 
   /// Convenience accessor — templates filtered by language. Used by
@@ -284,6 +409,12 @@ const Size _square = Size(1080, 1080);
 
 /// 9:16 1080×1920 — Instagram / TikTok story.
 const Size _story = Size(1080, 1920);
+
+/// 16:9 1280×720 — YouTube thumbnail.
+const Size _youtubeThumbnail = Size(1280, 720);
+
+/// 4:5 1080×1350 — promotional feed poster.
+const Size _portraitPoster = Size(1080, 1350);
 
 // Common Latin display family pairings, by intent.
 const String _enDisplayBold = 'Hanken_Grotesk';
@@ -304,8 +435,7 @@ LayerTransform _box({
   required double y,
   required double w,
   required double h,
-}) =>
-    LayerTransform(position: Offset(x, y), size: Size(w, h));
+}) => LayerTransform(position: Offset(x, y), size: Size(w, h));
 
 TextLayer _text({
   required String id,
@@ -319,6 +449,7 @@ TextLayer _text({
   double backgroundRadius = 0,
   Color? shadow,
   String? fontFamily,
+  double lineHeight = 1.2,
 }) {
   return TextLayer(
     id: id,
@@ -329,6 +460,7 @@ TextLayer _text({
       fontSize: size,
       color: color,
       fontWeight: weight,
+      lineHeight: lineHeight,
       alignment: align,
       backgroundColor: background,
       backgroundRadius: backgroundRadius,
@@ -676,7 +808,8 @@ EditorDocument _enQuoteEditorial() {
       ),
       _text(
         id: 'quote',
-        content: '“The future is\nalready here\n— it\'s just not\nevenly distributed.”',
+        content:
+            '“The future is\nalready here\n— it\'s just not\nevenly distributed.”',
         transform: _box(x: 140, y: 260, w: 860, h: 600),
         color: const Color(0xFF111827),
         weight: FontWeight.w800,
@@ -1881,7 +2014,7 @@ EditorDocument _enSaleModernGradient() {
     canvas: _square,
     background: const LinearGradientBackground(
       startColor: Color(0xFF7C5CFF), // violet (modernGradient.background)
-      endColor: Color(0xFFE85DDC),   // magenta (modernGradient.accent)
+      endColor: Color(0xFFE85DDC), // magenta (modernGradient.accent)
       angleDegrees: 135, // top-left → bottom-right
     ),
     layers: [
@@ -2016,7 +2149,7 @@ EditorDocument _faStoryWarmPastel() {
     canvas: _story,
     background: const LinearGradientBackground(
       startColor: Color(0xFFFAF3E7), // warmPastel.background — cream
-      endColor: Color(0xFFF5C7C7),   // warmPastel.surface     — blush
+      endColor: Color(0xFFF5C7C7), // warmPastel.surface     — blush
       angleDegrees: 180, // top → bottom
     ),
     layers: [
@@ -2086,6 +2219,1098 @@ EditorDocument _faStoryWarmPastel() {
         kind: ShapeKind.circle,
         transform: _box(x: 580, y: 1500, w: 60, h: 60),
         fill: const Color(0xFFF5C7C7),
+      ),
+    ],
+  );
+}
+
+// ═════════ PHASE A — FOCUSED USE-CASE SAMPLE TEMPLATES ═════════════
+
+EditorDocument _faInstaStoryV1() {
+  const palette = warmPastel;
+  return _docFill(
+    canvas: _story,
+    background: LinearGradientBackground(
+      startColor: palette.surface,
+      endColor: palette.background,
+      angleDegrees: 180,
+    ),
+    layers: [
+      ShapeLayer(
+        id: 'lower-right-accent',
+        kind: ShapeKind.circle,
+        transform: _box(x: 700, y: 1370, w: 620, h: 620),
+        fill: const RadialGradientBackground(
+          centerColor: Color(0xEED89A9A),
+          edgeColor: Color(0x00D89A9A),
+          focalPoint: Alignment(-0.35, -0.35),
+          radius: 0.9,
+        ),
+      ),
+      _text(
+        id: 'headline',
+        content: 'داستان امروز',
+        transform: _box(x: 100, y: 260, w: 880, h: 180),
+        color: palette.primary,
+        weight: FontWeight.w800,
+        size: 128,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+        lineHeight: 1.05,
+      ),
+      _text(
+        id: 'subtext',
+        content: 'اینجا کلیک کن',
+        transform: _box(x: 100, y: 455, w: 880, h: 90),
+        color: palette.secondary,
+        weight: FontWeight.w500,
+        size: 48,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+    ],
+  );
+}
+
+EditorDocument _enYoutubeThumbnailV1() {
+  const palette = boldHighContrast;
+  return _docFill(
+    canvas: _youtubeThumbnail,
+    background: LinearGradientBackground(
+      startColor: palette.surfaceAlt,
+      endColor: palette.background,
+      angleDegrees: 110,
+    ),
+    layers: [
+      _shape(
+        id: 'accent-bar',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 0, y: 0, w: 34, h: 720),
+        fill: palette.accent,
+      ),
+      _text(
+        id: 'headline',
+        content: 'WATCH\nTHIS',
+        transform: _box(x: 88, y: 112, w: 600, h: 330),
+        color: palette.primary,
+        weight: FontWeight.w900,
+        size: 140,
+        align: TextAlign.left,
+        shadow: const Color(0x99000000),
+        fontFamily: boldDisplay.bodyFont,
+        lineHeight: 0.9,
+      ),
+      _text(
+        id: 'subtitle',
+        content: "before it's too late",
+        transform: _box(x: 92, y: 472, w: 560, h: 70),
+        color: palette.accent,
+        weight: FontWeight.w500,
+        size: 52,
+        align: TextAlign.left,
+        fontFamily: boldDisplay.bodyFont,
+      ),
+    ],
+  );
+}
+
+EditorDocument _faPoetryV1() {
+  final gold = vintageFaded.accent;
+  return _docFill(
+    canvas: _square,
+    background: const SolidBackground(color: Color(0xFFF5EFE6)),
+    layers: [
+      _shape(
+        id: 'frame-top',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 170, y: 170, w: 740, h: 3),
+        fill: gold,
+      ),
+      _shape(
+        id: 'frame-bottom',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 170, y: 907, w: 740, h: 3),
+        fill: gold,
+      ),
+      _shape(
+        id: 'frame-left',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 170, y: 170, w: 3, h: 740),
+        fill: gold,
+      ),
+      _shape(
+        id: 'frame-right',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 907, y: 170, w: 3, h: 740),
+        fill: gold,
+      ),
+      _shape(
+        id: 'corner-tl-h',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 120, y: 220, w: 150, h: 4),
+        fill: gold,
+      ),
+      _shape(
+        id: 'corner-tl-v',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 220, y: 120, w: 4, h: 150),
+        fill: gold,
+      ),
+      _shape(
+        id: 'corner-br-h',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 810, y: 856, w: 150, h: 4),
+        fill: gold,
+      ),
+      _shape(
+        id: 'corner-br-v',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 856, y: 810, w: 4, h: 150),
+        fill: gold,
+      ),
+      _text(
+        id: 'verse',
+        content: 'هر که آمد عمارتی نو ساخت\nرفت و منزل به دیگری پرداخت',
+        transform: _box(x: 170, y: 402, w: 740, h: 190),
+        color: editorialMuted.primary,
+        weight: FontWeight.w400,
+        size: 64,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+        lineHeight: 1.5,
+      ),
+      _text(
+        id: 'author',
+        content: '— سعدی',
+        transform: _box(x: 170, y: 690, w: 740, h: 58),
+        color: editorialMuted.secondary,
+        weight: FontWeight.w400,
+        size: 32,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+      ),
+    ],
+  );
+}
+
+EditorDocument _faPromoV1() {
+  const crimson = Color(0xFFE63946);
+  return _docFill(
+    canvas: _portraitPoster,
+    background: const LinearGradientBackground(
+      startColor: Color(0xFF101827),
+      endColor: Color(0xFF05070D),
+      angleDegrees: 150,
+    ),
+    layers: [
+      ShapeLayer(
+        id: 'diagonal-accent',
+        kind: ShapeKind.rectangle,
+        transform: const LayerTransform(
+          position: Offset(670, -140),
+          size: Size(230, 1640),
+          rotation: -0.36,
+        ),
+        fillColor: crimson,
+        fillOpacity: 0.9,
+      ),
+      _text(
+        id: 'label',
+        content: 'تخفیف ویژه',
+        transform: _box(x: 120, y: 170, w: 840, h: 70),
+        color: const Color(0xFFFFD60A),
+        weight: FontWeight.w500,
+        size: 36,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+      _text(
+        id: 'hero',
+        content: '۵۰٪ تخفیف',
+        transform: _box(x: 120, y: 365, w: 840, h: 245),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w900,
+        size: 180,
+        align: TextAlign.right,
+        shadow: const Color(0x99000000),
+        fontFamily: _faDisplayCasual,
+        lineHeight: 0.95,
+      ),
+      _text(
+        id: 'subtext',
+        content: 'فقط تا پایان هفته',
+        transform: _box(x: 120, y: 650, w: 840, h: 90),
+        color: const Color(0xFFE5E7EB),
+        weight: FontWeight.w500,
+        size: 48,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+      _shape(
+        id: 'cta-bg',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 120, y: 1040, w: 420, h: 112),
+        fill: crimson,
+        cornerRadius: 56,
+      ),
+      _text(
+        id: 'cta-text',
+        content: 'خرید کنید',
+        transform: _box(x: 120, y: 1062, w: 420, h: 72),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w700,
+        size: 52,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+      ),
+    ],
+  );
+}
+
+// ═════════ PHASE C — FOCUSED CATEGORY DEPTH TEMPLATES ══════════════
+
+EditorDocument _faInstaStoryBoldWordV1() {
+  return _docFill(
+    canvas: _story,
+    background: const LinearGradientBackground(
+      startColor: Color(0xFF2D1B4E),
+      endColor: Color(0xFF7C5CFF),
+      angleDegrees: 180,
+    ),
+    layers: [
+      ShapeLayer(
+        id: 'magenta-bloom',
+        kind: ShapeKind.circle,
+        transform: _box(x: -260, y: -220, w: 720, h: 720),
+        fill: const RadialGradientBackground(
+          centerColor: Color(0xDDE85DDC),
+          edgeColor: Color(0x00E85DDC),
+          radius: 0.85,
+        ),
+      ),
+      _shape(
+        id: 'baseline-rule',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 700, y: 1112, w: 240, h: 10),
+        fill: const Color(0xFFFFD60A),
+      ),
+      _text(
+        id: 'word',
+        content: 'جرئت',
+        transform: _box(x: 110, y: 710, w: 860, h: 310),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w900,
+        size: 245,
+        align: TextAlign.right,
+        shadow: const Color(0x66000000),
+        fontFamily: _faBody,
+        lineHeight: 0.95,
+      ),
+      _text(
+        id: 'caption',
+        content: 'همین امروز شروع کن',
+        transform: _box(x: 120, y: 1055, w: 820, h: 80),
+        color: const Color(0xFFE8DFFF),
+        weight: FontWeight.w500,
+        size: 46,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+    ],
+  );
+}
+
+EditorDocument _faInstaStoryAnnouncementV1() {
+  return _docFill(
+    canvas: _story,
+    background: const LinearGradientBackground(
+      startColor: Color(0xFF111827),
+      endColor: Color(0xFF030712),
+      angleDegrees: 165,
+    ),
+    layers: [
+      _shape(
+        id: 'top-pill',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 650, y: 270, w: 300, h: 82),
+        fill: const Color(0xFFFFD60A),
+        cornerRadius: 41,
+      ),
+      _text(
+        id: 'pill-text',
+        content: 'اعلان',
+        transform: _box(x: 650, y: 286, w: 300, h: 52),
+        color: const Color(0xFF111827),
+        weight: FontWeight.w800,
+        size: 36,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+      ),
+      _shape(
+        id: 'card',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 90, y: 560, w: 900, h: 620),
+        fill: const Color(0xFF1F2937),
+        cornerRadius: 48,
+      ),
+      _text(
+        id: 'headline',
+        content: 'امشب ساعت ۹\nخبر مهمی داریم',
+        transform: _box(x: 150, y: 675, w: 780, h: 245),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w700,
+        size: 74,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+        lineHeight: 1.25,
+      ),
+      _text(
+        id: 'subtext',
+        content: 'منتظر بمان',
+        transform: _box(x: 150, y: 970, w: 780, h: 80),
+        color: const Color(0xFFFFD60A),
+        weight: FontWeight.w500,
+        size: 44,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+      _shape(
+        id: 'bottom-rule',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 150, y: 1096, w: 780, h: 2),
+        fill: const Color(0x44FFFFFF),
+      ),
+    ],
+  );
+}
+
+EditorDocument _faInstaStoryFrameV1() {
+  return _docFill(
+    canvas: _story,
+    background: const SolidBackground(color: Color(0xFFF5EFE6)),
+    layers: [
+      _shape(
+        id: 'photo-frame',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 100, y: 320, w: 880, h: 1120),
+        fill: const Color(0xFFE8D5B0),
+        cornerRadius: 56,
+      ),
+      ShapeLayer(
+        id: 'photo-wash',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 140, y: 360, w: 800, h: 1040),
+        cornerRadius: 42,
+        fill: const LinearGradientBackground(
+          startColor: Color(0xFFA8B89C),
+          endColor: Color(0xFFF5C7C7),
+          angleDegrees: 135,
+        ),
+      ),
+      _shape(
+        id: 'frame-top',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 180, y: 430, w: 720, h: 5),
+        fill: const Color(0xFFFFFFFF),
+      ),
+      _shape(
+        id: 'frame-bottom',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 180, y: 1325, w: 720, h: 5),
+        fill: const Color(0xFFFFFFFF),
+      ),
+      _shape(
+        id: 'frame-left',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 180, y: 430, w: 5, h: 900),
+        fill: const Color(0xFFFFFFFF),
+      ),
+      _shape(
+        id: 'frame-right',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 895, y: 430, w: 5, h: 900),
+        fill: const Color(0xFFFFFFFF),
+      ),
+      _text(
+        id: 'title',
+        content: 'قاب امروز',
+        transform: _box(x: 120, y: 1530, w: 840, h: 90),
+        color: const Color(0xFF3D2A1F),
+        weight: FontWeight.w800,
+        size: 58,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+      _text(
+        id: 'caption',
+        content: 'تصویرت را اینجا بگذار',
+        transform: _box(x: 120, y: 1628, w: 840, h: 70),
+        color: const Color(0xFF8B6F47),
+        weight: FontWeight.w500,
+        size: 38,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+    ],
+  );
+}
+
+EditorDocument _faInstaStoryMinimalV1() {
+  return _docFill(
+    canvas: _story,
+    background: const SolidBackground(color: Color(0xFFFAF7F1)),
+    layers: [
+      _shape(
+        id: 'tiny-rule',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 820, y: 310, w: 120, h: 4),
+        fill: const Color(0xFFC45D3A),
+      ),
+      _text(
+        id: 'headline',
+        content: 'یادداشت کوتاه',
+        transform: _box(x: 120, y: 340, w: 820, h: 82),
+        color: const Color(0xFF2C2C2C),
+        weight: FontWeight.w600,
+        size: 52,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+      _text(
+        id: 'caption',
+        content: 'برای امروز',
+        transform: _box(x: 120, y: 430, w: 820, h: 56),
+        color: const Color(0xFF6B6359),
+        weight: FontWeight.w400,
+        size: 32,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+      _shape(
+        id: 'bottom-dot',
+        kind: ShapeKind.circle,
+        transform: _box(x: 506, y: 1510, w: 68, h: 68),
+        fill: const Color(0xFFE8D5B0),
+      ),
+    ],
+  );
+}
+
+EditorDocument _enYoutubeQuestionV1() {
+  return _docFill(
+    canvas: _youtubeThumbnail,
+    background: const LinearGradientBackground(
+      startColor: Color(0xFF0F172A),
+      endColor: Color(0xFF1E3A8A),
+      angleDegrees: 90,
+    ),
+    layers: [
+      _shape(
+        id: 'question-disc',
+        kind: ShapeKind.circle,
+        transform: _box(x: 875, y: 95, w: 300, h: 300),
+        fill: const Color(0xFFFFD60A),
+      ),
+      _text(
+        id: 'question-mark',
+        content: '?',
+        transform: _box(x: 875, y: 118, w: 300, h: 260),
+        color: const Color(0xFF0F172A),
+        weight: FontWeight.w900,
+        size: 210,
+        fontFamily: boldDisplay.bodyFont,
+        lineHeight: 0.95,
+      ),
+      _text(
+        id: 'headline',
+        content: 'WHY DOES\nTHIS HAPPEN?',
+        transform: _box(x: 70, y: 105, w: 720, h: 290),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w900,
+        size: 98,
+        align: TextAlign.left,
+        shadow: const Color(0x99000000),
+        fontFamily: boldDisplay.bodyFont,
+        lineHeight: 0.95,
+      ),
+      _text(
+        id: 'subtitle',
+        content: 'the answer is weird',
+        transform: _box(x: 76, y: 430, w: 590, h: 64),
+        color: const Color(0xFFFFD60A),
+        weight: FontWeight.w600,
+        size: 46,
+        align: TextAlign.left,
+        fontFamily: boldDisplay.bodyFont,
+      ),
+    ],
+  );
+}
+
+EditorDocument _enYoutubeListV1() {
+  return _docFill(
+    canvas: _youtubeThumbnail,
+    background: const SolidBackground(color: Color(0xFF111827)),
+    layers: [
+      _shape(
+        id: 'number-box',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 70, y: 92, w: 230, h: 230),
+        fill: const Color(0xFFFFD60A),
+        cornerRadius: 36,
+      ),
+      _text(
+        id: 'number',
+        content: '5',
+        transform: _box(x: 70, y: 92, w: 230, h: 210),
+        color: const Color(0xFF111827),
+        weight: FontWeight.w900,
+        size: 180,
+        fontFamily: boldDisplay.bodyFont,
+        lineHeight: 0.95,
+      ),
+      _text(
+        id: 'headline',
+        content: 'THINGS\nYOU NEED',
+        transform: _box(x: 330, y: 105, w: 620, h: 250),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w900,
+        size: 90,
+        align: TextAlign.left,
+        fontFamily: boldDisplay.bodyFont,
+        lineHeight: 0.95,
+      ),
+      _shape(
+        id: 'right-panel',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 1010, y: 0, w: 270, h: 720),
+        fill: const Color(0xFFE63946),
+      ),
+      _text(
+        id: 'badge',
+        content: 'SAVE\nTHIS',
+        transform: _box(x: 1035, y: 268, w: 220, h: 150),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w900,
+        size: 54,
+        fontFamily: boldDisplay.bodyFont,
+        lineHeight: 0.95,
+      ),
+      _text(
+        id: 'subtitle',
+        content: 'before your next upload',
+        transform: _box(x: 76, y: 490, w: 760, h: 56),
+        color: const Color(0xFF9CA3AF),
+        weight: FontWeight.w500,
+        size: 38,
+        align: TextAlign.left,
+        fontFamily: boldDisplay.bodyFont,
+      ),
+    ],
+  );
+}
+
+EditorDocument _enYoutubeReactionV1() {
+  return _docFill(
+    canvas: _youtubeThumbnail,
+    background: const LinearGradientBackground(
+      startColor: Color(0xFFE63946),
+      endColor: Color(0xFF0A0A0A),
+      angleDegrees: 125,
+    ),
+    layers: [
+      ShapeLayer(
+        id: 'spotlight',
+        kind: ShapeKind.circle,
+        transform: _box(x: 760, y: 45, w: 420, h: 420),
+        fill: const RadialGradientBackground(
+          centerColor: Color(0x99FFFFFF),
+          edgeColor: Color(0x00FFFFFF),
+          radius: 0.85,
+        ),
+      ),
+      _text(
+        id: 'headline',
+        content: 'NO\nWAY!',
+        transform: _box(x: 72, y: 118, w: 590, h: 310),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w900,
+        size: 132,
+        align: TextAlign.left,
+        shadow: const Color(0xAA000000),
+        fontFamily: boldDisplay.bodyFont,
+        lineHeight: 0.9,
+      ),
+      _shape(
+        id: 'face-placeholder',
+        kind: ShapeKind.circle,
+        transform: _box(x: 860, y: 155, w: 230, h: 230),
+        fill: const Color(0xFFFFD60A),
+      ),
+      _text(
+        id: 'face-mark',
+        content: '!',
+        transform: _box(x: 860, y: 168, w: 230, h: 190),
+        color: const Color(0xFF111827),
+        weight: FontWeight.w900,
+        size: 150,
+        fontFamily: boldDisplay.bodyFont,
+        lineHeight: 0.9,
+      ),
+      _shape(
+        id: 'subtitle-bg',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 72, y: 485, w: 480, h: 84),
+        fill: const Color(0xFFFFD60A),
+        cornerRadius: 42,
+      ),
+      _text(
+        id: 'subtitle',
+        content: 'watch the ending',
+        transform: _box(x: 72, y: 503, w: 480, h: 54),
+        color: const Color(0xFF111827),
+        weight: FontWeight.w800,
+        size: 38,
+        fontFamily: boldDisplay.bodyFont,
+      ),
+    ],
+  );
+}
+
+EditorDocument _enYoutubeTutorialV1() {
+  return _docFill(
+    canvas: _youtubeThumbnail,
+    background: const LinearGradientBackground(
+      startColor: Color(0xFF063B3F),
+      endColor: Color(0xFF0F172A),
+      angleDegrees: 135,
+    ),
+    layers: [
+      _shape(
+        id: 'top-bar',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 0, y: 0, w: 1280, h: 22),
+        fill: const Color(0xFF22C55E),
+      ),
+      _text(
+        id: 'headline',
+        content: 'HOW TO\nEDIT FAST',
+        transform: _box(x: 76, y: 118, w: 720, h: 285),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w900,
+        size: 102,
+        align: TextAlign.left,
+        fontFamily: boldDisplay.bodyFont,
+        lineHeight: 0.95,
+      ),
+      _shape(
+        id: 'timer-pill',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 76, y: 450, w: 500, h: 92),
+        fill: const Color(0xFF22C55E),
+        cornerRadius: 46,
+      ),
+      _text(
+        id: 'timer-text',
+        content: 'IN 60 SECONDS',
+        transform: _box(x: 76, y: 470, w: 500, h: 56),
+        color: const Color(0xFF052E2B),
+        weight: FontWeight.w900,
+        size: 40,
+        fontFamily: boldDisplay.bodyFont,
+      ),
+      _shape(
+        id: 'preview-window',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 850, y: 150, w: 330, h: 260),
+        fill: const Color(0xFF0B1220),
+        cornerRadius: 28,
+      ),
+      _shape(
+        id: 'play-button',
+        kind: ShapeKind.triangle,
+        transform: _box(x: 982, y: 240, w: 88, h: 88),
+        fill: const Color(0xFF22C55E),
+      ),
+    ],
+  );
+}
+
+EditorDocument _faPoetryMinimalV1() {
+  return _docFill(
+    canvas: _square,
+    background: const SolidBackground(color: Color(0xFFF5F1EB)),
+    layers: [
+      _text(
+        id: 'verse',
+        content:
+            'از صدای سخن عشق ندیدم خوشتر\nیادگاری که در این گنبد دوار بماند',
+        transform: _box(x: 120, y: 410, w: 840, h: 180),
+        color: const Color(0xFF3F3A35),
+        weight: FontWeight.w400,
+        size: 52,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+        lineHeight: 1.55,
+      ),
+      _text(
+        id: 'author',
+        content: '— حافظ',
+        transform: _box(x: 120, y: 680, w: 840, h: 56),
+        color: const Color(0xFF8C8175),
+        weight: FontWeight.w400,
+        size: 30,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+      ),
+      _shape(
+        id: 'quiet-dot',
+        kind: ShapeKind.circle,
+        transform: _box(x: 520, y: 808, w: 40, h: 40),
+        fill: const Color(0xFFDDD7CC),
+      ),
+    ],
+  );
+}
+
+EditorDocument _faPoetryTraditionalV1() {
+  const gold = Color(0xFFD4A24C);
+  return _docFill(
+    canvas: _square,
+    background: const LinearGradientBackground(
+      startColor: Color(0xFFFAF3E7),
+      endColor: Color(0xFFE8D5B0),
+      angleDegrees: 180,
+    ),
+    layers: [
+      _shape(
+        id: 'outer-frame',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 120, y: 120, w: 840, h: 840),
+        fill: const Color(0xFFF8EED8),
+        cornerRadius: 42,
+      ),
+      _shape(
+        id: 'left-rule',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 168, y: 190, w: 4, h: 700),
+        fill: gold,
+      ),
+      _shape(
+        id: 'right-rule',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 908, y: 190, w: 4, h: 700),
+        fill: gold,
+      ),
+      _shape(
+        id: 'top-rule',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 210, y: 226, w: 660, h: 4),
+        fill: gold,
+      ),
+      _shape(
+        id: 'bottom-rule',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 210, y: 850, w: 660, h: 4),
+        fill: gold,
+      ),
+      _shape(
+        id: 'ornament-top',
+        kind: ShapeKind.diamond,
+        transform: _box(x: 512, y: 190, w: 56, h: 56),
+        fill: gold,
+      ),
+      _shape(
+        id: 'ornament-bottom',
+        kind: ShapeKind.diamond,
+        transform: _box(x: 512, y: 826, w: 56, h: 56),
+        fill: gold,
+      ),
+      _shape(
+        id: 'ornament-left',
+        kind: ShapeKind.diamond,
+        transform: _box(x: 148, y: 512, w: 44, h: 44),
+        fill: gold,
+      ),
+      _shape(
+        id: 'ornament-right',
+        kind: ShapeKind.diamond,
+        transform: _box(x: 888, y: 512, w: 44, h: 44),
+        fill: gold,
+      ),
+      _text(
+        id: 'verse',
+        content: 'بشنو از نی چون حکایت می‌کند\nاز جدایی‌ها شکایت می‌کند',
+        transform: _box(x: 170, y: 420, w: 740, h: 190),
+        color: const Color(0xFF3D2A1F),
+        weight: FontWeight.w400,
+        size: 58,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+        lineHeight: 1.48,
+      ),
+      _text(
+        id: 'author',
+        content: '— مولوی',
+        transform: _box(x: 170, y: 690, w: 740, h: 56),
+        color: const Color(0xFF8B6F47),
+        weight: FontWeight.w400,
+        size: 32,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+      ),
+    ],
+  );
+}
+
+EditorDocument _faPoetryOverlayV1() {
+  return _docFill(
+    canvas: _square,
+    background: const LinearGradientBackground(
+      startColor: Color(0xFF3D2A1F),
+      endColor: Color(0xFF0A0A0A),
+      angleDegrees: 170,
+    ),
+    layers: [
+      ShapeLayer(
+        id: 'implied-light',
+        kind: ShapeKind.circle,
+        transform: _box(x: -170, y: -140, w: 620, h: 620),
+        fill: const RadialGradientBackground(
+          centerColor: Color(0x66D4A24C),
+          edgeColor: Color(0x00D4A24C),
+          radius: 0.9,
+        ),
+      ),
+      _shape(
+        id: 'overlay-panel',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 0, y: 620, w: 1080, h: 460),
+        fill: const Color(0x99000000),
+      ),
+      _text(
+        id: 'verse',
+        content: 'این قافله عمر عجب می‌گذرد\nدریاب دمی که با طرب می‌گذرد',
+        transform: _box(x: 105, y: 700, w: 870, h: 170),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w500,
+        size: 52,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+        lineHeight: 1.45,
+      ),
+      _text(
+        id: 'author',
+        content: '— خیام',
+        transform: _box(x: 105, y: 905, w: 870, h: 52),
+        color: const Color(0xFFD4A24C),
+        weight: FontWeight.w400,
+        size: 30,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+      ),
+    ],
+  );
+}
+
+EditorDocument _faPromoSaleV1() {
+  return _docFill(
+    canvas: _portraitPoster,
+    background: const SolidBackground(color: Color(0xFFFFD60A)),
+    layers: [
+      _shape(
+        id: 'black-block',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 0, y: 0, w: 1080, h: 600),
+        fill: const Color(0xFF0A0A0A),
+      ),
+      _text(
+        id: 'label',
+        content: 'حراج آخر فصل',
+        transform: _box(x: 110, y: 115, w: 860, h: 74),
+        color: const Color(0xFFFFD60A),
+        weight: FontWeight.w700,
+        size: 42,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+      _text(
+        id: 'percent',
+        content: '۷۰٪',
+        transform: _box(x: 80, y: 245, w: 920, h: 270),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w900,
+        size: 220,
+        align: TextAlign.center,
+        shadow: const Color(0x99000000),
+        fontFamily: _faBody,
+        lineHeight: 0.95,
+      ),
+      _text(
+        id: 'headline',
+        content: 'تخفیف برای همه محصولات',
+        transform: _box(x: 90, y: 720, w: 900, h: 92),
+        color: const Color(0xFF111827),
+        weight: FontWeight.w800,
+        size: 58,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+      _shape(
+        id: 'cta-bg',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 90, y: 1040, w: 470, h: 112),
+        fill: const Color(0xFF0A0A0A),
+        cornerRadius: 56,
+      ),
+      _text(
+        id: 'cta',
+        content: 'همین حالا',
+        transform: _box(x: 90, y: 1062, w: 470, h: 72),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w700,
+        size: 50,
+        align: TextAlign.center,
+        fontFamily: _faBody,
+      ),
+    ],
+  );
+}
+
+EditorDocument _faPromoEventV1() {
+  return _docFill(
+    canvas: _portraitPoster,
+    background: const LinearGradientBackground(
+      startColor: Color(0xFF1F3A5F),
+      endColor: Color(0xFF05070D),
+      angleDegrees: 180,
+    ),
+    layers: [
+      _shape(
+        id: 'date-card',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 660, y: 140, w: 280, h: 280),
+        fill: const Color(0xFFFFFFFF),
+        cornerRadius: 32,
+      ),
+      _text(
+        id: 'day',
+        content: '۲۴',
+        transform: _box(x: 660, y: 174, w: 280, h: 120),
+        color: const Color(0xFF1F3A5F),
+        weight: FontWeight.w900,
+        size: 92,
+        fontFamily: _faBody,
+        lineHeight: 0.95,
+      ),
+      _text(
+        id: 'month',
+        content: 'خرداد',
+        transform: _box(x: 660, y: 300, w: 280, h: 60),
+        color: const Color(0xFFC45D3A),
+        weight: FontWeight.w700,
+        size: 36,
+        fontFamily: _faBody,
+      ),
+      _text(
+        id: 'headline',
+        content: 'همایش طراحی\nو خلاقیت',
+        transform: _box(x: 90, y: 520, w: 900, h: 250),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w800,
+        size: 82,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+        lineHeight: 1.18,
+      ),
+      _text(
+        id: 'venue',
+        content: 'سالن اصلی · ساعت ۱۸',
+        transform: _box(x: 90, y: 825, w: 900, h: 72),
+        color: const Color(0xFFE8D5B0),
+        weight: FontWeight.w500,
+        size: 42,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+      _shape(
+        id: 'accent-line',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 90, y: 1010, w: 900, h: 5),
+        fill: const Color(0xFFC45D3A),
+      ),
+      _text(
+        id: 'footer',
+        content: 'ثبت‌نام از امروز آغاز شد',
+        transform: _box(x: 90, y: 1060, w: 900, h: 70),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w600,
+        size: 42,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+    ],
+  );
+}
+
+EditorDocument _faPromoLaunchV1() {
+  return _docFill(
+    canvas: _portraitPoster,
+    background: const SolidBackground(color: Color(0xFFF5F1EB)),
+    layers: [
+      _shape(
+        id: 'accent-block',
+        kind: ShapeKind.rectangle,
+        transform: _box(x: 0, y: 0, w: 1080, h: 470),
+        fill: const Color(0xFF0F766E),
+      ),
+      _shape(
+        id: 'product-placeholder',
+        kind: ShapeKind.roundedRectangle,
+        transform: _box(x: 190, y: 300, w: 700, h: 520),
+        fill: const Color(0xFFFFFFFF),
+        cornerRadius: 46,
+      ),
+      ShapeLayer(
+        id: 'product-gradient',
+        kind: ShapeKind.circle,
+        transform: _box(x: 365, y: 388, w: 350, h: 350),
+        fill: const RadialGradientBackground(
+          centerColor: Color(0xFF22C55E),
+          edgeColor: Color(0xFF0F766E),
+          radius: 0.82,
+        ),
+      ),
+      _text(
+        id: 'label',
+        content: 'معرفی محصول',
+        transform: _box(x: 90, y: 95, w: 900, h: 70),
+        color: const Color(0xFFFFFFFF),
+        weight: FontWeight.w600,
+        size: 40,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+      ),
+      _text(
+        id: 'headline',
+        content: 'نسخه تازه\nاز راه رسید',
+        transform: _box(x: 90, y: 875, w: 900, h: 210),
+        color: const Color(0xFF111827),
+        weight: FontWeight.w800,
+        size: 74,
+        align: TextAlign.right,
+        fontFamily: _faBody,
+        lineHeight: 1.2,
+      ),
+      _text(
+        id: 'subtext',
+        content: 'طراحی تمیز، امکانات بیشتر',
+        transform: _box(x: 90, y: 1110, w: 900, h: 64),
+        color: const Color(0xFF6B6359),
+        weight: FontWeight.w500,
+        size: 38,
+        align: TextAlign.right,
+        fontFamily: _faBody,
       ),
     ],
   );

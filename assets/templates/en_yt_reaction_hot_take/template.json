@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_yt_reaction_hot_take",
+  "title": {
+    "en": "Hot Take Reaction YouTube Thumbnail",
+    "fa": "تامبنیل واکنش و تحلیل"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_yt_reaction_hot_take/thumbnail.png",
+  "document": "assets/templates/en_yt_reaction_hot_take/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "english",
+    "youtube",
+    "reaction",
+    "commentary"
+  ],
+  "home": {
+    "sortOrder": 109
+  }
+}

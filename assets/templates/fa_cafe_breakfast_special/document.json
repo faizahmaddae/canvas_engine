@@ -1,0 +1,176 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294966251,
+    "endColor": 4294891434,
+    "angleDegrees": 160.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "top",
+      "transform": {
+        "x": 80.0,
+        "y": 85.0,
+        "w": 920.0,
+        "h": 520.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4286328082,
+        "endColor": 4290007817,
+        "angleDegrees": 120.0
+      },
+      "cornerRadius": 58.0,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 34.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "cup",
+      "transform": {
+        "x": 375.0,
+        "y": 230.0,
+        "w": 330.0,
+        "h": 230.0,
+        "r": 0.0
+      },
+      "kind": "oval",
+      "fillColor": 4294965229,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "coffee",
+      "transform": {
+        "x": 420.0,
+        "y": 272.0,
+        "w": 240.0,
+        "h": 126.0,
+        "r": 0.0
+      },
+      "kind": "oval",
+      "fillColor": 4282586119,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "steam1",
+      "transform": {
+        "x": 455.0,
+        "y": 155.0,
+        "w": 72.0,
+        "h": 105.0,
+        "r": -12.0
+      },
+      "kind": "line",
+      "fillColor": 4294829706,
+      "strokeWidth": 12.0
+    },
+    {
+      "type": "shape",
+      "id": "steam2",
+      "transform": {
+        "x": 565.0,
+        "y": 145.0,
+        "w": 68.0,
+        "h": 115.0,
+        "r": 10.0
+      },
+      "kind": "line",
+      "fillColor": 4294829706,
+      "strokeWidth": 12.0
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 150.0,
+        "y": 690.0,
+        "w": 780.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "کافه صبح",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4287774734,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 140.0,
+        "y": 775.0,
+        "w": 800.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "صبحانه\nویژه",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 118.0,
+        "color": 4282586119,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.98,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "price",
+      "transform": {
+        "x": 170.0,
+        "y": 1060.0,
+        "w": 740.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4282586119,
+      "strokeWidth": 0.0,
+      "cornerRadius": 50.0
+    },
+    {
+      "type": "text",
+      "id": "price-text",
+      "transform": {
+        "x": 210.0,
+        "y": 1079.0,
+        "w": 660.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "قهوه + کروسان ۱۸۰",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 54.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_course_signup",
+  "title": {
+    "en": "Persian Course Signup Story",
+    "fa": "استوری ثبت‌نام دوره"
+  },
+  "category": "story",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_course_signup/thumbnail.png",
+  "document": "assets/templates/fa_story_course_signup/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "story",
+    "education",
+    "course"
+  ],
+  "home": {
+    "sortOrder": 33
+  }
+}

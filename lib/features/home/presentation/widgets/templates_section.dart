@@ -1,205 +1,305 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../templates/domain/template.dart';
-import '../../../templates/domain/template_catalog.dart';
+import '../../../templates/presentation/template_presentation_order.dart';
 import '../../../templates/presentation/templates_browse_screen.dart';
 import 'category_row.dart';
+import 'home_style.dart';
 
-/// Templates block on Home: a focused preview of the top
-/// [maxCategories] categories followed by a single "Browse all
-/// templates" tile.
-///
-/// Each category row carries its own header — there is no parent
-/// "Templates" title above them, since the bottom-nav already has a
-/// dedicated Templates tab and a stacked title would just repeat
-/// the first row's header.
-///
-/// English-only for now — the Persian catalog will be re-introduced
-/// once the localization phase lands.
-///
-/// While the catalog is still small, each category row is padded
-/// with display-only repeats of the same templates (under a
-/// distinct `key`) so the rows look populated. These repeats route
-/// the same `onOpen` so behaviour is identical.
+enum HomeTemplateLanguageFilter { all, persian, english, mixed }
+
+/// Templates block on Home: curated, product-facing strips instead
+/// of a raw catalog dump. The language filter is local to Home and
+/// never changes the app locale.
 class TemplatesSection extends StatelessWidget {
   const TemplatesSection({
     super.key,
     required this.onOpen,
-    this.language = TemplateLanguage.english,
-    this.minPerRow = 6,
-    this.maxCategories = 3,
-  });
+    this.language,
+    required List<Template> templates,
+    this.contentLanguages,
+    this.enabledCategories,
+    this.languageFilter = HomeTemplateLanguageFilter.all,
+    this.filter,
+    this.onSeeAllCategory,
+  }) : _templates = templates;
 
-  static const String browseAllLabel = 'Browse all templates';
+  static const List<_HomeTemplateSectionSpec> _sections = [
+    _HomeTemplateSectionSpec(
+      kind: _HomeTemplateSectionKind.recommended,
+      categories: {
+        TemplateCategory.instagramStory,
+        TemplateCategory.story,
+        TemplateCategory.social,
+        TemplateCategory.business,
+        TemplateCategory.food,
+        TemplateCategory.event,
+        TemplateCategory.sale,
+        TemplateCategory.youtubeThumbnail,
+        TemplateCategory.poetryPost,
+        TemplateCategory.promotionalPoster,
+        TemplateCategory.quote,
+      },
+      height: 172,
+      aspectRatio: 4 / 5,
+      categoryPriority: [
+        TemplateCategory.instagramStory,
+        TemplateCategory.promotionalPoster,
+        TemplateCategory.poetryPost,
+        TemplateCategory.youtubeThumbnail,
+        TemplateCategory.quote,
+        TemplateCategory.story,
+        TemplateCategory.social,
+        TemplateCategory.sale,
+        TemplateCategory.business,
+        TemplateCategory.food,
+        TemplateCategory.event,
+      ],
+      preferredIds: kHomeRecommendedTemplateIds,
+    ),
+    _HomeTemplateSectionSpec(
+      kind: _HomeTemplateSectionKind.instagramStories,
+      categories: {TemplateCategory.instagramStory},
+      category: TemplateCategory.instagramStory,
+      height: 168,
+      aspectRatio: 9 / 16,
+      preferredIds: kHomeStoryTemplateIds,
+    ),
+    _HomeTemplateSectionSpec(
+      kind: _HomeTemplateSectionKind.textTypography,
+      categories: {TemplateCategory.quote},
+      category: TemplateCategory.quote,
+      height: 138,
+      aspectRatio: 1,
+      preferredIds: kHomeTextTemplateIds,
+    ),
+    _HomeTemplateSectionSpec(
+      kind: _HomeTemplateSectionKind.advertisingPosts,
+      categories: {TemplateCategory.promotionalPoster, TemplateCategory.sale},
+      category: TemplateCategory.promotionalPoster,
+      height: 164,
+      aspectRatio: 4 / 5,
+      preferredIds: kHomeAdvertisingTemplateIds,
+    ),
+    _HomeTemplateSectionSpec(
+      kind: _HomeTemplateSectionKind.youtubeThumbnails,
+      categories: {TemplateCategory.youtubeThumbnail},
+      category: TemplateCategory.youtubeThumbnail,
+      height: 110,
+      aspectRatio: 16 / 9,
+      preferredIds: kHomeYoutubeTemplateIds,
+    ),
+    _HomeTemplateSectionSpec(
+      kind: _HomeTemplateSectionKind.quotesPoems,
+      categories: {TemplateCategory.poetryPost},
+      category: TemplateCategory.poetryPost,
+      height: 138,
+      aspectRatio: 1,
+      preferredIds: kHomePoetryTemplateIds,
+    ),
+  ];
 
   final void Function(Template) onOpen;
-  final TemplateLanguage language;
 
-  /// Minimum number of cards per category row. Padding repeats from
-  /// the category's own pool only — never borrows across categories.
-  final int? minPerRow;
+  /// Kept for older callers/tests that still pass a language, but Home
+  /// now shows every template in a focused category regardless of the
+  /// UI locale or template content language.
+  final TemplateLanguage? language;
 
-  /// Number of categories surfaced on Home. The full catalog stays
-  /// reachable via the trailing "Browse all templates" tile and the
-  /// dedicated Templates tab.
-  final int maxCategories;
+  final Set<TemplateLanguage>? contentLanguages;
+
+  final HomeTemplateLanguageFilter languageFilter;
+
+  /// Optional compact control rendered directly under the Templates
+  /// title. Home passes the local language filter here so the filter
+  /// reads as part of recommendations instead of a separate section.
+  final Widget? filter;
+
+  final Set<TemplateCategory>? enabledCategories;
+
+  /// Repository-backed source supplied by Home; tests inject a small
+  /// catalog here so the row/filter logic stays deterministic.
+  final List<Template> _templates;
+
+  /// Optional observer used by widget tests to verify the category
+  /// that will pre-filter the browse screen. Production leaves this
+  /// null and still navigates normally.
+  final void Function(TemplateCategory category)? onSeeAllCategory;
 
   @override
   Widget build(BuildContext context) {
-    final pool = TemplateCatalog.byLanguage(language);
-    if (pool.isEmpty) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final source = _templates;
+    final allowedLanguages = _allowedLanguages(
+      languageFilter,
+      contentLanguages,
+    );
+    final allowedCategories = enabledCategories;
+    final rows = <_HomeTemplateSectionRow>[];
+    for (final spec in _sections) {
+      final categories = spec.categories.where(
+        (category) =>
+            allowedCategories == null || allowedCategories.contains(category),
+      );
+      if (categories.isEmpty) continue;
 
-    // Group + preserve catalog order — first appearance of each
-    // category dictates the row order on Home.
-    final byCategory = <TemplateCategory, List<Template>>{};
-    for (final t in pool) {
-      byCategory.putIfAbsent(t.category, () => <Template>[]).add(t);
+      final templates = _templatesFor(
+        source: source,
+        spec: spec,
+        categories: categories.toSet(),
+        allowedLanguages: allowedLanguages,
+      );
+      if (templates.isEmpty) continue;
+      rows.add(_HomeTemplateSectionRow(spec: spec, templates: templates));
     }
 
-    final categories = byCategory.entries.take(maxCategories).toList();
+    if (rows.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final entry in categories) ...[
-          CategoryRow(
-            title: entry.key.label,
-            templates: _padded(entry.value),
-            onOpen: onOpen,
-            onSeeAll: () => _openBrowse(context),
-            // Force a uniform 1:1 thumbnail in the home preview so
-            // the row rhythm doesn't break when stories (9:16) sit
-            // next to squares (1:1). Real aspect ratios still
-            // apply once the user lands in the editor.
-            thumbnailAspectRatio: 1,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-        ],
         Padding(
           padding: const EdgeInsetsDirectional.only(
             start: AppSpacing.pageGutter,
             end: AppSpacing.pageGutter,
           ),
-          child: _BrowseAllTile(onTap: () => _openBrowse(context)),
+          child: Text(
+            l10n.templatesTitle,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: HomePalette.ink,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
         ),
+        if (filter != null) ...[const SizedBox(height: AppSpacing.sm), filter!],
+        const SizedBox(height: AppSpacing.md),
+        for (var index = 0; index < rows.length; index++) ...[
+          Builder(
+            builder: (context) {
+              final row = rows[index];
+              final width = row.spec.height * row.spec.aspectRatio;
+              return CategoryRow(
+                title: _labelFor(l10n, row.spec.kind),
+                templates: row.templates,
+                onOpen: onOpen,
+                onSeeAll: () => _openBrowse(
+                  context,
+                  row.spec.category ?? row.templates.first.category,
+                  row.templates.first.language,
+                ),
+                actionLabel: l10n.seeAllAction,
+                cardHeight: row.spec.height,
+                thumbnailAspectRatio: row.spec.aspectRatio,
+                cardMinWidth: width,
+                cardMaxWidth: width,
+              );
+            },
+          ),
+          if (index != rows.length - 1) const SizedBox(height: AppSpacing.xxl),
+        ],
       ],
     );
   }
 
-  List<Template> _padded(List<Template> source) {
-    final min = minPerRow ?? 0;
-    if (source.isEmpty || source.length >= min) return source;
-    final out = <Template>[...source];
-    var i = 0;
-    while (out.length < min) {
-      final base = source[i % source.length];
-      out.add(Template(
-        // Distinct id so Flutter's `ValueKey(template.id)` in the
-        // row treats this as a separate widget instance.
-        id: '${base.id}__pad${out.length}',
-        name: base.name,
-        category: base.category,
-        language: base.language,
-        build: base.build,
-      ));
-      i++;
-    }
-    return out;
-  }
+  String _labelFor(AppLocalizations l10n, _HomeTemplateSectionKind kind) =>
+      switch (kind) {
+        _HomeTemplateSectionKind.recommended => l10n.homeTemplatesRecommended,
+        _HomeTemplateSectionKind.instagramStories =>
+          l10n.homeTemplatesInstagramStories,
+        _HomeTemplateSectionKind.textTypography =>
+          l10n.homeTemplatesTextTypography,
+        _HomeTemplateSectionKind.advertisingPosts =>
+          l10n.homeTemplatesAdvertisingPosts,
+        _HomeTemplateSectionKind.youtubeThumbnails =>
+          l10n.homeTemplatesYoutubeThumbnails,
+        _HomeTemplateSectionKind.quotesPoems => l10n.homeTemplatesQuotesPoems,
+      };
 
-  void _openBrowse(BuildContext context) {
+  void _openBrowse(
+    BuildContext context,
+    TemplateCategory category,
+    TemplateLanguage browseLanguage,
+  ) {
+    onSeeAllCategory?.call(category);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => TemplatesBrowseScreen(
           onOpen: onOpen,
-          initialLanguage: language,
+          initialLanguage: browseLanguage,
+          initialCategory: category,
+          templates: _templates,
         ),
       ),
     );
   }
 }
 
-/// Full-width tile that surfaces the rest of the catalog without
-/// crowding the home view. Outlined, primary-tinted, with a
-/// directional chevron that auto-mirrors under RTL.
-class _BrowseAllTile extends StatelessWidget {
-  const _BrowseAllTile({required this.onTap});
+Set<TemplateLanguage> _allowedLanguages(
+  HomeTemplateLanguageFilter filter,
+  Set<TemplateLanguage>? settingsLanguages,
+) => switch (filter) {
+  HomeTemplateLanguageFilter.all =>
+    settingsLanguages ?? {TemplateLanguage.english, TemplateLanguage.persian},
+  HomeTemplateLanguageFilter.persian => {TemplateLanguage.persian},
+  HomeTemplateLanguageFilter.english => {TemplateLanguage.english},
+  HomeTemplateLanguageFilter.mixed => {
+    TemplateLanguage.english,
+    TemplateLanguage.persian,
+  },
+};
 
-  final VoidCallback onTap;
+List<Template> _templatesFor({
+  required List<Template> source,
+  required _HomeTemplateSectionSpec spec,
+  required Set<TemplateCategory> categories,
+  required Set<TemplateLanguage> allowedLanguages,
+}) {
+  final pool = source
+      .where((t) => categories.contains(t.category))
+      .where((t) => allowedLanguages.contains(t.language))
+      .toList(growable: false);
+  return orderTemplatesForHome(
+    templates: pool,
+    preferredIds: spec.preferredIds,
+    categoryPriority: spec.categoryPriority,
+  );
+}
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final accent = scheme.primary;
+enum _HomeTemplateSectionKind {
+  recommended,
+  instagramStories,
+  textTypography,
+  advertisingPosts,
+  youtubeThumbnails,
+  quotesPoems,
+}
 
-    return Semantics(
-      button: true,
-      label: TemplatesSection.browseAllLabel,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadii.card),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(AppRadii.card),
-            border: Border.all(
-              color: accent.withValues(alpha: 0.45),
-              width: 1.5,
-            ),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppRadii.card),
-            onTap: onTap,
-            splashColor: accent.withValues(alpha: 0.18),
-            highlightColor: accent.withValues(alpha: 0.10),
-            child: Padding(
-              padding: const EdgeInsetsDirectional.only(
-                start: AppSpacing.lg,
-                end: AppSpacing.lg,
-                top: AppSpacing.md,
-                bottom: AppSpacing.md,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(AppRadii.button),
-                    ),
-                    child: Icon(
-                      Icons.grid_view_rounded,
-                      color: accent,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      TemplatesSection.browseAllLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.start,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: accent,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: accent,
-                    size: 22,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+class _HomeTemplateSectionSpec {
+  const _HomeTemplateSectionSpec({
+    required this.kind,
+    required this.categories,
+    required this.height,
+    required this.aspectRatio,
+    this.category,
+    this.preferredIds = const [],
+    this.categoryPriority = const [],
+  });
+
+  final _HomeTemplateSectionKind kind;
+  final Set<TemplateCategory> categories;
+  final TemplateCategory? category;
+  final double height;
+  final double aspectRatio;
+  final List<String> preferredIds;
+  final List<TemplateCategory> categoryPriority;
+}
+
+class _HomeTemplateSectionRow {
+  const _HomeTemplateSectionRow({required this.spec, required this.templates});
+
+  final _HomeTemplateSectionSpec spec;
+  final List<Template> templates;
 }

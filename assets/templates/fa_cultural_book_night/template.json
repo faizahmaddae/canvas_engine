@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_cultural_book_night",
+  "title": {
+    "en": "Persian Book Night Event",
+    "fa": "شب کتاب و گفتگو"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_cultural_book_night/thumbnail.png",
+  "document": "assets/templates/fa_cultural_book_night/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "cultural",
+    "book",
+    "event"
+  ],
+  "home": {
+    "sortOrder": 77
+  }
+}

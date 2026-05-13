@@ -4,6 +4,7 @@ import '../../core/background_fill.dart';
 import '../../core/editor_layer.dart';
 import '../../core/layer_capabilities.dart';
 import '../../core/layer_transform.dart';
+import '../../effects/editor_effect.dart';
 import 'shape_paths.dart';
 
 /// Supported primitive shape kinds. New kinds can be added without any
@@ -147,6 +148,7 @@ class ShapeLayer extends EditorLayer {
     super.visible,
     super.locked,
     super.opacity,
+    super.effects,
   }) : super(
           // Inline so the constructor stays `const`. Honour an
           // explicit per-instance [resizeMode] first; otherwise fall
@@ -261,100 +263,93 @@ class ShapeLayer extends EditorLayer {
   @override
   String get type => 'shape';
 
-  @override
-  EditorLayer withTransform(LayerTransform transform) => ShapeLayer(
-        id: id,
-        transform: transform,
-        kind: kind,
-        fillColor: fillColor,
-        fill: fill,
-        fillOpacity: fillOpacity,
-        strokeColor: strokeColor,
-        strokeWidth: strokeWidth,
-        cornerRadius: cornerRadius,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffset: shadowOffset,
-        shadowOpacity: shadowOpacity,
-        resizeMode: resizeMode,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  /// Single source of truth for cloning a [ShapeLayer] with one or
+  /// more fields replaced. Every `with*` override and the public
+  /// [copyWith] delegate here. See [ImageLayer.copyAll] for the
+  /// rationale.
+  ///
+  /// Sentinels: [name], [fill], [strokeColor], [resizeMode] are all
+  /// nullable and use [_kCopySentinel] so callers can both *omit*
+  /// (preserve current) and *pass null* (clear). Without sentinels
+  /// `null` would be ambiguous on every fill / stroke / mode edit.
+  ShapeLayer copyAll({
+    String? id,
+    LayerTransform? transform,
+    ShapeKind? kind,
+    Color? fillColor,
+    Object? fill = _kCopySentinel,
+    double? fillOpacity,
+    Object? strokeColor = _kCopySentinel,
+    double? strokeWidth,
+    double? cornerRadius,
+    Color? shadowColor,
+    double? shadowBlur,
+    Offset? shadowOffset,
+    double? shadowOpacity,
+    Object? resizeMode = _kCopySentinel,
+    Object? name = _kCopySentinel,
+    bool? visible,
+    bool? locked,
+    double? opacity,
+    EffectStack? effects,
+  }) {
+    assert(
+      opacity == null || (opacity >= 0.0 && opacity <= 1.0),
+      'opacity must be in 0..1 (got $opacity)',
+    );
+    return ShapeLayer(
+      id: id ?? this.id,
+      transform: transform ?? this.transform,
+      kind: kind ?? this.kind,
+      fillColor: fillColor ?? this.fillColor,
+      fill: identical(fill, _kCopySentinel)
+          ? this.fill
+          : fill as BackgroundFill?,
+      fillOpacity: fillOpacity ?? this.fillOpacity,
+      strokeColor: identical(strokeColor, _kCopySentinel)
+          ? this.strokeColor
+          : strokeColor as Color?,
+      strokeWidth: strokeWidth ?? this.strokeWidth,
+      cornerRadius: cornerRadius ?? this.cornerRadius,
+      shadowColor: shadowColor ?? this.shadowColor,
+      shadowBlur: shadowBlur ?? this.shadowBlur,
+      shadowOffset: shadowOffset ?? this.shadowOffset,
+      shadowOpacity: shadowOpacity ?? this.shadowOpacity,
+      resizeMode: identical(resizeMode, _kCopySentinel)
+          ? this.resizeMode
+          : resizeMode as ShapeResizeMode?,
+      name: identical(name, _kCopySentinel) ? this.name : name as String?,
+      visible: visible ?? this.visible,
+      locked: locked ?? this.locked,
+      opacity: opacity == null ? this.opacity : opacity.clamp(0.0, 1.0),
+      effects: effects ?? this.effects,
+    );
+  }
+
+  static const Object _kCopySentinel = Object();
 
   @override
-  EditorLayer withVisibility(bool visible) => ShapeLayer(
-        id: id,
-        transform: transform,
-        kind: kind,
-        fillColor: fillColor,
-        fill: fill,
-        fillOpacity: fillOpacity,
-        strokeColor: strokeColor,
-        strokeWidth: strokeWidth,
-        cornerRadius: cornerRadius,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffset: shadowOffset,
-        shadowOpacity: shadowOpacity,
-        resizeMode: resizeMode,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  EditorLayer withTransform(LayerTransform transform) =>
+      copyAll(transform: transform);
 
   @override
-  EditorLayer withLocked(bool locked) => ShapeLayer(
-        id: id,
-        transform: transform,
-        kind: kind,
-        fillColor: fillColor,
-        fill: fill,
-        fillOpacity: fillOpacity,
-        strokeColor: strokeColor,
-        strokeWidth: strokeWidth,
-        cornerRadius: cornerRadius,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffset: shadowOffset,
-        shadowOpacity: shadowOpacity,
-        resizeMode: resizeMode,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  EditorLayer withVisibility(bool visible) => copyAll(visible: visible);
 
   @override
-  EditorLayer withOpacity(double opacity) => ShapeLayer(
-        id: id,
-        transform: transform,
-        kind: kind,
-        fillColor: fillColor,
-        fill: fill,
-        fillOpacity: fillOpacity,
-        strokeColor: strokeColor,
-        strokeWidth: strokeWidth,
-        cornerRadius: cornerRadius,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffset: shadowOffset,
-        shadowOpacity: shadowOpacity,
-        resizeMode: resizeMode,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity.clamp(0.0, 1.0),
-      );
+  EditorLayer withLocked(bool locked) => copyAll(locked: locked);
+
+  @override
+  EditorLayer withOpacity(double opacity) =>
+      copyAll(opacity: opacity.clamp(0.0, 1.0));
 
   /// Returns a new shape with selected fields overridden.
   ///
-  /// Pass [clearStroke]: true to explicitly drop the stroke colour;
-  /// without it, a `null` [strokeColor] argument is treated as
-  /// "keep current" so a fill-only edit doesn't blow away the
-  /// existing outline.
+  /// Pass [clearFill] / [clearStroke] true to explicitly drop the
+  /// gradient fill or stroke colour; without them, a `null` argument
+  /// is treated as "keep current" so a fill-only edit doesn't blow
+  /// away the existing outline. Internally delegates to [copyAll]
+  /// with the matching sentinel — kept as a separate method for
+  /// callers that prefer the boolean-clear ergonomics.
   ShapeLayer copyWith({
     ShapeKind? kind,
     Color? fillColor,
@@ -371,28 +366,22 @@ class ShapeLayer extends EditorLayer {
     double? shadowOpacity,
     ShapeResizeMode? resizeMode,
     String? name,
-  }) {
-    return ShapeLayer(
-      id: id,
-      transform: transform,
-      kind: kind ?? this.kind,
-      fillColor: fillColor ?? this.fillColor,
-      fill: clearFill ? null : (fill ?? this.fill),
-      fillOpacity: fillOpacity ?? this.fillOpacity,
-      strokeColor: clearStroke ? null : (strokeColor ?? this.strokeColor),
-      strokeWidth: strokeWidth ?? this.strokeWidth,
-      cornerRadius: cornerRadius ?? this.cornerRadius,
-      shadowColor: shadowColor ?? this.shadowColor,
-      shadowBlur: shadowBlur ?? this.shadowBlur,
-      shadowOffset: shadowOffset ?? this.shadowOffset,
-      shadowOpacity: shadowOpacity ?? this.shadowOpacity,
-      resizeMode: resizeMode ?? this.resizeMode,
-      name: name ?? this.name,
-      visible: visible,
-      locked: locked,
-      opacity: opacity,
-    );
-  }
+  }) =>
+      copyAll(
+        kind: kind,
+        fillColor: fillColor,
+        fill: clearFill ? null : (fill ?? this.fill),
+        fillOpacity: fillOpacity,
+        strokeColor: clearStroke ? null : (strokeColor ?? this.strokeColor),
+        strokeWidth: strokeWidth,
+        cornerRadius: cornerRadius,
+        shadowColor: shadowColor,
+        shadowBlur: shadowBlur,
+        shadowOffset: shadowOffset,
+        shadowOpacity: shadowOpacity,
+        resizeMode: resizeMode ?? this.resizeMode,
+        name: name ?? this.name,
+      );
 
   @override
   Widget buildContent(BuildContext context) {
@@ -583,6 +572,7 @@ class ShapeLayer extends EditorLayer {
       visible: json['visible'] as bool? ?? true,
       locked: json['locked'] as bool? ?? false,
       opacity: ((json['opacity'] as num?)?.toDouble() ?? 1.0).clamp(0.0, 1.0),
+      effects: EditorLayer.parseEffects(json),
     );
   }
 

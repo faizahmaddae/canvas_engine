@@ -15,39 +15,51 @@ abstract final class AppTheme {
   /// Primary UI font for Latin scripts. Bundled in `pubspec.yaml`
   /// already (no `google_fonts` dependency needed). Hanken Grotesk
   /// is geometrically close to Inter and ships a real Bold weight.
-  static const String _uiFamily = 'Hanken_Grotesk';
+  static const String _latinUiFamily = 'Hanken_Grotesk';
+  static const String _persianUiFamily = 'Vazir_Regular';
 
   /// Persian fallback chain for later localization. Listed via
   /// `fontFamilyFallback` so Latin glyphs come from Hanken Grotesk
   /// and any unsupported codepoints fall through to a Persian
   /// family that's already in `pubspec.yaml`.
-  static const List<String> _uiFallback = <String>[
+  static const List<String> _latinUiFallback = <String>[
     'IranianSans',
     'B_Yekan',
     'Gandom',
   ];
 
-  static ThemeData light() => _build(Brightness.light);
-  static ThemeData dark() => _build(Brightness.dark);
+  static const List<String> _persianUiFallback = <String>[
+    _latinUiFamily,
+    'IranianSans',
+    'B_Yekan',
+    'Gandom',
+  ];
 
-  static ThemeData _build(Brightness brightness) {
+  static ThemeData light({Locale? locale}) =>
+      _build(Brightness.light, locale: locale);
+  static ThemeData dark({Locale? locale}) =>
+      _build(Brightness.dark, locale: locale);
+
+  static ThemeData _build(Brightness brightness, {Locale? locale}) {
     final scheme = ColorScheme.fromSeed(
       seedColor: seed,
       brightness: brightness,
     );
+    final uiFamily = _uiFamilyFor(locale);
+    final uiFallback = _uiFallbackFor(locale);
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       brightness: brightness,
       scaffoldBackgroundColor: scheme.surface,
-      fontFamily: _uiFamily,
-      fontFamilyFallback: _uiFallback,
+      fontFamily: uiFamily,
+      fontFamilyFallback: uiFallback,
       visualDensity: VisualDensity.standard,
       splashFactory: InkSparkle.splashFactory,
     );
 
     return base.copyWith(
-      textTheme: _textTheme(base.textTheme, scheme),
+      textTheme: _textTheme(base.textTheme, scheme, uiFamily, uiFallback),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           shape: RoundedRectangleBorder(
@@ -60,8 +72,7 @@ abstract final class AppTheme {
           textStyle: const TextStyle(
             fontWeight: FontWeight.w600,
             letterSpacing: -0.1,
-            fontFamily: _uiFamily,
-          ),
+          ).copyWith(fontFamily: uiFamily, fontFamilyFallback: uiFallback),
         ),
       ),
       iconButtonTheme: IconButtonThemeData(
@@ -86,7 +97,8 @@ abstract final class AppTheme {
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
-            fontFamily: _uiFamily,
+            fontFamily: uiFamily,
+            fontFamilyFallback: uiFallback,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
             fontSize: 11,
             letterSpacing: 0,
@@ -107,7 +119,8 @@ abstract final class AppTheme {
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
-          fontFamily: _uiFamily,
+          fontFamily: uiFamily,
+          fontFamilyFallback: uiFallback,
           fontWeight: FontWeight.w700,
           fontSize: 18,
           color: scheme.onSurface,
@@ -117,11 +130,22 @@ abstract final class AppTheme {
     );
   }
 
-  static TextTheme _textTheme(TextTheme base, ColorScheme scheme) {
+  static String _uiFamilyFor(Locale? locale) =>
+      locale?.languageCode == 'fa' ? _persianUiFamily : _latinUiFamily;
+
+  static List<String> _uiFallbackFor(Locale? locale) =>
+      locale?.languageCode == 'fa' ? _persianUiFallback : _latinUiFallback;
+
+  static TextTheme _textTheme(
+    TextTheme base,
+    ColorScheme scheme,
+    String uiFamily,
+    List<String> uiFallback,
+  ) {
     TextStyle s(double size, FontWeight w, {double letter = 0, double? h}) =>
         TextStyle(
-          fontFamily: _uiFamily,
-          fontFamilyFallback: _uiFallback,
+          fontFamily: uiFamily,
+          fontFamilyFallback: uiFallback,
           fontSize: size,
           fontWeight: w,
           letterSpacing: letter,
@@ -138,9 +162,12 @@ abstract final class AppTheme {
       titleSmall: s(14, FontWeight.w600, letter: -0.1, h: 1.3),
       bodyLarge: s(15, FontWeight.w500, letter: -0.1, h: 1.35),
       bodyMedium: s(14, FontWeight.w500, letter: -0.05, h: 1.4),
-      bodySmall: s(12, FontWeight.w500, letter: 0, h: 1.35).copyWith(
-        color: scheme.onSurfaceVariant,
-      ),
+      bodySmall: s(
+        12,
+        FontWeight.w500,
+        letter: 0,
+        h: 1.35,
+      ).copyWith(color: scheme.onSurfaceVariant),
       labelLarge: s(14, FontWeight.w600, letter: 0, h: 1.2),
       labelMedium: s(12, FontWeight.w600, letter: 0.1, h: 1.2),
       labelSmall: s(11, FontWeight.w600, letter: 0.2, h: 1.2),

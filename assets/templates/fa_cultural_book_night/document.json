@@ -1,0 +1,124 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4282718723,
+    "endColor": 4287774734,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "book",
+      "transform": {
+        "x": 210.0,
+        "y": 140.0,
+        "w": 660.0,
+        "h": 520.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294898631,
+        "endColor": 4294829706,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 42.0,
+      "shadowOpacity": 0.24,
+      "shadowBlur": 38.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "spine",
+      "transform": {
+        "x": 510.0,
+        "y": 140.0,
+        "w": 60.0,
+        "h": 520.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4287774734,
+      "strokeWidth": 0.0,
+      "cornerRadius": 12.0
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 155.0,
+        "y": 760.0,
+        "w": 760.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "content": "رویداد فرهنگی",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 140.0,
+        "y": 845.0,
+        "w": 800.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "شب کتاب\nو گفتگو",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 108.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.98,
+        "alignment": "right",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 160.0,
+        "y": 1110.0,
+        "w": 760.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "content": "برای نشست کتاب‌خوانی، رونمایی کتاب یا گفتگوی فرهنگی استفاده کنید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4294898631,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

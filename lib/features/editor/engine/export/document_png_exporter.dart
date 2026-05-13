@@ -9,6 +9,7 @@ import 'package:flutter/scheduler.dart';
 
 import '../core/editor_document.dart';
 import '../rendering/document_view.dart';
+import 'png_color_space.dart';
 
 /// Thrown when the document cannot be rasterised. Wraps the underlying
 /// engine cause (timeout, missing render boundary, etc.) so callers
@@ -32,6 +33,16 @@ class DocumentExportException implements Exception {
 /// the [RepaintBoundary] via `toImage`, then removes the entry. Selection
 /// chrome, handles, snap guides, mode chips and the viewport transform
 /// are *not* part of [DocumentView], so they cannot leak into the output.
+///
+/// **Color-space contract.** The captured pixels are sRGB-encoded,
+/// premultiplied-alpha (matches the on-screen `DocumentView` contract;
+/// see `docs/effects.md` §6). PNGs are post-processed via
+/// [tagPngAsSrgb] to embed an `sRGB` (+ `gAMA`) chunk so wide-gamut
+/// viewers (iOS Photos, macOS Preview on a Display-P3 device) don't
+/// expand the untagged content into the device's gamut. The pixels
+/// themselves remain plain sRGB; this is the right answer today and
+/// matches the rendering math of every shipped effect. A wide-gamut
+/// / HDR pipeline is a future change tracked in `docs/effects.md`.
 ///
 /// Two entry points:
 ///
@@ -185,7 +196,11 @@ class DocumentPngExporter {
           'toByteData returned null — render produced no pixels',
         );
       }
-      return byteData.buffer.asUint8List();
+      // Flutter's PNG encoder writes no colour-space chunks; tag the
+      // bytes as sRGB so iOS Photos.app and other wide-gamut viewers
+      // don't expand the file into the device's gamut. See
+      // [tagPngAsSrgb] for the rationale.
+      return tagPngAsSrgb(byteData.buffer.asUint8List());
     } finally {
       image.dispose();
     }

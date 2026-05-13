@@ -1,0 +1,179 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4278322711,
+    "endColor": 4286328082,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "spotlight",
+      "transform": {
+        "x": 625.0,
+        "y": -140.0,
+        "w": 620.0,
+        "h": 620.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "radial",
+        "centerColor": 4294626325,
+        "edgeColor": 4293870660,
+        "focalX": -0.2,
+        "focalY": -0.2,
+        "radius": 1.0
+      },
+      "opacity": 0.74
+    },
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 92.0,
+        "y": 205.0,
+        "w": 896.0,
+        "h": 940.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279179050,
+      "strokeWidth": 4.0,
+      "cornerRadius": 60.0,
+      "strokeColor": 4294626325,
+      "shadowOpacity": 0.32,
+      "shadowBlur": 48.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 26.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 150.0,
+        "y": 300.0,
+        "w": 760.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "STARTUP NIGHT",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 42.0,
+        "color": 4294626325,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 145.0,
+        "y": 390.0,
+        "w": 790.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "Pitch your\nnext big idea",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 86.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.98,
+        "alignment": "left",
+        "shadowColor": 2600468480,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "panel",
+      "transform": {
+        "x": 150.0,
+        "y": 700.0,
+        "w": 780.0,
+        "h": 145.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280166715,
+      "strokeWidth": 0.0,
+      "cornerRadius": 36.0
+    },
+    {
+      "type": "text",
+      "id": "panel-text",
+      "transform": {
+        "x": 190.0,
+        "y": 735.0,
+        "w": 700.0,
+        "h": 64.0,
+        "r": 0.0
+      },
+      "content": "Founders • Investors • Demo tables",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 40.0,
+        "color": 4291548641,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 150.0,
+        "y": 940.0,
+        "w": 390.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0,
+      "cornerRadius": 41.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 185.0,
+        "y": 958.0,
+        "w": 320.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "APPLY NOW",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 40.0,
+        "color": 4279310375,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

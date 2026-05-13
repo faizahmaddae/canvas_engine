@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../domain/project.dart';
 import 'widgets/recent_projects_grid.dart';
 
@@ -27,16 +28,13 @@ class RecentProjectsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Recent projects'),
+        title: Text(context.l10n.recentProjectsTitle),
         scrolledUnderElevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 24),
-          child: RecentProjectsGrid(
-            onCreate: onCreate,
-            onOpen: onOpen,
-          ),
+          child: RecentProjectsGrid(onCreate: onCreate, onOpen: onOpen),
         ),
       ),
     );

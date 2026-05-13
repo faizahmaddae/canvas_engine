@@ -1,0 +1,155 @@
+{
+  "version": 2,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279179050,
+    "endColor": 4278322711,
+    "angleDegrees": 120.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "yellow-band",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "w": 1280.0,
+        "h": 74.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "right-panel",
+      "transform": {
+        "x": 820.0,
+        "y": 118.0,
+        "w": 360.0,
+        "h": 430.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294507260,
+      "strokeWidth": 0.0,
+      "cornerRadius": 38.0
+    },
+    {
+      "type": "shape",
+      "id": "play-disc",
+      "transform": {
+        "x": 916.0,
+        "y": 238.0,
+        "w": 168.0,
+        "h": 168.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293870660,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "play-triangle",
+      "transform": {
+        "x": 980.0,
+        "y": 284.0,
+        "w": 82.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "kind": "triangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 70.0,
+        "y": 112.0,
+        "w": 660.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "STOP SCROLLING",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 42.0,
+        "color": 4294626325,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 66.0,
+        "y": 190.0,
+        "w": 720.0,
+        "h": 300.0,
+        "r": 0.0
+      },
+      "content": "WATCH\nTHIS",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 148.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.92,
+        "alignment": "left",
+        "shadowColor": 2566914048,
+        "shadowBlur": 4.0,
+        "shadowDx": 0.0,
+        "shadowDy": 2.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "subtitle-pill",
+      "transform": {
+        "x": 70.0,
+        "y": 552.0,
+        "w": 650.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293870660,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "transform": {
+        "x": 96.0,
+        "y": 574.0,
+        "w": 598.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "BEFORE YOU EDIT AGAIN",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 40.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.1,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

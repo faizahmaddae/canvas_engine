@@ -1,0 +1,120 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294507260,
+    "endColor": 4293257195,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "photo",
+      "transform": {
+        "x": 95.0,
+        "y": 95.0,
+        "w": 890.0,
+        "h": 430.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4279310375,
+        "endColor": 4285231744,
+        "angleDegrees": 140.0
+      },
+      "cornerRadius": 48.0,
+      "shadowOpacity": 0.16,
+      "shadowBlur": 30.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 16.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "label",
+      "transform": {
+        "x": 150.0,
+        "y": 585.0,
+        "w": 260.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 35.0
+    },
+    {
+      "type": "text",
+      "id": "label-text",
+      "transform": {
+        "x": 180.0,
+        "y": 600.0,
+        "w": 200.0,
+        "h": 40.0,
+        "r": 0.0
+      },
+      "content": "EDITORIAL",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 34.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 145.0,
+        "y": 710.0,
+        "w": 790.0,
+        "h": 330.0,
+        "r": 0.0
+      },
+      "content": "گاهی\nسادگی\nقوی‌ترین\nبیان است",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 90.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.02,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 160.0,
+        "y": 1110.0,
+        "w": 760.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "content": "برای کپشن‌های جدی و حرفه‌ای",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4283127139,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

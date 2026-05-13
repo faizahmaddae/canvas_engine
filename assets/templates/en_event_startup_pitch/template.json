@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_event_startup_pitch",
+  "title": {
+    "en": "Startup Pitch Event Poster",
+    "fa": "پوستر رویداد استارتاپ"
+  },
+  "category": "event",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_event_startup_pitch/thumbnail.png",
+  "document": "assets/templates/en_event_startup_pitch/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "english",
+    "event",
+    "startup",
+    "pitch"
+  ],
+  "home": {
+    "sortOrder": 80
+  }
+}

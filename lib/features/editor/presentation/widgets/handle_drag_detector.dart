@@ -48,9 +48,9 @@ class HandleDragDetector extends StatelessWidget {
       gestures: <Type, GestureRecognizerFactory>{
         _HandleDragRecognizer:
             GestureRecognizerFactoryWithHandlers<_HandleDragRecognizer>(
-          () => _HandleDragRecognizer(),
-          (instance) => instance.onDrag = onDrag,
-        ),
+              () => _HandleDragRecognizer(),
+              (instance) => instance.onDrag = onDrag,
+            ),
       },
       child: SizedBox.expand(
         child: Stack(
@@ -61,9 +61,7 @@ class HandleDragDetector extends StatelessWidget {
             // tests land anywhere in the parent box even if the visual
             // child is smaller (e.g. a 14dp glyph centred in a 48dp
             // touch target).
-            const Positioned.fill(
-              child: ColoredBox(color: Color(0x00000000)),
-            ),
+            const Positioned.fill(child: ColoredBox(color: Color(0x00000000))),
             ?child,
           ],
         ),

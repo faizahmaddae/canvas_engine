@@ -53,5 +53,5 @@ class RecentColorsController extends Notifier<List<Color>> {
 /// the user's history.
 final recentColorsControllerProvider =
     NotifierProvider<RecentColorsController, List<Color>>(
-  RecentColorsController.new,
-);
+      RecentColorsController.new,
+    );

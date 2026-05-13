@@ -1,7 +1,8 @@
 # Canvas Engine — Architecture
 
-A modular Flutter editor engine. Initial focus: text on canvas. Designed to
-expand to images, shapes, stickers, drawing, filters, etc. without rewrites.
+A modular Flutter photo editor engine. The current focus is photo editing
+(Snapseed / Lightroom Mobile class), while the architecture stays generic
+enough to support design-tool and animation features later.
 
 ## Layering
 
@@ -9,8 +10,12 @@ expand to images, shapes, stickers, drawing, filters, etc. without rewrites.
 engine  →  application  →  presentation
 ```
 
-* **engine/** — pure Dart. No widgets, no providers. Holds the document,
-  transform math, commands, and interaction math. Trivially unit-testable.
+* **engine/** — provider-free and presentation-free. Holds the document,
+  transform math, commands, serialization, interaction math, and the narrow
+  layer-render contract. `core/` may reference Flutter's `Widget` /
+  `BuildContext` for `EditorLayer.buildContent`, and `modules/` may render
+  their own content. Commands, interaction, and serialization must not import
+  widgets, providers, application, or presentation code.
 * **application/** — Riverpod controllers. Orchestrates commands and owns
   ephemeral interaction state. The ONLY layer allowed to call into engine
   commands.
@@ -21,11 +26,13 @@ engine  →  application  →  presentation
 
 | Folder | Responsibility |
 |---|---|
-| `engine/core/` | `EditorDocument`, `EditorLayer` (abstract), `LayerTransform`, `SelectionState`, `LayerCapabilities` |
+| `engine/core/` | `EditorDocument`, `EditorLayer` (abstract), `LayerTransform`, `SelectionState`, `LayerCapabilities`, `BackgroundFill` |
 | `engine/commands/` | `EditorCommand` + concrete commands + `HistoryStack` |
-| `engine/modules/<type>/` | Layer-type specific data + rendering (`TextLayer`) |
-| `engine/interaction/` | `InteractionEngine` (pure math) + `InteractionSession` |
+| `engine/modules/<type>/` | Layer-type specific data + rendering (`TextLayer`, `ImageLayer`, `ShapeLayer`, `PaintLayer`) |
+| `engine/interaction/` | Pure-math helpers such as `InteractionEngine`, `SnapEngine`, `AlignmentEngine`, `GroupEngine` |
 | `engine/rendering/` | Thin widgets that turn a `LayerTransform` into Flutter |
+| `engine/serialization/` | `DocumentCodec`, the only place that imports every module |
+| `engine/export/` | PNG/JPG exporters |
 
 ## State separation
 
@@ -45,21 +52,27 @@ flat and the document immutable most of the time.
 2. Extend `EditorLayer`:
    - unique `type` string,
    - your own immutable fields + `copyWith`,
-   - implement `withTransform()` preserving your fields,
+   - implement `withTransform()`, `withVisibility()`, `withLocked()`,
+     and `withOpacity()`, preserving every subclass field,
    - implement `buildContent(BuildContext)` to render inside a box of
-     `transform.size` (translation + rotation are applied for you).
+     `transform.size` (translation + rotation are applied for you),
+   - implement `toJson()` spreading `baseJson()`,
+   - add a static `fromJson()` factory.
 3. Expose a `LayerCapabilities` value — default is `movable/resizable/rotatable`.
    Use `keepsAspectRatio: true` for images, for example.
-4. Add a toolbar action that constructs your layer and dispatches
-   `AddLayerCommand`.
+4. Register `<type>: MyLayer.fromJson` in `DocumentCodec._layerFactories`.
+5. Add round-trip tests in `test/engine/<type>_layer_test.dart`.
+6. If the layer is user-facing, add an application action that constructs
+   your layer and dispatches `AddLayerCommand`, then wire presentation UI to
+   that action.
 
 That's it. Selection, move, resize, rotate and undo/redo all work for free
 because none of them read subclass-specific data.
 
 ## Engine rules (strict)
 
-1. **Math lives in `engine/`.** If you find yourself calling `math.sin` in a
-   widget, stop.
+1. **Math lives in `engine/interaction` or focused engine helpers.** If you
+   find yourself calling `math.sin` in a presentation widget, stop.
 2. **UI forwards raw coordinates.** Handle widgets hand `globalPosition` to
    the canvas, which converts to canvas-local before calling the interaction
    controller.
@@ -68,8 +81,10 @@ because none of them read subclass-specific data.
 4. **Commands are pure.** `apply(doc) -> doc`. No side effects. This is why
    history, serialization, and future collaboration work.
 5. **The document is immutable.** All mutations return a new instance.
-6. **No premature generalization.** Until single-object move/resize/rotate
-   feels perfect, we don't add multi-select, snapping, pan/zoom, or plugins.
+6. **No invented engine concepts.** If a change introduces a new cross-cutting
+   concept such as effects, masks, blend modes, groups, or plugin hooks, read
+   the design doc first or ask. Keep generic machinery generic; do not collapse
+   it into a photo-specific shortcut.
 
 ## Interaction pipeline
 

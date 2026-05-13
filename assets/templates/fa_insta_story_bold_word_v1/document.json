@@ -1,0 +1,97 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4281146190,
+    "endColor": 4286340351,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "magenta-bloom",
+      "transform": {
+        "x": -260.0,
+        "y": -220.0,
+        "w": 720.0,
+        "h": 720.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "fill": {
+        "type": "radial",
+        "centerColor": 3722993116,
+        "edgeColor": 15228380,
+        "focalX": 0.0,
+        "focalY": 0.0,
+        "radius": 0.85
+      },
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "baseline-rule",
+      "transform": {
+        "x": 670.0,
+        "y": 1105.0,
+        "w": 270.0,
+        "h": 12.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294956554,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "word",
+      "transform": {
+        "x": 110.0,
+        "y": 670.0,
+        "w": 860.0,
+        "h": 330.0,
+        "r": 0.0
+      },
+      "content": "جرئت",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 285.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "right",
+        "shadowColor": 1711276032,
+        "shadowBlur": 4.0,
+        "shadowDx": 0.0,
+        "shadowDy": 2.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 120.0,
+        "y": 1035.0,
+        "w": 820.0,
+        "h": 90.0,
+        "r": 0.0
+      },
+      "content": "همین امروز شروع کن",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 56.0,
+        "color": 4294829706,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

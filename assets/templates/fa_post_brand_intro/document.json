@@ -1,0 +1,185 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279179050,
+    "endColor": 4279651939,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "panel",
+      "transform": {
+        "x": 82.0,
+        "y": 92.0,
+        "w": 916.0,
+        "h": 896.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294967295,
+        "endColor": 4292932350,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 52.0,
+      "shadowOpacity": 0.24,
+      "shadowBlur": 42.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 24.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "logo-mark",
+      "transform": {
+        "x": 718.0,
+        "y": 150.0,
+        "w": 200.0,
+        "h": 200.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4278630100,
+        "endColor": 4280640491,
+        "angleDegrees": 135.0
+      },
+      "cornerRadius": 52.0
+    },
+    {
+      "type": "text",
+      "id": "logo",
+      "transform": {
+        "x": 746.0,
+        "y": 202.0,
+        "w": 144.0,
+        "h": 86.0,
+        "r": 0.0
+      },
+      "content": "نام",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 74.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "transform": {
+        "x": 150.0,
+        "y": 184.0,
+        "w": 520.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "معرفی برند",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4279137424,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 150.0,
+        "y": 282.0,
+        "w": 760.0,
+        "h": 230.0,
+        "r": 0.0
+      },
+      "content": "صدای\nبرند شما",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 116.0,
+        "color": 4279179050,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.98,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 150.0,
+        "y": 560.0,
+        "w": 780.0,
+        "h": 130.0,
+        "r": 0.0
+      },
+      "content": "یک متن کوتاه برای معرفی کسب‌وکار، ارزش پیشنهادی و مسیر ارتباطی بنویسید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4281549141,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.28,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule",
+      "transform": {
+        "x": 625.0,
+        "y": 748.0,
+        "w": 290.0,
+        "h": 10.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4278630100,
+      "strokeWidth": 0.0,
+      "cornerRadius": 5.0
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 150.0,
+        "y": 805.0,
+        "w": 760.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "content": "@yourbrand",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 42.0,
+        "color": 4279179050,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

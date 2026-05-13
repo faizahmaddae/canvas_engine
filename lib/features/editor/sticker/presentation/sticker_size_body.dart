@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/transform_commands.dart';
 import '../../engine/modules/text/text_layer.dart';
@@ -32,7 +33,7 @@ class StickerSizeBody extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final currentSide = layer.transform.size.shortestSide;
     return StickerPanelShell(
-      title: 'Size',
+      title: context.l10n.sizeTool,
       icon: Icons.photo_size_select_large_rounded,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -63,13 +64,12 @@ class StickerSizeBody extends ConsumerWidget {
     final t = layer.transform;
     final centre = t.position + Offset(t.size.width / 2, t.size.height / 2);
     final newSize = Size(side, side);
-    final newPos =
-        centre - Offset(newSize.width / 2, newSize.height / 2);
+    final newPos = centre - Offset(newSize.width / 2, newSize.height / 2);
     final next = t.copyWith(position: newPos, size: newSize);
     if (next == t) return;
-    ref.read(documentControllerProvider.notifier).execute(
-          ResizeLayerCommand(layerId: layer.id, transform: next),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(ResizeLayerCommand(layerId: layer.id, transform: next));
   }
 }
 

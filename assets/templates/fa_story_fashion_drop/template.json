@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_fashion_drop",
+  "title": {
+    "en": "Persian Fashion Drop Story",
+    "fa": "استوری کالکشن مد"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_fashion_drop/thumbnail.png",
+  "document": "assets/templates/fa_story_fashion_drop/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "instagram",
+    "story",
+    "fashion"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 90
+  }
+}

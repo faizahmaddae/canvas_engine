@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_sale_v1",
+  "title": {
+    "en": "حراج پررنگ",
+    "fa": "حراج پررنگ"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_sale_v1/thumbnail.png",
+  "document": "assets/templates/fa_promo_sale_v1/document.json",
+  "tags": [
+    "migrated",
+    "persian",
+    "promo",
+    "fa",
+    "sale"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 170
+  }
+}

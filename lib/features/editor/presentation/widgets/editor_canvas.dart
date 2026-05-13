@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
@@ -5,11 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
 import '../../application/document_controller.dart';
 import '../../application/editing_controller.dart';
 import '../../application/editor_lifecycle.dart';
+import '../../application/editor_session.dart';
 import '../../application/interaction_controller.dart';
+import '../../application/live_overlay_controller.dart';
+import '../../application/project_viewport_store.dart';
 import '../../application/selection_controller.dart';
 import '../../application/viewport_controller.dart';
 import '../../engine/core/editor_document.dart';
@@ -95,6 +100,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   /// flashes during normal interaction.
   bool _fittedOnce = false;
 
+  /// Per-project zoom/pan persistence. Owned by the canvas widget so
+  /// load + save share a single [SharedPreferences] handle (cached on
+  /// the store after first call) and survive across rebuilds.
+  final ProjectViewportStore _viewportStore = ProjectViewportStore();
+
   // ------------------------------------------------------------------
   // Multi-finger tap shortcuts (Procreate-style):
   //   * 2-finger tap → undo
@@ -163,10 +173,41 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Persist viewport changes per-project. We listen here (not in
+    // build) so the subscription is single-shot and doesn't
+    // re-register on every rebuild. The save is debounced by
+    // [_kViewportSaveDebounce] so a pinch-zoom that emits 60
+    // intermediate states writes once on settle, not 60 times.
+    ref.listenManual<ViewportState>(viewportControllerProvider, (prev, next) {
+      if (prev == next) return;
+      if (!_fittedOnce) {
+        // The very first viewport push is the auto-fit/restore
+        // itself; do not write it back over a possibly-still-
+        // loading saved entry.
+        return;
+      }
+      final session = ref.read(editorSessionProvider);
+      final projectId = session?.projectId;
+      if (projectId == null) return;
+      _viewportSaveTimer?.cancel();
+      _viewportSaveTimer = Timer(_kViewportSaveDebounce, () {
+        if (!mounted) return;
+        _viewportStore.save(projectId, next);
+      });
+    });
   }
+
+  /// Debounce window for viewport persistence. 600 ms is long enough
+  /// that a single pinch + settle yields one write, short enough that
+  /// a backgrounded app keeps a fresh enough value to feel correct
+  /// on the next launch.
+  static const Duration _kViewportSaveDebounce = Duration(milliseconds: 600);
+
+  Timer? _viewportSaveTimer;
 
   @override
   void dispose() {
+    _viewportSaveTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     // Note: we deliberately do NOT call `interactionController.cancel()`
     // here — Riverpod's `ref` is unsafe inside dispose because the
@@ -321,12 +362,36 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   /// forbids state mutation while another provider is being read), so we
   /// defer to the post-frame callback and gate the canvas contents until
   /// the fit has actually been committed.
+  ///
+  /// **Restore-on-reopen.** If the active session has a `projectId`
+  /// and the viewport store has a saved entry, the saved viewport is
+  /// applied instead of running auto-fit. The saved viewport is
+  /// validated lightly (finite values, scale > 0); a corrupt entry
+  /// silently falls back to auto-fit so a bad pref never breaks the
+  /// editor. Restoration only happens on the first fit of a session;
+  /// later [_scheduleFit] calls (canvas resize, screen rotation) are
+  /// genuine refits and must replay the auto-fit math.
   void _scheduleFit(Size screen, Size docSize) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      ref
-          .read(viewportControllerProvider.notifier)
-          .fit(screenSize: screen, canvasSize: docSize);
+      final controller = ref.read(viewportControllerProvider.notifier);
+      if (!_fittedOnce) {
+        final session = ref.read(editorSessionProvider);
+        final projectId = session?.projectId;
+        if (projectId != null) {
+          final saved = await _viewportStore.load(projectId);
+          if (!mounted) return;
+          if (saved != null && saved.scale > 0 && saved.scale.isFinite) {
+            // We still need lastFitContext seeded so the user-facing
+            // "Fit to screen" action has geometry to replay against.
+            controller.fit(screenSize: screen, canvasSize: docSize);
+            controller.restore(saved);
+            setState(() => _fittedOnce = true);
+            return;
+          }
+        }
+      }
+      controller.fit(screenSize: screen, canvasSize: docSize);
       if (!_fittedOnce) {
         setState(() => _fittedOnce = true);
       }
@@ -335,7 +400,12 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
 
   @override
   Widget build(BuildContext context) {
-    final doc = ref.watch(documentControllerProvider);
+    // The canvas is the ONLY consumer that wants the merged "committed
+    // + in-flight overlay" view, so a 60-fps slider drag rebuilds the
+    // canvas (correct — it must show the preview) without rebuilding
+    // the layers panel, undo rail, or any other widget that watches
+    // [documentControllerProvider] directly.
+    final doc = ref.watch(renderedDocumentProvider);
     final selection = ref.watch(selectionControllerProvider);
     final viewport = ref.watch(viewportControllerProvider);
     final activeLayerId = ref.watch(
@@ -359,7 +429,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
     return LayoutBuilder(
       builder: (context, constraints) {
         final screen = constraints.biggest;
-        final hasValidSize = screen.width.isFinite &&
+        final hasValidSize =
+            screen.width.isFinite &&
             screen.height.isFinite &&
             screen.width > 0 &&
             screen.height > 0 &&
@@ -399,335 +470,352 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             _gestureStartFocal = null;
           },
           child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapUp: (d) {
-            // Paint mode owns the canvas — the paint surface (mounted
-            // inside the viewport transform) handles taps that land
-            // on the canvas itself. Taps that land OUTSIDE the canvas
-            // (pasteboard / black area) reach this background
-            // detector and must dismiss paint mode through the same
-            // central seam, so the user has a way out without having
-            // to first navigate back to the canvas. Drawing is a pan
-            // gesture and never routes through onTapUp, so this is
-            // safe mid-session.
-            if (ref.read(paintToolControllerProvider).activeTool != null) {
-              dismissActiveEditing(ref);
-              return;
-            }
-            ref.read(editingControllerProvider.notifier).stop();
-            _handleTap(d.globalPosition, doc.layers);
-          },
-          // Long-press: the dedicated mobile entry to multi-select
-          // mode. Fires after the system long-press timeout on any
-          // pointer that reaches this detector — i.e. taps on empty
-          // canvas and on un-selected layers (a selected layer's body
-          // surface eagerly claims pointer-down, so long-press over an
-          // already-selected layer falls through to the body's tap
-          // path on release; that's fine for v1).
-          onLongPressStart: (d) {
-            _handleLongPress(d.globalPosition, doc.layers);
-          },
-          onDoubleTapDown: (d) {
-            // Double-tap is reserved for future non-text editable
-            // affordances. Text editing is initiated exclusively from
-            // the floating toolbar's edit pill so users never have to
-            // discover two ways to do the same thing.
-            final local = _toCanvas(d.globalPosition);
-            final hit = _hitTest(doc.layers, local);
-            if (hit == null || !hit.capabilities.editable) return;
-            if (hit is TextLayer) return;
-            ref.read(selectionControllerProvider.notifier).select(hit.id);
-            ref.read(editingControllerProvider.notifier).start(hit.id);
-          },
-          onDoubleTap: () {},
-          // Background pan + pinch-to-zoom for the viewport. Layer scale
-          // recognisers sit deeper in the tree and win the gesture arena
-          // when a finger lands on a selected layer; touches on empty
-          // canvas / margin fall through to this handler.
-          //
-          // Defensive guard: even with the body's claim-on-down
-          // recogniser, an out-of-order pointer (e.g. one finger on the
-          // selected layer, a second finger lands on empty canvas) can
-          // briefly satisfy this recogniser. Skipping start/update while
-          // an interaction session is active prevents the viewport from
-          // panning/zooming "alongside" an object transform — the
-          // selected object owns the gesture, exclusively, until it
-          // ends.
-          onScaleStart: (d) {
-            if (ref.read(interactionControllerProvider).isActive) return;
-            // Paint mode suppresses viewport pan/zoom — the gesture
-            // belongs to the drawing surface above.
-            if (ref.read(paintToolControllerProvider).activeTool != null) {
-              return;
-            }
-            final s = ref.read(appSettingsProvider);
-            if (!s.canvasPanEnabled && !s.canvasZoomEnabled) return;
-            _gestureStartViewport = ref.read(viewportControllerProvider);
-            _gestureStartFocal = d.focalPoint;
-          },
-          onScaleUpdate: (d) {
-            if (ref.read(interactionControllerProvider).isActive) return;
-            if (ref.read(paintToolControllerProvider).activeTool != null) {
-              return;
-            }
-            final start = _gestureStartViewport;
-            final focal = _gestureStartFocal;
-            if (start == null || focal == null) return;
-            // Honour user gesture toggles. Disabling pan freezes the
-            // focal point at gesture start so translation never moves;
-            // disabling zoom forces unit scale so pinch becomes a no-op.
-            // Object interaction (drag/resize) is unaffected — those
-            // recognisers live deeper in the tree and never reach this
-            // background handler.
-            final settings = ref.read(appSettingsProvider);
-            final effectiveFocal =
-                settings.canvasPanEnabled ? d.focalPoint : focal;
-            final effectiveScale = settings.canvasZoomEnabled ? d.scale : 1.0;
-            ref
-                .read(viewportControllerProvider.notifier)
-                .gestureUpdate(
-                  startState: start,
-                  startFocal: focal,
-                  currentFocal: effectiveFocal,
-                  scale: effectiveScale,
-                );
-          },
-          onScaleEnd: (_) {
-            _gestureStartViewport = null;
-            _gestureStartFocal = null;
-          },
-          child: ColoredBox(
-            color: const Color(0xFF111318),
-            child: ClipRect(
-              // Outer Stack: viewport-transformed canvas board (bottom)
-              // + screen-space chrome (top). Selection handles + HUD live
-              // in the screen-space layer so they stay constant size in
-              // dp regardless of document size or zoom.
-              //
-              // Until the first auto-fit lands the canvas would briefly
-              // appear at identity (top-left, 1:1) — a flash that reads
-              // as "the canvas is the wrong size." Hiding the contents
-              // with Visibility (rather than skipping the subtree) keeps
-              // layout/state alive so the post-frame fit has correct
-              // constraints to work with.
-              child: Visibility(
-                visible: _fittedOnce,
-                maintainState: true,
-                maintainSize: true,
-                maintainAnimation: true,
-                child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // Drop shadow under the canvas — paints first so the
-                  // document covers it everywhere except along its
-                  // edges, producing a subtle floating-paper effect on
-                  // the dark workbench.
-                  CanvasFraming(
-                    docSize: docSize,
-                    viewport: viewport,
-                    layer: CanvasFramingLayer.shadowBelow,
-                  ),
-                  OverflowBox(
-                    minWidth: 0,
-                    minHeight: 0,
-                    maxWidth: double.infinity,
-                    maxHeight: double.infinity,
-                    alignment: Alignment.topLeft,
-                    child: Transform(
-                      alignment: Alignment.topLeft,
-                      transform: viewport.toMatrix(),
-                      child: SizedBox(
-                        width: doc.width,
-                        height: doc.height,
-                        child: Stack(
-                          key: _canvasKey,
-                          clipBehavior: Clip.none,
-                          children: [
-                            // The document's own background. When
-                            // mode is `color`, paints the picked
-                            // solid fill -- the Canvas tool's
-                            // colour change shows up here and on
-                            // PNG export. When mode is
-                            // `transparent`, paints a tiled
-                            // checkerboard so the user can see
-                            // through to "empty" -- the export
-                            // pipeline writes alpha instead.
-                            Positioned.fill(
-                              child: doc.backgroundMode ==
-                                      CanvasBackgroundMode.transparent
-                                  ? const CanvasCheckerboard()
-                                  : BackgroundFillBox(fill: doc.background),
-                            ),
-                            for (final layer in doc.layers)
-                              if (layer.visible)
-                                _LayerGestureWrapper(
-                                  key: ValueKey(layer.id),
-                                  layer: layer,
-                                  isActive: activeLayerId == layer.id,
+            behavior: HitTestBehavior.opaque,
+            onTapUp: (d) {
+              // Paint mode owns the canvas — the paint surface (mounted
+              // inside the viewport transform) handles taps that land
+              // on the canvas itself. Taps that land OUTSIDE the canvas
+              // (pasteboard / black area) reach this background
+              // detector and must dismiss paint mode through the same
+              // central seam, so the user has a way out without having
+              // to first navigate back to the canvas. Drawing is a pan
+              // gesture and never routes through onTapUp, so this is
+              // safe mid-session.
+              if (ref.read(paintToolControllerProvider).activeTool != null) {
+                dismissActiveEditing(ref);
+                return;
+              }
+              ref.read(editingControllerProvider.notifier).stop();
+              _handleTap(d.globalPosition, doc.layers);
+            },
+            // Long-press: the dedicated mobile entry to multi-select
+            // mode. Fires after the system long-press timeout on any
+            // pointer that reaches this detector — i.e. taps on empty
+            // canvas and on un-selected layers (a selected layer's body
+            // surface eagerly claims pointer-down, so long-press over an
+            // already-selected layer falls through to the body's tap
+            // path on release; that's fine for v1).
+            onLongPressStart: (d) {
+              _handleLongPress(d.globalPosition, doc.layers);
+            },
+            onDoubleTapDown: (d) {
+              // Double-tap is reserved for future non-text editable
+              // affordances. Text editing is initiated exclusively from
+              // the floating toolbar's edit pill so users never have to
+              // discover two ways to do the same thing.
+              final local = _toCanvas(d.globalPosition);
+              final hit = _hitTest(doc.layers, local);
+              if (hit == null || !hit.capabilities.editable) return;
+              if (hit is TextLayer) return;
+              ref.read(selectionControllerProvider.notifier).select(hit.id);
+              ref.read(editingControllerProvider.notifier).start(hit.id);
+            },
+            onDoubleTap: () {},
+            // Background pan + pinch-to-zoom for the viewport. Layer scale
+            // recognisers sit deeper in the tree and win the gesture arena
+            // when a finger lands on a selected layer; touches on empty
+            // canvas / margin fall through to this handler.
+            //
+            // Defensive guard: even with the body's claim-on-down
+            // recogniser, an out-of-order pointer (e.g. one finger on the
+            // selected layer, a second finger lands on empty canvas) can
+            // briefly satisfy this recogniser. Skipping start/update while
+            // an interaction session is active prevents the viewport from
+            // panning/zooming "alongside" an object transform — the
+            // selected object owns the gesture, exclusively, until it
+            // ends.
+            onScaleStart: (d) {
+              if (ref.read(interactionControllerProvider).isActive) return;
+              // Paint mode suppresses viewport pan/zoom — the gesture
+              // belongs to the drawing surface above.
+              if (ref.read(paintToolControllerProvider).activeTool != null) {
+                return;
+              }
+              final s = ref.read(appSettingsProvider);
+              if (!s.canvasPanEnabled && !s.canvasZoomEnabled) return;
+              _gestureStartViewport = ref.read(viewportControllerProvider);
+              _gestureStartFocal = d.focalPoint;
+            },
+            onScaleUpdate: (d) {
+              if (ref.read(interactionControllerProvider).isActive) return;
+              if (ref.read(paintToolControllerProvider).activeTool != null) {
+                return;
+              }
+              final start = _gestureStartViewport;
+              final focal = _gestureStartFocal;
+              if (start == null || focal == null) return;
+              // Honour user gesture toggles. Disabling pan freezes the
+              // focal point at gesture start so translation never moves;
+              // disabling zoom forces unit scale so pinch becomes a no-op.
+              // Object interaction (drag/resize) is unaffected — those
+              // recognisers live deeper in the tree and never reach this
+              // background handler.
+              final settings = ref.read(appSettingsProvider);
+              final effectiveFocal = settings.canvasPanEnabled
+                  ? d.focalPoint
+                  : focal;
+              final effectiveScale = settings.canvasZoomEnabled ? d.scale : 1.0;
+              ref
+                  .read(viewportControllerProvider.notifier)
+                  .gestureUpdate(
+                    startState: start,
+                    startFocal: focal,
+                    currentFocal: effectiveFocal,
+                    scale: effectiveScale,
+                  );
+            },
+            onScaleEnd: (_) {
+              _gestureStartViewport = null;
+              _gestureStartFocal = null;
+            },
+            child: ColoredBox(
+              color: const Color(0xFF111318),
+              child: ClipRect(
+                // Outer Stack: viewport-transformed canvas board (bottom)
+                // + screen-space chrome (top). Selection handles + HUD live
+                // in the screen-space layer so they stay constant size in
+                // dp regardless of document size or zoom.
+                //
+                // Until the first auto-fit lands the canvas would briefly
+                // appear at identity (top-left, 1:1) — a flash that reads
+                // as "the canvas is the wrong size." Hiding the contents
+                // with Visibility (rather than skipping the subtree) keeps
+                // layout/state alive so the post-frame fit has correct
+                // constraints to work with.
+                child: Visibility(
+                  visible: _fittedOnce,
+                  maintainState: true,
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Drop shadow under the canvas — paints first so the
+                      // document covers it everywhere except along its
+                      // edges, producing a subtle floating-paper effect on
+                      // the dark workbench.
+                      CanvasFraming(
+                        docSize: docSize,
+                        viewport: viewport,
+                        layer: CanvasFramingLayer.shadowBelow,
+                      ),
+                      OverflowBox(
+                        minWidth: 0,
+                        minHeight: 0,
+                        maxWidth: double.infinity,
+                        maxHeight: double.infinity,
+                        alignment: Alignment.topLeft,
+                        child: Transform(
+                          alignment: Alignment.topLeft,
+                          transform: viewport.toMatrix(),
+                          child: SizedBox(
+                            width: doc.width,
+                            height: doc.height,
+                            child: Stack(
+                              key: _canvasKey,
+                              clipBehavior: Clip.none,
+                              children: [
+                                // The document's own background. When
+                                // mode is `color`, paints the picked
+                                // solid fill -- the Canvas tool's
+                                // colour change shows up here and on
+                                // PNG export. When mode is
+                                // `transparent`, paints a tiled
+                                // checkerboard so the user can see
+                                // through to "empty" -- the export
+                                // pipeline writes alpha instead.
+                                Positioned.fill(
+                                  child:
+                                      doc.backgroundMode ==
+                                          CanvasBackgroundMode.transparent
+                                      ? const CanvasCheckerboard()
+                                      : BackgroundFillBox(fill: doc.background),
                                 ),
-                            // Per-member outlines for multi-select.
-                            // Drawn inside the viewport transform so
-                            // they hug each layer's rotated rect
-                            // pixel-accurately. No handles — the
-                            // group selection chrome (screen-space)
-                            // owns transformation.
-                            if (selection.count > 1)
-                              _GroupMemberOutlines(
-                                layers: doc.layers,
-                                selection: selection,
-                                viewportScale: viewport.scale,
-                              ),
-                            // Engine-driven alignment + spacing
-                            // overlays. Wrapped together so a single
-                            // opacity fade governs appearance and
-                            // disappearance, eliminating flicker as
-                            // snaps engage and release. Both painters
-                            // counter-scale stroke widths by
-                            // viewport.scale so guides stay 1px on
-                            // screen at any zoom.
-                            AnimatedGuidesLayer(
-                              snapGuides: snapGuides,
-                              spacingGuides: spacingGuides,
-                              viewportScale: viewport.scale,
+                                for (final layer in doc.layers)
+                                  if (layer.visible)
+                                    _LayerGestureWrapper(
+                                      key: ValueKey(layer.id),
+                                      layer: layer,
+                                      isActive: activeLayerId == layer.id,
+                                    ),
+                                // Per-member outlines for multi-select.
+                                // Drawn inside the viewport transform so
+                                // they hug each layer's rotated rect
+                                // pixel-accurately. No handles — the
+                                // group selection chrome (screen-space)
+                                // owns transformation.
+                                if (selection.count > 1)
+                                  _GroupMemberOutlines(
+                                    layers: doc.layers,
+                                    selection: selection,
+                                    viewportScale: viewport.scale,
+                                  ),
+                                // Engine-driven alignment + spacing
+                                // overlays. Wrapped together so a single
+                                // opacity fade governs appearance and
+                                // disappearance, eliminating flicker as
+                                // snaps engage and release. Both painters
+                                // counter-scale stroke widths by
+                                // viewport.scale so guides stay 1px on
+                                // screen at any zoom.
+                                AnimatedGuidesLayer(
+                                  snapGuides: snapGuides,
+                                  spacingGuides: spacingGuides,
+                                  viewportScale: viewport.scale,
+                                ),
+                                // Paint drawing surface — mounted only when
+                                // a paint tool is active. Sits as the
+                                // topmost child of the doc board so it
+                                // claims canvas-area gestures before any
+                                // layer wrapper, and provides drag-to-draw
+                                // + tap-to-erase. Coordinates arrive in
+                                // canvas-local space because we're inside
+                                // the viewport transform.
+                                PaintGestureSurface(docSize: docSize),
+                              ],
                             ),
-                            // Paint drawing surface — mounted only when
-                            // a paint tool is active. Sits as the
-                            // topmost child of the doc board so it
-                            // claims canvas-area gestures before any
-                            // layer wrapper, and provides drag-to-draw
-                            // + tap-to-erase. Coordinates arrive in
-                            // canvas-local space because we're inside
-                            // the viewport transform.
-                            PaintGestureSurface(
-                              docSize: docSize,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  // Dim mask + canvas border — paints OVER layers so
-                  // off-canvas portions of layers visibly recede while
-                  // staying selectable. Sits below the selection chrome
-                  // so handles + body surface remain crisp on top.
-                  //
-                  // Photo projects use the SUBTLE border emphasis so
-                  // the hairline doesn't trace the imported base
-                  // photo's edge in a way that reads like a permanent
-                  // selection outline. Design projects keep the
-                  // STANDARD emphasis -- on a blank/transparent
-                  // canvas the border is the only artboard cue and
-                  // needs to be clearly visible.
-                  CanvasFraming(
-                    docSize: docSize,
-                    viewport: viewport,
-                    layer: CanvasFramingLayer.dimAndBorderAbove,
-                    borderEmphasis:
-                        doc.projectKind == ProjectKind.photo
+                      // Dim mask + canvas border — paints OVER layers so
+                      // off-canvas portions of layers visibly recede while
+                      // staying selectable. Sits below the selection chrome
+                      // so handles + body surface remain crisp on top.
+                      //
+                      // Photo projects use the SUBTLE border emphasis so
+                      // the hairline doesn't trace the imported base
+                      // photo's edge in a way that reads like a permanent
+                      // selection outline. Design projects keep the
+                      // STANDARD emphasis -- on a blank/transparent
+                      // canvas the border is the only artboard cue and
+                      // needs to be clearly visible.
+                      CanvasFraming(
+                        docSize: docSize,
+                        viewport: viewport,
+                        layer: CanvasFramingLayer.dimAndBorderAbove,
+                        borderEmphasis: doc.projectKind == ProjectKind.photo
                             ? CanvasBorderEmphasis.subtle
                             : CanvasBorderEmphasis.standard,
+                      ),
+                      // Screen-space chrome — sits OUTSIDE the viewport
+                      // transform so handles never scale with zoom or doc
+                      // size. Receives the current viewport so it can map
+                      // canvas-space corners to screen coordinates.
+                      //
+                      // Routing:
+                      //   * count == 1 → per-layer selection chrome that
+                      //     hugs the rotated layer rect.
+                      //   * count >  1 → group selection chrome on the
+                      //     shared axis-aligned bounds. The per-layer
+                      //     overlay is suppressed; subtle outlines are
+                      //     painted *inside* the viewport (above) instead.
+                      //
+                      // Protected base photo (photo project + locked) is
+                      // the canvas itself, not a movable object. UX:
+                      //   * Selection FRAME is shown (outline only, no
+                      //     handles, no body drag) so the user can see
+                      //     what is selected when they pick the row in
+                      //     the Layers panel and the bottom Image tools
+                      //     appear. Without this the toolbar change is
+                      //     unexplained.
+                      //   * Transform HUD, floating duplicate/delete bar
+                      //     and inline contextual toolbars stay
+                      //     suppressed -- those imply move/scale/delete,
+                      //     none of which apply to the base photo.
+                      //   * A small "Base photo" badge is rendered near
+                      //     the photo's top-left corner so the selection
+                      //     state has a clear label. See
+                      //     `_buildProtectedBaseBadge`.
+                      // Handles + body drag suppression for protected
+                      // base photo is handled inside
+                      // `_buildSelectionOverlay` (it passes
+                      // `showHandles: !locked` and `onBody: null` for
+                      // locked layers).
+                      if (selection.count == 1 && !addTextComposerOpen)
+                        _buildSelectionOverlay(doc.layers, selection, viewport),
+                      if (selection.count == 1 &&
+                          _isProtectedSelection(doc, selection))
+                        _buildProtectedBaseBadge(
+                          doc.layers,
+                          selection,
+                          viewport,
+                        ),
+                      if (selection.count > 1 && !addTextComposerOpen)
+                        _buildGroupSelectionOverlay(
+                          doc.layers,
+                          selection,
+                          viewport,
+                        ),
+                      if (selection.hasSelection &&
+                          !_isProtectedSelection(doc, selection) &&
+                          !addTextComposerOpen)
+                        _buildHud(doc.layers, selection, viewport),
+                      // Floating contextual text toolbar — appears next to
+                      // the selected text layer with the high-frequency
+                      // controls (color / size / bold). Mounted in the
+                      // screen-space chrome so it stays a constant size at
+                      // any zoom and never reflows the canvas.
+                      if (selection.count == 1 && !addTextComposerOpen)
+                        _buildTextFloatingToolbar(
+                          doc.layers,
+                          selection,
+                          viewport,
+                        ),
+                      // Floating contextual paint toolbar — symmetric with
+                      // the text toolbar above. Appears next to a selected
+                      // paint layer with stroke color, size, and resize
+                      // behavior toggle. Mutually exclusive with the text
+                      // toolbar (each builder type-checks its layer kind).
+                      if (selection.count == 1 && !addTextComposerOpen)
+                        _buildPaintFloatingToolbar(
+                          doc.layers,
+                          selection,
+                          viewport,
+                        ),
+                      // Floating contextual shape toolbar — mirror of
+                      // the paint toolbar. Surfaces the resize-mode
+                      // toggle (Scale ↔ Free) for the selected shape
+                      // so the user can override the kind-based
+                      // default (e.g. let a circle stretch, or lock
+                      // a rectangle's aspect). Mutually exclusive
+                      // with the other floating bars (each builder
+                      // type-checks its layer kind).
+                      if (selection.count == 1 && !addTextComposerOpen)
+                        _buildShapeFloatingToolbar(
+                          doc.layers,
+                          selection,
+                          viewport,
+                        ),
+                      // Quick actions pill — duplicate / bring-forward /
+                      // delete. Shown for ANY single-layer selection;
+                      // visibility is further gated inside the builder on
+                      // inline-editing and active transform sessions so
+                      // the bar never chases a moving selection.
+                      if (selection.count == 1 &&
+                          !_isProtectedSelection(doc, selection) &&
+                          !addTextComposerOpen)
+                        _buildQuickActionsOverlay(
+                          doc.layers,
+                          selection,
+                          viewport,
+                        ),
+                      // Note: the legacy in-canvas image crop overlay
+                      // was removed. Cropping now happens in the
+                      // full-screen [CropModeOverlay] mounted by the
+                      // [EditorScreen] above this canvas.
+                      // Minimal multi-select mode indicator. Renders only
+                      // when the user has explicitly entered the mode via
+                      // long-press. A tiny chip in the top-left corner
+                      // tells the user "you are in multi-select" + the
+                      // current count, so toggling-on-tap behaviour is
+                      // never invisible.
+                      const _MultiSelectModeChip(),
+                    ],
                   ),
-                  // Screen-space chrome — sits OUTSIDE the viewport
-                  // transform so handles never scale with zoom or doc
-                  // size. Receives the current viewport so it can map
-                  // canvas-space corners to screen coordinates.
-                  //
-                  // Routing:
-                  //   * count == 1 → per-layer selection chrome that
-                  //     hugs the rotated layer rect.
-                  //   * count >  1 → group selection chrome on the
-                  //     shared axis-aligned bounds. The per-layer
-                  //     overlay is suppressed; subtle outlines are
-                  //     painted *inside* the viewport (above) instead.
-                  //
-                  // Protected base photo (photo project + locked) is
-                  // the canvas itself, not a movable object. UX:
-                  //   * Selection FRAME is shown (outline only, no
-                  //     handles, no body drag) so the user can see
-                  //     what is selected when they pick the row in
-                  //     the Layers panel and the bottom Image tools
-                  //     appear. Without this the toolbar change is
-                  //     unexplained.
-                  //   * Transform HUD, floating duplicate/delete bar
-                  //     and inline contextual toolbars stay
-                  //     suppressed -- those imply move/scale/delete,
-                  //     none of which apply to the base photo.
-                  //   * A small "Base photo" badge is rendered near
-                  //     the photo's top-left corner so the selection
-                  //     state has a clear label. See
-                  //     `_buildProtectedBaseBadge`.
-                  // Handles + body drag suppression for protected
-                  // base photo is handled inside
-                  // `_buildSelectionOverlay` (it passes
-                  // `showHandles: !locked` and `onBody: null` for
-                  // locked layers).
-                  if (selection.count == 1 && !addTextComposerOpen)
-                    _buildSelectionOverlay(
-                        doc.layers, selection, viewport),
-                  if (selection.count == 1 &&
-                      _isProtectedSelection(doc, selection))
-                    _buildProtectedBaseBadge(
-                        doc.layers, selection, viewport),
-                  if (selection.count > 1 && !addTextComposerOpen)
-                    _buildGroupSelectionOverlay(
-                        doc.layers, selection, viewport),
-                  if (selection.hasSelection &&
-                      !_isProtectedSelection(doc, selection) &&
-                      !addTextComposerOpen)
-                    _buildHud(doc.layers, selection, viewport),
-                  // Floating contextual text toolbar — appears next to
-                  // the selected text layer with the high-frequency
-                  // controls (color / size / bold). Mounted in the
-                  // screen-space chrome so it stays a constant size at
-                  // any zoom and never reflows the canvas.
-                  if (selection.count == 1 && !addTextComposerOpen)
-                    _buildTextFloatingToolbar(doc.layers, selection, viewport),
-                  // Floating contextual paint toolbar — symmetric with
-                  // the text toolbar above. Appears next to a selected
-                  // paint layer with stroke color, size, and resize
-                  // behavior toggle. Mutually exclusive with the text
-                  // toolbar (each builder type-checks its layer kind).
-                  if (selection.count == 1 && !addTextComposerOpen)
-                    _buildPaintFloatingToolbar(
-                        doc.layers, selection, viewport),
-                  // Floating contextual shape toolbar — mirror of
-                  // the paint toolbar. Surfaces the resize-mode
-                  // toggle (Scale ↔ Free) for the selected shape
-                  // so the user can override the kind-based
-                  // default (e.g. let a circle stretch, or lock
-                  // a rectangle's aspect). Mutually exclusive
-                  // with the other floating bars (each builder
-                  // type-checks its layer kind).
-                  if (selection.count == 1 && !addTextComposerOpen)
-                    _buildShapeFloatingToolbar(
-                        doc.layers, selection, viewport),
-                  // Quick actions pill — duplicate / bring-forward /
-                  // delete. Shown for ANY single-layer selection;
-                  // visibility is further gated inside the builder on
-                  // inline-editing and active transform sessions so
-                  // the bar never chases a moving selection.
-                  if (selection.count == 1 &&
-                      !_isProtectedSelection(doc, selection) &&
-                      !addTextComposerOpen)
-                    _buildQuickActionsOverlay(
-                        doc.layers, selection, viewport),
-                  // Note: the legacy in-canvas image crop overlay
-                  // was removed. Cropping now happens in the
-                  // full-screen [CropModeOverlay] mounted by the
-                  // [EditorScreen] above this canvas.
-                  // Minimal multi-select mode indicator. Renders only
-                  // when the user has explicitly entered the mode via
-                  // long-press. A tiny chip in the top-left corner
-                  // tells the user "you are in multi-select" + the
-                  // current count, so toggling-on-tap behaviour is
-                  // never invisible.
-                  const _MultiSelectModeChip(),
-                ],
                 ),
               ),
             ),
           ),
-        ),
         );
       },
     );
@@ -806,9 +894,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
         if (isEditing) return const SizedBox.shrink();
         final live = ref.watch(
           interactionControllerProvider.select(
-            (s) => s.session?.layerId == selectedLayer.id
-                ? s.liveTransform
-                : null,
+            (s) =>
+                s.session?.layerId == selectedLayer.id ? s.liveTransform : null,
           ),
         );
         final activeHandle = ref.watch(
@@ -820,8 +907,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
         );
         final isRotSnapped = ref.watch(
           interactionControllerProvider.select(
-            (s) => s.session?.layerId == selectedLayer.id &&
-                s.isRotationSnapped,
+            (s) =>
+                s.session?.layerId == selectedLayer.id && s.isRotationSnapped,
           ),
         );
         final transform = live ?? selectedLayer.transform;
@@ -867,8 +954,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             // full-screen [CropModeOverlay]; the selection body
             // surface must yield so the canvas underneath stays
             // inert.
-            final cropActive =
-                ref.read(cropControllerProvider).active;
+            final cropActive = ref.read(cropControllerProvider).active;
             if (cropActive) return false;
             return true;
           },
@@ -899,8 +985,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           // callback re-injects those taps so overlapping-layer
           // cycling continues to work when the topmost layer is the
           // currently selected one.
-          onBodyTap: (globalPosition) =>
-              _handleTap(globalPosition, layers),
+          onBodyTap: (globalPosition) => _handleTap(globalPosition, layers),
           // Long-press intent re-injection. The body surface claims
           // every pointer-down whenever a layer is selected, so the
           // canvas-level `GestureDetector.onLongPressStart` is dead
@@ -917,8 +1002,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           onBody: selectedLayer.locked || !selectedLayer.capabilities.movable
               ? null
               : (update) {
-                  final controller =
-                      ref.read(interactionControllerProvider.notifier);
+                  final controller = ref.read(
+                    interactionControllerProvider.notifier,
+                  );
                   final focalCanvas = _toCanvas(update.focalGlobal);
                   switch (update.phase) {
                     case DragPhase.start:
@@ -943,8 +1029,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                   }
                 },
           onHandle: (handle, globalPointer, phase) {
-            final controller =
-                ref.read(interactionControllerProvider.notifier);
+            final controller = ref.read(interactionControllerProvider.notifier);
             switch (phase) {
               case DragPhase.start:
                 final pointer = _toCanvas(globalPointer);
@@ -1009,8 +1094,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           frameQuad: ui.groupLiveQuad,
           viewport: viewport,
           activeHandle: activeHandle,
-          onBodyTap: (globalPosition) =>
-              _handleTap(globalPosition, layers),
+          onBodyTap: (globalPosition) => _handleTap(globalPosition, layers),
           // Long-press intent re-injection (see single-layer overlay
           // for full rationale). While in multi-select with the
           // group active, long-pressing another layer must still
@@ -1028,8 +1112,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           // routing (toggle-in / toggle-out / mode exit).
           shouldClaimBody: (_) {
             if (_gestureStartViewport != null) return false;
-            final cropActive =
-                ref.read(cropControllerProvider).active;
+            final cropActive = ref.read(cropControllerProvider).active;
             if (cropActive) return false;
             return true;
           },
@@ -1044,8 +1127,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             return !bounds.contains(local);
           },
           onBody: (update) {
-            final controller =
-                ref.read(interactionControllerProvider.notifier);
+            final controller = ref.read(interactionControllerProvider.notifier);
             final focalCanvas = _toCanvas(update.focalGlobal);
             switch (update.phase) {
               case DragPhase.start:
@@ -1065,8 +1147,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             }
           },
           onHandle: (handle, globalPointer, phase) {
-            final controller =
-                ref.read(interactionControllerProvider.notifier);
+            final controller = ref.read(interactionControllerProvider.notifier);
             final pointer = _toCanvas(globalPointer);
             switch (phase) {
               case DragPhase.start:
@@ -1119,9 +1200,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
         if (handle == null) return const SizedBox.shrink();
         final live = ref.watch(
           interactionControllerProvider.select(
-            (s) => s.session?.layerId == selectedLayer.id
-                ? s.liveTransform
-                : null,
+            (s) =>
+                s.session?.layerId == selectedLayer.id ? s.liveTransform : null,
           ),
         );
         return TransformHud(
@@ -1312,30 +1392,24 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
         // selection controls. Mirrors how text/paint suppress
         // their floating bars while their sheet is open.
         final imagePanelOpen = ref.watch(
-          imageToolControllerProvider
-              .select((s) => s.openSlot != null),
+          imageToolControllerProvider.select((s) => s.openSlot != null),
         );
         if (imagePanelOpen) return const SizedBox.shrink();
         // Mirror the image-mode guard for the Sticker sub-tools so
         // the floating pill never stacks on top of the Style /
         // Size / Replace panel that owns the bottom of the screen.
         final stickerPanelOpen = ref.watch(
-          stickerToolControllerProvider
-              .select((s) => s.openSlot != null),
+          stickerToolControllerProvider.select((s) => s.openSlot != null),
         );
         if (stickerPanelOpen) return const SizedBox.shrink();
         // Mirror for the Shape sub-tools — same reason: Style /
         // Border / Shadow / Replace panels would otherwise have
         // a floating pill stacking on top of them on small phones.
         final shapePanelOpen = ref.watch(
-          shapeToolControllerProvider
-              .select((s) => s.openSlot != null),
+          shapeToolControllerProvider.select((s) => s.openSlot != null),
         );
         if (shapePanelOpen) return const SizedBox.shrink();
-        return QuickActionsOverlay(
-          layer: selectedLayer,
-          viewport: viewport,
-        );
+        return QuickActionsOverlay(layer: selectedLayer, viewport: viewport);
       },
     );
   }
@@ -1380,10 +1454,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
     final dy = point.dy - c.dy;
     final lx = dx * cos - dy * sin + t.size.width / 2;
     final ly = dx * sin + dy * cos + t.size.height / 2;
-    return lx >= 0 &&
-        ly >= 0 &&
-        lx <= t.size.width &&
-        ly <= t.size.height;
+    return lx >= 0 && ly >= 0 && lx <= t.size.width && ly <= t.size.height;
   }
 
   /// Selection-routing for a plain tap on the canvas.
@@ -1446,7 +1517,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
 
     final lastGlobal = _lastTapGlobal;
     final lastIds = _lastTapHitIds;
-    final isSameSpot = lastGlobal != null &&
+    final isSameSpot =
+        lastGlobal != null &&
         (globalPosition - lastGlobal).distance <= _tapCycleTolerancePx;
     final isSameHits = lastIds != null && _listsEqual(lastIds, hitIds);
 
@@ -1552,9 +1624,7 @@ class _LayerGestureWrapper extends ConsumerWidget {
             interactionControllerProvider.select((s) => s.liveTransform),
           )
         : ref.watch(
-            interactionControllerProvider.select(
-              (s) => s.groupLive[layer.id],
-            ),
+            interactionControllerProvider.select((s) => s.groupLive[layer.id]),
           );
     final transform = liveTransform ?? layer.transform;
     // The body-drag gesture lives in screen space (see
@@ -1584,8 +1654,7 @@ class _MultiSelectModeChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(selectionModeProvider);
     if (mode != SelectionMode.multi) return const SizedBox.shrink();
-    final count =
-        ref.watch(selectionControllerProvider.select((s) => s.count));
+    final count = ref.watch(selectionControllerProvider.select((s) => s.count));
     final scheme = Theme.of(context).colorScheme;
     return Positioned(
       top: 12,
@@ -1616,7 +1685,7 @@ class _MultiSelectModeChip extends ConsumerWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                'Multi-select · $count',
+                context.l10n.multiSelectCount(count),
                 style: TextStyle(
                   color: scheme.onPrimary,
                   fontSize: 12,
@@ -1660,7 +1729,7 @@ class _ProtectedBaseBadge extends StatelessWidget {
           Icon(Icons.lock_outline, size: 12, color: scheme.onPrimary),
           const SizedBox(width: 4),
           Text(
-            'Base photo',
+            context.l10n.basePhotoLabel,
             style: TextStyle(
               color: scheme.onPrimary,
               fontSize: 11,

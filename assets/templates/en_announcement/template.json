@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_announcement",
+  "title": {
+    "en": "Announcement",
+    "fa": "Announcement"
+  },
+  "category": "social",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_announcement/thumbnail.png",
+  "document": "assets/templates/en_announcement/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "social",
+    "announcement"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 50
+  }
+}

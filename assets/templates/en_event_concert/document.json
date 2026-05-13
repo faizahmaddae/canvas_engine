@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4279769115,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "spot1",
+      "transform": {
+        "x": -300.0,
+        "y": -300.0,
+        "w": 800.0,
+        "h": 800.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4292429551,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "spot2",
+      "transform": {
+        "x": 650.0,
+        "y": 1570.0,
+        "w": 740.0,
+        "h": 740.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4278630100,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 60.0,
+        "y": 720.0,
+        "w": 960.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "LIVE · ONE NIGHT",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 44.0,
+        "color": 4294626325,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "name",
+      "transform": {
+        "x": 60.0,
+        "y": 810.0,
+        "w": 960.0,
+        "h": 540.0,
+        "r": 0.0
+      },
+      "content": "NEON\nWAVES",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 260.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.02,
+        "alignment": "center",
+        "shadowColor": 2566914048,
+        "shadowBlur": 4.0,
+        "shadowDx": 0.0,
+        "shadowDy": 2.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule",
+      "transform": {
+        "x": 460.0,
+        "y": 1380.0,
+        "w": 160.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "date",
+      "transform": {
+        "x": 60.0,
+        "y": 1450.0,
+        "w": 960.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "SAT · OCT 12 · 9 PM",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 52.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "where",
+      "transform": {
+        "x": 60.0,
+        "y": 1535.0,
+        "w": 960.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "The Echo · Los Angeles",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 44.0,
+        "color": 4294967295,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

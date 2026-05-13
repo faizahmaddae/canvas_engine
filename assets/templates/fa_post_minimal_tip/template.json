@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_post_minimal_tip",
+  "title": {
+    "en": "Persian Minimal Tip Post",
+    "fa": "پست نکته آموزشی"
+  },
+  "category": "social",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_post_minimal_tip/thumbnail.png",
+  "document": "assets/templates/fa_post_minimal_tip/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "post",
+    "education",
+    "tip"
+  ],
+  "home": {
+    "sortOrder": 35
+  }
+}

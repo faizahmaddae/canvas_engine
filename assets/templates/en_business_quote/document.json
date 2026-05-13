@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4292932350,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "bubble",
+      "transform": {
+        "x": 80.0,
+        "y": 220.0,
+        "w": 920.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "kind": "quoteBubble",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 140.0,
+        "y": 320.0,
+        "w": 800.0,
+        "h": 360.0,
+        "r": 0.0
+      },
+      "content": "“Stay close\nto the customer.”",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 88.0,
+        "color": 4278995566,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "avatar",
+      "transform": {
+        "x": 100.0,
+        "y": 840.0,
+        "w": 120.0,
+        "h": 120.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4279150057,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "name",
+      "transform": {
+        "x": 240.0,
+        "y": 860.0,
+        "w": 760.0,
+        "h": 50.0,
+        "r": 0.0
+      },
+      "content": "Mina Patel",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 38.0,
+        "color": 4278995566,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "role",
+      "transform": {
+        "x": 240.0,
+        "y": 910.0,
+        "w": 760.0,
+        "h": 50.0,
+        "r": 0.0
+      },
+      "content": "Founder, Northwind",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 30.0,
+        "color": 4278671749,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

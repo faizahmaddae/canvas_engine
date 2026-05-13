@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294440174,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "rule",
+      "transform": {
+        "x": 120.0,
+        "y": 315.0,
+        "w": 110.0,
+        "h": 8.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4280232247,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 96.0,
+        "y": 360.0,
+        "w": 888.0,
+        "h": 330.0,
+        "r": 0.0
+      },
+      "content": "“Done is better\nthan perfect.”",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 112.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.15,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "attrib",
+      "transform": {
+        "x": 96.0,
+        "y": 735.0,
+        "w": 888.0,
+        "h": 64.0,
+        "r": 0.0
+      },
+      "content": "— Sheryl Sandberg",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 38.0,
+        "color": 4285231744,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

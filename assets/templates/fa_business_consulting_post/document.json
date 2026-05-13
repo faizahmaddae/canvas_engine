@@ -1,0 +1,184 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4293916415,
+    "endColor": 4294507260,
+    "angleDegrees": 160.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "left",
+      "transform": {
+        "x": 80.0,
+        "y": 96.0,
+        "w": 410.0,
+        "h": 888.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4279179050,
+        "endColor": 4280110808,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 54.0,
+      "shadowOpacity": 0.22,
+      "shadowBlur": 38.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "right",
+      "transform": {
+        "x": 545.0,
+        "y": 96.0,
+        "w": 455.0,
+        "h": 888.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 54.0,
+      "shadowOpacity": 0.15,
+      "shadowBlur": 30.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 16.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "number",
+      "transform": {
+        "x": 185.0,
+        "y": 210.0,
+        "w": 200.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "content": "۳",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 140.0,
+        "color": 4294829706,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "left-text",
+      "transform": {
+        "x": 130.0,
+        "y": 430.0,
+        "w": 310.0,
+        "h": 245.0,
+        "r": 0.0
+      },
+      "content": "سؤال\nقبل از\nشروع",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 82.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.02,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 590.0,
+        "y": 190.0,
+        "w": 360.0,
+        "h": 180.0,
+        "r": 0.0
+      },
+      "content": "جلسه\nمشاوره",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 86.0,
+        "color": 4279179050,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 590.0,
+        "y": 430.0,
+        "w": 350.0,
+        "h": 160.0,
+        "r": 0.0
+      },
+      "content": "برای معرفی خدمات مشاوره، تحلیل کسب‌وکار یا جلسه رایگان استفاده کنید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4281549141,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "button",
+      "transform": {
+        "x": 605.0,
+        "y": 745.0,
+        "w": 320.0,
+        "h": 78.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280110808,
+      "strokeWidth": 0.0,
+      "cornerRadius": 39.0
+    },
+    {
+      "type": "text",
+      "id": "button-text",
+      "transform": {
+        "x": 635.0,
+        "y": 760.0,
+        "w": 260.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "رزرو وقت",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 44.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

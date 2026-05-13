@@ -6,6 +6,10 @@ import '../../editor/engine/core/editor_document.dart';
 /// screen. Keep the list short — categories are a navigation aid,
 /// not a taxonomy.
 enum TemplateCategory {
+  instagramStory('Instagram Story'),
+  youtubeThumbnail('YouTube Thumbnail'),
+  poetryPost('پست شاعرانه'),
+  promotionalPoster('پوستر تبلیغاتی'),
   social('Social'),
   story('Story'),
   quote('Quote'),
@@ -35,14 +39,13 @@ enum TemplateLanguage {
   final String label;
 }
 
-/// A single, hand-crafted starter design.
+/// A single starter design entry.
 ///
-/// Templates are defined in code (not on-disk JSON) so they stay
-/// type-safe across schema changes and so design tweaks land via
-/// normal PR review. The [build] callback returns a fresh
-/// [EditorDocument] every time the template is opened — never share
-/// instances, since opening a template seeds an editing session
-/// that the user is free to mutate.
+/// Production templates are parsed from JSON assets. The deprecated
+/// `TemplateCatalog` still creates the same model temporarily for migration and
+/// audit tests. The [build] callback returns a fresh [EditorDocument] every
+/// time the template is opened - never share instances, since opening a
+/// template seeds an editing session that the user is free to mutate.
 @immutable
 class Template {
   const Template({
@@ -51,6 +54,7 @@ class Template {
     required this.category,
     required this.language,
     required this.build,
+    this.thumbnailPath,
   });
 
   /// Stable id. Used for analytics + as a thumbnail cache key.
@@ -58,6 +62,11 @@ class Template {
 
   /// Short, user-facing name shown under the thumbnail.
   final String name;
+
+  /// Optional bundled raster thumbnail for asset-backed templates.
+  /// Legacy Dart templates leave this null and keep using the live
+  /// document renderer for previews.
+  final String? thumbnailPath;
 
   final TemplateCategory category;
 

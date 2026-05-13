@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "en_yt_tutorial_blueprint",
+  "title": {
+    "en": "Tutorial Blueprint YouTube Thumbnail",
+    "fa": "تامبنیل آموزش مرحله‌ای"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_yt_tutorial_blueprint/thumbnail.png",
+  "document": "assets/templates/en_yt_tutorial_blueprint/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "english",
+    "youtube",
+    "tutorial",
+    "blueprint"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 108
+  }
+}

@@ -4,10 +4,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import '../../../text/domain/text_style_presets.dart' show textDirectionForContent;
+import 'text_direction_utils.dart';
 import '../../core/editor_layer.dart';
 import '../../core/layer_capabilities.dart';
 import '../../core/layer_transform.dart';
+import '../../effects/editor_effect.dart';
 import 'text_style_spec.dart';
 
 export 'text_style_spec.dart';
@@ -57,6 +58,7 @@ class TextLayer extends EditorLayer {
     super.visible,
     super.locked,
     super.opacity,
+    super.effects,
   }) : super(
           capabilities: resizeMode == TextResizeMode.scaleText
               ? LayerCapabilities.textScale
@@ -75,61 +77,56 @@ class TextLayer extends EditorLayer {
   @override
   String get type => 'text';
 
-  @override
-  EditorLayer withTransform(LayerTransform transform) => TextLayer(
-        id: id,
-        transform: transform,
-        content: content,
-        style: style,
-        resizeMode: resizeMode,
-        kind: kind,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  /// Single source of truth for cloning a [TextLayer] with one or
+  /// more fields replaced. Every `with*` override and the public
+  /// [copyWith] delegate here so adding a new field is a one-line
+  /// change instead of editing every per-field copy method
+  /// individually. See [ImageLayer.copyAll] for the rationale.
+  TextLayer copyAll({
+    String? id,
+    LayerTransform? transform,
+    String? content,
+    TextStyleSpec? style,
+    TextResizeMode? resizeMode,
+    TextLayerKind? kind,
+    Object? name = _kCopySentinel,
+    bool? visible,
+    bool? locked,
+    double? opacity,
+    EffectStack? effects,
+  }) {
+    assert(
+      opacity == null || (opacity >= 0.0 && opacity <= 1.0),
+      'opacity must be in 0..1 (got $opacity)',
+    );
+    return TextLayer(
+      id: id ?? this.id,
+      transform: transform ?? this.transform,
+      content: content ?? this.content,
+      style: style ?? this.style,
+      resizeMode: resizeMode ?? this.resizeMode,
+      kind: kind ?? this.kind,
+      name: identical(name, _kCopySentinel) ? this.name : name as String?,
+      visible: visible ?? this.visible,
+      locked: locked ?? this.locked,
+      opacity: opacity == null ? this.opacity : opacity.clamp(0.0, 1.0),
+      effects: effects ?? this.effects,
+    );
+  }
 
   @override
-  EditorLayer withVisibility(bool visible) => TextLayer(
-        id: id,
-        transform: transform,
-        content: content,
-        style: style,
-        resizeMode: resizeMode,
-        kind: kind,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  EditorLayer withTransform(LayerTransform transform) =>
+      copyAll(transform: transform);
 
   @override
-  EditorLayer withLocked(bool locked) => TextLayer(
-        id: id,
-        transform: transform,
-        content: content,
-        style: style,
-        resizeMode: resizeMode,
-        kind: kind,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  EditorLayer withVisibility(bool visible) => copyAll(visible: visible);
 
   @override
-  EditorLayer withOpacity(double opacity) => TextLayer(
-        id: id,
-        transform: transform,
-        content: content,
-        style: style,
-        resizeMode: resizeMode,
-        kind: kind,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity.clamp(0.0, 1.0),
-      );
+  EditorLayer withLocked(bool locked) => copyAll(locked: locked);
+
+  @override
+  EditorLayer withOpacity(double opacity) =>
+      copyAll(opacity: opacity.clamp(0.0, 1.0));
 
   TextLayer copyWith({
     String? content,
@@ -137,20 +134,22 @@ class TextLayer extends EditorLayer {
     TextResizeMode? resizeMode,
     TextLayerKind? kind,
     String? name,
-  }) {
-    return TextLayer(
-      id: id,
-      transform: transform,
-      content: content ?? this.content,
-      style: style ?? this.style,
-      resizeMode: resizeMode ?? this.resizeMode,
-      kind: kind ?? this.kind,
-      name: name ?? this.name,
-      visible: visible,
-      locked: locked,
-      opacity: opacity,
-    );
-  }
+  }) =>
+      copyAll(
+        content: content,
+        style: style,
+        resizeMode: resizeMode,
+        kind: kind,
+        name: name ?? this.name,
+      );
+
+  static const Object _kCopySentinel = Object();
+
+  @override
+  // 2 bytes per UTF-16 code unit. Style is small and bounded so it
+  // folds into the base; only [content] scales with user input.
+  int get estimatedByteSize =>
+      EditorLayer.kLayerBaseBytes + content.length * 2;
 
   @override
   Widget buildContent(BuildContext context) {
@@ -215,6 +214,7 @@ class TextLayer extends EditorLayer {
       visible: json['visible'] as bool? ?? true,
       locked: json['locked'] as bool? ?? false,
       opacity: ((json['opacity'] as num?)?.toDouble() ?? 1.0).clamp(0.0, 1.0),
+      effects: EditorLayer.parseEffects(json),
     );
   }
 

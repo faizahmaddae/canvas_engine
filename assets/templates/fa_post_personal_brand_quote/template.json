@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_post_personal_brand_quote",
+  "title": {
+    "en": "Persian Personal Brand Quote",
+    "fa": "نقل‌قول برند شخصی"
+  },
+  "category": "quote",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_post_personal_brand_quote/thumbnail.png",
+  "document": "assets/templates/fa_post_personal_brand_quote/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "instagram",
+    "quote",
+    "personal-brand"
+  ],
+  "home": {
+    "sortOrder": 95
+  }
+}

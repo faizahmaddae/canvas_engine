@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_product_reveal",
+  "title": {
+    "en": "Persian Product Reveal Story",
+    "fa": "استوری معرفی محصول"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_product_reveal/thumbnail.png",
+  "document": "assets/templates/fa_story_product_reveal/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "instagram",
+    "story",
+    "product"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 30
+  }
+}

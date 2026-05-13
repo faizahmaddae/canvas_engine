@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4279310375,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "frame",
+      "transform": {
+        "x": 80.0,
+        "y": 310.0,
+        "w": 920.0,
+        "h": 1280.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294286859,
+      "strokeWidth": 0.0,
+      "cornerRadius": 32.0
+    },
+    {
+      "type": "text",
+      "id": "date",
+      "transform": {
+        "x": 80.0,
+        "y": 420.0,
+        "w": 920.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "جمعه ۲۴ خرداد",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 60.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 80.0,
+        "y": 550.0,
+        "w": 920.0,
+        "h": 500.0,
+        "r": 0.0
+      },
+      "content": "بازارچه\nتابستانی",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 190.0,
+        "color": 4279310375,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.02,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "divider",
+      "transform": {
+        "x": 460.0,
+        "y": 1100.0,
+        "w": 160.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "where",
+      "transform": {
+        "x": 80.0,
+        "y": 1150.0,
+        "w": 920.0,
+        "h": 230.0,
+        "r": 0.0
+      },
+      "content": "۱۱ صبح تا ۶ عصر\nپارک ملت",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 70.0,
+        "color": 4280232247,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta-bg",
+      "transform": {
+        "x": 300.0,
+        "y": 1448.0,
+        "w": 480.0,
+        "h": 104.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 52.0
+    },
+    {
+      "type": "text",
+      "id": "cta",
+      "transform": {
+        "x": 300.0,
+        "y": 1468.0,
+        "w": 480.0,
+        "h": 64.0,
+        "r": 0.0
+      },
+      "content": "بلیت بگیر",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 48.0,
+        "color": 4294286859,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

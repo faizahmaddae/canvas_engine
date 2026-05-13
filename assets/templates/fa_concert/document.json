@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4279769115,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "spot1",
+      "transform": {
+        "x": -300.0,
+        "y": -300.0,
+        "w": 800.0,
+        "h": 800.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4292429551,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "spot2",
+      "transform": {
+        "x": 650.0,
+        "y": 1570.0,
+        "w": 740.0,
+        "h": 740.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4278630100,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 60.0,
+        "y": 720.0,
+        "w": 960.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "اجرای زنده · یک شب فقط",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 50.0,
+        "color": 4294626325,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "name",
+      "transform": {
+        "x": 60.0,
+        "y": 820.0,
+        "w": 960.0,
+        "h": 540.0,
+        "r": 0.0
+      },
+      "content": "موج\nنئون",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 250.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center",
+        "shadowColor": 2566914048,
+        "shadowBlur": 4.0,
+        "shadowDx": 0.0,
+        "shadowDy": 2.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule",
+      "transform": {
+        "x": 460.0,
+        "y": 1390.0,
+        "w": 160.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "date",
+      "transform": {
+        "x": 60.0,
+        "y": 1460.0,
+        "w": 960.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "شنبه ۲۰ مهر · ساعت ۲۱",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 54.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "where",
+      "transform": {
+        "x": 60.0,
+        "y": 1545.0,
+        "w": 960.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "سالن میلاد · تهران",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4294967295,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

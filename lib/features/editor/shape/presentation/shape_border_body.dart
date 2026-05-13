@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/shape_commands.dart';
@@ -56,8 +57,15 @@ class ShapeBorderBody extends ConsumerStatefulWidget {
 }
 
 class _ShapeBorderBodyState extends ConsumerState<ShapeBorderBody> {
-  void _commit({Color? c, bool clearColor = false, double? w, bool live = false}) {
-    ref.read(documentControllerProvider.notifier).execute(
+  void _commit({
+    Color? c,
+    bool clearColor = false,
+    double? w,
+    bool live = false,
+  }) {
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           SetShapeStrokeCommand(
             layerId: widget.layer.id,
             color: c,
@@ -104,10 +112,12 @@ class _ShapeBorderBodyState extends ConsumerState<ShapeBorderBody> {
     final isStroked = isStrokedShapeKind(layer.kind);
     // For stroked kinds the “None” thickness chip is meaningless
     // (the line IS the shape) — drop it from the chip set.
-    final thicknessLabel = isStroked ? 'Line thickness' : 'Thickness';
+    final thicknessLabel = isStroked
+        ? context.l10n.strokeWidthLabel
+        : context.l10n.thicknessLabel;
 
     return ShapePanelShell(
-      title: 'Border',
+      title: context.l10n.borderTool,
       icon: Icons.border_outer_rounded,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -143,7 +153,7 @@ class _ShapeBorderBodyState extends ConsumerState<ShapeBorderBody> {
           ),
           if (!isStroked) ...[
             const SizedBox(height: 12),
-            const SectionLabel('Color'),
+            SectionLabel(context.l10n.colorLabel),
             // Approved compact color UI — fed by the app-wide
             // [recentColorsControllerProvider] so customs picked
             // in any colour panel are surfaced here too.
@@ -154,10 +164,7 @@ class _ShapeBorderBodyState extends ConsumerState<ShapeBorderBody> {
               compactRecents: true,
               onPick: (picked) {
                 EditorHaptics.toggle();
-                _commit(
-                  c: picked,
-                  w: hasBorder ? null : medium,
-                );
+                _commit(c: picked, w: hasBorder ? null : medium);
               },
               onCustom: () async {
                 final original = color;
@@ -165,12 +172,9 @@ class _ShapeBorderBodyState extends ConsumerState<ShapeBorderBody> {
                   context,
                   initial: original,
                   recents: ref.read(recentColorsControllerProvider),
-                  onLiveChange: (c) => _commit(
-                    c: c,
-                    w: hasBorder ? null : medium,
-                    live: true,
-                  ),
-                  title: 'Border color',
+                  onLiveChange: (c) =>
+                      _commit(c: c, w: hasBorder ? null : medium, live: true),
+                  title: context.l10n.borderColorTitle,
                 );
                 if (picked == null) {
                   _commit(c: original);
@@ -210,10 +214,29 @@ class _ThicknessChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = <(_ChipKey, double, String, IconData, double)>[
-      if (allowNone) (_ChipKey.none, 0, 'None', Icons.block_rounded, 18),
-      (_ChipKey.thin, thin, 'Thin', Icons.horizontal_rule_rounded, 16),
-      (_ChipKey.medium, medium, 'Medium', Icons.horizontal_rule_rounded, 22),
-      (_ChipKey.bold, bold, 'Bold', Icons.horizontal_rule_rounded, 30),
+      if (allowNone)
+        (_ChipKey.none, 0, context.l10n.noneOption, Icons.block_rounded, 18),
+      (
+        _ChipKey.thin,
+        thin,
+        context.l10n.thinOption,
+        Icons.horizontal_rule_rounded,
+        16,
+      ),
+      (
+        _ChipKey.medium,
+        medium,
+        context.l10n.mediumOption,
+        Icons.horizontal_rule_rounded,
+        22,
+      ),
+      (
+        _ChipKey.bold,
+        bold,
+        context.l10n.boldAction,
+        Icons.horizontal_rule_rounded,
+        30,
+      ),
     ];
     // Tolerance scales with the canvas-aware preset values so
     // "Medium" on a 4K canvas (e.g. ~20px stored) still matches

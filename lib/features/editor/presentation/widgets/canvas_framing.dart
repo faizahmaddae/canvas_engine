@@ -118,9 +118,9 @@ class _CanvasFramingPainter extends CustomPainter {
   static const Color _borderColorSubtle = Color(0x22FFFFFF);
 
   Color get _borderColor => switch (borderEmphasis) {
-        CanvasBorderEmphasis.standard => _borderColorStandard,
-        CanvasBorderEmphasis.subtle => _borderColorSubtle,
-      };
+    CanvasBorderEmphasis.standard => _borderColorStandard,
+    CanvasBorderEmphasis.subtle => _borderColorSubtle,
+  };
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -141,10 +141,7 @@ class _CanvasFramingPainter extends CustomPainter {
     final paint = Paint()
       ..color = const Color(0x80000000)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
-    canvas.drawRect(
-      canvasRect.translate(0, 4).inflate(2),
-      paint,
-    );
+    canvas.drawRect(canvasRect.translate(0, 4).inflate(2), paint);
   }
 
   void _paintDimMask(Canvas canvas, Size size) {

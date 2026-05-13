@@ -1,0 +1,151 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294966251,
+    "endColor": 4294898631,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "column",
+      "transform": {
+        "x": 118.0,
+        "y": 110.0,
+        "w": 844.0,
+        "h": 860.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 48.0,
+      "shadowOpacity": 0.16,
+      "shadowBlur": 34.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "line",
+      "transform": {
+        "x": 790.0,
+        "y": 180.0,
+        "w": 8.0,
+        "h": 720.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4287774734,
+      "strokeWidth": 0.0,
+      "cornerRadius": 4.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 170.0,
+        "y": 180.0,
+        "w": 560.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "یادداشت کوتاه",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4287774734,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 170.0,
+        "y": 285.0,
+        "w": 575.0,
+        "h": 285.0,
+        "r": 0.0
+      },
+      "content": "کلمات\nوقتی اثر می‌گذارند\nکه دقیق انتخاب شوند",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 76.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.06,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 170.0,
+        "y": 640.0,
+        "w": 575.0,
+        "h": 105.0,
+        "r": 0.0
+      },
+      "content": "یک نقل‌قول، نکته یا بخشی از مقاله را اینجا بنویسید.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4283913038,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.24,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "footer",
+      "transform": {
+        "x": 300.0,
+        "y": 825.0,
+        "w": 420.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 35.0
+    },
+    {
+      "type": "text",
+      "id": "footer-text",
+      "transform": {
+        "x": 335.0,
+        "y": 838.0,
+        "w": 350.0,
+        "h": 42.0,
+        "r": 0.0
+      },
+      "content": "مطالعه بیشتر",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 40.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

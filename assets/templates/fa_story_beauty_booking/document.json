@@ -1,0 +1,218 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294965492,
+    "endColor": 4294630884,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "salon-panel",
+      "transform": {"x": 82.0, "y": 122.0, "w": 916.0, "h": 1426.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 76.0,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 44.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 22.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "top-badge",
+      "transform": {"x": 630.0, "y": 188.0, "w": 250.0, "h": 72.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4285473103,
+      "strokeWidth": 0.0,
+      "cornerRadius": 36.0
+    },
+    {
+      "type": "text",
+      "id": "top-badge-text",
+      "transform": {"x": 666.0, "y": 204.0, "w": 178.0, "h": 42.0, "r": 0.0},
+      "content": "رزرو نوبت",
+      "style": {"fontFamily": "Lalezar", "fontSize": 40.0, "color": 4294967295, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "booking-card",
+      "transform": {"x": 150.0, "y": 330.0, "w": 780.0, "h": 470.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294962415,
+      "strokeWidth": 0.0,
+      "cornerRadius": 58.0,
+      "shadowOpacity": 0.12,
+      "shadowBlur": 26.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 12.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "booking-header",
+      "transform": {"x": 150.0, "y": 330.0, "w": 780.0, "h": 104.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4285473103,
+      "strokeWidth": 0.0,
+      "cornerRadius": 58.0
+    },
+    {
+      "type": "text",
+      "id": "booking-header-text",
+      "transform": {"x": 288.0, "y": 356.0, "w": 510.0, "h": 52.0, "r": 0.0},
+      "content": "رزرو سریع سالن",
+      "style": {"fontFamily": "Lalezar", "fontSize": 50.0, "color": 4294967295, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "calendar-tile",
+      "transform": {"x": 698.0, "y": 486.0, "w": 162.0, "h": 170.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4292430717,
+      "strokeWidth": 0.0,
+      "cornerRadius": 42.0
+    },
+    {
+      "type": "text",
+      "id": "calendar-date",
+      "transform": {"x": 720.0, "y": 516.0, "w": 118.0, "h": 108.0, "r": 0.0},
+      "content": "۲۵\nآذر",
+      "style": {"fontFamily": "BTitrBd", "fontSize": 54.0, "color": 4294967295, "fontWeight": 800, "letterSpacing": 0.0, "lineHeight": 0.94, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "salon-name",
+      "transform": {"x": 236.0, "y": 490.0, "w": 392.0, "h": 62.0, "r": 0.0},
+      "content": "سالن زیبایی رز",
+      "style": {"fontFamily": "Lalezar", "fontSize": 56.0, "color": 4282062902, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "booking-time",
+      "transform": {"x": 236.0, "y": 572.0, "w": 392.0, "h": 44.0, "r": 0.0},
+      "content": "امروز ۱۸:۳۰",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 36.0, "color": 4285473103, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "service-chip-one",
+      "transform": {"x": 448.0, "y": 692.0, "w": 360.0, "h": 58.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 29.0
+    },
+    {
+      "type": "text",
+      "id": "service-chip-one-text",
+      "transform": {"x": 486.0, "y": 705.0, "w": 284.0, "h": 34.0, "r": 0.0},
+      "content": "میکاپ و مراقبت پوست",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 29.0, "color": 4282062902, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "service-chip-two",
+      "transform": {"x": 238.0, "y": 692.0, "w": 180.0, "h": 58.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4292430717,
+      "strokeWidth": 0.0,
+      "cornerRadius": 29.0
+    },
+    {
+      "type": "text",
+      "id": "service-chip-two-text",
+      "transform": {"x": 270.0, "y": 705.0, "w": 116.0, "h": 34.0, "r": 0.0},
+      "content": "نوبت باز",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 29.0, "color": 4294967295, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "salon-cue-circle",
+      "transform": {"x": 206.0, "y": 208.0, "w": 148.0, "h": 148.0, "r": 0.0},
+      "kind": "oval",
+      "fillColor": 4294630884,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "salon-cue-line-one",
+      "transform": {"x": 242.0, "y": 262.0, "w": 78.0, "h": 10.0, "r": -18.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4285473103,
+      "strokeWidth": 0.0,
+      "cornerRadius": 5.0
+    },
+    {
+      "type": "shape",
+      "id": "salon-cue-line-two",
+      "transform": {"x": 242.0, "y": 292.0, "w": 78.0, "h": 10.0, "r": 18.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4292430717,
+      "strokeWidth": 0.0,
+      "cornerRadius": 5.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {"x": 132.0, "y": 900.0, "w": 816.0, "h": 156.0, "r": 0.0},
+      "content": "زیبایی آماده است",
+      "style": {"fontFamily": "BTitrBd", "fontSize": 84.0, "color": 4282062902, "fontWeight": 800, "letterSpacing": 0.0, "lineHeight": 1.0, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {"x": 152.0, "y": 1080.0, "w": 776.0, "h": 84.0, "r": 0.0},
+      "content": "نوبت زیبایی را سریع رزرو کنید",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 42.0, "color": 4285473103, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.18, "alignment": "right"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "service-strip",
+      "transform": {"x": 172.0, "y": 1240.0, "w": 736.0, "h": 86.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4294962415,
+      "strokeWidth": 0.0,
+      "cornerRadius": 43.0
+    },
+    {
+      "type": "text",
+      "id": "service-strip-text",
+      "transform": {"x": 226.0, "y": 1262.0, "w": 628.0, "h": 42.0, "r": 0.0},
+      "content": "مو  |  ناخن  |  مراقبت پوست",
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 34.0, "color": 4282062902, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {"x": 220.0, "y": 1588.0, "w": 640.0, "h": 110.0, "r": 0.0},
+      "kind": "roundedRectangle",
+      "fillColor": 4285473103,
+      "strokeWidth": 0.0,
+      "cornerRadius": 55.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {"x": 282.0, "y": 1611.0, "w": 516.0, "h": 62.0, "r": 0.0},
+      "content": "رزرو آنلاین",
+      "style": {"fontFamily": "Lalezar", "fontSize": 58.0, "color": 4294967295, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "resizeMode": "scaleText"
+    }
+  ]
+}

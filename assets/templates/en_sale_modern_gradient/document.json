@@ -1,0 +1,193 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4286340351,
+    "endColor": 4293418460,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "bloom",
+      "transform": {
+        "x": 700.0,
+        "y": -160.0,
+        "w": 600.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "fill": {
+        "type": "radial",
+        "centerColor": 3439329279,
+        "edgeColor": 16777215,
+        "focalX": 0.0,
+        "focalY": 0.0,
+        "radius": 1.0
+      },
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "tag",
+      "transform": {
+        "x": 80.0,
+        "y": 120.0,
+        "w": 320.0,
+        "h": 88.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280225341,
+      "strokeWidth": 0.0,
+      "cornerRadius": 44.0
+    },
+    {
+      "type": "shape",
+      "id": "discount-badge",
+      "transform": {
+        "x": 720.0,
+        "y": 130.0,
+        "w": 260.0,
+        "h": 260.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "discount-number",
+      "transform": {
+        "x": 735.0,
+        "y": 184.0,
+        "w": 230.0,
+        "h": 86.0,
+        "r": 0.0
+      },
+      "content": "50%",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 72.0,
+        "color": 4279572010,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "discount-label",
+      "transform": {
+        "x": 735.0,
+        "y": 274.0,
+        "w": 230.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "OFF",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 30.0,
+        "color": 4286340351,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "tag-text",
+      "transform": {
+        "x": 80.0,
+        "y": 138.0,
+        "w": 320.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "NEW DROP",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 38.0,
+        "color": 4293418460,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 80.0,
+        "y": 270.0,
+        "w": 920.0,
+        "h": 520.0,
+        "r": 0.0
+      },
+      "content": "BIG\nSALE",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 286.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.92,
+        "alignment": "left",
+        "shadowColor": 1140850688,
+        "shadowBlur": 4.0,
+        "shadowDx": 0.0,
+        "shadowDy": 2.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 80.0,
+        "y": 880.0,
+        "w": 920.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279572010,
+      "strokeWidth": 0.0,
+      "cornerRadius": 50.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 80.0,
+        "y": 904.0,
+        "w": 920.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "Shop the drop · 50% off",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 42.0,
+        "color": 4294955366,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/l10n.dart';
 import '../../editor/application/export_quality.dart';
+import '../../onboarding/application/onboarding_complete_provider.dart';
+import '../../templates/domain/template.dart';
 import '../application/settings_controller.dart';
 
 /// User-facing preferences screen.
@@ -17,85 +21,177 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsProvider);
     final controller = ref.read(settingsControllerProvider.notifier);
+    final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
-          _SectionHeader('Canvas Interaction'),
+          _SectionHeader(l10n.appearanceSection),
+          _NavTile(
+            icon: Icons.brightness_auto_rounded,
+            title: l10n.themeTitle,
+            subtitle: _themeModeLabel(l10n, settings.themeMode),
+            onTap: () => _openThemePicker(context, ref, settings),
+          ),
+          _NavTile(
+            icon: Icons.translate_rounded,
+            title: l10n.languageTitle,
+            subtitle: _localePreferenceLabel(l10n, settings.localePreference),
+            onTap: () => _openLanguagePicker(context, ref, settings),
+          ),
+          _NavTile(
+            icon: Icons.language_rounded,
+            title: l10n.settingsContentLanguagesTitle,
+            subtitle: _contentLanguagesLabel(l10n, settings.contentLanguages),
+            onTap: () => _openContentLanguagesPicker(context, ref, settings),
+          ),
+          _NavTile(
+            icon: Icons.dashboard_customize_outlined,
+            title: l10n.settingsEnabledCategoriesTitle,
+            subtitle: _enabledCategoriesLabel(l10n, settings.enabledCategories),
+            onTap: () => _openEnabledCategoriesPicker(context, ref, settings),
+          ),
+          const SizedBox(height: 8),
+          _SectionHeader(l10n.canvasInteractionSection),
           _SwitchTile(
             icon: Icons.pan_tool_alt_outlined,
-            title: 'Enable canvas pan',
-            subtitle: 'Drag the canvas to reposition it',
+            title: l10n.enableCanvasPanTitle,
+            subtitle: l10n.enableCanvasPanSubtitle,
             value: settings.canvasPanEnabled,
             onChanged: controller.setCanvasPanEnabled,
           ),
           _SwitchTile(
             icon: Icons.zoom_in_rounded,
-            title: 'Enable canvas zoom',
-            subtitle: 'Pinch to zoom in and out',
+            title: l10n.enableCanvasZoomTitle,
+            subtitle: l10n.enableCanvasZoomSubtitle,
             value: settings.canvasZoomEnabled,
             onChanged: controller.setCanvasZoomEnabled,
           ),
           _SwitchTile(
             icon: Icons.screen_rotation_alt_outlined,
-            title: 'Enable canvas rotation',
-            subtitle: 'Reserved for future two-finger rotate gesture',
+            title: l10n.enableCanvasRotationTitle,
+            subtitle: l10n.enableCanvasRotationSubtitle,
             value: settings.canvasRotationEnabled,
             onChanged: controller.setCanvasRotationEnabled,
           ),
           const SizedBox(height: 8),
-          _SectionHeader('Export'),
+          _SectionHeader(l10n.exportSection),
           _NavTile(
             icon: Icons.high_quality_outlined,
-            title: 'Default export quality',
+            title: l10n.defaultExportQualityTitle,
             subtitle:
-                '${settings.defaultExportQuality.label} '
+                '${_exportQualityLabel(l10n, settings.defaultExportQuality)} '
                 '· ${settings.defaultExportQuality.multiplier}',
             onTap: () => _openQualityPicker(context, ref, settings),
           ),
           const SizedBox(height: 8),
-          _SectionHeader('Editor'),
+          _SectionHeader(l10n.editorSection),
           _SwitchTile(
             icon: Icons.straighten_rounded,
-            title: 'Snap to guides',
-            subtitle: 'Auto-align layers to nearby edges and centers',
+            title: l10n.snapToGuidesTitle,
+            subtitle: l10n.snapToGuidesSubtitle,
             value: settings.snapToGuides,
             onChanged: controller.setSnapToGuides,
           ),
           _SwitchTile(
             icon: Icons.space_bar_rounded,
-            title: 'Show spacing guides',
-            subtitle: 'Highlight equal gaps between layers while dragging',
+            title: l10n.showSpacingGuidesTitle,
+            subtitle: l10n.showSpacingGuidesSubtitle,
             value: settings.showSpacingGuides,
             onChanged: controller.setShowSpacingGuides,
           ),
           _SwitchTile(
             icon: Icons.touch_app_outlined,
-            title: 'Multi-finger undo / redo',
-            subtitle:
-                'Two-finger tap to undo, three-finger tap to redo. '
-                'Off by default — can conflict with pinch gestures.',
+            title: l10n.multiFingerUndoRedoTitle,
+            subtitle: l10n.multiFingerUndoRedoSubtitle,
             value: settings.multiFingerUndoRedoEnabled,
             onChanged: controller.setMultiFingerUndoRedoEnabled,
           ),
           _SwitchTile(
             icon: Icons.front_hand_outlined,
-            title: 'Right-handed toolbar',
-            subtitle:
-                'Aligns the bottom strip to the right edge so tools '
-                'sit closer to your right thumb. Tool order stays the '
-                'same — only placement changes.',
+            title: l10n.rightHandedToolbarTitle,
+            subtitle: l10n.rightHandedToolbarSubtitle,
             value: settings.rightHandedToolbar,
             onChanged: controller.setRightHandedToolbar,
           ),
           const SizedBox(height: 24),
+          Center(
+            child: TextButton(
+              onPressed: () =>
+                  ref.read(onboardingCompleteProvider.notifier).reset(),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                textStyle: Theme.of(context).textTheme.labelSmall,
+              ),
+              child: Text(l10n.settingsResetOnboarding),
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );
+  }
+
+  Future<void> _openThemePicker(
+    BuildContext context,
+    WidgetRef ref,
+    AppSettings current,
+  ) async {
+    final picked = await showDialog<ThemeMode>(
+      context: context,
+      builder: (_) => _ThemePickerDialog(initial: current.themeMode),
+    );
+    if (picked == null) return;
+    await ref.read(settingsControllerProvider.notifier).setThemeMode(picked);
+  }
+
+  Future<void> _openLanguagePicker(
+    BuildContext context,
+    WidgetRef ref,
+    AppSettings current,
+  ) async {
+    final picked = await showDialog<LocalePreference>(
+      context: context,
+      builder: (_) => _LanguagePickerDialog(initial: current.localePreference),
+    );
+    if (picked == null) return;
+    await ref
+        .read(settingsControllerProvider.notifier)
+        .setLocalePreference(picked);
+  }
+
+  Future<void> _openContentLanguagesPicker(
+    BuildContext context,
+    WidgetRef ref,
+    AppSettings current,
+  ) async {
+    final picked = await showDialog<Set<TemplateLanguage>>(
+      context: context,
+      builder: (_) =>
+          _ContentLanguagesDialog(initial: current.contentLanguages),
+    );
+    if (picked == null) return;
+    await ref
+        .read(settingsControllerProvider.notifier)
+        .setContentLanguages(picked);
+  }
+
+  Future<void> _openEnabledCategoriesPicker(
+    BuildContext context,
+    WidgetRef ref,
+    AppSettings current,
+  ) async {
+    final picked = await showDialog<Set<TemplateCategory>>(
+      context: context,
+      builder: (_) =>
+          _EnabledCategoriesDialog(initial: current.enabledCategories),
+    );
+    if (picked == null) return;
+    await ref
+        .read(settingsControllerProvider.notifier)
+        .setEnabledCategories(picked);
   }
 
   Future<void> _openQualityPicker(
@@ -105,12 +201,269 @@ class SettingsScreen extends ConsumerWidget {
   ) async {
     final picked = await showDialog<ExportQuality>(
       context: context,
-      builder: (_) => _QualityPickerDialog(initial: current.defaultExportQuality),
+      builder: (_) =>
+          _QualityPickerDialog(initial: current.defaultExportQuality),
     );
     if (picked == null) return;
     await ref
         .read(settingsControllerProvider.notifier)
         .setDefaultExportQuality(picked);
+  }
+}
+
+String _themeModeLabel(AppLocalizations l10n, ThemeMode mode) => switch (mode) {
+  ThemeMode.system => l10n.themeSystem,
+  ThemeMode.light => l10n.themeLight,
+  ThemeMode.dark => l10n.themeDark,
+};
+
+String _localePreferenceLabel(
+  AppLocalizations l10n,
+  LocalePreference preference,
+) => switch (preference) {
+  LocalePreference.system => l10n.languageSystem,
+  LocalePreference.english => l10n.languageEnglish,
+  LocalePreference.persian => l10n.languagePersian,
+};
+
+String _contentLanguagesLabel(
+  AppLocalizations l10n,
+  Set<TemplateLanguage> languages,
+) {
+  final selected = languages.isEmpty ? kDefaultContentLanguages : languages;
+  return [
+    if (selected.contains(TemplateLanguage.english)) l10n.languageEnglish,
+    if (selected.contains(TemplateLanguage.persian)) l10n.languagePersian,
+  ].join(' · ');
+}
+
+String _enabledCategoriesLabel(
+  AppLocalizations l10n,
+  Set<TemplateCategory> categories,
+) {
+  final selected = categories.isEmpty
+      ? kDefaultEnabledTemplateCategories
+      : categories;
+  return [
+    for (final category in kHomeTemplateGoalCategories)
+      if (selected.contains(category)) _categoryLabel(l10n, category),
+  ].join(' · ');
+}
+
+String _categoryLabel(AppLocalizations l10n, TemplateCategory category) =>
+    switch (category) {
+      TemplateCategory.instagramStory => l10n.onboardingGoalInstagram,
+      TemplateCategory.youtubeThumbnail => l10n.onboardingGoalYoutube,
+      TemplateCategory.poetryPost => l10n.onboardingGoalPoetry,
+      TemplateCategory.promotionalPoster => l10n.onboardingGoalPoster,
+      _ => l10n.categorySocial,
+    };
+
+IconData _categoryIcon(TemplateCategory category) => switch (category) {
+  TemplateCategory.instagramStory => Icons.phone_iphone_rounded,
+  TemplateCategory.youtubeThumbnail => Icons.play_circle_outline_rounded,
+  TemplateCategory.poetryPost => Icons.format_quote_rounded,
+  TemplateCategory.promotionalPoster => Icons.campaign_rounded,
+  _ => Icons.auto_awesome_rounded,
+};
+
+String _exportQualityLabel(AppLocalizations l10n, ExportQuality quality) =>
+    switch (quality) {
+      ExportQuality.original => l10n.exportQualityOriginal,
+      ExportQuality.high => l10n.exportQualityHigh,
+      ExportQuality.ultra => l10n.exportQualityUltra,
+    };
+
+class _ThemePickerDialog extends StatefulWidget {
+  const _ThemePickerDialog({required this.initial});
+  final ThemeMode initial;
+
+  @override
+  State<_ThemePickerDialog> createState() => _ThemePickerDialogState();
+}
+
+class _ThemePickerDialogState extends State<_ThemePickerDialog> {
+  late ThemeMode _selected = widget.initial;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.themeTitle),
+      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+      content: RadioGroup<ThemeMode>(
+        groupValue: _selected,
+        onChanged: (v) {
+          if (v != null) setState(() => _selected = v);
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final mode in ThemeMode.values)
+              RadioListTile<ThemeMode>(
+                value: mode,
+                title: Text(_themeModeLabel(l10n, mode)),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelAction),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _selected),
+          child: Text(l10n.saveAction),
+        ),
+      ],
+    );
+  }
+}
+
+class _LanguagePickerDialog extends StatefulWidget {
+  const _LanguagePickerDialog({required this.initial});
+  final LocalePreference initial;
+
+  @override
+  State<_LanguagePickerDialog> createState() => _LanguagePickerDialogState();
+}
+
+class _LanguagePickerDialogState extends State<_LanguagePickerDialog> {
+  late LocalePreference _selected = widget.initial;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.languageTitle),
+      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+      content: RadioGroup<LocalePreference>(
+        groupValue: _selected,
+        onChanged: (v) {
+          if (v != null) setState(() => _selected = v);
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final preference in LocalePreference.values)
+              RadioListTile<LocalePreference>(
+                value: preference,
+                title: Text(_localePreferenceLabel(l10n, preference)),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelAction),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _selected),
+          child: Text(l10n.saveAction),
+        ),
+      ],
+    );
+  }
+}
+
+class _ContentLanguagesDialog extends StatefulWidget {
+  const _ContentLanguagesDialog({required this.initial});
+  final Set<TemplateLanguage> initial;
+
+  @override
+  State<_ContentLanguagesDialog> createState() =>
+      _ContentLanguagesDialogState();
+}
+
+class _ContentLanguagesDialogState extends State<_ContentLanguagesDialog> {
+  late final Set<TemplateLanguage> _selected = {...widget.initial};
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.settingsContentLanguagesTitle),
+      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final language in TemplateLanguage.values)
+            CheckboxListTile(
+              value: _selected.contains(language),
+              title: Text(
+                language == TemplateLanguage.english
+                    ? l10n.languageEnglish
+                    : l10n.languagePersian,
+              ),
+              onChanged: (_) => setState(() {
+                if (!_selected.add(language)) _selected.remove(language);
+              }),
+            ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelAction),
+        ),
+        FilledButton(
+          onPressed: _selected.isEmpty
+              ? null
+              : () => Navigator.pop(context, Set.unmodifiable(_selected)),
+          child: Text(l10n.saveAction),
+        ),
+      ],
+    );
+  }
+}
+
+class _EnabledCategoriesDialog extends StatefulWidget {
+  const _EnabledCategoriesDialog({required this.initial});
+  final Set<TemplateCategory> initial;
+
+  @override
+  State<_EnabledCategoriesDialog> createState() =>
+      _EnabledCategoriesDialogState();
+}
+
+class _EnabledCategoriesDialogState extends State<_EnabledCategoriesDialog> {
+  late final Set<TemplateCategory> _selected = {...widget.initial};
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.settingsEnabledCategoriesTitle),
+      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final category in kHomeTemplateGoalCategories)
+            CheckboxListTile(
+              value: _selected.contains(category),
+              secondary: Icon(_categoryIcon(category)),
+              title: Text(_categoryLabel(l10n, category)),
+              onChanged: (_) => setState(() {
+                if (!_selected.add(category)) _selected.remove(category);
+              }),
+            ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancelAction),
+        ),
+        FilledButton(
+          onPressed: _selected.isEmpty
+              ? null
+              : () => Navigator.pop(context, Set.unmodifiable(_selected)),
+          child: Text(l10n.saveAction),
+        ),
+      ],
+    );
   }
 }
 
@@ -201,8 +554,9 @@ class _QualityPickerDialogState extends State<_QualityPickerDialog> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return AlertDialog(
-      title: const Text('Default export quality'),
+      title: Text(l10n.defaultExportQualityTitle),
       contentPadding: const EdgeInsets.symmetric(vertical: 12),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -218,7 +572,7 @@ class _QualityPickerDialogState extends State<_QualityPickerDialog> {
                 for (final q in ExportQuality.values)
                   RadioListTile<ExportQuality>(
                     value: q,
-                    title: Text(q.label),
+                    title: Text(_exportQualityLabel(l10n, q)),
                     secondary: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -245,11 +599,11 @@ class _QualityPickerDialogState extends State<_QualityPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancelAction),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, _selected),
-          child: const Text('Save'),
+          child: Text(l10n.saveAction),
         ),
       ],
     );

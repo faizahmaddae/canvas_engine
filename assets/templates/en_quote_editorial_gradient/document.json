@@ -1,0 +1,109 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4294637294,
+    "edgeColor": 4292728780,
+    "focalX": -0.4,
+    "focalY": -0.6,
+    "radius": 1.2
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "sidebar",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "w": 96.0,
+        "h": 1080.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4280236639,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 140.0,
+        "y": 150.0,
+        "w": 800.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "FIELD NOTE · 04",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 30.0,
+        "color": 4291059002,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 140.0,
+        "y": 250.0,
+        "w": 850.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "content": "“We shape\nour tools.\nThen they\nshape us.”",
+      "style": {
+        "fontFamily": "Playfair_Display",
+        "fontSize": 104.0,
+        "color": 4281084972,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "attrib-rule",
+      "transform": {
+        "x": 140.0,
+        "y": 825.0,
+        "w": 220.0,
+        "h": 6.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4291059002,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "attrib",
+      "transform": {
+        "x": 140.0,
+        "y": 860.0,
+        "w": 860.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "MARSHALL McLUHAN",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 34.0,
+        "color": 4285227865,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

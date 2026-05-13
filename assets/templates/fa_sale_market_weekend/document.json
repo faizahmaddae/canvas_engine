@@ -1,0 +1,201 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4294965229,
+    "endColor": 4294962645,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "green-band",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "w": 1080.0,
+        "h": 380.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279522093,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "orange-card",
+      "transform": {
+        "x": 95.0,
+        "y": 250.0,
+        "w": 890.0,
+        "h": 880.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4294538006,
+        "endColor": 4293548044,
+        "angleDegrees": 120.0
+      },
+      "cornerRadius": 54.0,
+      "shadowOpacity": 0.24,
+      "shadowBlur": 42.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 22.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "price-sticker",
+      "transform": {
+        "x": 680.0,
+        "y": 180.0,
+        "w": 260.0,
+        "h": 260.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294898631,
+      "strokeWidth": 0.0,
+      "shadowOpacity": 0.2,
+      "shadowBlur": 28.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 16.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "text",
+      "id": "sticker",
+      "transform": {
+        "x": 710.0,
+        "y": 230.0,
+        "w": 200.0,
+        "h": 140.0,
+        "r": 0.0
+      },
+      "content": "۲ تا\nیکی",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 72.0,
+        "color": 4288295954,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.92,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 160.0,
+        "y": 405.0,
+        "w": 760.0,
+        "h": 245.0,
+        "r": 0.0
+      },
+      "content": "تخفیف\nآخر هفته",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 120.0,
+        "color": 4294967295,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.98,
+        "alignment": "right",
+        "shadowColor": 2516582400,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 170.0,
+        "y": 690.0,
+        "w": 720.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "برای فروشگاه، سوپرمارکت یا بازار محلی",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4294966251,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "coupon",
+      "transform": {
+        "x": 180.0,
+        "y": 835.0,
+        "w": 720.0,
+        "h": 130.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279310375,
+      "strokeWidth": 0.0,
+      "cornerRadius": 38.0
+    },
+    {
+      "type": "text",
+      "id": "coupon-text",
+      "transform": {
+        "x": 220.0,
+        "y": 865.0,
+        "w": 640.0,
+        "h": 72.0,
+        "r": 0.0
+      },
+      "content": "کد: WEEKEND",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 54.0,
+        "color": 4294829706,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 215.0,
+        "y": 1048.0,
+        "w": 650.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "content": "جمعه تا یکشنبه",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 54.0,
+        "color": 4279522093,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

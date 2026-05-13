@@ -62,7 +62,8 @@ class EditorToolDock extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final media = MediaQuery.of(context);
-    final compact = media.size.shortestSide < 380 ||
+    final compact =
+        media.size.shortestSide < 380 ||
         media.orientation == Orientation.landscape;
     final stripHeight = height ?? (compact ? 64.0 : 80.0);
     return Material(
@@ -111,27 +112,19 @@ class EditorToolDock extends StatelessWidget {
                       ).animate(animation);
                       return FadeTransition(
                         opacity: animation,
-                        child: SlideTransition(
-                          position: slide,
-                          child: child,
-                        ),
+                        child: SlideTransition(position: slide, child: child),
                       );
                     },
                     layoutBuilder: (currentChild, previousChildren) {
                       return Stack(
                         alignment: Alignment.bottomCenter,
-                        children: [
-                          ...previousChildren,
-                          ?currentChild,
-                        ],
+                        children: [...previousChildren, ?currentChild],
                       );
                     },
                     child: expanded == null
                         ? const SizedBox(width: double.infinity, height: 0)
                         : KeyedSubtree(
-                            key: ValueKey(
-                              expandedKey ?? expanded.runtimeType,
-                            ),
+                            key: ValueKey(expandedKey ?? expanded.runtimeType),
                             child: SizedBox(
                               width: double.infinity,
                               child: expanded,
@@ -162,16 +155,10 @@ class EditorToolDock extends StatelessWidget {
                   layoutBuilder: (currentChild, previousChildren) {
                     return Stack(
                       alignment: Alignment.center,
-                      children: [
-                        ...previousChildren,
-                        ?currentChild,
-                      ],
+                      children: [...previousChildren, ?currentChild],
                     );
                   },
-                  child: KeyedSubtree(
-                    key: ValueKey(modeKey),
-                    child: child,
-                  ),
+                  child: KeyedSubtree(key: ValueKey(modeKey), child: child),
                 ),
               ),
             ],

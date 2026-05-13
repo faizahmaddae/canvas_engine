@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "en_sale_bold",
+  "title": {
+    "en": "Bold sale",
+    "fa": "Bold sale"
+  },
+  "category": "sale",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_sale_bold/thumbnail.png",
+  "document": "assets/templates/en_sale_bold/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "sale",
+    "en",
+    "bold"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 330
+  }
+}

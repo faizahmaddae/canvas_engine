@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../effects/editor_effect.dart';
 import 'layer_capabilities.dart';
 import 'layer_transform.dart';
 
@@ -21,6 +22,7 @@ abstract class EditorLayer {
     this.visible = true,
     this.locked = false,
     this.opacity = 1.0,
+    this.effects = EffectStack.empty,
   });
 
   final String id;
@@ -50,6 +52,16 @@ abstract class EditorLayer {
   /// the whole composite.
   final double opacity;
 
+  /// Non-destructive effect stack applied to this layer at render
+  /// time. Empty by default — every legacy document re-encodes
+  /// without an `effects` key, so the v2 fixture corpus stays
+  /// byte-identical after the schema bump.
+  ///
+  /// Effects are stored bottom-to-top: `effects[0]` applies first,
+  /// `effects[last]` applies last. See `effects/editor_effect.dart`
+  /// for the contract.
+  final EffectStack effects;
+
   /// Discriminator used for serialization and debugging.
   String get type;
 
@@ -70,6 +82,29 @@ abstract class EditorLayer {
   /// top-left, extent equal to `transform.size`). The canvas has already
   /// been translated + rotated.
   Widget buildContent(BuildContext context);
+
+  /// Approximate retained-memory cost of this layer, in bytes. Used by
+  /// [HistoryStack] when a command holds a full layer copy
+  /// (Add/Remove and their inverses) — that's where the cap actually
+  /// matters, since paint strokes can carry tens of thousands of
+  /// points and each undo entry would otherwise pin the whole array.
+  ///
+  /// Default `kLayerBaseBytes` covers the common scalar fields
+  /// (transform + capabilities + flags). Subclasses override when
+  /// they carry user-content of variable size: paint stroke points,
+  /// long text, or image pixel buffers (when those ever live on the
+  /// layer; today image pixels live in the OS image cache and the
+  /// layer only holds the asset/file/url string).
+  ///
+  /// Estimates, not exact byte counts. The point is to distinguish
+  /// "50 KB" from "50 MB", not to predict the GC trace.
+  int get estimatedByteSize => kLayerBaseBytes;
+
+  /// Baseline used by [estimatedByteSize] for the common scalar
+  /// fields. Cheap to keep this conservative — the budget is a soft
+  /// cap, an overestimate just means slightly shallower history under
+  /// pressure (which is the safe direction).
+  static const int kLayerBaseBytes = 256;
 
   /// Serialize this layer to a JSON-friendly map. Implementations must
   /// include a `type` field matching [type] so a registry can dispatch
@@ -92,7 +127,18 @@ abstract class EditorLayer {
         // Only persist when non-default so legacy round-trips stay
         // byte-identical and existing thumbnails / hashes are stable.
         if (opacity < 1.0) 'opacity': opacity,
+        // Same omit-when-default rule for effects: an empty stack
+        // costs zero bytes on disk. This is the gate that keeps the
+        // v2 corpus byte-identical under schema v3.
+        if (effects.isNotEmpty) 'effects': effects.toJson(),
       };
+
+  /// Helper for subclass `fromJson` factories: returns the decoded
+  /// [EffectStack] under the `effects` key, or [EffectStack.empty]
+  /// when absent. Centralised so every layer reads the same key with
+  /// the same null/empty handling.
+  static EffectStack parseEffects(Map<String, dynamic> json) =>
+      EffectStack.fromJson(json['effects']);
 
   @override
   bool operator ==(Object other) =>
@@ -104,9 +150,18 @@ abstract class EditorLayer {
           other.visible == visible &&
           other.locked == locked &&
           other.opacity == opacity &&
-          other.name == name;
+          other.name == name &&
+          other.effects == effects;
 
   @override
-  int get hashCode =>
-      Object.hash(id, transform, capabilities, visible, locked, opacity, name);
+  int get hashCode => Object.hash(
+        id,
+        transform,
+        capabilities,
+        visible,
+        locked,
+        opacity,
+        name,
+        effects,
+      );
 }

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_black_gold_nastaliq",
+  "title": {
+    "en": "Persian Black Gold Nastaliq Poem",
+    "fa": "شعر نستعلیق مشکی طلایی"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_black_gold_nastaliq/thumbnail.png",
+  "document": "assets/templates/fa_poetry_black_gold_nastaliq/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "persian",
+    "poetry",
+    "nastaliq",
+    "premium"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 101
+  }
+}

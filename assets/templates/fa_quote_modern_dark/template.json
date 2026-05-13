@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_quote_modern_dark",
+  "title": {
+    "en": "Persian Modern Dark Quote",
+    "fa": "نقل‌قول مدرن تیره"
+  },
+  "category": "quote",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_quote_modern_dark/thumbnail.png",
+  "document": "assets/templates/fa_quote_modern_dark/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "quote",
+    "modern",
+    "dark"
+  ],
+  "home": {
+    "sortOrder": 43
+  }
+}

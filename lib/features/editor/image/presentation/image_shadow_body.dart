@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/image_commands.dart';
@@ -46,25 +47,30 @@ class _ImageShadowBodyState extends ConsumerState<ImageShadowBody> {
     return mag.clamp(8, 40).toDouble();
   }
 
-  void _commit({Color? c, double? blur, Offset? offset, double? opacity}) {
-    ref.read(documentControllerProvider.notifier).execute(
+  void _commit({
+    Color? c,
+    double? blur,
+    Offset? offset,
+    double? opacity,
+    bool live = false,
+  }) {
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           SetImageShadowCommand(
             layerId: widget.layer.id,
             color: c,
             blur: blur,
             offset: offset,
             opacity: opacity,
+            live: live,
           ),
         );
   }
 
   void _applyPreset(_ShadowPreset preset) {
     EditorHaptics.toggle();
-    _commit(
-      blur: preset.blur,
-      offset: preset.offset,
-      opacity: preset.opacity,
-    );
+    _commit(blur: preset.blur, offset: preset.offset, opacity: preset.opacity);
   }
 
   @override
@@ -74,23 +80,20 @@ class _ImageShadowBodyState extends ConsumerState<ImageShadowBody> {
     final activePreset = _matchPreset(layer);
 
     return ImagePanelShell(
-      title: 'Shadow',
+      title: context.l10n.shadowTool,
       icon: Icons.layers_outlined,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SectionLabel('Style'),
-          _PresetRow(
-            active: activePreset,
-            onPick: _applyPreset,
-          ),
+          SectionLabel(context.l10n.styleLabel),
+          _PresetRow(active: activePreset, onPick: _applyPreset),
           // When the shadow is None there's nothing to colour or
           // fine-tune — collapse the rest of the panel so the dock
           // stays short on phones. Picking any preset reveals it.
           if (hasShadow) ...[
             const SizedBox(height: 12),
-            const SectionLabel('Color'),
+            SectionLabel(context.l10n.colorLabel),
             InlineColorBody(
               current: layer.shadowColor,
               recents: ref.watch(recentColorsControllerProvider),
@@ -106,8 +109,8 @@ class _ImageShadowBodyState extends ConsumerState<ImageShadowBody> {
                   context,
                   initial: original,
                   recents: ref.read(recentColorsControllerProvider),
-                  onLiveChange: (c) => _commit(c: c),
-                  title: 'Shadow color',
+                  onLiveChange: (c) => _commit(c: c, live: true),
+                  title: context.l10n.shadowColorTitle,
                 );
                 if (picked == null) {
                   _commit(c: original);
@@ -148,18 +151,18 @@ class _ImageShadowBodyState extends ConsumerState<ImageShadowBody> {
                           ),
                           const SizedBox(height: 6),
                           _LabeledSlider(
-                            label: 'Blur',
+                            label: context.l10n.blurLabel,
                             value: layer.shadowBlur,
                             max: 80,
                             format: (v) => v.round().toString(),
-                            onChange: (v) => _commit(blur: v),
+                            onChange: (v) => _commit(blur: v, live: true),
                           ),
                           _LabeledSlider(
-                            label: 'Opacity',
+                            label: context.l10n.opacityLabel,
                             value: layer.shadowOpacity,
                             max: 1,
                             format: (v) => '${(v * 100).round()}%',
-                            onChange: (v) => _commit(opacity: v),
+                            onChange: (v) => _commit(opacity: v, live: true),
                           ),
                         ],
                       ),
@@ -289,11 +292,22 @@ class _PresetChip extends StatelessWidget {
     return PanelOptionTile(
       icon: preset.icon,
       iconSize: 18,
-      label: preset.label,
+      label: _shadowPresetLabel(context, preset),
       selected: selected,
       onTap: onTap,
     );
   }
+}
+
+String _shadowPresetLabel(BuildContext context, _ShadowPreset preset) {
+  return switch (preset.id) {
+    'none' => context.l10n.noneOption,
+    'soft' => context.l10n.softOption,
+    'hard' => context.l10n.hardOption,
+    'glow' => context.l10n.glowOption,
+    'lift' => context.l10n.liftOption,
+    _ => preset.label,
+  };
 }
 
 /// 3×3 grid of direction buttons. Centre cell maps to
@@ -313,9 +327,15 @@ class _DirectionPad extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const cells = <(int, int)>[
-      (-1, -1), (0, -1), (1, -1),
-      (-1, 0),  (0, 0),  (1, 0),
-      (-1, 1),  (0, 1),  (1, 1),
+      (-1, -1),
+      (0, -1),
+      (1, -1),
+      (-1, 0),
+      (0, 0),
+      (1, 0),
+      (-1, 1),
+      (0, 1),
+      (1, 1),
     ];
     final activeCell = _activeCell(offset);
     return SizedBox(
@@ -392,8 +412,7 @@ class _DirectionCell extends StatelessWidget {
                   child: Icon(
                     Icons.arrow_upward_rounded,
                     size: 16,
-                    color:
-                        selected ? scheme.primary : scheme.onSurfaceVariant,
+                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
                   ),
                 ),
         ),
@@ -427,11 +446,7 @@ class _AdjustHeader extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         child: Row(
           children: [
-            Icon(
-              Icons.tune_rounded,
-              size: 16,
-              color: scheme.primary,
-            ),
+            Icon(Icons.tune_rounded, size: 16, color: scheme.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -439,7 +454,7 @@ class _AdjustHeader extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Adjust precisely',
+                    context.l10n.adjustPrecisely,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -448,7 +463,7 @@ class _AdjustHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    'Blur, direction, opacity',
+                    context.l10n.blurDirectionOpacitySubtitle,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
@@ -532,4 +547,3 @@ class _LabeledSlider extends StatelessWidget {
     );
   }
 }
-

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/image_commands.dart';
@@ -62,12 +63,15 @@ class ImageBorderBody extends ConsumerStatefulWidget {
 class _ImageBorderBodyState extends ConsumerState<ImageBorderBody> {
   bool _adjustOpen = false;
 
-  void _commit({Color? c, double? w}) {
-    ref.read(documentControllerProvider.notifier).execute(
+  void _commit({Color? c, double? w, bool live = false}) {
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           SetImageBorderCommand(
             layerId: widget.layer.id,
             color: c,
             width: w,
+            live: live,
           ),
         );
   }
@@ -107,7 +111,7 @@ class _ImageBorderBodyState extends ConsumerState<ImageBorderBody> {
     final sliderMax = math.max(20.0, bold * 2);
 
     return ImagePanelShell(
-      title: 'Border',
+      title: context.l10n.borderTool,
       icon: Icons.border_outer_rounded,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -115,7 +119,7 @@ class _ImageBorderBodyState extends ConsumerState<ImageBorderBody> {
         children: [
           // Thickness leads — picking a width is the primary
           // action; colour is a refinement once the border is on.
-          const SectionLabel('Thickness'),
+          SectionLabel(context.l10n.thicknessLabel),
           _ThicknessChips(
             width: width,
             onPick: (w) {
@@ -127,7 +131,7 @@ class _ImageBorderBodyState extends ConsumerState<ImageBorderBody> {
             bold: bold,
           ),
           const SizedBox(height: 12),
-          const SectionLabel('Color'),
+          SectionLabel(context.l10n.colorLabel),
           InlineColorBody(
             current: color,
             recents: ref.watch(recentColorsControllerProvider),
@@ -137,10 +141,7 @@ class _ImageBorderBodyState extends ConsumerState<ImageBorderBody> {
               EditorHaptics.toggle();
               // Auto-promote width so a colour pick on a no-border
               // image is visible instead of silently committing.
-              _commit(
-                c: picked,
-                w: hasBorder ? null : medium,
-              );
+              _commit(c: picked, w: hasBorder ? null : medium);
             },
             onCustom: () async {
               final original = color;
@@ -148,11 +149,9 @@ class _ImageBorderBodyState extends ConsumerState<ImageBorderBody> {
                 context,
                 initial: original,
                 recents: ref.read(recentColorsControllerProvider),
-                onLiveChange: (c) => _commit(
-                  c: c,
-                  w: hasBorder ? null : medium,
-                ),
-                title: 'Border color',
+                onLiveChange: (c) =>
+                    _commit(c: c, w: hasBorder ? null : medium, live: true),
+                title: context.l10n.borderColorTitle,
               );
               if (picked == null) {
                 _commit(c: original);
@@ -166,7 +165,7 @@ class _ImageBorderBodyState extends ConsumerState<ImageBorderBody> {
           const SizedBox(height: 6),
           _AdjustHeader(
             open: _adjustOpen,
-            subtitle: 'Width',
+            subtitle: context.l10n.widthLabel,
             onToggle: () {
               EditorHaptics.tap();
               setState(() => _adjustOpen = !_adjustOpen);
@@ -182,7 +181,7 @@ class _ImageBorderBodyState extends ConsumerState<ImageBorderBody> {
                     child: _PrecisionSlider(
                       value: width,
                       max: sliderMax,
-                      onChange: (w) => _commit(w: w),
+                      onChange: (w) => _commit(w: w, live: true),
                     ),
                   )
                 : const SizedBox.shrink(),
@@ -213,10 +212,28 @@ class _ThicknessChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = <(_ChipKey, double, String, IconData, double)>[
-      (_ChipKey.none, 0, 'None', Icons.block_rounded, 18),
-      (_ChipKey.thin, thin, 'Thin', Icons.horizontal_rule_rounded, 16),
-      (_ChipKey.medium, medium, 'Medium', Icons.horizontal_rule_rounded, 22),
-      (_ChipKey.bold, bold, 'Bold', Icons.horizontal_rule_rounded, 30),
+      (_ChipKey.none, 0, context.l10n.noneOption, Icons.block_rounded, 18),
+      (
+        _ChipKey.thin,
+        thin,
+        context.l10n.thinOption,
+        Icons.horizontal_rule_rounded,
+        16,
+      ),
+      (
+        _ChipKey.medium,
+        medium,
+        context.l10n.mediumOption,
+        Icons.horizontal_rule_rounded,
+        22,
+      ),
+      (
+        _ChipKey.bold,
+        bold,
+        context.l10n.boldAction,
+        Icons.horizontal_rule_rounded,
+        30,
+      ),
     ];
     _ChipKey activeKey;
     // Scale tolerance with the preset itself so picks are still
@@ -308,11 +325,7 @@ class _AdjustHeader extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         child: Row(
           children: [
-            Icon(
-              Icons.tune_rounded,
-              size: 16,
-              color: scheme.primary,
-            ),
+            Icon(Icons.tune_rounded, size: 16, color: scheme.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -320,7 +333,7 @@ class _AdjustHeader extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Adjust precisely',
+                    context.l10n.adjustPrecisely,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -382,7 +395,7 @@ class _PrecisionSlider extends StatelessWidget {
           SizedBox(
             width: 56,
             child: Text(
-              'Width',
+              context.l10n.widthLabel,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

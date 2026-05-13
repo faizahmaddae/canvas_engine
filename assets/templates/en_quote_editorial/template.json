@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "en_quote_editorial",
+  "title": {
+    "en": "Editorial quote",
+    "fa": "Editorial quote"
+  },
+  "category": "quote",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_quote_editorial/thumbnail.png",
+  "document": "assets/templates/en_quote_editorial/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "quote",
+    "en",
+    "editorial"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 370
+  }
+}

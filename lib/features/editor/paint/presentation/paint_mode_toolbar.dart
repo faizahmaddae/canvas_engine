@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../../settings/application/settings_controller.dart';
 import '../../application/selection_controller.dart';
@@ -48,14 +50,7 @@ Set<String> _allowedSlotsFor(PaintToolType? tool) {
     case PaintToolType.hexagon:
       return const {'tool', 'color', 'size', 'fill', 'opacity'};
     case PaintToolType.polygon:
-      return const {
-        'tool',
-        'color',
-        'size',
-        'fill',
-        'opacity',
-        'polygon',
-      };
+      return const {'tool', 'color', 'size', 'fill', 'opacity', 'polygon'};
     case PaintToolType.eraser:
       return const {'tool', 'size'};
     case PaintToolType.blur:
@@ -67,36 +62,36 @@ Set<String> _allowedSlotsFor(PaintToolType? tool) {
 //
 // Tile `valueText` shows a word, not a number. Numbers stay inside
 // the sub-tool sheet for power users.
-String _strokeWord(double w) {
-  if (w <= 4) return 'Thin';
-  if (w <= 12) return 'Medium';
-  if (w <= 24) return 'Thick';
-  return 'Heavy';
+String _strokeWord(AppLocalizations l10n, double w) {
+  if (w <= 4) return l10n.thinOption;
+  if (w <= 12) return l10n.mediumOption;
+  if (w <= 24) return l10n.thickOption;
+  return l10n.heavyOption;
 }
 
-String _opacityWord(double alpha01) {
+String _opacityWord(AppLocalizations l10n, double alpha01) {
   final p = (alpha01.clamp(0.0, 1.0) * 100).round();
-  if (p <= 35) return 'Light';
-  if (p <= 75) return 'Normal';
-  return 'Strong';
+  if (p <= 35) return l10n.lightOption;
+  if (p <= 75) return l10n.normalOption;
+  return l10n.strongOption;
 }
 
-String _blurWord(double r) {
-  if (r < 1) return 'None';
-  if (r <= 16) return 'Soft';
-  return 'Strong';
+String _blurWord(AppLocalizations l10n, double r) {
+  if (r < 1) return l10n.noneOption;
+  if (r <= 16) return l10n.softOption;
+  return l10n.strongOption;
 }
 
-String _dashWordForTool(PaintToolType? tool) {
+String _dashWordForTool(AppLocalizations l10n, PaintToolType? tool) {
   switch (tool) {
     case PaintToolType.dashLine:
-      return 'Dashed';
+      return l10n.dashedOption;
     case PaintToolType.dashDotLine:
-      return 'Dotted';
+      return l10n.dottedOption;
     case PaintToolType.line:
-      return 'Solid';
+      return l10n.solidOption;
     default:
-      return 'Solid';
+      return l10n.solidOption;
   }
 }
 
@@ -121,55 +116,18 @@ class PaintModeToolbar extends ConsumerStatefulWidget {
   // Flat single-tier strip — Tool · Color · Size · Fill · Opacity ·
   // Blur · Sides · Dash. Ordered by expected frequency of use.
   static final List<_PaintSpec> _tools = <_PaintSpec>[
-    _PaintSpec(
-      id: 'tool',
-      icon: Icons.gesture_rounded,
-      label: 'Tool',
-      dynamicLabel: (_, tool) => tool.label,
-    ),
-    _PaintSpec(
-      id: 'color',
-      icon: Icons.palette_rounded,
-      label: 'Color',
-    ),
-    _PaintSpec(
-      id: 'size',
-      icon: Icons.line_weight_rounded,
-      label: 'Size',
-      dynamicLabel: (s, _) => _strokeWord(s.strokeWidth),
-    ),
+    _PaintSpec(id: 'tool', icon: Icons.gesture_rounded, label: 'Tool'),
+    _PaintSpec(id: 'color', icon: Icons.palette_rounded, label: 'Color'),
+    _PaintSpec(id: 'size', icon: Icons.line_weight_rounded, label: 'Size'),
     _PaintSpec(
       id: 'fill',
       icon: Icons.format_color_fill_rounded,
       label: 'Fill',
-      dynamicLabel: (s, _) => s.fillColor == null ? 'Off' : 'On',
     ),
-    _PaintSpec(
-      id: 'opacity',
-      icon: Icons.opacity_rounded,
-      label: 'Opacity',
-      dynamicLabel: (s, _) => _opacityWord(s.strokeColor.a),
-    ),
-    _PaintSpec(
-      id: 'blur',
-      icon: Icons.blur_on_rounded,
-      label: 'Blur',
-      dynamicLabel: (s, _) => _blurWord(s.blurRadius),
-    ),
-    _PaintSpec(
-      id: 'polygon',
-      icon: Icons.pentagon_outlined,
-      label: 'Sides',
-      dynamicLabel: (s, _) => '${s.polygonSides} sides',
-    ),
-    _PaintSpec(
-      id: 'dash',
-      icon: Icons.linear_scale_rounded,
-      label: 'Style',
-      // Label tracks the live *tool kind* so the strip never
-      // lies about what the next stroke will look like.
-      dynamicLabel: (_, tool) => _dashWordForTool(tool),
-    ),
+    _PaintSpec(id: 'opacity', icon: Icons.opacity_rounded, label: 'Opacity'),
+    _PaintSpec(id: 'blur', icon: Icons.blur_on_rounded, label: 'Blur'),
+    _PaintSpec(id: 'polygon', icon: Icons.pentagon_outlined, label: 'Sides'),
+    _PaintSpec(id: 'dash', icon: Icons.linear_scale_rounded, label: 'Style'),
   ];
 
   // ignore: library_private_types_in_public_api
@@ -306,8 +264,7 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
     if (open != _lastOpen) {
       _lastOpen = open;
       if (open != null) {
-        final idx =
-            PaintModeToolbar._tools.indexWhere((s) => s.id == open);
+        final idx = PaintModeToolbar._tools.indexWhere((s) => s.id == open);
         if (idx >= 0) {
           WidgetsBinding.instance.addPostFrameCallback(
             (_) => _ensureVisible(idx),
@@ -322,9 +279,8 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
         controller: _scroll,
         centerWhenFits: true,
         // Handedness affects alignment only — never tile order.
-        fitAlignment: ref.watch(
-          appSettingsProvider.select((s) => s.rightHandedToolbar),
-        )
+        fitAlignment:
+            ref.watch(appSettingsProvider.select((s) => s.rightHandedToolbar))
             ? MainAxisAlignment.end
             : MainAxisAlignment.center,
         children: [
@@ -336,18 +292,22 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
                     ? tool.icon
                     : PaintModeToolbar._tools[i].icon,
                 label: PaintModeToolbar._tools[i].id == 'tool'
-                    ? (session.activeTool?.label ?? 'Tool')
-                    : PaintModeToolbar._tools[i].label,
+                    ? _paintToolLabel(context.l10n, session.activeTool) ??
+                          context.l10n.toolLabel
+                    : _paintSpecLabel(context.l10n, PaintModeToolbar._tools[i]),
                 valueText: PaintModeToolbar._tools[i].id == 'tool'
                     ? null
-                    : PaintModeToolbar._tools[i]
-                        .dynamicLabel
-                        ?.call(session, tool),
+                    : _paintValueText(
+                        context.l10n,
+                        PaintModeToolbar._tools[i],
+                        session,
+                        tool,
+                      ),
                 swatchColor: PaintModeToolbar._tools[i].id == 'color'
                     ? session.strokeColor
                     : PaintModeToolbar._tools[i].id == 'fill' && fillEnabled
-                        ? session.fillColor
-                        : null,
+                    ? session.fillColor
+                    : null,
                 active: session.openSlot == PaintModeToolbar._tools[i].id,
                 compact: _isCompact(context),
                 onTap: () {
@@ -369,8 +329,7 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
   // ── Layout helpers ──────────────────────────────────────────────
   bool _isCompact(BuildContext ctx) {
     final m = MediaQuery.of(ctx);
-    return m.size.shortestSide < 380 ||
-        m.orientation == Orientation.landscape;
+    return m.size.shortestSide < 380 || m.orientation == Orientation.landscape;
   }
 
   double _stripHeight(BuildContext ctx) => _isCompact(ctx) ? 64 : 80;
@@ -380,10 +339,7 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
   /// row's alignment via [DockToolStrip.fitAlignment]; it never
   /// reverses tools.
   List<int> _toolOrder(BuildContext ctx, WidgetRef ref) {
-    return List<int>.generate(
-      PaintModeToolbar._tools.length,
-      (i) => i,
-    );
+    return List<int>.generate(PaintModeToolbar._tools.length, (i) => i);
   }
 
   bool _isTierBoundary(WidgetRef ref, int rawIndex) {
@@ -419,13 +375,14 @@ class PaintModeInlineExpansion extends ConsumerWidget {
     // The 'tool' slot gets a friendlier header so it reads as a
     // temporary chooser, not a persistent settings panel.
     final bool isPicker = openId == 'tool';
-    final SubTool subTool = _paintSliderSubTools[openId] ??
+    final SubTool subTool =
+        _paintSliderSubTools(context)[openId] ??
         WidgetSubTool(
-          headerTitle: isPicker ? 'Choose a tool' : spec.label,
-          headerIcon: isPicker
-              ? Icons.brush_rounded
-              : spec.icon,
-          builder: (ctx, _) => _buildPaintBody(openId, session),
+          headerTitle: isPicker
+              ? context.l10n.chooseToolTitle
+              : _paintSpecLabel(context.l10n, spec),
+          headerIcon: isPicker ? Icons.brush_rounded : spec.icon,
+          builder: (ctx, _) => _buildPaintBody(ctx, openId, session),
         );
 
     final ids = PaintModeToolbar.toolIdsFor(session.activeTool);
@@ -454,7 +411,11 @@ class PaintModeInlineExpansion extends ConsumerWidget {
   /// in [build] stays a single expression. Each case is a one-liner
   /// constructing the existing body widget unchanged \u2014 only the
   /// surrounding chrome is unified.
-  Widget _buildPaintBody(String openId, PaintSession session) {
+  Widget _buildPaintBody(
+    BuildContext context,
+    String openId,
+    PaintSession session,
+  ) {
     switch (openId) {
       case 'tool':
         return const _PaintToolBody();
@@ -482,17 +443,77 @@ class PaintModeInlineExpansion extends ConsumerWidget {
 // ─────────────────────────────────────────────────────────────────
 
 class _PaintSpec {
-  const _PaintSpec({
-    required this.id,
-    required this.icon,
-    required this.label,
-    this.dynamicLabel,
-  });
+  const _PaintSpec({required this.id, required this.icon, required this.label});
 
   final String id;
   final IconData icon;
   final String label;
-  final String Function(PaintSession session, PaintToolType tool)? dynamicLabel;
+}
+
+String _paintSpecLabel(AppLocalizations l10n, _PaintSpec spec) {
+  return switch (spec.id) {
+    'tool' => l10n.toolLabel,
+    'color' => l10n.colorLabel,
+    'size' => l10n.sizeTool,
+    'fill' => l10n.fillLabel,
+    'opacity' => l10n.opacityLabel,
+    'blur' => l10n.blurLabel,
+    'polygon' => l10n.sidesTool,
+    'dash' => l10n.styleLabel,
+    _ => spec.label,
+  };
+}
+
+String? _paintValueText(
+  AppLocalizations l10n,
+  _PaintSpec spec,
+  PaintSession session,
+  PaintToolType tool,
+) {
+  return switch (spec.id) {
+    'size' => _strokeWord(l10n, session.strokeWidth),
+    'fill' => session.fillColor == null ? l10n.offOption : l10n.onOption,
+    'opacity' => _opacityWord(l10n, session.strokeColor.a),
+    'blur' => _blurWord(l10n, session.blurRadius),
+    'polygon' => l10n.sidesCount(session.polygonSides),
+    'dash' => _dashWordForTool(l10n, tool),
+    _ => null,
+  };
+}
+
+String? _paintToolLabel(AppLocalizations l10n, PaintToolType? tool) {
+  return switch (tool) {
+    null => null,
+    PaintToolType.freestyle => l10n.penTool,
+    PaintToolType.line => l10n.lineTool,
+    PaintToolType.arrow => l10n.arrowTool,
+    PaintToolType.dashLine => l10n.dashedOption,
+    PaintToolType.dashDotLine => l10n.dashDotOption,
+    PaintToolType.rectangle => l10n.squareLabel,
+    PaintToolType.circle => l10n.circleLabel,
+    PaintToolType.hexagon => l10n.hexagonLabel,
+    PaintToolType.polygon => l10n.polygonLabel,
+    PaintToolType.eraser => l10n.eraserTool,
+    PaintToolType.blur => l10n.blurLabel,
+  };
+}
+
+String _paintGroupLabel(AppLocalizations l10n, _ToolGroup group) {
+  return switch (group.title) {
+    'Draw' => l10n.drawGroup,
+    'Shapes' => l10n.shapesGroup,
+    'Effects' => l10n.effectsGroup,
+    _ => group.title,
+  };
+}
+
+String _dashPresetLabel(AppLocalizations l10n, String label) {
+  return switch (label) {
+    'Solid' => l10n.solidOption,
+    'Dashed' => l10n.dashedOption,
+    'Dotted' => l10n.dottedOption,
+    _ => label,
+  };
 }
 
 /// Compact chooser of every paint tool, organised into three
@@ -531,12 +552,7 @@ class _PaintToolBody extends ConsumerWidget {
         (PaintToolType.polygon, 'Polygon'),
       ],
     ),
-    _ToolGroup(
-      title: 'Effects',
-      tools: [
-        (PaintToolType.blur, 'Blur'),
-      ],
-    ),
+    _ToolGroup(title: 'Effects', tools: [(PaintToolType.blur, 'Blur')]),
   ];
 
   @override
@@ -552,7 +568,7 @@ class _PaintToolBody extends ConsumerWidget {
       children: [
         for (var g = 0; g < _groups.length; g++) ...[
           if (g > 0) const SizedBox(height: 14),
-          _GroupHeader(title: _groups[g].title),
+          _GroupHeader(title: _paintGroupLabel(context.l10n, _groups[g])),
           const SizedBox(height: 8),
           GridView.count(
             crossAxisCount: cols,
@@ -566,7 +582,7 @@ class _PaintToolBody extends ConsumerWidget {
               for (final (tool, label) in _groups[g].tools)
                 _PaintToolGridTile(
                   tool: tool,
-                  label: label,
+                  label: _paintToolLabel(context.l10n, tool) ?? label,
                   paintColor: session.strokeColor,
                   selected: session.activeTool == tool,
                   onTap: tool.available
@@ -648,8 +664,8 @@ class _PaintToolGridTile extends StatelessWidget {
     final labelColor = !enabled
         ? scheme.onSurface.withValues(alpha: 0.32)
         : selected
-            ? scheme.primary
-            : scheme.onSurface.withValues(alpha: 0.88);
+        ? scheme.primary
+        : scheme.onSurface.withValues(alpha: 0.88);
 
     return Material(
       color: Colors.transparent,
@@ -663,10 +679,7 @@ class _PaintToolGridTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: bgColor,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: borderColor,
-              width: selected ? 1.4 : 1,
-            ),
+            border: Border.all(color: borderColor, width: selected ? 1.4 : 1),
             boxShadow: selected
                 ? [
                     BoxShadow(
@@ -802,8 +815,14 @@ class _ToolPreviewPainter extends CustomPainter {
     }
   }
 
-  void _dashes(Canvas c, Paint p, double w, double y,
-      {required double dashOn, required double dashOff}) {
+  void _dashes(
+    Canvas c,
+    Paint p,
+    double w,
+    double y, {
+    required double dashOn,
+    required double dashOff,
+  }) {
     var x = 2.0;
     while (x < w - 2) {
       final end = (x + dashOn).clamp(0.0, w - 2).toDouble();
@@ -878,7 +897,7 @@ class _PaintColorBody extends ConsumerWidget {
           initial: original,
           recents: ref.read(recentColorsControllerProvider),
           onLiveChange: ctrl.setStrokeColor,
-          title: 'Stroke color',
+          title: context.l10n.strokeColorTitle,
         );
         if (picked != null) {
           ctrl.setStrokeColor(picked);
@@ -891,74 +910,84 @@ class _PaintColorBody extends ConsumerWidget {
   }
 }
 
-
 /// Stroke-width body. Preset chips above a "Fine tune" slider with
 /// a dot preview that grows/shrinks live.
 /// Phase 2 registry: paint slots whose body is a generic
 /// preset+slider. New numeric tools should be added here, not as
 /// new private body widgets.
-final Map<String, SubTool> _paintSliderSubTools = <String, SubTool>{
-  'blur': SliderSubTool(
-    headerTitle: 'Blur',
-    headerIcon: Icons.blur_on_rounded,
-    min: 0,
-    max: 64,
-    // Preset-first: 3 human choices users actually pick. Slider
-    // covers everything in between for power users.
-    presets: const [0, 10, 32],
-    presetLabels: const ['None', 'Soft', 'Strong'],
-    readValue: (ref) =>
-        ref.watch(paintToolControllerProvider).blurRadius,
-    writeValue: (ref, v) =>
-        ref.read(paintToolControllerProvider.notifier).setBlurRadius(v),
-    format: (v) => '${v.round()}',
-  ),
-  // Opacity drives the alpha channel of the active stroke colour.
-  // Re-uses the colour-picker pathway ([setStrokeColor]) so undo,
-  // recents, and layer-mirroring all keep working unchanged — the
-  // slider is a faster surface for the same setter the picker calls.
-  'opacity': SliderSubTool(
-    headerTitle: 'Opacity',
-    headerIcon: Icons.opacity_rounded,
-    min: 0,
-    max: 100,
-    // Three plain-language steps cover ≥95% of intents.
-    presets: const [25, 60, 100],
-    presetLabels: const ['Light', 'Normal', 'Strong'],
-    readValue: (ref) {
-      final c = ref.watch(paintToolControllerProvider).strokeColor;
-      return (c.a * 100).clamp(0.0, 100.0);
-    },
-    writeValue: (ref, v) {
-      final session = ref.read(paintToolControllerProvider);
-      final next = session.strokeColor
-          .withValues(alpha: (v / 100).clamp(0.0, 1.0));
-      ref.read(paintToolControllerProvider.notifier).setStrokeColor(next);
-    },
-    format: (v) => '${v.round()}%',
-    leadingBuilder: (context, value) {
-      // Mini swatch preview at the live opacity — instant proof
-      // of what the stroke will look like before release.
-      final session =
-          ProviderScope.containerOf(context).read(paintToolControllerProvider);
-      final scheme = Theme.of(context).colorScheme;
-      final c = session.strokeColor
-          .withValues(alpha: (value / 100).clamp(0.0, 1.0));
-      return Container(
-        width: 22,
-        height: 22,
-        decoration: BoxDecoration(
-          color: c,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.6),
-            width: 1,
-          ),
-        ),
-      );
-    },
-  ),
-};
+Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
+    <String, SubTool>{
+      'blur': SliderSubTool(
+        headerTitle: context.l10n.blurLabel,
+        headerIcon: Icons.blur_on_rounded,
+        min: 0,
+        max: 64,
+        // Preset-first: 3 human choices users actually pick. Slider
+        // covers everything in between for power users.
+        presets: const [0, 10, 32],
+        presetLabels: [
+          context.l10n.noneOption,
+          context.l10n.softOption,
+          context.l10n.strongOption,
+        ],
+        readValue: (ref) => ref.watch(paintToolControllerProvider).blurRadius,
+        writeValue: (ref, v) =>
+            ref.read(paintToolControllerProvider.notifier).setBlurRadius(v),
+        format: (v) => '${v.round()}',
+      ),
+      // Opacity drives the alpha channel of the active stroke colour.
+      // Re-uses the colour-picker pathway ([setStrokeColor]) so undo,
+      // recents, and layer-mirroring all keep working unchanged — the
+      // slider is a faster surface for the same setter the picker calls.
+      'opacity': SliderSubTool(
+        headerTitle: context.l10n.opacityLabel,
+        headerIcon: Icons.opacity_rounded,
+        min: 0,
+        max: 100,
+        // Three plain-language steps cover ≥95% of intents.
+        presets: const [25, 60, 100],
+        presetLabels: [
+          context.l10n.lightOption,
+          context.l10n.normalOption,
+          context.l10n.strongOption,
+        ],
+        readValue: (ref) {
+          final c = ref.watch(paintToolControllerProvider).strokeColor;
+          return (c.a * 100).clamp(0.0, 100.0);
+        },
+        writeValue: (ref, v) {
+          final session = ref.read(paintToolControllerProvider);
+          final next = session.strokeColor.withValues(
+            alpha: (v / 100).clamp(0.0, 1.0),
+          );
+          ref.read(paintToolControllerProvider.notifier).setStrokeColor(next);
+        },
+        format: (v) => '${v.round()}%',
+        leadingBuilder: (context, value) {
+          // Mini swatch preview at the live opacity — instant proof
+          // of what the stroke will look like before release.
+          final session = ProviderScope.containerOf(
+            context,
+          ).read(paintToolControllerProvider);
+          final scheme = Theme.of(context).colorScheme;
+          final c = session.strokeColor.withValues(
+            alpha: (value / 100).clamp(0.0, 1.0),
+          );
+          return Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: c,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.6),
+                width: 1,
+              ),
+            ),
+          );
+        },
+      ),
+    };
 
 /// Fill body — toggle row + colour swatch grid. Enables/disables
 /// fill while preserving the last-used fill colour.
@@ -1008,8 +1037,7 @@ class _PaintFillBody extends ConsumerWidget {
     final fill = session.fillColor;
 
     final isNone = fill == null;
-    final isSameAsStroke =
-        fill != null && fill.toARGB32() == stroke.toARGB32();
+    final isSameAsStroke = fill != null && fill.toARGB32() == stroke.toARGB32();
     final isCustom = fill != null && !isSameAsStroke;
 
     return Column(
@@ -1022,7 +1050,7 @@ class _PaintFillBody extends ConsumerWidget {
           children: [
             Expanded(
               child: _FillChoice(
-                label: 'No fill',
+                label: context.l10n.noFillOption,
                 selected: isNone,
                 preview: const _FillPreviewNone(),
                 onTap: () {
@@ -1034,7 +1062,7 @@ class _PaintFillBody extends ConsumerWidget {
             const SizedBox(width: 10),
             Expanded(
               child: _FillChoice(
-                label: 'Same color',
+                label: context.l10n.sameColorOption,
                 selected: isSameAsStroke,
                 preview: _FillPreviewSolid(color: stroke),
                 onTap: () {
@@ -1046,7 +1074,7 @@ class _PaintFillBody extends ConsumerWidget {
             const SizedBox(width: 10),
             Expanded(
               child: _FillChoice(
-                label: 'Custom',
+                label: context.l10n.customLabel,
                 selected: isCustom,
                 preview: isCustom
                     ? _FillPreviewSolid(color: fill)
@@ -1059,7 +1087,7 @@ class _PaintFillBody extends ConsumerWidget {
                     initial: fill ?? stroke,
                     recents: ref.read(recentColorsControllerProvider),
                     onLiveChange: ctrl.setFillColor,
-                    title: 'Fill color',
+                    title: context.l10n.fillColorTitle,
                   );
                   if (picked != null) {
                     ctrl.setFillColor(picked);
@@ -1234,7 +1262,7 @@ class _PaintPolygonBody extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: 6),
-        _Label(text: 'Polygon sides'),
+        _Label(text: context.l10n.polygonSidesLabel),
         // Horizontal scroll mirrors the chip strip used by every
         // other preset surface in the editor (paint Size/Blur,
         // text sliders) — single layout grammar across modes.
@@ -1269,20 +1297,20 @@ class _PaintDashBody extends ConsumerWidget {
   // dashed / dotted — no phantom session state.
   static const List<(String, PaintToolType)> _presets =
       <(String, PaintToolType)>[
-    ('Solid', PaintToolType.line),
-    ('Dashed', PaintToolType.dashLine),
-    ('Dotted', PaintToolType.dashDotLine),
-  ];
+        ('Solid', PaintToolType.line),
+        ('Dashed', PaintToolType.dashLine),
+        ('Dotted', PaintToolType.dashDotLine),
+      ];
 
   // Cosmetic patterns used purely by the chip preview painter so
   // the user can sight-pick the style. The engine itself ignores
   // these and renders dashing from the PaintKind.
   static const Map<PaintToolType, List<double>?> _previewPatterns =
       <PaintToolType, List<double>?>{
-    PaintToolType.line: null,
-    PaintToolType.dashLine: <double>[10, 6],
-    PaintToolType.dashDotLine: <double>[2, 5],
-  };
+        PaintToolType.line: null,
+        PaintToolType.dashLine: <double>[10, 6],
+        PaintToolType.dashDotLine: <double>[2, 5],
+      };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1300,7 +1328,7 @@ class _PaintDashBody extends ConsumerWidget {
               if (i > 0) const SizedBox(width: 10),
               Expanded(
                 child: _DashChoice(
-                  label: _presets[i].$1,
+                  label: _dashPresetLabel(context.l10n, _presets[i].$1),
                   pattern: _previewPatterns[_presets[i].$2],
                   selected: active == _presets[i].$2,
                   onTap: () => ctrl.selectTool(_presets[i].$2),

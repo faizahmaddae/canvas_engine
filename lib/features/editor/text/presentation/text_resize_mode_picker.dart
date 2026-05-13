@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../engine/modules/text/text_layer.dart';
 
 /// Shared picker UI for [TextResizeMode].
@@ -43,17 +44,12 @@ Future<TextResizeMode?> pickTextResizeMode(
               Navigator.of(ctx).pop(mode);
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
                 children: [
                   Icon(
                     icon,
-                    color: selected
-                        ? scheme.primary
-                        : scheme.onSurfaceVariant,
+                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -64,9 +60,7 @@ Future<TextResizeMode?> pickTextResizeMode(
                           title,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: selected
-                                ? scheme.primary
-                                : scheme.onSurface,
+                            color: selected ? scheme.primary : scheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -90,24 +84,22 @@ Future<TextResizeMode?> pickTextResizeMode(
       }
 
       return AlertDialog(
-        title: const Text('Resize behavior'),
+        title: Text(ctx.l10n.resizeBehaviorTitle),
         contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             tile(
               TextResizeMode.scaleText,
-              'Scale text',
-              'Corner drag scales the whole text uniformly. Box always '
-                  'fits the text.',
+              ctx.l10n.scaleTextTitle,
+              ctx.l10n.scaleTextSubtitle,
               Icons.zoom_out_map_rounded,
             ),
             const SizedBox(height: 4),
             tile(
               TextResizeMode.resizeBox,
-              'Resize box',
-              'Corner drag changes the wrap width. Font size stays the '
-                  'same; height auto-fits.',
+              ctx.l10n.resizeBoxTitle,
+              ctx.l10n.resizeBoxSubtitle,
               Icons.crop_landscape_rounded,
             ),
           ],
@@ -115,12 +107,21 @@ Future<TextResizeMode?> pickTextResizeMode(
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(ctx.l10n.cancelAction),
           ),
         ],
       );
     },
   );
+}
+
+String localizedTextResizeModeLabel(BuildContext context, TextResizeMode mode) {
+  switch (mode) {
+    case TextResizeMode.scaleText:
+      return context.l10n.scaleTextSummary;
+    case TextResizeMode.resizeBox:
+      return context.l10n.resizeBoxSummary;
+  }
 }
 
 /// Short, user-facing label for [mode] — used in list-tile subtitles.

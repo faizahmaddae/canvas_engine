@@ -165,13 +165,13 @@ void main() {
 
   group('ImageLayer JSON', () {
     test('asset source round-trips', () {
-      const layer = ImageLayer(
+      final layer = ImageLayer(
         id: 'i1',
-        transform: LayerTransform(
+        transform: const LayerTransform(
           position: Offset(5, 5),
           size: Size(120, 90),
         ),
-        source: ImageSource.asset('assets/foo.png'),
+        source: const ImageSource.asset('assets/foo.png'),
         fit: BoxFit.contain,
       );
       final back = ImageLayer.fromJson(layer.toJson());
@@ -179,13 +179,13 @@ void main() {
     });
 
     test('network source round-trips', () {
-      const layer = ImageLayer(
+      final layer = ImageLayer(
         id: 'i2',
-        transform: LayerTransform(
+        transform: const LayerTransform(
           position: Offset(0, 0),
           size: Size(50, 50),
         ),
-        source: ImageSource.network('https://example.com/x.png'),
+        source: const ImageSource.network('https://example.com/x.png'),
       );
       final back = ImageLayer.fromJson(layer.toJson());
       expect(back, layer);
@@ -232,13 +232,13 @@ void main() {
         kind: ShapeKind.circle,
         opacity: 0.5,
       );
-      const image = ImageLayer(
+      final image = ImageLayer(
         id: 'i',
-        transform: LayerTransform(
+        transform: const LayerTransform(
           position: Offset.zero,
           size: Size(40, 40),
         ),
-        source: ImageSource.asset('a.png'),
+        source: const ImageSource.asset('a.png'),
         opacity: 0.75,
       );
       expect(TextLayer.fromJson(text.toJson()).opacity, 0.25);
@@ -267,8 +267,8 @@ void main() {
       return EditorDocument(
         width: 1920,
         height: 1080,
-        layers: const [
-          ShapeLayer(
+        layers: [
+          const ShapeLayer(
             id: 'bg',
             transform: LayerTransform(
               position: Offset(0, 0),
@@ -279,14 +279,14 @@ void main() {
           ),
           ImageLayer(
             id: 'photo',
-            transform: LayerTransform(
+            transform: const LayerTransform(
               position: Offset(100, 200),
               size: Size(400, 300),
               rotation: 0.1,
             ),
-            source: ImageSource.network('https://img/test.jpg'),
+            source: const ImageSource.network('https://img/test.jpg'),
           ),
-          TextLayer(
+          const TextLayer(
             id: 'title',
             transform: LayerTransform(
               position: Offset(80, 80),
@@ -322,9 +322,14 @@ void main() {
       );
     });
 
-    test('encoded JSON declares the current schema version', () {
+    test('encoded JSON declares a supported schema version', () {
+      // The codec stamps the *minimum* reader version a doc requires
+      // (see `DocumentCodec._writerVersion`), not the current build's
+      // version. A legacy-shape doc may write v1 even on a v3 build.
       final json = DocumentCodec.toJson(makeMixedDoc());
-      expect(json['version'], DocumentCodec.schemaVersion);
+      final version = json['version'] as int;
+      expect(version, greaterThanOrEqualTo(DocumentCodec.minSupportedSchemaVersion));
+      expect(version, lessThanOrEqualTo(DocumentCodec.schemaVersion));
     });
 
     test('empty document round-trips', () {

@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../core/utils/user_error.dart';
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../crop/application/crop_controller.dart';
@@ -45,17 +47,18 @@ class ImageModeToolbar extends ConsumerWidget {
       imageToolControllerProvider.select((s) => s.openSlot),
     );
     final imageCtrl = ref.read(imageToolControllerProvider.notifier);
+    final l10n = context.l10n;
     final slots = <ToolbarSlot>[
       ToolbarSlot(
         id: ImageToolSlot.style.name,
         icon: Icons.auto_awesome_outlined,
-        label: 'Style',
+        label: l10n.styleTool,
         onTap: () => imageCtrl.toggleSlot(ImageToolSlot.style),
       ),
       ToolbarSlot(
         id: ImageToolSlot.crop.name,
         icon: Icons.crop_rotate_rounded,
-        label: 'Crop',
+        label: l10n.cropTool,
         // Crop is a full-screen mode — it does NOT toggle the
         // dock's expanded slot. Instead we open the centralised
         // [CropModeOverlay] which is the same surface launched
@@ -69,46 +72,51 @@ class ImageModeToolbar extends ConsumerWidget {
           // user clearly wants the image to remain selected after
           // Done — preserve the existing selection across the crop
           // session.
-          ref.read(cropControllerProvider.notifier).openCrop(
-                layer.id,
-                priorSelectionId: layer.id,
-              );
+          ref
+              .read(cropControllerProvider.notifier)
+              .openCrop(layer.id, priorSelectionId: layer.id);
         },
       ),
       ToolbarSlot(
         id: ImageToolSlot.shape.name,
         icon: Icons.crop_square_rounded,
-        label: 'Shape',
+        label: l10n.shapeTool,
         onTap: () => imageCtrl.toggleSlot(ImageToolSlot.shape),
       ),
       ToolbarSlot(
         id: ImageToolSlot.border.name,
         icon: Icons.border_outer_rounded,
-        label: 'Border',
+        label: l10n.borderTool,
         onTap: () => imageCtrl.toggleSlot(ImageToolSlot.border),
       ),
       ToolbarSlot(
         id: ImageToolSlot.shadow.name,
         icon: Icons.layers_outlined,
-        label: 'Shadow',
+        label: l10n.shadowTool,
         onTap: () => imageCtrl.toggleSlot(ImageToolSlot.shadow),
       ),
       ToolbarSlot(
         id: ImageToolSlot.adjust.name,
         icon: Icons.tune_rounded,
-        label: 'Adjust',
+        label: l10n.adjustTool,
         onTap: () => imageCtrl.toggleSlot(ImageToolSlot.adjust),
+      ),
+      ToolbarSlot(
+        id: ImageToolSlot.effects.name,
+        icon: Icons.layers_rounded,
+        label: l10n.effectsTool,
+        onTap: () => imageCtrl.toggleSlot(ImageToolSlot.effects),
       ),
       ToolbarSlot(
         id: ImageToolSlot.filters.name,
         icon: Icons.auto_fix_high_outlined,
-        label: 'Filters',
+        label: l10n.filtersTool,
         onTap: () => imageCtrl.toggleSlot(ImageToolSlot.filters),
       ),
       ToolbarSlot(
         id: ImageToolSlot.replace.name,
         icon: Icons.swap_horiz_rounded,
-        label: 'Replace',
+        label: l10n.replaceTool,
         onTap: () => _replace(context, ref),
       ),
     ];
@@ -124,11 +132,19 @@ class ImageModeToolbar extends ConsumerWidget {
     final picker.XFile? picked;
     try {
       picked = await pick.pickImage(source: source, imageQuality: 92);
-    } catch (e) {
+    } catch (e, st) {
+      debugLogError('imageMode/pickImage', e, st);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not pick image: $e'),
+          content: Text(
+            userMessageFor(
+              e,
+              fallback: context.l10n.couldntOpenPhoto,
+              permissionDeniedMessage: context.l10n.allowPhotoAccessSettings,
+              genericMessage: context.l10n.somethingWentWrong,
+            ),
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -137,7 +153,9 @@ class ImageModeToolbar extends ConsumerWidget {
     if (picked == null) return;
 
     final stable = await _persistPickedImage(picked.path);
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           ReplaceImageSourceCommand(
             layerId: layer.id,
             source: ImageSource.file(stable),
@@ -149,6 +167,7 @@ class ImageModeToolbar extends ConsumerWidget {
   }
 
   Future<picker.ImageSource?> _pickImageSource(BuildContext context) {
+    final l10n = context.l10n;
     return showModalBottomSheet<picker.ImageSource>(
       context: context,
       showDragHandle: true,
@@ -159,7 +178,7 @@ class ImageModeToolbar extends ConsumerWidget {
             children: [
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Gallery'),
+                title: Text(l10n.galleryAction),
                 onTap: () {
                   EditorHaptics.tap();
                   Navigator.pop(ctx, picker.ImageSource.gallery);
@@ -167,7 +186,7 @@ class ImageModeToolbar extends ConsumerWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Camera'),
+                title: Text(l10n.cameraAction),
                 onTap: () {
                   EditorHaptics.tap();
                   Navigator.pop(ctx, picker.ImageSource.camera);

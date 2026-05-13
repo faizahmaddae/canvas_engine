@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4279310375,
+  "layers": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 80.0,
+        "y": 170.0,
+        "w": 920.0,
+        "h": 72.0,
+        "r": 0.0
+      },
+      "content": "NEW",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 56.0,
+        "color": 4294626325,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 80.0,
+        "y": 285.0,
+        "w": 920.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "content": "We're\nlaunching\nsoon.",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 174.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.08,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "underline",
+      "transform": {
+        "x": 80.0,
+        "y": 895.0,
+        "w": 230.0,
+        "h": 8.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294626325,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 80.0,
+        "y": 930.0,
+        "w": 920.0,
+        "h": 72.0,
+        "r": 0.0
+      },
+      "content": "Join the waitlist on our site.",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 42.0,
+        "color": 4292932350,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

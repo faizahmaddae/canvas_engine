@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/l10n.dart';
+
 import '../../../../core/utils/haptics.dart';
 
 /// Shared, mode-agnostic dock content for the **Adaptive Dock**
@@ -83,16 +85,13 @@ class QuickActionCapsule extends StatelessWidget {
         child: SizedBox(
           height: 80,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 12,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _CapsuleIconChip(
                   icon: Icons.arrow_back_rounded,
-                  tooltip: 'Done',
+                  tooltip: context.l10n.doneAction,
                   onTap: onExit,
                 ),
                 const SizedBox(width: 8),
@@ -116,7 +115,9 @@ class QuickActionCapsule extends StatelessWidget {
                     icon: moreActive
                         ? Icons.keyboard_arrow_down_rounded
                         : Icons.more_horiz_rounded,
-                    tooltip: moreActive ? 'Collapse' : 'More options',
+                    tooltip: moreActive
+                        ? context.l10n.collapseTooltip
+                        : context.l10n.moreOptionsTooltip,
                     onTap: onMore!,
                     active: moreActive,
                   ),
@@ -211,14 +212,8 @@ class _SlotButton extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 140),
               curve: Curves.easeOut,
-              constraints: const BoxConstraints(
-                minHeight: 40,
-                minWidth: 40,
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 4,
-              ),
+              constraints: const BoxConstraints(minHeight: 40, minWidth: 40),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: fill,
                 borderRadius: BorderRadius.circular(20),
@@ -226,18 +221,14 @@ class _SlotButton extends StatelessWidget {
               ),
               child: DefaultTextStyle.merge(
                 style: TextStyle(
-                  color: slot.active
-                      ? scheme.primary
-                      : scheme.onSurface,
+                  color: slot.active ? scheme.primary : scheme.onSurface,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.1,
                   fontSize: 13,
                 ),
                 child: IconTheme.merge(
                   data: IconThemeData(
-                    color: slot.active
-                        ? scheme.primary
-                        : scheme.onSurface,
+                    color: slot.active ? scheme.primary : scheme.onSurface,
                     size: 18,
                   ),
                   child: slot.child,

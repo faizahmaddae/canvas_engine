@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
 import '../../engine/core/editor_document.dart';
@@ -33,15 +34,15 @@ class CanvasPanelBody extends ConsumerWidget {
   const CanvasPanelBody({super.key});
 
   void _commit(WidgetRef ref, Color c, {bool live = false}) {
-    ref.read(documentControllerProvider.notifier).execute(
-          SetCanvasBackgroundCommand(color: c, live: live),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(SetCanvasBackgroundCommand(color: c, live: live));
   }
 
   void _commitMode(WidgetRef ref, CanvasBackgroundMode mode) {
-    ref.read(documentControllerProvider.notifier).execute(
-          SetCanvasBackgroundModeCommand(mode),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(SetCanvasBackgroundModeCommand(mode));
   }
 
   @override
@@ -55,7 +56,7 @@ class CanvasPanelBody extends ConsumerWidget {
     final recents = ref.watch(recentColorsControllerProvider);
 
     return EditorToolPanelShell(
-      title: 'Background',
+      title: context.l10n.backgroundTool,
       icon: Icons.image_outlined,
       onClose: () =>
           ref.read(canvasToolControllerProvider.notifier).closePanel(),
@@ -97,9 +98,8 @@ class CanvasPanelBody extends ConsumerWidget {
                     context,
                     initial: original,
                     recents: recents,
-                    onLiveChange: (c) =>
-                        _commit(ref, c, live: true),
-                    title: 'Canvas background',
+                    onLiveChange: (c) => _commit(ref, c, live: true),
+                    title: context.l10n.canvasBackgroundTitle,
                   );
                   if (picked == null) {
                     // Cancelled — restore the original colour so
@@ -147,14 +147,14 @@ class _BackgroundModeToggle extends StatelessWidget {
         children: [
           _ModeTile(
             key: const ValueKey('canvas-bg-mode-color'),
-            label: 'Color',
+            label: context.l10n.colorLabel,
             selected: value == CanvasBackgroundMode.color,
             onTap: () => onChanged(CanvasBackgroundMode.color),
             scheme: scheme,
           ),
           _ModeTile(
             key: const ValueKey('canvas-bg-mode-transparent'),
-            label: 'Transparent',
+            label: context.l10n.transparentOption,
             selected: value == CanvasBackgroundMode.transparent,
             onTap: () => onChanged(CanvasBackgroundMode.transparent),
             scheme: scheme,
@@ -225,23 +225,16 @@ class _PhotoProjectHint extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: scheme.primary.withValues(alpha: 0.18),
-        ),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.info_outline_rounded,
-            size: 16,
-            color: scheme.primary,
-          ),
+          Icon(Icons.info_outline_rounded, size: 16, color: scheme.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Background only shows behind transparent or uncovered '
-              'areas of your photo.',
+              context.l10n.photoBackgroundHint,
               style: TextStyle(
                 fontSize: 11.5,
                 height: 1.35,
@@ -254,6 +247,3 @@ class _PhotoProjectHint extends StatelessWidget {
     );
   }
 }
-
-
-

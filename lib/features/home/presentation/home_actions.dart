@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart' as picker;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/utils/user_error.dart';
+import '../../../l10n/l10n.dart';
 import '../../editor/application/document_controller.dart';
 import '../../editor/application/editor_lifecycle.dart';
 import '../../editor/application/editor_session.dart';
@@ -15,9 +17,12 @@ import '../../editor/engine/commands/transform_commands.dart';
 import '../../editor/engine/core/editor_document.dart';
 import '../../editor/engine/core/layer_transform.dart';
 import '../../editor/engine/modules/image/image_layer.dart';
+import '../../editor/engine/modules/shape/shape_layer.dart';
+import '../../editor/engine/modules/text/text_layer.dart';
 import '../../editor/engine/serialization/document_codec.dart';
 import '../../editor/presentation/editor_screen.dart';
 import '../../templates/domain/template.dart';
+import '../../templates/presentation/templates_browse_screen.dart';
 import '../application/project_store.dart';
 import '../domain/project.dart';
 import 'recent_projects_screen.dart';
@@ -49,7 +54,7 @@ class HomeActions {
     _seedAndOpen(
       width: size.width,
       height: size.height,
-      name: size.label ?? 'New design',
+      name: size.label ?? context.l10n.newDesignName,
     );
   }
 
@@ -58,17 +63,46 @@ class HomeActions {
   /// editor with no selection (so the photo reads as the canvas).
   Future<void> importPhoto() async {
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     final pick = picker.ImagePicker();
-    final picked = await pick.pickImage(source: picker.ImageSource.gallery);
+    final picker.XFile? picked;
+    try {
+      picked = await pick.pickImage(source: picker.ImageSource.gallery);
+    } catch (e, st) {
+      debugLogError('importPhoto/pickImage', e, st);
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            userMessageFor(
+              e,
+              fallback: l10n.couldntOpenPhoto,
+              permissionDeniedMessage: l10n.allowPhotoAccessSettings,
+              genericMessage: l10n.somethingWentWrong,
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (picked == null || !context.mounted) return;
 
     final Size dims;
     try {
       dims = await _resolveImageSize(File(picked.path));
-    } catch (e) {
+    } catch (e, st) {
+      debugLogError('importPhoto/_resolveImageSize', e, st);
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Could not read image: $e'),
+          content: Text(
+            userMessageFor(
+              e,
+              fallback: l10n.couldntOpenPhoto,
+              permissionDeniedMessage: l10n.allowPhotoAccessSettings,
+              genericMessage: l10n.somethingWentWrong,
+            ),
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -86,26 +120,22 @@ class HomeActions {
     );
     final id = _uuid.v4();
     docCtrl.execute(
-      CompositeCommand(
-        [
-          AddLayerCommand(ImageLayer(
+      CompositeCommand([
+        AddLayerCommand(
+          ImageLayer(
             id: id,
-            transform: LayerTransform(
-              position: Offset.zero,
-              size: dims,
-            ),
+            transform: LayerTransform(position: Offset.zero, size: dims),
             source: ImageSource.file(stable),
             locked: true,
-          )),
-          SetBasePhotoCommand(id),
-        ],
-        labelOverride: 'Import photo',
-      ),
+          ),
+        ),
+        SetBasePhotoCommand(id),
+      ], labelOverride: l10n.importPhotoCommand),
     );
     docCtrl.clearHistory();
     ref.read(selectionControllerProvider.notifier).clear();
-    ref.read(editorSessionProvider.notifier).state = const EditorSession(
-      name: 'Imported image',
+    ref.read(editorSessionProvider.notifier).state = EditorSession(
+      name: l10n.importedImageName,
     );
     _push();
   }
@@ -117,9 +147,27 @@ class HomeActions {
     final doc = template.build();
     docCtrl.importJson(DocumentCodec.encode(doc));
     ref.read(selectionControllerProvider.notifier).clear();
-    ref.read(editorSessionProvider.notifier).state =
-        EditorSession(name: template.name);
+    ref.read(editorSessionProvider.notifier).state = EditorSession(
+      name: template.name,
+    );
     _push();
+  }
+
+  /// Open the template browser from Home CTAs without changing the
+  /// user's app locale or persisted content-language preferences.
+  void openTemplates({
+    TemplateLanguage initialLanguage = TemplateLanguage.persian,
+    TemplateCategory? initialCategory,
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TemplatesBrowseScreen(
+          onOpen: openTemplate,
+          initialLanguage: initialLanguage,
+          initialCategory: initialCategory,
+        ),
+      ),
+    );
   }
 
   /// Open a saved [Project] from the Recent rail.
@@ -127,9 +175,14 @@ class HomeActions {
     final docCtrl = ref.read(documentControllerProvider.notifier);
     try {
       docCtrl.importJson(p.documentJson);
-    } catch (e) {
+    } catch (e, st) {
+      debugLogError('openProject/importJson', e, st);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open project: $e')),
+        SnackBar(
+          content: Text(
+            userMessageFor(e, fallback: context.l10n.somethingWentWrong),
+          ),
+        ),
       );
       return;
     }
@@ -138,9 +191,7 @@ class HomeActions {
       name: p.name,
       projectId: p.id,
     );
-    unawaited(
-      ref.read(lastOpenedProjectIdProvider.notifier).set(p.id),
-    );
+    unawaited(ref.read(lastOpenedProjectIdProvider.notifier).set(p.id));
     _push();
   }
 
@@ -150,12 +201,76 @@ class HomeActions {
   void openRecentAll() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => RecentProjectsScreen(
-          onCreate: createNew,
-          onOpen: openProject,
-        ),
+        builder: (_) =>
+            RecentProjectsScreen(onCreate: createNew, onOpen: openProject),
       ),
     );
+  }
+
+  /// "Try a sample" path for first-time users: seeds an opinionated
+  /// 1080-square demo document with a tinted shape and a heading
+  /// text layer so the user sees something *editable* without
+  /// having to import their own photo or pick a template.
+  ///
+  /// Why this exists separately from [createNew] / [openTemplate]:
+  /// new users with an empty Recent rail otherwise face a blank
+  /// canvas (intimidating) or a templates browser (commitment).
+  /// A pre-populated demo is the lowest-friction on-ramp — they
+  /// can drag, scale, recolour, undo, and discover the editor's
+  /// shape *before* committing their own content.
+  ///
+  /// The sample is an EditorSession with no [Project] id, so the
+  /// autosave controller will not pollute the Recent rail. If the
+  /// user genuinely wants to keep it they can hit Save explicitly
+  /// — the same rule [importPhoto] uses for picked photos.
+  void openSample() {
+    final l10n = context.l10n;
+    const canvas = Size(1080, 1080);
+
+    final docCtrl = ref.read(documentControllerProvider.notifier);
+    docCtrl.newDocument(width: canvas.width, height: canvas.height);
+
+    // A circle accent in the upper third + a heading text below.
+    // Kept tiny so the user sees the editor, not a finished design.
+    final shapeId = _uuid.v4();
+    final textId = _uuid.v4();
+    docCtrl.execute(
+      CompositeCommand([
+        AddLayerCommand(
+          ShapeLayer(
+            id: shapeId,
+            transform: const LayerTransform(
+              position: Offset(390, 220),
+              size: Size(300, 300),
+            ),
+            kind: ShapeKind.circle,
+            fillColor: const Color(0xFF7C5CFF),
+          ),
+        ),
+        AddLayerCommand(
+          TextLayer(
+            id: textId,
+            transform: const LayerTransform(
+              position: Offset(140, 600),
+              size: Size(800, 220),
+            ),
+            content: 'Hello, Canvas',
+            style: const TextStyleSpec(
+              fontSize: 96,
+              color: Color(0xFF1A1A1F),
+              fontWeight: FontWeight.w800,
+              alignment: TextAlign.center,
+            ),
+          ),
+        ),
+      ], labelOverride: l10n.sampleCommand),
+    );
+    docCtrl.clearHistory();
+    ref.read(selectionControllerProvider.notifier).clear();
+    ref.read(editorSessionProvider.notifier).state = EditorSession(
+      name: l10n.sampleName,
+    );
+    _push();
   }
 
   // ───────────────────────── internals ─────────────────────────────
@@ -181,9 +296,9 @@ class HomeActions {
   /// on the document, not on the providers reset here.
   void _push() {
     resetEditorEphemeralState(ref);
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const EditorScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const EditorScreen()));
   }
 
   Future<Size> _resolveImageSize(File file) async {

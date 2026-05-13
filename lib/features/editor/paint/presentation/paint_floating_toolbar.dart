@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/modules/paint/paint_layer.dart';
@@ -80,7 +81,7 @@ class PaintFloatingToolbar extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           FloatingPillButton(
-            semanticLabel: 'Stroke color',
+            semanticLabel: context.l10n.strokeColorTitle,
             onTap: () async {
               final original = layer.strokeColor;
               final picked = await showColorPickerSheet(
@@ -88,7 +89,7 @@ class PaintFloatingToolbar extends ConsumerWidget {
                 initial: original,
                 recents: ref.read(recentColorsControllerProvider),
                 onLiveChange: ctrl.setStrokeColor,
-                title: 'Stroke color',
+                title: context.l10n.strokeColorTitle,
               );
               if (picked == null) {
                 ctrl.setStrokeColor(original);
@@ -101,7 +102,7 @@ class PaintFloatingToolbar extends ConsumerWidget {
           ),
           const SizedBox(width: 4),
           FloatingPillButton(
-            semanticLabel: 'Stroke size',
+            semanticLabel: context.l10n.strokeSizeSemantics,
             onTap: () => showPaintSizeSheet(context, ref),
             child: _StrokeSizePillContent(
               strokeWidth: layer.strokeWidth,
@@ -112,10 +113,12 @@ class PaintFloatingToolbar extends ConsumerWidget {
           FloatingPillButton(
             active: isScale,
             semanticLabel: isScale
-                ? 'Resize behavior: Scale object (tap for Free)'
-                : 'Resize behavior: Resize freely (tap for Scale)',
+                ? context.l10n.resizeBehaviorScaleObjectSemantics
+                : context.l10n.resizeBehaviorFreeSemantics,
             onTap: () {
-              final next = isScale ? PaintResizeMode.free : PaintResizeMode.scale;
+              final next = isScale
+                  ? PaintResizeMode.free
+                  : PaintResizeMode.scale;
               ctrl.setResizeMode(next);
             },
             // Reuse the shape toolbar's resize-mode label so the two
@@ -128,7 +131,7 @@ class PaintFloatingToolbar extends ConsumerWidget {
           ),
           const SizedBox(width: 4),
           FloatingPillButton(
-            semanticLabel: 'More actions',
+            semanticLabel: context.l10n.moreActionsSemantics,
             onTap: () => showLayerActionsSheet(context, ref, layer),
             child: Icon(Icons.more_horiz_rounded, size: 20, color: fg),
           ),

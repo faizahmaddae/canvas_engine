@@ -71,7 +71,8 @@ class _SlotStripState extends State<SlotStrip> {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    final compact = media.size.shortestSide < 380 ||
+    final compact =
+        media.size.shortestSide < 380 ||
         media.orientation == Orientation.landscape;
     final scheme = Theme.of(context).colorScheme;
 

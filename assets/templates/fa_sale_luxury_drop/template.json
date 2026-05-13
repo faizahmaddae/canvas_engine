@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_sale_luxury_drop",
+  "title": {
+    "en": "Persian Luxury Sale Drop",
+    "fa": "پوستر فروش لوکس"
+  },
+  "category": "sale",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_sale_luxury_drop/thumbnail.png",
+  "document": "assets/templates/fa_sale_luxury_drop/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "sale",
+    "promo",
+    "luxury"
+  ],
+  "home": {
+    "featured": true,
+    "sortOrder": 38
+  }
+}

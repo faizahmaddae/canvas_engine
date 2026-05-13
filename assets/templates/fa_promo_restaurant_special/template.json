@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_restaurant_special",
+  "title": {
+    "en": "Persian Restaurant Special Poster",
+    "fa": "پوستر پیشنهاد رستوران"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_restaurant_special/thumbnail.png",
+  "document": "assets/templates/fa_promo_restaurant_special/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "restaurant",
+    "promo",
+    "food"
+  ],
+  "home": {
+    "sortOrder": 40
+  }
+}

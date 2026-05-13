@@ -30,4 +30,20 @@ abstract class EditorCommand {
   /// entry and only when it targets the same layer + the same set of
   /// fields, to avoid silently swallowing unrelated edits.
   EditorCommand? mergeWith(EditorCommand previous) => null;
+
+  /// Approximate retained-memory cost of this command, in bytes. Read
+  /// by [HistoryStack] to enforce a soft byte budget on top of the
+  /// count cap; an overestimate is fine, an underestimate risks the
+  /// silent-OOM scenario the budget exists to prevent.
+  ///
+  /// Default `0`. Override on commands that hold a full layer copy, a
+  /// pixel buffer, a long stroke-point list, or any other payload
+  /// that scales with user content. Scalar/enum-only commands can
+  /// keep the default — the per-entry structural overhead is added
+  /// once by `HistoryStack` itself.
+  ///
+  /// Must be O(1) (or close to it) — read on every push and on every
+  /// undo/redo to keep the running total honest. Layer-bearing
+  /// commands typically delegate to [EditorLayer.estimatedByteSize].
+  int get estimatedByteSize => 0;
 }

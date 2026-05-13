@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../core/editor_layer.dart';
 import '../../core/layer_capabilities.dart';
 import '../../core/layer_transform.dart';
+import '../../effects/editor_effect.dart';
 
 /// Paint primitive kinds. New kinds plug in here without changes to
 /// the gesture pipeline as long as their geometry can be expressed as
@@ -50,11 +51,16 @@ enum PaintResizeMode { free, scale }
 /// list is unused at render time — the bounding box itself IS the
 /// shape (or, for blur, the region to filter).
 class PaintLayer extends EditorLayer {
-  const PaintLayer({
+  // Non-const because [normalizedPoints] is wrapped in
+  // [List.unmodifiable] at construction. The defence at the public
+  // entry point complements the [copyAll] wrap so no caller —
+  // command, codec, or test fixture — can hand us a growable list
+  // and mutate it from the outside after the layer is built.
+  PaintLayer({
     required super.id,
     required super.transform,
     required this.kind,
-    required this.normalizedPoints,
+    required List<Offset> normalizedPoints,
     this.strokeColor = const Color(0xFFFF3B30),
     this.strokeWidth = 6.0,
     this.fillColor,
@@ -65,7 +71,9 @@ class PaintLayer extends EditorLayer {
     super.visible,
     super.locked,
     super.opacity,
-  }) : super(
+    super.effects,
+  })  : normalizedPoints = List.unmodifiable(normalizedPoints),
+        super(
           capabilities: resizeMode == PaintResizeMode.scale
               ? _paintCapsScale
               : _paintCapsFree,
@@ -102,110 +110,107 @@ class PaintLayer extends EditorLayer {
   @override
   String get type => 'paint';
 
-  @override
-  EditorLayer withTransform(LayerTransform transform) => PaintLayer(
-        id: id,
-        transform: transform,
-        kind: kind,
-        normalizedPoints: normalizedPoints,
-        strokeColor: strokeColor,
-        strokeWidth: strokeWidth,
-        fillColor: fillColor,
-        sides: sides,
-        blurSigma: blurSigma,
-        resizeMode: resizeMode,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  /// Single source of truth for cloning a [PaintLayer]. Every `with*`
+  /// override and the public [copyWith] delegate here. See
+  /// [ImageLayer.copyAll] for the rationale.
+  PaintLayer copyAll({
+    String? id,
+    LayerTransform? transform,
+    PaintKind? kind,
+    List<Offset>? normalizedPoints,
+    Color? strokeColor,
+    double? strokeWidth,
+    Object? fillColor = _kCopySentinel,
+    int? sides,
+    double? blurSigma,
+    PaintResizeMode? resizeMode,
+    Object? name = _kCopySentinel,
+    bool? visible,
+    bool? locked,
+    double? opacity,
+    EffectStack? effects,
+  }) {
+    assert(
+      opacity == null || (opacity >= 0.0 && opacity <= 1.0),
+      'opacity must be in 0..1 (got $opacity)',
+    );
+    return PaintLayer(
+      id: id ?? this.id,
+      transform: transform ?? this.transform,
+      kind: kind ?? this.kind,
+      // Defend the immutability contract at the only runtime entry point
+      // that accepts a caller-supplied list. `this.normalizedPoints`
+      // already came from a wrapped source (fromJson / a previous
+      // copyAll); a freshly supplied list might be growable. Wrap so
+      // no command can hand us a list and later mutate it under us.
+      normalizedPoints: normalizedPoints == null
+          ? this.normalizedPoints
+          : List.unmodifiable(normalizedPoints),
+      strokeColor: strokeColor ?? this.strokeColor,
+      strokeWidth: strokeWidth ?? this.strokeWidth,
+      fillColor: identical(fillColor, _kCopySentinel)
+          ? this.fillColor
+          : fillColor as Color?,
+      sides: sides ?? this.sides,
+      blurSigma: blurSigma ?? this.blurSigma,
+      resizeMode: resizeMode ?? this.resizeMode,
+      name: identical(name, _kCopySentinel) ? this.name : name as String?,
+      visible: visible ?? this.visible,
+      locked: locked ?? this.locked,
+      opacity: opacity == null ? this.opacity : opacity.clamp(0.0, 1.0),
+      effects: effects ?? this.effects,
+    );
+  }
+
+  static const Object _kCopySentinel = Object();
 
   @override
-  EditorLayer withVisibility(bool visible) => PaintLayer(
-        id: id,
-        transform: transform,
-        kind: kind,
-        normalizedPoints: normalizedPoints,
-        strokeColor: strokeColor,
-        strokeWidth: strokeWidth,
-        fillColor: fillColor,
-        sides: sides,
-        blurSigma: blurSigma,
-        resizeMode: resizeMode,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  EditorLayer withTransform(LayerTransform transform) =>
+      copyAll(transform: transform);
 
   @override
-  EditorLayer withLocked(bool locked) => PaintLayer(
-        id: id,
-        transform: transform,
-        kind: kind,
-        normalizedPoints: normalizedPoints,
-        strokeColor: strokeColor,
-        strokeWidth: strokeWidth,
-        fillColor: fillColor,
-        sides: sides,
-        blurSigma: blurSigma,
-        resizeMode: resizeMode,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity,
-      );
+  EditorLayer withVisibility(bool visible) => copyAll(visible: visible);
 
   @override
-  EditorLayer withOpacity(double opacity) => PaintLayer(
-        id: id,
-        transform: transform,
-        kind: kind,
-        normalizedPoints: normalizedPoints,
-        strokeColor: strokeColor,
-        strokeWidth: strokeWidth,
-        fillColor: fillColor,
-        sides: sides,
-        blurSigma: blurSigma,
-        resizeMode: resizeMode,
-        name: name,
-        visible: visible,
-        locked: locked,
-        opacity: opacity.clamp(0.0, 1.0),
-      );
+  EditorLayer withLocked(bool locked) => copyAll(locked: locked);
 
-  /// Returns a copy with the given fields replaced. The sentinel
-  /// pattern on [fillColor] preserves the ability to clear it (set to
-  /// null) versus leaving it untouched.
+  @override
+  EditorLayer withOpacity(double opacity) =>
+      copyAll(opacity: opacity.clamp(0.0, 1.0));
+
+  /// Returns a copy with the given fields replaced. The [fillColor]
+  /// parameter uses the same sentinel as [copyAll] so callers can
+  /// both omit (preserve) and pass `null` (clear) the fill.
   PaintLayer copyWith({
     Color? strokeColor,
     double? strokeWidth,
-    Object? fillColor = _sentinel,
+    Object? fillColor = _kCopySentinel,
     int? sides,
     double? blurSigma,
     PaintResizeMode? resizeMode,
     String? name,
-  }) {
-    return PaintLayer(
-      id: id,
-      transform: transform,
-      kind: kind,
-      normalizedPoints: normalizedPoints,
-      strokeColor: strokeColor ?? this.strokeColor,
-      strokeWidth: strokeWidth ?? this.strokeWidth,
-      fillColor:
-          identical(fillColor, _sentinel) ? this.fillColor : fillColor as Color?,
-      sides: sides ?? this.sides,
-      blurSigma: blurSigma ?? this.blurSigma,
-      resizeMode: resizeMode ?? this.resizeMode,
-      name: name ?? this.name,
-      visible: visible,
-      locked: locked,
-      opacity: opacity,
-    );
-  }
+  }) =>
+      copyAll(
+        strokeColor: strokeColor,
+        strokeWidth: strokeWidth,
+        fillColor: fillColor,
+        sides: sides,
+        blurSigma: blurSigma,
+        resizeMode: resizeMode,
+        name: name ?? this.name,
+      );
 
-  static const Object _sentinel = Object();
+  /// Per-element cost of [normalizedPoints]: 16 bytes for the two
+  /// doubles inside each [Offset], plus ~8 bytes of `List<Offset>`
+  /// element overhead. Stroke history is the one realistic way undo
+  /// memory blows up — a freestyle line at 60 Hz holds tens of
+  /// thousands of points, and a hundred undoable strokes would pin
+  /// hundreds of MB if we never accounted for them.
+  static const int _kPerOffsetBytes = 24;
+
+  @override
+  int get estimatedByteSize =>
+      EditorLayer.kLayerBaseBytes + normalizedPoints.length * _kPerOffsetBytes;
 
   @override
   Widget buildContent(BuildContext context) {
@@ -216,9 +221,17 @@ class PaintLayer extends EditorLayer {
     // engine like any other widget, and exports correctly via
     // RepaintBoundary.toImage().
     if (kind == PaintKind.blur) {
+      // Cache the [ui.ImageFilter] per-layer-instance so a slider
+      // drag (which re-runs `build` for every frame the parent
+      // rebuilds) doesn't allocate a fresh native filter object
+      // every time. Keyed on the layer's identity via an [Expando]
+      // so it can't outlive the layer; PaintLayer is immutable so
+      // [blurSigma] never changes for a given instance.
+      final filter = _blurFilterCache[this] ??=
+          ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma);
       return ClipRect(
         child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          filter: filter,
           child: const SizedBox.expand(),
         ),
       );
@@ -301,6 +314,7 @@ class PaintLayer extends EditorLayer {
       visible: json['visible'] as bool? ?? true,
       locked: json['locked'] as bool? ?? false,
       opacity: ((json['opacity'] as num?)?.toDouble() ?? 1.0).clamp(0.0, 1.0),
+      effects: EditorLayer.parseEffects(json),
     );
   }
 
@@ -375,6 +389,14 @@ class PaintLayer extends EditorLayer {
     return true;
   }
 }
+
+/// Per-instance cache for the blur [ui.ImageFilter]. Keyed off
+/// [PaintLayer] identity so the entry dies with the layer; the layer
+/// is immutable so [PaintLayer.blurSigma] never changes for a given
+/// instance, making this cache a pure win on every frame after the
+/// first.
+final Expando<ui.ImageFilter> _blurFilterCache =
+    Expando<ui.ImageFilter>('PaintLayer.blurFilter');
 
 /// Stand-alone painter so the in-flight preview overlay can reuse the
 /// exact same rendering as committed [PaintLayer]s — guarantees the

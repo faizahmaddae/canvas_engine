@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "basePhotoLayerId": "img-1",
+  "projectKind": "photo",
+  "layers": [
+    {
+      "type": "image",
+      "id": "img-1",
+      "transform": {
+        "x": 60.0,
+        "y": 60.0,
+        "w": 960.0,
+        "h": 720.0,
+        "r": 0.0
+      },
+      "opacity": 0.85,
+      "source": {
+        "asset": "assets/sample.jpg"
+      },
+      "fit": "cover",
+      "mask": "rounded",
+      "borderWidth": 4.0,
+      "borderColor": 4294967295,
+      "shadowOpacity": 0.4,
+      "shadowBlur": 16.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 6.0,
+      "shadowColor": 4278190080,
+      "adjustments": {
+        "brightness": 12.0,
+        "contrast": 1.1,
+        "saturation": 0.9
+      },
+      "cropL": 0.1,
+      "cropT": 0.1,
+      "cropR": 0.9,
+      "cropB": 0.9,
+      "filterPreset": "warm"
+    }
+  ]
+}

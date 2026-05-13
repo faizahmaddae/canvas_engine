@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/shape_commands.dart';
@@ -31,7 +32,9 @@ class ShapeStyleBody extends ConsumerStatefulWidget {
 
 class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
   void _commitFill({Color? c, double? opacity, bool live = false}) {
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           SetShapeFillCommand(
             layerId: widget.layer.id,
             color: c,
@@ -42,7 +45,9 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
   }
 
   void _commitRadius(double r, {bool live = false}) {
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           SetShapeRadiusCommand(
             layerId: widget.layer.id,
             radius: r,
@@ -54,7 +59,8 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
   @override
   Widget build(BuildContext context) {
     final layer = widget.layer;
-    final supportsRadius = layer.kind == ShapeKind.rectangle ||
+    final supportsRadius =
+        layer.kind == ShapeKind.rectangle ||
         layer.kind == ShapeKind.roundedRectangle;
     final isStroked = isStrokedShapeKind(layer.kind);
     final shorterSide = layer.transform.size.shortestSide;
@@ -63,7 +69,7 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
     final maxRadius = (shorterSide / 2).clamp(0.0, 9999.0);
 
     return ShapePanelShell(
-      title: 'Style',
+      title: context.l10n.styleTool,
       icon: Icons.palette_outlined,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -72,7 +78,9 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
           // Stroked kinds (line / arrow) have no fill body — the
           // fillColor field doubles as the stroke colour, so the
           // section reads as "Color" rather than "Fill".
-          SectionLabel(isStroked ? 'Color' : 'Fill'),
+          SectionLabel(
+            isStroked ? context.l10n.colorLabel : context.l10n.fillLabel,
+          ),
           // Approved compact color UI — same widget every other
           // colour-bearing panel uses. Recents are sourced from the
           // app-wide [recentColorsControllerProvider] so a custom
@@ -93,7 +101,7 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
                 initial: original,
                 recents: ref.read(recentColorsControllerProvider),
                 onLiveChange: (c) => _commitFill(c: c, live: true),
-                title: 'Fill color',
+                title: context.l10n.fillColorTitle,
               );
               if (picked == null) {
                 _commitFill(c: original);
@@ -105,14 +113,14 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
             },
           ),
           const SizedBox(height: 14),
-          const SectionLabel('Opacity'),
+          SectionLabel(context.l10n.opacityLabel),
           _OpacitySlider(
             value: layer.fillOpacity,
             onChange: (v) => _commitFill(opacity: v, live: true),
           ),
           if (supportsRadius) ...[
             const SizedBox(height: 14),
-            const SectionLabel('Corner radius'),
+            SectionLabel(context.l10n.cornerRadiusLabel),
             _RadiusPresets(
               current: layer.cornerRadius,
               max: maxRadius,

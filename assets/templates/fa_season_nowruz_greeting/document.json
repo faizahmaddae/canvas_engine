@@ -1,0 +1,173 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4294898631,
+    "edgeColor": 4278556265,
+    "focalX": -0.25,
+    "focalY": -0.2,
+    "radius": 1.1
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "tile",
+      "transform": {
+        "x": 100.0,
+        "y": 100.0,
+        "w": 880.0,
+        "h": 880.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294966251,
+      "strokeWidth": 5.0,
+      "cornerRadius": 72.0,
+      "strokeColor": 4278483031,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 36.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "flower1",
+      "transform": {
+        "x": 205.0,
+        "y": 185.0,
+        "w": 115.0,
+        "h": 115.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294538006,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "flower2",
+      "transform": {
+        "x": 765.0,
+        "y": 190.0,
+        "w": 115.0,
+        "h": 115.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294286859,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "flower3",
+      "transform": {
+        "x": 200.0,
+        "y": 760.0,
+        "w": 115.0,
+        "h": 115.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4279286145,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "flower4",
+      "transform": {
+        "x": 765.0,
+        "y": 760.0,
+        "w": 115.0,
+        "h": 115.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294538006,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 190.0,
+        "y": 330.0,
+        "w": 700.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "نوروز\nمبارک",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 112.0,
+        "color": 4278603323,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.98,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 205.0,
+        "y": 600.0,
+        "w": 670.0,
+        "h": 105.0,
+        "r": 0.0
+      },
+      "content": "آرزوی سالی پر از آرامش، سلامتی و شروع‌های تازه",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4287774734,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "signature",
+      "transform": {
+        "x": 315.0,
+        "y": 795.0,
+        "w": 450.0,
+        "h": 78.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4278603323,
+      "strokeWidth": 0.0,
+      "cornerRadius": 39.0
+    },
+    {
+      "type": "text",
+      "id": "sig",
+      "transform": {
+        "x": 350.0,
+        "y": 810.0,
+        "w": 380.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "content": "از طرف برند شما",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 42.0,
+        "color": 4294898631,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

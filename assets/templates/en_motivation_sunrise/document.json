@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294962645,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "sun",
+      "transform": {
+        "x": 240.0,
+        "y": 540.0,
+        "w": 600.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294677052,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "mound",
+      "transform": {
+        "x": 0.0,
+        "y": 880.0,
+        "w": 1080.0,
+        "h": 200.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4293548044,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 80.0,
+        "y": 160.0,
+        "w": 920.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "GOOD MORNING",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 40.0,
+        "color": 4286328082,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 80.0,
+        "y": 260.0,
+        "w": 920.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "rise & shine",
+      "style": {
+        "fontFamily": "Dancing_Script",
+        "fontSize": 200.0,
+        "color": 4286328082,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "en_story_quote",
+  "title": {
+    "en": "Story quote",
+    "fa": "Story quote"
+  },
+  "category": "story",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_story_quote/thumbnail.png",
+  "document": "assets/templates/en_story_quote/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "story",
+    "en",
+    "quote"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 260
+  }
+}

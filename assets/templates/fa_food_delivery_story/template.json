@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_food_delivery_story",
+  "title": {
+    "en": "Persian Food Delivery Story",
+    "fa": "استوری ارسال غذا"
+  },
+  "category": "food",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_food_delivery_story/thumbnail.png",
+  "document": "assets/templates/fa_food_delivery_story/document.json",
+  "tags": [
+    "product-quality-batch-2",
+    "persian",
+    "food",
+    "delivery",
+    "story"
+  ],
+  "home": {
+    "sortOrder": 67
+  }
+}

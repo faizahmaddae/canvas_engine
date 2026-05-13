@@ -207,8 +207,9 @@ class _DockToolTileState extends State<DockToolTile> {
                         style: TextStyle(
                           fontFamily: widget.fontFamily,
                           fontSize: compact ? 10 : 11,
-                          fontWeight:
-                              active ? FontWeight.w700 : FontWeight.w600,
+                          fontWeight: active
+                              ? FontWeight.w700
+                              : FontWeight.w600,
                           color: fg,
                           letterSpacing: 0.1,
                         ),
@@ -254,4 +255,3 @@ class _DockToolTileState extends State<DockToolTile> {
     return tile;
   }
 }
-

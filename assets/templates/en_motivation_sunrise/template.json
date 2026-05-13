@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_motivation_sunrise",
+  "title": {
+    "en": "Sunrise motivation",
+    "fa": "Sunrise motivation"
+  },
+  "category": "motivational",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_motivation_sunrise/thumbnail.png",
+  "document": "assets/templates/en_motivation_sunrise/document.json",
+  "tags": [
+    "migrated",
+    "english",
+    "en",
+    "motivational"
+  ],
+  "home": {
+    "featured": false,
+    "sortOrder": 70
+  }
+}

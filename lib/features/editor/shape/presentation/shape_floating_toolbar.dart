@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/l10n.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/floating_action_bar.dart';
@@ -78,11 +79,12 @@ class ShapeFloatingToolbar extends ConsumerWidget {
           FloatingPillButton(
             active: isScale,
             semanticLabel: isScale
-                ? 'Resize behavior: Scale shape (tap for Free)'
-                : 'Resize behavior: Resize freely (tap for Scale)',
+                ? context.l10n.resizeBehaviorScaleSemantics
+                : context.l10n.resizeBehaviorFreeSemantics,
             onTap: () {
-              final next =
-                  isScale ? ShapeResizeMode.free : ShapeResizeMode.scale;
+              final next = isScale
+                  ? ShapeResizeMode.free
+                  : ShapeResizeMode.scale;
               ctrl.setResizeMode(next);
             },
             child: ResizeModePillContent(
@@ -93,7 +95,7 @@ class ShapeFloatingToolbar extends ConsumerWidget {
           ),
           const SizedBox(width: 4),
           FloatingPillButton(
-            semanticLabel: 'More actions',
+            semanticLabel: context.l10n.moreActionsSemantics,
             onTap: () => showLayerActionsSheet(context, ref, layer),
             child: Icon(Icons.more_horiz_rounded, size: 20, color: fg),
           ),

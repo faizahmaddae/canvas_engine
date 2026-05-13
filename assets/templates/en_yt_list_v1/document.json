@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": 4279310375,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "number-box",
+      "transform": {
+        "x": 64.0,
+        "y": 88.0,
+        "w": 245.0,
+        "h": 245.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294956554,
+      "strokeWidth": 0.0,
+      "cornerRadius": 36.0
+    },
+    {
+      "type": "text",
+      "id": "number",
+      "transform": {
+        "x": 64.0,
+        "y": 88.0,
+        "w": 245.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "5",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 190.0,
+        "color": 4279310375,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 332.0,
+        "y": 95.0,
+        "w": 640.0,
+        "h": 265.0,
+        "r": 0.0
+      },
+      "content": "THINGS\nYOU NEED",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 96.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "right-panel",
+      "transform": {
+        "x": 1010.0,
+        "y": 0.0,
+        "w": 270.0,
+        "h": 720.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4293278022,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "badge",
+      "transform": {
+        "x": 1030.0,
+        "y": 248.0,
+        "w": 230.0,
+        "h": 180.0,
+        "r": 0.0
+      },
+      "content": "SAVE\nTHIS",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 58.0,
+        "color": 4294967295,
+        "fontWeight": 900,
+        "letterSpacing": 0.0,
+        "lineHeight": 0.95,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "transform": {
+        "x": 76.0,
+        "y": 485.0,
+        "w": 810.0,
+        "h": 64.0,
+        "r": 0.0
+      },
+      "content": "before your next upload",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 42.0,
+        "color": 4293257195,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

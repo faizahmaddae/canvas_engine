@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_cafe_mood",
+  "title": {
+    "en": "Persian Cafe Mood Story",
+    "fa": "استوری حال و هوای کافه"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_cafe_mood/thumbnail.png",
+  "document": "assets/templates/fa_story_cafe_mood/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "story",
+    "cafe",
+    "food"
+  ],
+  "home": {
+    "sortOrder": 32
+  }
+}

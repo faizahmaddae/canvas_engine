@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/background_fill.dart';
 import '../core/editor_document.dart';
 import 'background_fill_box.dart';
 import 'layer_renderer.dart';
@@ -21,6 +20,15 @@ import 'layer_renderer.dart';
 /// This widget is the single source of truth for "what the document
 /// actually looks like" and is reused by [DocumentPngExporter]. Editor-
 /// canvas chrome is painted on top of (not inside) this view.
+///
+/// **Color-space contract (see `docs/effects.md` §6).** Every layer
+/// renders in **sRGB-encoded, premultiplied-alpha** Flutter colour
+/// space. Effects in `engine/effects/` operate as `ColorFilter.matrix`
+/// or sRGB custom paint — they do **not** linearise. The `DocumentView`
+/// composite, the per-layer `RepaintBoundary`, and the exporter all
+/// assume this contract. Adding a wide-gamut source, an HDR layer, or
+/// a linear-light effect is a deliberate phase change that must update
+/// the contract here, in `EditorEffect`, and in the exporter together.
 class DocumentView extends StatelessWidget {
   const DocumentView({
     super.key,

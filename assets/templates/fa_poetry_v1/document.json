@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294307814,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "frame-top",
+      "transform": {
+        "x": 170.0,
+        "y": 170.0,
+        "w": 740.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "frame-bottom",
+      "transform": {
+        "x": 170.0,
+        "y": 907.0,
+        "w": 740.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "frame-left",
+      "transform": {
+        "x": 170.0,
+        "y": 170.0,
+        "w": 3.0,
+        "h": 740.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "frame-right",
+      "transform": {
+        "x": 907.0,
+        "y": 170.0,
+        "w": 3.0,
+        "h": 740.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "corner-tl-h",
+      "transform": {
+        "x": 120.0,
+        "y": 220.0,
+        "w": 150.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "corner-tl-v",
+      "transform": {
+        "x": 220.0,
+        "y": 120.0,
+        "w": 4.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "corner-br-h",
+      "transform": {
+        "x": 810.0,
+        "y": 856.0,
+        "w": 150.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "corner-br-v",
+      "transform": {
+        "x": 856.0,
+        "y": 810.0,
+        "w": 4.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292125260,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 170.0,
+        "y": 375.0,
+        "w": 740.0,
+        "h": 210.0,
+        "r": 0.0
+      },
+      "content": "هر که آمد عمارتی نو ساخت\nرفت و منزل به دیگری پرداخت",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 70.0,
+        "color": 4281084972,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.42,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 170.0,
+        "y": 660.0,
+        "w": 740.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "content": "— سعدی",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4285227865,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

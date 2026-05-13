@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": 4294308331,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "accent-block",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "w": 1080.0,
+        "h": 500.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4279203438,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "product-placeholder",
+      "transform": {
+        "x": 190.0,
+        "y": 285.0,
+        "w": 700.0,
+        "h": 520.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0
+    },
+    {
+      "type": "shape",
+      "id": "product-gradient",
+      "transform": {
+        "x": 365.0,
+        "y": 373.0,
+        "w": 350.0,
+        "h": 350.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "fill": {
+        "type": "radial",
+        "centerColor": 4280468830,
+        "edgeColor": 4279203438,
+        "focalX": 0.0,
+        "focalY": 0.0,
+        "radius": 0.82
+      },
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "product-highlight",
+      "transform": {
+        "x": 455.0,
+        "y": 690.0,
+        "w": 170.0,
+        "h": 24.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294308331,
+      "strokeWidth": 0.0,
+      "cornerRadius": 12.0
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "transform": {
+        "x": 90.0,
+        "y": 95.0,
+        "w": 900.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "معرفی محصول",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 44.0,
+        "color": 4294967295,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 90.0,
+        "y": 850.0,
+        "w": 900.0,
+        "h": 210.0,
+        "r": 0.0
+      },
+      "content": "نسخه تازه\nاز راه رسید",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 90.0,
+        "color": 4279310375,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.1,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "subtext",
+      "transform": {
+        "x": 90.0,
+        "y": 1088.0,
+        "w": 900.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "طراحی تمیز، امکانات بیشتر",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 46.0,
+        "color": 4285227865,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta",
+      "transform": {
+        "x": 90.0,
+        "y": 1190.0,
+        "w": 390.0,
+        "h": 88.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279203438,
+      "strokeWidth": 0.0,
+      "cornerRadius": 44.0
+    },
+    {
+      "type": "text",
+      "id": "cta-text",
+      "transform": {
+        "x": 90.0,
+        "y": 1208.0,
+        "w": 390.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "بیشتر بدانید",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4294967295,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

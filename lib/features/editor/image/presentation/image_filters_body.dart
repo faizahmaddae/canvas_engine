@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/modules/image/image_layer.dart';
@@ -32,9 +33,9 @@ class ImageFiltersBody extends ConsumerWidget {
   final ImageLayer layer;
 
   void _commit(WidgetRef ref, ImageFilterPreset p) {
-    ref.read(documentControllerProvider.notifier).execute(
-          SetImageFilterCommand(layerId: layer.id, filterPreset: p),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(SetImageFilterCommand(layerId: layer.id, filterPreset: p));
   }
 
   @override
@@ -46,7 +47,7 @@ class ImageFiltersBody extends ConsumerWidget {
     final provider = _providerFor(layer.source);
 
     return ImagePanelShell(
-      title: 'Filters',
+      title: context.l10n.filtersTool,
       icon: Icons.auto_fix_high_outlined,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -107,17 +108,17 @@ const _allPresets = <ImageFilterPreset>[
   ImageFilterPreset.dramatic,
 ];
 
-/// Human-readable labels — `enum.name` is fine internally but the
-/// chip strip shows these.
-const _labels = <ImageFilterPreset, String>{
-  ImageFilterPreset.none: 'None',
-  ImageFilterPreset.warm: 'Warm',
-  ImageFilterPreset.cool: 'Cool',
-  ImageFilterPreset.vintage: 'Vintage',
-  ImageFilterPreset.mono: 'Mono',
-  ImageFilterPreset.fade: 'Fade',
-  ImageFilterPreset.dramatic: 'Drama',
-};
+String _filterLabel(BuildContext context, ImageFilterPreset preset) {
+  return switch (preset) {
+    ImageFilterPreset.none => context.l10n.noneOption,
+    ImageFilterPreset.warm => context.l10n.warmOption,
+    ImageFilterPreset.cool => context.l10n.coolOption,
+    ImageFilterPreset.vintage => context.l10n.vintageOption,
+    ImageFilterPreset.mono => context.l10n.monoOption,
+    ImageFilterPreset.fade => context.l10n.fadeOption,
+    ImageFilterPreset.dramatic => context.l10n.dramaOption,
+  };
+}
 
 class _FilterChip extends StatefulWidget {
   const _FilterChip({
@@ -210,10 +211,7 @@ class _FilterChipState extends State<_FilterChip> {
               // Vertical padding reduced 6→4 so selected and
               // unselected chips share visually identical heights
               // (badge is now inset, no longer extends bounds).
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 4,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
                 color: bg,
                 borderRadius: BorderRadius.circular(14),
@@ -229,11 +227,7 @@ class _FilterChipState extends State<_FilterChip> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(
-                          width: 60,
-                          height: 60,
-                          child: preview,
-                        ),
+                        child: SizedBox(width: 60, height: 60, child: preview),
                       ),
                       // Subtle hairline so the thumb edge still
                       // reads on very light/dark images.
@@ -243,8 +237,9 @@ class _FilterChipState extends State<_FilterChip> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: scheme.outlineVariant
-                                    .withValues(alpha: 0.45),
+                                color: scheme.outlineVariant.withValues(
+                                  alpha: 0.45,
+                                ),
                                 width: 1,
                               ),
                             ),
@@ -261,13 +256,12 @@ class _FilterChipState extends State<_FilterChip> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    _labels[widget.preset] ?? widget.preset.name,
+                    _filterLabel(context, widget.preset),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 11,
-                      fontWeight:
-                          selected ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                       color: fg,
                       letterSpacing: 0.2,
                     ),
@@ -317,11 +311,7 @@ class _SelectedBadge extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: scheme.surface, width: 1.5),
       ),
-      child: Icon(
-        Icons.check_rounded,
-        size: 10,
-        color: scheme.onPrimary,
-      ),
+      child: Icon(Icons.check_rounded, size: 10, color: scheme.onPrimary),
     );
   }
 }

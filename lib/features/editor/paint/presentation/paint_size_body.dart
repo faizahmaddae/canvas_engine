@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
 
 /// Shared Paint Size UI rendered in BOTH the inline dock panel and
@@ -34,13 +35,17 @@ class PaintSizeBody extends StatelessWidget {
   // surfaces both surface. Numeric chip-grids are gone — the
   // precision slider covers anything in between.
   static const List<double> _presets = [3, 8, 18, 36];
-  static const List<String> _presetLabels = [
-    'Thin',
-    'Medium',
-    'Thick',
-    'Heavy',
-  ];
   static const double _epsilon = 0.01;
+
+  String _presetLabel(BuildContext context, int index) {
+    return switch (index) {
+      0 => context.l10n.thinOption,
+      1 => context.l10n.mediumOption,
+      2 => context.l10n.thickOption,
+      3 => context.l10n.heavyOption,
+      _ => '',
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,14 +54,10 @@ class PaintSizeBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 6),
-        const _SectionLabel('Size'),
-        StrokeHero(
-          width: value,
-          color: color,
-          dashPattern: dashPattern,
-        ),
+        _SectionLabel(context.l10n.sizeTool),
+        StrokeHero(width: value, color: color, dashPattern: dashPattern),
         const SizedBox(height: 12),
-        const _SectionLabel('Stroke width'),
+        _SectionLabel(context.l10n.strokeWidthLabel),
         // Horizontal scroller mirrors the chip row used by every
         // other Paint preset surface (Polygon, Dash) so chips read
         // as "the same control" across the editor.
@@ -69,7 +70,7 @@ class PaintSizeBody extends StatelessWidget {
             itemCount: _presets.length,
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (_, i) => PresetChip(
-              label: _presetLabels[i],
+              label: _presetLabel(context, i),
               selected: (value - _presets[i]).abs() < _epsilon,
               // Chip tap = instant commit. PresetChip emits the
               // selection haptic itself.
@@ -269,8 +270,7 @@ class _PaintSizePrecisionAdvancedState
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final muted = scheme.onSurfaceVariant;
-    final clampedValue =
-        widget.value.clamp(widget.min, widget.max).toDouble();
+    final clampedValue = widget.value.clamp(widget.min, widget.max).toDouble();
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -283,15 +283,14 @@ class _PaintSizePrecisionAdvancedState
               setState(() => _open = !_open);
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      _open ? 'Hide precise controls' : 'Adjust precisely',
+                      _open
+                          ? context.l10n.hidePreciseControls
+                          : context.l10n.adjustPrecisely,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurface,
                         fontWeight: FontWeight.w600,

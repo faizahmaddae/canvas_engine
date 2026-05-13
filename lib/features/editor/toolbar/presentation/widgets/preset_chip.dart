@@ -99,4 +99,3 @@ class _PresetChipState extends State<PresetChip> {
     );
   }
 }
-

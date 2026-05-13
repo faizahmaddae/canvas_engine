@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../application/document_controller.dart';
 import '../../application/editing_controller.dart';
+import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/layer_state_commands.dart';
 import '../../engine/commands/text_commands.dart';
@@ -635,33 +636,29 @@ class TextToolController extends Notifier<TextSession> {
     final next = mergePresetVisual(current: layer.style, preset: preset);
     if (next == layer.style) return;
     // Slider-drag edge case: a style preset is a discrete, one-shot
-    // pick — never part of a live drag. Use liveReplace if a drag
-    // is somehow open so we don't push a stray history entry mid-
-    // drag, otherwise execute the command normally.
+    // pick — never part of a live drag. Route through the live
+    // overlay if a drag is somehow open so we don't push a stray
+    // history entry mid-drag, otherwise execute the command normally.
     if (_styleDrag != null) {
-      final doc = ref.read(documentControllerProvider);
       final updated = layer.copyWith(style: next);
-      ref
-          .read(documentControllerProvider.notifier)
-          .liveReplace(doc.replaceLayer(updated));
+      ref.read(liveOverlayProvider.notifier).replaceLayer(updated);
       return;
     }
-    // During live new-add (user is still typing), mirror via
-    // liveReplace so the whole session still collapses to one
+    // During live new-add (user is still typing), mirror onto the
+    // staged addition so the whole session still collapses to one
     // history entry on commit.
     final live = _live;
     if (live != null && live.isNew && live.layerId == layer.id) {
-      final doc = ref.read(documentControllerProvider);
       final updated = layer.copyWith(style: next);
-      ref
-          .read(documentControllerProvider.notifier)
-          .liveReplace(doc.replaceLayer(updated));
+      ref.read(liveOverlayProvider.notifier).updateAddedLayer(updated);
       return;
     }
     ref.read(documentControllerProvider.notifier).execute(
           UpdateTextCommand(
             layerId: layer.id,
-            content: layer.content,
+            // style-only edit: leave content null so the command's
+            // touched-field shape stays {style} and merges cleanly
+            // with neighbouring style frames (slider drag).
             style: next,
             // No transform → bounding box, position, rotation,
             // resizeMode are all preserved exactly.
@@ -676,8 +673,9 @@ class TextToolController extends Notifier<TextSession> {
     ref.read(documentControllerProvider.notifier).execute(
           UpdateTextCommand(
             layerId: layer.id,
+            // content-only edit: leave style null so this never merges
+            // with a preceding style edit.
             content: content,
-            style: layer.style,
           ),
         );
   }
@@ -755,26 +753,41 @@ class TextToolController extends Notifier<TextSession> {
     _styleDrag = null;
     if (session == null) return;
     final layer = selectedTextLayer();
-    final docCtrl = ref.read(documentControllerProvider.notifier);
+    final overlay = ref.read(liveOverlayProvider.notifier);
+    // Invariant: nobody pushed a real `execute` while the style-drag
+    // session was open. Sessions are pure-overlay; if this fails,
+    // someone added an `execute` mid-session and the assumption that
+    // `clear()` rewinds to docBefore no longer holds.
+    assert(
+      identical(session.docBefore, ref.read(documentControllerProvider)),
+      'committed document changed during style-drag session — '
+      'something dispatched execute() mid-drag',
+    );
     if (layer == null) {
-      // Nothing to commit — just rewind to the pre-drag doc so
-      // we don't leak a transient state.
-      docCtrl.liveReplace(session.docBefore);
+      // Nothing to commit — just drop the in-flight overlay so we
+      // don't leak a transient state.
+      overlay.clear();
       return;
     }
     final finalStyle = layer.style;
     final finalTransform = layer.transform;
-    // Restore the pre-drag doc, then push exactly one command
-    // covering the whole drag.
-    docCtrl.liveReplace(session.docBefore);
-    docCtrl.execute(
-      UpdateTextCommand(
-        layerId: layer.id,
-        content: layer.content,
-        style: finalStyle,
-        transform: finalTransform,
-      ),
-    );
+    // Drop the overlay BEFORE pushing the command. Together they
+    // produce a single Riverpod tick where the merged view goes from
+    // "committed + in-flight override" to "committed (with the new
+    // style baked in)" with no flicker through the pre-drag state.
+    overlay.clear();
+    ref.read(documentControllerProvider.notifier).execute(
+          UpdateTextCommand(
+            layerId: layer.id,
+            // End-of-drag commit covers the whole live session — content,
+            // style and transform may all have changed, so all three are
+            // captured. The shape will only merge with another full-shape
+            // command, which is what we want.
+            content: layer.content,
+            style: finalStyle,
+            transform: finalTransform,
+          ),
+        );
   }
 
   /// Begin editing the currently selected text layer. No-op if nothing
@@ -846,7 +859,6 @@ class TextToolController extends Notifier<TextSession> {
         clearSelectedSizePreset: true,
       );
     }
-    final docCtrl = ref.read(documentControllerProvider.notifier);
     final doc = ref.read(documentControllerProvider);
     final selection = ref.read(selectionControllerProvider);
     final id = _uuid.v4();
@@ -899,9 +911,10 @@ class TextToolController extends Notifier<TextSession> {
       isNew: true,
       scaleAtBegin: 1.0,
     );
-    // Stage the layer onto the doc without pushing history; select it
-    // so the canvas shows the bounding box where text will appear.
-    docCtrl.liveReplace(doc.addLayer(layer));
+    // Stage the layer onto the live overlay (NOT the committed doc)
+    // so the canvas shows the bounding box where text will appear
+    // without polluting the layers panel / undo rail until commit.
+    ref.read(liveOverlayProvider.notifier).addLayer(layer);
     ref.read(selectionControllerProvider.notifier).select(id);
     return id;
   }
@@ -911,9 +924,12 @@ class TextToolController extends Notifier<TextSession> {
   void previewContent(String content) {
     final s = _live;
     if (s == null) return;
-    final docCtrl = ref.read(documentControllerProvider.notifier);
+    // Read the merged view so a new-add staged addition (which only
+    // exists in the live overlay) is found alongside committed
+    // layers being edited.
     final doc = ref.read(documentControllerProvider);
-    final current = doc.layerById(s.layerId);
+    final merged = ref.read(renderedDocumentProvider);
+    final current = merged.layerById(s.layerId);
     if (current is! TextLayer) return;
     var next = current.copyWith(content: content);
     // For brand-new layers being live-typed: cap the natural width
@@ -948,7 +964,12 @@ class TextToolController extends Notifier<TextSession> {
       next = next.withTransform(newTransform) as TextLayer;
     }
     if (next == current) return;
-    docCtrl.liveReplace(doc.replaceLayer(next));
+    final overlay = ref.read(liveOverlayProvider.notifier);
+    if (s.isNew) {
+      overlay.updateAddedLayer(next);
+    } else {
+      overlay.replaceLayer(next);
+    }
   }
 
   /// Confirm the live edit. Pushes ONE history entry covering the
@@ -959,22 +980,35 @@ class TextToolController extends Notifier<TextSession> {
     _live = null;
     if (s == null) return;
     final docCtrl = ref.read(documentControllerProvider.notifier);
-    // Capture the staged layer's *current* style BEFORE we restore
-    // docBefore — restore wipes the live layer, taking with it any
-    // pre-commit tweaks the user made via the composer's quick-style
-    // strip (Bold, Color). Snapshot.style is frozen at session begin
-    // and would otherwise lose those edits.
+    final overlay = ref.read(liveOverlayProvider.notifier);
+    // Invariant: the live session never dispatches `execute`, so the
+    // committed document must still be the same instance captured at
+    // session begin. If this fails, someone snuck an `execute` in
+    // mid-session and the `clear()` below would NOT reproduce the
+    // historical `liveReplace(docBefore)` rewind — silent corruption.
+    assert(
+      identical(s.docBefore, ref.read(documentControllerProvider)),
+      'committed document changed during live text-edit session — '
+      'something dispatched execute() mid-session',
+    );
+    // Capture the staged layer's *current* state BEFORE we drop the
+    // overlay — clearing it loses any pre-commit tweaks the user made
+    // via the composer's quick-style strip (Bold, Color). Snapshot
+    // .style is frozen at session begin and would otherwise lose
+    // those edits. Read from the merged view so a new-add staged
+    // layer (which only lives in the overlay) is still found.
     final liveLayerBeforeRestore = ref
-        .read(documentControllerProvider)
+        .read(renderedDocumentProvider)
         .layerById(s.layerId);
     final liveStyleAtCommit =
         (liveLayerBeforeRestore is TextLayer)
             ? liveLayerBeforeRestore.style
             : null;
-    // Always restore the pre-session state first; the single command
-    // we then execute carries all the intent. This guarantees one and
-    // only one undo entry, regardless of how many previews ran.
-    docCtrl.liveReplace(s.docBefore);
+    // Drop the overlay so the committed doc becomes the canonical
+    // view again; the single command below carries all the intent.
+    // Guarantees one and only one undo entry, regardless of how many
+    // previews ran.
+    overlay.clear();
     final trimmed = content.trim();
     if (trimmed.isEmpty) {
       // Empty result — treat as cancel for both new and edit flows.
@@ -1060,6 +1094,10 @@ class TextToolController extends Notifier<TextSession> {
       docCtrl.execute(
         UpdateTextCommand(
           layerId: s.layerId,
+          // Live-edit commit: a full session can mutate any of the
+          // three fields, so all are captured. Pre-fix this used the
+          // required-field API; the shape is identical to the
+          // drag-commit path above and merges only with itself.
           content: trimmed,
           style: finalStyle,
           transform: (newTransform == s.layerBefore.transform && !styleChanged)
@@ -1076,7 +1114,15 @@ class TextToolController extends Notifier<TextSession> {
     final s = _live;
     _live = null;
     if (s == null) return;
-    ref.read(documentControllerProvider.notifier).liveReplace(s.docBefore);
+    // Invariant: nobody pushed a real `execute` while the live edit
+    // session was open. If this fails the `clear()` rewind below is
+    // not equivalent to the historical `liveReplace(docBefore)`.
+    assert(
+      identical(s.docBefore, ref.read(documentControllerProvider)),
+      'committed document changed during live text-edit session — '
+      'something dispatched execute() mid-session',
+    );
+    ref.read(liveOverlayProvider.notifier).clear();
     _restoreSelection(s);
   }
 
@@ -1437,8 +1483,15 @@ class TextToolController extends Notifier<TextSession> {
   TextLayer? selectedTextLayer() {
     final selection = ref.read(selectionControllerProvider);
     if (!selection.hasSelection) return null;
-    final layer =
-        ref.read(documentControllerProvider).layerById(selection.selectedId!);
+    // Read the MERGED view so an in-flight live session (Add Text
+    // composer's staged layer, slider-drag style preview) is found
+    // even though it does not yet exist in the committed document.
+    // Falling back to the committed read would null out the staged
+    // layer mid-session and silently break every per-frame style /
+    // content update routed through this method.
+    final layer = ref
+        .read(renderedDocumentProvider)
+        .layerById(selection.selectedId!);
     if (layer is TextLayer && !layer.isSticker) return layer;
     return null;
   }
@@ -1477,10 +1530,10 @@ class TextToolController extends Notifier<TextSession> {
     // During a live new-add session, style changes (e.g. user drags
     // the size slider while still typing) must NOT push extra
     // history entries — the whole session collapses to one entry on
-    // commit. Mirror the change onto the live layer via liveReplace
-    // and, because the new-add layer is centred + wrap-capped, also
-    // re-flow the bounding box and re-centre it so the live preview
-    // stays inside the canvas at the new style.
+    // commit. Mirror the change onto the staged addition in the live
+    // overlay and, because the new-add layer is centred + wrap-
+    // capped, also re-flow the bounding box and re-centre it so the
+    // live preview stays inside the canvas at the new style.
     final live = _live;
     if (live != null && live.isNew && live.layerId == layer.id) {
       final doc = ref.read(documentControllerProvider);
@@ -1491,9 +1544,7 @@ class TextToolController extends Notifier<TextSession> {
       );
       final updated = layer.copyWith(style: next).withTransform(newTransform)
           as TextLayer;
-      ref.read(documentControllerProvider.notifier).liveReplace(
-            doc.replaceLayer(updated),
-          );
+      ref.read(liveOverlayProvider.notifier).updateAddedLayer(updated);
       return;
     }
 
@@ -1514,24 +1565,23 @@ class TextToolController extends Notifier<TextSession> {
     final newTransform = (newSize == null || newSize == layer.transform.size)
         ? null
         : layer.transform.copyWith(size: newSize);
-    // Slider-drag fast path: route through liveReplace so the
+    // Slider-drag fast path: publish to the live overlay so the
     // canvas updates immediately without polluting history. The
     // single undo entry is pushed by [endStyleDrag] on release.
     if (_styleDrag != null) {
-      final doc = ref.read(documentControllerProvider);
       var updated = layer.copyWith(style: next);
       if (newTransform != null) {
         updated = updated.withTransform(newTransform) as TextLayer;
       }
-      ref
-          .read(documentControllerProvider.notifier)
-          .liveReplace(doc.replaceLayer(updated));
+      ref.read(liveOverlayProvider.notifier).replaceLayer(updated);
       return;
     }
     ref.read(documentControllerProvider.notifier).execute(
           UpdateTextCommand(
             layerId: layer.id,
-            content: layer.content,
+            // style edit (optionally with a re-measure transform).
+            // content stays null so this merges with neighbouring
+            // style frames but NOT with content edits.
             style: next,
             transform: newTransform,
           ),

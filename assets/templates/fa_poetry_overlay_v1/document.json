@@ -1,0 +1,93 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4282198559,
+    "endColor": 4278848010,
+    "angleDegrees": 170.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "implied-light",
+      "transform": {
+        "x": -170.0,
+        "y": -140.0,
+        "w": 620.0,
+        "h": 620.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294967295,
+      "fill": {
+        "type": "radial",
+        "centerColor": 1725211212,
+        "edgeColor": 13935180,
+        "focalX": 0.0,
+        "focalY": 0.0,
+        "radius": 0.9
+      },
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "overlay-panel",
+      "transform": {
+        "x": 0.0,
+        "y": 585.0,
+        "w": 1080.0,
+        "h": 495.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 2566914048,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 105.0,
+        "y": 670.0,
+        "w": 870.0,
+        "h": 190.0,
+        "r": 0.0
+      },
+      "content": "این قافله عمر عجب می‌گذرد\nدریاب دمی که با طرب می‌گذرد",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 58.0,
+        "color": 4294967295,
+        "fontWeight": 500,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.35,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 105.0,
+        "y": 905.0,
+        "w": 870.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "— خیام",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 34.0,
+        "color": 4294286859,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

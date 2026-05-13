@@ -1,0 +1,177 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4294898631,
+    "edgeColor": 4278483031,
+    "focalX": -0.3,
+    "focalY": -0.2,
+    "radius": 1.1
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "tile",
+      "transform": {
+        "x": 110.0,
+        "y": 110.0,
+        "w": 860.0,
+        "h": 860.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294966251,
+      "strokeWidth": 5.0,
+      "cornerRadius": 70.0,
+      "strokeColor": 4278607686,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 38.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "orn-1",
+      "transform": {
+        "x": 190.0,
+        "y": 190.0,
+        "w": 120.0,
+        "h": 120.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4294286859,
+      "strokeWidth": 0.0,
+      "opacity": 0.82
+    },
+    {
+      "type": "shape",
+      "id": "orn-2",
+      "transform": {
+        "x": 770.0,
+        "y": 770.0,
+        "w": 120.0,
+        "h": 120.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4294286859,
+      "strokeWidth": 0.0,
+      "opacity": 0.82
+    },
+    {
+      "type": "shape",
+      "id": "orn-3",
+      "transform": {
+        "x": 790.0,
+        "y": 190.0,
+        "w": 110.0,
+        "h": 110.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4279286145,
+      "strokeWidth": 0.0,
+      "opacity": 0.85
+    },
+    {
+      "type": "shape",
+      "id": "orn-4",
+      "transform": {
+        "x": 190.0,
+        "y": 790.0,
+        "w": 110.0,
+        "h": 110.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4279286145,
+      "strokeWidth": 0.0,
+      "opacity": 0.85
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 185.0,
+        "y": 315.0,
+        "w": 710.0,
+        "h": 240.0,
+        "r": 0.0
+      },
+      "content": "روزهای خوب\nدر راه‌اند",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 104.0,
+        "color": 4278603323,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "caption",
+      "transform": {
+        "x": 210.0,
+        "y": 610.0,
+        "w": 660.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "content": "یک پیام مناسبتی گرم برای مخاطبانتان بنویسید",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 42.0,
+        "color": 4287774734,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "signature",
+      "transform": {
+        "x": 330.0,
+        "y": 780.0,
+        "w": 420.0,
+        "h": 78.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4278603323,
+      "strokeWidth": 0.0,
+      "cornerRadius": 39.0
+    },
+    {
+      "type": "text",
+      "id": "signature-text",
+      "transform": {
+        "x": 360.0,
+        "y": 795.0,
+        "w": 360.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "content": "با آرزوی آرامش",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 42.0,
+        "color": 4294898631,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

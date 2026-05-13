@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "en_yt_podcast_interview",
+  "title": {
+    "en": "Podcast Interview YouTube Thumbnail",
+    "fa": "تامبنیل پادکست مصاحبه"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "english",
+  "thumbnail": "assets/templates/en_yt_podcast_interview/thumbnail.png",
+  "document": "assets/templates/en_yt_podcast_interview/document.json",
+  "tags": [
+    "product-quality-batch-3",
+    "english",
+    "youtube",
+    "podcast",
+    "interview"
+  ],
+  "home": {
+    "sortOrder": 110
+  }
+}

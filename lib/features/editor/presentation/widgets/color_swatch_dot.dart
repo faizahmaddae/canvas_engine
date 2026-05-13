@@ -44,8 +44,8 @@ class _ColorSwatchDotState extends State<ColorSwatchDot> {
     // the whole palette without per-swatch overrides.
     final checkColor =
         ThemeData.estimateBrightnessForColor(color) == Brightness.dark
-            ? Colors.white
-            : Colors.black;
+        ? Colors.white
+        : Colors.black;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => setState(() => _down = true),

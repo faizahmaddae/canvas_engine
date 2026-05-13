@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_course_launch",
+  "title": {
+    "en": "Persian Course Launch Poster",
+    "fa": "پوستر شروع دوره"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_course_launch/thumbnail.png",
+  "document": "assets/templates/fa_promo_course_launch/document.json",
+  "tags": [
+    "product-quality-batch-1",
+    "persian",
+    "promo",
+    "education",
+    "course"
+  ],
+  "home": {
+    "sortOrder": 41
+  }
+}

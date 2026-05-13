@@ -1,0 +1,225 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4293721855,
+    "endColor": 4294507260,
+    "angleDegrees": 145.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "card",
+      "transform": {
+        "x": 96.0,
+        "y": 96.0,
+        "w": 888.0,
+        "h": 888.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "cornerRadius": 54.0,
+      "shadowOpacity": 0.16,
+      "shadowBlur": 38.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 20.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "badge",
+      "transform": {
+        "x": 150.0,
+        "y": 160.0,
+        "w": 275.0,
+        "h": 74.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279179050,
+      "strokeWidth": 0.0,
+      "cornerRadius": 37.0
+    },
+    {
+      "type": "text",
+      "id": "badge-text",
+      "transform": {
+        "x": 180.0,
+        "y": 176.0,
+        "w": 215.0,
+        "h": 42.0,
+        "r": 0.0
+      },
+      "content": "LAUNCH",
+      "style": {
+        "fontFamily": "Chivo_Mono",
+        "fontSize": 36.0,
+        "color": 4284999929,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 150.0,
+        "y": 285.0,
+        "w": 760.0,
+        "h": 190.0,
+        "r": 0.0
+      },
+      "content": "Checklist\nfor release day",
+      "style": {
+        "fontFamily": "Hanken_Grotesk",
+        "fontSize": 78.0,
+        "color": 4279179050,
+        "fontWeight": 800,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "item1",
+      "transform": {
+        "x": 160.0,
+        "y": 540.0,
+        "w": 760.0,
+        "h": 86.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293721855,
+      "strokeWidth": 0.0,
+      "cornerRadius": 28.0
+    },
+    {
+      "type": "shape",
+      "id": "item2",
+      "transform": {
+        "x": 160.0,
+        "y": 650.0,
+        "w": 760.0,
+        "h": 86.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293983732,
+      "strokeWidth": 0.0,
+      "cornerRadius": 28.0
+    },
+    {
+      "type": "shape",
+      "id": "item3",
+      "transform": {
+        "x": 160.0,
+        "y": 760.0,
+        "w": 760.0,
+        "h": 86.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294898631,
+      "strokeWidth": 0.0,
+      "cornerRadius": 28.0
+    },
+    {
+      "type": "text",
+      "id": "check1",
+      "transform": {
+        "x": 205.0,
+        "y": 561.0,
+        "w": 650.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "01  Headline ready",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 38.0,
+        "color": 4279590517,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "check2",
+      "transform": {
+        "x": 205.0,
+        "y": 671.0,
+        "w": 650.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "02  CTA tested",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 38.0,
+        "color": 4279657780,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "check3",
+      "transform": {
+        "x": 205.0,
+        "y": 781.0,
+        "w": 650.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "03  Story scheduled",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 38.0,
+        "color": 4287774734,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 155.0,
+        "y": 910.0,
+        "w": 765.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "Edit the list and ship with confidence",
+      "style": {
+        "fontFamily": "Raleway",
+        "fontSize": 34.0,
+        "color": 4282865001,
+        "fontWeight": 600,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}
