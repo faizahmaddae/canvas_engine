@@ -1,6 +1,7 @@
 import 'package:flutter/painting.dart';
 
 import '../core/editor_document.dart';
+import '../core/layer_mask.dart';
 import '../effects/editor_effect.dart';
 import '../modules/image/image_layer.dart';
 import 'editor_command.dart';
@@ -908,6 +909,70 @@ class DeleteEffectCommand extends EditorCommand {
       index: index,
       effect: layer.effects.effects[index],
     );
+  }
+}
+
+/// Set, replace, or clear ([mask] = null) the stack-level mask that
+/// clips the composed output of an [ImageLayer]'s effect stack —
+/// docs/effects.md §5's `composite(I_prev over I0 through stackMask)`,
+/// rendered by `StackMaskComposite` since A3 Step 1.
+///
+/// Mergeable family keyed on `(layerId, "stackMask")` per §8: [live]
+/// drags of a mask-shape editor collapse into one undo entry, same
+/// convention as [SetImageAdjustmentsCommand]. Discrete preset taps
+/// leave [live] false so each is its own undo step.
+///
+/// The writer stamps schema v3 for any document carrying a stack mask
+/// (`DocumentCodec._writerVersion`), so documents produced through
+/// this command are refused loudly by pre-v3 readers instead of
+/// silently dropping the mask on resave.
+class SetStackMaskCommand extends EditorCommand {
+  const SetStackMaskCommand({
+    required this.layerId,
+    required this.mask,
+    this.live = false,
+  });
+
+  final String layerId;
+  final LayerMask? mask;
+  final bool live;
+
+  @override
+  String get label => mask == null ? 'Clear stack mask' : 'Stack mask';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer is! ImageLayer) return doc;
+    final effects = layer.effects;
+    if (effects.stackMask == mask) return doc;
+    // Direct construction is the sanctioned mask-write path (see
+    // EffectStack.copyWith — its doc reserves mask writes for this
+    // command). Canonicalise a fully-empty result to the shared
+    // singleton so emptiness identity checks stay valid.
+    final next = (effects.effects.isEmpty && mask == null)
+        ? EffectStack.empty
+        : EffectStack(effects.effects, stackMask: mask);
+    return doc.replaceLayer(layer.copyAll(effects: next));
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) {
+    final layer = before.layerById(layerId);
+    if (layer is! ImageLayer) return _noop;
+    return SetStackMaskCommand(
+      layerId: layerId,
+      mask: layer.effects.stackMask,
+    );
+  }
+
+  @override
+  EditorCommand? mergeWith(EditorCommand previous) {
+    if (!live) return null;
+    if (previous is! SetStackMaskCommand) return null;
+    if (!previous.live) return null;
+    if (previous.layerId != layerId) return null;
+    return this;
   }
 }
 

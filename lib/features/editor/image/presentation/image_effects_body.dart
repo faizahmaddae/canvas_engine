@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +7,7 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/image_commands.dart';
+import '../../engine/core/layer_mask.dart';
 import '../../engine/effects/editor_effect.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../application/image_tool_controller.dart';
@@ -39,7 +42,112 @@ class ImageEffectsBody extends ConsumerWidget {
     return ImagePanelShell(
       title: context.l10n.effectsTool,
       icon: Icons.layers_rounded,
-      child: effects.isEmpty ? const _EmptyState() : _EffectList(layer: layer),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (effects.isEmpty)
+            const _EmptyState()
+          else
+            _EffectList(layer: layer),
+          _StackMaskSection(layer: layer),
+        ],
+      ),
+    );
+  }
+}
+
+/// Region presets for the stack mask. Placeholder UX for A3: preset
+/// rects exercise the full command → render path today; on-canvas
+/// mask-shape editing (drag the rect, live-merged commands) is the
+/// roadmap Phase 3.2 replacement and needs no data change.
+enum _MaskPreset { off, top, bottom, center }
+
+class _StackMaskSection extends ConsumerWidget {
+  const _StackMaskSection({required this.layer});
+
+  final ImageLayer layer;
+
+  /// Build the preset's mask in layer-local space (LayerMask's
+  /// contract). Feather = 15% of the shorter side: wide enough that
+  /// the region edge reads as a gradient, not a hard seam, on any
+  /// layer size — a presentation tuning choice, not engine math.
+  LayerMask? _maskFor(_MaskPreset preset) {
+    final s = layer.transform.size;
+    final feather = math.min(s.width, s.height) * 0.15;
+    return switch (preset) {
+      _MaskPreset.off => null,
+      _MaskPreset.top => RectMask(
+          rect: Rect.fromLTWH(0, 0, s.width, s.height / 2),
+          feather: feather,
+        ),
+      _MaskPreset.bottom => RectMask(
+          rect: Rect.fromLTWH(0, s.height / 2, s.width, s.height / 2),
+          feather: feather,
+        ),
+      _MaskPreset.center => RectMask(
+          rect: Rect.fromLTWH(
+            s.width * 0.15,
+            s.height * 0.15,
+            s.width * 0.7,
+            s.height * 0.7,
+          ),
+          feather: feather,
+        ),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final current = layer.effects.stackMask;
+
+    String labelFor(_MaskPreset p) => switch (p) {
+      _MaskPreset.off => context.l10n.maskPresetOff,
+      _MaskPreset.top => context.l10n.maskPresetTop,
+      _MaskPreset.bottom => context.l10n.maskPresetBottom,
+      _MaskPreset.center => context.l10n.maskPresetCenter,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            context.l10n.selectiveMaskLabel,
+            style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            context.l10n.selectiveMaskHint,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final preset in _MaskPreset.values)
+                ChoiceChip(
+                  label: Text(labelFor(preset)),
+                  visualDensity: VisualDensity.compact,
+                  selected: current == _maskFor(preset),
+                  onSelected: (_) {
+                    EditorHaptics.tap();
+                    ref.read(documentControllerProvider.notifier).execute(
+                          SetStackMaskCommand(
+                            layerId: layer.id,
+                            mask: _maskFor(preset),
+                          ),
+                        );
+                  },
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

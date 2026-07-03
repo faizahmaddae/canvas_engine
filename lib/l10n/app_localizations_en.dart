@@ -1459,6 +1459,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openAdjustOrVignetteHint => 'Open Adjust or Vignette to add one.';
 
   @override
+  String get selectiveMaskLabel => 'Selective';
+
+  @override
+  String get selectiveMaskHint => 'Limit the stack to a region of the layer';
+
+  @override
+  String get maskPresetOff => 'Off';
+
+  @override
+  String get maskPresetTop => 'Top';
+
+  @override
+  String get maskPresetBottom => 'Bottom';
+
+  @override
+  String get maskPresetCenter => 'Center';
+
+  @override
   String unknownEffectLabel(String type) {
     return 'Unknown effect ($type)';
   }

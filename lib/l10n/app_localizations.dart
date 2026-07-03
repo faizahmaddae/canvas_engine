@@ -2858,6 +2858,42 @@ abstract class AppLocalizations {
   /// **'Open Adjust or Vignette to add one.'**
   String get openAdjustOrVignetteHint;
 
+  /// No description provided for @selectiveMaskLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Selective'**
+  String get selectiveMaskLabel;
+
+  /// No description provided for @selectiveMaskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit the stack to a region of the layer'**
+  String get selectiveMaskHint;
+
+  /// No description provided for @maskPresetOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get maskPresetOff;
+
+  /// No description provided for @maskPresetTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Top'**
+  String get maskPresetTop;
+
+  /// No description provided for @maskPresetBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottom'**
+  String get maskPresetBottom;
+
+  /// No description provided for @maskPresetCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center'**
+  String get maskPresetCenter;
+
   /// No description provided for @unknownEffectLabel.
   ///
   /// In en, this message translates to:

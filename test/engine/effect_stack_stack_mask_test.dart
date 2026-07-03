@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:canvas_engine/features/editor/engine/commands/history_stack.dart';
 import 'package:canvas_engine/features/editor/engine/commands/image_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_mask.dart';
@@ -197,11 +198,96 @@ void main() {
     });
   });
 
+  group('SetStackMaskCommand', () {
+    ImageLayer applied(EditorDocument doc) =>
+        doc.layerById('img-1')! as ImageLayer;
+
+    test('sets the mask without touching the effects list', () {
+      final doc = EditorDocument.empty.addLayer(makeImage(
+        effects: EffectStack(
+          List<EditorEffect>.unmodifiable(
+            <EditorEffect>[BrightnessEffect(amount: 20)],
+          ),
+        ),
+      ));
+      final next =
+          const SetStackMaskCommand(layerId: 'img-1', mask: mask).apply(doc);
+      final layer = applied(next);
+      expect(layer.effects.stackMask, equals(mask));
+      expect(layer.effects.effects.single, isA<BrightnessEffect>());
+    });
+
+    test('clearing the last state canonicalises to the empty singleton', () {
+      final doc = EditorDocument.empty.addLayer(makeImage(
+        effects: const EffectStack(<EditorEffect>[], stackMask: mask),
+      ));
+      final next =
+          const SetStackMaskCommand(layerId: 'img-1', mask: null).apply(doc);
+      expect(identical(applied(next).effects, EffectStack.empty), isTrue);
+    });
+
+    test('same mask is a no-op (identical document)', () {
+      final doc = EditorDocument.empty.addLayer(makeImage(
+        effects: const EffectStack(<EditorEffect>[], stackMask: mask),
+      ));
+      final next =
+          const SetStackMaskCommand(layerId: 'img-1', mask: mask).apply(doc);
+      expect(identical(next, doc), isTrue);
+    });
+
+    test('undo/redo restores prior mask in both directions', () {
+      var doc = EditorDocument.empty.addLayer(makeImage());
+      final history = HistoryStack();
+
+      doc = history.execute(
+        doc,
+        const SetStackMaskCommand(layerId: 'img-1', mask: mask),
+      );
+      expect(applied(doc).effects.stackMask, equals(mask));
+
+      doc = history.undo(doc);
+      expect(applied(doc).effects.stackMask, isNull);
+      expect(identical(applied(doc).effects, EffectStack.empty), isTrue);
+
+      doc = history.redo(doc);
+      expect(applied(doc).effects.stackMask, equals(mask));
+    });
+
+    test('live stream merges to one undo entry; settle stays discrete', () {
+      var doc = EditorDocument.empty.addLayer(makeImage());
+      final history = HistoryStack();
+      const a = RectMask(rect: Rect.fromLTWH(0, 0, 100, 100));
+      const b = RectMask(rect: Rect.fromLTWH(0, 0, 150, 100));
+
+      doc = history.execute(
+        doc,
+        const SetStackMaskCommand(layerId: 'img-1', mask: a, live: true),
+      );
+      doc = history.execute(
+        doc,
+        const SetStackMaskCommand(layerId: 'img-1', mask: b, live: true),
+      );
+      expect(applied(doc).effects.stackMask, equals(b));
+
+      // One undo rewinds the whole live stream.
+      doc = history.undo(doc);
+      expect(applied(doc).effects.stackMask, isNull);
+      expect(history.canUndo, isFalse,
+          reason: 'both live ticks must have merged into one entry');
+    });
+
+    test('missing / non-image layer is a safe no-op', () {
+      final doc = EditorDocument.empty;
+      const cmd = SetStackMaskCommand(layerId: 'ghost', mask: mask);
+      expect(identical(cmd.apply(doc), doc), isTrue);
+      final inverse = cmd.invert(doc);
+      expect(identical(inverse.apply(doc), doc), isTrue);
+    });
+  });
+
   group('command rebuilds preserve stackMask', () {
     // Every command that rebuilds an existing layer's effects list
-    // must keep a set stackMask (constructed directly here —
-    // SetStackMaskCommand doesn't exist yet) while the effects
-    // change still lands.
+    // must keep a set stackMask while the effects change still lands.
     ImageLayer layerWith(List<EditorEffect> effects) => makeImage(
           effects: EffectStack(
             List<EditorEffect>.unmodifiable(effects),

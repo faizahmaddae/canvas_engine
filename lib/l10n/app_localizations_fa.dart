@@ -1463,6 +1463,24 @@ class AppLocalizationsFa extends AppLocalizations {
       'برای اضافه کردن، Adjust یا Vignette را باز کنید.';
 
   @override
+  String get selectiveMaskLabel => 'انتخابی';
+
+  @override
+  String get selectiveMaskHint => 'محدود کردن جلوه‌ها به بخشی از لایه';
+
+  @override
+  String get maskPresetOff => 'خاموش';
+
+  @override
+  String get maskPresetTop => 'بالا';
+
+  @override
+  String get maskPresetBottom => 'پایین';
+
+  @override
+  String get maskPresetCenter => 'مرکز';
+
+  @override
   String unknownEffectLabel(String type) {
     return 'افکت ناشناخته ($type)';
   }
