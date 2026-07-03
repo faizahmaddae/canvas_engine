@@ -12,6 +12,7 @@ import '../../engine/core/layer_mask.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/interaction/layer_space_mapper.dart';
 import '../../engine/modules/image/image_layer.dart';
+import '../../ui/editor_slider_row.dart';
 import 'handle_drag_detector.dart';
 import 'selection_overlay.dart' show DragPhase;
 
@@ -354,20 +355,14 @@ class _BottomStrip extends ConsumerWidget {
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    Text(
-                      context.l10n.maskFeatherLabel,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    Expanded(
-                      child: Slider(
-                        value: draft.feather.clamp(0.0, featherMax),
-                        max: featherMax,
-                        onChanged: ctl.setFeather,
-                      ),
-                    ),
-                  ],
+                EditorSliderRow(
+                  label: context.l10n.maskFeatherLabel,
+                  labelWidth: 80,
+                  showReadout: false,
+                  value: draft.feather,
+                  max: featherMax,
+                  format: (v) => v.round().toString(),
+                  onChanged: ctl.setFeather,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
