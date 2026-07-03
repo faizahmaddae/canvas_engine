@@ -1,0 +1,43 @@
+# CI gates for every push/PR. Keep these aligned with the "Definition
+# of done" in AGENTS.md: analyzer clean, full test suite green, engine
+# import direction respected, serialization fixtures byte-identical.
+#
+# The byte-identity fixtures run as their own named step (before the
+# full suite) so a serialization regression fails with a legible step
+# name instead of drowning in 1,400 test results.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Pinned to the version the repo is developed against.
+          # Bump deliberately (and locally first), not implicitly.
+          flutter-version: 3.41.7
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Engine import direction
+        run: bash tool/check_import_direction.sh
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Serialization byte-identity gates
+        run: flutter test test/engine/fixtures
+
+      - name: Full test suite
+        run: flutter test
