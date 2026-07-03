@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
+import '../../presentation/widgets/section_label.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
 
 /// Shared Paint Size UI rendered in BOTH the inline dock panel and
@@ -54,10 +55,18 @@ class PaintSizeBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 6),
-        _SectionLabel(context.l10n.sizeTool),
+        SectionLabel(
+          context.l10n.sizeTool,
+          uppercase: true,
+          letterSpacing: 0.8,
+        ),
         StrokeHero(width: value, color: color, dashPattern: dashPattern),
         const SizedBox(height: 12),
-        _SectionLabel(context.l10n.strokeWidthLabel),
+        SectionLabel(
+          context.l10n.strokeWidthLabel,
+          uppercase: true,
+          letterSpacing: 0.8,
+        ),
         // Horizontal scroller mirrors the chip row used by every
         // other Paint preset surface (Polygon, Dash) so chips read
         // as "the same control" across the editor.
@@ -90,32 +99,6 @@ class PaintSizeBody extends StatelessWidget {
   }
 }
 
-/// Section label aligned with `_PanelSectionLabel` in Text and
-/// `_Label` in Paint mode toolbar — uppercase 11sp, w700,
-/// letterSpacing 0.8, muted, with a 4/4/4/6 inset for the panel
-/// rhythm. Kept private here so this file stays a self-contained
-/// widget and doesn't need to import the dock toolbar.
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
-      child: Text(
-        text.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
-          color: scheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-}
 
 /// Single horizontal brush stroke painted live in the user's
 /// current colour, dash, and stroke width. Bigger and more honest

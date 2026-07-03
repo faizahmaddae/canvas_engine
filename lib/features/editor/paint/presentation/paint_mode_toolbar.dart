@@ -13,12 +13,14 @@ import '../../presentation/widgets/dock_tool_strip.dart';
 import '../../presentation/widgets/dock_tool_tile.dart';
 import '../../presentation/widgets/inline_color_body.dart';
 import '../../application/recent_colors_controller.dart';
+import '../../presentation/widgets/section_label.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 import '../../toolbar/domain/sub_tool.dart';
 import '../../toolbar/domain/sub_tools/slider_sub_tool.dart';
 import '../../toolbar/domain/sub_tools/widget_sub_tool.dart';
 import '../../toolbar/presentation/sub_tool_sheet.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
+import '../../ui/editor_tier_gap.dart';
 import '../application/paint_tool_controller.dart';
 import '../domain/paint_tool_type.dart';
 import 'paint_size_body.dart';
@@ -286,7 +288,7 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
         children: [
           for (final i in _toolOrder(context, ref))
             if (allowed.contains(PaintModeToolbar._tools[i].id)) ...[
-              if (_isTierBoundary(ref, i)) const _PaintTierGap(),
+              if (_isTierBoundary(ref, i)) const EditorTierGap(),
               DockToolTile(
                 icon: PaintModeToolbar._tools[i].id == 'tool'
                     ? tool.icon
@@ -1262,7 +1264,11 @@ class _PaintPolygonBody extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: 6),
-        _Label(text: context.l10n.polygonSidesLabel),
+        SectionLabel(
+          context.l10n.polygonSidesLabel,
+          uppercase: true,
+          letterSpacing: 0.8,
+        ),
         // Horizontal scroll mirrors the chip strip used by every
         // other preset surface in the editor (paint Size/Blur,
         // text sliders) — single layout grammar across modes.
@@ -1463,55 +1469,3 @@ class _DashPreviewPainter extends CustomPainter {
   }
 }
 
-/// Section label aligned with the Text-panel `_PanelSectionLabel`
-/// grammar (uppercase 11sp, w700, letterSpacing 0.8, muted) so
-/// Paint and Text panels share the same visual heading rhythm.
-/// Built-in `EdgeInsets.fromLTRB(4,4,4,6)` padding mirrors Text;
-/// existing call-sites that wrapped this in their own SizedBox
-/// gap can drop those without breaking the layout.
-class _Label extends StatelessWidget {
-  const _Label({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
-      child: Text(
-        text.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
-          color: scheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-}
-
-/// Visual gap inserted into the paint-mode strip after the 4
-/// primary tools (Tool · Color · Size · Fill) to separate them
-/// from the secondary cluster (Opacity · Blur · Sides · Dash).
-class _PaintTierGap extends StatelessWidget {
-  const _PaintTierGap();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 13,
-      alignment: Alignment.center,
-      child: Container(
-        width: 1,
-        height: 28,
-        decoration: BoxDecoration(
-          color: scheme.outlineVariant.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(0.5),
-        ),
-      ),
-    );
-  }
-}
