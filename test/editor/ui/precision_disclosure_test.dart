@@ -90,4 +90,54 @@ void main() {
     );
     expect(find.text('inner-content'), findsOneWidget);
   });
+
+  group('PrecisionDisclosure — headerValue (value-in-header grammar)', () {
+    testWidgets('renders headerValue between title and chevron; omitted '
+        'when null', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          PrecisionDisclosure(
+            titleClosed: 'Adjust precisely',
+            headerValue: '24px',
+            children: const [SizedBox.shrink()],
+          ),
+        ),
+      );
+      expect(find.text('24px'), findsOneWidget);
+
+      await tester.pumpWidget(
+        _host(
+          PrecisionDisclosure(
+            titleClosed: 'Adjust precisely',
+            children: const [SizedBox.shrink()],
+          ),
+        ),
+      );
+      expect(find.text('24px'), findsNothing);
+    });
+
+    testWidgets('headerValue colour follows the open/closed chevron rule', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          PrecisionDisclosure(
+            titleClosed: 'Adjust precisely',
+            headerValue: '24px',
+            children: const [SizedBox.shrink()],
+          ),
+        ),
+      );
+      final scheme = Theme.of(
+        tester.element(find.text('Adjust precisely')),
+      ).colorScheme;
+      var value = tester.widget<Text>(find.text('24px'));
+      expect(value.style?.color, scheme.onSurfaceVariant);
+
+      await tester.tap(find.text('Adjust precisely'));
+      await tester.pumpAndSettle();
+      value = tester.widget<Text>(find.text('24px'));
+      expect(value.style?.color, scheme.primary);
+    });
+  });
 }

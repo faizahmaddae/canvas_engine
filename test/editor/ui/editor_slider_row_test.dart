@@ -285,4 +285,67 @@ void main() {
       expect(readout.textAlign, TextAlign.end);
     });
   });
+
+  group('EditorSliderRow — style overrides (text-panel parity)', () {
+    testWidgets('labelStyle/readoutStyle override the shape/image default',
+        (tester) async {
+      const label = TextStyle(fontSize: 13, color: Colors.red);
+      const readout = TextStyle(fontSize: 11, color: Colors.blue);
+      await tester.pumpWidget(
+        _host(
+          EditorSliderRow(
+            label: 'X',
+            value: 10,
+            max: 100,
+            format: (v) => v.round().toString(),
+            onChanged: (_) {},
+            labelStyle: label,
+            readoutStyle: readout,
+          ),
+        ),
+      );
+      final labelText = tester.widget<Text>(find.text('X'));
+      expect(labelText.style, label);
+      final readoutText = tester.widget<Text>(find.text('10'));
+      expect(readoutText.style, readout);
+    });
+
+    testWidgets('labelStyle/readoutStyle default to null (existing '
+        'consumers unaffected)', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          EditorSliderRow(
+            label: 'X',
+            value: 10,
+            max: 100,
+            format: (v) => v.round().toString(),
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      final labelText = tester.widget<Text>(find.text('X'));
+      expect(labelText.style?.fontSize, 12);
+    });
+
+    testWidgets('label truncates with ellipsis instead of wrapping', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          EditorSliderRow(
+            label: 'A very long label that would otherwise wrap',
+            value: 10,
+            max: 100,
+            format: (v) => v.round().toString(),
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      final labelText = tester.widget<Text>(
+        find.text('A very long label that would otherwise wrap'),
+      );
+      expect(labelText.maxLines, 1);
+      expect(labelText.overflow, TextOverflow.ellipsis);
+    });
+  });
 }

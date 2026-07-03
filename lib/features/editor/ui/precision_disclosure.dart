@@ -30,6 +30,7 @@ class PrecisionDisclosure extends StatefulWidget {
     required this.titleClosed,
     this.titleOpen,
     this.subtitle,
+    this.headerValue,
     required this.children,
     this.initiallyOpen = false,
     this.animationDuration = const Duration(milliseconds: 180),
@@ -51,6 +52,13 @@ class PrecisionDisclosure extends StatefulWidget {
   /// Second line under the title. `null` omits it (the text-panel
   /// look is single-line).
   final String? subtitle;
+
+  /// Formatted current value shown between the title and the
+  /// chevron (e.g. `"24px"`). `null` omits it. Colour follows the
+  /// same open/closed rule as the chevron
+  /// ([chevronColorOpen]/[chevronColorClosed]) — matches the text
+  /// Size panel's and paint's value-in-header precision disclosures.
+  final String? headerValue;
 
   final List<Widget> children;
   final bool initiallyOpen;
@@ -142,6 +150,17 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
                             ),
                           ),
                   ),
+                  if (widget.headerValue != null) ...[
+                    Text(
+                      widget.headerValue!,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: chevronColor,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                  ],
                   AnimatedRotation(
                     turns: _open ? 0.25 : 0,
                     duration: widget.animationDuration,

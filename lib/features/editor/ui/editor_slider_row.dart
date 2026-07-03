@@ -71,6 +71,8 @@ class EditorSliderRow extends StatefulWidget {
     this.onDragEnd,
     this.haptics = EditorSliderHaptics.none,
     this.semanticLabel,
+    this.labelStyle,
+    this.readoutStyle,
   });
 
   /// Label rendered in a fixed-width leading column. `null` omits
@@ -127,6 +129,18 @@ class EditorSliderRow extends StatefulWidget {
   /// this explicitly or the row is unreachable by name for screen
   /// reader users.
   final String? semanticLabel;
+
+  /// Overrides the label column's [TextStyle]. Defaults to the
+  /// shape/image family's look (12px, `onSurfaceVariant`). The
+  /// text-panel family uses a distinctly larger/bolder style
+  /// (`bodyMedium` base, 13px, `onSurface`) — pass it explicitly
+  /// there rather than letting the default silently change its feel.
+  final TextStyle? labelStyle;
+
+  /// Overrides the trailing readout's [TextStyle]. Defaults to the
+  /// shape/image family's look. The text-panel family uses
+  /// `labelMedium` base with tabular figures — pass it explicitly.
+  final TextStyle? readoutStyle;
 
   @override
   State<EditorSliderRow> createState() => _EditorSliderRowState();
@@ -209,11 +223,14 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
                 width: widget.labelWidth,
                 child: Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: widget.labelStyle ??
+                      TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurfaceVariant,
+                      ),
                 ),
               ),
             Expanded(child: slider),
@@ -223,11 +240,12 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
                 child: Text(
                   widget.format(widget.value),
                   textAlign: TextAlign.end,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                  ),
+                  style: widget.readoutStyle ??
+                      TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onSurface,
+                      ),
                 ),
               ),
           ],
