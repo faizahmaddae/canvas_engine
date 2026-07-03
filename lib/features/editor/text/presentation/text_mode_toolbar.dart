@@ -16,6 +16,10 @@ import '../../presentation/widgets/dock_tool_strip.dart';
 import '../../presentation/widgets/dock_tool_tile.dart';
 import '../../presentation/widgets/inline_color_body.dart';
 import '../../presentation/widgets/panel_option_tile.dart';
+import '../../ui/editor_slider_row.dart';
+import '../../ui/editor_tier_gap.dart';
+import '../../ui/panel_direction_pad.dart';
+import '../../ui/precision_disclosure.dart';
 import '../../application/recent_colors_controller.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 import '../../toolbar/domain/sub_tools/widget_sub_tool.dart';
@@ -274,7 +278,7 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
             : MainAxisAlignment.center,
         children: [
           for (final i in _toolOrder(context, ref)) ...[
-            if (_isTierBoundary(context, ref, i)) const _TierGap(),
+            if (_isTierBoundary(context, ref, i)) const EditorTierGap(),
             DockToolTile(
               icon: TextModeToolbar._tools[i].icon,
               label: _localizedToolDockLabel(
@@ -938,9 +942,14 @@ class _TextBodies {
             alignment: Alignment.centerLeft,
             child: SizedBox(
               width: 168,
-              child: _ShadowDirectionPad(
+              child: PanelDirectionPad(
                 offset: style.shadowOffset,
-                onSet: ctrl.setShadowOffset,
+                magnitude: _shadowDirectionMagnitude(style.shadowOffset),
+                size: 144,
+                onPick: (off) {
+                  EditorHaptics.toggle();
+                  ctrl.setShadowOffset(off);
+                },
               ),
             ),
           ),
@@ -1491,263 +1500,108 @@ class _PrecisionDivider extends StatelessWidget {
   }
 }
 
-/// Flat label + value + slider row used inside one-level disclosures
-/// (Background's "Adjust precisely"). Has NO chevron and NO inner
-/// expand: parent owns the disclosure, this row is always-visible
-/// once revealed. Style writes go through [onChange] inside a
-/// `beginStyleDrag`/`endStyleDrag` window so each drag collapses to
-/// a single undo entry.
-class _FlatSliderRow extends ConsumerStatefulWidget {
-  const _FlatSliderRow({
-    required this.label,
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChange,
-    this.unit = '',
-  });
-
-  final String label;
-  final double value;
-  final double min;
-  final double max;
-  final ValueChanged<double> onChange;
-  final String unit;
-
-  @override
-  ConsumerState<_FlatSliderRow> createState() => _FlatSliderRowState();
+/// Label style shared by every migrated flat-row slider in the
+/// Background/Border/Shadow precision disclosures — larger and
+/// bolder than [EditorSliderRow]'s shape/image default, so the
+/// text-panel row keeps its existing look after unifying onto the
+/// shared primitive.
+TextStyle? _flatSliderLabelStyle(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.textTheme.bodyMedium?.copyWith(
+    color: theme.colorScheme.onSurface,
+    fontWeight: FontWeight.w600,
+    fontSize: 13,
+  );
 }
 
-class _FlatSliderRowState extends ConsumerState<_FlatSliderRow> {
-  bool _dragInFlight = false;
-  double? _lastTickValue;
-
-  String _format(double v) => '${v.toStringAsFixed(0)}${widget.unit}';
-
-  void _set(double v) {
-    final clamped = v.clamp(widget.min, widget.max).toDouble();
-    widget.onChange(clamped);
-  }
-
-  void _maybeTick(double v) {
-    final span = widget.max - widget.min;
-    if (span <= 0) return;
-    final step = span / 20.0;
-    final last = _lastTickValue;
-    if (last == null || (v - last).abs() >= step) {
-      _lastTickValue = v;
-      EditorHaptics.snap();
-    }
-  }
-
-  void _endDrag() {
-    if (!_dragInFlight) return;
-    _dragInFlight = false;
-    _lastTickValue = null;
-    ref.read(textToolControllerProvider.notifier).endStyleDrag();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final muted = scheme.onSurfaceVariant;
-    final clampedValue = widget.value.clamp(widget.min, widget.max).toDouble();
-    // Single-row inline layout: [label] [slider] [value]. Each row
-    // collapses from a stacked ~52dp to a single ~36dp line, so the
-    // 4-slider Background block drops from ~208dp to ~144dp +
-    // divider — reads as a tight inspector strip rather than a
-    // settings page.
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 96,
-            child: Text(
-              widget.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurface,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 2,
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                padding: EdgeInsets.zero,
-              ),
-              child: Listener(
-                onPointerCancel: (_) => _endDrag(),
-                child: Slider(
-                  value: clampedValue,
-                  min: widget.min,
-                  max: widget.max,
-                  onChangeStart: (v) {
-                    _dragInFlight = true;
-                    _lastTickValue = v;
-                    EditorHaptics.toggle();
-                    ref
-                        .read(textToolControllerProvider.notifier)
-                        .beginStyleDrag();
-                  },
-                  onChanged: (v) {
-                    _set(v);
-                    _maybeTick(v);
-                  },
-                  onChangeEnd: (_) {
-                    if (!_dragInFlight) return;
-                    EditorHaptics.confirm();
-                    _endDrag();
-                  },
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 44,
-            child: Text(
-              _format(clampedValue),
-              textAlign: TextAlign.right,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: muted,
-                fontWeight: FontWeight.w600,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+/// Readout style shared by the same rows — tabular figures keep the
+/// digits from jittering width while dragging.
+TextStyle? _flatSliderReadoutStyle(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.textTheme.labelMedium?.copyWith(
+    color: theme.colorScheme.onSurfaceVariant,
+    fontWeight: FontWeight.w600,
+    fontFeatures: const [FontFeature.tabularFigures()],
+  );
 }
 
 /// "Adjust precisely" disclosure for the Background panel. Same
 /// flat header treatment as `_SizePrecisionAdvanced` and the
 /// Layout cards: whole row is tappable, single chevron, no nested
-/// arrows. Hosts four `_FlatSliderRow`s when expanded.
-class _BackgroundPrecisionAdvanced extends ConsumerStatefulWidget {
+/// arrows. Hosts four [EditorSliderRow]s when expanded.
+class _BackgroundPrecisionAdvanced extends ConsumerWidget {
   const _BackgroundPrecisionAdvanced({required this.style});
   final TextStyleSpec style;
 
   @override
-  ConsumerState<_BackgroundPrecisionAdvanced> createState() =>
-      _BackgroundPrecisionAdvancedState();
-}
-
-class _BackgroundPrecisionAdvancedState
-    extends ConsumerState<_BackgroundPrecisionAdvanced> {
-  bool _open = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final muted = scheme.onSurfaceVariant;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
     final ctrl = ref.read(textToolControllerProvider.notifier);
-    final style = widget.style;
     final bg = style.backgroundColor;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final labelStyle = _flatSliderLabelStyle(context);
+    final readoutStyle = _flatSliderReadoutStyle(context);
+    return PrecisionDisclosure(
+      titleClosed: context.l10n.adjustPrecisely,
+      titleOpen: context.l10n.hidePreciseControls,
+      chevronSize: 18,
       children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              EditorHaptics.tap();
-              setState(() => _open = !_open);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _open
-                          ? context.l10n.hidePreciseControls
-                          : context.l10n.adjustPrecisely,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: _open ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: _open ? scheme.primary : muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        _PrecisionDivider(scheme: scheme),
+        EditorSliderRow(
+          label: context.l10n.roundnessLabel,
+          labelWidth: 96,
+          // backgroundRadius is a percent (0..1) of the box's
+          // shorter side; UI drives 0..100 directly.
+          value: (style.backgroundRadius * 100).clamp(0.0, 100.0),
+          max: 100,
+          format: (v) => '${v.toStringAsFixed(0)}%',
+          onChanged: (v) => ctrl.setBackgroundRadius(v / 100),
+          onDragStart: ctrl.beginStyleDrag,
+          onDragEnd: ctrl.endStyleDrag,
+          haptics: EditorSliderHaptics.startTickEnd,
+          labelStyle: labelStyle,
+          readoutStyle: readoutStyle,
+        ),
+        EditorSliderRow(
+          label: context.l10n.verticalPaddingLabel,
+          labelWidth: 96,
+          value: style.backgroundPaddingY,
+          max: 64,
+          format: (v) => '${v.toStringAsFixed(0)}px',
+          onChanged: ctrl.setBackgroundPaddingY,
+          onDragStart: ctrl.beginStyleDrag,
+          onDragEnd: ctrl.endStyleDrag,
+          haptics: EditorSliderHaptics.startTickEnd,
+          labelStyle: labelStyle,
+          readoutStyle: readoutStyle,
+        ),
+        EditorSliderRow(
+          label: context.l10n.horizontalPaddingLabel,
+          labelWidth: 96,
+          value: style.backgroundPaddingX,
+          max: 64,
+          format: (v) => '${v.toStringAsFixed(0)}px',
+          onChanged: ctrl.setBackgroundPaddingX,
+          onDragStart: ctrl.beginStyleDrag,
+          onDragEnd: ctrl.endStyleDrag,
+          haptics: EditorSliderHaptics.startTickEnd,
+          labelStyle: labelStyle,
+          readoutStyle: readoutStyle,
+        ),
+        if (bg != null)
+          EditorSliderRow(
+            label: context.l10n.opacityLabel,
+            labelWidth: 96,
+            value: bg.a * 100,
+            max: 100,
+            format: (v) => '${v.toStringAsFixed(0)}%',
+            onChanged: (v) =>
+                ctrl.setBackgroundColor(bg.withValues(alpha: v / 100)),
+            onDragStart: ctrl.beginStyleDrag,
+            onDragEnd: ctrl.endStyleDrag,
+            haptics: EditorSliderHaptics.startTickEnd,
+            labelStyle: labelStyle,
+            readoutStyle: readoutStyle,
           ),
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
-          child: _open
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _PrecisionDivider(scheme: scheme),
-                    _FlatSliderRow(
-                      label: context.l10n.roundnessLabel,
-                      // backgroundRadius is a percent (0..1) of the
-                      // box's shorter side; UI drives 0..100 directly.
-                      value: (style.backgroundRadius * 100).clamp(0.0, 100.0),
-                      min: 0,
-                      max: 100,
-                      onChange: (v) => ctrl.setBackgroundRadius(v / 100),
-                      unit: '%',
-                    ),
-                    _FlatSliderRow(
-                      label: context.l10n.verticalPaddingLabel,
-                      value: style.backgroundPaddingY,
-                      min: 0,
-                      max: 64,
-                      onChange: ctrl.setBackgroundPaddingY,
-                      unit: 'px',
-                    ),
-                    _FlatSliderRow(
-                      label: context.l10n.horizontalPaddingLabel,
-                      value: style.backgroundPaddingX,
-                      min: 0,
-                      max: 64,
-                      onChange: ctrl.setBackgroundPaddingX,
-                      unit: 'px',
-                    ),
-                    if (bg != null)
-                      _FlatSliderRow(
-                        label: context.l10n.opacityLabel,
-                        value: bg.a * 100,
-                        min: 0,
-                        max: 100,
-                        onChange: (v) {
-                          ctrl.setBackgroundColor(
-                            bg.withValues(alpha: v / 100),
-                          );
-                        },
-                        unit: '%',
-                      ),
-                  ],
-                )
-              : const SizedBox.shrink(),
-        ),
       ],
     );
   }
@@ -1757,103 +1611,51 @@ class _BackgroundPrecisionAdvancedState
 /// flat header treatment as `_BackgroundPrecisionAdvanced`: whole
 /// row tappable, single chevron, no nested arrows. Hosts thickness
 /// and opacity sliders inline when expanded.
-class _BorderPrecisionAdvanced extends ConsumerStatefulWidget {
+class _BorderPrecisionAdvanced extends ConsumerWidget {
   const _BorderPrecisionAdvanced({required this.style});
   final TextStyleSpec style;
 
   @override
-  ConsumerState<_BorderPrecisionAdvanced> createState() =>
-      _BorderPrecisionAdvancedState();
-}
-
-class _BorderPrecisionAdvancedState
-    extends ConsumerState<_BorderPrecisionAdvanced> {
-  bool _open = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final muted = scheme.onSurfaceVariant;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
     final ctrl = ref.read(textToolControllerProvider.notifier);
-    final style = widget.style;
     final outline = style.outlineColor;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final labelStyle = _flatSliderLabelStyle(context);
+    final readoutStyle = _flatSliderReadoutStyle(context);
+    return PrecisionDisclosure(
+      titleClosed: context.l10n.adjustPrecisely,
+      titleOpen: context.l10n.hidePreciseControls,
+      chevronSize: 18,
       children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              EditorHaptics.tap();
-              setState(() => _open = !_open);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _open
-                          ? context.l10n.hidePreciseControls
-                          : context.l10n.adjustPrecisely,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: _open ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: _open ? scheme.primary : muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        _PrecisionDivider(scheme: scheme),
+        EditorSliderRow(
+          label: context.l10n.thicknessLabel,
+          labelWidth: 96,
+          value: style.outlineWidth,
+          max: 12,
+          format: (v) => '${v.toStringAsFixed(0)}px',
+          onChanged: ctrl.setOutlineWidth,
+          onDragStart: ctrl.beginStyleDrag,
+          onDragEnd: ctrl.endStyleDrag,
+          haptics: EditorSliderHaptics.startTickEnd,
+          labelStyle: labelStyle,
+          readoutStyle: readoutStyle,
+        ),
+        if (outline != null)
+          EditorSliderRow(
+            label: context.l10n.opacityLabel,
+            labelWidth: 96,
+            value: outline.a * 100,
+            max: 100,
+            format: (v) => '${v.toStringAsFixed(0)}%',
+            onChanged: (v) =>
+                ctrl.setOutlineColor(outline.withValues(alpha: v / 100)),
+            onDragStart: ctrl.beginStyleDrag,
+            onDragEnd: ctrl.endStyleDrag,
+            haptics: EditorSliderHaptics.startTickEnd,
+            labelStyle: labelStyle,
+            readoutStyle: readoutStyle,
           ),
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
-          child: _open
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _PrecisionDivider(scheme: scheme),
-                    _FlatSliderRow(
-                      label: context.l10n.thicknessLabel,
-                      value: style.outlineWidth,
-                      min: 0,
-                      max: 12,
-                      onChange: ctrl.setOutlineWidth,
-                      unit: 'px',
-                    ),
-                    if (outline != null)
-                      _FlatSliderRow(
-                        label: context.l10n.opacityLabel,
-                        value: outline.a * 100,
-                        min: 0,
-                        max: 100,
-                        onChange: (v) {
-                          ctrl.setOutlineColor(
-                            outline.withValues(alpha: v / 100),
-                          );
-                        },
-                        unit: '%',
-                      ),
-                  ],
-                )
-              : const SizedBox.shrink(),
-        ),
       ],
     );
   }
@@ -1862,103 +1664,51 @@ class _BorderPrecisionAdvancedState
 /// "Adjust precisely" disclosure for the Shadow panel. Mirrors the
 /// Background/Border treatment — single chevron, whole-row tappable,
 /// no nested arrows. Hosts blur and opacity sliders inline.
-class _ShadowPrecisionAdvanced extends ConsumerStatefulWidget {
+class _ShadowPrecisionAdvanced extends ConsumerWidget {
   const _ShadowPrecisionAdvanced({required this.style});
   final TextStyleSpec style;
 
   @override
-  ConsumerState<_ShadowPrecisionAdvanced> createState() =>
-      _ShadowPrecisionAdvancedState();
-}
-
-class _ShadowPrecisionAdvancedState
-    extends ConsumerState<_ShadowPrecisionAdvanced> {
-  bool _open = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final muted = scheme.onSurfaceVariant;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
     final ctrl = ref.read(textToolControllerProvider.notifier);
-    final style = widget.style;
     final shadow = style.shadowColor;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final labelStyle = _flatSliderLabelStyle(context);
+    final readoutStyle = _flatSliderReadoutStyle(context);
+    return PrecisionDisclosure(
+      titleClosed: context.l10n.adjustPrecisely,
+      titleOpen: context.l10n.hidePreciseControls,
+      chevronSize: 18,
       children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              EditorHaptics.tap();
-              setState(() => _open = !_open);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _open
-                          ? context.l10n.hidePreciseControls
-                          : context.l10n.adjustPrecisely,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: _open ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: _open ? scheme.primary : muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        _PrecisionDivider(scheme: scheme),
+        EditorSliderRow(
+          label: context.l10n.blurLabel,
+          labelWidth: 96,
+          value: style.shadowBlur,
+          max: 40,
+          format: (v) => '${v.toStringAsFixed(0)}px',
+          onChanged: ctrl.setShadowBlur,
+          onDragStart: ctrl.beginStyleDrag,
+          onDragEnd: ctrl.endStyleDrag,
+          haptics: EditorSliderHaptics.startTickEnd,
+          labelStyle: labelStyle,
+          readoutStyle: readoutStyle,
+        ),
+        if (shadow != null)
+          EditorSliderRow(
+            label: context.l10n.opacityLabel,
+            labelWidth: 96,
+            value: shadow.a * 100,
+            max: 100,
+            format: (v) => '${v.toStringAsFixed(0)}%',
+            onChanged: (v) =>
+                ctrl.setShadowColor(shadow.withValues(alpha: v / 100)),
+            onDragStart: ctrl.beginStyleDrag,
+            onDragEnd: ctrl.endStyleDrag,
+            haptics: EditorSliderHaptics.startTickEnd,
+            labelStyle: labelStyle,
+            readoutStyle: readoutStyle,
           ),
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
-          child: _open
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _PrecisionDivider(scheme: scheme),
-                    _FlatSliderRow(
-                      label: context.l10n.blurLabel,
-                      value: style.shadowBlur,
-                      min: 0,
-                      max: 40,
-                      onChange: ctrl.setShadowBlur,
-                      unit: 'px',
-                    ),
-                    if (shadow != null)
-                      _FlatSliderRow(
-                        label: context.l10n.opacityLabel,
-                        value: shadow.a * 100,
-                        min: 0,
-                        max: 100,
-                        onChange: (v) {
-                          ctrl.setShadowColor(
-                            shadow.withValues(alpha: v / 100),
-                          );
-                        },
-                        unit: '%',
-                      ),
-                  ],
-                )
-              : const SizedBox.shrink(),
-        ),
       ],
     );
   }
@@ -2529,110 +2279,13 @@ class _StyleTile {
   final double iconSize;
 }
 
-/// 3×3 direction pad for shadow offset. Center cell resets to (0,0).
-/// Surrounding cells set the offset to a fixed magnitude in that
-/// direction. Magnitude = current offset distance (when non-zero) or
-/// a sensible default of 6 px. One spatial choice replaces 2 numeric
-/// sliders (Offset X + Offset Y).
-class _ShadowDirectionPad extends StatelessWidget {
-  const _ShadowDirectionPad({required this.offset, required this.onSet});
-
-  final Offset offset;
-  final ValueChanged<Offset> onSet;
-
-  /// Fixed magnitude for direction taps. Uses the current offset
-  /// magnitude if the user already dialled a distance, otherwise a
-  /// sensible default that reads as a real shadow on canvas.
-  double get _magnitude {
-    final m = offset.distance;
-    return m < 1.0 ? 6.0 : m.clamp(2.0, 24.0);
-  }
-
-  bool _selected(int dx, int dy) {
-    final m = _magnitude;
-    final tx = dx * m;
-    final ty = dy * m;
-    return (offset.dx - tx).abs() < 0.6 && (offset.dy - ty).abs() < 0.6;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    Widget cell(int dx, int dy) {
-      final isCenter = dx == 0 && dy == 0;
-      final selected = _selected(dx, dy);
-      return Expanded(
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: Padding(
-            padding: const EdgeInsets.all(2),
-            child: Material(
-              color: selected
-                  ? scheme.primary.withValues(alpha: 0.14)
-                  : scheme.surfaceContainerHighest.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(8),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () {
-                  EditorHaptics.toggle();
-                  if (isCenter) {
-                    onSet(Offset.zero);
-                  } else {
-                    final m = _magnitude;
-                    onSet(Offset(dx * m, dy * m));
-                  }
-                },
-                child: Center(
-                  child: isCenter
-                      ? Icon(
-                          Icons.circle_outlined,
-                          size: 14,
-                          color: selected
-                              ? scheme.primary
-                              : scheme.onSurfaceVariant,
-                        )
-                      : Icon(
-                          _arrowIconFor(dx, dy),
-                          size: 16,
-                          color: selected
-                              ? scheme.primary
-                              : scheme.onSurfaceVariant,
-                        ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return SizedBox(
-      width: 144,
-      height: 144,
-      child: Column(
-        children: [
-          for (int dy = -1; dy <= 1; dy++)
-            Expanded(
-              child: Row(
-                children: [for (int dx = -1; dx <= 1; dx++) cell(dx, dy)],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  static IconData _arrowIconFor(int dx, int dy) {
-    // 8 directional arrows for the surround cells.
-    if (dy == -1 && dx == 0) return Icons.arrow_upward_rounded;
-    if (dy == 1 && dx == 0) return Icons.arrow_downward_rounded;
-    if (dy == 0 && dx == -1) return Icons.arrow_back_rounded;
-    if (dy == 0 && dx == 1) return Icons.arrow_forward_rounded;
-    if (dy == -1 && dx == -1) return Icons.north_west_rounded;
-    if (dy == -1 && dx == 1) return Icons.north_east_rounded;
-    if (dy == 1 && dx == -1) return Icons.south_west_rounded;
-    return Icons.south_east_rounded;
-  }
+/// Fixed magnitude for [PanelDirectionPad] direction taps on the
+/// Shadow panel. Uses the current offset's own magnitude if the
+/// user already dialled a distance, otherwise a sensible default
+/// that reads as a real shadow on canvas.
+double _shadowDirectionMagnitude(Offset offset) {
+  final m = offset.distance;
+  return m < 1.0 ? 6.0 : m.clamp(2.0, 24.0);
 }
 
 /// Body for the Text Size sub-tool. Owns no local state — the
@@ -2730,7 +2383,7 @@ class _SizeBody extends ConsumerWidget {
 /// the dock uses (`setFontSize`), so undo coalescing, the
 /// scale-aware translation in `_translateFontSizeForVisualScale`,
 /// and the box auto-fit behaviour are all preserved verbatim.
-class _SizePrecisionAdvanced extends ConsumerStatefulWidget {
+class _SizePrecisionAdvanced extends ConsumerWidget {
   const _SizePrecisionAdvanced({
     required this.value,
     required this.min,
@@ -2743,167 +2396,65 @@ class _SizePrecisionAdvanced extends ConsumerStatefulWidget {
   final double max;
   final ValueChanged<double> onChange;
 
-  @override
-  ConsumerState<_SizePrecisionAdvanced> createState() =>
-      _SizePrecisionAdvancedState();
-}
-
-class _SizePrecisionAdvancedState
-    extends ConsumerState<_SizePrecisionAdvanced> {
-  bool _open = false;
-  bool _dragInFlight = false;
-  double? _lastTickValue;
-
   static const List<double> _pxPresets = [12, 16, 24, 32, 48, 64, 96];
 
   String _format(double v) => '${v.toStringAsFixed(0)}px';
 
-  void _set(double v) {
-    final clamped = v.clamp(widget.min, widget.max).toDouble();
-    widget.onChange(clamped);
-  }
-
-  void _maybeTick(double v) {
-    final span = widget.max - widget.min;
-    if (span <= 0) return;
-    final step = span / 20.0;
-    final last = _lastTickValue;
-    if (last == null || (v - last).abs() >= step) {
-      _lastTickValue = v;
-      EditorHaptics.snap();
-    }
-  }
-
-  void _endDrag() {
-    if (!_dragInFlight) return;
-    _dragInFlight = false;
-    _lastTickValue = null;
-    ref.read(textToolControllerProvider.notifier).endStyleDrag();
-  }
-
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final muted = scheme.onSurfaceVariant;
-    final clampedValue = widget.value.clamp(widget.min, widget.max).toDouble();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final ctrl = ref.read(textToolControllerProvider.notifier);
+    final clampedValue = value.clamp(min, max).toDouble();
+    return PrecisionDisclosure(
+      titleClosed: context.l10n.adjustPrecisely,
+      titleOpen: context.l10n.hidePreciseControls,
+      headerValue: _format(clampedValue),
+      chevronSize: 18,
       children: [
-        // Flat tappable row — same shape as Layout panel cards. No
-        // border, no rounded background, no leading icon: editor-feel,
-        // not settings-feel.
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              EditorHaptics.tap();
-              setState(() => _open = !_open);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-              child: Row(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _PrecisionDivider(scheme: scheme),
+              const SizedBox(height: 8),
+              // px presets reuse the Layout chip so the two
+              // panels share one visual vocabulary.
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
                 children: [
-                  Expanded(
-                    child: Text(
-                      _open
-                          ? context.l10n.hidePreciseControls
-                          : context.l10n.adjustPrecisely,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
+                  for (final p in _pxPresets)
+                    _LayoutPresetChip(
+                      label: _format(p),
+                      selected: (p - clampedValue).abs() < 0.001,
+                      onTap: () => onChange(p.clamp(min, max).toDouble()),
                     ),
-                  ),
-                  Text(
-                    _format(clampedValue),
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: _open ? scheme.primary : muted,
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  AnimatedRotation(
-                    turns: _open ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: _open ? scheme.primary : muted,
-                    ),
-                  ),
                 ],
               ),
-            ),
-          ),
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
-          child: _open
-              ? Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _PrecisionDivider(scheme: scheme),
-                      const SizedBox(height: 8),
-                      // px presets reuse the Layout chip so the two
-                      // panels share one visual vocabulary.
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          for (final p in _pxPresets)
-                            _LayoutPresetChip(
-                              label: _format(p),
-                              selected: (p - clampedValue).abs() < 0.001,
-                              onTap: () => _set(p),
-                            ),
-                        ],
-                      ),
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          trackHeight: 2,
-                          overlayShape: const RoundSliderOverlayShape(
-                            overlayRadius: 14,
-                          ),
-                        ),
-                        child: Listener(
-                          onPointerCancel: (_) => _endDrag(),
-                          child: Slider(
-                            value: clampedValue,
-                            min: widget.min,
-                            max: widget.max,
-                            onChangeStart: (v) {
-                              _dragInFlight = true;
-                              _lastTickValue = v;
-                              EditorHaptics.toggle();
-                              ref
-                                  .read(textToolControllerProvider.notifier)
-                                  .beginStyleDrag();
-                            },
-                            onChanged: (v) {
-                              _set(v);
-                              _maybeTick(v);
-                            },
-                            onChangeEnd: (_) {
-                              if (!_dragInFlight) return;
-                              EditorHaptics.confirm();
-                              _endDrag();
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 2,
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 14,
                   ),
-                )
-              : const SizedBox.shrink(),
+                ),
+                child: EditorSliderRow(
+                  value: clampedValue,
+                  min: min,
+                  max: max,
+                  showReadout: false,
+                  format: _format,
+                  onChanged: onChange,
+                  onDragStart: ctrl.beginStyleDrag,
+                  onDragEnd: ctrl.endStyleDrag,
+                  haptics: EditorSliderHaptics.startTickEnd,
+                  semanticLabel: context.l10n.sizeTool,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -3823,33 +3374,6 @@ class _AllFontsCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Visual gap inserted into the text-mode strip after the 4
-/// primary tools (Font · Color · Size · Style) to separate them
-/// from the secondary cluster (Layout · Background · Border ·
-/// Shadow · Behavior). 12dp of breathing room + a 1dp hairline
-/// reads as "tier change" without adding a control or stealing a
-/// tap target.
-class _TierGap extends StatelessWidget {
-  const _TierGap();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 13,
-      alignment: Alignment.center,
-      child: Container(
-        width: 1,
-        height: 28,
-        decoration: BoxDecoration(
-          color: scheme.outlineVariant.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(0.5),
         ),
       ),
     );
