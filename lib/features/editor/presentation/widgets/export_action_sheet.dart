@@ -14,6 +14,7 @@ import '../../application/export_format.dart';
 import '../../application/export_quality.dart';
 import '../../application/export_size.dart';
 import '../../application/image_export_service.dart';
+import '../../ui/editor_slider_row.dart';
 import 'export_preview_screen.dart';
 import 'section_label.dart';
 
@@ -557,16 +558,19 @@ class _JpgQualitySlider extends StatelessWidget {
             ],
           ),
         ),
-        Slider(
+        // 30 discrete stops between 70% and 100% — fine enough that
+        // the user feels continuous control, coarse enough that the
+        // displayed label doesn't twitch on every micro-drag.
+        EditorSliderRow(
           value: value,
           min: 0.7,
           max: 1.0,
-          // 30 discrete stops between 70% and 100% — fine enough that
-          // the user feels continuous control, coarse enough that the
-          // displayed label doesn't twitch on every micro-drag.
           divisions: 30,
-          label: '$pct%',
-          onChanged: enabled ? onChanged : null,
+          enabled: enabled,
+          showReadout: false,
+          format: (v) => '${(v * 100).round()}%',
+          onChanged: onChanged,
+          semanticLabel: context.l10n.qualityLabel,
         ),
       ],
     );
