@@ -96,6 +96,42 @@ void main() {
     });
   });
 
+  group('EditorSliderRow — showReadout (composed headers)', () {
+    testWidgets('showReadout: false omits the trailing value column', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          EditorSliderRow(
+            value: 0.95,
+            max: 1,
+            showReadout: false,
+            format: (v) => '${(v * 100).round()}%',
+            onChanged: (_) {},
+            semanticLabel: 'Quality',
+          ),
+        ),
+      );
+      expect(find.text('95%'), findsNothing);
+    });
+
+    testWidgets('showReadout defaults to true (existing consumers '
+        'unaffected)', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          EditorSliderRow(
+            label: 'X',
+            value: 10,
+            max: 100,
+            format: (v) => v.round().toString(),
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      expect(find.text('10'), findsOneWidget);
+    });
+  });
+
   group('EditorSliderRow — divisions/enabled (JPG-quality outlier)', () {
     testWidgets('divisions is forwarded to the underlying Slider', (
       tester,

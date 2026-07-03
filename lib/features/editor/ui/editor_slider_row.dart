@@ -65,6 +65,7 @@ class EditorSliderRow extends StatefulWidget {
     this.enabled = true,
     required this.format,
     this.readoutWidth = 44,
+    this.showReadout = true,
     required this.onChanged,
     this.onDragStart,
     this.onDragEnd,
@@ -97,6 +98,13 @@ class EditorSliderRow extends StatefulWidget {
   final String Function(double) format;
 
   final double readoutWidth;
+
+  /// When false, omits the trailing readout column entirely. For
+  /// compositions that already show the formatted value elsewhere
+  /// (e.g. the export sheet's JPG-quality header, which puts the
+  /// percentage above the slider) — the default readout would
+  /// otherwise duplicate it.
+  final bool showReadout;
 
   final ValueChanged<double> onChanged;
 
@@ -209,18 +217,19 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
                 ),
               ),
             Expanded(child: slider),
-            SizedBox(
-              width: widget.readoutWidth,
-              child: Text(
-                widget.format(widget.value),
-                textAlign: TextAlign.end,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: scheme.onSurface,
+            if (widget.showReadout)
+              SizedBox(
+                width: widget.readoutWidth,
+                child: Text(
+                  widget.format(widget.value),
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
