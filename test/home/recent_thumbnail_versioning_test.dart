@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../support/temp_projects_dir.dart';
+
 
 /// Recent project thumbnails must reflect the actual EditorDocument
 /// — including canvas background colour. Older PNGs were captured
@@ -41,10 +43,16 @@ Future<void> _pumpRecent(
   Project project,
 ) async {
   SharedPreferences.setMockInitialValues({});
-  final container = ProviderContainer();
+  final dir = tempProjectsDir();
+  final container = ProviderContainer(overrides: [
+    projectsDirectoryProvider.overrideWith((ref) async => dir),
+  ]);
   addTearDown(container.dispose);
-  await container.read(projectStoreProvider.future);
-  await container.read(projectStoreProvider.notifier).upsert(project);
+  // Real file IO — run outside the fake-async zone.
+  await tester.runAsync(() async {
+    await container.read(projectStoreProvider.future);
+    await container.read(projectStoreProvider.notifier).upsert(project);
+  });
 
   await tester.pumpWidget(
     UncontrolledProviderScope(

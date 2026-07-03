@@ -22,9 +22,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../support/temp_projects_dir.dart';
+
 Future<ProviderContainer> _container() async {
   SharedPreferences.setMockInitialValues(const {});
-  final c = ProviderContainer();
+  final dir = tempProjectsDir();
+  final c = ProviderContainer(overrides: [
+    projectsDirectoryProvider.overrideWith((ref) async => dir),
+  ]);
   // Resolve async stores up front.
   await c.read(projectStoreProvider.future);
   // Mount the autosave controller so its listener is wired.

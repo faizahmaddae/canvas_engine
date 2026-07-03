@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../support/temp_projects_dir.dart';
+
 
 import 'package:canvas_engine/features/home/application/project_store.dart';
 import 'package:canvas_engine/features/home/domain/project.dart';
@@ -31,14 +33,20 @@ Future<void> _pumpHome(
   required List<Project> projects,
 }) async {
   SharedPreferences.setMockInitialValues({});
-  final container = ProviderContainer();
+  final dir = tempProjectsDir();
+  final container = ProviderContainer(overrides: [
+    projectsDirectoryProvider.overrideWith((ref) async => dir),
+  ]);
   addTearDown(container.dispose);
   // Hydrate the store BEFORE first frame so the section renders the
-  // grid (not the skeleton) on first pump.
-  await container.read(projectStoreProvider.future);
-  for (final p in projects) {
-    await container.read(projectStoreProvider.notifier).upsert(p);
-  }
+  // grid (not the skeleton) on first pump. Real file IO — must run
+  // outside the fake-async test zone (see temp_projects_dir.dart).
+  await tester.runAsync(() async {
+    await container.read(projectStoreProvider.future);
+    for (final p in projects) {
+      await container.read(projectStoreProvider.notifier).upsert(p);
+    }
+  });
 
   await tester.pumpWidget(
     UncontrolledProviderScope(
@@ -99,9 +107,14 @@ void main() {
   testWidgets('empty state shows the create CTA', (tester) async {
     var created = 0;
     SharedPreferences.setMockInitialValues({});
-    final container = ProviderContainer();
+    final dir = tempProjectsDir();
+    final container = ProviderContainer(overrides: [
+      projectsDirectoryProvider.overrideWith((ref) async => dir),
+    ]);
     addTearDown(container.dispose);
-    await container.read(projectStoreProvider.future);
+    await tester.runAsync(
+      () => container.read(projectStoreProvider.future),
+    );
 
     await tester.pumpWidget(
       UncontrolledProviderScope(

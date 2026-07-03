@@ -1,9 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:canvas_engine/features/home/application/project_store.dart';
 import 'package:canvas_engine/features/home/domain/project.dart';
+
+import '../support/temp_projects_dir.dart';
 
 Project _make(String id, String name, {DateTime? when, DateTime? created}) =>
     Project(
@@ -19,8 +24,11 @@ Project _make(String id, String name, {DateTime? when, DateTime? created}) =>
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues(const {}));
 
-  Future<ProjectContainer> container() async {
-    final c = ProviderContainer();
+  Future<ProjectContainer> container({Directory? dir}) async {
+    final d = dir ?? tempProjectsDir();
+    final c = ProviderContainer(overrides: [
+      projectsDirectoryProvider.overrideWith((ref) async => d),
+    ]);
     addTearDown(c.dispose);
     // Wait for AsyncNotifier.build() to resolve.
     await c.read(projectStoreProvider.future);
@@ -74,13 +82,108 @@ void main() {
     expect(updated.lastModified.isAfter(original.lastModified), isTrue);
   });
 
-  test('persists across container instances via SharedPreferences',
+  test('persists across container instances via the shared directory',
       () async {
-    final c1 = await container();
+    final sharedDir = tempProjectsDir();
+    final c1 = await container(dir: sharedDir);
     await c1.notifier.upsert(_make('persist', 'PP'));
 
-    final c2 = await container();
+    final c2 = await container(dir: sharedDir);
     expect(c2.list.map((p) => p.id), contains('persist'));
+  });
+
+  // ─── file-store specifics ────────────────────────────────────────
+
+  test('one file per project; writes are atomic (no stray .tmp)', () async {
+    final dir = tempProjectsDir();
+    final c = await container(dir: dir);
+    await c.notifier.upsert(_make('a', 'A'));
+    await c.notifier.upsert(_make('b', 'B'));
+
+    final names = dir
+        .listSync()
+        .map((e) => e.path.split(Platform.pathSeparator).last)
+        .toList()
+      ..sort();
+    expect(names, ['a.json', 'b.json']);
+  });
+
+  test('a corrupt file is quarantined; the rest of the library survives',
+      () async {
+    final dir = tempProjectsDir();
+    File('${dir.path}${Platform.pathSeparator}good.json').writeAsStringSync(
+      jsonEncode(_make('good', 'Good').toJson()),
+    );
+    File('${dir.path}${Platform.pathSeparator}bad.json')
+        .writeAsStringSync('{not json');
+
+    final c = await container(dir: dir);
+    expect(c.list.map((p) => p.id), ['good'],
+        reason: 'one corrupt byte must cost one project, not the library');
+    final names = dir
+        .listSync()
+        .map((e) => e.path.split(Platform.pathSeparator).last)
+        .toList();
+    expect(names.where((n) => n.startsWith('bad.json.corrupt')), hasLength(1),
+        reason: 'corrupt bytes are quarantined for recovery, not deleted');
+  });
+
+  test('delete removes the project file from disk', () async {
+    final dir = tempProjectsDir();
+    final c = await container(dir: dir);
+    await c.notifier.upsert(_make('x', 'X'));
+    expect(File('${dir.path}${Platform.pathSeparator}x.json').existsSync(),
+        isTrue);
+    await c.notifier.delete('x');
+    expect(File('${dir.path}${Platform.pathSeparator}x.json').existsSync(),
+        isFalse);
+  });
+
+  // ─── legacy prefs migration ──────────────────────────────────────
+
+  test('migrates the legacy prefs blob to files and removes the key',
+      () async {
+    final legacy = [
+      _make('m1', 'One', when: DateTime.utc(2025, 3, 1)).toJson(),
+      _make('m2', 'Two', when: DateTime.utc(2025, 4, 1)).toJson(),
+    ];
+    SharedPreferences.setMockInitialValues({
+      'home.projects.v1': jsonEncode(legacy),
+    });
+
+    final c = await container();
+    expect(c.list.map((p) => p.id), ['m2', 'm1']);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('home.projects.v1'), isNull,
+        reason: 'key removed only after every file verifiably reads back');
+  });
+
+  test('unreadable legacy blob is kept for forensics, store starts empty',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      'home.projects.v1': '{definitely not a list',
+    });
+    final c = await container();
+    expect(c.list, isEmpty);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('home.projects.v1'), isNotNull,
+        reason: 'never destroy bytes we could not migrate');
+  });
+
+  test('existing files win over the legacy blob on migration', () async {
+    final dir = tempProjectsDir();
+    // File version is newer authority than the blob's copy of m1.
+    File('${dir.path}${Platform.pathSeparator}m1.json').writeAsStringSync(
+      jsonEncode(_make('m1', 'File wins').toJson()),
+    );
+    SharedPreferences.setMockInitialValues({
+      'home.projects.v1':
+          jsonEncode([_make('m1', 'Blob loses').toJson()]),
+    });
+
+    final c = await container(dir: dir);
+    expect(c.list.single.name, 'File wins');
   });
 
   test('duplicate inserts a new project with " (copy)" suffix', () async {
