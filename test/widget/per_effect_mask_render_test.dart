@@ -220,6 +220,63 @@ void main() {
     });
   });
 
+  group('reorder honesty (Phase 3.3)', () {
+    testWidgets('canonical stack (vignette on top) keeps the fast path',
+        (tester) async {
+      await _mount(
+        tester,
+        _doc(_stack([
+          BrightnessEffect(amount: 60),
+          const VignetteEffect(intensity: 0.9),
+        ])),
+      );
+      expect(find.byType(StackMaskComposite), findsNothing,
+          reason: 'everything our writers produce must keep the '
+              'legacy widget tree');
+    });
+
+    testWidgets(
+        'brightness above vs below a vignette renders DIFFERENT pixels',
+        (tester) async {
+      // The old renderer applied the composed matrix first and painted
+      // every custom-paint effect on top unconditionally, so these two
+      // stacks rendered identically while the Effects panel offered
+      // the drag as a real change. Corner probe: the vignette darkens
+      // corners; brightness ABOVE it re-brightens the darkened
+      // corners, brightness BELOW it does not.
+      Future<({int r, int g, int b})> corner(EffectStack stack) async {
+        final key = await _mount(tester, _doc(stack));
+        final shot = await _captureSettled(
+          tester,
+          key,
+          // Painted once the centre shows non-white (image landed).
+          (px) => !_nearPx(px(100, 100), (r: 255, g: 255, b: 255)),
+        );
+        return shot.px(4, 4);
+      }
+
+      final vignetteOnTop = await corner(_stack([
+        BrightnessEffect(amount: 60),
+        const VignetteEffect(intensity: 0.9),
+      ]));
+      final brightnessOnTop = await corner(_stack([
+        const VignetteEffect(intensity: 0.9),
+        BrightnessEffect(amount: 60),
+      ]));
+
+      expect(
+        (vignetteOnTop.r - brightnessOnTop.r).abs() > 8 ||
+            (vignetteOnTop.g - brightnessOnTop.g).abs() > 8,
+        isTrue,
+        reason: 'stack order must be a real render change '
+            '($vignetteOnTop vs $brightnessOnTop)',
+      );
+      expect(brightnessOnTop.r > vignetteOnTop.r, isTrue,
+          reason: 'brightness above the vignette re-brightens the '
+              'darkened corner');
+    });
+  });
+
   group('pixel gates', () {
     testWidgets(
         'masked effect confined to its region; effect below it applies '

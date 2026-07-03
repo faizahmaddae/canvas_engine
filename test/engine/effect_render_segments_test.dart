@@ -115,14 +115,96 @@ void main() {
       );
     });
 
-    test('custom-paint effects never enter the fold', () {
+    test('custom-paint effects fold at their stack position', () {
       final s = stack([
         BrightnessEffect(amount: 10),
         const VignetteEffect(intensity: 0.5),
       ]);
-      expect(s.renderSegments, hasLength(1));
+      final segments = s.renderSegments;
+      expect(segments, hasLength(2));
+      expect(segments[0], isA<MatrixSegment>());
+      expect(segments[1], isA<CustomPaintSegment>());
     });
 
+    test('a matrix effect ABOVE custom paint splits around it — the '
+        'reorder is a real render change', () {
+      final s = stack([
+        const VignetteEffect(intensity: 0.5),
+        BrightnessEffect(amount: 10),
+      ]);
+      final segments = s.renderSegments;
+      expect(segments, hasLength(2));
+      expect(segments[0], isA<CustomPaintSegment>());
+      expect(segments[1], isA<MatrixSegment>(),
+          reason: 'brightness above the vignette must recolour the '
+              'vignette pixels too');
+    });
+
+    test('consecutive custom-paint effects batch into one segment', () {
+      final s = stack([
+        const VignetteEffect(intensity: 0.5),
+        const VignetteEffect(intensity: 0.2),
+      ]);
+      final segments = s.renderSegments;
+      expect(segments, hasLength(1));
+      expect((segments.single as CustomPaintSegment).effects, hasLength(2));
+    });
+
+    test('masked custom paint is its own boundary at position', () {
+      final s = stack([
+        BrightnessEffect(amount: 10),
+        const VignetteEffect(intensity: 0.5, mask: mask),
+        const ContrastEffect(amount: 1.5),
+      ]);
+      final segments = s.renderSegments;
+      expect(segments, hasLength(3));
+      expect(segments[1], isA<MaskedCustomPaintSegment>());
+    });
+  });
+
+  group('rendersOnFastPath', () {
+    test('true for canonical stacks (matrices below, custom paint on top)',
+        () {
+      expect(EffectStack.empty.rendersOnFastPath, isTrue);
+      expect(
+        stack([
+          BrightnessEffect(amount: 10),
+          const VignetteEffect(intensity: 0.5),
+        ]).rendersOnFastPath,
+        isTrue,
+        reason: 'everything our writers produce keeps the legacy tree',
+      );
+    });
+
+    test('false when a matrix effect sits above contributing custom paint',
+        () {
+      expect(
+        stack([
+          const VignetteEffect(intensity: 0.5),
+          BrightnessEffect(amount: 10),
+        ]).rendersOnFastPath,
+        isFalse,
+      );
+      // Identity matrix above the vignette contributes nothing —
+      // still fast.
+      expect(
+        stack([
+          const VignetteEffect(intensity: 0.5),
+          BrightnessEffect(amount: 0),
+        ]).rendersOnFastPath,
+        isTrue,
+      );
+    });
+
+    test('false for any enabled masked effect', () {
+      expect(
+        stack([BrightnessEffect(amount: 10, mask: mask)]).rendersOnFastPath,
+        isFalse,
+      );
+    });
+  });
+
+  group('renderSegments — masked boundaries', () {
     test('consecutive masked effects are consecutive boundaries', () {
       const mask2 =
           RectMask(rect: Rect.fromLTWH(0, 50, 100, 50), inverted: true);

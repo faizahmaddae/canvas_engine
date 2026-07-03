@@ -402,42 +402,94 @@ final class EffectStack {
             e.contributes,
       );
 
-  /// Step 6 render plan: the enabled colour-matrix effects folded
-  /// into segments, in stack order (docs/effects-step6-per-effect-
-  /// masks-2026-07.md §3). Maximal runs of *unmasked* effects
-  /// compose into one [MatrixSegment] — exact, because matrix
-  /// composition is associative within a run — while each masked
-  /// effect becomes its own [MaskedEffectSegment] boundary, because
-  /// composing across a per-pixel blend is not.
+  /// Step 6/3.3 render plan: every enabled, contributing effect
+  /// folded into segments, in stack order (docs/effects-step6-per-
+  /// effect-masks-2026-07.md §3 + the reorder-honesty extension).
   ///
-  /// Custom-paint effects are not part of the fold; the renderer's
-  /// overlay pass handles them ([customPaintEffects] /
-  /// [maskedCustomPaintEffects]).
+  ///   * Maximal runs of *unmasked* colour-matrix effects compose
+  ///     into one [MatrixSegment] — exact, because matrix
+  ///     composition is associative within a run.
+  ///   * Each masked matrix effect is its own [MaskedEffectSegment]
+  ///     boundary, because composing across a per-pixel blend is not.
+  ///   * Maximal runs of *unmasked* custom-paint effects become one
+  ///     [CustomPaintSegment] (one overlay painter for the run);
+  ///     masked ones become [MaskedCustomPaintSegment] boundaries.
+  ///
+  /// Including custom paint in the fold is what makes reordering a
+  /// vignette against matrix effects a *real* render change — a
+  /// matrix effect above the vignette now recolours the vignette's
+  /// pixels too, exactly as the stack order promises.
   List<EffectRenderSegment> get renderSegments {
     final out = <EffectRenderSegment>[];
-    List<double>? acc;
-    void flush() {
-      final m = acc;
+    List<double>? matrixAcc;
+    List<EditorEffect>? paintAcc;
+    void flushMatrix() {
+      final m = matrixAcc;
       if (m != null) {
         out.add(MatrixSegment(m));
-        acc = null;
+        matrixAcc = null;
+      }
+    }
+
+    void flushPaint() {
+      final p = paintAcc;
+      if (p != null) {
+        out.add(CustomPaintSegment(List<EditorEffect>.unmodifiable(p)));
+        paintAcc = null;
       }
     }
 
     for (final eff in effects) {
-      if (!eff.enabled || eff.kind != EffectKind.colorMatrix) continue;
-      final m = _matrixOf(eff);
-      if (m == null) continue; // identity — invisible on either path
-      if (eff.mask != null) {
-        flush();
-        out.add(MaskedEffectSegment(eff, m));
-      } else {
-        final prev = acc;
-        acc = prev == null ? m : composeColorMatrices(m, prev);
+      if (!eff.enabled || !eff.contributes) continue;
+      switch (eff.kind) {
+        case EffectKind.colorMatrix:
+          final m = _matrixOf(eff);
+          if (m == null) continue; // identity — invisible either way
+          if (eff.mask != null) {
+            flushMatrix();
+            flushPaint();
+            out.add(MaskedEffectSegment(eff, m));
+          } else {
+            flushPaint();
+            final prev = matrixAcc;
+            matrixAcc = prev == null ? m : composeColorMatrices(m, prev);
+          }
+        case EffectKind.customPaint:
+          if (eff.mask != null) {
+            flushMatrix();
+            flushPaint();
+            out.add(MaskedCustomPaintSegment(eff));
+          } else {
+            flushMatrix();
+            (paintAcc ??= <EditorEffect>[]).add(eff);
+          }
       }
     }
-    flush();
+    flushMatrix();
+    flushPaint();
     return out;
+  }
+
+  /// True when the stack renders identically under the legacy
+  /// "one matrix, then every custom-paint on top" fast path — i.e.
+  /// no enabled masked effect, and no contributing custom-paint
+  /// effect sitting *below* a contributing matrix effect. Every
+  /// document our writers produce is canonical (the Adjust panel
+  /// keeps derived matrices below and vignette appended last); only
+  /// an explicit reorder in the Effects panel makes this false.
+  bool get rendersOnFastPath {
+    if (hasEnabledMaskedEffect) return false;
+    var seenCustomPaint = false;
+    for (final eff in effects) {
+      if (!eff.enabled || !eff.contributes) continue;
+      switch (eff.kind) {
+        case EffectKind.customPaint:
+          seenCustomPaint = true;
+        case EffectKind.colorMatrix:
+          if (seenCustomPaint && _matrixOf(eff) != null) return false;
+      }
+    }
+    return true;
   }
 
   /// Custom-paint effects that actually contribute to the final
@@ -518,4 +570,23 @@ final class MaskedEffectSegment extends EffectRenderSegment {
 
   final EditorEffect effect;
   final List<double> matrix;
+}
+
+/// A maximal run of enabled, unmasked custom-paint effects — one
+/// overlay painter draws the whole run on top of the running state,
+/// at the run's position in the stack so effects above it (matrix or
+/// otherwise) apply to its pixels too.
+final class CustomPaintSegment extends EffectRenderSegment {
+  const CustomPaintSegment(this.effects);
+
+  final List<EditorEffect> effects;
+}
+
+/// A single enabled custom-paint effect carrying a per-effect mask.
+/// The overlay draws on top, so the renderer clips just the overlay
+/// through the mask's alpha (nothing shows until the raster lands).
+final class MaskedCustomPaintSegment extends EffectRenderSegment {
+  const MaskedCustomPaintSegment(this.effect);
+
+  final EditorEffect effect;
 }
