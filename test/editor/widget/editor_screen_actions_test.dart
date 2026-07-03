@@ -223,8 +223,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(BottomSheet), findsNothing);
-    expect(find.text('Distribute horizontally'), findsOneWidget);
-    expect(find.text('Distribute vertically'), findsOneWidget);
+    expect(find.byTooltip('Distribute horizontally'), findsOneWidget);
+    expect(find.byTooltip('Distribute vertically'), findsOneWidget);
 
     await tester.tap(find.text('Opacity'));
     await tester.pumpAndSettle();
