@@ -42,8 +42,9 @@ class DocumentCodec {
   /// for [LinearGradientBackground] / [RadialGradientBackground].
   /// Solid backgrounds are still written as ints in v2 so v1 readers
   /// can open any document that doesn't use a gradient. v3 adds the
-  /// optional `effects` array on every layer (Phase 2 effects). An
-  /// *empty* stack is omitted, so every legacy v1/v2 layer
+  /// optional `effects` array on every layer (Phase 2 effects) and
+  /// the optional per-layer `stackMask` key (Effects A3). An *empty*
+  /// stack and a null mask are omitted, so every legacy v1/v2 layer
   /// re-encodes to byte-identical bytes — the version bump is purely
   /// a forward-compat marker for newer readers.
   static const int schemaVersion = 3;
@@ -103,7 +104,8 @@ class DocumentCodec {
   ///
   ///   * v1 — solid background only.
   ///   * v2 — gradient backgrounds (linear / radial).
-  ///   * v3 — per-layer effect stacks (Phase 2).
+  ///   * v3 — per-layer effect stacks (Phase 2) and the stack-level
+  ///     mask `stackMask` (Effects A3).
   ///
   /// A v3-aware reader handles all three; a v2-only reader can still
   /// open a doc stamped v2 even if this build wrote it.
@@ -111,9 +113,12 @@ class DocumentCodec {
     var version = 1;
     // v2: gradient background uses the tagged-map shape.
     if (backgroundJson is Map) version = 2;
-    // v3: any layer carries a non-empty effect stack.
+    // v3: any layer carries a non-empty effect stack OR a stack mask.
+    // The mask must promote on its own: a stackMask-only layer writes
+    // the v3-only `stackMask` key, and a v1/v2 reader that opened such
+    // a doc without complaint would silently drop the mask on resave.
     for (final layer in doc.layers) {
-      if (layer.effects.isNotEmpty) {
+      if (layer.effects.isNotEmpty || layer.effects.stackMask != null) {
         version = 3;
         break;
       }

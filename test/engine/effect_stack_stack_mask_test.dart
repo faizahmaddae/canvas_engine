@@ -7,6 +7,7 @@ import 'package:canvas_engine/features/editor/engine/core/layer_mask.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/effects/editor_effect.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
+import 'package:canvas_engine/features/editor/engine/serialization/document_codec.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// A3 Step 1 — `EffectStack.stackMask` model + serialization.
@@ -158,6 +159,41 @@ void main() {
       expect(next.effects, isEmpty);
       expect(next.stackMask, equals(mask));
       expect(stack.copyWith().stackMask, equals(mask));
+    });
+  });
+
+  group('writer schema version — stackMask promotes to v3 (trap #2)', () {
+    // A stackMask-only layer writes the v3-only `stackMask` key. If
+    // the writer stamped it v1/v2, an older reader would open the doc
+    // without complaint and silently drop the mask on resave — the
+    // loud version-range rejection exists precisely to prevent that.
+    test('stackMask-only document stamps v3', () {
+      final doc = EditorDocument.empty.addLayer(makeImage(
+        effects: const EffectStack(<EditorEffect>[], stackMask: mask),
+      ));
+      final json = DocumentCodec.toJson(doc);
+      expect(json['version'], 3,
+          reason: 'the stackMask key is v3-only; stamping lower lets '
+              'old readers silently drop the mask on resave');
+    });
+
+    test('effects + stackMask document stamps v3', () {
+      final doc = EditorDocument.empty.addLayer(makeImage(
+        effects: EffectStack(
+          List<EditorEffect>.unmodifiable(
+            <EditorEffect>[BrightnessEffect(amount: 20)],
+          ),
+          stackMask: mask,
+        ),
+      ));
+      expect(DocumentCodec.toJson(doc)['version'], 3);
+    });
+
+    test('empty stack, no mask still stamps v1 (byte-identity guard)', () {
+      final doc = EditorDocument.empty.addLayer(makeImage());
+      expect(DocumentCodec.toJson(doc)['version'], 1,
+          reason: 'mask promotion must not disturb the minimum-version '
+              'writer for legacy documents');
     });
   });
 
