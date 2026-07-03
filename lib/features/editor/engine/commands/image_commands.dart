@@ -946,15 +946,15 @@ class SetStackMaskCommand extends EditorCommand {
     if (layer is! ImageLayer) return doc;
     final effects = layer.effects;
     if (effects.stackMask == mask) return doc;
-    // Direct construction is the sanctioned mask-write path (see
-    // EffectStack.copyWith — its doc reserves mask writes for this
-    // command). Canonicalise a fully-empty result to the shared
-    // singleton so emptiness identity checks stay valid.
-    final next = (effects.effects.isEmpty && mask == null)
-        ? EffectStack.empty
-        : EffectStack(effects.effects, stackMask: mask);
-    return doc.replaceLayer(layer.copyAll(effects: next));
+    return doc.replaceLayer(
+      layer.copyAll(effects: effects.withStackMask(mask)),
+    );
   }
+
+  // The mask payload dominates (a PathMask can carry many segments);
+  // scalars ride on the per-entry overhead.
+  @override
+  int get estimatedByteSize => mask?.estimatedByteSize ?? 0;
 
   @override
   EditorCommand invert(EditorDocument before) {

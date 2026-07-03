@@ -60,6 +60,12 @@ sealed class LayerMask {
   static const String shapeEllipse = 'ellipse';
   static const String shapePath = 'path';
 
+  /// Retained-bytes estimate for history budgeting: commands holding
+  /// a mask (SetStackMaskCommand and its inverse) report it through
+  /// `EditorCommand.estimatedByteSize`, so the undo byte budget sees
+  /// path masks with many segments as the real cost they are.
+  int get estimatedByteSize;
+
   /// Inverts the alpha after evaluation (`α := 1 - α`). Omitted from
   /// JSON when `false` (the default).
   final bool inverted;
@@ -154,6 +160,16 @@ final class RectMask extends LayerMask {
 
   final Rect rect;
 
+  /// Functional copy for interactive editing (mask-edit mode drags,
+  /// feather slider, invert toggle). Omitted fields keep the
+  /// receiver's value.
+  RectMask copyWith({Rect? rect, bool? inverted, double? feather}) =>
+      RectMask(
+        rect: rect ?? this.rect,
+        inverted: inverted ?? this.inverted,
+        feather: feather ?? this.feather,
+      );
+
   @override
   double sampleAlpha(Offset point) {
     final inside = _rectAlpha(rect, point, feather);
@@ -196,6 +212,10 @@ final class RectMask extends LayerMask {
 
   @override
   int get hashCode => Object.hash(rect, inverted, feather);
+
+  // Object header + Rect (4 doubles) + flag + feather.
+  @override
+  int get estimatedByteSize => 96;
 }
 
 /// Ellipse inscribed in [`bounds`]. Coordinates are layer-local.
@@ -208,6 +228,14 @@ final class EllipseMask extends LayerMask {
   });
 
   final Rect bounds;
+
+  /// Functional copy for interactive editing — see [RectMask.copyWith].
+  EllipseMask copyWith({Rect? bounds, bool? inverted, double? feather}) =>
+      EllipseMask(
+        bounds: bounds ?? this.bounds,
+        inverted: inverted ?? this.inverted,
+        feather: feather ?? this.feather,
+      );
 
   @override
   double sampleAlpha(Offset point) {
@@ -256,6 +284,10 @@ final class EllipseMask extends LayerMask {
 
   @override
   int get hashCode => Object.hash(bounds, inverted, feather);
+
+  // Object header + Rect (4 doubles) + flag + feather.
+  @override
+  int get estimatedByteSize => 96;
 }
 
 /// One closed contour in a [`PathMask`]. Concrete segments
@@ -605,6 +637,17 @@ final class PathMask extends LayerMask {
         fillType,
         inverted,
         feather,
+      );
+
+  // Base + per-contour overhead + a flat per-segment cost (a cubic
+  // is 3 points; 48 bytes covers the worst case, keeping the
+  // estimate monotone in real payload without walking point counts).
+  @override
+  int get estimatedByteSize =>
+      64 +
+      contours.fold(
+        0,
+        (n, c) => n + 32 + c.segments.length * 48,
       );
 }
 

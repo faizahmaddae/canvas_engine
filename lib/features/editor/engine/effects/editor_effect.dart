@@ -521,9 +521,9 @@ final class EffectStack {
   /// construction. Every command that rebuilds an existing layer's
   /// effects list MUST go through this instead of `EffectStack(next)`
   /// — the bare constructor defaults `stackMask` to null and silently
-  /// drops a set mask. Only [effects] is exposed: setting the mask
-  /// itself goes through direct construction in the stack-mask
-  /// command, so no sentinel machinery is needed here.
+  /// drops a set mask. Only [effects] is exposed: mask writes go
+  /// through [withStackMask], so no sentinel machinery is needed
+  /// here.
   ///
   /// A fully empty result (no effects, no mask) canonicalises to the
   /// [empty] singleton so `identical(stack, EffectStack.empty)` stays
@@ -532,6 +532,19 @@ final class EffectStack {
     final nextEffects = effects ?? this.effects;
     if (nextEffects.isEmpty && stackMask == null) return empty;
     return EffectStack(nextEffects, stackMask: stackMask);
+  }
+
+  /// Clone with the stack mask replaced (`null` clears). THE
+  /// sanctioned mask-write path — `SetStackMaskCommand` and the
+  /// mask-edit mode's live-overlay staging both go through here so
+  /// canonicalisation cannot drift between them: a fully-empty
+  /// result (no effects, no mask) collapses to the [empty] singleton,
+  /// keeping `identical(stack, EffectStack.empty)` a valid fast
+  /// emptiness check.
+  EffectStack withStackMask(LayerMask? mask) {
+    if (mask == stackMask) return this;
+    if (effects.isEmpty && mask == null) return empty;
+    return EffectStack(effects, stackMask: mask);
   }
 
   @override
