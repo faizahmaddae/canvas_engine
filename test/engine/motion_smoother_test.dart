@@ -1,5 +1,6 @@
+import 'dart:ui';
+
 import 'package:canvas_engine/features/editor/engine/interaction/motion_smoother.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// At equivalent total wall-clock time, smoothers ticked at different

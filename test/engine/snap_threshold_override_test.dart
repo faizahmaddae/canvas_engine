@@ -1,5 +1,6 @@
+import 'dart:ui';
+
 import 'package:canvas_engine/features/editor/engine/interaction/snap_engine.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// The controller passes a viewport-scaled threshold so the magnetic
