@@ -95,6 +95,24 @@ class EngineConstants {
   /// commands would cost zero on paper but tens of MB in practice.
   static const int kHistoryEntryOverheadBytes = 64;
 
+  /// Maximum idle gap within one mergeable command stream. A command
+  /// only merges into the top history entry if that entry was pushed
+  /// or last merged within this window — so a slider drag (frames
+  /// arrive every ~16 ms) collapses into one undo entry, while a
+  /// second drag of the same knob a few seconds later starts a fresh
+  /// entry instead of silently extending the first.
+  ///
+  /// Why a time gate and not a drag-end "settle" command: the settle
+  /// would have to be threaded through every slider's onChangeEnd
+  /// (ten near-duplicate private slider widgets today), and a
+  /// same-value settle is swallowed by the no-op guard before it can
+  /// break the chain anyway. One second is a compromise: holding
+  /// still >1 s mid-drag splits that drag into two entries (rare,
+  /// costs one extra undo press), and two deliberate re-drags within
+  /// 1 s merge (equally rare, costs one missing undo stop). Both
+  /// failure modes are one granularity step, never lost work.
+  static const Duration kLiveMergeWindow = Duration(seconds: 1);
+
   // ---------------------------------------------------------------------
   // Effect cache (docs/effects.md §10)
   // ---------------------------------------------------------------------

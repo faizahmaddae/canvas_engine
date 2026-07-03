@@ -35,10 +35,12 @@ import 'package:flutter_test/flutter_test.dart';
 //   * `SetLayerOpacityCommand` is commit-only via `onChangeEnd` in
 //     `layers_panel.dart`. It does not need merge today. Flagged for
 //     the Phase 5 live-decoupling sweep.
-//   * `UpdateTextCommand` and `UpdatePaintStyleCommand` merge
-//     unconditionally (no `live` flag, no time window). The existing
-//     tests encode the intended behaviour. Add a `live` flag only if
-//     a real "stale merge" bug surfaces.
+//   * `UpdateTextCommand` and `UpdatePaintStyleCommand` merge without
+//     a `live` flag. Since Phase 3.3 the HistoryStack-level merge
+//     window (EngineConstants.kLiveMergeWindow) bounds them anyway:
+//     edits more than a second apart are separate undo entries. Add a
+//     `live` flag only if sub-second discrete taps merging becomes a
+//     real complaint.
 // ---------------------------------------------------------------------
 
 ImageLayer _img(String id) => ImageLayer(
@@ -397,6 +399,81 @@ void main() {
       final decoded = DocumentCodec.decode(json);
       expect(DocumentCodec.encode(decoded), json);
       expect((decoded.layers.single as ImageLayer).shadowBlur, 60.0);
+    });
+  });
+
+  // ===================================================================
+  // Merge window (Phase 3.3) — streams terminate on idle
+  // ===================================================================
+  group('kLiveMergeWindow gate', () {
+    test('same-knob drags separated by more than the window are '
+        'separate undo entries', () {
+      var now = DateTime.utc(2026, 1, 1);
+      final stack = HistoryStack(clock: () => now);
+      var doc = _docWith([_img('a')]);
+
+      // First drag: two ticks 100 ms apart -> one entry.
+      doc = stack.execute(doc,
+          const SetImageAdjustmentsCommand(layerId: 'a', brightness: 10, live: true));
+      now = now.add(const Duration(milliseconds: 100));
+      doc = stack.execute(doc,
+          const SetImageAdjustmentsCommand(layerId: 'a', brightness: 20, live: true));
+      expect(stack.undoDepth, 1);
+
+      // Second drag of the SAME knob, 5 s later -> fresh entry. This
+      // was the bug: with no drag-end settle the two drags collapsed
+      // into one undo step no matter how far apart they were.
+      now = now.add(const Duration(seconds: 5));
+      doc = stack.execute(doc,
+          const SetImageAdjustmentsCommand(layerId: 'a', brightness: 40, live: true));
+      expect(stack.undoDepth, 2,
+          reason: 'an idle gap beyond kLiveMergeWindow must terminate '
+              'the merge stream');
+
+      // Undo granularity matches the two gestures.
+      doc = stack.undo(doc);
+      expect((doc.layerById('a')! as ImageLayer).adjustments.brightness, 20);
+      doc = stack.undo(doc);
+      expect((doc.layerById('a')! as ImageLayer).adjustments.brightness, 0);
+    });
+
+    test('ticks within the window keep merging (running total, not '
+        'first-tick anchored)', () {
+      var now = DateTime.utc(2026, 1, 1);
+      final stack = HistoryStack(clock: () => now);
+      var doc = _docWith([_img('a')]);
+      // 30 ticks, 900 ms apart: every consecutive pair is inside the
+      // window even though the whole stream spans ~26 s — the window
+      // measures idle gaps, not total stream length.
+      for (var i = 1; i <= 30; i++) {
+        doc = stack.execute(
+          doc,
+          SetImageAdjustmentsCommand(
+              layerId: 'a', brightness: i.toDouble(), live: true),
+        );
+        now = now.add(const Duration(milliseconds: 900));
+      }
+      expect(stack.undoDepth, 1);
+      doc = stack.undo(doc);
+      expect((doc.layerById('a')! as ImageLayer).adjustments.brightness, 0);
+    });
+
+    test('a redone entry does not absorb the next live drag', () {
+      var now = DateTime.utc(2026, 1, 1);
+      final stack = HistoryStack(clock: () => now);
+      var doc = _docWith([_img('a')]);
+      doc = stack.execute(doc,
+          const SetImageAdjustmentsCommand(layerId: 'a', brightness: 10, live: true));
+      doc = stack.undo(doc);
+      doc = stack.redo(doc);
+      // Immediately drag again: the redone entry is completed work,
+      // not an in-flight stream — must not be extended.
+      doc = stack.execute(doc,
+          const SetImageAdjustmentsCommand(layerId: 'a', brightness: 30, live: true));
+      expect(stack.undoDepth, 2);
+      doc = stack.undo(doc);
+      expect((doc.layerById('a')! as ImageLayer).adjustments.brightness, 10,
+          reason: 'undo after redo+drag must stop at the redone state');
     });
   });
 }

@@ -7,7 +7,12 @@ class HistoryStack {
   HistoryStack({
     this.limit = 200,
     this.byteBudget = EngineConstants.kHistoryByteBudget,
-  });
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
+
+  /// Injectable time source so the merge-window gate is testable
+  /// without real sleeps. Production uses the wall clock.
+  final DateTime Function() _clock;
 
   /// Hard count cap on each stack. Predates the byte cap and continues
   /// to apply — eviction triggers as soon as either the count OR the
@@ -56,17 +61,30 @@ class HistoryStack {
     final inverse = command.invert(document);
     final next = command.apply(document);
     if (identical(next, document)) return document; // no-op
+    final now = _clock();
     if (_undo.isNotEmpty) {
       final top = _undo.last;
-      final merged = command.mergeWith(top.forward);
+      // Merge-window gate: a stream only extends an entry that was
+      // touched within kLiveMergeWindow. Without it, two drags of the
+      // same slider minutes apart collapsed into one undo entry —
+      // sliders emit no drag-end settle, and a same-value settle
+      // would be swallowed by the no-op guard above anyway.
+      // Strictly-less-than so an entry backdated by exactly one
+      // window (see [redo]) can never be absorbed.
+      final withinWindow = now.difference(top.touchedAt) <
+          EngineConstants.kLiveMergeWindow;
+      final merged = withinWindow ? command.mergeWith(top.forward) : null;
       if (merged != null) {
         // Merge replaces the forward command in place; the inverse
         // is preserved so undo still rewinds to the pre-stream state.
         // Adjust the running total by the delta between the old and
         // new forward sizes (inverse is unchanged).
         _undoBytes += merged.estimatedByteSize - top.forward.estimatedByteSize;
-        _undo[_undo.length - 1] =
-            _HistoryEntry(inverse: top.inverse, forward: merged);
+        _undo[_undo.length - 1] = _HistoryEntry(
+          inverse: top.inverse,
+          forward: merged,
+          touchedAt: now,
+        );
         _clearRedoInternal();
         // A merge can grow the entry (e.g. a future composite-merge
         // bundling more children); enforce the budget afterwards.
@@ -74,7 +92,8 @@ class HistoryStack {
         return next;
       }
     }
-    final entry = _HistoryEntry(inverse: inverse, forward: command);
+    final entry =
+        _HistoryEntry(inverse: inverse, forward: command, touchedAt: now);
     _undo.add(entry);
     _undoBytes += _entryBytes(entry);
     _clearRedoInternal();
@@ -90,6 +109,7 @@ class HistoryStack {
     final redoEntry = _HistoryEntry(
       inverse: entry.inverse.invert(document),
       forward: entry.forward,
+      touchedAt: _clock(),
     );
     _redo.add(redoEntry);
     _redoBytes += _entryBytes(redoEntry);
@@ -102,9 +122,14 @@ class HistoryStack {
     final entry = _redo.removeLast();
     _redoBytes -= _entryBytes(entry);
     final next = entry.forward.apply(document);
+    // Stamped with the current time, but a redone entry should not
+    // silently absorb the next live drag — it represents completed
+    // work, not an in-flight stream. Backdating it beyond the merge
+    // window closes that hole.
     final undoEntry = _HistoryEntry(
       inverse: entry.forward.invert(document),
       forward: entry.forward,
+      touchedAt: _clock().subtract(EngineConstants.kLiveMergeWindow),
     );
     _undo.add(undoEntry);
     _undoBytes += _entryBytes(undoEntry);
@@ -159,7 +184,15 @@ class HistoryStack {
 }
 
 class _HistoryEntry {
-  _HistoryEntry({required this.inverse, required this.forward});
+  _HistoryEntry({
+    required this.inverse,
+    required this.forward,
+    required this.touchedAt,
+  });
   final EditorCommand inverse;
   final EditorCommand forward;
+
+  /// When this entry was pushed or last absorbed a merge. Gates the
+  /// live-merge window in [HistoryStack.execute].
+  final DateTime touchedAt;
 }
