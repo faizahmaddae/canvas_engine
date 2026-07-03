@@ -2323,31 +2323,6 @@ class _PickerItem {
   final String? headerLabel;
   final _PickerItemKind kind;
 }
-// (`_CategoryChip` and `_IconButton` were removed when the chip
-// strip was replaced by `QuickActionCapsule`.)
-
-// ─────────────────────────────────────────────────────────────────
-// Inline expansion rows (Adaptive Dock — Option E)
-// ─────────────────────────────────────────────────────────────────
-//
-// These render INSIDE the QuickActionCapsule's inline expansion
-// zone — a thin (~56 dp) row above the capsule. Tapping a value
-// applies it instantly without opening the full panel, so the
-// canvas barely shrinks for the most common edits.
-
-/// Horizontal slider for font size with live preview. Drags update
-
-/// Pill-shaped category chip with icon-on-top, label-below.
-///
-/// Three visual states:
-///   * disabled — muted, no border, no fill
-///   * idle     — neutral surface, subtle outline
-///   * selected — primary tint fill + outline + bolder label
-///
-/// Mirrors the Paint dock's `_ToolChip` design language (icon stacked
-/// above a small label) so the two modes share one chip vocabulary.
-// (`_CategoryChip` and `_IconButton` were removed when the chip
-// strip was replaced by `QuickActionCapsule`.)
 
 // ─────────────────────────────────────────────────────────────────────
 // Compact sheet building blocks
@@ -2493,92 +2468,6 @@ String _shadowPresetLabel(AppLocalizations l10n, _ShadowPreset preset) {
 // Shared widgets for the "presets-first, advanced-hidden" sub-tool
 // redesign. The canvas above each sheet is the live preview, so these
 // helpers focus on fast 1-tap choices instead of large preview tiles.
-
-/// Vertical disclosure used to hide numeric / fine-tune controls
-/// behind a single tap. Default state = collapsed so the casual
-/// surface stays uncluttered. Caller passes the children that
-/// should appear when the section is expanded.
-class _AdvancedSection extends StatefulWidget {
-  const _AdvancedSection({required this.children, required this.label});
-
-  final List<Widget> children;
-
-  /// Section label — bodies pass a contextual word ('Fine tune',
-  /// 'Details', 'Adjust') so the disclosure reads as a hint about
-  /// what's inside, not a generic catch-all.
-  final String label;
-
-  @override
-  State<_AdvancedSection> createState() => _AdvancedSectionState();
-}
-
-class _AdvancedSectionState extends State<_AdvancedSection> {
-  bool _open = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: () {
-              EditorHaptics.tap();
-              setState(() => _open = !_open);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-              child: Row(
-                children: [
-                  Icon(Icons.tune_rounded, size: 20, color: scheme.primary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      widget.label,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: scheme.onSurface,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.1,
-                        fontSize: 13.5,
-                      ),
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: _open ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          alignment: Alignment.topCenter,
-          child: _open
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: widget.children,
-                )
-              : const SizedBox.shrink(),
-        ),
-      ],
-    );
-  }
-}
 
 /// Single-select tile group for visual style presets (Background
 /// shape, Shadow style, Border style, etc). Each tile renders
@@ -3208,11 +3097,6 @@ const List<Color> _curatedSwatches = [
   Color(0xFFAB47BC), // Purple
   Color(0xFF8D6E63), // Brown
 ];
-
-// _InlineSliderRow / _InlineSliderRowState / _InlinePresetChip removed
-// 2026-05: panels now route exclusively through `_FlatSliderRow`. The
-// inline-expand variant had no live call site and the only thing
-// keeping it alive was a pair of `// ignore: unused_element*` markers.
 
 // ─────────────────────────────────────────────────────────────────────
 // Inline color body + secondary More grid
