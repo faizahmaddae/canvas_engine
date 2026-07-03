@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:canvas_engine/features/editor/engine/commands/image_commands.dart';
+import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_mask.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/effects/editor_effect.dart';
@@ -141,6 +143,102 @@ void main() {
       expect(decoded.effects.effects, hasLength(1));
       expect(decoded.effects.effects.single, isA<BrightnessEffect>());
       expect(decoded.effects.stackMask, equals(mask));
+    });
+  });
+
+  group('EffectStack.copyWith', () {
+    test('preserves stackMask; replaces effects list', () {
+      final stack = EffectStack(
+        List<EditorEffect>.unmodifiable(
+          <EditorEffect>[BrightnessEffect(amount: 20)],
+        ),
+        stackMask: mask,
+      );
+      final next = stack.copyWith(effects: const <EditorEffect>[]);
+      expect(next.effects, isEmpty);
+      expect(next.stackMask, equals(mask));
+      expect(stack.copyWith().stackMask, equals(mask));
+    });
+  });
+
+  group('command rebuilds preserve stackMask', () {
+    // Every command that rebuilds an existing layer's effects list
+    // must keep a set stackMask (constructed directly here —
+    // SetStackMaskCommand doesn't exist yet) while the effects
+    // change still lands.
+    ImageLayer layerWith(List<EditorEffect> effects) => makeImage(
+          effects: EffectStack(
+            List<EditorEffect>.unmodifiable(effects),
+            stackMask: mask,
+          ),
+        );
+
+    ImageLayer applied(EditorDocument doc) =>
+        doc.layerById('img-1')! as ImageLayer;
+
+    test('SetImageAdjustmentsCommand (adjust)', () {
+      var doc = EditorDocument.empty
+          .addLayer(layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]));
+      doc = const SetImageAdjustmentsCommand(layerId: 'img-1', contrast: 1.5)
+          .apply(doc);
+      final layer = applied(doc);
+      expect(layer.adjustments.contrast, 1.5, reason: 'edit must land');
+      expect(layer.effects.stackMask, equals(mask));
+    });
+
+    test('SetImageVignetteCommand (vignette)', () {
+      var doc = EditorDocument.empty.addLayer(layerWith(const <EditorEffect>[]));
+      doc = const SetImageVignetteCommand(layerId: 'img-1', intensity: 0.6)
+          .apply(doc);
+      final layer = applied(doc);
+      expect(layer.effects.effects.single, isA<VignetteEffect>());
+      expect(layer.effects.stackMask, equals(mask));
+    });
+
+    test('ReorderEffectCommand (reorder)', () {
+      var doc = EditorDocument.empty.addLayer(layerWith(<EditorEffect>[
+        BrightnessEffect(amount: 20),
+        ContrastEffect(amount: 1.5),
+      ]));
+      doc = const ReorderEffectCommand(
+        layerId: 'img-1',
+        oldIndex: 0,
+        newIndex: 1,
+      ).apply(doc);
+      final layer = applied(doc);
+      expect(layer.effects.effects.first, isA<ContrastEffect>());
+      expect(layer.effects.stackMask, equals(mask));
+    });
+
+    test('ToggleEffectEnabledCommand (toggle)', () {
+      var doc = EditorDocument.empty
+          .addLayer(layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]));
+      doc = const ToggleEffectEnabledCommand(layerId: 'img-1', index: 0)
+          .apply(doc);
+      final layer = applied(doc);
+      expect(layer.effects.effects.single.enabled, isFalse);
+      expect(layer.effects.stackMask, equals(mask));
+    });
+
+    test('DeleteEffectCommand (delete) — mask outlives the last effect', () {
+      var doc = EditorDocument.empty
+          .addLayer(layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]));
+      doc = const DeleteEffectCommand(layerId: 'img-1', index: 0).apply(doc);
+      final layer = applied(doc);
+      expect(layer.effects.isEmpty, isTrue);
+      expect(layer.effects.stackMask, equals(mask),
+          reason: 'the mask is user state independent of list emptiness');
+    });
+
+    test('DeleteEffectCommand.invert (insert) restores with mask intact', () {
+      final before = EditorDocument.empty
+          .addLayer(layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]));
+      const delete = DeleteEffectCommand(layerId: 'img-1', index: 0);
+      final after = delete.apply(before);
+      final restored = delete.invert(before).apply(after);
+      final layer = restored.layerById('img-1')! as ImageLayer;
+      expect(layer.effects.effects.single, isA<BrightnessEffect>());
+      expect(layer.effects.stackMask, equals(mask));
     });
   });
 }

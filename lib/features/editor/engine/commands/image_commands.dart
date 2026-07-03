@@ -383,9 +383,10 @@ class SetImageAdjustmentsCommand extends EditorCommand {
         .toList(growable: true);
     final derived = next.toEffectStack();
     final merged = <EditorEffect>[...derived, ...keep];
-    final nextEffects = merged.isEmpty
-        ? EffectStack.empty
-        : EffectStack(List<EditorEffect>.unmodifiable(merged));
+    // copyWith preserves the stack mask by construction — rebuilding
+    // via the bare constructor would silently drop a set stackMask.
+    final nextEffects = layer.effects
+        .copyWith(effects: List<EditorEffect>.unmodifiable(merged));
     return doc.replaceLayer(layer.copyAll(effects: nextEffects));
   }
 
@@ -494,9 +495,8 @@ class SetImageVignetteCommand extends EditorCommand {
         ? <EditorEffect>[...keep, next]
         : keep;
     if (existing == null && !next.contributes) return doc;
-    final nextEffects = merged.isEmpty
-        ? EffectStack.empty
-        : EffectStack(List<EditorEffect>.unmodifiable(merged));
+    final nextEffects = layer.effects
+        .copyWith(effects: List<EditorEffect>.unmodifiable(merged));
     if (nextEffects == layer.effects) return doc;
     return doc.replaceLayer(layer.copyAll(effects: nextEffects));
   }
@@ -697,7 +697,8 @@ class ReorderEffectCommand extends EditorCommand {
     final moved = next.removeAt(oldIndex);
     next.insert(newIndex, moved);
     return doc.replaceLayer(layer.copyAll(
-      effects: EffectStack(List<EditorEffect>.unmodifiable(next)),
+      effects: layer.effects
+          .copyWith(effects: List<EditorEffect>.unmodifiable(next)),
     ));
   }
 
@@ -741,7 +742,8 @@ class ToggleEffectEnabledCommand extends EditorCommand {
     final next = List<EditorEffect>.of(effects);
     next[index] = flipped;
     return doc.replaceLayer(layer.copyAll(
-      effects: EffectStack(List<EditorEffect>.unmodifiable(next)),
+      effects: layer.effects
+          .copyWith(effects: List<EditorEffect>.unmodifiable(next)),
     ));
   }
 
@@ -778,10 +780,11 @@ class DeleteEffectCommand extends EditorCommand {
     final effects = layer.effects.effects;
     if (index < 0 || index >= effects.length) return doc;
     final next = List<EditorEffect>.of(effects)..removeAt(index);
+    // copyWith keeps the stack mask when the last effect is deleted —
+    // the mask is user state independent of the list's emptiness.
     return doc.replaceLayer(layer.copyAll(
-      effects: next.isEmpty
-          ? EffectStack.empty
-          : EffectStack(List<EditorEffect>.unmodifiable(next)),
+      effects: layer.effects
+          .copyWith(effects: List<EditorEffect>.unmodifiable(next)),
     ));
   }
 
@@ -825,7 +828,8 @@ class _InsertEffectCommand extends EditorCommand {
     final clamped = index.clamp(0, effects.length);
     final next = List<EditorEffect>.of(effects)..insert(clamped, effect);
     return doc.replaceLayer(layer.copyAll(
-      effects: EffectStack(List<EditorEffect>.unmodifiable(next)),
+      effects: layer.effects
+          .copyWith(effects: List<EditorEffect>.unmodifiable(next)),
     ));
   }
 

@@ -396,6 +396,23 @@ final class EffectStack {
   /// `Stack` at all.
   bool get hasContributingCustomPaint => customPaintEffects.isNotEmpty;
 
+  /// Clone with a new effects list, preserving [stackMask] by
+  /// construction. Every command that rebuilds an existing layer's
+  /// effects list MUST go through this instead of `EffectStack(next)`
+  /// — the bare constructor defaults `stackMask` to null and silently
+  /// drops a set mask. Only [effects] is exposed: setting the mask
+  /// itself goes through direct construction in the stack-mask
+  /// command, so no sentinel machinery is needed here.
+  ///
+  /// A fully empty result (no effects, no mask) canonicalises to the
+  /// [empty] singleton so `identical(stack, EffectStack.empty)` stays
+  /// a valid fast emptiness check after command rebuilds.
+  EffectStack copyWith({List<EditorEffect>? effects}) {
+    final nextEffects = effects ?? this.effects;
+    if (nextEffects.isEmpty && stackMask == null) return empty;
+    return EffectStack(nextEffects, stackMask: stackMask);
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
