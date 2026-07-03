@@ -940,6 +940,12 @@ class InteractionController extends Notifier<InteractionUiState> {
           g.initials,
           anchor: g.anchor,
           scale: factor,
+          // Same per-session envelope as single-layer gestures. Without
+          // these the engine's permissive API defaults (0.05..64) apply
+          // and a group pinch can scale far past what a single-layer
+          // pinch allows.
+          minScale: EngineConstants.minGestureScale,
+          maxScale: EngineConstants.maxGestureScale,
           minLayerSide: EngineConstants.minLayerSize,
           maxLayerSide: EngineConstants.maxLayerSize,
         );
