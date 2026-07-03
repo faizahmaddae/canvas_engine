@@ -282,18 +282,41 @@ void main() {
       assetBundle: bundle,
       child: DocumentView(document: doc, backgroundFill: doc.background),
     );
-    for (var i = 0; i < 5; i++) {
-      await tester.pump(const Duration(milliseconds: 16));
+
+    // The image decode is real-async (instantiateImageCodec never
+    // completes under fake-async pumps alone), so settle with
+    // real-time slices until the probe pixel stops being the white
+    // background. Without this the old assertions (r≈g≈b, r>40)
+    // were satisfied by an all-white frame — the test could pass
+    // with the image never decoding at all.
+    var decoded = await tester.runAsync(() async {
+      final bytes = await _capturePng(key);
+      return _decodePng(bytes);
+    });
+    for (var i = 0;
+        i < 40 && ((decoded!.argb(24, 24) >> 16) & 0xFF) >= 250;
+        i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+      await tester.pump();
+      decoded = await tester.runAsync(() async {
+        final bytes = await _capturePng(key);
+        return _decodePng(bytes);
+      });
     }
 
-    final bytes = await tester.runAsync(() => _capturePng(key));
-    final decoded = await tester.runAsync(() => _decodePng(bytes!));
     final argb = decoded!.argb(24, 24);
     final r = (argb >> 16) & 0xFF;
     final g = (argb >> 8) & 0xFF;
     final b = argb & 0xFF;
     expect((r - g).abs(), lessThanOrEqualTo(2));
     expect((g - b).abs(), lessThanOrEqualTo(2));
+    // Mono-filtered pure red is a mid grey — far from the white
+    // background, so a blank frame can no longer pass.
     expect(r, greaterThan(40));
+    expect(r, lessThan(200),
+        reason: 'pixel must be the filtered image, not the white '
+            'background (${(r, g, b)})');
   });
 }
