@@ -10,6 +10,7 @@ import '../../../../l10n/l10n.dart';
 import '../../../editor/engine/core/editor_document.dart';
 import '../../../editor/engine/rendering/document_thumbnail.dart';
 import '../../../editor/engine/serialization/document_codec.dart';
+import '../../application/project_delete_service.dart';
 import '../../application/project_store.dart';
 import '../../domain/project.dart';
 
@@ -310,7 +311,9 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
     );
     if (ok ?? false) {
       final name = widget.project.name;
-      await ref.read(projectStoreProvider.notifier).delete(widget.project.id);
+      await ref
+          .read(projectDeleteServiceProvider)
+          .delete(widget.project.id);
       messenger.showSnackBar(
         SnackBar(
           content: Text(l10n.deletedProject(name)),
