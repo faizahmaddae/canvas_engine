@@ -44,9 +44,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Backup lib snapshots
-lib*.zip
-
 # IDE metadata
 .metadata
 .idea/
