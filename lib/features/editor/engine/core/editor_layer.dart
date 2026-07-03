@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../effects/editor_effect.dart';
 import 'layer_capabilities.dart';
+import 'layer_mask.dart';
 import 'layer_transform.dart';
 
 /// Base class for any visual layer that can live on the canvas.
@@ -133,16 +134,26 @@ abstract class EditorLayer {
     if (opacity < 1.0) 'opacity': opacity,
     // Same omit-when-default rule for effects: an empty stack
     // costs zero bytes on disk. This is the gate that keeps the
-    // v2 corpus byte-identical under schema v3.
-    if (effects.isNotEmpty) 'effects': effects.toJson(),
+    // v2 corpus byte-identical under schema v3. The gate reads the
+    // raw effects LIST — never a composite emptiness that folds in
+    // stackMask — so a stackMask-only stack still omits `effects`.
+    if (effects.effects.isNotEmpty) 'effects': effects.toJson(),
+    // Additive within schema v3: the stack mask serializes under its
+    // own key, gated independently of the effects list, so documents
+    // without one keep their exact bytes.
+    if (effects.stackMask != null) 'stackMask': effects.stackMask!.toJson(),
   };
 
   /// Helper for subclass `fromJson` factories: returns the decoded
-  /// [EffectStack] under the `effects` key, or [EffectStack.empty]
-  /// when absent. Centralised so every layer reads the same key with
-  /// the same null/empty handling.
-  static EffectStack parseEffects(Map<String, dynamic> json) =>
-      EffectStack.fromJson(json['effects']);
+  /// [EffectStack] combining the `effects` and `stackMask` keys, or
+  /// [EffectStack.empty] when both are absent. Centralised so every
+  /// layer reads the same keys with the same null/empty handling.
+  static EffectStack parseEffects(Map<String, dynamic> json) {
+    final stack = EffectStack.fromJson(json['effects']);
+    final rawMask = json['stackMask'];
+    if (rawMask == null) return stack;
+    return EffectStack(stack.effects, stackMask: LayerMask.fromJson(rawMask));
+  }
 
   @override
   bool operator ==(Object other) =>

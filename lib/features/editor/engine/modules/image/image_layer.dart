@@ -622,8 +622,16 @@ class ImageLayer extends EditorLayer {
     if (legacy is! Map) return fromArray;
     final adj = ImageAdjustments.fromJson(Map<String, dynamic>.from(legacy));
     final lifted = adj.toEffectStack();
-    if (lifted.isEmpty) return EffectStack.empty;
-    return EffectStack(List<EditorEffect>.unmodifiable(lifted));
+    // Carry any decoded stackMask through the lift branches — a
+    // hybrid document (v3 stackMask + leftover legacy adjustments)
+    // must not lose the mask. `fromArray` here has an empty effects
+    // list by construction, so returning it is byte-equivalent to
+    // the old `EffectStack.empty` when no mask is present.
+    if (lifted.isEmpty) return fromArray;
+    return EffectStack(
+      List<EditorEffect>.unmodifiable(lifted),
+      stackMask: fromArray.stackMask,
+    );
   }
 }
 

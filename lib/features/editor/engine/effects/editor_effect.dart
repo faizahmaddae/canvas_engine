@@ -249,9 +249,10 @@ final Expando<List<double>> _composedColorMatrixCache =
 final List<double> _kNullMatrixSentinel = List<double>.unmodifiable(
     <double>[]);
 
-/// Immutable, ordered list of effects on a layer. Empty by default —
-/// an empty stack costs nothing in JSON (the layer omits the
-/// `effects` key entirely).
+/// Immutable, ordered list of effects on a layer, plus an optional
+/// [stackMask] that clips the composed output of the whole stack.
+/// Empty by default — an empty stack costs nothing in JSON (the
+/// layer omits the `effects` key entirely).
 @immutable
 final class EffectStack {
   /// Construct an effect stack. The constructor stores [effects] as
@@ -259,7 +260,7 @@ final class EffectStack {
   /// (commands wrap with `List.unmodifiable`; const list literals
   /// are already immutable). The const form keeps test fixtures and
   /// the [empty] singleton cheap.
-  const EffectStack(this.effects);
+  const EffectStack(this.effects, {this.stackMask});
 
   /// The shared empty instance. Constructors default to this so
   /// callers never have to pass it explicitly and `identical(stack,
@@ -268,6 +269,17 @@ final class EffectStack {
 
   final List<EditorEffect> effects;
 
+  /// Clips the composed output of the whole stack (docs/effects.md
+  /// §5: `composite(I_prev over I0 through stackMask)`). `null` means
+  /// no clip. Composes with per-effect masks via `min(α)` at sample
+  /// time — see [LayerMask.composedAlpha].
+  final LayerMask? stackMask;
+
+  /// Emptiness of the *effects list only*. Deliberately does NOT
+  /// consider [stackMask]: this getter gates the `effects` JSON key
+  /// (a stackMask-only stack must still omit `effects`, or every
+  /// legacy document's bytes change) and the renderer's "any effects
+  /// to compose?" checks, both of which care about the list alone.
   bool get isEmpty => effects.isEmpty;
   bool get isNotEmpty => effects.isNotEmpty;
   int get length => effects.length;
@@ -387,8 +399,10 @@ final class EffectStack {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is EffectStack && listEquals(other.effects, effects));
+      (other is EffectStack &&
+          listEquals(other.effects, effects) &&
+          other.stackMask == stackMask);
 
   @override
-  int get hashCode => Object.hashAll(effects);
+  int get hashCode => Object.hash(Object.hashAll(effects), stackMask);
 }
