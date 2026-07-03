@@ -93,10 +93,41 @@ EditorDocument _imageWithStackMask() => EditorDocument(
   projectKind: ProjectKind.photo,
 );
 
+/// Step 6: a per-effect mask alongside an unmasked effect. Locks the
+/// wire shape of `mask` on an effect entry and (via the byte-identity
+/// gate) that the Step 6 renderer work never touches serialization.
+EditorDocument _imageWithPerEffectMask() => EditorDocument(
+  layers: [
+    ImageLayer(
+      id: 'img-1',
+      transform: const LayerTransform(
+        position: Offset(60, 60),
+        size: Size(960, 720),
+      ),
+      source: const ImageSource.asset('assets/sample.jpg'),
+      effects: EffectStack(
+        List<EditorEffect>.unmodifiable(<EditorEffect>[
+          const SaturationEffect(amount: 0.8),
+          BrightnessEffect(
+            amount: 24,
+            mask: const RectMask(
+              rect: Rect.fromLTWH(0, 0, 960, 360),
+              feather: 32,
+            ),
+          ),
+        ]),
+      ),
+    ),
+  ],
+  basePhotoLayerId: 'img-1',
+  projectKind: ProjectKind.photo,
+);
+
 void main() {
   final fixtures = <String, EditorDocument>{
     '01_image_with_effects.json': _imageWithEffects(),
     '02_image_with_stack_mask.json': _imageWithStackMask(),
+    '03_image_with_per_effect_mask.json': _imageWithPerEffectMask(),
   };
 
   test('write v3 fixture corpus', () {

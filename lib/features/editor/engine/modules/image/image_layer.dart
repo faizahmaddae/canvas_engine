@@ -250,49 +250,126 @@ class ImageLayer extends EditorLayer {
     // Wrapping inside the clip means border and shadow keep their
     // own colours.
     final filterMatrix = imageFilterMatrix(filterPreset);
-    final adjMatrix = effects.composedColorMatrix;
-    final List<double>? combined;
-    if (filterMatrix == null) {
-      combined = adjMatrix;
-    } else if (adjMatrix == null) {
-      combined = filterMatrix;
-    } else {
-      combined = composeColorMatrices(adjMatrix, filterMatrix);
-    }
     final int? cacheWidth = _decodeCacheWidth(transform.size.width);
-    final adjusted = _loadableImage(
-      cacheWidth: cacheWidth,
-      colorMatrix: combined,
-    );
-    // Crop window selects a sub-rect of the post-fit image. Applied
-    // *before* the mask/border/shadow stack so cropping zooms into
-    // the visible silhouette but the silhouette itself, the
-    // border, and the shadow stay anchored to the layer bounds —
-    // exactly like cropping in any photo editor.
-    final pixels = isFullCrop ? adjusted : _applyCrop(adjusted);
-    // Custom-paint effect overlay (vignette, future grain, etc.).
-    // Painted *over* the pixels but *inside* the mask clip so it
-    // tracks every silhouette shape for free \u2014 same trick the
-    // border / shadow painters use. When no custom-paint effect
-    // contributes, we omit the wrapping `Stack` entirely so the
-    // widget tree is byte-identical to a pre-effect document
-    // (this is what keeps the v3 byte-identity gate green for
-    // documents whose vignette intensity is 0).
-    final painted = effects.hasContributingCustomPaint
-        ? Stack(
-            fit: StackFit.expand,
-            children: [
-              pixels,
-              IgnorePointer(
-                child: CustomPaint(
-                  painter: _CustomPaintEffectsPainter(
-                    effects: effects.customPaintEffects.toList(growable: false),
-                  ),
-                ),
+    // Crop note (applies to both paths below): the crop window
+    // selects a sub-rect of the post-fit image and is applied
+    // *before* the mask/border/shadow stack, so cropping zooms into
+    // the visible silhouette while the silhouette, border, and
+    // shadow stay anchored to the layer bounds. A colour matrix is
+    // pointwise, so ColorFiltered-after-crop equals crop-after-
+    // ColorFiltered exactly — the segmented path relies on this.
+    final Widget pixels;
+    final bool stackHasMatrix;
+    if (!effects.hasEnabledMaskedEffect) {
+      // Fast path — every pre-Step-6 document. The whole stack
+      // composes into ONE matrix, merged with the filter preset so we
+      // pay a single [ColorFiltered]. This branch must stay
+      // widget-identical to the pre-Step-6 renderer (structure-gated
+      // in tests).
+      final adjMatrix = effects.composedColorMatrix;
+      final List<double>? combined;
+      if (filterMatrix == null) {
+        combined = adjMatrix;
+      } else if (adjMatrix == null) {
+        combined = filterMatrix;
+      } else {
+        combined = composeColorMatrices(adjMatrix, filterMatrix);
+      }
+      final adjusted = _loadableImage(
+        cacheWidth: cacheWidth,
+        colorMatrix: combined,
+      );
+      pixels = isFullCrop ? adjusted : _applyCrop(adjusted);
+      stackHasMatrix = adjMatrix != null;
+    } else {
+      // Step 6 segmented fold (docs/effects-step6-per-effect-masks-
+      // 2026-07.md §3): maximal unmasked runs stay one ColorFiltered;
+      // each masked effect composites its output over the running
+      // state through its mask's alpha — effects.md §5's
+      //   I_prev := composite(I_next over I_prev through e.mask).
+      final segments = effects.renderSegments;
+      List<double>? lead;
+      var rest = segments;
+      if (segments.isNotEmpty && segments.first is MatrixSegment) {
+        // The leading unmasked run merges into the image widget's own
+        // colour filter, same single-pass cost as the fast path.
+        lead = (segments.first as MatrixSegment).matrix;
+        rest = segments.sublist(1);
+      }
+      final List<double>? firstCombined;
+      if (filterMatrix == null) {
+        firstCombined = lead;
+      } else if (lead == null) {
+        firstCombined = filterMatrix;
+      } else {
+        firstCombined = composeColorMatrices(lead, filterMatrix);
+      }
+      final adjusted = _loadableImage(
+        cacheWidth: cacheWidth,
+        colorMatrix: firstCombined,
+      );
+      Widget current = isFullCrop ? adjusted : _applyCrop(adjusted);
+      for (final seg in rest) {
+        current = switch (seg) {
+          MatrixSegment(:final matrix) => ColorFiltered(
+              colorFilter: ColorFilter.matrix(matrix),
+              child: current,
+            ),
+          MaskedEffectSegment(:final effect, :final matrix) =>
+            StackMaskComposite(
+              mask: effect.mask!,
+              size: transform.size,
+              base: current,
+              painted: ColorFiltered(
+                colorFilter: ColorFilter.matrix(matrix),
+                child: current,
               ),
-            ],
-          )
-        : pixels;
+            ),
+        };
+      }
+      pixels = current;
+      stackHasMatrix = segments.isNotEmpty;
+    }
+    // Custom-paint effect overlays (vignette, future grain, etc.).
+    // Painted *over* the pixels but *inside* the mask clip so they
+    // track every silhouette shape for free — same trick the
+    // border / shadow painters use. When nothing contributes, the
+    // wrapping `Stack` is omitted entirely so the widget tree is
+    // byte-identical to a pre-effect document (this keeps the v3
+    // byte-identity gate green for vignette-intensity-0 documents).
+    //
+    // A masked custom-paint effect draws on top, so masking the
+    // overlay alone implements §5's composite for this kind — and
+    // rendering nothing until its alpha raster lands (empty base)
+    // avoids a one-frame flash of the unmasked overlay.
+    final maskedCp = effects.maskedCustomPaintEffects.toList(growable: false);
+    final overlays = <Widget>[
+      if (effects.hasContributingCustomPaint)
+        IgnorePointer(
+          child: CustomPaint(
+            painter: _CustomPaintEffectsPainter(
+              effects: effects.customPaintEffects.toList(growable: false),
+            ),
+          ),
+        ),
+      for (final e in maskedCp)
+        IgnorePointer(
+          child: StackMaskComposite(
+            mask: e.mask!,
+            size: transform.size,
+            base: const SizedBox.expand(),
+            painted: CustomPaint(
+              painter: _CustomPaintEffectsPainter(effects: [e]),
+            ),
+          ),
+        ),
+    ];
+    final painted = overlays.isEmpty
+        ? pixels
+        : Stack(
+            fit: StackFit.expand,
+            children: [pixels, ...overlays],
+          );
     // Stack mask (A3): composite the effected subtree over the
     // un-effected base through the mask's alpha — effects.md §5's
     // `I_prev := composite(I_prev over I0 through stack.stackMask)`.
@@ -307,8 +384,9 @@ class ImageLayer extends EditorLayer {
     // is a layer field, not a stack entry, so the mask must not clip
     // it; crop selects which pixels exist at all.
     final stackMask = effects.stackMask;
-    final stackContributes =
-        adjMatrix != null || effects.hasContributingCustomPaint;
+    final stackContributes = stackHasMatrix ||
+        effects.hasContributingCustomPaint ||
+        maskedCp.isNotEmpty;
     final Widget composited;
     if (stackMask == null || !stackContributes) {
       composited = painted;

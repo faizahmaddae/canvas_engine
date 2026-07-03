@@ -354,21 +354,90 @@ final class EffectStack {
     List<double>? acc;
     for (final eff in effects) {
       if (!eff.enabled || eff.mask != null) continue;
-      final m = switch (eff) {
-        BrightnessEffect(:final amount) when amount != 0 =>
-          _brightnessMatrix(amount),
-        ContrastEffect(:final amount) when amount != ContrastEffect.identityAmount =>
-          _contrastMatrix(amount),
-        SaturationEffect(:final amount) when amount != SaturationEffect.identityAmount =>
-          _saturationMatrix(amount),
-        ExposureEffect(:final amount) when amount != 0 => _exposureMatrix(amount),
-        WarmthEffect(:final amount) when amount != 0 => _warmthMatrix(amount),
-        _ => null,
-      };
+      final m = _matrixOf(eff);
       if (m == null) continue;
       acc = acc == null ? m : composeColorMatrices(m, acc);
     }
     return acc;
+  }
+
+  /// The 4×5 matrix a single colour-adjustment effect contributes,
+  /// or null for identity values and non-matrix kinds. Shared by the
+  /// legacy single-matrix composition above and the Step 6 segmented
+  /// renderer below so the two paths can never disagree about an
+  /// effect's math.
+  static List<double>? _matrixOf(EditorEffect eff) => switch (eff) {
+        BrightnessEffect(:final amount) when amount != 0 =>
+          _brightnessMatrix(amount),
+        ContrastEffect(:final amount)
+            when amount != ContrastEffect.identityAmount =>
+          _contrastMatrix(amount),
+        SaturationEffect(:final amount)
+            when amount != SaturationEffect.identityAmount =>
+          _saturationMatrix(amount),
+        ExposureEffect(:final amount) when amount != 0 =>
+          _exposureMatrix(amount),
+        WarmthEffect(:final amount) when amount != 0 => _warmthMatrix(amount),
+        _ => null,
+      };
+
+  /// True when any enabled, contributing effect carries a per-effect
+  /// mask — the signal that the renderer must take the segmented
+  /// Step 6 path ([renderSegments]) instead of the single composed
+  /// matrix. False for every pre-Step-6 document, which keeps the
+  /// fast path (and its widget tree) untouched.
+  bool get hasEnabledMaskedEffect => effects.any(
+        (e) => e.enabled && e.mask != null && e.contributes,
+      );
+
+  /// Custom-paint effects with a per-effect mask, in stack order.
+  /// Rendered as individually mask-clipped overlays (the overlay
+  /// draws on top, so masking the overlay alone implements §5's
+  /// composite for this kind).
+  Iterable<EditorEffect> get maskedCustomPaintEffects => effects.where(
+        (e) =>
+            e.enabled &&
+            e.mask != null &&
+            e.kind == EffectKind.customPaint &&
+            e.contributes,
+      );
+
+  /// Step 6 render plan: the enabled colour-matrix effects folded
+  /// into segments, in stack order (docs/effects-step6-per-effect-
+  /// masks-2026-07.md §3). Maximal runs of *unmasked* effects
+  /// compose into one [MatrixSegment] — exact, because matrix
+  /// composition is associative within a run — while each masked
+  /// effect becomes its own [MaskedEffectSegment] boundary, because
+  /// composing across a per-pixel blend is not.
+  ///
+  /// Custom-paint effects are not part of the fold; the renderer's
+  /// overlay pass handles them ([customPaintEffects] /
+  /// [maskedCustomPaintEffects]).
+  List<EffectRenderSegment> get renderSegments {
+    final out = <EffectRenderSegment>[];
+    List<double>? acc;
+    void flush() {
+      final m = acc;
+      if (m != null) {
+        out.add(MatrixSegment(m));
+        acc = null;
+      }
+    }
+
+    for (final eff in effects) {
+      if (!eff.enabled || eff.kind != EffectKind.colorMatrix) continue;
+      final m = _matrixOf(eff);
+      if (m == null) continue; // identity — invisible on either path
+      if (eff.mask != null) {
+        flush();
+        out.add(MaskedEffectSegment(eff, m));
+      } else {
+        final prev = acc;
+        acc = prev == null ? m : composeColorMatrices(m, prev);
+      }
+    }
+    flush();
+    return out;
   }
 
   /// Custom-paint effects that actually contribute to the final
@@ -422,4 +491,31 @@ final class EffectStack {
 
   @override
   int get hashCode => Object.hash(Object.hashAll(effects), stackMask);
+}
+
+/// One step of the Step 6 segmented render plan ([EffectStack
+/// .renderSegments]). Sealed so the renderer's fold is an exhaustive
+/// switch — adding a segment kind is a compile error at every
+/// consumer.
+sealed class EffectRenderSegment {
+  const EffectRenderSegment();
+}
+
+/// A maximal run of enabled, unmasked colour-matrix effects composed
+/// into one 4×5 matrix — applied with a single `ColorFiltered`, same
+/// cost as the pre-Step-6 renderer paid for the whole stack.
+final class MatrixSegment extends EffectRenderSegment {
+  const MatrixSegment(this.matrix);
+
+  final List<double> matrix;
+}
+
+/// A single enabled colour-matrix effect carrying a per-effect mask.
+/// The renderer composites `ColorFiltered(matrix)` over the running
+/// state through `effect.mask`'s alpha (the A3 mechanism).
+final class MaskedEffectSegment extends EffectRenderSegment {
+  const MaskedEffectSegment(this.effect, this.matrix);
+
+  final EditorEffect effect;
+  final List<double> matrix;
 }

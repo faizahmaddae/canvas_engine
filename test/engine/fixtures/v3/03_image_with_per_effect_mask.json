@@ -1,0 +1,45 @@
+{
+  "version": 3,
+  "width": 1080.0,
+  "height": 1080.0,
+  "basePhotoLayerId": "img-1",
+  "projectKind": "photo",
+  "layers": [
+    {
+      "type": "image",
+      "id": "img-1",
+      "transform": {
+        "x": 60.0,
+        "y": 60.0,
+        "w": 960.0,
+        "h": 720.0,
+        "r": 0.0
+      },
+      "effects": [
+        {
+          "type": "saturation",
+          "amount": 0.8
+        },
+        {
+          "type": "brightness",
+          "mask": {
+            "shape": "rect",
+            "rect": [
+              0.0,
+              0.0,
+              960.0,
+              360.0
+            ],
+            "feather": 32.0
+          },
+          "amount": 24.0
+        }
+      ],
+      "source": {
+        "asset": "assets/sample.jpg"
+      },
+      "fit": "cover",
+      "mask": "original"
+    }
+  ]
+}

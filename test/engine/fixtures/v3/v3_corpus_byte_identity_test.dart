@@ -15,6 +15,7 @@ const _fixtureDir = 'test/engine/fixtures/v3';
 const _fixtureFiles = <String>[
   '01_image_with_effects.json',
   '02_image_with_stack_mask.json',
+  '03_image_with_per_effect_mask.json',
 ];
 
 void main() {
