@@ -14,6 +14,8 @@ import '../../presentation/widgets/inline_color_body.dart';
 import '../../presentation/widgets/panel_option_tile.dart';
 import '../../application/recent_colors_controller.dart';
 import '../../presentation/widgets/section_label.dart';
+import '../../ui/editor_slider_row.dart';
+import '../../ui/precision_disclosure.dart';
 import 'image_panel_shell.dart';
 
 /// Expanded panel body for the Image sub-tool's "Border" tab.
@@ -61,8 +63,6 @@ class ImageBorderBody extends ConsumerStatefulWidget {
 }
 
 class _ImageBorderBodyState extends ConsumerState<ImageBorderBody> {
-  bool _adjustOpen = false;
-
   void _commit({Color? c, double? w, bool live = false}) {
     ref
         .read(documentControllerProvider.notifier)
@@ -163,28 +163,23 @@ class _ImageBorderBodyState extends ConsumerState<ImageBorderBody> {
             },
           ),
           const SizedBox(height: 6),
-          _AdjustHeader(
-            open: _adjustOpen,
+          PrecisionDisclosure(
+            icon: Icons.tune_rounded,
+            titleClosed: context.l10n.adjustPrecisely,
             subtitle: context.l10n.widthLabel,
-            onToggle: () {
-              EditorHaptics.tap();
-              setState(() => _adjustOpen = !_adjustOpen);
-            },
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: _adjustOpen
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: _PrecisionSlider(
-                      value: width,
-                      max: sliderMax,
-                      onChange: (w) => _commit(w: w, live: true),
-                    ),
-                  )
-                : const SizedBox.shrink(),
+            chevronColorClosed: Theme.of(context).colorScheme.primary,
+            chevronColorOpen: Theme.of(context).colorScheme.primary,
+            children: [
+              const SizedBox(height: 4),
+              EditorSliderRow(
+                label: context.l10n.widthLabel,
+                readoutWidth: 40,
+                value: width,
+                max: sliderMax,
+                format: (v) => '${v.round()}',
+                onChanged: (w) => _commit(w: w, live: true),
+              ),
+            ],
           ),
         ],
       ),
@@ -301,130 +296,3 @@ class _Chip extends StatelessWidget {
   }
 }
 
-/// Shared "Adjust precisely" disclosure header used by both the
-/// Border and Shadow panels. Optional [subtitle] hints at what the
-/// disclosure contains so users don't have to expand it to know.
-class _AdjustHeader extends StatelessWidget {
-  const _AdjustHeader({
-    required this.open,
-    required this.onToggle,
-    this.subtitle,
-  });
-
-  final bool open;
-  final VoidCallback onToggle;
-  final String? subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: onToggle,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-        child: Row(
-          children: [
-            Icon(Icons.tune_rounded, size: 16, color: scheme.primary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    context.l10n.adjustPrecisely,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 1),
-                    Text(
-                      subtitle!,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            AnimatedRotation(
-              turns: open ? 0.25 : 0,
-              duration: const Duration(milliseconds: 180),
-              child: Icon(
-                Icons.chevron_right_rounded,
-                size: 22,
-                color: scheme.primary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Inline numeric slider so power-users can dial an exact pixel
-/// thickness outside the 4 presets. Range 0\u201320 keeps the fine
-/// control range aligned with the rest of the editor's stroke
-/// inputs (paint stroke, text outline, etc.).
-class _PrecisionSlider extends StatelessWidget {
-  const _PrecisionSlider({
-    required this.value,
-    required this.max,
-    required this.onChange,
-  });
-
-  final double value;
-  final double max;
-  final ValueChanged<double> onChange;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 2, 4, 0),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 56,
-            child: Text(
-              context.l10n.widthLabel,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Slider(
-              value: value.clamp(0.0, max),
-              min: 0,
-              max: max,
-              onChanged: onChange,
-            ),
-          ),
-          SizedBox(
-            width: 40,
-            child: Text(
-              '${value.round()}',
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: scheme.onSurface,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
