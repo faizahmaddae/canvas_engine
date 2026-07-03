@@ -1,9 +1,10 @@
-import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/widgets.dart' show EdgeInsets, Orientation;
 
+import '../../engine/core/layer_transform.dart';
 import '../../engine/core/viewport_state.dart';
+import '../../engine/interaction/layer_space_mapper.dart';
 
 /// Where the floating toolbar landed relative to the selected layer.
 enum FloatingToolbarPlacement {
@@ -112,30 +113,29 @@ class FloatingToolbarPositioner {
     if (forceHidden) return const FloatingToolbarAnchor.hidden();
 
     // ─── Step 1: rotated screen-space bounds of the layer ──────────────
+    // `layerCenter` is always `layerPosition + layerSize/2` at every
+    // call site (matches `LayerTransform.center`'s own derivation), so
+    // the mapper can rebuild an equivalent transform from the
+    // decomposed params without a separate centre input.
+    final mapper = LayerSpaceMapper(
+      transform: LayerTransform(
+        position: layerPosition,
+        size: layerSize,
+        rotation: layerRotation,
+      ),
+      viewport: viewport,
+    );
     final corners = <Offset>[
-      _rotate(layerPosition, layerCenter, layerRotation),
-      _rotate(
-        layerPosition + Offset(layerSize.width, 0),
-        layerCenter,
-        layerRotation,
-      ),
-      _rotate(
-        layerPosition + Offset(0, layerSize.height),
-        layerCenter,
-        layerRotation,
-      ),
-      _rotate(
-        layerPosition + Offset(layerSize.width, layerSize.height),
-        layerCenter,
-        layerRotation,
-      ),
+      mapper.layerToScreen(Offset.zero),
+      mapper.layerToScreen(Offset(layerSize.width, 0)),
+      mapper.layerToScreen(Offset(0, layerSize.height)),
+      mapper.layerToScreen(Offset(layerSize.width, layerSize.height)),
     ];
     var minX = double.infinity;
     var minY = double.infinity;
     var maxX = -double.infinity;
     var maxY = -double.infinity;
-    for (final c in corners) {
-      final s = c * viewport.scale + viewport.translation;
+    for (final s in corners) {
       if (s.dx < minX) minX = s.dx;
       if (s.dx > maxX) maxX = s.dx;
       if (s.dy < minY) minY = s.dy;
@@ -207,16 +207,5 @@ class FloatingToolbarPositioner {
     final compact =
         screen.shortestSide < 380 || orientation == Orientation.landscape;
     return compact ? 64.0 : 80.0;
-  }
-
-  /// Rotate [p] around [pivot] by [a] radians. Exposed for tests and
-  /// for any caller that needs the same rotated-bounding-rect math
-  /// outside of a full anchor resolve.
-  static Offset _rotate(Offset p, Offset pivot, double a) {
-    final c = math.cos(a);
-    final s = math.sin(a);
-    final dx = p.dx - pivot.dx;
-    final dy = p.dy - pivot.dy;
-    return Offset(pivot.dx + dx * c - dy * s, pivot.dy + dx * s + dy * c);
   }
 }

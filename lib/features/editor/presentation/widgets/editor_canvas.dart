@@ -24,6 +24,7 @@ import '../../engine/core/editor_layer.dart';
 import '../../engine/core/layer_transform.dart';
 import '../../engine/core/selection_state.dart';
 import '../../engine/core/viewport_state.dart';
+import '../../engine/interaction/layer_space_mapper.dart';
 import '../../engine/interaction/group_engine.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../../engine/modules/text/text_layer.dart';
@@ -1497,14 +1498,17 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   /// lock state, or selection.
   bool _pointInLayerBbox(EditorLayer layer, Offset point) {
     final t = layer.transform;
-    final c = t.center;
-    final cos = math.cos(-t.rotation);
-    final sin = math.sin(-t.rotation);
-    final dx = point.dx - c.dx;
-    final dy = point.dy - c.dy;
-    final lx = dx * cos - dy * sin + t.size.width / 2;
-    final ly = dx * sin + dy * cos + t.size.height / 2;
-    return lx >= 0 && ly >= 0 && lx <= t.size.width && ly <= t.size.height;
+    // `canvasToLayer` never reads `viewport` (only `transform`), so
+    // `ViewportState.identity` is a correct, not just convenient,
+    // stand-in — this hit-test works in canvas space, not screen space.
+    final local = LayerSpaceMapper(
+      transform: t,
+      viewport: ViewportState.identity,
+    ).canvasToLayer(point);
+    return local.dx >= 0 &&
+        local.dy >= 0 &&
+        local.dx <= t.size.width &&
+        local.dy <= t.size.height;
   }
 
   /// Selection-routing for a plain tap on the canvas.

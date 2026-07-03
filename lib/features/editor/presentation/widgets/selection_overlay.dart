@@ -9,6 +9,7 @@ import '../../../../core/constants/engine_constants.dart';
 import '../../engine/core/layer_transform.dart';
 import '../../engine/core/selection_state.dart';
 import '../../engine/core/viewport_state.dart';
+import '../../engine/interaction/layer_space_mapper.dart';
 import 'handle_drag_detector.dart';
 
 enum DragPhase { start, update, end }
@@ -195,42 +196,18 @@ class LayerSelectionOverlay extends StatelessWidget {
   /// layers, so handles + drag are switched off together.
   final bool showHandles;
 
-  /// Map a canvas-space point to screen space using the viewport.
-  Offset _toScreen(Offset canvas) =>
-      canvas * viewport.scale + viewport.translation;
-
-  /// Rotate [point] around [pivot] by [angle] radians.
-  Offset _rotate(Offset point, Offset pivot, double angle) {
-    final c = math.cos(angle);
-    final s = math.sin(angle);
-    final dx = point.dx - pivot.dx;
-    final dy = point.dy - pivot.dy;
-    return Offset(pivot.dx + dx * c - dy * s, pivot.dy + dx * s + dy * c);
-  }
-
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
-    final pos = transform.position;
     final size = transform.size;
-    final centerCanvas = transform.center;
-    final rot = transform.rotation;
+    final mapper = LayerSpaceMapper(transform: transform, viewport: viewport);
 
-    // Layer corners in canvas-space (rotated around the layer centre).
-    final tlCanvas = _rotate(pos, centerCanvas, rot);
-    final trCanvas = _rotate(pos + Offset(size.width, 0), centerCanvas, rot);
-    final blCanvas = _rotate(pos + Offset(0, size.height), centerCanvas, rot);
-    final brCanvas = _rotate(
-      pos + Offset(size.width, size.height),
-      centerCanvas,
-      rot,
-    );
-
-    // Map to screen space.
-    final tlRaw = _toScreen(tlCanvas);
-    final trRaw = _toScreen(trCanvas);
-    final blRaw = _toScreen(blCanvas);
-    final brRaw = _toScreen(brCanvas);
+    // Layer corners, layer-local → screen in one step (rotation about
+    // the layer centre + viewport scale/translation).
+    final tlRaw = mapper.layerToScreen(Offset.zero);
+    final trRaw = mapper.layerToScreen(Offset(size.width, 0));
+    final blRaw = mapper.layerToScreen(Offset(0, size.height));
+    final brRaw = mapper.layerToScreen(Offset(size.width, size.height));
 
     // Push the chrome quad outward by [EngineConstants.selectionOutset]
     // dp along the rotated rect's local axes so the frame + handles sit
