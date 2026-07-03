@@ -201,6 +201,17 @@ class EditorDocument {
   EditorDocument addLayer(EditorLayer layer) =>
       copyWith(layers: [...layers, layer]);
 
+  /// Insert [layer] at [index] in z-order (bottom = 0, top = length).
+  /// The index is clamped to the valid range rather than thrown on:
+  /// the main caller is [RemoveLayerCommand]'s inverse, whose captured
+  /// index may exceed the list length by the time undo runs if other
+  /// layers were removed in between — restoring the layer at the top
+  /// beats crashing the undo.
+  EditorDocument insertLayer(EditorLayer layer, int index) {
+    final i = index.clamp(0, layers.length);
+    return copyWith(layers: [...layers]..insert(i, layer));
+  }
+
   EditorDocument removeLayer(String id) {
     final nextLayers =
         layers.where((l) => l.id != id).toList(growable: false);

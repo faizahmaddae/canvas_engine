@@ -65,6 +65,76 @@ void main() {
     });
   });
 
+  group('RemoveLayerCommand undo restores z-order', () {
+    List<String> ids(EditorDocument d) =>
+        d.layers.map((l) => l.id).toList();
+
+    test('middle-layer delete restores at the original index', () {
+      final before = seed(); // [a, b, c]
+      const cmd = RemoveLayerCommand('b');
+      final inverse = cmd.invert(before);
+      final after = cmd.apply(before);
+      expect(ids(after), ['a', 'c']);
+
+      final restored = inverse.apply(after);
+      expect(ids(restored), ['a', 'b', 'c'],
+          reason: 'invert(before).apply(after) must reproduce the '
+              'pre-delete z-order, not append the layer on top');
+    });
+
+    test('bottom-layer delete restores at index 0 through HistoryStack', () {
+      var doc = seed();
+      final history = HistoryStack();
+      doc = history.execute(doc, const RemoveLayerCommand('a'));
+      expect(ids(doc), ['b', 'c']);
+
+      doc = history.undo(doc);
+      expect(ids(doc), ['a', 'b', 'c']);
+
+      doc = history.redo(doc);
+      expect(ids(doc), ['b', 'c']);
+    });
+
+    test('multi-delete via CompositeCommand restores exact order', () {
+      var doc = seed();
+      doc = AddLayerCommand(rect('d')).apply(doc); // [a, b, c, d]
+      final before = doc;
+
+      const cmd = CompositeCommand([
+        RemoveLayerCommand('b'),
+        RemoveLayerCommand('d'),
+      ]);
+      final inverse = cmd.invert(before);
+      final after = cmd.apply(before);
+      expect(ids(after), ['a', 'c']);
+
+      final restored = inverse.apply(after);
+      expect(ids(restored), ['a', 'b', 'c', 'd'],
+          reason: 'reversed index-captured inserts must rebuild the '
+              'original order, not flip the restored layers');
+    });
+
+    test('layerById/indexOf stay consistent after an undone delete', () {
+      final before = seed();
+      const cmd = RemoveLayerCommand('b');
+      final restored = cmd.invert(before).apply(cmd.apply(before));
+      expect(restored.indexOf('b'), 1);
+      expect(restored.layerById('b')!.id, 'b');
+    });
+
+    test('AddLayerCommand without index still appends to the top', () {
+      final doc = AddLayerCommand(rect('x')).apply(seed());
+      expect(ids(doc), ['a', 'b', 'c', 'x']);
+    });
+
+    test('AddLayerCommand clamps a stale out-of-range index', () {
+      // An inverse captured against a larger document may outlive
+      // some of its neighbours; restoring at the top beats crashing.
+      final doc = AddLayerCommand(rect('x'), index: 9).apply(seed());
+      expect(ids(doc), ['a', 'b', 'c', 'x']);
+    });
+  });
+
   group('SetLayerVisibilityCommand', () {
     test('toggles visible and inverts to previous value', () {
       var doc = seed();

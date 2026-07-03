@@ -4,14 +4,21 @@ import '../core/layer_transform.dart';
 import 'editor_command.dart';
 
 class AddLayerCommand extends EditorCommand {
-  const AddLayerCommand(this.layer);
+  const AddLayerCommand(this.layer, {this.index});
   final EditorLayer layer;
+
+  /// Z-order insertion point (bottom = 0). Null appends to the top —
+  /// the right default for user-created layers. [RemoveLayerCommand]'s
+  /// inverse sets it so undoing a delete restores the layer at its
+  /// original depth instead of on top of everything.
+  final int? index;
 
   @override
   String get label => 'Add ${layer.type}';
 
   @override
-  EditorDocument apply(EditorDocument doc) => doc.addLayer(layer);
+  EditorDocument apply(EditorDocument doc) =>
+      index == null ? doc.addLayer(layer) : doc.insertLayer(layer, index!);
 
   @override
   EditorCommand invert(EditorDocument _) => RemoveLayerCommand(layer.id);
@@ -39,7 +46,21 @@ class RemoveLayerCommand extends EditorCommand {
       // Defensive: inverting a no-op remove is itself a no-op.
       return const _NoopCommand();
     }
-    return AddLayerCommand(prev);
+    // Capture the pre-delete z-index so undo restores the layer at
+    // its original depth. In a multi-delete CompositeCommand this
+    // composes correctly on its own: each child's inverse captures
+    // the index in the document just before that child applied, and
+    // the reversed replay re-inserts into exactly those states.
+    //
+    // Deliberately NOT restored here: EditorDocument.removeLayer
+    // clears basePhotoLayerId as a side effect, and this inverse
+    // does not re-point it. The one production base-photo delete
+    // flow (LayerActions) compensates by bundling an explicit
+    // SetBasePhotoCommand(null) first in its composite, whose
+    // inverse re-points on undo. Folding the pointer in here too is
+    // a semantics change for that call site — revisit with the
+    // command-invert harness sweep (roadmap Phase 5.1).
+    return AddLayerCommand(prev, index: before.indexOf(layerId));
   }
 }
 
