@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 /// Canonical small section label used inside editor panels
 /// and bottom sheets.
 ///
-/// Spec (matches the Paint and Text panel labels — single source of
-/// truth so the editor's section rhythm stays aligned across every
-/// surface):
+/// Spec (matches the Text panel's `_PanelSectionLabel` — single
+/// source of truth so the editor's section rhythm stays aligned
+/// across every surface):
 ///   * sentence-case/localized text
 ///   * 11 sp, weight 700, letterSpacing 0
 ///   * `colorScheme.onSurfaceVariant`
@@ -14,15 +14,29 @@ import 'package:flutter/material.dart';
 ///
 /// If a host needs a different inset (e.g. a sheet that already
 /// applies its own vertical rhythm), pass a custom [padding].
+///
+/// Paint's `_Label`/`_SectionLabel` copies uppercase their text with
+/// `letterSpacing: 0.8` instead — a real visual difference, not
+/// drift to silently erase. Pass [uppercase]`: true` and
+/// [letterSpacing]`: 0.8` to fold those copies in without changing
+/// Paint's visible casing.
 class SectionLabel extends StatelessWidget {
   const SectionLabel(
     this.text, {
     super.key,
     this.padding = const EdgeInsetsDirectional.fromSTEB(4, 4, 4, 6),
+    this.uppercase = false,
+    this.letterSpacing = 0,
   });
 
   final String text;
   final EdgeInsetsGeometry padding;
+
+  /// When true, renders [text] via [String.toUpperCase] — matches
+  /// Paint's `_Label`/`_SectionLabel` convention.
+  final bool uppercase;
+
+  final double letterSpacing;
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +44,11 @@ class SectionLabel extends StatelessWidget {
     return Padding(
       padding: padding,
       child: Text(
-        text,
+        uppercase ? text.toUpperCase() : text,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0,
+          letterSpacing: letterSpacing,
           color: scheme.onSurfaceVariant,
         ),
       ),
