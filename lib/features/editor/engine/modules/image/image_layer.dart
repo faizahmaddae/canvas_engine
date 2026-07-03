@@ -15,6 +15,7 @@ import '../../core/layer_capabilities.dart';
 import '../../core/layer_transform.dart';
 import '../../effects/color_matrix_ops.dart';
 import '../../effects/editor_effect.dart';
+import '../../rendering/stack_mask_composite.dart';
 
 // Re-export so existing imports of `image_layer.dart` keep resolving
 // `composeColorMatrices` after the symbol moved into the shared
@@ -292,7 +293,38 @@ class ImageLayer extends EditorLayer {
             ],
           )
         : pixels;
-    final clipped = _maskClip(mask, painted);
+    // Stack mask (A3): composite the effected subtree over the
+    // un-effected base through the mask's alpha — effects.md §5's
+    // `I_prev := composite(I_prev over I0 through stack.stackMask)`.
+    // Both gates matter:
+    //   * stackMask == null → today's tree, untouched. The wrapper is
+    //     never constructed, keeping the render tree byte-identical
+    //     for every pre-stackMask document.
+    //   * stack contributes nothing (no colour matrix, no custom
+    //     paint) → base and painted are visually identical, so the
+    //     composite would be a no-op costing an extra subtree.
+    // The base keeps the filter preset and crop (§7.2): `filterPreset`
+    // is a layer field, not a stack entry, so the mask must not clip
+    // it; crop selects which pixels exist at all.
+    final stackMask = effects.stackMask;
+    final stackContributes =
+        adjMatrix != null || effects.hasContributingCustomPaint;
+    final Widget composited;
+    if (stackMask == null || !stackContributes) {
+      composited = painted;
+    } else {
+      final baseImage = _loadableImage(
+        cacheWidth: cacheWidth,
+        colorMatrix: filterMatrix,
+      );
+      composited = StackMaskComposite(
+        mask: stackMask,
+        size: transform.size,
+        base: isFullCrop ? baseImage : _applyCrop(baseImage),
+        painted: painted,
+      );
+    }
+    final clipped = _maskClip(mask, composited);
     final hasBorder = borderWidth > 0;
     final body = hasBorder
         ? Stack(
