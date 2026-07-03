@@ -58,16 +58,24 @@ contributor in one sitting without changing the engine contract.
 
 ## Tier 1 — Critical, in-session if scope allows
 
-- [ ] **No crash recovery / autosave journal.** Autosave debounces 1.5 s
+- [~] **No crash recovery / autosave journal.** Autosave debounces 1.5 s
   and only writes for projects with a `projectId`. Mid-edit crash =
   silent data loss with zero trail. Needs: write-ahead journal of
-  commands + recovery prompt on cold start. 🔴 M. Out of session scope
-  (design needed).
-- [ ] **Effect system half-shipped.** Schema bumped to v3, `EffectStack`
+  commands + recovery prompt on cold start. 🔴 M.
+  *2026-07-03: half done. `EditJournal` write-ahead log exists and is
+  wired into autosave (750 ms debounce, atomic tmp+rename), but
+  `recover()` has no callers — the cold-start resume prompt is not
+  built. Roadmap Phase 2.2.*
+- [~] **Effect system half-shipped.** Schema bumped to v3, `EffectStack`
   + `LayerMask` data shipped, but `PathMask.sampleAlpha` throws
   `UnimplementedError("Phase 2 Step 5")` and there is no per-effect
   mask renderer or stack-panel UI. Until this lands, the engine
-  cannot grow. 🔴 L–XL. Out of session scope (design + multi-week impl).
+  cannot grow. 🔴 L–XL.
+  *2026-07-03: specifics stale. `PathMask.sampleAlpha` is implemented
+  (binary coverage; feather is a raster post-pass by contract), and
+  the Adjust panel + Effects stack panel (reorder/toggle/delete) UI
+  shipped. Still missing: per-effect mask rendering and stack-mask
+  rendering (A3 in flight). Roadmap Phases 1 and 3.*
 - [ ] **God-files have rotted.**
   - `text_mode_toolbar.dart` — 4,697 lines
   - `editor_screen.dart` — 1,925
@@ -79,12 +87,22 @@ contributor in one sitting without changing the engine contract.
 
   AGENTS.md soft-limit is ~600. Splitting is M each, behaviour-preserving
   but risky. Out of session scope (each split is its own PR).
-- [ ] **No memory-pressure handling.** No `didChangeMemoryPressure` wiring;
+  *2026-07-03: `image_layer.dart` split landed (1,244 → 764 via part
+  files); the other counts have drifted (several grew) — current
+  numbers live in `docs/project-review-and-roadmap-2026-07-03.md`.*
+- [x] **No memory-pressure handling.** No `didChangeMemoryPressure` wiring;
   `ImageCache` is shared and untuned. 🔴 M.
+  *2026-07-03: done. `MemoryGuard` (lib/core/memory/memory_guard.dart)
+  installed from `main()` caps `ImageCache` to 64 MB / 50 entries and
+  clears it on `didHaveMemoryPressure`.*
 - [ ] **No telemetry / crash reporting.** Cannot diagnose production
   issues. 🔴 S to wire, but requires service choice.
-- [ ] **No localization framework.** Persian font fallback is wired;
+  *2026-07-03: still open. Roadmap Phase 2.3.*
+- [x] **No localization framework.** Persian font fallback is wired;
   `intl` / `.arb` / code-gen are not. 🔴 M.
+  *2026-07-03: done. `l10n.yaml` + gen_l10n with `app_en.arb` /
+  `app_fa.arb` at exact key parity (508/508), zero untranslated
+  messages, no literal user-facing strings in feature UI.*
 
 ---
 

@@ -50,15 +50,18 @@ engine  ──▶  application  ──▶  presentation
 
 **Inverted imports are bugs.** A file in `engine/` must not import
 anything from `application/` or `presentation/`. A file in
-`application/` must not import widgets. CI does not enforce this
-yet — you do.
+`application/` must not import widgets. CI enforces the engine-level
+rule (`tool/check_import_direction.sh`, run by
+`.github/workflows/ci.yml`); the application-level rule is still
+convention — you enforce it.
 
 ### Engine subfolders
 
 | Folder | What lives there |
 |---|---|
-| `engine/core/` | `EditorDocument`, `EditorLayer` (abstract), `LayerTransform`, `SelectionState`, `LayerCapabilities`, `BackgroundFill` |
+| `engine/core/` | `EditorDocument`, `EditorLayer` (abstract), `LayerTransform`, `SelectionState`, `LayerCapabilities`, `BackgroundFill`, `LayerMask` |
 | `engine/commands/` | `EditorCommand` + concretes + `HistoryStack` |
+| `engine/effects/` | `EditorEffect` (sealed) + `EffectStack`; concrete colour adjustments, `VignetteEffect`, `UnknownEffect` forward-compat carrier |
 | `engine/modules/<type>/` | One folder per layer type — data + render widget |
 | `engine/interaction/` | Pure-math helpers: `InteractionEngine`, `SnapEngine`, `AlignmentEngine`, `GroupEngine` |
 | `engine/rendering/` | Thin widgets that turn engine state into Flutter |
@@ -152,9 +155,31 @@ them read subclass-specific data.
 
 ## How to add a new effect (the photo-editor recipe)
 
-> The effect system is being introduced in the current sprint. Read
-> the design doc at `docs/effects.md` once it lands. Until then, do
-> not invent your own effect API — flag the gap and ask.
+The effect system is **shipped** and lives in
+`lib/features/editor/engine/effects/`. Read `docs/effects.md` (the
+design record — its status block lists where the as-built system
+deliberately diverges) before touching it. The shape that shipped:
+
+1. `EditorEffect` is a **sealed** class with `paint(Canvas, Rect)`
+   and an `EffectKind` dual dispatch: `colorMatrix` effects compose
+   into ONE 4×5 matrix applied via `ColorFiltered`;
+   `customPaint` effects (e.g. vignette) draw an overlay on top.
+   There is no per-effect rasterize step.
+2. A new effect extends the sealed class in `engine/effects/`,
+   registers its `fromJson` in the part-file registry, and follows
+   the serialization discipline: default-valued fields omitted,
+   round-trip byte-identity proven against the fixture corpus.
+3. Effects mutate through **idempotent replace-in-stack commands**
+   (`SetImageAdjustmentsCommand` surgically edits the live instance
+   in place and must never touch disabled or masked effects;
+   `Reorder`/`Toggle`/`DeleteEffectCommand` are structural). Live
+   slider streams merge via the `live` flag + field-set match.
+4. Rendering currently happens only in `ImageLayer.buildContent`,
+   even though `EffectStack` lives on every layer. Per-effect masks
+   and the stack mask have model + serialization but no render path
+   yet (stack-mask render integration is in flight — see
+   `docs/effects-a3-scoped-plan-2026-07.md`). Do not invent a
+   renderer for them ad hoc; follow that plan.
 
 ---
 
@@ -211,7 +236,8 @@ When opening a session that touches these areas, load these files
 into context **before** writing code:
 
 * Any engine change → `docs/architecture.md`, this file
-* Effect work → `docs/effects.md` (when present)
+* Effect work → `docs/effects.md` (design + as-built status block)
+  and `docs/effects-a3-scoped-plan-2026-07.md` (in-flight stackMask)
 * New layer type → `lib/features/editor/engine/core/editor_layer.dart`
   and one existing module (e.g. `modules/text/text_layer.dart`)
 * Command work → `lib/features/editor/engine/commands/editor_command.dart`,

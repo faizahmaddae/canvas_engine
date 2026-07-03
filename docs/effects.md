@@ -1,7 +1,38 @@
 # Canvas Engine — Effects (Design)
 
-> Draft. Not yet implemented. Approved-outline cycle in progress;
-> implementation does not begin until this document is signed off.
+> **Status (2026-07-03): largely shipped; kept as the design record.**
+> The vocabulary (§2), attachment model (§4), colour-space contract
+> (§6), serialization discipline (§7), and deferred list (§11) match
+> the shipped code. Where this document and the code differ, **the
+> code is the source of truth**; the as-built divergences are:
+>
+> * **§3 interface.** Shipped as `sealed class EditorEffect` with
+>   `paint(Canvas, Rect)` plus an `EffectKind` dual dispatch —
+>   `colorMatrix` effects compose into ONE 4×5 matrix applied via
+>   `ColorFiltered`; `customPaint` effects (vignette) draw an overlay
+>   — not the `apply(Canvas, ui.Image input, Rect)` rasterize
+>   contract. `EffectStack.isEmpty` deliberately reads only the
+>   effects list (never `stackMask`): it gates the `effects` JSON key,
+>   and folding the mask in would emit `"effects": []` and break
+>   legacy byte-identity.
+> * **§5 pipeline.** The rasterize-per-effect loop was not built; the
+>   renderer is widget-level (`ImageLayer.buildContent`). Per-effect
+>   masks are model + serialization only — both render paths skip
+>   masked effects ("Step 6+"). The stack mask has model +
+>   serialization + command preservation; its render integration is
+>   in flight (`docs/effects-a3-scoped-plan-2026-07.md`). Effects
+>   currently render on `ImageLayer` only, though `EffectStack` lives
+>   on every layer type.
+> * **§8 commands.** The `CompositeCommand([AddEffect,
+>   SetEffectParam])` merge-delegation design was not built. Shipped:
+>   idempotent replace-in-stack commands (`SetImageAdjustmentsCommand`
+>   edits the live instance of each knob surgically in place,
+>   preserving disabled/masked effects and user ordering;
+>   `SetImageVignetteCommand`; structural `Reorder`/`Toggle`/`Delete`)
+>   with live-drag merging via a `live` flag + field-set match.
+> * **§10 cache.** Budget constants landed in
+>   `engine_constants.dart`; the cache itself is unimplemented (the
+>   A3 mask-raster cache will be its first consumer).
 
 ## 0. Why this exists
 

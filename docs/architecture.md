@@ -26,8 +26,9 @@ engine  →  application  →  presentation
 
 | Folder | Responsibility |
 |---|---|
-| `engine/core/` | `EditorDocument`, `EditorLayer` (abstract), `LayerTransform`, `SelectionState`, `LayerCapabilities`, `BackgroundFill` |
+| `engine/core/` | `EditorDocument`, `EditorLayer` (abstract), `LayerTransform`, `SelectionState`, `LayerCapabilities`, `BackgroundFill`, `LayerMask` |
 | `engine/commands/` | `EditorCommand` + concrete commands + `HistoryStack` |
+| `engine/effects/` | `EditorEffect` (sealed) + `EffectStack` — colour adjustments, vignette, unknown-effect forward compat (see `docs/effects.md`) |
 | `engine/modules/<type>/` | Layer-type specific data + rendering (`TextLayer`, `ImageLayer`, `ShapeLayer`, `PaintLayer`) |
 | `engine/interaction/` | Pure-math helpers such as `InteractionEngine`, `SnapEngine`, `AlignmentEngine`, `GroupEngine` |
 | `engine/rendering/` | Thin widgets that turn a `LayerTransform` into Flutter |
@@ -81,10 +82,13 @@ because none of them read subclass-specific data.
 4. **Commands are pure.** `apply(doc) -> doc`. No side effects. This is why
    history, serialization, and future collaboration work.
 5. **The document is immutable.** All mutations return a new instance.
-6. **No invented engine concepts.** If a change introduces a new cross-cutting
-   concept such as effects, masks, blend modes, groups, or plugin hooks, read
-   the design doc first or ask. Keep generic machinery generic; do not collapse
-   it into a photo-specific shortcut.
+6. **No invented engine concepts.** Effects and masks now exist
+   (`engine/effects/`, `core/layer_mask.dart` — designed in
+   `docs/effects.md`); extend them through their own recipes, not ad
+   hoc. For any *new* cross-cutting concept (blend modes, groups,
+   plugin hooks, …), read the design doc first or ask. Keep generic
+   machinery generic; do not collapse it into a photo-specific
+   shortcut.
 
 ## Interaction pipeline
 
