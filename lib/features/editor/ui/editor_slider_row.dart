@@ -178,6 +178,11 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
         min: widget.min,
         max: widget.max,
         divisions: widget.divisions,
+        // A stepped slider (divisions != null) shows the Material
+        // drag tooltip with the formatted value — matches the JPG-
+        // quality slider's existing '$pct%' tooltip exactly.
+        // Continuous sliders never showed a tooltip; unchanged.
+        label: widget.divisions != null ? widget.format(clamped) : null,
         semanticFormatterCallback: widget.format,
         onChangeStart: widget.enabled ? _onChangeStart : null,
         onChanged: widget.enabled ? _onChanged : null,

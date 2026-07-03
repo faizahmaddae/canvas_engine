@@ -117,6 +117,42 @@ void main() {
       expect(slider.divisions, 30);
     });
 
+    testWidgets('divisions != null shows the formatted drag tooltip '
+        '(JPG-quality parity)', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          EditorSliderRow(
+            value: 0.95,
+            min: 0.7,
+            max: 1.0,
+            divisions: 30,
+            format: (v) => '${(v * 100).round()}%',
+            onChanged: (_) {},
+            semanticLabel: 'Quality',
+          ),
+        ),
+      );
+      final slider = tester.widget<Slider>(find.byType(Slider));
+      expect(slider.label, '95%');
+    });
+
+    testWidgets('divisions == null shows no drag tooltip (unchanged for '
+        'every continuous slider)', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          EditorSliderRow(
+            label: 'X',
+            value: 10,
+            max: 100,
+            format: (v) => v.round().toString(),
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      final slider = tester.widget<Slider>(find.byType(Slider));
+      expect(slider.label, isNull);
+    });
+
     testWidgets('enabled: false disables the slider', (tester) async {
       await tester.pumpWidget(
         _host(
