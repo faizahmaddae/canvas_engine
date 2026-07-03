@@ -2894,6 +2894,42 @@ abstract class AppLocalizations {
   /// **'Center'**
   String get maskPresetCenter;
 
+  /// No description provided for @maskPresetCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get maskPresetCustom;
+
+  /// No description provided for @adjustRegionAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust region'**
+  String get adjustRegionAction;
+
+  /// No description provided for @maskShapeRect.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get maskShapeRect;
+
+  /// No description provided for @maskShapeEllipse.
+  ///
+  /// In en, this message translates to:
+  /// **'Ellipse'**
+  String get maskShapeEllipse;
+
+  /// No description provided for @maskFeatherLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Feather'**
+  String get maskFeatherLabel;
+
+  /// No description provided for @maskInvertLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invert'**
+  String get maskInvertLabel;
+
   /// No description provided for @resumeEditsTitle.
   ///
   /// In en, this message translates to:

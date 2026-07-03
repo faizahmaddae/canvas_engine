@@ -17,6 +17,7 @@ import '../application/document_controller.dart';
 import '../application/live_overlay_controller.dart';
 import '../application/editor_lifecycle.dart';
 import '../application/editor_session.dart';
+import '../application/mask_edit_controller.dart';
 import '../application/project_save_service.dart';
 import '../application/selection_controller.dart';
 import '../application/viewport_controller.dart';
@@ -120,11 +121,26 @@ class EditorScreen extends ConsumerWidget {
     final cropActive = ref.watch(
       cropControllerProvider.select((s) => s.active),
     );
+    // Mask-edit mode hides the same chrome: its bottom strip is the
+    // only editing surface while the user shapes the region, and the
+    // undo rail must hide because a mid-draft undo would mutate the
+    // document under the mode (the doc listener would then cancel
+    // the session — technically safe, but jarring).
+    final maskEditActive = ref.watch(
+      maskEditControllerProvider.select((s) => s.active),
+    );
 
     return _AutosaveLifecycleScope(
       child: PopScope(
-        canPop: !cropActive,
+        canPop: !cropActive && !maskEditActive,
         onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && maskEditActive) {
+            // Back = Cancel, restoring the pre-mode toolbar context.
+            ref
+                .read(maskEditControllerProvider.notifier)
+                .cancel(restoreSelection: true);
+            return;
+          }
           if (!didPop && cropActive) {
             ref.read(cropControllerProvider.notifier).cancelCrop();
             return;
@@ -146,7 +162,7 @@ class EditorScreen extends ConsumerWidget {
           }
         },
         child: Scaffold(
-          appBar: cropActive
+          appBar: cropActive || maskEditActive
               ? null
               : AppBar(
                   title: _DocumentTitle(),
@@ -227,7 +243,7 @@ class EditorScreen extends ConsumerWidget {
               // most-used commands a permanent, thumb-reachable home
               // that mirrors the Done pill's top-right anchor for
               // visual symmetry. Hidden in Crop Mode.
-              if (!cropActive)
+              if (!cropActive && !maskEditActive)
                 const Positioned(
                   top: 8,
                   left: 8,
@@ -240,7 +256,7 @@ class EditorScreen extends ConsumerWidget {
               // canvas-tap-to-deselect gesture for new users while
               // keeping that gesture as the pro shortcut. Hidden in
               // Crop Mode.
-              if (!cropActive)
+              if (!cropActive && !maskEditActive)
                 const Positioned(
                   top: 8,
                   right: 8,
@@ -260,6 +276,11 @@ class EditorScreen extends ConsumerWidget {
                 cropControllerProvider.select((s) => s.active),
               );
               if (cropActive) return const SizedBox.shrink();
+              // Mask-edit: its bottom strip replaces the dock.
+              final maskActive = ref.watch(
+                maskEditControllerProvider.select((s) => s.active),
+              );
+              if (maskActive) return const SizedBox.shrink();
               final paintOpen = ref.watch(
                 paintToolControllerProvider.select((s) => s.panelOpen),
               );

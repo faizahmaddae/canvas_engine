@@ -1477,6 +1477,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get maskPresetCenter => 'Center';
 
   @override
+  String get maskPresetCustom => 'Custom';
+
+  @override
+  String get adjustRegionAction => 'Adjust region';
+
+  @override
+  String get maskShapeRect => 'Rectangle';
+
+  @override
+  String get maskShapeEllipse => 'Ellipse';
+
+  @override
+  String get maskFeatherLabel => 'Feather';
+
+  @override
+  String get maskInvertLabel => 'Invert';
+
+  @override
   String get resumeEditsTitle => 'Resume unsaved changes?';
 
   @override

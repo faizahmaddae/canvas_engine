@@ -15,6 +15,7 @@ import '../../application/editor_session.dart';
 import '../../application/context_toolbar_controller.dart';
 import '../../application/interaction_controller.dart';
 import '../../application/live_overlay_controller.dart';
+import '../../application/mask_edit_controller.dart';
 import '../../application/project_viewport_store.dart';
 import '../../application/selection_controller.dart';
 import '../../application/viewport_controller.dart';
@@ -44,6 +45,7 @@ import '../../text/presentation/add_text_composer_state.dart';
 import '../../text/presentation/text_floating_toolbar.dart';
 import 'animated_guides_layer.dart';
 import 'canvas_framing.dart';
+import 'mask_edit_overlay.dart';
 import 'quick_actions_overlay.dart';
 import 'selection_overlay.dart';
 import 'transform_hud.dart';
@@ -276,6 +278,13 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
       _abortMultiTap();
       return;
     }
+    // Mask-edit mode rides on the live canvas (unlike crop's opaque
+    // overlay) — a clean 2-finger tap must not fire undo under the
+    // mode's draft.
+    if (ref.read(maskEditControllerProvider).active) {
+      _abortMultiTap();
+      return;
+    }
     // NOTE: we deliberately do NOT abort here when an interaction
     // session is already active. With the active-transform-surface
     // model, the body recogniser eagerly claims pointer-down whenever
@@ -426,6 +435,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
     // quick-action pill all hide. The modal scrim already dims the
     // canvas; this flag handles the rest.
     final addTextComposerOpen = ref.watch(addTextComposerOpenProvider);
+    // Mask-edit mode replaces the selection chrome with its own
+    // overlay: handles, HUD, floating toolbars and quick actions all
+    // hide while the region editor owns the layer.
+    final maskEditActive =
+        ref.watch(maskEditControllerProvider.select((s) => s.active));
     final docSize = Size(doc.width, doc.height);
 
     return LayoutBuilder(
@@ -733,16 +747,21 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                       // `_buildSelectionOverlay` (it passes
                       // `showHandles: !locked` and `onBody: null` for
                       // locked layers).
-                      if (selection.count == 1 && !addTextComposerOpen)
+                      if (selection.count == 1 &&
+                          !addTextComposerOpen &&
+                          !maskEditActive)
                         _buildSelectionOverlay(doc.layers, selection, viewport),
                       if (selection.count == 1 &&
-                          _isProtectedSelection(doc, selection))
+                          _isProtectedSelection(doc, selection) &&
+                          !maskEditActive)
                         _buildProtectedBaseBadge(
                           doc.layers,
                           selection,
                           viewport,
                         ),
-                      if (selection.count > 1 && !addTextComposerOpen)
+                      if (selection.count > 1 &&
+                          !addTextComposerOpen &&
+                          !maskEditActive)
                         _buildGroupSelectionOverlay(
                           doc.layers,
                           selection,
@@ -750,14 +769,17 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                         ),
                       if (selection.hasSelection &&
                           !_isProtectedSelection(doc, selection) &&
-                          !addTextComposerOpen)
+                          !addTextComposerOpen &&
+                          !maskEditActive)
                         _buildHud(doc.layers, selection, viewport),
                       // Floating contextual text toolbar — appears next to
                       // the selected text layer with the high-frequency
                       // controls (color / size / bold). Mounted in the
                       // screen-space chrome so it stays a constant size at
                       // any zoom and never reflows the canvas.
-                      if (selection.count == 1 && !addTextComposerOpen)
+                      if (selection.count == 1 &&
+                          !addTextComposerOpen &&
+                          !maskEditActive)
                         _buildTextFloatingToolbar(
                           doc.layers,
                           selection,
@@ -768,7 +790,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                       // paint layer with stroke color, size, and resize
                       // behavior toggle. Mutually exclusive with the text
                       // toolbar (each builder type-checks its layer kind).
-                      if (selection.count == 1 && !addTextComposerOpen)
+                      if (selection.count == 1 &&
+                          !addTextComposerOpen &&
+                          !maskEditActive)
                         _buildPaintFloatingToolbar(
                           doc.layers,
                           selection,
@@ -782,7 +806,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                       // a rectangle's aspect). Mutually exclusive
                       // with the other floating bars (each builder
                       // type-checks its layer kind).
-                      if (selection.count == 1 && !addTextComposerOpen)
+                      if (selection.count == 1 &&
+                          !addTextComposerOpen &&
+                          !maskEditActive)
                         _buildShapeFloatingToolbar(
                           doc.layers,
                           selection,
@@ -796,7 +822,8 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                       // chases a moving selection.
                       if (selection.count == 1 &&
                           !_isProtectedSelection(doc, selection) &&
-                          !addTextComposerOpen)
+                          !addTextComposerOpen &&
+                          !maskEditActive)
                         _buildQuickActionsOverlay(
                           doc.layers,
                           selection,
@@ -812,6 +839,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                       // tells the user "you are in multi-select" + the
                       // current count, so toggling-on-tap behaviour is
                       // never invisible.
+                      // Mask-edit chrome: region scrim/outline, drag
+                      // handles, and the bottom strip. Mounted above
+                      // every other chrome piece it replaces.
+                      if (maskEditActive)
+                        MaskEditOverlay(viewport: viewport),
                       const _MultiSelectModeChip(),
                     ],
                   ),
@@ -959,6 +991,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             // inert.
             final cropActive = ref.read(cropControllerProvider).active;
             if (cropActive) return false;
+            // Mask-edit mode: the overlay owns the region + handles;
+            // yielding lets outside-region pointers fall through to
+            // viewport pan/zoom.
+            if (ref.read(maskEditControllerProvider).active) return false;
             return true;
           },
           // Defer-start gate: when the first pointer lands OUTSIDE
@@ -1117,6 +1153,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             if (_gestureStartViewport != null) return false;
             final cropActive = ref.read(cropControllerProvider).active;
             if (cropActive) return false;
+            // Mask-edit mode: the overlay owns the region + handles;
+            // yielding lets outside-region pointers fall through to
+            // viewport pan/zoom.
+            if (ref.read(maskEditControllerProvider).active) return false;
             return true;
           },
           // Defer-start gate: pointers landing OUTSIDE the group's

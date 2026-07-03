@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
+import '../../application/mask_edit_controller.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/core/layer_mask.dart';
 import '../../engine/effects/editor_effect.dart';
@@ -102,6 +103,11 @@ class _StackMaskSection extends ConsumerWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final current = layer.effects.stackMask;
+    // An on-canvas edit usually produces a mask matching no preset —
+    // without an explicit Custom state every chip would silently
+    // deselect and the section would read as "off".
+    final isCustom = current != null &&
+        !_MaskPreset.values.any((p) => _maskFor(p) == current);
 
     String labelFor(_MaskPreset p) => switch (p) {
       _MaskPreset.off => context.l10n.maskPresetOff,
@@ -128,6 +134,7 @@ class _StackMaskSection extends ConsumerWidget {
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
+            runSpacing: 4,
             children: [
               for (final preset in _MaskPreset.values)
                 ChoiceChip(
@@ -144,11 +151,39 @@ class _StackMaskSection extends ConsumerWidget {
                         );
                   },
                 ),
+              if (isCustom)
+                ChoiceChip(
+                  label: Text(context.l10n.maskPresetCustom),
+                  visualDensity: VisualDensity.compact,
+                  selected: true,
+                  // Read-only marker: tapping re-opens the editor.
+                  onSelected: (_) => _openMaskEditor(ref),
+                ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: FilledButton.tonalIcon(
+              onPressed: () => _openMaskEditor(ref),
+              icon: const Icon(Icons.crop_free_rounded, size: 18),
+              label: Text(context.l10n.adjustRegionAction),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  void _openMaskEditor(WidgetRef ref) {
+    EditorHaptics.tap();
+    // The mode's chrome replaces the panel — close it first so the
+    // dock isn't left open underneath (the mode hides the dock, but
+    // leaving openSlot set would re-mount the panel on exit, which
+    // is actually what we want: Done/Cancel returns the user here).
+    ref
+        .read(maskEditControllerProvider.notifier)
+        .open(layer.id, priorSelectionId: layer.id);
   }
 }
 

@@ -1481,6 +1481,24 @@ class AppLocalizationsFa extends AppLocalizations {
   String get maskPresetCenter => 'مرکز';
 
   @override
+  String get maskPresetCustom => 'سفارشی';
+
+  @override
+  String get adjustRegionAction => 'تنظیم ناحیه';
+
+  @override
+  String get maskShapeRect => 'مستطیل';
+
+  @override
+  String get maskShapeEllipse => 'بیضی';
+
+  @override
+  String get maskFeatherLabel => 'محو لبه';
+
+  @override
+  String get maskInvertLabel => 'معکوس';
+
+  @override
   String get resumeEditsTitle => 'ادامه تغییرات ذخیره‌نشده؟';
 
   @override
