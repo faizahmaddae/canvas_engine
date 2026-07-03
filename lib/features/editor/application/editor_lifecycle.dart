@@ -10,6 +10,7 @@ import '../sticker/application/sticker_tool_controller.dart';
 import '../text/application/text_tool_controller.dart';
 import 'context_toolbar_controller.dart';
 import 'editing_controller.dart';
+import 'mask_edit_controller.dart';
 import 'selection_controller.dart';
 import 'viewport_controller.dart';
 
@@ -45,6 +46,10 @@ void resetEditorEphemeralState(WidgetRef ref) {
   // mode already active (worse: pointing at a layer that no
   // longer exists in the new document).
   ref.read(cropControllerProvider.notifier).cancelCrop();
+  // Mask-edit is the same class of global non-autoDispose modal
+  // session as crop — reset it at the project boundary for the same
+  // reason.
+  ref.read(maskEditControllerProvider.notifier).cancel();
 }
 
 /// Single dismiss seam for "user tapped empty workspace / pasteboard".
@@ -103,6 +108,9 @@ void dismissActiveEditing(WidgetRef ref) {
   // but a tap on the pasteboard while its panel is open is still
   // a clear "I'm done" signal — collapse it for symmetry.
   ref.read(canvasToolControllerProvider.notifier).closePanel();
+  // Mask-edit mode: an off-canvas tap is an explicit "I'm done" —
+  // cancel (draft-first, so this discards cleanly with no command).
+  ref.read(maskEditControllerProvider.notifier).cancel();
   // Keyboard: tapping the pasteboard reads as a true "I'm done"
   // gesture, even if the user was mid-typing inside an inline
   // field hosted by a sheet that just closed.
@@ -149,4 +157,7 @@ void closeObjectSubPanels(WidgetRef ref) {
   // its target id pointing at the previously-selected layer would
   // re-enter edit mode the next time that layer is reselected.
   ref.read(editingControllerProvider.notifier).stop();
+  // Mask-edit is scoped to the layer it opened on — any selection
+  // change ends the session (cancel is idempotent and draft-first).
+  ref.read(maskEditControllerProvider.notifier).cancel();
 }
