@@ -1,4 +1,3 @@
-import 'package:canvas_engine/features/editor/engine/modules/text/text_direction_utils.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/engine/serialization/document_codec.dart';
 import 'package:canvas_engine/features/templates/domain/template.dart';

@@ -37,14 +37,11 @@ Future<ProviderContainer> _container() async {
 }
 
 ShapeLayer _shape(String id) => ShapeLayer(
-      id: id,
-      transform: LayerTransform(
-        position: Offset.zero,
-        size: const Size(50, 50),
-      ),
-      kind: ShapeKind.rectangle,
-      fillColor: const Color(0xFFFFFFFF),
-    );
+  id: id,
+  transform: LayerTransform(position: Offset.zero, size: const Size(50, 50)),
+  kind: ShapeKind.rectangle,
+  fillColor: const Color(0xFFFFFFFF),
+);
 
 void main() {
   test('does NOT autosave when session has no projectId', () async {
@@ -52,14 +49,20 @@ void main() {
     addTearDown(c.dispose);
 
     // No editor session id → unsaved doc → autosave must skip.
-    c.read(editorSessionProvider.notifier).state =
-        const EditorSession(name: 'Untitled');
+    c.read(editorSessionProvider.notifier).state = const EditorSession(
+      name: 'Untitled',
+    );
 
-    c.read(documentControllerProvider.notifier).execute(AddLayerCommand(_shape('a')));
+    c
+        .read(documentControllerProvider.notifier)
+        .execute(AddLayerCommand(_shape('a')));
     await c.read(autosaveControllerProvider.notifier).flushNow();
 
-    expect(c.read(projectStoreProvider).value, isEmpty,
-        reason: 'fresh, never-saved docs must not silently create projects');
+    expect(
+      c.read(projectStoreProvider).value,
+      isEmpty,
+      reason: 'fresh, never-saved docs must not silently create projects',
+    );
   });
 
   test('autosaves an existing project after a committed edit', () async {
@@ -75,23 +78,50 @@ void main() {
       createdAt: DateTime.utc(2026, 1, 1),
       lastModified: DateTime.utc(2026, 1, 1),
       documentJson: c.read(documentControllerProvider.notifier).exportJson(),
+      thumbnailPath: '/tmp/thumb.png',
+      thumbnailVersion: Project.currentThumbnailVersion,
     );
     await c.read(projectStoreProvider.notifier).upsert(original);
-    c.read(editorSessionProvider.notifier).state =
-        const EditorSession(name: 'My design', projectId: 'proj-1');
+    c.read(editorSessionProvider.notifier).state = const EditorSession(
+      name: 'My design',
+      projectId: 'proj-1',
+    );
 
     // Commit a real edit, then force-flush past the debounce.
-    c.read(documentControllerProvider.notifier).execute(AddLayerCommand(_shape('shape-a')));
+    c
+        .read(documentControllerProvider.notifier)
+        .execute(AddLayerCommand(_shape('shape-a')));
     await c.read(autosaveControllerProvider.notifier).flushNow();
 
-    final saved =
-        c.read(projectStoreProvider).value!.firstWhere((p) => p.id == 'proj-1');
-    expect(saved.documentJson, contains('shape-a'),
-        reason: 'autosave must persist the new layer');
-    expect(saved.lastModified.isAfter(original.lastModified), isTrue,
-        reason: 'lastModified must advance on every autosave');
-    expect(saved.createdAt, original.createdAt,
-        reason: 'createdAt must be preserved across autosaves');
+    final saved = c
+        .read(projectStoreProvider)
+        .value!
+        .firstWhere((p) => p.id == 'proj-1');
+    expect(
+      saved.documentJson,
+      contains('shape-a'),
+      reason: 'autosave must persist the new layer',
+    );
+    expect(
+      saved.lastModified.isAfter(original.lastModified),
+      isTrue,
+      reason: 'lastModified must advance on every autosave',
+    );
+    expect(
+      saved.createdAt,
+      original.createdAt,
+      reason: 'createdAt must be preserved across autosaves',
+    );
+    expect(
+      saved.thumbnailPath,
+      original.thumbnailPath,
+      reason: 'autosave keeps the last manual-save thumbnail bytes',
+    );
+    expect(
+      saved.thumbnailVersion,
+      0,
+      reason: 'autosave marks cached thumbnail bytes as stale',
+    );
   });
 
   test('skips writing when the document is unchanged', () async {
@@ -109,8 +139,10 @@ void main() {
       documentJson: json,
     );
     await c.read(projectStoreProvider.notifier).upsert(original);
-    c.read(editorSessionProvider.notifier).state =
-        const EditorSession(name: 'No-op', projectId: 'proj-2');
+    c.read(editorSessionProvider.notifier).state = const EditorSession(
+      name: 'No-op',
+      projectId: 'proj-2',
+    );
 
     // Bump the commit version manually — simulates a command that
     // returned an identical document (e.g. selecting an already-
@@ -118,10 +150,15 @@ void main() {
     c.read(documentCommitVersionProvider.notifier).bump();
     await c.read(autosaveControllerProvider.notifier).flushNow();
 
-    final after =
-        c.read(projectStoreProvider).value!.firstWhere((p) => p.id == 'proj-2');
-    expect(after.lastModified, original.lastModified,
-        reason: 'no-op edits must not bump lastModified');
+    final after = c
+        .read(projectStoreProvider)
+        .value!
+        .firstWhere((p) => p.id == 'proj-2');
+    expect(
+      after.lastModified,
+      original.lastModified,
+      reason: 'no-op edits must not bump lastModified',
+    );
   });
 
   test('debounces a burst of commits into a single flush', () async {
@@ -138,8 +175,10 @@ void main() {
       documentJson: c.read(documentControllerProvider.notifier).exportJson(),
     );
     await c.read(projectStoreProvider.notifier).upsert(original);
-    c.read(editorSessionProvider.notifier).state =
-        const EditorSession(name: 'Burst', projectId: 'proj-3');
+    c.read(editorSessionProvider.notifier).state = const EditorSession(
+      name: 'Burst',
+      projectId: 'proj-3',
+    );
 
     // Fire several commits in rapid succession. None of them should
     // hit disk synchronously — only the debounced flush at the end
@@ -150,15 +189,22 @@ void main() {
     docCtrl.execute(AddLayerCommand(_shape('c')));
 
     // Pre-flush state still has the original record.
-    final pre =
-        c.read(projectStoreProvider).value!.firstWhere((p) => p.id == 'proj-3');
-    expect(pre.documentJson, original.documentJson,
-        reason: 'debounce must hold the write back until the timer fires');
+    final pre = c
+        .read(projectStoreProvider)
+        .value!
+        .firstWhere((p) => p.id == 'proj-3');
+    expect(
+      pre.documentJson,
+      original.documentJson,
+      reason: 'debounce must hold the write back until the timer fires',
+    );
 
     await c.read(autosaveControllerProvider.notifier).flushNow();
 
-    final post =
-        c.read(projectStoreProvider).value!.firstWhere((p) => p.id == 'proj-3');
+    final post = c
+        .read(projectStoreProvider)
+        .value!
+        .firstWhere((p) => p.id == 'proj-3');
     expect(post.documentJson, contains('"a"'));
     expect(post.documentJson, contains('"b"'));
     expect(post.documentJson, contains('"c"'));

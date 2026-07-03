@@ -40,7 +40,10 @@ void main() {
       expect(r, lessThan(3.0));
       // Shrunk image must respect the cap (with a tiny slack).
       final pixels = (6000 * r) * (4000 * r);
-      expect(pixels, lessThanOrEqualTo(DocumentPngExporter.maxOutputPixels + 1));
+      expect(
+        pixels,
+        lessThanOrEqualTo(DocumentPngExporter.maxOutputPixels + 1),
+      );
     });
 
     test('preserves aspect ratio (same scalar applied to W and H)', () {
@@ -105,6 +108,26 @@ void main() {
       // 1000×1000 already hits the cap at ratio 1.0.
       expect(r, closeTo(1.0, 1e-9));
     });
+
+    test('very large canvas request clamps to a deterministic safe scalar', () {
+      const width = 30000.0;
+      const height = 20000.0;
+      const requested = 4.0;
+      const cap = DocumentPngExporter.maxOutputPixels;
+
+      final r = DocumentPngExporter.clampPixelRatio(
+        width: width,
+        height: height,
+        requested: requested,
+        maxPixels: cap,
+      );
+
+      final expected = math.sqrt(cap / (width * height));
+      expect(r, closeTo(expected, 1e-12));
+      expect(r, lessThan(requested));
+      expect((width * r) * (height * r), lessThanOrEqualTo(cap + 1));
+      expect((width * r) / (height * r), closeTo(width / height, 1e-12));
+    });
   });
 
   group('DocumentPngExporter.devicePixelCap', () {
@@ -123,24 +146,21 @@ void main() {
       expect(cap, greaterThanOrEqualTo(4 * 1000 * 1000));
     });
 
-    test(
-      'omitting maxPixels uses devicePixelCap (not maxOutputPixels)',
-      () {
-        // A canvas big enough to bust the device cap but small
-        // enough to fit the global cap — only with an actual
-        // device-aware ceiling will the ratio shrink.
-        final cap = DocumentPngExporter.devicePixelCap();
-        // Build a square canvas that needs ratio = 2 to hit `cap`,
-        // then ask for ratio 4 — must shrink iff the device cap
-        // was actually consulted.
-        final edge = math.sqrt(cap / 4); // 2× cap area at ratio 4
-        final shrunk = DocumentPngExporter.clampPixelRatio(
-          width: edge * 2, // already covers `cap` at ratio 1
-          height: edge * 2,
-          requested: 4.0,
-        );
-        expect(shrunk, lessThan(4.0));
-      },
-    );
+    test('omitting maxPixels uses devicePixelCap (not maxOutputPixels)', () {
+      // A canvas big enough to bust the device cap but small
+      // enough to fit the global cap — only with an actual
+      // device-aware ceiling will the ratio shrink.
+      final cap = DocumentPngExporter.devicePixelCap();
+      // Build a square canvas that needs ratio = 2 to hit `cap`,
+      // then ask for ratio 4 — must shrink iff the device cap
+      // was actually consulted.
+      final edge = math.sqrt(cap / 4); // 2× cap area at ratio 4
+      final shrunk = DocumentPngExporter.clampPixelRatio(
+        width: edge * 2, // already covers `cap` at ratio 1
+        height: edge * 2,
+        requested: 4.0,
+      );
+      expect(shrunk, lessThan(4.0));
+    });
   });
 }

@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:canvas_engine/features/editor/engine/commands/layer_state_commands.dart';
+import 'package:canvas_engine/features/editor/engine/commands/history_stack.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
@@ -10,13 +11,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   ShapeLayer rect(String id) => ShapeLayer(
-        id: id,
-        transform: const LayerTransform(
-          position: Offset.zero,
-          size: Size(100, 100),
-        ),
-        kind: ShapeKind.rectangle,
-      );
+    id: id,
+    transform: const LayerTransform(
+      position: Offset.zero,
+      size: Size(100, 100),
+    ),
+    kind: ShapeKind.rectangle,
+  );
 
   EditorDocument seed() {
     var doc = EditorDocument.empty;
@@ -41,15 +42,24 @@ void main() {
     test('no-op for equal or out-of-range indices', () {
       final doc = seed();
       expect(
-        const ReorderLayerCommand(from: 1, to: 1).apply(doc).layers.map((l) => l.id).toList(),
+        const ReorderLayerCommand(
+          from: 1,
+          to: 1,
+        ).apply(doc).layers.map((l) => l.id).toList(),
         ['a', 'b', 'c'],
       );
       expect(
-        const ReorderLayerCommand(from: -1, to: 2).apply(doc).layers.map((l) => l.id).toList(),
+        const ReorderLayerCommand(
+          from: -1,
+          to: 2,
+        ).apply(doc).layers.map((l) => l.id).toList(),
         ['a', 'b', 'c'],
       );
       expect(
-        const ReorderLayerCommand(from: 0, to: 9).apply(doc).layers.map((l) => l.id).toList(),
+        const ReorderLayerCommand(
+          from: 0,
+          to: 9,
+        ).apply(doc).layers.map((l) => l.id).toList(),
         ['a', 'b', 'c'],
       );
     });
@@ -69,9 +79,10 @@ void main() {
 
     test('no-op for missing layer', () {
       final doc = seed();
-      final result =
-          const SetLayerVisibilityCommand(layerId: 'x', visible: false)
-              .apply(doc);
+      final result = const SetLayerVisibilityCommand(
+        layerId: 'x',
+        visible: false,
+      ).apply(doc);
       expect(identical(result, doc), isTrue);
     });
   });
@@ -141,18 +152,21 @@ void main() {
       expect(layer.locked, isFalse);
     });
 
-    test('withVisibility / withLocked return new instances with the flag applied', () {
-      final a = rect('x');
-      final b = a.withVisibility(false);
-      final c = a.withLocked(true);
-      expect(b.visible, isFalse);
-      expect(b.locked, isFalse);
-      expect(c.locked, isTrue);
-      expect(c.visible, isTrue);
-      // Shape-specific fields preserved.
-      expect(b, isA<ShapeLayer>());
-      expect((b as ShapeLayer).kind, ShapeKind.rectangle);
-    });
+    test(
+      'withVisibility / withLocked return new instances with the flag applied',
+      () {
+        final a = rect('x');
+        final b = a.withVisibility(false);
+        final c = a.withLocked(true);
+        expect(b.visible, isFalse);
+        expect(b.locked, isFalse);
+        expect(c.locked, isTrue);
+        expect(c.visible, isTrue);
+        // Shape-specific fields preserved.
+        expect(b, isA<ShapeLayer>());
+        expect((b as ShapeLayer).kind, ShapeKind.rectangle);
+      },
+    );
 
     test('opacity defaults to 1.0 and withOpacity returns a clamped copy', () {
       final a = rect('x');
@@ -183,6 +197,57 @@ void main() {
       const cmd = SetLayerOpacityCommand(layerId: 'a', opacity: 1.0);
       final next = cmd.apply(doc);
       expect(identical(next, doc), isTrue);
+    });
+
+    test('SetLayerNameCommand applies, normalises, and inverts cleanly', () {
+      var doc = EditorDocument.empty;
+      doc = AddLayerCommand(rect('a')).apply(doc);
+      const cmd = SetLayerNameCommand(layerId: 'a', name: '  Hero title  ');
+      final inverse = cmd.invert(doc);
+
+      doc = cmd.apply(doc);
+      expect(doc.layerById('a')!.name, 'Hero title');
+
+      doc = inverse.apply(doc);
+      expect(doc.layerById('a')!.name, isNull);
+    });
+
+    test('SetLayerNameCommand no-ops for missing or unchanged layers', () {
+      var doc = EditorDocument.empty;
+      doc = AddLayerCommand(rect('a').withName('Badge')).apply(doc);
+
+      expect(
+        identical(
+          const SetLayerNameCommand(layerId: 'x', name: 'Other').apply(doc),
+          doc,
+        ),
+        isTrue,
+      );
+      expect(
+        identical(
+          const SetLayerNameCommand(layerId: 'a', name: 'Badge').apply(doc),
+          doc,
+        ),
+        isTrue,
+      );
+    });
+
+    test('SetLayerNameCommand works through HistoryStack undo/redo', () {
+      var doc = EditorDocument.empty;
+      doc = AddLayerCommand(rect('a')).apply(doc);
+      final history = HistoryStack();
+
+      doc = history.execute(
+        doc,
+        const SetLayerNameCommand(layerId: 'a', name: 'Cover'),
+      );
+      expect(doc.layerById('a')!.name, 'Cover');
+
+      doc = history.undo(doc);
+      expect(doc.layerById('a')!.name, isNull);
+
+      doc = history.redo(doc);
+      expect(doc.layerById('a')!.name, 'Cover');
     });
 
     test('opacity does not affect visibility flag', () {

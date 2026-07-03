@@ -7,7 +7,7 @@
 //   * a small "Base photo" badge label,
 // and we do NOT render
 //   * any transform handles,
-//   * the floating QuickActionsOverlay (duplicate / delete),
+//   * the floating QuickActionsOverlay (direct duplicate / delete),
 //   * the transform HUD readout.
 // Normal layers and overlay images keep their full chrome.
 
@@ -29,10 +29,7 @@ import 'package:flutter_test/flutter_test.dart';
 ImageLayer _img(String id, {bool locked = false, Offset pos = Offset.zero}) =>
     ImageLayer(
       id: id,
-      transform: LayerTransform(
-        position: pos,
-        size: const Size(400, 300),
-      ),
+      transform: LayerTransform(position: pos, size: const Size(400, 300)),
       source: const ImageSource.asset('a.png'),
       locked: locked,
     );
@@ -55,22 +52,21 @@ Future<void> _photoProject(
   final ctrl = c.read(documentControllerProvider.notifier);
   ctrl.newDocument(width: 400, height: 300, kind: ProjectKind.photo);
   ctrl.execute(
-    CompositeCommand(
-      [AddLayerCommand(_img(id, locked: true)), SetBasePhotoCommand(id)],
-      labelOverride: 'Import photo',
-    ),
+    CompositeCommand([
+      AddLayerCommand(_img(id, locked: true)),
+      SetBasePhotoCommand(id),
+    ], labelOverride: 'Import photo'),
   );
   ctrl.clearHistory();
 }
 
-Future<void> _pumpCanvas(
-  WidgetTester tester,
-  ProviderContainer c,
-) async {
-  await tester.pumpWidget(UncontrolledProviderScope(
-    container: c,
-    child: const MaterialApp(home: Scaffold(body: EditorCanvas())),
-  ));
+Future<void> _pumpCanvas(WidgetTester tester, ProviderContainer c) async {
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: c,
+      child: const MaterialApp(home: Scaffold(body: EditorCanvas())),
+    ),
+  );
   await tester.pump();
   await tester.pump();
   // Asset-backed ImageLayers in widget tests fail to load (no
@@ -83,8 +79,9 @@ Future<void> _pumpCanvas(
 
 void main() {
   group('protected base photo selection chrome', () {
-    testWidgets('shows frame WITHOUT handles + Base photo badge',
-        (tester) async {
+    testWidgets('shows frame WITHOUT handles + Base photo badge', (
+      tester,
+    ) async {
       final c = _setup(tester);
       await _photoProject(tester, c);
       c.read(selectionControllerProvider.notifier).select('photo');
@@ -105,8 +102,9 @@ void main() {
       expect(find.byType(QuickActionsOverlay), findsNothing);
     });
 
-    testWidgets('overlay image in photo project keeps full chrome',
-        (tester) async {
+    testWidgets('overlay image in photo project keeps full chrome', (
+      tester,
+    ) async {
       final c = _setup(tester);
       await _photoProject(tester, c);
       c
@@ -121,8 +119,9 @@ void main() {
       expect(frames, hasLength(1));
       expect(frames.single.showHandles, isTrue);
       expect(frames.single.onBody, isNotNull);
-      // Floating quick-actions toolbar is shown for normal layers.
-      expect(find.byType(QuickActionsOverlay), findsOneWidget);
+      // Image structural actions now live in the contextual Image
+      // toolbar's More entry, not as a direct duplicate/delete pill.
+      expect(find.byType(QuickActionsOverlay), findsNothing);
       // No "Base photo" label on the overlay.
       expect(find.text('Base photo'), findsNothing);
     });
@@ -139,10 +138,11 @@ void main() {
       await _pumpCanvas(tester, c);
 
       final frame = tester.widget<LayerSelectionOverlay>(
-          find.byType(LayerSelectionOverlay));
+        find.byType(LayerSelectionOverlay),
+      );
       expect(frame.showHandles, isTrue);
       expect(frame.onBody, isNotNull);
-      expect(find.byType(QuickActionsOverlay), findsOneWidget);
+      expect(find.byType(QuickActionsOverlay), findsNothing);
       expect(find.text('Base photo'), findsNothing);
     });
 
@@ -151,7 +151,9 @@ void main() {
       c
           .read(documentControllerProvider.notifier)
           .newDocument(width: 800, height: 800);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             AddLayerCommand(
               ShapeLayer(
                 id: 's',
@@ -167,7 +169,8 @@ void main() {
       await _pumpCanvas(tester, c);
 
       final frame = tester.widget<LayerSelectionOverlay>(
-          find.byType(LayerSelectionOverlay));
+        find.byType(LayerSelectionOverlay),
+      );
       expect(frame.showHandles, isTrue);
       expect(frame.onBody, isNotNull);
       expect(find.text('Base photo'), findsNothing);
@@ -175,22 +178,22 @@ void main() {
   });
 
   group('Layers panel: tapping protected base photo', () {
-    testWidgets(
-        'selects the layer AND closes the drawer',
-        (tester) async {
+    testWidgets('selects the layer AND closes the drawer', (tester) async {
       final c = _setup(tester);
       await _photoProject(tester, c);
       final scaffoldKey = GlobalKey<ScaffoldState>();
-      await tester.pumpWidget(UncontrolledProviderScope(
-        container: c,
-        child: MaterialApp(
-          home: Scaffold(
-            key: scaffoldKey,
-            endDrawer: const LayersPanel(),
-            body: const SizedBox.expand(),
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: c,
+          child: MaterialApp(
+            home: Scaffold(
+              key: scaffoldKey,
+              endDrawer: const LayersPanel(),
+              body: const SizedBox.expand(),
+            ),
           ),
         ),
-      ));
+      );
       scaffoldKey.currentState!.openEndDrawer();
       await tester.pumpAndSettle();
       expect(find.byType(LayersPanel), findsOneWidget);
@@ -204,9 +207,9 @@ void main() {
       expect(find.byType(LayersPanel), findsNothing);
     });
 
-    testWidgets(
-        'tapping a normal layer does NOT auto-close the drawer',
-        (tester) async {
+    testWidgets('tapping a normal layer does NOT auto-close the drawer', (
+      tester,
+    ) async {
       final c = _setup(tester);
       c
           .read(documentControllerProvider.notifier)
@@ -215,16 +218,18 @@ void main() {
           .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(_img('n')));
       final scaffoldKey = GlobalKey<ScaffoldState>();
-      await tester.pumpWidget(UncontrolledProviderScope(
-        container: c,
-        child: MaterialApp(
-          home: Scaffold(
-            key: scaffoldKey,
-            endDrawer: const LayersPanel(),
-            body: const SizedBox.expand(),
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: c,
+          child: MaterialApp(
+            home: Scaffold(
+              key: scaffoldKey,
+              endDrawer: const LayersPanel(),
+              body: const SizedBox.expand(),
+            ),
           ),
         ),
-      ));
+      );
       scaffoldKey.currentState!.openEndDrawer();
       await tester.pumpAndSettle();
 

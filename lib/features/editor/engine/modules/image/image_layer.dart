@@ -46,18 +46,18 @@ enum ImageMask {
 @immutable
 class ImageSource {
   const ImageSource.asset(String this.assetName)
-      : networkUrl = null,
-        filePath = null;
+    : networkUrl = null,
+      filePath = null;
   const ImageSource.network(String this.networkUrl)
-      : assetName = null,
-        filePath = null;
+    : assetName = null,
+      filePath = null;
 
   /// Local on-device file path (e.g. one returned by `image_picker`
   /// after copying into app-documents storage). Stored as a string so
   /// the engine has no `dart:io` dependency at the type level.
   const ImageSource.file(String this.filePath)
-      : assetName = null,
-        networkUrl = null;
+    : assetName = null,
+      networkUrl = null;
 
   final String? assetName;
   final String? networkUrl;
@@ -75,10 +75,10 @@ class ImageSource {
   int get hashCode => Object.hash(assetName, networkUrl, filePath);
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        if (assetName != null) 'asset': assetName,
-        if (networkUrl != null) 'url': networkUrl,
-        if (filePath != null) 'file': filePath,
-      };
+    if (assetName != null) 'asset': assetName,
+    if (networkUrl != null) 'url': networkUrl,
+    if (filePath != null) 'file': filePath,
+  };
 
   /// At least one of `asset`, `url` or `file` must be present, mirroring
   /// the named constructors. Throws otherwise — silent fallback would
@@ -99,7 +99,8 @@ class ImageSource {
   /// short identifier string. Pixels live in the OS image cache, not
   /// here, so an [ImageSource] is cheap to keep in undo history.
   int get estimatedByteSize {
-    final n = (assetName?.length ?? 0) +
+    final n =
+        (assetName?.length ?? 0) +
         (networkUrl?.length ?? 0) +
         (filePath?.length ?? 0);
     return n * 2; // 2 bytes per UTF-16 code unit.
@@ -203,20 +204,52 @@ class ImageAdjustments {
     // 1) Exposure: pure RGB gain. Mid-grey passes through scaled.
     final ex = 1 + exposure / 100;
     final expM = <double>[
-      ex, 0,  0,  0, 0,
-      0,  ex, 0,  0, 0,
-      0,  0,  ex, 0, 0,
-      0,  0,  0,  1, 0,
+      ex,
+      0,
+      0,
+      0,
+      0,
+      0,
+      ex,
+      0,
+      0,
+      0,
+      0,
+      0,
+      ex,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
 
     // 2) Warmth: shift blue↔orange. ±100 → ±20% additive on R/B.
     //    Green gets a smaller nudge so the white point stays neutral.
     final wOff = warmth * 0.2 * 2.55; // 0.2 of full range, in 0..255.
     final warmM = <double>[
-      1, 0, 0, 0, wOff,
-      0, 1, 0, 0, wOff * 0.4,
-      0, 0, 1, 0, -wOff,
-      0, 0, 0, 1, 0,
+      1,
+      0,
+      0,
+      0,
+      wOff,
+      0,
+      1,
+      0,
+      0,
+      wOff * 0.4,
+      0,
+      0,
+      1,
+      0,
+      -wOff,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
 
     final s = saturation;
@@ -228,27 +261,75 @@ class ImageAdjustments {
     final sg0 = (1 - s) * lg;
     final sb0 = (1 - s) * lb;
     final sat = <double>[
-      sr0 + s, sg0,     sb0,     0, 0,
-      sr0,     sg0 + s, sb0,     0, 0,
-      sr0,     sg0,     sb0 + s, 0, 0,
-      0,       0,       0,       1, 0,
+      sr0 + s,
+      sg0,
+      sb0,
+      0,
+      0,
+      sr0,
+      sg0 + s,
+      sb0,
+      0,
+      0,
+      sr0,
+      sg0,
+      sb0 + s,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
 
     final c = contrast;
     final cTrans = 128 * (1 - c);
     final con = <double>[
-      c, 0, 0, 0, cTrans,
-      0, c, 0, 0, cTrans,
-      0, 0, c, 0, cTrans,
-      0, 0, 0, 1, 0,
+      c,
+      0,
+      0,
+      0,
+      cTrans,
+      0,
+      c,
+      0,
+      0,
+      cTrans,
+      0,
+      0,
+      c,
+      0,
+      cTrans,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
 
     final bTrans = brightness * 2.55;
     final bri = <double>[
-      1, 0, 0, 0, bTrans,
-      0, 1, 0, 0, bTrans,
-      0, 0, 1, 0, bTrans,
-      0, 0, 0, 1, 0,
+      1,
+      0,
+      0,
+      0,
+      bTrans,
+      0,
+      1,
+      0,
+      0,
+      bTrans,
+      0,
+      0,
+      1,
+      0,
+      bTrans,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
 
     // Apply outermost-last: bri( con( sat( warm( exp(c) ) ) ) ).
@@ -256,21 +337,18 @@ class ImageAdjustments {
       bri,
       composeColorMatrices(
         con,
-        composeColorMatrices(
-          sat,
-          composeColorMatrices(warmM, expM),
-        ),
+        composeColorMatrices(sat, composeColorMatrices(warmM, expM)),
       ),
     );
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        if (brightness != 0) 'brightness': brightness,
-        if (contrast != 1) 'contrast': contrast,
-        if (saturation != 1) 'saturation': saturation,
-        if (exposure != 0) 'exposure': exposure,
-        if (warmth != 0) 'warmth': warmth,
-      };
+    if (brightness != 0) 'brightness': brightness,
+    if (contrast != 1) 'contrast': contrast,
+    if (saturation != 1) 'saturation': saturation,
+    if (exposure != 0) 'exposure': exposure,
+    if (warmth != 0) 'warmth': warmth,
+  };
 
   factory ImageAdjustments.fromJson(Map<String, dynamic> json) {
     return ImageAdjustments(
@@ -414,50 +492,146 @@ List<double>? imageFilterMatrix(ImageFilterPreset preset) {
     case ImageFilterPreset.warm:
       // Lift R+G, drop B slightly.
       return const <double>[
-        1.10, 0.00, 0.00, 0, 12,
-        0.00, 1.05, 0.00, 0, 6,
-        0.00, 0.00, 0.92, 0, -10,
-        0.00, 0.00, 0.00, 1, 0,
+        1.10,
+        0.00,
+        0.00,
+        0,
+        12,
+        0.00,
+        1.05,
+        0.00,
+        0,
+        6,
+        0.00,
+        0.00,
+        0.92,
+        0,
+        -10,
+        0.00,
+        0.00,
+        0.00,
+        1,
+        0,
       ];
     case ImageFilterPreset.cool:
       // Drop R, lift B for icy tones.
       return const <double>[
-        0.92, 0.00, 0.00, 0, -8,
-        0.00, 0.98, 0.00, 0, 4,
-        0.00, 0.00, 1.10, 0, 12,
-        0.00, 0.00, 0.00, 1, 0,
+        0.92,
+        0.00,
+        0.00,
+        0,
+        -8,
+        0.00,
+        0.98,
+        0.00,
+        0,
+        4,
+        0.00,
+        0.00,
+        1.10,
+        0,
+        12,
+        0.00,
+        0.00,
+        0.00,
+        1,
+        0,
       ];
     case ImageFilterPreset.vintage:
       // Sepia-flavoured cross-channel mix + slight contrast lift.
       return const <double>[
-        0.62, 0.30, 0.18, 0, 0,
-        0.30, 0.65, 0.16, 0, 0,
-        0.22, 0.28, 0.55, 0, 0,
-        0.00, 0.00, 0.00, 1, 0,
+        0.62,
+        0.30,
+        0.18,
+        0,
+        0,
+        0.30,
+        0.65,
+        0.16,
+        0,
+        0,
+        0.22,
+        0.28,
+        0.55,
+        0,
+        0,
+        0.00,
+        0.00,
+        0.00,
+        1,
+        0,
       ];
     case ImageFilterPreset.mono:
       // BT.601 luma weights — clean black & white.
       return const <double>[
-        0.299, 0.587, 0.114, 0, 0,
-        0.299, 0.587, 0.114, 0, 0,
-        0.299, 0.587, 0.114, 0, 0,
-        0.000, 0.000, 0.000, 1, 0,
+        0.299,
+        0.587,
+        0.114,
+        0,
+        0,
+        0.299,
+        0.587,
+        0.114,
+        0,
+        0,
+        0.299,
+        0.587,
+        0.114,
+        0,
+        0,
+        0.000,
+        0.000,
+        0.000,
+        1,
+        0,
       ];
     case ImageFilterPreset.fade:
       // Lift blacks, compress range — milky vintage film look.
       return const <double>[
-        0.85, 0.00, 0.00, 0, 30,
-        0.00, 0.85, 0.00, 0, 30,
-        0.00, 0.00, 0.85, 0, 30,
-        0.00, 0.00, 0.00, 1, 0,
+        0.85,
+        0.00,
+        0.00,
+        0,
+        30,
+        0.00,
+        0.85,
+        0.00,
+        0,
+        30,
+        0.00,
+        0.00,
+        0.85,
+        0,
+        30,
+        0.00,
+        0.00,
+        0.00,
+        1,
+        0,
       ];
     case ImageFilterPreset.dramatic:
       // Strong contrast around mid-grey, slight desaturation.
       return const <double>[
-        1.30, 0.00, 0.00, 0, -38,
-        0.00, 1.30, 0.00, 0, -38,
-        0.00, 0.00, 1.30, 0, -38,
-        0.00, 0.00, 0.00, 1, 0,
+        1.30,
+        0.00,
+        0.00,
+        0,
+        -38,
+        0.00,
+        1.30,
+        0.00,
+        0,
+        -38,
+        0.00,
+        0.00,
+        1.30,
+        0,
+        -38,
+        0.00,
+        0.00,
+        0.00,
+        1,
+        0,
       ];
   }
 }
@@ -534,8 +708,7 @@ class ImageLayer extends EditorLayer {
   /// [EffectStack]. Derived (not stored) so the canonical state
   /// lives in [effects] and the legacy slider UI keeps reading a
   /// flat value object.
-  ImageAdjustments get adjustments =>
-      ImageAdjustments.fromEffectStack(effects);
+  ImageAdjustments get adjustments => ImageAdjustments.fromEffectStack(effects);
 
   /// Normalised crop window into the post-fit image, expressed in
   /// the layer's own coordinate system (0..1 on each axis). Defaults
@@ -648,6 +821,9 @@ class ImageLayer extends EditorLayer {
       copyAll(opacity: opacity.clamp(0.0, 1.0));
 
   @override
+  EditorLayer withName(String? name) => copyAll(name: name);
+
+  @override
   // Pixel data is NOT held by the layer — it lives in the OS image
   // cache, keyed by asset / file path / URL. The layer only retains
   // those small string identifiers, so an undo entry pinning an
@@ -675,16 +851,6 @@ class ImageLayer extends EditorLayer {
     // URL), so rebuilds of this widget do NOT re-decode the bytes —
     // they just rebind the same cached `ui.Image`. No custom layer
     // cache is required on top.
-    final int? cacheWidth = _decodeCacheWidth(transform.size.width);
-    final rawPixels = switch (source) {
-      ImageSource(:final assetName?) =>
-        Image.asset(assetName, fit: fit, cacheWidth: cacheWidth),
-      ImageSource(:final networkUrl?) =>
-        Image.network(networkUrl, fit: fit, cacheWidth: cacheWidth),
-      ImageSource(:final filePath?) =>
-        Image.file(File(filePath), fit: fit, cacheWidth: cacheWidth),
-      _ => const ColoredBox(color: Color(0x22FFFFFF)),
-    };
     // Compose filter preset and the layer's effect stack into a
     // single colour matrix so we only pay the [ColorFiltered] cost
     // once. The filter is applied first (acts on the raw pixels),
@@ -702,12 +868,11 @@ class ImageLayer extends EditorLayer {
     } else {
       combined = composeColorMatrices(adjMatrix, filterMatrix);
     }
-    final adjusted = combined == null
-        ? rawPixels
-        : ColorFiltered(
-            colorFilter: ColorFilter.matrix(combined),
-            child: rawPixels,
-          );
+    final int? cacheWidth = _decodeCacheWidth(transform.size.width);
+    final adjusted = _loadableImage(
+      cacheWidth: cacheWidth,
+      colorMatrix: combined,
+    );
     // Crop window selects a sub-rect of the post-fit image. Applied
     // *before* the mask/border/shadow stack so cropping zooms into
     // the visible silhouette but the silhouette itself, the
@@ -794,6 +959,81 @@ class ImageLayer extends EditorLayer {
     );
   }
 
+  /// Build the source image with a deterministic fallback for broken
+  /// asset / network / file references. The colour matrix is applied
+  /// through [Image.frameBuilder] so it wraps successful pixels only;
+  /// the missing-image placeholder remains readable even when the
+  /// layer carries a heavy filter/effect stack.
+  Widget _loadableImage({
+    required int? cacheWidth,
+    required List<double>? colorMatrix,
+  }) {
+    Widget frameBuilder(
+      BuildContext context,
+      Widget child,
+      int? frame,
+      bool wasSynchronouslyLoaded,
+    ) {
+      if (colorMatrix == null) return child;
+      return ColorFiltered(
+        colorFilter: ColorFilter.matrix(colorMatrix),
+        child: child,
+      );
+    }
+
+    Widget errorBuilder(
+      BuildContext context,
+      Object error,
+      StackTrace? stackTrace,
+    ) {
+      return const _MissingImagePlaceholder();
+    }
+
+    return switch (source) {
+      ImageSource(:final assetName?) => Image.asset(
+        assetName,
+        fit: fit,
+        cacheWidth: cacheWidth,
+        gaplessPlayback: true,
+        frameBuilder: frameBuilder,
+        errorBuilder: errorBuilder,
+      ),
+      ImageSource(:final networkUrl?) => Image.network(
+        networkUrl,
+        fit: fit,
+        cacheWidth: cacheWidth,
+        gaplessPlayback: true,
+        frameBuilder: frameBuilder,
+        errorBuilder: errorBuilder,
+      ),
+      ImageSource(:final filePath?) => _fileImage(
+        filePath,
+        cacheWidth: cacheWidth,
+        frameBuilder: frameBuilder,
+        errorBuilder: errorBuilder,
+      ),
+      _ => const _MissingImagePlaceholder(),
+    };
+  }
+
+  Widget _fileImage(
+    String filePath, {
+    required int? cacheWidth,
+    required ImageFrameBuilder frameBuilder,
+    required ImageErrorWidgetBuilder errorBuilder,
+  }) {
+    final file = File(filePath);
+    if (!file.existsSync()) return const _MissingImagePlaceholder();
+    return Image.file(
+      file,
+      fit: fit,
+      cacheWidth: cacheWidth,
+      gaplessPlayback: true,
+      frameBuilder: frameBuilder,
+      errorBuilder: errorBuilder,
+    );
+  }
+
   /// Wraps the (already fitted + adjusted) pixel widget in a
   /// scale+translate transform so only the configured [cropRect]
   /// region is visible inside the layer bounds. The image is scaled
@@ -822,12 +1062,13 @@ class ImageLayer extends EditorLayer {
               alignment: Alignment.topLeft,
               transform: Matrix4.identity()
                 ..scaleByDouble(1 / cw, 1 / ch, 1, 1)
-                ..translateByDouble(-cropRect.left * w, -cropRect.top * h, 0, 1),
-              child: SizedBox(
-                width: w,
-                height: h,
-                child: pixels,
-              ),
+                ..translateByDouble(
+                  -cropRect.left * w,
+                  -cropRect.top * h,
+                  0,
+                  1,
+                ),
+              child: SizedBox(width: w, height: h, child: pixels),
             ),
           );
         },
@@ -861,40 +1102,40 @@ class ImageLayer extends EditorLayer {
 
   @override
   int get hashCode => Object.hash(
-        super.hashCode,
-        source,
-        fit,
-        mask,
-        borderColor,
-        borderWidth,
-        shadowColor,
-        shadowBlur,
-        shadowOffset,
-        shadowOpacity,
-        cropRect,
-        filterPreset,
-      );
+    super.hashCode,
+    source,
+    fit,
+    mask,
+    borderColor,
+    borderWidth,
+    shadowColor,
+    shadowBlur,
+    shadowOffset,
+    shadowOpacity,
+    cropRect,
+    filterPreset,
+  );
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        ...baseJson(),
-        'source': source.toJson(),
-        'fit': fit.name,
-        'mask': mask.name,
-        if (borderWidth > 0) 'borderWidth': borderWidth,
-        if (borderWidth > 0) 'borderColor': borderColor.toARGB32(),
-        if (shadowOpacity > 0) 'shadowOpacity': shadowOpacity,
-        if (shadowOpacity > 0) 'shadowBlur': shadowBlur,
-        if (shadowOpacity > 0) 'shadowOffsetX': shadowOffset.dx,
-        if (shadowOpacity > 0) 'shadowOffsetY': shadowOffset.dy,
-        if (shadowOpacity > 0) 'shadowColor': shadowColor.toARGB32(),
-        if (!isFullCrop) 'cropL': cropRect.left,
-        if (!isFullCrop) 'cropT': cropRect.top,
-        if (!isFullCrop) 'cropR': cropRect.right,
-        if (!isFullCrop) 'cropB': cropRect.bottom,
-        if (filterPreset != ImageFilterPreset.none)
-          'filterPreset': filterPreset.name,
-      };
+    ...baseJson(),
+    'source': source.toJson(),
+    'fit': fit.name,
+    'mask': mask.name,
+    if (borderWidth > 0) 'borderWidth': borderWidth,
+    if (borderWidth > 0) 'borderColor': borderColor.toARGB32(),
+    if (shadowOpacity > 0) 'shadowOpacity': shadowOpacity,
+    if (shadowOpacity > 0) 'shadowBlur': shadowBlur,
+    if (shadowOpacity > 0) 'shadowOffsetX': shadowOffset.dx,
+    if (shadowOpacity > 0) 'shadowOffsetY': shadowOffset.dy,
+    if (shadowOpacity > 0) 'shadowColor': shadowColor.toARGB32(),
+    if (!isFullCrop) 'cropL': cropRect.left,
+    if (!isFullCrop) 'cropT': cropRect.top,
+    if (!isFullCrop) 'cropR': cropRect.right,
+    if (!isFullCrop) 'cropB': cropRect.bottom,
+    if (filterPreset != ImageFilterPreset.none)
+      'filterPreset': filterPreset.name,
+  };
 
   factory ImageLayer.fromJson(Map<String, dynamic> json) {
     final id = json['id'];
@@ -989,9 +1230,7 @@ class ImageLayer extends EditorLayer {
     if (fromArray.isNotEmpty) return fromArray;
     final legacy = json['adjustments'];
     if (legacy is! Map) return fromArray;
-    final adj = ImageAdjustments.fromJson(
-      Map<String, dynamic>.from(legacy),
-    );
+    final adj = ImageAdjustments.fromJson(Map<String, dynamic>.from(legacy));
     final lifted = adj.toEffectStack();
     if (lifted.isEmpty) return EffectStack.empty;
     return EffectStack(List<EditorEffect>.unmodifiable(lifted));
@@ -1009,6 +1248,79 @@ Widget _maskClip(ImageMask mask, Widget child) {
   return ClipPath(clipper: _MaskClipper(mask), child: child);
 }
 
+class _MissingImagePlaceholder extends StatelessWidget {
+  const _MissingImagePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _missingImageLabel(context);
+    return Semantics(
+      label: label,
+      child: CustomPaint(
+        painter: const _MissingImagePlaceholderPainter(),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: const Color(0xFF4B5563),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  height: 1.1,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _missingImageLabel(BuildContext context) {
+  final locale = Localizations.maybeLocaleOf(context);
+  if (locale?.languageCode == 'fa') return 'تصویر در دسترس نیست';
+  return 'Image unavailable';
+}
+
+class _MissingImagePlaceholderPainter extends CustomPainter {
+  const _MissingImagePlaceholderPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final rect = Offset.zero & size;
+    final bg = Paint()..color = const Color(0xFFF2F4F7);
+    final stroke = Paint()
+      ..color = const Color(0xFF9AA4B2)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke
+      ..isAntiAlias = true;
+    canvas.drawRect(rect, bg);
+    canvas.drawRect(rect.deflate(0.75), stroke);
+
+    final inset = size.shortestSide * 0.18;
+    canvas.drawLine(
+      Offset(inset, inset),
+      Offset(size.width - inset, size.height - inset),
+      stroke,
+    );
+    canvas.drawLine(
+      Offset(size.width - inset, inset),
+      Offset(inset, size.height - inset),
+      stroke,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _MissingImagePlaceholderPainter oldDelegate) =>
+      false;
+}
+
 /// Returns the silhouette path for [mask] inside a [size]-sized box.
 /// Used by both [_MaskClipper] (to clip the pixels) and
 /// [_MaskBorderPainter] (to stroke the visible edge), so the border
@@ -1023,13 +1335,12 @@ Path imageMaskPath(ImageMask mask, Size size) {
         ..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(24)));
     case ImageMask.circle:
       final r = size.shortestSide / 2;
-      return Path()
-        ..addOval(
-          Rect.fromCircle(
-            center: Offset(size.width / 2, size.height / 2),
-            radius: r,
-          ),
-        );
+      return Path()..addOval(
+        Rect.fromCircle(
+          center: Offset(size.width / 2, size.height / 2),
+          radius: r,
+        ),
+      );
     case ImageMask.squircle:
       return ContinuousRectangleBorder(
         borderRadius: BorderRadius.circular(size.shortestSide * 0.4),
@@ -1113,8 +1424,7 @@ class _MaskBorderPainter extends CustomPainter {
       (size.height - inset * 2).clamp(0, size.height),
     );
     if (innerSize.isEmpty) return;
-    final path = imageMaskPath(mask, innerSize)
-        .shift(Offset(inset, inset));
+    final path = imageMaskPath(mask, innerSize).shift(Offset(inset, inset));
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = width
@@ -1237,14 +1547,7 @@ Path _heartPath(Size size) {
   final path = Path();
   path.moveTo(w / 2, h * 0.95);
   path.cubicTo(-w * 0.1, h * 0.6, w * 0.15, -h * 0.05, w / 2, h * 0.28);
-  path.cubicTo(
-    w - w * 0.15,
-    -h * 0.05,
-    w + w * 0.1,
-    h * 0.6,
-    w / 2,
-    h * 0.95,
-  );
+  path.cubicTo(w - w * 0.15, -h * 0.05, w + w * 0.1, h * 0.6, w / 2, h * 0.95);
   path.close();
   return path;
 }

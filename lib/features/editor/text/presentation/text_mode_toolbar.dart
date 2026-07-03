@@ -23,19 +23,21 @@ import '../../toolbar/presentation/sub_tool_sheet.dart';
 import '../application/text_tool_controller.dart';
 import '../domain/font_catalog.dart';
 import '../domain/text_style_presets.dart';
+import 'text_floating_toolbar.dart' show showTextMoreSheet;
 
 /// Bottom dock for text mode — Canva-style.
 ///
 /// The dock is a single horizontally scrollable strip of large
-/// icon+label tiles. Each tile opens a dedicated **modal bottom
-/// sheet** that overlays the canvas with a very faint dim (≈ 4 %),
-/// so the canvas is *never* resized while the user edits.
+/// icon+label tiles. Each tile opens an in-dock compact panel so
+/// the canvas stays visible while the user edits.
 ///
 /// Tiles (left → right):
 ///   * Font — opens the typeface picker.
-///   * Color — opens the colour picker (live preview on the layer).
 ///   * Size — opens a slider sheet with presets.
-///   * Layout — alignment, line height, letter spacing.
+///   * Color — opens the colour picker (live preview on the layer).
+///   * Style — one-tap visual style presets.
+///   * Align — alignment, line height, letter spacing.
+///   * More — structural text actions shared with the floating bar.
 ///   * Background — fill, padding, corner radius.
 ///   * Border — glyph outline (color + width).
 ///   * Shadow — color, blur, offset.
@@ -48,19 +50,17 @@ class TextModeToolbar extends ConsumerStatefulWidget {
   const TextModeToolbar({super.key});
 
   // Width of a DockToolTile + its horizontal margin. Kept in sync
-  // with dock_tool_tile.dart (64 + 2*2).
-  static const double _tileExtent = 68;
+  // with dock_tool_tile.dart (66 + 2*2).
+  static const double _tileExtent = 70;
 
   @override
   ConsumerState<TextModeToolbar> createState() => _TextModeToolbarState();
 
   // ─── Tool registry ─────────────────────────────────────────────
   //
-  // Flat, single-tier strip — 8 category tools in one horizontally
-  // scrollable row. Ordered by expected frequency of use so the
-  // left-hand (thumb-natural) side surfaces the highest-value
-  // tools; everything else is one short swipe away. No "More"
-  // dead-end: every tool is reachable in ≤ 1 tap.
+  // Flat, scrollable strip ordered by expected frequency of use so
+  // the first viewport carries Font / Size / Color / Style / Align /
+  // More. Deeper text decoration tools remain one short swipe away.
   //
   // Bold / Italic / Underline are deliberately NOT a tile here —
   // they're toggle actions (not category sheets) and live in the
@@ -73,21 +73,6 @@ class TextModeToolbar extends ConsumerStatefulWidget {
       bodyBuilder: _TextBodies.fontBody,
     ),
     _ToolSpec(
-      // One-tap visual style presets. Sits next to Font because
-      // both are typeface-level, look-defining choices and users
-      // who reach for one often want the other in the same flow.
-      id: 'styles',
-      icon: Icons.auto_awesome_rounded,
-      label: 'Styles',
-      bodyBuilder: _TextBodies.stylesBody,
-    ),
-    _ToolSpec(
-      id: 'color',
-      icon: Icons.palette_rounded,
-      label: 'Color',
-      bodyBuilder: _TextBodies.colorBody,
-    ),
-    _ToolSpec(
       id: 'size',
       icon: Icons.format_size_rounded,
       label: 'Size',
@@ -98,11 +83,27 @@ class TextModeToolbar extends ConsumerStatefulWidget {
       bodyBuilder: _TextBodies.sizeBody,
     ),
     _ToolSpec(
+      id: 'color',
+      icon: Icons.palette_rounded,
+      label: 'Color',
+      bodyBuilder: _TextBodies.colorBody,
+    ),
+    _ToolSpec(
+      // One-tap visual style presets. Sits next to Font because
+      // both are typeface-level, look-defining choices and users
+      // who reach for one often want the other in the same flow.
+      id: 'styles',
+      icon: Icons.auto_awesome_rounded,
+      label: 'Styles',
+      bodyBuilder: _TextBodies.stylesBody,
+    ),
+    _ToolSpec(
       id: 'layout',
       icon: Icons.format_align_center_rounded,
-      label: 'Layout',
+      label: 'Align',
       bodyBuilder: _TextBodies.layoutBody,
     ),
+    _ToolSpec(id: 'more', icon: Icons.more_horiz_rounded, label: 'More'),
     _ToolSpec(
       id: 'background',
       // Filled-rectangle glyph reads as a *shape with fill*; clearly
@@ -153,8 +154,10 @@ class TextModeToolbar extends ConsumerStatefulWidget {
 
   /// Ordered list of sibling tool ids — used by sheet swipe
   /// navigation to jump to the prev/next tool.
-  static List<String> get toolIds =>
-      _tools.map((s) => s.id).toList(growable: false);
+  static List<String> get toolIds => _tools
+      .where((s) => s.bodyBuilder != null)
+      .map((s) => s.id)
+      .toList(growable: false);
 
   static TextLayer? _selectedTextLayer(WidgetRef ref) {
     final selection = ref.watch(selectionControllerProvider);
@@ -292,13 +295,21 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
               compact: _isCompact(context),
               onTap: () {
                 EditorHaptics.tap();
+                final spec = TextModeToolbar._tools[i];
+                if (spec.id == 'more') {
+                  ref.read(textToolControllerProvider.notifier).closeSheet();
+                  if (selected != null) {
+                    showTextMoreSheet(context, ref, selected);
+                  }
+                  return;
+                }
                 // Toggling: re-tapping the active tile dismisses
                 // the sheet (in addition to drag-handle / swipe-
                 // down / Done pill). Tapping a different tile
                 // switches sheets.
                 ref
                     .read(textToolControllerProvider.notifier)
-                    .toggleSheet(TextModeToolbar._tools[i].id);
+                    .toggleSheet(spec.id);
               },
               // Long-press peek removed from tiles — too easy to
               // trigger an undo by resting a thumb on the strip.
@@ -328,10 +339,10 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
   }
 
   bool _isTierBoundary(BuildContext ctx, WidgetRef ref, int rawIndex) {
-    // Boundary always sits before tool index 3
-    // (Font / Color / Size  ▸  Layout / Background / Border / Shadow
-    // / Resize). Stable across left/right handed mode.
-    return rawIndex == 3;
+    // Boundary always sits before the deeper decoration tools
+    // (Font / Size / Color / Style / Align / More ▸ Background / Border /
+    // Shadow / Resize). Stable across left/right handed mode.
+    return rawIndex == 6;
   }
 }
 
@@ -432,7 +443,8 @@ String _localizedToolLabel(AppLocalizations l10n, _ToolSpec spec) {
     'styles' => l10n.stylesTool,
     'color' => l10n.colorLabel,
     'size' => l10n.sizeTool,
-    'layout' => l10n.layoutTool,
+    'layout' => l10n.alignAction,
+    'more' => l10n.moreActionsSemantics,
     'background' => l10n.backgroundTool,
     'border' => l10n.borderTool,
     'shadow' => l10n.shadowTool,
@@ -1433,7 +1445,7 @@ class _LayoutPresetChip extends StatelessWidget {
   }
 }
 
-/// Small uppercase section label used by panels that group multiple
+/// Small section label used by panels that group multiple
 /// affordances (Background → Shape / Color / …). Same visual weight
 /// as the old `_AdvancedGroupHeader` so the eye treats them as
 /// peer-level dividers, not nested headers.
@@ -1445,13 +1457,13 @@ class _PanelSectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
+      padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 4, 6),
       child: Text(
-        label.toUpperCase(),
+        label,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
+          letterSpacing: 0,
           color: scheme.onSurfaceVariant,
         ),
       ),

@@ -9,8 +9,7 @@ import 'floating_toolbar_positioner.dart';
 import 'layer_actions.dart';
 
 /// Small floating pill hovering near the selected layer with the
-/// highest-frequency structural actions: duplicate, delete, bring
-/// forward.
+/// highest-frequency structural actions: duplicate, order, lock, delete.
 ///
 /// This is deliberately a **helper, not a toolbar replacement** — the
 /// main bottom dock still owns exhaustive layer operations. The quick
@@ -49,8 +48,8 @@ class QuickActionsOverlay extends ConsumerWidget {
 
   // Estimated bar width — used only to clamp horizontally. The bar
   // sizes itself via IntrinsicWidth, but we need a reasonable bound
-  // for the clamp; covers four 44 dp pills + 3 dividers + padding.
-  static const double _estWidth = 224;
+  // for the clamp; covers five 44 dp pills + 4 dividers + padding.
+  static const double _estWidth = 269;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -66,6 +65,7 @@ class QuickActionsOverlay extends ConsumerWidget {
     // of existence as the user reorders layers.
     final index = doc.indexOf(layer.id);
     final canBringForward = index != null && index < doc.layers.length - 1;
+    final canSendBackward = index != null && index > 0;
 
     final anchor = FloatingToolbarPositioner.resolve(
       layerPosition: layer.transform.position,
@@ -91,10 +91,12 @@ class QuickActionsOverlay extends ConsumerWidget {
       scheme: scheme,
       isDark: isDark,
       canBringForward: canBringForward,
+      canSendBackward: canSendBackward,
       isLocked: layer.locked,
       onDuplicate: () => LayerActions.duplicate(ref, layer),
       onDelete: () => LayerActions.delete(context, ref, layer),
       onBringForward: canBringForward ? () => _bringForward(ref) : null,
+      onSendBackward: canSendBackward ? () => _sendBackward(ref) : null,
       onToggleLock: () => LayerActions.toggleLock(ref, layer),
     );
 
@@ -121,6 +123,10 @@ class QuickActionsOverlay extends ConsumerWidget {
   void _bringForward(WidgetRef ref) {
     LayerActions.bringForward(ref, layer);
   }
+
+  void _sendBackward(WidgetRef ref) {
+    LayerActions.sendBackward(ref, layer);
+  }
 }
 
 class _BarContent extends StatelessWidget {
@@ -128,20 +134,24 @@ class _BarContent extends StatelessWidget {
     required this.scheme,
     required this.isDark,
     required this.canBringForward,
+    required this.canSendBackward,
     required this.isLocked,
     required this.onDuplicate,
     required this.onDelete,
     required this.onBringForward,
+    required this.onSendBackward,
     required this.onToggleLock,
   });
 
   final ColorScheme scheme;
   final bool isDark;
   final bool canBringForward;
+  final bool canSendBackward;
   final bool isLocked;
   final VoidCallback onDuplicate;
   final VoidCallback onDelete;
   final VoidCallback? onBringForward;
+  final VoidCallback? onSendBackward;
   final VoidCallback onToggleLock;
 
   @override
@@ -198,6 +208,14 @@ class _BarContent extends StatelessWidget {
               // layers panel highlight semantics.
               color: isLocked ? scheme.primary : fg,
               onTap: onToggleLock,
+            ),
+            _Divider(color: dividerColor),
+            _ActionPill(
+              icon: Icons.flip_to_back_rounded,
+              tooltip: context.l10n.sendBackwardAction,
+              color: fg,
+              enabled: canSendBackward,
+              onTap: onSendBackward,
             ),
             _Divider(color: dividerColor),
             _ActionPill(

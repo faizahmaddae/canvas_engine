@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// Canonical small uppercase section label used inside editor panels
+/// Canonical small section label used inside editor panels
 /// and bottom sheets.
 ///
 /// Spec (matches the Paint and Text panel labels — single source of
 /// truth so the editor's section rhythm stays aligned across every
 /// surface):
-///   * uppercase text
-///   * 11 sp, weight 700, letterSpacing 0.8
+///   * sentence-case/localized text
+///   * 11 sp, weight 700, letterSpacing 0
 ///   * `colorScheme.onSurfaceVariant`
 ///   * 4 / 4 / 4 / 6 inset (extra bottom space for visual breathing
 ///     room before the section content)
@@ -18,7 +18,7 @@ class SectionLabel extends StatelessWidget {
   const SectionLabel(
     this.text, {
     super.key,
-    this.padding = const EdgeInsets.fromLTRB(4, 4, 4, 6),
+    this.padding = const EdgeInsetsDirectional.fromSTEB(4, 4, 4, 6),
   });
 
   final String text;
@@ -30,11 +30,11 @@ class SectionLabel extends StatelessWidget {
     return Padding(
       padding: padding,
       child: Text(
-        text.toUpperCase(),
+        text,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
+          letterSpacing: 0,
           color: scheme.onSurfaceVariant,
         ),
       ),

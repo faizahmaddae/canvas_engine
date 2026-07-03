@@ -375,6 +375,93 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get longPressCanvasMultiSelectHint =>
+      'برای انتخاب چند لایه، روی بوم نگه دارید.';
+
+  @override
+  String layerControlsSingleSubtitle(String type) {
+    return '$type. برای چندانتخاب، روی بوم نگه دارید.';
+  }
+
+  @override
+  String get layerControlsMultiSubtitle =>
+      'لایه‌های انتخاب‌شده را هم‌تراز یا توزیع کنید.';
+
+  @override
+  String get layerControlsReviewLayersSubtitle =>
+      'ترتیب و نام لایه‌ها را بررسی کنید.';
+
+  @override
+  String get renameLayerTitle => 'تغییر نام لایه';
+
+  @override
+  String get alignAction => 'تراز';
+
+  @override
+  String get alignToCanvasTitle => 'تراز با بوم';
+
+  @override
+  String get alignSelectedLayersTitle => 'تراز لایه‌ها';
+
+  @override
+  String get alignToCanvasSubtitle => 'این لایه را داخل بوم جابه‌جا کنید.';
+
+  @override
+  String get alignSelectedLayersSubtitle =>
+      'لایه‌های انتخاب‌شده را نسبت به هم هم‌تراز کنید.';
+
+  @override
+  String layersSelectedCount(int count) {
+    return '$count لایه انتخاب شده';
+  }
+
+  @override
+  String get moveSelectedLayerInsideCanvas =>
+      'لایه انتخاب‌شده را داخل بوم جابه‌جا کنید.';
+
+  @override
+  String get alignHorizontalGroup => 'تراز افقی';
+
+  @override
+  String get alignVerticalGroup => 'تراز عمودی';
+
+  @override
+  String get distributeGroup => 'توزیع';
+
+  @override
+  String get horizontalOption => 'افقی';
+
+  @override
+  String get verticalOption => 'عمودی';
+
+  @override
+  String get alignLeftAction => 'چپ';
+
+  @override
+  String get alignCenterAction => 'مرکز';
+
+  @override
+  String get alignRightAction => 'راست';
+
+  @override
+  String get alignTopAction => 'بالا';
+
+  @override
+  String get alignMiddleAction => 'میانه';
+
+  @override
+  String get alignBottomAction => 'پایین';
+
+  @override
+  String get distributeHorizontallyAction => 'توزیع افقی';
+
+  @override
+  String get distributeVerticallyAction => 'توزیع عمودی';
+
+  @override
+  String get selectThreeOrMoreLayersHint => '۳ لایه یا بیشتر انتخاب کنید.';
+
+  @override
   String get noLayersEmpty =>
       'هنوز لایه‌ای ندارید.\nبرای شروع متن، تصویر یا شکل اضافه کنید.';
 
@@ -928,7 +1015,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get effectsTool => 'افکت‌ها';
 
   @override
-  String get replaceTool => 'جایگزینی';
+  String get replaceTool => 'جایگزین';
+
+  @override
+  String get replaceImageAction => 'جایگزین';
+
+  @override
+  String get relinkImageAction => 'اتصال مجدد';
+
+  @override
+  String get imageUnavailableLabel => 'تصویر در دسترس نیست';
 
   @override
   String get backgroundTool => 'پس‌زمینه';
@@ -937,22 +1033,22 @@ class AppLocalizationsFa extends AppLocalizations {
   String get colorLabel => 'رنگ';
 
   @override
-  String get fillLabel => 'پرکردن';
+  String get fillLabel => 'رنگ';
 
   @override
   String get fontTool => 'فونت';
 
   @override
-  String get stylesTool => 'استایل‌ها';
+  String get stylesTool => 'استایل';
 
   @override
-  String get layoutTool => 'چیدمان';
+  String get layoutTool => 'تراز';
 
   @override
   String get resizeTool => 'تغییر اندازه';
 
   @override
-  String get bgShortLabel => 'پس‌زمینه';
+  String get bgShortLabel => 'زمینه';
 
   @override
   String get textColorTitle => 'رنگ متن';
@@ -961,7 +1057,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get fontSizeSemantics => 'اندازه فونت';
 
   @override
-  String get moreActionsSemantics => 'اقدام‌های بیشتر';
+  String get moreActionsSemantics => 'بیشتر';
 
   @override
   String get editTextAction => 'ویرایش متن';
@@ -996,6 +1092,18 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get resizeBoxSummary =>
       'تغییر اندازه کادر — کشیدن گوشه عرض شکست خط را تغییر می‌دهد';
+
+  @override
+  String get textDirectionTitle => 'جهت متن';
+
+  @override
+  String get textDirectionAutoTitle => 'جهت خودکار';
+
+  @override
+  String get textDirectionRtlTitle => 'راست به چپ';
+
+  @override
+  String get textDirectionLtrTitle => 'چپ به راست';
 
   @override
   String get typeSomethingHint => 'چیزی بنویسید…';
@@ -1046,7 +1154,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get behaviorLabel => 'رفتار';
 
   @override
-  String get noneOption => 'هیچ‌کدام';
+  String get noneOption => 'بدون';
 
   @override
   String get pillOption => 'کپسولی';
@@ -1056,6 +1164,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get tagOption => 'برچسب';
+
+  @override
+  String get sharpOption => 'تیز';
 
   @override
   String get hairlineOption => 'نازک';
@@ -1383,6 +1494,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get resetCropAction => 'بازنشانی برش';
+
+  @override
+  String get cropImageAction => 'برش تصویر';
+
+  @override
+  String get restoreImageAction => 'بازیابی تصویر';
 
   @override
   String get freeOption => 'آزاد';

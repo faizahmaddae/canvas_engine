@@ -6,19 +6,17 @@ import '../../engine/core/viewport_state.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/floating_action_bar.dart';
 import '../../presentation/widgets/floating_toolbar_positioner.dart';
-import '../../presentation/widgets/layer_actions_sheet.dart';
 import '../application/shape_tool_controller.dart';
 
 /// Compact glass pill that hovers near the selected shape layer.
 ///
-/// Holds exactly two contextual actions:
+/// Holds exactly one contextual action:
 ///   ⇆  resize behaviour toggle (Scale ↔ Free)
-///   ⋯  more actions (layer-ops sheet — duplicate / lock / delete …)
 ///
-/// Fill / stroke / shadow / replace flows live in the bottom shape
-/// dock; this floating bar exists purely to surface the *resize*
-/// affordance (so users can override the per-kind aspect-lock
-/// default) — symmetric with [PaintFloatingToolbar].
+/// Fill / stroke / shadow / replace / opacity / more flows live in
+/// the bottom shape dock; this floating bar exists purely to surface
+/// the *resize* affordance so users can override the per-kind
+/// aspect-lock default.
 ///
 /// Visibility is owned by the canvas: mounted only when a single
 /// shape layer is selected, unmounted while a transform gesture is
@@ -36,8 +34,8 @@ class ShapeFloatingToolbar extends ConsumerWidget {
 
   // Estimated bar width — used only to clamp horizontally. The bar
   // sizes itself via IntrinsicWidth, but the positioner needs a
-  // reasonable bound. 180 covers the resize pill + more pill + padding.
-  static const double _estWidth = 180;
+  // reasonable bound for the resize pill + padding.
+  static const double _estWidth = 116;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -92,12 +90,6 @@ class ShapeFloatingToolbar extends ConsumerWidget {
               foreground: fg,
               activeColor: scheme.primary,
             ),
-          ),
-          const SizedBox(width: 4),
-          FloatingPillButton(
-            semanticLabel: context.l10n.moreActionsSemantics,
-            onTap: () => showLayerActionsSheet(context, ref, layer),
-            child: Icon(Icons.more_horiz_rounded, size: 20, color: fg),
           ),
         ],
       ),

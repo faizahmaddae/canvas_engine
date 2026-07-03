@@ -190,6 +190,24 @@ class LayerActions {
         .execute(SetLayerLockCommand(layerId: layer.id, locked: !layer.locked));
   }
 
+  /// Prompt for a layer display name and commit it through the command
+  /// stack. Empty input clears the custom name so default layer labels
+  /// remain stable.
+  static Future<void> rename(
+    BuildContext context,
+    WidgetRef ref,
+    EditorLayer layer,
+  ) async {
+    final nextName = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => _RenameLayerDialog(initialName: layer.name ?? ''),
+    );
+    if (nextName == null) return;
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(SetLayerNameCommand(layerId: layer.id, name: nextName));
+  }
+
   static bool canBringForward(WidgetRef ref, EditorLayer layer) {
     final doc = ref.read(documentControllerProvider);
     final index = doc.indexOf(layer.id);
@@ -200,5 +218,52 @@ class LayerActions {
     final doc = ref.read(documentControllerProvider);
     final index = doc.indexOf(layer.id);
     return index != null && index > 0;
+  }
+}
+
+class _RenameLayerDialog extends StatefulWidget {
+  const _RenameLayerDialog({required this.initialName});
+
+  final String initialName;
+
+  @override
+  State<_RenameLayerDialog> createState() => _RenameLayerDialogState();
+}
+
+class _RenameLayerDialogState extends State<_RenameLayerDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    void submit() => Navigator.of(context).pop(_controller.text);
+    return AlertDialog(
+      title: Text(context.l10n.renameLayerTitle),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+        decoration: InputDecoration(labelText: context.l10n.renameAction),
+        onSubmitted: (_) => submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(null),
+          child: Text(context.l10n.cancelAction),
+        ),
+        FilledButton(onPressed: submit, child: Text(context.l10n.applyAction)),
+      ],
+    );
   }
 }

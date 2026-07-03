@@ -5,18 +5,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
+import '../../application/context_toolbar_controller.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../presentation/widgets/floating_toolbar_positioner.dart';
 import '../../presentation/widgets/layer_actions.dart';
 import '../../presentation/widgets/recent_colors_controller.dart';
+import '../../text/presentation/text_direction_mode_picker.dart';
 import '../../text/presentation/text_resize_mode_picker.dart';
 import '../application/text_tool_controller.dart';
-import 'text_input_flow_sheet.dart';
+import 'text_edit_flow.dart';
 
 /// Compact glass pill that hovers near the selected text layer.
 ///
-/// Holds exactly four contextual actions, in order:
+/// Holds exactly five contextual actions, in order:
+///   ✎  edit text
 ///   Aa font picker (opens the dock font sheet)
 ///   ●  color swatch
 ///   Aa size readout (opens the dock size sheet)
@@ -45,8 +48,8 @@ class TextFloatingToolbar extends ConsumerWidget {
   static const double _horizontalMargin = 12;
   // Estimated bar width — used only to clamp horizontally. The bar
   // sizes itself via IntrinsicWidth, but we need a reasonable bound
-  // for the clamp; 240 covers the four pills + padding.
-  static const double _estWidth = 240;
+  // for the clamp; 288 covers the five pills + padding.
+  static const double _estWidth = 288;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -74,6 +77,7 @@ class TextFloatingToolbar extends ConsumerWidget {
       ),
     );
     final ctrl = ref.read(textToolControllerProvider.notifier);
+    final contextCtrl = ref.read(contextToolbarControllerProvider.notifier);
 
     if (anchor.isHidden) return const SizedBox.shrink();
 
@@ -85,8 +89,13 @@ class TextFloatingToolbar extends ConsumerWidget {
       scheme: scheme,
       brightness: brightness,
       style: style,
-      onPickFont: () => ctrl.openSheet('font'),
+      onEditText: () => showEditTextLayerFlow(context, ref, layer),
+      onPickFont: () {
+        contextCtrl.closePanel();
+        ctrl.openSheet('font');
+      },
       onPickColor: () async {
+        contextCtrl.closePanel();
         final original = layer.style.color;
         final picked = await showColorPickerSheet(
           context,
@@ -105,11 +114,17 @@ class TextFloatingToolbar extends ConsumerWidget {
       // Size opens the SAME bottom-dock sheet ('size') the dock tile
       // uses — single source of truth, single chrome (Done pill,
       // sibling swipe, undo chip). No more standalone modal.
-      onPickSize: () => ctrl.openSheet('size'),
+      onPickSize: () {
+        contextCtrl.closePanel();
+        ctrl.openSheet('size');
+      },
       // More: text-specific action sheet. Hosts the moved Edit-text
       // entry, the B/I/U toggles (relocated from a standalone Bold
       // pill on this bar) and the existing layer actions.
-      onMore: () => showTextMoreSheet(context, ref, layer),
+      onMore: () {
+        contextCtrl.closePanel();
+        showTextMoreSheet(context, ref, layer);
+      },
     );
 
     return AnimatedPositioned(
@@ -127,6 +142,7 @@ class _BarContent extends StatelessWidget {
     required this.scheme,
     required this.brightness,
     required this.style,
+    required this.onEditText,
     required this.onPickFont,
     required this.onPickColor,
     required this.onPickSize,
@@ -136,6 +152,7 @@ class _BarContent extends StatelessWidget {
   final ColorScheme scheme;
   final Brightness brightness;
   final TextStyleSpec style;
+  final VoidCallback onEditText;
   final VoidCallback onPickFont;
   final VoidCallback onPickColor;
   final VoidCallback onPickSize;
@@ -170,6 +187,12 @@ class _BarContent extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              _PillButton(
+                onTap: onEditText,
+                semanticLabel: context.l10n.editTextAction,
+                child: Icon(Icons.edit_rounded, size: 18, color: fg),
+              ),
+              const SizedBox(width: 4),
               _PillButton(
                 onTap: onPickFont,
                 semanticLabel: context.l10n.fontTool,
@@ -318,22 +341,29 @@ class _TextMoreSheet extends StatelessWidget {
               title: Text(l10n.editTextAction),
               onTap: () async {
                 Navigator.of(context).pop();
-                final ctrl = parentRef.read(
-                  textToolControllerProvider.notifier,
-                );
-                ctrl.beginEditText();
-                final result = await showTextInputFlowSheet(
-                  context,
-                  initial: layer.content,
-                  title: l10n.editTextAction,
-                  confirmLabel: l10n.applyAction,
-                  onLiveChange: ctrl.previewContent,
-                );
-                if (result == null) {
-                  ctrl.cancelLiveEdit();
-                } else {
-                  ctrl.commitLiveEdit(result);
-                }
+                await showEditTextLayerFlow(context, parentRef, layer);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.align_horizontal_left_rounded),
+              title: Text(l10n.alignAction),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                Navigator.of(context).pop();
+                parentRef
+                    .read(contextToolbarControllerProvider.notifier)
+                    .open(ContextToolPanel.align);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.opacity),
+              title: Text(l10n.opacityLabel),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                Navigator.of(context).pop();
+                parentRef
+                    .read(contextToolbarControllerProvider.notifier)
+                    .open(ContextToolPanel.opacity);
               },
             ),
             const Divider(height: 1),
@@ -380,6 +410,14 @@ class _TextMoreSheet extends StatelessWidget {
                   .setUnderline(!style.underline),
             ),
             const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.drive_file_rename_outline_rounded),
+              title: Text(l10n.renameAction),
+              onTap: () async {
+                await LayerActions.rename(context, parentRef, layer);
+                if (context.mounted) Navigator.of(context).pop();
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.copy_all_outlined),
               title: Text(l10n.duplicateAction),
@@ -439,6 +477,27 @@ class _TextMoreSheet extends StatelessWidget {
                   parentRef
                       .read(textToolControllerProvider.notifier)
                       .setResizeMode(picked);
+                }
+              },
+            ),
+            ListTile(
+              leading: Icon(textDirectionModeIcon(layer.textDirectionMode)),
+              title: Text(l10n.textDirectionTitle),
+              subtitle: Text(
+                localizedTextDirectionModeLabel(
+                  context,
+                  layer.textDirectionMode,
+                ),
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () async {
+                Navigator.of(context).pop();
+                final current = layer.textDirectionMode;
+                final picked = await pickTextDirectionMode(context, current);
+                if (picked != null && picked != current) {
+                  parentRef
+                      .read(textToolControllerProvider.notifier)
+                      .setTextDirectionMode(picked);
                 }
               },
             ),

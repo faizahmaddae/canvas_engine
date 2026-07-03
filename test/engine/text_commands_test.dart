@@ -8,14 +8,11 @@ import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dar
 import 'package:flutter_test/flutter_test.dart';
 
 TextLayer _layer() => const TextLayer(
-      id: 't1',
-      transform: LayerTransform(
-        position: Offset(0, 0),
-        size: Size(200, 80),
-      ),
-      content: 'hi',
-      style: TextStyleSpec(),
-    );
+  id: 't1',
+  transform: LayerTransform(position: Offset(0, 0), size: Size(200, 80)),
+  content: 'hi',
+  style: TextStyleSpec(),
+);
 
 void main() {
   group('UpdateTextCommand.mergeWith', () {
@@ -40,8 +37,7 @@ void main() {
         ),
       );
 
-      expect(history.undoDepth, 1,
-          reason: 'style-only stream should coalesce');
+      expect(history.undoDepth, 1, reason: 'style-only stream should coalesce');
     });
 
     test('merges a content-only stream into one undo entry', () {
@@ -58,8 +54,11 @@ void main() {
         const UpdateTextCommand(layerId: 't1', content: 'he'),
       );
 
-      expect(history.undoDepth, 1,
-          reason: 'content-only stream should coalesce');
+      expect(
+        history.undoDepth,
+        1,
+        reason: 'content-only stream should coalesce',
+      );
     });
 
     test('does NOT merge a content edit and a style edit', () {
@@ -84,8 +83,11 @@ void main() {
         ),
       );
 
-      expect(history.undoDepth, 2,
-          reason: 'content-edit + style-edit must remain separate');
+      expect(
+        history.undoDepth,
+        2,
+        reason: 'content-edit + style-edit must remain separate',
+      );
 
       // Step the style change back: content stays, style reverts.
       doc = history.undo(doc);
@@ -127,6 +129,92 @@ void main() {
       );
 
       expect(history.undoDepth, 2);
+    });
+  });
+
+  group('SetTextDirectionModeCommand', () {
+    test('apply sets the text direction mode and optional transform', () {
+      final doc = EditorDocument.empty.addLayer(_layer());
+      const transform = LayerTransform(
+        position: Offset(12, 24),
+        size: Size(240, 96),
+      );
+
+      final next = const SetTextDirectionModeCommand(
+        layerId: 't1',
+        mode: TextDirectionMode.rtl,
+        transform: transform,
+      ).apply(doc);
+
+      final layer = next.layerById('t1')! as TextLayer;
+      expect(layer.textDirectionMode, TextDirectionMode.rtl);
+      expect(layer.transform, transform);
+    });
+
+    test('invert restores the previous direction mode and transform', () {
+      final before = EditorDocument.empty.addLayer(_layer());
+      const transform = LayerTransform(
+        position: Offset(12, 24),
+        size: Size(240, 96),
+      );
+      const command = SetTextDirectionModeCommand(
+        layerId: 't1',
+        mode: TextDirectionMode.rtl,
+        transform: transform,
+      );
+
+      final after = command.apply(before);
+      final restored = command.invert(before).apply(after);
+
+      expect(restored.layerById('t1'), before.layerById('t1'));
+    });
+
+    test('missing or unchanged layer is a no-op', () {
+      final doc = EditorDocument.empty.addLayer(_layer());
+
+      expect(
+        const SetTextDirectionModeCommand(
+          layerId: 'missing',
+          mode: TextDirectionMode.rtl,
+        ).apply(doc),
+        same(doc),
+      );
+      expect(
+        const SetTextDirectionModeCommand(
+          layerId: 't1',
+          mode: TextDirectionMode.auto,
+        ).apply(doc),
+        same(doc),
+      );
+    });
+
+    test('history undo and redo preserve direction mode changes', () {
+      final history = HistoryStack();
+      var doc = EditorDocument.empty.addLayer(_layer());
+
+      doc = history.execute(
+        doc,
+        const SetTextDirectionModeCommand(
+          layerId: 't1',
+          mode: TextDirectionMode.rtl,
+        ),
+      );
+      expect(
+        (doc.layerById('t1')! as TextLayer).textDirectionMode,
+        TextDirectionMode.rtl,
+      );
+
+      doc = history.undo(doc);
+      expect(
+        (doc.layerById('t1')! as TextLayer).textDirectionMode,
+        TextDirectionMode.auto,
+      );
+
+      doc = history.redo(doc);
+      expect(
+        (doc.layerById('t1')! as TextLayer).textDirectionMode,
+        TextDirectionMode.rtl,
+      );
     });
   });
 }

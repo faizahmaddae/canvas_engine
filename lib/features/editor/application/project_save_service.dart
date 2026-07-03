@@ -55,6 +55,7 @@ class ProjectSaveService {
         document: doc,
         pixelRatio: pixelRatio,
         background: DocumentThumbnail.backgroundFor(doc),
+        backgroundFill: doc.background,
       );
       thumbPath = await _writeThumbnail(bytes);
     } catch (_) {
@@ -81,9 +82,7 @@ class ProjectSaveService {
     // orphaned file per save. Cleanup is fire-and-forget; a failure
     // here costs at most a few KB on disk.
     final priorThumb = existing?.thumbnailPath;
-    if (thumbPath != null &&
-        priorThumb != null &&
-        priorThumb != thumbPath) {
+    if (thumbPath != null && priorThumb != null && priorThumb != thumbPath) {
       unawaited(File(priorThumb).delete().catchError(_swallowFile));
     }
     final now = DateTime.now();

@@ -8,6 +8,7 @@ import '../paint/application/paint_tool_controller.dart';
 import '../shape/application/shape_tool_controller.dart';
 import '../sticker/application/sticker_tool_controller.dart';
 import '../text/application/text_tool_controller.dart';
+import 'context_toolbar_controller.dart';
 import 'editing_controller.dart';
 import 'selection_controller.dart';
 import 'viewport_controller.dart';
@@ -33,6 +34,7 @@ import 'viewport_controller.dart';
 /// not from any of the providers reset here.
 void resetEditorEphemeralState(WidgetRef ref) {
   ref.read(textToolControllerProvider.notifier).resetSession();
+  ref.read(contextToolbarControllerProvider.notifier).closePanel();
   ref.read(paintToolControllerProvider.notifier).resetSession();
   ref.read(editingControllerProvider.notifier).stop();
   ref.read(selectionModeProvider.notifier).exitMulti();
@@ -131,6 +133,7 @@ void dismissActiveEditing(WidgetRef ref) {
 ///     having to re-enter it. Only the per-selection sheet/slot
 ///     state is cleared.
 void closeObjectSubPanels(WidgetRef ref) {
+  ref.read(contextToolbarControllerProvider.notifier).closePanel();
   ref.read(imageToolControllerProvider.notifier).closePanel();
   ref.read(shapeToolControllerProvider.notifier).closePanel();
   ref.read(stickerToolControllerProvider.notifier).closePanel();

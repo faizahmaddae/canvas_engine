@@ -230,7 +230,7 @@ class _ThicknessChips extends StatelessWidget {
       (
         _ChipKey.bold,
         bold,
-        context.l10n.boldAction,
+        context.l10n.thickOption,
         Icons.horizontal_rule_rounded,
         30,
       ),

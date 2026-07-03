@@ -1,16 +1,18 @@
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
+import 'package:canvas_engine/features/editor/application/context_toolbar_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/shape/application/shape_tool_controller.dart';
 import 'package:canvas_engine/features/editor/shape/presentation/shape_mode_toolbar.dart';
 import 'package:canvas_engine/features/editor/shape/presentation/shape_style_body.dart';
+import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Widget-level coverage for the Shape sub-tool surface:
-///   * Shape toolbar renders Style / Border / Shadow / Replace tabs.
+///   * Shape toolbar renders Style / Border / Shadow / Opacity / Replace / More tabs.
 ///   * Tapping Shadow opens the `shadow` slot.
 ///   * Style panel labels its colour section "Color" for line /
 ///     arrow (stroked kinds) and "Fill" otherwise.
@@ -34,43 +36,44 @@ void main() {
     c
         .read(documentControllerProvider.notifier)
         .newDocument(width: 800, height: 800);
-    c
-        .read(documentControllerProvider.notifier)
-        .execute(AddLayerCommand(layer));
+    c.read(documentControllerProvider.notifier).execute(AddLayerCommand(layer));
     addTearDown(c.dispose);
     return c;
   }
 
-  testWidgets('ShapeModeToolbar shows Style / Border / Shadow / Replace',
-      (tester) async {
-    final layer = makeLayer();
-    final container = makeContainer(layer);
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: MaterialApp(
-          home: Scaffold(
-            body: SizedBox(
-              width: 800,
-              height: 120,
-              child: ShapeModeToolbar(layer: layer, onReplaceTap: () {}),
+  testWidgets(
+    'ShapeModeToolbar shows Style Border Shadow Opacity Replace More',
+    (tester) async {
+      final layer = makeLayer();
+      final container = makeContainer(layer);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 120,
+                child: ShapeModeToolbar(layer: layer, onReplaceTap: () {}),
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    // Slot strip enters compact mode in landscape (test default), which
-    // hides static labels — finding by icon is the stable signal that
-    // each tab is mounted.
-    expect(find.byIcon(Icons.palette_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.border_outer_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.blur_on_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.swap_horiz_rounded), findsOneWidget);
-  });
+      // Slot strip enters compact mode in landscape (test default), which
+      // hides static labels — finding by icon is the stable signal that
+      // each tab is mounted.
+      expect(find.byIcon(Icons.palette_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.border_outer_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.blur_on_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.opacity), findsOneWidget);
+      expect(find.byIcon(Icons.swap_horiz_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.more_horiz_rounded), findsOneWidget);
+    },
+  );
 
-  testWidgets('Tapping Shadow tab opens the shadow slot',
-      (tester) async {
+  testWidgets('Tapping Shadow tab opens the shadow slot', (tester) async {
     final layer = makeLayer();
     final container = makeContainer(layer);
     await tester.pumpWidget(
@@ -101,8 +104,81 @@ void main() {
     );
   });
 
-  testWidgets('ShapeStyleBody labels colour section "Color" for line',
-      (tester) async {
+  testWidgets('ShapeModeToolbar uses short Persian primary labels', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(520, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final layer = makeLayer();
+    final container = makeContainer(layer);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          locale: const Locale('fa'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              width: 520,
+              height: 120,
+              child: ShapeModeToolbar(layer: layer, onReplaceTap: () {}),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('رنگ'), findsOneWidget);
+    expect(find.text('کادر'), findsOneWidget);
+    expect(find.text('سایه'), findsOneWidget);
+    expect(find.text('شفافیت'), findsOneWidget);
+    expect(find.text('بیشتر'), findsOneWidget);
+    expect(find.text('جایگزینی'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Tapping Opacity tab opens compact context panel state', (
+    tester,
+  ) async {
+    final layer = makeLayer();
+    final container = makeContainer(layer);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 800,
+              height: 120,
+              child: ShapeModeToolbar(layer: layer, onReplaceTap: () {}),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final opacityFinder = find.byIcon(Icons.opacity);
+    await tester.scrollUntilVisible(opacityFinder, 80);
+    await tester.tap(opacityFinder);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(
+      container.read(contextToolbarControllerProvider),
+      ContextToolPanel.opacity,
+    );
+    expect(container.read(shapeToolControllerProvider).openSlot, isNull);
+  });
+
+  testWidgets('ShapeStyleBody labels colour section "Color" for line', (
+    tester,
+  ) async {
     final layer = makeLayer(kind: ShapeKind.line);
     final container = makeContainer(layer);
     await tester.pumpWidget(
@@ -120,12 +196,13 @@ void main() {
       ),
     );
 
-    expect(find.text('COLOR'), findsOneWidget);
-    expect(find.text('FILL'), findsNothing);
+    expect(find.text('Color'), findsOneWidget);
+    expect(find.text('Fill'), findsNothing);
   });
 
-  testWidgets('ShapeStyleBody labels colour section "Fill" for rectangle',
-      (tester) async {
+  testWidgets('ShapeStyleBody labels colour section "Fill" for rectangle', (
+    tester,
+  ) async {
     final layer = makeLayer();
     final container = makeContainer(layer);
     await tester.pumpWidget(
@@ -143,6 +220,6 @@ void main() {
       ),
     );
 
-    expect(find.text('FILL'), findsOneWidget);
+    expect(find.text('Fill'), findsOneWidget);
   });
 }

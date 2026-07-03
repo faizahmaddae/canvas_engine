@@ -85,6 +85,34 @@ class AlignmentEngine {
     return out;
   }
 
+  /// Align one [initial] transform to a target [Rect] in canvas space.
+  /// Used for single-layer canvas alignment, where there is no peer
+  /// selection bounding box to align against. Preserves size and rotation.
+  LayerTransform alignToRect(
+    LayerTransform initial,
+    Rect target,
+    AlignAxis axis,
+  ) {
+    final rect = initial.unrotatedRect;
+    double newX = rect.left;
+    double newY = rect.top;
+    switch (axis) {
+      case AlignAxis.left:
+        newX = target.left;
+      case AlignAxis.centerX:
+        newX = target.center.dx - rect.width / 2;
+      case AlignAxis.right:
+        newX = target.right - rect.width;
+      case AlignAxis.top:
+        newY = target.top;
+      case AlignAxis.centerY:
+        newY = target.center.dy - rect.height / 2;
+      case AlignAxis.bottom:
+        newY = target.bottom - rect.height;
+    }
+    return initial.copyWith(position: Offset(newX, newY));
+  }
+
   /// Distribute every entry in [initials] along [axis] so that the
   /// gaps between adjacent rects become equal. The first and last
   /// rects (along the axis) stay anchored — only the in-between rects
@@ -121,8 +149,9 @@ class AlignmentEngine {
     final spanStart = axis == DistributeAxis.horizontal
         ? firstRect.left
         : firstRect.top;
-    final spanEnd =
-        axis == DistributeAxis.horizontal ? lastRect.right : lastRect.bottom;
+    final spanEnd = axis == DistributeAxis.horizontal
+        ? lastRect.right
+        : lastRect.bottom;
     final total = spanEnd - spanStart;
 
     double sumExtents = 0;
@@ -142,8 +171,7 @@ class AlignmentEngine {
     for (final e in entries) {
       final t = e.value;
       final r = t.unrotatedRect;
-      final extent =
-          axis == DistributeAxis.horizontal ? r.width : r.height;
+      final extent = axis == DistributeAxis.horizontal ? r.width : r.height;
       final leading = cursor;
       cursor = leading + extent + gap;
       Offset newPos;

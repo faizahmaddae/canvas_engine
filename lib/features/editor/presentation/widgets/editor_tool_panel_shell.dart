@@ -147,7 +147,7 @@ class EditorToolPanelShell extends StatelessWidget {
   /// Replacement (not additive) for the default body padding.
   /// Defaults to [kEditorPanelDefaultBodyPadding]. Bottom safe-
   /// area inset is added on top automatically.
-  final EdgeInsets? bodyPadding;
+  final EdgeInsetsGeometry? bodyPadding;
 
   /// Optional max width for the body content. When set, the body
   /// is centred and constrained — use for grid-style panels
@@ -165,7 +165,9 @@ class EditorToolPanelShell extends StatelessWidget {
     // ~34 dp of phantom bottom padding on iPhones and pushed the
     // last scrollable row past the visible viewport edge.
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final pad = bodyPadding ?? kEditorPanelDefaultBodyPadding;
+    final pad = (bodyPadding ?? kEditorPanelDefaultBodyPadding).resolve(
+      Directionality.of(context),
+    );
     Widget body = Padding(
       padding: pad.copyWith(bottom: pad.bottom + bottomInset),
       child: child,

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/export/document_jpg_exporter.dart';
 import 'package:canvas_engine/features/editor/engine/export/document_png_exporter.dart';
+import 'package:canvas_engine/features/editor/engine/rendering/document_thumbnail.dart';
 import 'package:canvas_engine/features/editor/engine/rendering/document_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -34,11 +35,11 @@ void main() {
   const yellow = Color(0xFFFFEB3B);
 
   EditorDocument yellowDoc() => EditorDocument(
-        width: 60,
-        height: 40,
-        layers: const [],
-        backgroundColor: yellow,
-      );
+    width: 60,
+    height: 40,
+    layers: const [],
+    backgroundColor: yellow,
+  );
 
   /// Mount [doc] inside a sized [RepaintBoundary] painted with
   /// [background] (mirrors `DocumentPngExporter.export`'s internal
@@ -47,6 +48,8 @@ void main() {
     WidgetTester tester, {
     required EditorDocument doc,
     required Color background,
+    BackgroundFill? backgroundFill,
+    bool honorTransparentMode = false,
   }) async {
     final boundaryKey = GlobalKey();
     tester.view.physicalSize = Size(doc.width, doc.height);
@@ -72,6 +75,8 @@ void main() {
                     child: DocumentView(
                       document: doc,
                       background: background,
+                      backgroundFill: backgroundFill,
+                      honorTransparentMode: honorTransparentMode,
                     ),
                   ),
                 ),
@@ -85,21 +90,16 @@ void main() {
     return boundaryKey;
   }
 
-  /// Decode raw RGBA bytes from a PNG and return the centre pixel.
-  /// MUST be called inside [WidgetTester.runAsync] — both
-  /// `instantiateImageCodec` and `image.toByteData` need the IO
-  /// thread, which is starved by the fake async zone otherwise.
-  Future<int> centerPixelArgb(Uint8List bytes) async {
+  Future<int> pixelArgb(Uint8List bytes, int? x, int? y) async {
     final codec = await ui.instantiateImageCodec(bytes);
     final frame = await codec.getNextFrame();
     final image = frame.image;
-    final raw =
-        await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final raw = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     expect(raw, isNotNull);
     final w = image.width;
     final h = image.height;
-    final cx = w ~/ 2;
-    final cy = h ~/ 2;
+    final cx = x ?? w ~/ 2;
+    final cy = y ?? h ~/ 2;
     final i = (cy * w + cx) * 4;
     final r = raw!.getUint8(i);
     final g = raw.getUint8(i + 1);
@@ -107,6 +107,14 @@ void main() {
     final a = raw.getUint8(i + 3);
     image.dispose();
     return (a << 24) | (r << 16) | (g << 8) | b;
+  }
+
+  /// Decode raw RGBA bytes from a PNG and return the centre pixel.
+  /// MUST be called inside [WidgetTester.runAsync] — both
+  /// `instantiateImageCodec` and `image.toByteData` need the IO
+  /// thread, which is starved by the fake async zone otherwise.
+  Future<int> centerPixelArgb(Uint8List bytes) async {
+    return pixelArgb(bytes, null, null);
   }
 
   /// Centre pixel from a JPG byte buffer (decoded with
@@ -125,133 +133,195 @@ void main() {
 
   // -- Half 1: resolution contract ----------------------------------
 
-  test(
-    'ExportController contract: null background resolves to '
-    'document.backgroundColor; explicit override wins',
-    () {
-      final doc = EditorDocument(
-        width: 60,
-        height: 40,
-        layers: const [],
-        backgroundColor: yellow,
-      );
-      // Mirrors line 60 of export_controller.dart verbatim.
-      Color resolve(Color? background) =>
-          // ignore: deprecated_member_use_from_same_package
-          background ?? doc.backgroundColor;
+  test('ExportController contract: null background resolves to '
+      'document.backgroundColor; explicit override wins', () {
+    final doc = EditorDocument(
+      width: 60,
+      height: 40,
+      layers: const [],
+      backgroundColor: yellow,
+    );
+    // Mirrors line 60 of export_controller.dart verbatim.
+    Color resolve(Color? background) =>
+        // ignore: deprecated_member_use_from_same_package
+        background ?? doc.backgroundColor;
 
-      expect(resolve(null), yellow);
-      expect(resolve(const Color(0xFF0000FF)), const Color(0xFF0000FF));
-    },
-  );
+    expect(resolve(null), yellow);
+    expect(resolve(const Color(0xFF0000FF)), const Color(0xFF0000FF));
+  });
 
   // -- Half 2: painting contract ------------------------------------
 
-  testWidgets(
-    'PNG: document.backgroundColor reaches the centre pixel',
-    (tester) async {
-      final doc = yellowDoc();
-      final key = await mountDocument(
-        tester,
-        doc: doc,
-        // Resolution step (controller would do this for us).
-        // ignore: deprecated_member_use_from_same_package
-        background: doc.backgroundColor,
+  testWidgets('PNG: document.backgroundColor reaches the centre pixel', (
+    tester,
+  ) async {
+    final doc = yellowDoc();
+    final key = await mountDocument(
+      tester,
+      doc: doc,
+      // Resolution step (controller would do this for us).
+      // ignore: deprecated_member_use_from_same_package
+      background: doc.backgroundColor,
+    );
+    final argb = await tester.runAsync(() async {
+      final bytes = await DocumentPngExporter.captureBoundary(
+        boundaryKey: key,
+        pixelRatio: 1.0,
       );
-      final argb = await tester.runAsync(() async {
-        final bytes = await DocumentPngExporter.captureBoundary(
-          boundaryKey: key,
-          pixelRatio: 1.0,
-        );
-        return centerPixelArgb(bytes);
-      });
-      expect(argb, yellow.toARGB32());
-    },
-  );
+      return centerPixelArgb(bytes);
+    });
+    expect(argb, yellow.toARGB32());
+  });
+
+  testWidgets('JPG: document.backgroundColor flattens through (not white)', (
+    tester,
+  ) async {
+    final doc = yellowDoc();
+    final key = await mountDocument(
+      tester,
+      doc: doc,
+      // ignore: deprecated_member_use_from_same_package
+      background: doc.backgroundColor,
+    );
+    // Snapshot the boundary as a ui.Image then JPG-encode via the
+    // engine's own pipeline (max quality).
+    final bytes = await tester.runAsync(() async {
+      final ro =
+          key.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final image = await ro.toImage(pixelRatio: 1.0);
+      try {
+        return await DocumentJpgExporter.encodeImageAsJpg(image, quality: 100);
+      } finally {
+        image.dispose();
+      }
+    });
+    expect(bytes, isNotNull);
+    final argb = centerPixelJpgArgb(bytes!);
+    // JPG quantisation drifts pixels by a couple of units even at
+    // q=100; tolerate ±4 per channel.
+    const target = 0xFFFFEB3B;
+    final dr = ((argb >> 16) & 0xFF) - ((target >> 16) & 0xFF);
+    final dg = ((argb >> 8) & 0xFF) - ((target >> 8) & 0xFF);
+    final db = (argb & 0xFF) - (target & 0xFF);
+    expect(dr.abs(), lessThanOrEqualTo(4));
+    expect(dg.abs(), lessThanOrEqualTo(4));
+    expect(db.abs(), lessThanOrEqualTo(4));
+    // And explicitly NOT white.
+    expect(argb & 0xFFFFFF, isNot(0xFFFFFF));
+  });
+
+  testWidgets('PNG: explicit override colour reaches the centre pixel', (
+    tester,
+  ) async {
+    const override = Color(0xFF0000FF);
+    final doc = yellowDoc();
+    final key = await mountDocument(
+      tester,
+      doc: doc,
+      background: override, // controller would forward this verbatim
+    );
+    final argb = await tester.runAsync(() async {
+      final bytes = await DocumentPngExporter.captureBoundary(
+        boundaryKey: key,
+        pixelRatio: 1.0,
+      );
+      return centerPixelArgb(bytes);
+    });
+    expect(argb, override.toARGB32());
+  });
+
+  testWidgets('Engine captureBoundary still honours an explicit background', (
+    tester,
+  ) async {
+    // Sanity: the engine-level snapshot contract is untouched.
+    final doc = EditorDocument(
+      width: 30,
+      height: 30,
+      layers: const [],
+      backgroundColor: const Color(0xFFFFFFFF),
+    );
+    const magenta = Color(0xFFFF00FF);
+    final key = await mountDocument(tester, doc: doc, background: magenta);
+    final argb = await tester.runAsync(() async {
+      final bytes = await DocumentPngExporter.captureBoundary(
+        boundaryKey: key,
+        pixelRatio: 1.0,
+      );
+      return centerPixelArgb(bytes);
+    });
+    expect(argb, magenta.toARGB32());
+  });
 
   testWidgets(
-    'JPG: document.backgroundColor flattens through (not white)',
+    'PNG: backgroundFill preserves gradient pixels for saved thumbnails',
     (tester) async {
-      final doc = yellowDoc();
-      final key = await mountDocument(
-        tester,
-        doc: doc,
-        // ignore: deprecated_member_use_from_same_package
-        background: doc.backgroundColor,
+      const gradient = LinearGradientBackground(
+        startColor: Color(0xFFFF0000),
+        endColor: Color(0xFF0000FF),
+        angleDegrees: 90,
       );
-      // Snapshot the boundary as a ui.Image then JPG-encode via the
-      // engine's own pipeline (max quality).
-      final bytes = await tester.runAsync(() async {
-        final ro = key.currentContext!.findRenderObject()
-            as RenderRepaintBoundary;
-        final image = await ro.toImage(pixelRatio: 1.0);
-        try {
-          return await DocumentJpgExporter.encodeImageAsJpg(
-            image,
-            quality: 100,
-          );
-        } finally {
-          image.dispose();
-        }
-      });
-      expect(bytes, isNotNull);
-      final argb = centerPixelJpgArgb(bytes!);
-      // JPG quantisation drifts pixels by a couple of units even at
-      // q=100; tolerate ±4 per channel.
-      const target = 0xFFFFEB3B;
-      final dr = ((argb >> 16) & 0xFF) - ((target >> 16) & 0xFF);
-      final dg = ((argb >> 8) & 0xFF) - ((target >> 8) & 0xFF);
-      final db = (argb & 0xFF) - (target & 0xFF);
-      expect(dr.abs(), lessThanOrEqualTo(4));
-      expect(dg.abs(), lessThanOrEqualTo(4));
-      expect(db.abs(), lessThanOrEqualTo(4));
-      // And explicitly NOT white.
-      expect(argb & 0xFFFFFF, isNot(0xFFFFFF));
-    },
-  );
-
-  testWidgets(
-    'PNG: explicit override colour reaches the centre pixel',
-    (tester) async {
-      const override = Color(0xFF0000FF);
-      final doc = yellowDoc();
-      final key = await mountDocument(
-        tester,
-        doc: doc,
-        background: override, // controller would forward this verbatim
-      );
-      final argb = await tester.runAsync(() async {
-        final bytes = await DocumentPngExporter.captureBoundary(
-          boundaryKey: key,
-          pixelRatio: 1.0,
-        );
-        return centerPixelArgb(bytes);
-      });
-      expect(argb, override.toARGB32());
-    },
-  );
-
-  testWidgets(
-    'Engine captureBoundary still honours an explicit background',
-    (tester) async {
-      // Sanity: the engine-level snapshot contract is untouched.
       final doc = EditorDocument(
-        width: 30,
-        height: 30,
+        width: 60,
+        height: 20,
         layers: const [],
-        backgroundColor: const Color(0xFFFFFFFF),
+        background: gradient,
       );
-      const magenta = Color(0xFFFF00FF);
-      final key =
-          await mountDocument(tester, doc: doc, background: magenta);
-      final argb = await tester.runAsync(() async {
+      final key = await mountDocument(
+        tester,
+        doc: doc,
+        // Saved thumbnails still pass this legacy fallback for older
+        // solid-only consumers, but the gradient must come from the
+        // backgroundFill argument below.
+        background: DocumentThumbnail.backgroundFor(doc),
+        backgroundFill: doc.background,
+      );
+
+      final pixels = await tester.runAsync(() async {
         final bytes = await DocumentPngExporter.captureBoundary(
           boundaryKey: key,
           pixelRatio: 1.0,
         );
-        return centerPixelArgb(bytes);
+        return [await pixelArgb(bytes, 2, 10), await pixelArgb(bytes, 57, 10)];
       });
-      expect(argb, magenta.toARGB32());
+      final left = pixels![0];
+      final right = pixels[1];
+      final leftRed = (left >> 16) & 0xFF;
+      final leftBlue = left & 0xFF;
+      final rightRed = (right >> 16) & 0xFF;
+      final rightBlue = right & 0xFF;
+
+      expect(left, isNot(right));
+      expect(leftRed, greaterThan(leftBlue));
+      expect(rightBlue, greaterThan(rightRed));
     },
   );
+
+  testWidgets('PNG: saved thumbnail path preserves transparent canvas alpha', (
+    tester,
+  ) async {
+    final doc = EditorDocument(
+      width: 40,
+      height: 40,
+      layers: const [],
+      background: const SolidBackground(color: Color(0xFFFFEB3B)),
+      backgroundMode: CanvasBackgroundMode.transparent,
+    );
+    final key = await mountDocument(
+      tester,
+      doc: doc,
+      background: DocumentThumbnail.backgroundFor(doc),
+      backgroundFill: doc.background,
+      honorTransparentMode: true,
+    );
+
+    final argb = await tester.runAsync(() async {
+      final bytes = await DocumentPngExporter.captureBoundary(
+        boundaryKey: key,
+        pixelRatio: 1.0,
+      );
+      return centerPixelArgb(bytes);
+    });
+
+    expect((argb! >> 24) & 0xFF, 0);
+  });
 }

@@ -25,6 +25,7 @@ Future<String?> showTextInputFlowSheet(
   String initial = '',
   String? title,
   String? confirmLabel,
+  TextDirectionMode textDirectionMode = TextDirectionMode.auto,
   ValueChanged<String>? onLiveChange,
 }) {
   return showModalBottomSheet<String>(
@@ -36,6 +37,7 @@ Future<String?> showTextInputFlowSheet(
       initial: initial,
       title: title ?? context.l10n.addTextTitle,
       confirmLabel: confirmLabel ?? context.l10n.doneAction,
+      textDirectionMode: textDirectionMode,
       onLiveChange: onLiveChange,
     ),
   );
@@ -46,12 +48,14 @@ class _TextInputFlowSheet extends StatefulWidget {
     required this.initial,
     required this.title,
     required this.confirmLabel,
+    required this.textDirectionMode,
     this.onLiveChange,
   });
 
   final String initial;
   final String title;
   final String confirmLabel;
+  final TextDirectionMode textDirectionMode;
   final ValueChanged<String>? onLiveChange;
 
   @override
@@ -108,6 +112,10 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final direction = textDirectionForContent(
+      _controller.text,
+      mode: widget.textDirectionMode,
+    );
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 140),
@@ -219,10 +227,8 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                 // right-aligned, Vazir; Latin (and empty) → LTR,
                 // left-aligned, Roboto. Recomputed on every change
                 // so a script flip mid-typing updates live.
-                textDirection: textDirectionForContent(_controller.text),
-                textAlign:
-                    textDirectionForContent(_controller.text) ==
-                        TextDirection.rtl
+                textDirection: direction,
+                textAlign: direction == TextDirection.rtl
                     ? TextAlign.right
                     : TextAlign.left,
                 style: TextStyle(
@@ -242,7 +248,7 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                   // Hint follows the same direction + font as the
                   // input itself so the empty-state visual matches
                   // what the user will see once they start typing.
-                  hintTextDirection: textDirectionForContent(_controller.text),
+                  hintTextDirection: direction,
                   hintStyle: TextStyle(
                     fontFamily: defaultFontFamilyForContent(_controller.text),
                     color: scheme.onSurfaceVariant.withValues(alpha: 0.7),

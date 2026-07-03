@@ -5,7 +5,7 @@ import '../../../../core/utils/haptics.dart';
 /// Shared primary tile used by the main toolbar and every
 /// sub-toolbar (text / paint / shape / image / sticker).
 ///
-/// 64-dp wide card (56 in compact) with:
+/// 66-dp wide card (56 in compact) with:
 ///  * centered icon (or colour swatch when [swatchColor] is set)
 ///  * ellipsised label beneath
 ///  * unified active state — primary @ 12% fill, primary fg, label
@@ -39,7 +39,7 @@ class DockToolTile extends StatefulWidget {
   });
 
   /// Compact layout for landscape / very small screens. Drops width
-  /// 64→56, icon 26→22, hides label when [valueText] is null.
+  /// 66→56, icon 28→24, hides label when [valueText] is null.
   final bool compact;
 
   final IconData icon;
@@ -106,7 +106,7 @@ class _DockToolTileState extends State<DockToolTile> {
         ? scheme.onSurfaceVariant.withValues(alpha: 0.35)
         : (active ? scheme.primary : scheme.onSurfaceVariant);
 
-    final tileWidth = compact ? 56.0 : 64.0;
+    final tileWidth = compact ? 56.0 : 66.0;
     final iconSize = compact ? 24.0 : 28.0;
     final swatchSize = compact ? 26.0 : 30.0;
     final showLabel = !compact || widget.valueText != null;
@@ -211,7 +211,7 @@ class _DockToolTileState extends State<DockToolTile> {
                               ? FontWeight.w700
                               : FontWeight.w600,
                           color: fg,
-                          letterSpacing: 0.1,
+                          letterSpacing: 0,
                         ),
                       ),
                     ),

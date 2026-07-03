@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
-import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/layer_state_commands.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../engine/modules/text/text_layer.dart';
 import 'layer_actions.dart';
+import 'layer_opacity_control.dart';
 import 'layer_thumbnail.dart';
 
 /// Right-side drawer listing every layer in the document, topmost first.
@@ -31,7 +31,7 @@ class LayersPanel extends ConsumerWidget {
       child: SafeArea(
         child: Column(
           children: [
-            _PanelHeader(count: total),
+            _PanelHeader(count: total, selectionCount: selection.count),
             const Divider(height: 1),
             Expanded(
               child: total == 0
@@ -75,23 +75,40 @@ class LayersPanel extends ConsumerWidget {
 }
 
 class _PanelHeader extends StatelessWidget {
-  const _PanelHeader({required this.count});
+  const _PanelHeader({required this.count, required this.selectionCount});
   final int count;
+  final int selectionCount;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.layers_outlined, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            context.l10n.layersTooltip,
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            children: [
+              const Icon(Icons.layers_outlined, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                context.l10n.layersTooltip,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const Spacer(),
+              Text('$count', style: Theme.of(context).textTheme.bodySmall),
+            ],
           ),
-          const Spacer(),
-          Text('$count', style: Theme.of(context).textTheme.bodySmall),
+          if (selectionCount > 1 || count > 1) ...[
+            const SizedBox(height: 4),
+            Text(
+              selectionCount > 1
+                  ? context.l10n.multiSelectCount(selectionCount)
+                  : context.l10n.longPressCanvasMultiSelectHint,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).hintColor,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -212,6 +229,12 @@ class _LayerTile extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  if (isSelected)
+                    _IconAction(
+                      icon: Icons.drive_file_rename_outline_rounded,
+                      tooltip: context.l10n.renameAction,
+                      onTap: () => LayerActions.rename(context, ref, layer),
+                    ),
                   _IconAction(
                     icon: layer.locked ? Icons.lock : Icons.lock_open,
                     tooltip: layer.locked
@@ -273,7 +296,7 @@ class _LayerTile extends ConsumerWidget {
               // committed via `execute(SetLayerOpacityCommand)` on
               // change-end so undo/redo and autosave see exactly one
               // entry per drag gesture.
-              if (isSelected) _OpacitySlider(layer: layer),
+              if (isSelected) LayerOpacityControl(layer: layer),
             ],
           ),
         ),
@@ -320,96 +343,6 @@ class _IconAction extends StatelessWidget {
       visualDensity: VisualDensity.compact,
       onPressed: enabled ? onTap : null,
       icon: Icon(icon, color: color),
-    );
-  }
-}
-
-/// Compact per-layer opacity slider rendered under the selected
-/// layer's row. Drag previews use [DocumentController.liveReplace] so
-/// the canvas updates at 60fps without bumping the commit version
-/// (no autosave thrash, no undo entries). The final value is
-/// committed via [SetLayerOpacityCommand] on `onChangeEnd` so undo /
-/// redo and the dirty-state badge see exactly one entry per gesture.
-class _OpacitySlider extends ConsumerStatefulWidget {
-  const _OpacitySlider({required this.layer});
-  final EditorLayer layer;
-
-  @override
-  ConsumerState<_OpacitySlider> createState() => _OpacitySliderState();
-}
-
-class _OpacitySliderState extends ConsumerState<_OpacitySlider> {
-  // Local copy of the slider's in-flight value. Null when no drag is
-  // in progress so the displayed value tracks the layer's current
-  // opacity (which may have changed via undo / redo / a different
-  // surface).
-  double? _dragValue;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final value = (_dragValue ?? widget.layer.opacity).clamp(0.0, 1.0);
-    return Padding(
-      padding: const EdgeInsets.only(left: 36, right: 8, bottom: 4),
-      child: Row(
-        children: [
-          Icon(Icons.opacity, size: 16, color: theme.hintColor),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 2,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-              ),
-              child: Slider(
-                value: value,
-                min: 0,
-                max: 1,
-                onChanged: (v) {
-                  setState(() => _dragValue = v);
-                  // Live preview: publish an in-flight override on
-                  // the live overlay so the canvas reflects the new
-                  // opacity at 60 fps without rebuilding every panel
-                  // / thumbnail / undo-rail consumer that watches the
-                  // committed document.
-                  final doc = ref.read(documentControllerProvider);
-                  final layer = doc.layerById(widget.layer.id);
-                  if (layer == null) return;
-                  ref
-                      .read(liveOverlayProvider.notifier)
-                      .replaceLayer(layer.withOpacity(v));
-                },
-                onChangeEnd: (v) {
-                  setState(() => _dragValue = null);
-                  // Clear the overlay BEFORE committing so the merge
-                  // result transitions atomically from "committed +
-                  // override" to "committed (with new opacity)" in a
-                  // single Riverpod tick — no flicker back to the
-                  // pre-drag opacity in between.
-                  ref.read(liveOverlayProvider.notifier).clear();
-                  ref
-                      .read(documentControllerProvider.notifier)
-                      .execute(
-                        SetLayerOpacityCommand(
-                          layerId: widget.layer.id,
-                          opacity: v,
-                        ),
-                      );
-                },
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 36,
-            child: Text(
-              '${(value * 100).round()}%',
-              textAlign: TextAlign.right,
-              style: theme.textTheme.bodySmall,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

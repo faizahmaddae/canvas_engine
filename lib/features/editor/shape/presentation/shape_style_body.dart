@@ -259,9 +259,9 @@ class _RadiusPresets extends StatelessWidget {
       activeKey = _Key.custom;
     }
     final entries = <(_Key, double, String)>[
-      (_Key.sharp, 0, 'Sharp'),
-      (_Key.rounded, rounded.clamp(0.0, pill), 'Rounded'),
-      (_Key.pill, pill, 'Pill'),
+      (_Key.sharp, 0, context.l10n.sharpOption),
+      (_Key.rounded, rounded.clamp(0.0, pill), context.l10n.roundedOption),
+      (_Key.pill, pill, context.l10n.pillOption),
     ];
     return Row(
       children: [
@@ -328,7 +328,7 @@ class _Chip extends StatelessWidget {
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                   color: selected ? scheme.primary : scheme.onSurfaceVariant,
-                  letterSpacing: 0.2,
+                  letterSpacing: 0,
                 ),
               ),
             ),

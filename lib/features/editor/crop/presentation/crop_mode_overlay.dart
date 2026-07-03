@@ -108,7 +108,7 @@ class _CropTopBar extends ConsumerWidget {
             ),
             const Spacer(),
             Text(
-              context.l10n.cropTool,
+              context.l10n.cropImageAction,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 17,
@@ -212,15 +212,67 @@ class _UncroppedImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final src = layer.source;
     if (src.assetName != null) {
-      return Image.asset(src.assetName!, fit: layer.fit);
+      return Image.asset(
+        src.assetName!,
+        fit: layer.fit,
+        errorBuilder: (_, _, _) =>
+            _CropUnavailableImage(label: context.l10n.imageUnavailableLabel),
+      );
     }
     if (src.networkUrl != null) {
-      return Image.network(src.networkUrl!, fit: layer.fit);
+      return Image.network(
+        src.networkUrl!,
+        fit: layer.fit,
+        errorBuilder: (_, _, _) =>
+            _CropUnavailableImage(label: context.l10n.imageUnavailableLabel),
+      );
     }
     if (src.filePath != null) {
-      return Image.file(io.File(src.filePath!), fit: layer.fit);
+      final file = io.File(src.filePath!);
+      if (!file.existsSync()) {
+        return _CropUnavailableImage(label: context.l10n.imageUnavailableLabel);
+      }
+      return Image.file(
+        file,
+        fit: layer.fit,
+        errorBuilder: (_, _, _) =>
+            _CropUnavailableImage(label: context.l10n.imageUnavailableLabel),
+      );
     }
     return const ColoredBox(color: Color(0x22FFFFFF));
+  }
+}
+
+class _CropUnavailableImage extends StatelessWidget {
+  const _CropUnavailableImage({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: label,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: const Color(0xFF181818),
+          border: Border.all(color: const Color(0xFF5A5A5A)),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -564,7 +616,7 @@ class _CropBottomBar extends ConsumerWidget {
                   ctrl.resetCrop();
                 },
                 icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: Text(context.l10n.resetCropAction),
+                label: Text(context.l10n.restoreImageAction),
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xD9FFFFFF), // ~white85
                   minimumSize: const Size(140, 44),

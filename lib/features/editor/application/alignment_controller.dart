@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../engine/commands/editor_command.dart';
@@ -15,7 +17,7 @@ import 'selection_controller.dart';
 ///
 /// All operations are no-ops when:
 ///   * no layer is selected;
-///   * fewer than two layers are selected (alignment is meaningless);
+///   * fewer than two layers are selected for peer alignment;
 ///   * fewer than three layers are selected for distribute (ditto);
 ///   * every selected layer is locked or non-movable (nothing to commit).
 ///
@@ -36,6 +38,21 @@ class AlignmentController {
     if (initials.length < 2) return;
     final out = _engine.align(initials, axis);
     _commit(out, initials, label: _alignLabel(axis));
+  }
+
+  /// Align the primary selected layer to the document canvas. No-op
+  /// when nothing is selected, the selected layer is locked/non-movable,
+  /// or the requested alignment would not move it.
+  void alignToCanvas(AlignAxis axis) {
+    final selection = _ref.read(selectionControllerProvider);
+    final id = selection.selectedId;
+    if (id == null) return;
+    final doc = _ref.read(documentControllerProvider);
+    final layer = doc.layerById(id);
+    if (layer == null || layer.locked || !layer.capabilities.movable) return;
+    final target = Rect.fromLTWH(0, 0, doc.width, doc.height);
+    final next = _engine.alignToRect(layer.transform, target, axis);
+    _commit({id: next}, {id: layer.transform}, label: _alignLabel(axis));
   }
 
   /// Distribute every movable selected layer along [axis]. No-op when
@@ -76,21 +93,22 @@ class AlignmentController {
       final initial = initials[id];
       if (initial == null) return;
       if (t == initial) return;
-      cmds.add(SetLayerTransformCommand(
-        layerId: id,
-        transform: t,
-        labelOverride: label,
-      ));
+      cmds.add(
+        SetLayerTransformCommand(
+          layerId: id,
+          transform: t,
+          labelOverride: label,
+        ),
+      );
     });
     if (cmds.isEmpty) return;
     final docCtl = _ref.read(documentControllerProvider.notifier);
     if (cmds.length == 1) {
       docCtl.execute(cmds.first);
     } else {
-      docCtl.execute(CompositeCommand(
-        cmds,
-        labelOverride: '$label ${cmds.length} layers',
-      ));
+      docCtl.execute(
+        CompositeCommand(cmds, labelOverride: '$label ${cmds.length} layers'),
+      );
     }
   }
 

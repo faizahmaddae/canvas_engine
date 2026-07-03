@@ -150,29 +150,29 @@ class ShapeLayer extends EditorLayer {
     super.opacity,
     super.effects,
   }) : super(
-          // Inline so the constructor stays `const`. Honour an
-          // explicit per-instance [resizeMode] first; otherwise fall
-          // back to the kind-based default — the centralised helper
-          // [isAspectLockedShapeKind] decides which silhouettes
-          // collapse when stretched (circle / star / heart / hexagon
-          // / plus / check / cross / triangle / diamond) and which
-          // are container / linear / free-form primitives.
-          capabilities: resizeMode == ShapeResizeMode.scale
-              ? _shapeCapsAspect
-              : resizeMode == ShapeResizeMode.free
-                  ? _shapeCapsFree
-                  : (kind == ShapeKind.circle ||
-                          kind == ShapeKind.triangle ||
-                          kind == ShapeKind.diamond ||
-                          kind == ShapeKind.hexagon ||
-                          kind == ShapeKind.star ||
-                          kind == ShapeKind.heart ||
-                          kind == ShapeKind.plus ||
-                          kind == ShapeKind.check ||
-                          kind == ShapeKind.cross)
-                      ? _shapeCapsAspect
-                      : _shapeCapsFree,
-        );
+         // Inline so the constructor stays `const`. Honour an
+         // explicit per-instance [resizeMode] first; otherwise fall
+         // back to the kind-based default — the centralised helper
+         // [isAspectLockedShapeKind] decides which silhouettes
+         // collapse when stretched (circle / star / heart / hexagon
+         // / plus / check / cross / triangle / diamond) and which
+         // are container / linear / free-form primitives.
+         capabilities: resizeMode == ShapeResizeMode.scale
+             ? _shapeCapsAspect
+             : resizeMode == ShapeResizeMode.free
+             ? _shapeCapsFree
+             : (kind == ShapeKind.circle ||
+                   kind == ShapeKind.triangle ||
+                   kind == ShapeKind.diamond ||
+                   kind == ShapeKind.hexagon ||
+                   kind == ShapeKind.star ||
+                   kind == ShapeKind.heart ||
+                   kind == ShapeKind.plus ||
+                   kind == ShapeKind.check ||
+                   kind == ShapeKind.cross)
+             ? _shapeCapsAspect
+             : _shapeCapsFree,
+       );
 
   final ShapeKind kind;
 
@@ -199,8 +199,7 @@ class ShapeLayer extends EditorLayer {
   /// Resolved [BackgroundFill] after applying the precedence rule.
   /// Use this in renderer / painter code so a future fill type only
   /// requires updating one switch.
-  BackgroundFill get effectiveFill =>
-      fill ?? SolidBackground(color: fillColor);
+  BackgroundFill get effectiveFill => fill ?? SolidBackground(color: fillColor);
 
   /// 0..1, applied to [fillColor] only. Default 1 (fully opaque).
   /// Stroke is intentionally untouched so a thin outline stays
@@ -247,9 +246,7 @@ class ShapeLayer extends EditorLayer {
   /// Free-resize capabilities — corner drag stretches independently in
   /// both axes. Used by rectangles, lines and arrows where stretching
   /// is the expected behaviour.
-  static const _shapeCapsFree = LayerCapabilities(
-    editable: false,
-  );
+  static const _shapeCapsFree = LayerCapabilities(editable: false);
 
   /// Aspect-locked capabilities — corner drag preserves proportions
   /// so circles stay round, stars / hearts / diamonds / triangles
@@ -342,6 +339,9 @@ class ShapeLayer extends EditorLayer {
   EditorLayer withOpacity(double opacity) =>
       copyAll(opacity: opacity.clamp(0.0, 1.0));
 
+  @override
+  EditorLayer withName(String? name) => copyAll(name: name);
+
   /// Returns a new shape with selected fields overridden.
   ///
   /// Pass [clearFill] / [clearStroke] true to explicitly drop the
@@ -366,22 +366,21 @@ class ShapeLayer extends EditorLayer {
     double? shadowOpacity,
     ShapeResizeMode? resizeMode,
     String? name,
-  }) =>
-      copyAll(
-        kind: kind,
-        fillColor: fillColor,
-        fill: clearFill ? null : (fill ?? this.fill),
-        fillOpacity: fillOpacity,
-        strokeColor: clearStroke ? null : (strokeColor ?? this.strokeColor),
-        strokeWidth: strokeWidth,
-        cornerRadius: cornerRadius,
-        shadowColor: shadowColor,
-        shadowBlur: shadowBlur,
-        shadowOffset: shadowOffset,
-        shadowOpacity: shadowOpacity,
-        resizeMode: resizeMode ?? this.resizeMode,
-        name: name ?? this.name,
-      );
+  }) => copyAll(
+    kind: kind,
+    fillColor: fillColor,
+    fill: clearFill ? null : (fill ?? this.fill),
+    fillOpacity: fillOpacity,
+    strokeColor: clearStroke ? null : (strokeColor ?? this.strokeColor),
+    strokeWidth: strokeWidth,
+    cornerRadius: cornerRadius,
+    shadowColor: shadowColor,
+    shadowBlur: shadowBlur,
+    shadowOffset: shadowOffset,
+    shadowOpacity: shadowOpacity,
+    resizeMode: resizeMode ?? this.resizeMode,
+    name: name ?? this.name,
+  );
 
   @override
   Widget buildContent(BuildContext context) {
@@ -399,8 +398,8 @@ class ShapeLayer extends EditorLayer {
     final gradient = resolvedFill is LinearGradientBackground
         ? resolvedFill.toFlutterGradient()
         : resolvedFill is RadialGradientBackground
-            ? resolvedFill.toFlutterGradient()
-            : null;
+        ? resolvedFill.toFlutterGradient()
+        : null;
     final border = hasStroke
         ? Border.all(color: strokeColor!, width: strokeWidth)
         : null;
@@ -504,27 +503,27 @@ class ShapeLayer extends EditorLayer {
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        ...baseJson(),
-        'kind': kind.name,
-        'fillColor': _encodeColor(fillColor),
-        // Only persist [fill] when present; legacy readers (and
-        // legacy [SolidBackground] semantics) reconstruct from
-        // [fillColor] alone. Encode as a tagged map even for solids
-        // here so an explicit user choice round-trips losslessly.
-        if (fill != null) 'fill': _encodeFill(fill!),
-        if (fillOpacity < 1) 'fillOpacity': fillOpacity,
-        if (strokeColor != null) 'strokeColor': _encodeColor(strokeColor!),
-        'strokeWidth': strokeWidth,
-        if (cornerRadius > 0) 'cornerRadius': cornerRadius,
-        if (shadowOpacity > 0) 'shadowOpacity': shadowOpacity,
-        if (shadowOpacity > 0) 'shadowBlur': shadowBlur,
-        if (shadowOpacity > 0) 'shadowOffsetX': shadowOffset.dx,
-        if (shadowOpacity > 0) 'shadowOffsetY': shadowOffset.dy,
-        if (shadowOpacity > 0) 'shadowColor': _encodeColor(shadowColor),
-        // Only persist when explicitly chosen — keeps round-trip
-        // compatibility for files written before the field existed.
-        if (resizeMode != null) 'resizeMode': resizeMode!.name,
-      };
+    ...baseJson(),
+    'kind': kind.name,
+    'fillColor': _encodeColor(fillColor),
+    // Only persist [fill] when present; legacy readers (and
+    // legacy [SolidBackground] semantics) reconstruct from
+    // [fillColor] alone. Encode as a tagged map even for solids
+    // here so an explicit user choice round-trips losslessly.
+    if (fill != null) 'fill': _encodeFill(fill!),
+    if (fillOpacity < 1) 'fillOpacity': fillOpacity,
+    if (strokeColor != null) 'strokeColor': _encodeColor(strokeColor!),
+    'strokeWidth': strokeWidth,
+    if (cornerRadius > 0) 'cornerRadius': cornerRadius,
+    if (shadowOpacity > 0) 'shadowOpacity': shadowOpacity,
+    if (shadowOpacity > 0) 'shadowBlur': shadowBlur,
+    if (shadowOpacity > 0) 'shadowOffsetX': shadowOffset.dx,
+    if (shadowOpacity > 0) 'shadowOffsetY': shadowOffset.dy,
+    if (shadowOpacity > 0) 'shadowColor': _encodeColor(shadowColor),
+    // Only persist when explicitly chosen — keeps round-trip
+    // compatibility for files written before the field existed.
+    if (resizeMode != null) 'resizeMode': resizeMode!.name,
+  };
 
   /// Decode a [ShapeLayer] from JSON. Unknown `kind` values fall back to
   /// [ShapeKind.rectangle] so a legacy file never fails to open over a
@@ -551,16 +550,16 @@ class ShapeLayer extends EditorLayer {
         Map<String, dynamic>.from(transformJson),
       ),
       kind: kind,
-      fillColor:
-          _decodeColor(json['fillColor']) ?? const Color(0xFFFFFFFF),
+      fillColor: _decodeColor(json['fillColor']) ?? const Color(0xFFFFFFFF),
       fill: _decodeFill(json['fill']),
-      fillOpacity:
-          ((json['fillOpacity'] as num?)?.toDouble() ?? 1).clamp(0.0, 1.0),
+      fillOpacity: ((json['fillOpacity'] as num?)?.toDouble() ?? 1).clamp(
+        0.0,
+        1.0,
+      ),
       strokeColor: _decodeColor(json['strokeColor']),
       strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 0,
       cornerRadius: (json['cornerRadius'] as num?)?.toDouble() ?? 0,
-      shadowColor:
-          _decodeColor(json['shadowColor']) ?? const Color(0xFF000000),
+      shadowColor: _decodeColor(json['shadowColor']) ?? const Color(0xFF000000),
       shadowBlur: (json['shadowBlur'] as num?)?.toDouble() ?? 0,
       shadowOffset: Offset(
         (json['shadowOffsetX'] as num?)?.toDouble() ?? 0,
@@ -592,12 +591,10 @@ class ShapeLayer extends EditorLayer {
   static Object _encodeFill(BackgroundFill fill) {
     return switch (fill) {
       SolidBackground(:final color) => <String, dynamic>{
-          'type': 'solid',
-          'color': _encodeColor(color),
-        },
-      LinearGradientBackground() ||
-      RadialGradientBackground() =>
-        fill.toJson(),
+        'type': 'solid',
+        'color': _encodeColor(color),
+      },
+      LinearGradientBackground() || RadialGradientBackground() => fill.toJson(),
     };
   }
 
@@ -668,20 +665,20 @@ class ShapeLayer extends EditorLayer {
 
   @override
   int get hashCode => Object.hash(
-        super.hashCode,
-        kind,
-        fillColor,
-        fill,
-        fillOpacity,
-        strokeColor,
-        strokeWidth,
-        cornerRadius,
-        shadowColor,
-        shadowBlur,
-        shadowOffset,
-        shadowOpacity,
-        resizeMode,
-      );
+    super.hashCode,
+    kind,
+    fillColor,
+    fill,
+    fillOpacity,
+    strokeColor,
+    strokeWidth,
+    cornerRadius,
+    shadowColor,
+    shadowBlur,
+    shadowOffset,
+    shadowOpacity,
+    resizeMode,
+  );
 }
 
 /// Paints path / stroke based [ShapeKind]s. For filled kinds (triangle,
@@ -815,21 +812,19 @@ Path shapeOutlinePath(ShapeKind kind, Size size, {double cornerRadius = 0}) {
   switch (kind) {
     case ShapeKind.rectangle:
       if (cornerRadius > 0) {
-        return Path()
-          ..addRRect(
-            RRect.fromRectAndRadius(
-              Offset.zero & size,
-              Radius.circular(cornerRadius),
-            ),
-          );
+        return Path()..addRRect(
+          RRect.fromRectAndRadius(
+            Offset.zero & size,
+            Radius.circular(cornerRadius),
+          ),
+        );
       }
       return Path()..addRect(Offset.zero & size);
     case ShapeKind.roundedRectangle:
       final r = cornerRadius > 0 ? cornerRadius : size.shortestSide * 0.18;
-      return Path()
-        ..addRRect(
-          RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(r)),
-        );
+      return Path()..addRRect(
+        RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(r)),
+      );
     case ShapeKind.circle:
       return Path()..addOval(Offset.zero & size);
     case ShapeKind.oval:
@@ -896,8 +891,11 @@ class _ShapeShadowPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (opacity <= 0 || size.isEmpty) return;
-    final path = shapeOutlinePath(kind, size, cornerRadius: cornerRadius)
-        .shift(offset);
+    final path = shapeOutlinePath(
+      kind,
+      size,
+      cornerRadius: cornerRadius,
+    ).shift(offset);
     final paint = Paint()
       ..color = color.withValues(alpha: opacity.clamp(0.0, 1.0))
       ..isAntiAlias = true;

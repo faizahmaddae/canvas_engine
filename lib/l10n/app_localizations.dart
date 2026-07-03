@@ -806,6 +806,162 @@ abstract class AppLocalizations {
   /// **'Multi-select · {count}'**
   String multiSelectCount(int count);
 
+  /// No description provided for @longPressCanvasMultiSelectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press canvas to select multiple layers.'**
+  String get longPressCanvasMultiSelectHint;
+
+  /// No description provided for @layerControlsSingleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{type}. Long-press canvas to multi-select.'**
+  String layerControlsSingleSubtitle(String type);
+
+  /// No description provided for @layerControlsMultiSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Align or distribute the selected layers.'**
+  String get layerControlsMultiSubtitle;
+
+  /// No description provided for @layerControlsReviewLayersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review order and individual layer names.'**
+  String get layerControlsReviewLayersSubtitle;
+
+  /// No description provided for @renameLayerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename layer'**
+  String get renameLayerTitle;
+
+  /// No description provided for @alignAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Align'**
+  String get alignAction;
+
+  /// No description provided for @alignToCanvasTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Align to canvas'**
+  String get alignToCanvasTitle;
+
+  /// No description provided for @alignSelectedLayersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Align selected layers'**
+  String get alignSelectedLayersTitle;
+
+  /// No description provided for @alignToCanvasSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Align this layer to the canvas.'**
+  String get alignToCanvasSubtitle;
+
+  /// No description provided for @alignSelectedLayersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Align selected layers to each other.'**
+  String get alignSelectedLayersSubtitle;
+
+  /// No description provided for @layersSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} layers selected'**
+  String layersSelectedCount(int count);
+
+  /// No description provided for @moveSelectedLayerInsideCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the selected layer inside the canvas.'**
+  String get moveSelectedLayerInsideCanvas;
+
+  /// No description provided for @alignHorizontalGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal align'**
+  String get alignHorizontalGroup;
+
+  /// No description provided for @alignVerticalGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Vertical align'**
+  String get alignVerticalGroup;
+
+  /// No description provided for @distributeGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute'**
+  String get distributeGroup;
+
+  /// No description provided for @horizontalOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal'**
+  String get horizontalOption;
+
+  /// No description provided for @verticalOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Vertical'**
+  String get verticalOption;
+
+  /// No description provided for @alignLeftAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Align left'**
+  String get alignLeftAction;
+
+  /// No description provided for @alignCenterAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Align center'**
+  String get alignCenterAction;
+
+  /// No description provided for @alignRightAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Align right'**
+  String get alignRightAction;
+
+  /// No description provided for @alignTopAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Align top'**
+  String get alignTopAction;
+
+  /// No description provided for @alignMiddleAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Align middle'**
+  String get alignMiddleAction;
+
+  /// No description provided for @alignBottomAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Align bottom'**
+  String get alignBottomAction;
+
+  /// No description provided for @distributeHorizontallyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute horizontally'**
+  String get distributeHorizontallyAction;
+
+  /// No description provided for @distributeVerticallyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute vertically'**
+  String get distributeVerticallyAction;
+
+  /// No description provided for @selectThreeOrMoreLayersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select 3 or more layers.'**
+  String get selectThreeOrMoreLayersHint;
+
   /// No description provided for @noLayersEmpty.
   ///
   /// In en, this message translates to:
@@ -1832,6 +1988,24 @@ abstract class AppLocalizations {
   /// **'Replace'**
   String get replaceTool;
 
+  /// No description provided for @replaceImageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace image'**
+  String get replaceImageAction;
+
+  /// No description provided for @relinkImageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Relink image'**
+  String get relinkImageAction;
+
+  /// No description provided for @imageUnavailableLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Image unavailable'**
+  String get imageUnavailableLabel;
+
   /// No description provided for @backgroundTool.
   ///
   /// In en, this message translates to:
@@ -1958,6 +2132,30 @@ abstract class AppLocalizations {
   /// **'Resize box — corner drag changes the wrap width'**
   String get resizeBoxSummary;
 
+  /// No description provided for @textDirectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Text direction'**
+  String get textDirectionTitle;
+
+  /// No description provided for @textDirectionAutoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto direction'**
+  String get textDirectionAutoTitle;
+
+  /// No description provided for @textDirectionRtlTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Right to left'**
+  String get textDirectionRtlTitle;
+
+  /// No description provided for @textDirectionLtrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Left to right'**
+  String get textDirectionLtrTitle;
+
   /// No description provided for @typeSomethingHint.
   ///
   /// In en, this message translates to:
@@ -2077,6 +2275,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tag'**
   String get tagOption;
+
+  /// No description provided for @sharpOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharp'**
+  String get sharpOption;
 
   /// No description provided for @hairlineOption.
   ///
@@ -2713,6 +2917,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset crop'**
   String get resetCropAction;
+
+  /// No description provided for @cropImageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop image'**
+  String get cropImageAction;
+
+  /// No description provided for @restoreImageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore image'**
+  String get restoreImageAction;
 
   /// No description provided for @freeOption.
   ///

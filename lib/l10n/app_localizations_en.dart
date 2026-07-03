@@ -375,6 +375,93 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get longPressCanvasMultiSelectHint =>
+      'Long-press canvas to select multiple layers.';
+
+  @override
+  String layerControlsSingleSubtitle(String type) {
+    return '$type. Long-press canvas to multi-select.';
+  }
+
+  @override
+  String get layerControlsMultiSubtitle =>
+      'Align or distribute the selected layers.';
+
+  @override
+  String get layerControlsReviewLayersSubtitle =>
+      'Review order and individual layer names.';
+
+  @override
+  String get renameLayerTitle => 'Rename layer';
+
+  @override
+  String get alignAction => 'Align';
+
+  @override
+  String get alignToCanvasTitle => 'Align to canvas';
+
+  @override
+  String get alignSelectedLayersTitle => 'Align selected layers';
+
+  @override
+  String get alignToCanvasSubtitle => 'Align this layer to the canvas.';
+
+  @override
+  String get alignSelectedLayersSubtitle =>
+      'Align selected layers to each other.';
+
+  @override
+  String layersSelectedCount(int count) {
+    return '$count layers selected';
+  }
+
+  @override
+  String get moveSelectedLayerInsideCanvas =>
+      'Move the selected layer inside the canvas.';
+
+  @override
+  String get alignHorizontalGroup => 'Horizontal align';
+
+  @override
+  String get alignVerticalGroup => 'Vertical align';
+
+  @override
+  String get distributeGroup => 'Distribute';
+
+  @override
+  String get horizontalOption => 'Horizontal';
+
+  @override
+  String get verticalOption => 'Vertical';
+
+  @override
+  String get alignLeftAction => 'Align left';
+
+  @override
+  String get alignCenterAction => 'Align center';
+
+  @override
+  String get alignRightAction => 'Align right';
+
+  @override
+  String get alignTopAction => 'Align top';
+
+  @override
+  String get alignMiddleAction => 'Align middle';
+
+  @override
+  String get alignBottomAction => 'Align bottom';
+
+  @override
+  String get distributeHorizontallyAction => 'Distribute horizontally';
+
+  @override
+  String get distributeVerticallyAction => 'Distribute vertically';
+
+  @override
+  String get selectThreeOrMoreLayersHint => 'Select 3 or more layers.';
+
+  @override
   String get noLayersEmpty =>
       'No layers yet.\nAdd text, image or shape to begin.';
 
@@ -929,6 +1016,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get replaceTool => 'Replace';
 
   @override
+  String get replaceImageAction => 'Replace image';
+
+  @override
+  String get relinkImageAction => 'Relink image';
+
+  @override
+  String get imageUnavailableLabel => 'Image unavailable';
+
+  @override
   String get backgroundTool => 'Background';
 
   @override
@@ -996,6 +1092,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Resize box — corner drag changes the wrap width';
 
   @override
+  String get textDirectionTitle => 'Text direction';
+
+  @override
+  String get textDirectionAutoTitle => 'Auto direction';
+
+  @override
+  String get textDirectionRtlTitle => 'Right to left';
+
+  @override
+  String get textDirectionLtrTitle => 'Left to right';
+
+  @override
   String get typeSomethingHint => 'Type something…';
 
   @override
@@ -1054,6 +1162,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tagOption => 'Tag';
+
+  @override
+  String get sharpOption => 'Sharp';
 
   @override
   String get hairlineOption => 'Hairline';
@@ -1379,6 +1490,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetCropAction => 'Reset crop';
+
+  @override
+  String get cropImageAction => 'Crop image';
+
+  @override
+  String get restoreImageAction => 'Restore image';
 
   @override
   String get freeOption => 'Free';

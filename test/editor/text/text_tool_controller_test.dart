@@ -8,7 +8,6 @@ import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/text/application/text_color_resolver.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
-import 'package:canvas_engine/features/editor/text/domain/text_style_presets.dart' show textDirectionForContent;
 import 'package:canvas_engine/features/editor/text/domain/text_tool_category.dart';
 import 'package:canvas_engine/features/editor/text/domain/text_tool_action.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   ProviderContainer makeContainer() {
     final c = ProviderContainer();
-    c.read(documentControllerProvider.notifier)
+    c
+        .read(documentControllerProvider.notifier)
         .newDocument(width: 800, height: 800);
     addTearDown(c.dispose);
     return c;
@@ -29,6 +29,7 @@ void main() {
     String id = 't1',
     TextStyleSpec style = const TextStyleSpec(),
     String content = 'hello',
+    TextDirectionMode textDirectionMode = TextDirectionMode.auto,
   }) {
     final layer = TextLayer(
       id: id,
@@ -38,6 +39,7 @@ void main() {
       ),
       content: content,
       style: style,
+      textDirectionMode: textDirectionMode,
     );
     c.read(documentControllerProvider.notifier).execute(AddLayerCommand(layer));
     return layer;
@@ -96,8 +98,7 @@ void main() {
       expect(c.read(editingControllerProvider), isNull);
     });
 
-    test('setBold(true) maps to FontWeight.w700, setBold(false) to w400',
-        () {
+    test('setBold(true) maps to FontWeight.w700, setBold(false) to w400', () {
       final c = makeContainer();
       final ctrl = c.read(textToolControllerProvider.notifier);
       ctrl.setBold(true);
@@ -140,10 +141,7 @@ void main() {
           c.read(documentControllerProvider).layerById('t1') as TextLayer;
       // Layer is untouched.
       expect(layer.style.fontSize, const TextStyleSpec().fontSize);
-      expect(
-        c.read(textToolControllerProvider).defaultStyle.fontSize,
-        99,
-      );
+      expect(c.read(textToolControllerProvider).defaultStyle.fontSize, 99);
     });
 
     test('addCenteredText creates and selects a new text layer', () {
@@ -161,14 +159,12 @@ void main() {
     // -------------------------------------------------------------------
     // Default subtle drop-shadow on insert.
     // -------------------------------------------------------------------
-    test(
-        'beginAddText: brand-new text gets a subtle default shadow '
+    test('beginAddText: brand-new text gets a subtle default shadow '
         '(opposite-luminance, fixed alpha)', () {
       final c = makeContainer();
       final ctrl = c.read(textToolControllerProvider.notifier);
       final id = ctrl.beginAddText();
-      final layer =
-          c.read(renderedDocumentProvider).layerById(id) as TextLayer;
+      final layer = c.read(renderedDocumentProvider).layerById(id) as TextLayer;
       // Default text colour is white -> shadow must be the
       // translucent-black halo from the resolver.
       expect(layer.style.shadowColor, isNotNull);
@@ -182,10 +178,7 @@ void main() {
       const expectedScale = 800 / 1080;
       expect(
         layer.style.shadowBlur,
-        closeTo(
-          TextColorResolver.kDefaultShadowBlur * expectedScale,
-          0.01,
-        ),
+        closeTo(TextColorResolver.kDefaultShadowBlur * expectedScale, 0.01),
       );
       expect(
         layer.style.shadowOffset.dy,
@@ -210,8 +203,7 @@ void main() {
       );
     });
 
-    test(
-        'default shadow respects auto-picked text colour: white canvas + '
+    test('default shadow respects auto-picked text colour: white canvas + '
         'white default text -> dark text -> WHITE halo', () {
       // On a white canvas the resolver flips white default text to
       // near-black for readability. The auto-shadow must then be the
@@ -221,8 +213,7 @@ void main() {
       final c = makeContainer();
       final ctrl = c.read(textToolControllerProvider.notifier);
       final id = ctrl.beginAddText();
-      final layer =
-          c.read(renderedDocumentProvider).layerById(id) as TextLayer;
+      final layer = c.read(renderedDocumentProvider).layerById(id) as TextLayer;
       // Sanity: text colour was overridden away from white.
       expect(layer.style.color, isNot(const Color(0xFFFFFFFF)));
       // Shadow is computed from the FINAL colour.
@@ -232,8 +223,7 @@ void main() {
       );
     });
 
-    test(
-        'user-tuned default shadow is preserved (not overwritten by '
+    test('user-tuned default shadow is preserved (not overwritten by '
         'auto-shadow)', () {
       // If the user has already picked their own shadow into
       // defaultStyle, beginAddText must respect it verbatim.
@@ -250,28 +240,24 @@ void main() {
         const Color(0xFFFF00FF),
       );
       final id = notifier.beginAddText();
-      final layer =
-          c.read(renderedDocumentProvider).layerById(id) as TextLayer;
+      final layer = c.read(renderedDocumentProvider).layerById(id) as TextLayer;
       expect(layer.style.shadowColor, const Color(0xFFFF00FF));
       expect(layer.style.shadowBlur, 20);
       expect(layer.style.shadowOffset, const Offset(4, 4));
     });
 
-    test('existing saved layers are NOT touched by the auto-shadow rule',
-        () {
+    test('existing saved layers are NOT touched by the auto-shadow rule', () {
       // Loading a doc with a TextLayer whose style has shadowColor
       // null must keep that null — auto-shadow only runs on inserts
       // through the controller, never as a migration.
       final c = makeContainer();
       addText(c, id: 'legacy', style: const TextStyleSpec()); // no shadow
-      final layer = c
-          .read(documentControllerProvider)
-          .layerById('legacy') as TextLayer;
+      final layer =
+          c.read(documentControllerProvider).layerById('legacy') as TextLayer;
       expect(layer.style.shadowColor, isNull);
     });
 
-    test(
-        'style change with text layer selected: mirrors to layer via '
+    test('style change with text layer selected: mirrors to layer via '
         'UpdateTextCommand', () {
       final c = makeContainer();
       addText(c);
@@ -290,8 +276,7 @@ void main() {
       );
     });
 
-    test(
-        'no cross-layer style leak: editing Text A does not pollute '
+    test('no cross-layer style leak: editing Text A does not pollute '
         'defaults so a later beginAddText starts clean', () {
       final c = makeContainer();
       // Text A on canvas, fully styled by the user.
@@ -330,10 +315,7 @@ void main() {
     test('style change is undoable as a single step', () {
       final c = makeContainer();
       // Start non-bold so setBold(true) is a real change.
-      addText(
-        c,
-        style: const TextStyleSpec(fontWeight: FontWeight.w400),
-      );
+      addText(c, style: const TextStyleSpec(fontWeight: FontWeight.w400));
       c.read(selectionControllerProvider.notifier).select('t1');
       c.read(textToolControllerProvider.notifier).setBold(true);
       expect(
@@ -351,8 +333,7 @@ void main() {
       );
     });
 
-    test('selecting a non-text layer means style writes do not mirror',
-        () {
+    test('selecting a non-text layer means style writes do not mirror', () {
       final c = makeContainer();
       addText(c, id: 'txt');
       // Add a text layer but pretend selection is some other id —
@@ -380,10 +361,7 @@ void main() {
       recents = c.read(textToolControllerProvider).recentColors;
       expect(recents.first, const Color(0xFF000003));
       expect(recents, hasLength(8));
-      expect(
-        recents.where((c) => c == const Color(0xFF000003)).length,
-        1,
-      );
+      expect(recents.where((c) => c == const Color(0xFF000003)).length, 1);
     });
 
     test('TextToolAction enum exposes the wired phase-1 controls', () {
@@ -412,10 +390,7 @@ void main() {
 
     test('setOpacity clamps to [0,1] and preserves color hue', () {
       final c = makeContainer();
-      addText(
-        c,
-        style: const TextStyleSpec(color: Color(0xFFAABBCC)),
-      );
+      addText(c, style: const TextStyleSpec(color: Color(0xFFAABBCC)));
       c.read(selectionControllerProvider.notifier).select('t1');
       final ctrl = c.read(textToolControllerProvider.notifier);
 
@@ -498,8 +473,7 @@ void main() {
       expect(layer.style.backgroundColor, isNull);
     });
 
-    test(
-        'outline toggle: enable seeds canvas-aware width '
+    test('outline toggle: enable seeds canvas-aware width '
         '(reference 2 px scaled by 800/1080)', () {
       final c = makeContainer();
       addText(c);
@@ -512,14 +486,10 @@ void main() {
       expect(layer.style.outlineColor, isNotNull);
       // Reference 2 px scaled by 800/1080 ≈ 1.481, which is well
       // within the 0.5..20 clamp so no clamp engages here.
-      expect(
-        layer.style.outlineWidth,
-        closeTo(2.0 * 800 / 1080, 0.01),
-      );
+      expect(layer.style.outlineWidth, closeTo(2.0 * 800 / 1080, 0.01));
     });
 
-    test(
-        'background toggle: enable seeds canvas-aware padding '
+    test('background toggle: enable seeds canvas-aware padding '
         '(reference 8/4 px scaled by 800/1080)', () {
       final c = makeContainer();
       addText(c);
@@ -529,14 +499,8 @@ void main() {
       ctrl.setBackgroundEnabled(true);
       final layer =
           c.read(documentControllerProvider).layerById('t1') as TextLayer;
-      expect(
-        layer.style.backgroundPaddingX,
-        closeTo(8.0 * 800 / 1080, 0.01),
-      );
-      expect(
-        layer.style.backgroundPaddingY,
-        closeTo(4.0 * 800 / 1080, 0.01),
-      );
+      expect(layer.style.backgroundPaddingX, closeTo(8.0 * 800 / 1080, 0.01));
+      expect(layer.style.backgroundPaddingY, closeTo(4.0 * 800 / 1080, 0.01));
     });
 
     test('shadow + background round-trip through JSON', () {
@@ -551,10 +515,9 @@ void main() {
       expect(restored, original);
     });
 
-    test('duplicateSelectedText copies content/style and offsets position',
-        () {
+    test('duplicateSelectedText copies content/style and offsets position', () {
       final c = makeContainer();
-      addText(c, content: 'hello');
+      addText(c, content: 'hello', textDirectionMode: TextDirectionMode.rtl);
       c.read(selectionControllerProvider.notifier).select('t1');
       c.read(textToolControllerProvider.notifier).duplicateSelectedText();
       final layers = c.read(documentControllerProvider).layers;
@@ -563,13 +526,13 @@ void main() {
       final orig = layers.first as TextLayer;
       expect(dup.content, orig.content);
       expect(dup.style, orig.style);
-      expect(dup.transform.position - orig.transform.position,
-          const Offset(24, 24));
-      // New layer is selected.
+      expect(dup.textDirectionMode, orig.textDirectionMode);
       expect(
-        c.read(selectionControllerProvider).selectedId,
-        dup.id,
+        dup.transform.position - orig.transform.position,
+        const Offset(24, 24),
       );
+      // New layer is selected.
+      expect(c.read(selectionControllerProvider).selectedId, dup.id);
     });
 
     test('toggleSelectedLock flips locked state', () {
@@ -652,10 +615,7 @@ void main() {
     // emit and the canvas only rebuilt on the next unrelated
     // interaction \u2014 the "delayed batch apply" symptom.
     group('document notifies on style-only changes (no batch delay)', () {
-      void expectEmit(
-        String label,
-        void Function(TextToolController) mutate,
-      ) {
+      void expectEmit(String label, void Function(TextToolController) mutate) {
         test('$label triggers a documentControllerProvider listener', () {
           final c = makeContainer();
           addText(c);
@@ -672,43 +632,36 @@ void main() {
 
       expectEmit('setBold', (ctrl) => ctrl.setBold(true));
       expectEmit('setFontSize', (ctrl) => ctrl.setFontSize(72));
-      expectEmit('setColor',
-          (ctrl) => ctrl.setColor(const Color(0xFF112233)));
+      expectEmit('setColor', (ctrl) => ctrl.setColor(const Color(0xFF112233)));
       expectEmit('setItalic', (ctrl) => ctrl.setItalic(true));
       expectEmit('setUnderline', (ctrl) => ctrl.setUnderline(true));
-      expectEmit('setAlignment',
-          (ctrl) => ctrl.setAlignment(TextAlign.right));
+      expectEmit('setAlignment', (ctrl) => ctrl.setAlignment(TextAlign.right));
       expectEmit('setLetterSpacing', (ctrl) => ctrl.setLetterSpacing(4));
       expectEmit('setLineHeight', (ctrl) => ctrl.setLineHeight(1.8));
       expectEmit('setOpacity', (ctrl) => ctrl.setOpacity(0.4));
       expectEmit('setContent', (ctrl) => ctrl.setContent('changed'));
     });
 
-    test(
-      'TextLayer == ignores identity but distinguishes content + style',
-      () {
-        final base = TextLayer(
-          id: 'x',
-          transform: LayerTransform(
-            position: Offset.zero,
-            size: const Size(100, 30),
-          ),
-          content: 'hello',
-          style: const TextStyleSpec(),
-        );
-        final sameContent = base.copyWith();
-        expect(base, equals(sameContent));
-        expect(base.hashCode, sameContent.hashCode);
+    test('TextLayer == ignores identity but distinguishes content + style', () {
+      final base = TextLayer(
+        id: 'x',
+        transform: LayerTransform(
+          position: Offset.zero,
+          size: const Size(100, 30),
+        ),
+        content: 'hello',
+        style: const TextStyleSpec(),
+      );
+      final sameContent = base.copyWith();
+      expect(base, equals(sameContent));
+      expect(base.hashCode, sameContent.hashCode);
 
-        expect(base.copyWith(content: 'other'), isNot(equals(base)));
-        expect(
-          base.copyWith(
-            style: const TextStyleSpec(fontSize: 99),
-          ),
-          isNot(equals(base)),
-        );
-      },
-    );
+      expect(base.copyWith(content: 'other'), isNot(equals(base)));
+      expect(
+        base.copyWith(style: const TextStyleSpec(fontSize: 99)),
+        isNot(equals(base)),
+      );
+    });
 
     group('live edit', () {
       test('previewContent updates content + auto-resizes height '
@@ -721,8 +674,9 @@ void main() {
         ctrl.beginEditText();
         ctrl.previewContent('one\ntwo\nthree');
 
-        final live = c.read(renderedDocumentProvider).layerById(original.id)
-            as TextLayer;
+        final live =
+            c.read(renderedDocumentProvider).layerById(original.id)
+                as TextLayer;
         expect(live.content, 'one\ntwo\nthree');
         // Bounding box auto-fits the natural text size: height grew to
         // accommodate three lines.
@@ -733,10 +687,7 @@ void main() {
 
         // History was not touched: undo restores the empty document
         // state (everything before the AddLayerCommand).
-        expect(
-          c.read(documentControllerProvider.notifier).canUndo,
-          isTrue,
-        );
+        expect(c.read(documentControllerProvider.notifier).canUndo, isTrue);
         c.read(documentControllerProvider.notifier).undo();
         // After single undo we should be back to the state BEFORE the
         // text was added — proves the previews didn't push entries.
@@ -746,8 +697,7 @@ void main() {
         );
       });
 
-      test('commitLiveEdit pushes ONE undo entry covering all keystrokes',
-          () {
+      test('commitLiveEdit pushes ONE undo entry covering all keystrokes', () {
         final c = makeContainer();
         final original = addText(c, content: 'a');
         c.read(selectionControllerProvider.notifier).select(original.id);
@@ -760,8 +710,9 @@ void main() {
         ctrl.previewContent('abc\ndef');
         ctrl.commitLiveEdit('abc\ndef');
 
-        final after = c.read(documentControllerProvider).layerById(original.id)
-            as TextLayer;
+        final after =
+            c.read(documentControllerProvider).layerById(original.id)
+                as TextLayer;
         expect(after.content, 'abc\ndef');
 
         // ONE undo step undoes the whole edit (text + size).
@@ -773,31 +724,33 @@ void main() {
         expect(reverted.transform.size, original.transform.size);
       });
 
-      test('cancelLiveEdit restores the original snapshot, no history entry',
-          () {
-        final c = makeContainer();
-        final original = addText(c, content: 'keep me');
-        c.read(selectionControllerProvider.notifier).select(original.id);
-        final ctrl = c.read(textToolControllerProvider.notifier);
+      test(
+        'cancelLiveEdit restores the original snapshot, no history entry',
+        () {
+          final c = makeContainer();
+          final original = addText(c, content: 'keep me');
+          c.read(selectionControllerProvider.notifier).select(original.id);
+          final ctrl = c.read(textToolControllerProvider.notifier);
 
-        ctrl.beginEditText();
-        ctrl.previewContent('something else entirely');
-        ctrl.cancelLiveEdit();
+          ctrl.beginEditText();
+          ctrl.previewContent('something else entirely');
+          ctrl.cancelLiveEdit();
 
-        final restored =
-            c.read(documentControllerProvider).layerById(original.id)
-                as TextLayer;
-        expect(restored.content, 'keep me');
-        expect(restored.transform.size, original.transform.size);
+          final restored =
+              c.read(documentControllerProvider).layerById(original.id)
+                  as TextLayer;
+          expect(restored.content, 'keep me');
+          expect(restored.transform.size, original.transform.size);
 
-        // Undo once should remove the layer (the AddLayerCommand),
-        // proving cancel didn't push anything to history.
-        c.read(documentControllerProvider.notifier).undo();
-        expect(
-          c.read(documentControllerProvider).layerById(original.id),
-          isNull,
-        );
-      });
+          // Undo once should remove the layer (the AddLayerCommand),
+          // proving cancel didn't push anything to history.
+          c.read(documentControllerProvider.notifier).undo();
+          expect(
+            c.read(documentControllerProvider).layerById(original.id),
+            isNull,
+          );
+        },
+      );
 
       test('commitLiveEdit with no actual change pushes nothing', () {
         final c = makeContainer();
@@ -828,10 +781,8 @@ void main() {
         expect(c.read(documentControllerProvider).layers, isEmpty);
       });
 
-      test(
-          'edit: clearing all text and committing is treated as cancel '
-          '(original preserved, no history entry)',
-          () {
+      test('edit: clearing all text and committing is treated as cancel '
+          '(original preserved, no history entry)', () {
         final c = makeContainer();
         final original = addText(c, content: 'do not lose me');
         c.read(selectionControllerProvider.notifier).select(original.id);
@@ -841,8 +792,9 @@ void main() {
         ctrl.previewContent('');
         ctrl.commitLiveEdit('');
 
-        final after = c.read(documentControllerProvider).layerById(original.id)
-            as TextLayer;
+        final after =
+            c.read(documentControllerProvider).layerById(original.id)
+                as TextLayer;
         expect(after.content, 'do not lose me');
         expect(after.transform.size, original.transform.size);
 
@@ -854,9 +806,7 @@ void main() {
         );
       });
 
-      test(
-          'edit: whitespace-only commit is treated as cancel',
-          () {
+      test('edit: whitespace-only commit is treated as cancel', () {
         final c = makeContainer();
         final original = addText(c, content: 'real content');
         c.read(selectionControllerProvider.notifier).select(original.id);
@@ -865,14 +815,13 @@ void main() {
         ctrl.beginEditText();
         ctrl.commitLiveEdit('   \n  ');
 
-        final after = c.read(documentControllerProvider).layerById(original.id)
-            as TextLayer;
+        final after =
+            c.read(documentControllerProvider).layerById(original.id)
+                as TextLayer;
         expect(after.content, 'real content');
       });
 
-      test(
-          'edit auto-resizes the bounding box to fit the new content',
-          () {
+      test('edit auto-resizes the bounding box to fit the new content', () {
         final c = makeContainer();
         final original = addText(c, content: 'hi');
         c.read(selectionControllerProvider.notifier).select(original.id);
@@ -880,9 +829,9 @@ void main() {
 
         ctrl.beginEditText();
         ctrl.commitLiveEdit('a much longer string\nwith multiple lines');
-        final committed = c
-            .read(documentControllerProvider)
-            .layerById(original.id) as TextLayer;
+        final committed =
+            c.read(documentControllerProvider).layerById(original.id)
+                as TextLayer;
         expect(committed.transform.size, isNot(original.transform.size));
         expect(
           committed.transform.size.height,
@@ -890,10 +839,8 @@ void main() {
         );
       });
 
-      test(
-          'add: beginAddText stages a centered empty layer + selects it; '
-          'previewContent grows it; commit produces ONE add entry',
-          () {
+      test('add: beginAddText stages a centered empty layer + selects it; '
+          'previewContent grows it; commit produces ONE add entry', () {
         final c = makeContainer();
         final ctrl = c.read(textToolControllerProvider.notifier);
 
@@ -917,10 +864,7 @@ void main() {
         // Commit pushed exactly one entry — undo removes the layer.
         c.read(documentControllerProvider.notifier).undo();
         expect(c.read(documentControllerProvider).layerById(id), isNull);
-        expect(
-          c.read(documentControllerProvider.notifier).canRedo,
-          isTrue,
-        );
+        expect(c.read(documentControllerProvider.notifier).canRedo, isTrue);
         // Redo restores it identically.
         c.read(documentControllerProvider.notifier).redo();
         expect(
@@ -930,10 +874,8 @@ void main() {
         );
       });
 
-      test(
-          'add: cancel removes the staged layer and restores the prior '
-          'selection',
-          () {
+      test('add: cancel removes the staged layer and restores the prior '
+          'selection', () {
         final c = makeContainer();
         // Set up some other layer to be the prior selection.
         addText(c, id: 'prior', content: 'prior');
@@ -949,10 +891,8 @@ void main() {
         expect(c.read(selectionControllerProvider).selectedId, 'prior');
       });
 
-      test(
-          'add: empty / whitespace commit is treated as cancel — '
-          'no layer added, no history entry',
-          () {
+      test('add: empty / whitespace commit is treated as cancel — '
+          'no layer added, no history entry', () {
         final c = makeContainer();
         final ctrl = c.read(textToolControllerProvider.notifier);
 
@@ -962,35 +902,31 @@ void main() {
         ctrl.commitLiveEdit('   ');
 
         expect(c.read(documentControllerProvider).layerById(id), isNull);
-        expect(
-          c.read(documentControllerProvider.notifier).canUndo,
-          isFalse,
-        );
+        expect(c.read(documentControllerProvider.notifier).canUndo, isFalse);
         expect(c.read(selectionControllerProvider).hasSelection, isFalse);
       });
 
       test(
-          'add: typing then deleting then re-typing keeps preview in sync',
-          () {
-        final c = makeContainer();
-        final ctrl = c.read(textToolControllerProvider.notifier);
+        'add: typing then deleting then re-typing keeps preview in sync',
+        () {
+          final c = makeContainer();
+          final ctrl = c.read(textToolControllerProvider.notifier);
 
-        final id = ctrl.beginAddText();
-        ctrl.previewContent('he');
-        ctrl.previewContent('hel');
-        ctrl.previewContent('h');
-        ctrl.previewContent('');
-        ctrl.previewContent('done');
+          final id = ctrl.beginAddText();
+          ctrl.previewContent('he');
+          ctrl.previewContent('hel');
+          ctrl.previewContent('h');
+          ctrl.previewContent('');
+          ctrl.previewContent('done');
 
-        final live =
-            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
-        expect(live.content, 'done');
-      });
+          final live =
+              c.read(renderedDocumentProvider).layerById(id) as TextLayer;
+          expect(live.content, 'done');
+        },
+      );
 
-      test(
-          'add: uses defaultStyle from session at the moment of begin, '
-          'scaled to canvas dimensions',
-          () {
+      test('add: uses defaultStyle from session at the moment of begin, '
+          'scaled to canvas dimensions', () {
         final c = makeContainer();
         final ctrl = c.read(textToolControllerProvider.notifier);
         ctrl.setFontSize(64);
@@ -1007,7 +943,8 @@ void main() {
       test('add: scales font size up on a poster-sized canvas', () {
         final c = ProviderContainer();
         addTearDown(c.dispose);
-        c.read(documentControllerProvider.notifier)
+        c
+            .read(documentControllerProvider.notifier)
             .newDocument(width: 2160, height: 2160);
         final ctrl = c.read(textToolControllerProvider.notifier);
         ctrl.setFontSize(48);
@@ -1022,7 +959,8 @@ void main() {
       test('add: clamps font size on a tiny sticker canvas', () {
         final c = ProviderContainer();
         addTearDown(c.dispose);
-        c.read(documentControllerProvider.notifier)
+        c
+            .read(documentControllerProvider.notifier)
             .newDocument(width: 100, height: 100);
         final ctrl = c.read(textToolControllerProvider.notifier);
         ctrl.setFontSize(48);
@@ -1041,7 +979,8 @@ void main() {
         // leave 48-pt looking too small. Geometric mean
         // sqrt(1920 * 1080) ~= 1440 captures the canvas's true
         // presence: 48 * 1440/1080 = 64 -> snapped to 64.0.
-        c.read(documentControllerProvider.notifier)
+        c
+            .read(documentControllerProvider.notifier)
             .newDocument(width: 1920, height: 1080);
         final ctrl = c.read(textToolControllerProvider.notifier);
         ctrl.setFontSize(48);
@@ -1051,17 +990,16 @@ void main() {
         expect(staged.style.fontSize, 64.0);
       });
 
-      test(
-          'add: extreme aspect ratio falls back to long axis '
-          'so ticker banners stay readable',
-          () {
+      test('add: extreme aspect ratio falls back to long axis '
+          'so ticker banners stay readable', () {
         final c = ProviderContainer();
         addTearDown(c.dispose);
         // 20:1 ticker -- geometric mean would give sqrt(4000 * 200)
         // ~= 894, scaling 48-pt down to ~40 pt despite the huge
         // canvas. Above the 4:1 aspect threshold we use the long
         // axis instead: 48 * 4000/1080 ~= 177.78 -> 178.0.
-        c.read(documentControllerProvider.notifier)
+        c
+            .read(documentControllerProvider.notifier)
             .newDocument(width: 4000, height: 200);
         final ctrl = c.read(textToolControllerProvider.notifier);
         ctrl.setFontSize(48);
@@ -1077,7 +1015,8 @@ void main() {
         // 700-square -> 48 * 700/1080 = 31.111..., snapped to 31.0
         // (nearest 0.5) so the size shown in the slider/label reads
         // as a clean number.
-        c.read(documentControllerProvider.notifier)
+        c
+            .read(documentControllerProvider.notifier)
             .newDocument(width: 700, height: 700);
         final ctrl = c.read(textToolControllerProvider.notifier);
         ctrl.setFontSize(48);
@@ -1115,8 +1054,7 @@ void main() {
       // and (b) re-centre the layer on every keystroke so it grows
       // symmetrically around the canvas centre.
 
-      test(
-          'live-typing a long word wraps inside the canvas instead '
+      test('live-typing a long word wraps inside the canvas instead '
           'of overflowing the right edge', () {
         final c = makeContainer(); // 800 \u00d7 800 doc
         final ctrl = c.read(textToolControllerProvider.notifier);
@@ -1124,8 +1062,8 @@ void main() {
         // A long single "word" that, unwrapped at the default
         // ~96-pt-scaled font, would easily exceed 800 px wide.
         ctrl.previewContent('Hellohellohellohello');
-        final layer = c.read(renderedDocumentProvider).layerById(id)
-            as TextLayer;
+        final layer =
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         final right = layer.transform.position.dx + layer.transform.size.width;
         final canvasWidth = c.read(documentControllerProvider).width;
         // Box stays inside the canvas (within the 90 % wrap cap +
@@ -1145,10 +1083,10 @@ void main() {
 
         for (final text in ['A', 'AB', 'ABC', 'A long line of text']) {
           ctrl.previewContent(text);
-          final layer = c.read(renderedDocumentProvider).layerById(id)
-              as TextLayer;
-          final cx = layer.transform.position.dx +
-              layer.transform.size.width / 2;
+          final layer =
+              c.read(renderedDocumentProvider).layerById(id) as TextLayer;
+          final cx =
+              layer.transform.position.dx + layer.transform.size.width / 2;
           expect(
             cx,
             closeTo(canvasCx, 0.5),
@@ -1158,8 +1096,7 @@ void main() {
         ctrl.cancelLiveEdit();
       });
 
-      test(
-          'committing a long string lands a layer that fits inside '
+      test('committing a long string lands a layer that fits inside '
           'the canvas', () {
         final c = makeContainer();
         final ctrl = c.read(textToolControllerProvider.notifier);
@@ -1175,8 +1112,7 @@ void main() {
         expect(right, lessThanOrEqualTo(canvasWidth + 0.5));
       });
 
-      test(
-          'editing an EXISTING layer never moves it (resize cap is '
+      test('editing an EXISTING layer never moves it (resize cap is '
           'opt-in to the new-add flow only)', () {
         final c = makeContainer();
         final layer = addText(c, id: 'e1', content: 'hi');
@@ -1185,14 +1121,13 @@ void main() {
         final originalPos = layer.transform.position;
         ctrl.beginEditText();
         ctrl.previewContent('hi there a much longer string');
-        final after = c.read(renderedDocumentProvider).layerById(layer.id)
-            as TextLayer;
+        final after =
+            c.read(renderedDocumentProvider).layerById(layer.id) as TextLayer;
         expect(after.transform.position, originalPos);
         ctrl.cancelLiveEdit();
       });
 
-      test(
-          'short content commits in scaleText mode (snug single-line '
+      test('short content commits in scaleText mode (snug single-line '
           'box, sticker semantics)', () {
         final c = makeContainer();
         final ctrl = c.read(textToolControllerProvider.notifier);
@@ -1204,8 +1139,7 @@ void main() {
         expect(layer.resizeMode, TextResizeMode.scaleText);
       });
 
-      test(
-          'long (wrapped) content commits in resizeBox mode so '
+      test('long (wrapped) content commits in resizeBox mode so '
           'corner-drag re-wraps the paragraph cleanly', () {
         final c = makeContainer();
         final ctrl = c.read(textToolControllerProvider.notifier);
@@ -1218,24 +1152,26 @@ void main() {
         // resizeBox commits at the wrap-cap width, not the natural
         // (overflowing) width.
         final canvasWidth = c.read(documentControllerProvider).width;
-        expect(layer.transform.size.width, lessThanOrEqualTo(canvasWidth * 0.9 + 0.5));
+        expect(
+          layer.transform.size.width,
+          lessThanOrEqualTo(canvasWidth * 0.9 + 0.5),
+        );
       });
 
-      test(
-          'changing font size mid-type re-flows + re-centres the '
+      test('changing font size mid-type re-flows + re-centres the '
           'live new-add layer without polluting history', () {
         final c = makeContainer();
         final ctrl = c.read(textToolControllerProvider.notifier);
         final id = ctrl.beginAddText();
         ctrl.previewContent('Hi');
-        final beforeSize = (c.read(renderedDocumentProvider).layerById(id)
-                as TextLayer)
-            .transform
-            .size;
+        final beforeSize =
+            (c.read(renderedDocumentProvider).layerById(id) as TextLayer)
+                .transform
+                .size;
         // Drag the size slider mid-type.
         ctrl.setFontSize(200);
-        final after = c.read(renderedDocumentProvider).layerById(id)
-            as TextLayer;
+        final after =
+            c.read(renderedDocumentProvider).layerById(id) as TextLayer;
         // Box re-measured to the new style.
         expect(after.style.fontSize, 200);
         expect(after.transform.size, isNot(beforeSize));
@@ -1244,10 +1180,7 @@ void main() {
         final cx = after.transform.position.dx + after.transform.size.width / 2;
         expect(cx, closeTo(canvasCx, 0.5));
         // No extra history entries pushed during the live session.
-        expect(
-          c.read(documentControllerProvider.notifier).canUndo,
-          isFalse,
-        );
+        expect(c.read(documentControllerProvider.notifier).canUndo, isFalse);
         ctrl.cancelLiveEdit();
       });
     });
@@ -1350,17 +1283,19 @@ void main() {
         final ctrl = c.read(textToolControllerProvider.notifier);
         final h0 = layer.transform.size.height;
         ctrl.setLineHeight(2.5);
-        final h1 = (c.read(documentControllerProvider).layerById(layer.id)
-                as TextLayer)
-            .transform
-            .size
-            .height;
+        final h1 =
+            (c.read(documentControllerProvider).layerById(layer.id)
+                    as TextLayer)
+                .transform
+                .size
+                .height;
         expect(h1, greaterThan(h0));
-        final w1 = (c.read(documentControllerProvider).layerById(layer.id)
-                as TextLayer)
-            .transform
-            .size
-            .width;
+        final w1 =
+            (c.read(documentControllerProvider).layerById(layer.id)
+                    as TextLayer)
+                .transform
+                .size
+                .width;
         ctrl.setLetterSpacing(20);
         final after =
             c.read(documentControllerProvider).layerById(layer.id) as TextLayer;
@@ -1382,10 +1317,8 @@ void main() {
         expect(after.style.isBold, isTrue);
       });
 
-      test(
-          'setFontSize on a corner-scaled layer preserves visual size '
-          '(no jump back to natural metrics)',
-          () {
+      test('setFontSize on a corner-scaled layer preserves visual size '
+          '(no jump back to natural metrics)', () {
         final c = makeContainer();
         // Start a layer whose box is much larger than its natural size
         // — simulates a prior corner-drag that scaled the rendered text
@@ -1422,10 +1355,8 @@ void main() {
         );
       });
 
-      test(
-          'style change is ONE undoable step that reverts BOTH style '
-          'and auto-measured box',
-          () {
+      test('style change is ONE undoable step that reverts BOTH style '
+          'and auto-measured box', () {
         final c = makeContainer();
         final layer = addText(c, content: 'two\nlines');
         c.read(selectionControllerProvider.notifier).select(layer.id);
@@ -1443,41 +1374,43 @@ void main() {
       });
 
       test(
-          'live slider: many setFontSize calls keep box in sync each frame',
-          () {
-        final c = makeContainer();
-        final layer = addText(c, content: 'long\ntext\nhere');
-        c.read(selectionControllerProvider.notifier).select(layer.id);
-        final ctrl = c.read(textToolControllerProvider.notifier);
-        for (final s in [20.0, 40.0, 60.0, 80.0, 100.0]) {
-          ctrl.setFontSize(s);
-          final live = c.read(documentControllerProvider).layerById(layer.id)
-              as TextLayer;
-          // Box must always reflect THIS step's measured size for the
-          // current style — never a stale value from a previous frame.
-          final expected = TextPainter(
-            text: TextSpan(
-              text: live.content,
-              style: TextStyle(
-                fontFamily: live.style.fontFamily,
-                fontSize: live.style.fontSize,
-                fontWeight: live.style.fontWeight,
-                fontStyle: live.style.italic
-                    ? FontStyle.italic
-                    : FontStyle.normal,
-                letterSpacing: live.style.letterSpacing,
-                height: live.style.lineHeight,
+        'live slider: many setFontSize calls keep box in sync each frame',
+        () {
+          final c = makeContainer();
+          final layer = addText(c, content: 'long\ntext\nhere');
+          c.read(selectionControllerProvider.notifier).select(layer.id);
+          final ctrl = c.read(textToolControllerProvider.notifier);
+          for (final s in [20.0, 40.0, 60.0, 80.0, 100.0]) {
+            ctrl.setFontSize(s);
+            final live =
+                c.read(documentControllerProvider).layerById(layer.id)
+                    as TextLayer;
+            // Box must always reflect THIS step's measured size for the
+            // current style — never a stale value from a previous frame.
+            final expected = TextPainter(
+              text: TextSpan(
+                text: live.content,
+                style: TextStyle(
+                  fontFamily: live.style.fontFamily,
+                  fontSize: live.style.fontSize,
+                  fontWeight: live.style.fontWeight,
+                  fontStyle: live.style.italic
+                      ? FontStyle.italic
+                      : FontStyle.normal,
+                  letterSpacing: live.style.letterSpacing,
+                  height: live.style.lineHeight,
+                ),
               ),
-            ),
-            textAlign: live.style.alignment,
-            textDirection: TextDirection.ltr,
-            maxLines: null,
-          )..layout(maxWidth: double.infinity);
-          expect(live.transform.size.height, expected.height);
-          expect(live.transform.size.width, expected.width);
-          expected.dispose();
-        }
-      });
+              textAlign: live.style.alignment,
+              textDirection: TextDirection.ltr,
+              maxLines: null,
+            )..layout(maxWidth: double.infinity);
+            expect(live.transform.size.height, expected.height);
+            expect(live.transform.size.width, expected.width);
+            expected.dispose();
+          }
+        },
+      );
     });
 
     group('resize mode (per-layer opt-in)', () {
@@ -1530,8 +1463,7 @@ void main() {
         expect(after.transform.size.height, greaterThan(h0));
       });
 
-      test('setResizeMode is undoable and restores previous mode + box',
-          () {
+      test('setResizeMode is undoable and restores previous mode + box', () {
         final c = makeContainer();
         final layer = addText(c, content: 'roundtrip');
         c.read(selectionControllerProvider.notifier).select(layer.id);
@@ -1549,6 +1481,46 @@ void main() {
       });
     });
 
+    group('text direction mode', () {
+      test('setTextDirectionMode is undoable', () {
+        final c = makeContainer();
+        final layer = addText(c, content: 'Hello سلام');
+        c.read(selectionControllerProvider.notifier).select(layer.id);
+
+        c
+            .read(textToolControllerProvider.notifier)
+            .setTextDirectionMode(TextDirectionMode.rtl);
+        var current =
+            c.read(documentControllerProvider).layerById(layer.id) as TextLayer;
+        expect(current.textDirectionMode, TextDirectionMode.rtl);
+
+        c.read(documentControllerProvider.notifier).undo();
+        current =
+            c.read(documentControllerProvider).layerById(layer.id) as TextLayer;
+        expect(current.textDirectionMode, TextDirectionMode.auto);
+      });
+
+      test('edit preserves a forced direction mode for mixed text', () {
+        final c = makeContainer();
+        final layer = addText(
+          c,
+          content: 'Hello سلام',
+          textDirectionMode: TextDirectionMode.rtl,
+        );
+        c.read(selectionControllerProvider.notifier).select(layer.id);
+        final ctrl = c.read(textToolControllerProvider.notifier);
+
+        ctrl.beginEditText();
+        ctrl.previewContent('Sale ۵۰٪ امروز');
+        ctrl.commitLiveEdit('Sale ۵۰٪ امروز');
+
+        final current =
+            c.read(documentControllerProvider).layerById(layer.id) as TextLayer;
+        expect(current.content, 'Sale ۵۰٪ امروز');
+        expect(current.textDirectionMode, TextDirectionMode.rtl);
+      });
+    });
+
     group('edit existing text preserves visual size', () {
       // Bug-1 regression: opening edit on a text layer that the user
       // had previously corner-scaled used to re-measure the box to
@@ -1558,10 +1530,8 @@ void main() {
       // every measured size during the edit, so the user's manual
       // scale survives content changes verbatim.
 
-      test(
-          'beginEditText followed by previewContent keeps the scaled '
-          'box size proportional to the prior visual scale',
-          () {
+      test('beginEditText followed by previewContent keeps the scaled '
+          'box size proportional to the prior visual scale', () {
         final c = makeContainer();
         // Layer with box deliberately ~5x its natural width — a
         // user corner-drag scale-up.
@@ -1582,20 +1552,21 @@ void main() {
         final ctrl = c.read(textToolControllerProvider.notifier);
         ctrl.beginEditText();
         ctrl.previewContent('hello');
-        final after = c.read(documentControllerProvider).layerById('edit-scaled')
-            as TextLayer;
+        final after =
+            c.read(documentControllerProvider).layerById('edit-scaled')
+                as TextLayer;
         // The box still reflects the prior scale (within an order of
         // magnitude of the original height) — it does NOT collapse to
         // natural-at-fontSize-20 metrics.
-        expect(after.transform.size.height,
-            greaterThan(beforeSize.height * 0.5));
+        expect(
+          after.transform.size.height,
+          greaterThan(beforeSize.height * 0.5),
+        );
         ctrl.cancelLiveEdit();
       });
 
-      test(
-          'commitLiveEdit on an edited scaled layer keeps the box '
-          'roughly at the prior visual scale',
-          () {
+      test('commitLiveEdit on an edited scaled layer keeps the box '
+          'roughly at the prior visual scale', () {
         final c = makeContainer();
         final layer = TextLayer(
           id: 'commit-scaled',
@@ -1614,9 +1585,9 @@ void main() {
         final ctrl = c.read(textToolControllerProvider.notifier);
         ctrl.beginEditText();
         ctrl.commitLiveEdit('hi there');
-        final after = c
-            .read(documentControllerProvider)
-            .layerById('commit-scaled') as TextLayer;
+        final after =
+            c.read(documentControllerProvider).layerById('commit-scaled')
+                as TextLayer;
         // Same scale preserved — height remains within the same
         // order of magnitude as the pre-edit value.
         expect(after.transform.size.height, greaterThan(beforeHeight * 0.5));
@@ -1629,8 +1600,7 @@ void main() {
       // when the script flips (only when the user hasn't picked a
       // font themselves).
 
-      test('add Persian content commits with Vazir + RTL-friendly content',
-          () {
+      test('add Persian content commits with Vazir + RTL-friendly content', () {
         final c = makeContainer();
         final ctrl = c.read(textToolControllerProvider.notifier);
         ctrl.beginAddText();
@@ -1654,10 +1624,8 @@ void main() {
         expect(textDirectionForContent(layer.content), TextDirection.ltr);
       });
 
-      test(
-          'editing flips Roboto → Vazir when content becomes '
-          'predominantly Persian',
-          () {
+      test('editing flips Roboto → Vazir when content becomes '
+          'predominantly Persian', () {
         final c = makeContainer();
         final layer = addText(
           c,

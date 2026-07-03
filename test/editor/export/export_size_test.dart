@@ -1,6 +1,10 @@
+import 'dart:math' as math;
 import 'dart:ui' show Size;
 
+import 'package:canvas_engine/features/editor/application/export_controller.dart';
 import 'package:canvas_engine/features/editor/application/export_size.dart';
+import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -22,16 +26,13 @@ void main() {
     });
 
     test('values list drives the picker order', () {
-      expect(
-        ExportSize.values.map((s) => s.id).toList(),
-        const [
-          'original',
-          'square_1080',
-          'story_1080x1920',
-          'portrait_1080x1350',
-          'custom',
-        ],
-      );
+      expect(ExportSize.values.map((s) => s.id).toList(), const [
+        'original',
+        'square_1080',
+        'story_1080x1920',
+        'portrait_1080x1350',
+        'custom',
+      ]);
     });
 
     test('customSize() builds a typed preset that is custom', () {
@@ -88,6 +89,58 @@ void main() {
       );
       expect(r.width, 0);
       expect(r.height, 0);
+    });
+  });
+
+  group('ExportController resolution guard', () {
+    test('flags oversized fixed targets before export allocation', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final ctrl = container.read(exportControllerProvider);
+      final doc = EditorDocument(width: 100, height: 100, layers: const []);
+
+      expect(
+        ctrl.willReduceResolution(
+          document: doc,
+          pixelRatio: 1,
+          target: const Size(1080, 1080),
+        ),
+        isFalse,
+      );
+      expect(
+        ctrl.willReduceResolution(
+          document: doc,
+          pixelRatio: 1,
+          target: const Size(100000, 100000),
+        ),
+        isTrue,
+      );
+    });
+
+    test('clamps oversized fixed targets deterministically', () {
+      const target = Size(10000, 5000);
+      const cap = 1000 * 1000;
+      final clamped = ExportController.clampTargetSizeForExport(
+        target: target,
+        maxPixels: cap,
+      );
+      final expectedScale = math.sqrt(cap / (target.width * target.height));
+
+      expect(clamped.width, closeTo(target.width * expectedScale, 1e-6));
+      expect(clamped.height, closeTo(target.height * expectedScale, 1e-6));
+      expect(clamped.width / clamped.height, closeTo(2, 1e-9));
+      expect(clamped.width * clamped.height, lessThanOrEqualTo(cap + 1));
+    });
+
+    test('keeps fixed targets unchanged when they fit the cap', () {
+      const target = Size(1080, 1080);
+      expect(
+        ExportController.clampTargetSizeForExport(
+          target: target,
+          maxPixels: 2 * 1000 * 1000,
+        ),
+        target,
+      );
     });
   });
 }

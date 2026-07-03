@@ -12,10 +12,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   ProviderContainer makeContainer() {
     final c = ProviderContainer();
-    c.read(documentControllerProvider.notifier).newDocument(
-          width: 1000,
-          height: 1000,
-        );
+    c
+        .read(documentControllerProvider.notifier)
+        .newDocument(width: 1000, height: 1000);
     return c;
   }
 
@@ -25,7 +24,9 @@ void main() {
     required Offset position,
     Size size = const Size(50, 50),
   }) {
-    c.read(documentControllerProvider.notifier).execute(
+    c
+        .read(documentControllerProvider.notifier)
+        .execute(
           AddLayerCommand(
             ShapeLayer(
               id: id,
@@ -72,23 +73,58 @@ void main() {
   test('distribute horizontally evens out gaps; outers fixed', () {
     final c = makeContainer();
     addRect(c, id: 'a', position: const Offset(0, 0));
-    addRect(c, id: 'b', position: const Offset(80, 0), size: const Size(30, 30));
+    addRect(
+      c,
+      id: 'b',
+      position: const Offset(80, 0),
+      size: const Size(30, 30),
+    );
     addRect(c, id: 'cc', position: const Offset(200, 0));
     c.read(selectionControllerProvider.notifier).select('a');
     c.read(selectionControllerProvider.notifier).add('b');
     c.read(selectionControllerProvider.notifier).add('cc');
 
-    c.read(alignmentControllerProvider)
-        .distribute(DistributeAxis.horizontal);
+    c.read(alignmentControllerProvider).distribute(DistributeAxis.horizontal);
 
     final doc = c.read(documentControllerProvider);
     // Span 0..250, sum extents = 50+30+50 = 130, gap = 60, mid at 110.
     expect(doc.layerById('a')!.transform.position.dx, 0);
     expect(doc.layerById('cc')!.transform.position.dx, 200);
-    expect(
-      doc.layerById('b')!.transform.position.dx,
-      closeTo(110, 0.001),
+    expect(doc.layerById('b')!.transform.position.dx, closeTo(110, 0.001));
+  });
+
+  test('alignToCanvas moves a single selected layer to canvas edge', () {
+    final c = makeContainer();
+    addRect(c, id: 'a', position: const Offset(20, 30));
+    c.read(selectionControllerProvider.notifier).select('a');
+
+    c.read(alignmentControllerProvider).alignToCanvas(AlignAxis.right);
+
+    final doc = c.read(documentControllerProvider);
+    expect(doc.layerById('a')!.transform.position.dx, 950);
+    expect(doc.layerById('a')!.transform.position.dy, 30);
+  });
+
+  test('distribute vertically evens out gaps; outers fixed', () {
+    final c = makeContainer();
+    addRect(c, id: 'a', position: const Offset(0, 0));
+    addRect(
+      c,
+      id: 'b',
+      position: const Offset(0, 80),
+      size: const Size(30, 30),
     );
+    addRect(c, id: 'cc', position: const Offset(0, 200));
+    c.read(selectionControllerProvider.notifier).select('a');
+    c.read(selectionControllerProvider.notifier).add('b');
+    c.read(selectionControllerProvider.notifier).add('cc');
+
+    c.read(alignmentControllerProvider).distribute(DistributeAxis.vertical);
+
+    final doc = c.read(documentControllerProvider);
+    expect(doc.layerById('a')!.transform.position.dy, 0);
+    expect(doc.layerById('cc')!.transform.position.dy, 200);
+    expect(doc.layerById('b')!.transform.position.dy, closeTo(110, 0.001));
   });
 
   test('no-op when fewer than two movable layers selected', () {

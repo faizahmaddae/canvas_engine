@@ -44,10 +44,7 @@ class SetLayerVisibilityCommand extends EditorCommand {
   EditorCommand invert(EditorDocument before) {
     final prev = before.layerById(layerId);
     if (prev == null) return _NoopLayerCommand.instance;
-    return SetLayerVisibilityCommand(
-      layerId: layerId,
-      visible: prev.visible,
-    );
+    return SetLayerVisibilityCommand(layerId: layerId, visible: prev.visible);
   }
 }
 
@@ -83,10 +80,7 @@ class SetLayerLockCommand extends EditorCommand {
 /// drag are routed through `DocumentController.liveReplace` to keep
 /// the undo stack tidy).
 class SetLayerOpacityCommand extends EditorCommand {
-  const SetLayerOpacityCommand({
-    required this.layerId,
-    required this.opacity,
-  });
+  const SetLayerOpacityCommand({required this.layerId, required this.opacity});
 
   final String layerId;
   final double opacity;
@@ -108,6 +102,41 @@ class SetLayerOpacityCommand extends EditorCommand {
     final prev = before.layerById(layerId);
     if (prev == null) return _NoopLayerCommand.instance;
     return SetLayerOpacityCommand(layerId: layerId, opacity: prev.opacity);
+  }
+}
+
+/// Sets the optional display name for a layer. Empty / whitespace-only
+/// names are normalised to `null`, which preserves the existing default
+/// naming behaviour in the layers panel and avoids serialising empty names.
+class SetLayerNameCommand extends EditorCommand {
+  const SetLayerNameCommand({required this.layerId, required this.name});
+
+  final String layerId;
+  final String? name;
+
+  String? get _normalisedName {
+    final trimmed = name?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    return trimmed;
+  }
+
+  @override
+  String get label => 'Rename layer';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer == null) return doc;
+    final nextName = _normalisedName;
+    if (layer.name == nextName) return doc;
+    return doc.replaceLayer(layer.withName(nextName));
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) {
+    final prev = before.layerById(layerId);
+    if (prev == null) return _NoopLayerCommand.instance;
+    return SetLayerNameCommand(layerId: layerId, name: prev.name);
   }
 }
 

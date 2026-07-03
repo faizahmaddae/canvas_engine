@@ -122,7 +122,10 @@ class InlineColorBody extends StatelessWidget {
               children: [
                 if (compactRecents) ...[
                   Padding(
-                    padding: const EdgeInsets.only(left: 4, right: 10),
+                    padding: const EdgeInsetsDirectional.only(
+                      start: 4,
+                      end: 10,
+                    ),
                     child: Text(
                       context.l10n.recentLabel,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -130,7 +133,7 @@ class InlineColorBody extends StatelessWidget {
                           context,
                         ).colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
                         fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
@@ -188,13 +191,13 @@ class _GroupLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsetsDirectional.only(start: 4),
       child: Text(
         text,
         style: theme.textTheme.labelSmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
           fontWeight: FontWeight.w600,
-          letterSpacing: 0.2,
+          letterSpacing: 0,
         ),
       ),
     );
@@ -334,7 +337,7 @@ class _CurrentColorStrip extends StatelessWidget {
           style: theme.textTheme.bodyMedium?.copyWith(
             fontFeatures: const [FontFeature.tabularFigures()],
             fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
+            letterSpacing: 0,
             color: scheme.onSurface,
           ),
         ),
@@ -367,7 +370,7 @@ class _CustomColorPill extends StatelessWidget {
           onTap();
         },
         child: Container(
-          padding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
+          padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 12, 6),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
             border: Border.all(

@@ -80,6 +80,14 @@ class _LayerActionsSheet extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.drive_file_rename_outline_rounded),
+            title: Text(l10n.renameAction),
+            onTap: () async {
+              await LayerActions.rename(context, parentRef, layer);
+              if (context.mounted) Navigator.of(context).pop();
+            },
+          ),
+          ListTile(
             enabled: canForward,
             leading: const Icon(Icons.flip_to_front_rounded),
             title: Text(l10n.bringForwardAction),

@@ -1,41 +1,29 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart' as picker;
-import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../../core/utils/haptics.dart';
-import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/l10n.dart';
-import '../../application/document_controller.dart';
-import '../../application/selection_controller.dart';
+import '../../application/context_toolbar_controller.dart';
 import '../../crop/application/crop_controller.dart';
-import '../../engine/commands/image_commands.dart';
 import '../../engine/modules/image/image_layer.dart';
+import '../../presentation/widgets/selected_layer_actions_sheet.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
 import '../application/image_tool_controller.dart';
+import 'image_replace_flow.dart';
 
-const _uuid = Uuid();
-
-// Strip order and panel-vs-non-panel classification now live on
-// [ImageToolSlot]. Use `ImageToolSlot.values` for the strip order
-// and `kImagePanelSlotOrder` for the swipe-eligible subset.
+// Panel-vs-non-panel classification lives on [ImageToolSlot]; this
+// widget orders the highest-frequency layer controls first while
+// [kImagePanelSlotOrder] keeps sibling-swipe stable inside panels.
 
 /// Bottom toolbar shown when an [ImageLayer] is the current
 /// selection. Same dock grammar as the text/paint mode toolbars
 /// (shared `SlotStrip` → `DockToolTile`) so the active tab gets the
-/// soft-primary tint + ring + glow treatment automatically.
+/// same soft-primary tint treatment automatically.
 ///
-/// Phase 1 wires only the **Replace** tab to a real action (re-uses
-/// `image_picker`). The remaining tabs (Style, Crop, Shape, Border,
-/// Shadow, Adjust) are visible but disabled until their
-/// implementations land — this keeps the surface discoverable
-/// without shipping snackbar placeholders that pretend to do
-/// something.
+/// Crop and Replace are one-shot actions: Crop opens the full-screen
+/// crop surface, and Replace / Relink opens the shared image picker
+/// flow. Panel-bearing tabs still expand through [ImageToolController].
 class ImageModeToolbar extends ConsumerWidget {
   const ImageModeToolbar({super.key, required this.layer});
 
@@ -46,25 +34,91 @@ class ImageModeToolbar extends ConsumerWidget {
     final openSlot = ref.watch(
       imageToolControllerProvider.select((s) => s.openSlot),
     );
+    final contextPanel = ref.watch(contextToolbarControllerProvider);
     final imageCtrl = ref.read(imageToolControllerProvider.notifier);
+    final contextCtrl = ref.read(contextToolbarControllerProvider.notifier);
     final l10n = context.l10n;
     final slots = <ToolbarSlot>[
       ToolbarSlot(
         id: ImageToolSlot.style.name,
         icon: Icons.auto_awesome_outlined,
         label: l10n.styleTool,
-        onTap: () => imageCtrl.toggleSlot(ImageToolSlot.style),
+        onTap: () {
+          contextCtrl.closePanel();
+          imageCtrl.toggleSlot(ImageToolSlot.style);
+        },
+      ),
+      ToolbarSlot(
+        id: ImageToolSlot.border.name,
+        icon: Icons.border_outer_rounded,
+        label: l10n.borderTool,
+        onTap: () {
+          contextCtrl.closePanel();
+          imageCtrl.toggleSlot(ImageToolSlot.border);
+        },
+      ),
+      ToolbarSlot(
+        id: ImageToolSlot.shadow.name,
+        icon: Icons.layers_outlined,
+        label: l10n.shadowTool,
+        onTap: () {
+          contextCtrl.closePanel();
+          imageCtrl.toggleSlot(ImageToolSlot.shadow);
+        },
+      ),
+      ToolbarSlot(
+        id: 'opacity',
+        icon: Icons.opacity,
+        label: l10n.opacityLabel,
+        onTap: () {
+          imageCtrl.closePanel();
+          contextCtrl.toggle(ContextToolPanel.opacity);
+        },
+      ),
+      ToolbarSlot(
+        id: ImageToolSlot.replace.name,
+        icon: Icons.swap_horiz_rounded,
+        label: imageReplacementActionLabel(context, layer),
+        onTap: () {
+          contextCtrl.closePanel();
+          replaceImageLayer(
+            context,
+            ref,
+            layer,
+            debugLabel: 'imageMode/replaceImageLayer',
+          );
+        },
+      ),
+      ToolbarSlot(
+        id: 'more',
+        icon: Icons.more_horiz_rounded,
+        label: l10n.moreActionsSemantics,
+        onTap: () {
+          imageCtrl.closePanel();
+          contextCtrl.closePanel();
+          final scaffold = Scaffold.maybeOf(context);
+          showSelectedLayerActionsSheet(
+            context,
+            ref,
+            layer,
+            onOpenLayers: scaffold == null
+                ? null
+                : () => scaffold.openEndDrawer(),
+          );
+        },
       ),
       ToolbarSlot(
         id: ImageToolSlot.crop.name,
         icon: Icons.crop_rotate_rounded,
-        label: l10n.cropTool,
+        label: l10n.cropImageAction,
+        tier: SlotTier.tier2,
         // Crop is a full-screen mode — it does NOT toggle the
         // dock's expanded slot. Instead we open the centralised
         // [CropModeOverlay] which is the same surface launched
         // by the main toolbar's Crop button.
         onTap: () {
           EditorHaptics.tap();
+          contextCtrl.closePanel();
           // Close any other open dock slot first so leaving crop
           // mode doesn't reveal a stale panel.
           imageCtrl.closePanel();
@@ -81,136 +135,48 @@ class ImageModeToolbar extends ConsumerWidget {
         id: ImageToolSlot.shape.name,
         icon: Icons.crop_square_rounded,
         label: l10n.shapeTool,
-        onTap: () => imageCtrl.toggleSlot(ImageToolSlot.shape),
-      ),
-      ToolbarSlot(
-        id: ImageToolSlot.border.name,
-        icon: Icons.border_outer_rounded,
-        label: l10n.borderTool,
-        onTap: () => imageCtrl.toggleSlot(ImageToolSlot.border),
-      ),
-      ToolbarSlot(
-        id: ImageToolSlot.shadow.name,
-        icon: Icons.layers_outlined,
-        label: l10n.shadowTool,
-        onTap: () => imageCtrl.toggleSlot(ImageToolSlot.shadow),
+        tier: SlotTier.tier2,
+        onTap: () {
+          contextCtrl.closePanel();
+          imageCtrl.toggleSlot(ImageToolSlot.shape);
+        },
       ),
       ToolbarSlot(
         id: ImageToolSlot.adjust.name,
         icon: Icons.tune_rounded,
         label: l10n.adjustTool,
-        onTap: () => imageCtrl.toggleSlot(ImageToolSlot.adjust),
+        tier: SlotTier.tier2,
+        onTap: () {
+          contextCtrl.closePanel();
+          imageCtrl.toggleSlot(ImageToolSlot.adjust);
+        },
       ),
       ToolbarSlot(
         id: ImageToolSlot.effects.name,
         icon: Icons.layers_rounded,
         label: l10n.effectsTool,
-        onTap: () => imageCtrl.toggleSlot(ImageToolSlot.effects),
+        tier: SlotTier.tier2,
+        onTap: () {
+          contextCtrl.closePanel();
+          imageCtrl.toggleSlot(ImageToolSlot.effects);
+        },
       ),
       ToolbarSlot(
         id: ImageToolSlot.filters.name,
         icon: Icons.auto_fix_high_outlined,
         label: l10n.filtersTool,
-        onTap: () => imageCtrl.toggleSlot(ImageToolSlot.filters),
-      ),
-      ToolbarSlot(
-        id: ImageToolSlot.replace.name,
-        icon: Icons.swap_horiz_rounded,
-        label: l10n.replaceTool,
-        onTap: () => _replace(context, ref),
+        tier: SlotTier.tier2,
+        onTap: () {
+          contextCtrl.closePanel();
+          imageCtrl.toggleSlot(ImageToolSlot.filters);
+        },
       ),
     ];
-    return SlotStrip(slots: slots, activeId: openSlot?.name);
-  }
-
-  Future<void> _replace(BuildContext context, WidgetRef ref) async {
-    EditorHaptics.tap();
-    final source = await _pickImageSource(context);
-    if (source == null || !context.mounted) return;
-
-    final pick = picker.ImagePicker();
-    final picker.XFile? picked;
-    try {
-      picked = await pick.pickImage(source: source, imageQuality: 92);
-    } catch (e, st) {
-      debugLogError('imageMode/pickImage', e, st);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            userMessageFor(
-              e,
-              fallback: context.l10n.couldntOpenPhoto,
-              permissionDeniedMessage: context.l10n.allowPhotoAccessSettings,
-              genericMessage: context.l10n.somethingWentWrong,
-            ),
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-    if (picked == null) return;
-
-    final stable = await _persistPickedImage(picked.path);
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(
-          ReplaceImageSourceCommand(
-            layerId: layer.id,
-            source: ImageSource.file(stable),
-          ),
-        );
-    // Keep the same layer selected so the user stays in the Image
-    // sub-tool after replace.
-    ref.read(selectionControllerProvider.notifier).select(layer.id);
-  }
-
-  Future<picker.ImageSource?> _pickImageSource(BuildContext context) {
-    final l10n = context.l10n;
-    return showModalBottomSheet<picker.ImageSource>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: Text(l10n.galleryAction),
-                onTap: () {
-                  EditorHaptics.tap();
-                  Navigator.pop(ctx, picker.ImageSource.gallery);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_camera_outlined),
-                title: Text(l10n.cameraAction),
-                onTap: () {
-                  EditorHaptics.tap();
-                  Navigator.pop(ctx, picker.ImageSource.camera);
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
+    return SlotStrip(
+      slots: slots,
+      activeId: contextPanel == ContextToolPanel.opacity
+          ? 'opacity'
+          : openSlot?.name,
     );
-  }
-
-  /// Mirror of `_addImage`'s persistence step: copy out of the temp
-  /// picker dir into app-documents so the path survives restart.
-  Future<String> _persistPickedImage(String tempPath) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final folder = Directory('${dir.path}/imported_images');
-    if (!await folder.exists()) await folder.create(recursive: true);
-    final ext = tempPath.contains('.')
-        ? tempPath.substring(tempPath.lastIndexOf('.'))
-        : '.png';
-    final dest = '${folder.path}/${_uuid.v4()}$ext';
-    await File(tempPath).copy(dest);
-    return dest;
   }
 }

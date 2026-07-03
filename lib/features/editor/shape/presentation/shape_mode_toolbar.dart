@@ -2,26 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/l10n.dart';
+import '../../application/context_toolbar_controller.dart';
 import '../../engine/modules/shape/shape_layer.dart';
+import '../../presentation/widgets/selected_layer_actions_sheet.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
 import '../application/shape_tool_controller.dart';
 
-// Strip order and panel-vs-non-panel classification now live on
-// [ShapeToolSlot]. Use `ShapeToolSlot.values` for the strip order
-// and `kShapePanelSlotOrder` for the swipe-eligible subset.
+// Panel-vs-non-panel classification lives on [ShapeToolSlot]; this
+// widget orders the highest-frequency layer controls first while
+// [kShapePanelSlotOrder] keeps sibling-swipe stable inside panels.
 
 /// Bottom toolbar shown when a [ShapeLayer] is the current
 /// selection. Mirrors [ImageModeToolbar]: shared `SlotStrip` →
 /// `DockToolTile` grammar so the active tab gets the same primary
-/// tint + glow treatment.
+/// tint treatment.
 ///
 /// Tabs:
-///   * **Style** — fill colour, opacity, corner radius, presets.
+///   * **Color** — fill colour, opacity, corner radius, presets.
 ///   * **Border** — outline colour + thickness.
 ///   * **Shadow** — preset row + compact colour + Adjust precisely
 ///     (direction pad / blur / opacity).
-///   * **Replace** — opens the shape picker as a one-shot action.
+///   * **Replace** — secondary one-shot action behind the main tools.
 class ShapeModeToolbar extends ConsumerWidget {
   const ShapeModeToolbar({
     super.key,
@@ -40,38 +42,84 @@ class ShapeModeToolbar extends ConsumerWidget {
     final openSlot = ref.watch(
       shapeToolControllerProvider.select((s) => s.openSlot),
     );
+    final contextPanel = ref.watch(contextToolbarControllerProvider);
     final ctrl = ref.read(shapeToolControllerProvider.notifier);
+    final contextCtrl = ref.read(contextToolbarControllerProvider.notifier);
     final l10n = context.l10n;
     final slots = <ToolbarSlot>[
       ToolbarSlot(
         id: ShapeToolSlot.style.name,
         icon: Icons.palette_rounded,
-        label: l10n.styleTool,
-        onTap: () => ctrl.toggleSlot(ShapeToolSlot.style),
+        label: l10n.colorLabel,
+        onTap: () {
+          contextCtrl.closePanel();
+          ctrl.toggleSlot(ShapeToolSlot.style);
+        },
       ),
       ToolbarSlot(
         id: ShapeToolSlot.border.name,
         icon: Icons.border_outer_rounded,
         label: l10n.borderTool,
-        onTap: () => ctrl.toggleSlot(ShapeToolSlot.border),
+        onTap: () {
+          contextCtrl.closePanel();
+          ctrl.toggleSlot(ShapeToolSlot.border);
+        },
       ),
       ToolbarSlot(
         id: ShapeToolSlot.shadow.name,
         icon: Icons.blur_on_rounded,
         label: l10n.shadowTool,
-        onTap: () => ctrl.toggleSlot(ShapeToolSlot.shadow),
+        onTap: () {
+          contextCtrl.closePanel();
+          ctrl.toggleSlot(ShapeToolSlot.shadow);
+        },
       ),
-      // Replace is a one-shot action (opens the picker) rather than
-      // an inline panel — onPickReplace is wired by editor_screen via
-      // a callback baked into the slot. We still expose it as a
-      // toolbar slot so it visually matches the other tabs.
+      ToolbarSlot(
+        id: 'opacity',
+        icon: Icons.opacity,
+        label: l10n.opacityLabel,
+        onTap: () {
+          ctrl.closePanel();
+          contextCtrl.toggle(ContextToolPanel.opacity);
+        },
+      ),
+      ToolbarSlot(
+        id: 'more',
+        icon: Icons.more_horiz_rounded,
+        label: l10n.moreActionsSemantics,
+        onTap: () {
+          ctrl.closePanel();
+          contextCtrl.closePanel();
+          final scaffold = Scaffold.maybeOf(context);
+          showSelectedLayerActionsSheet(
+            context,
+            ref,
+            layer,
+            onOpenLayers: scaffold == null
+                ? null
+                : () => scaffold.openEndDrawer(),
+          );
+        },
+      ),
+      // Replace is a one-shot secondary action (opens the picker)
+      // rather than an inline panel. Keeping it after the divider
+      // preserves access without crowding the core styling tabs.
       ToolbarSlot(
         id: ShapeToolSlot.replace.name,
         icon: Icons.swap_horiz_rounded,
         label: l10n.replaceTool,
-        onTap: onReplaceTap,
+        tier: SlotTier.tier2,
+        onTap: () {
+          contextCtrl.closePanel();
+          onReplaceTap();
+        },
       ),
     ];
-    return SlotStrip(slots: slots, activeId: openSlot?.name);
+    return SlotStrip(
+      slots: slots,
+      activeId: contextPanel == ContextToolPanel.opacity
+          ? 'opacity'
+          : openSlot?.name,
+    );
   }
 }

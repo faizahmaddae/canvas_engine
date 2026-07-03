@@ -61,10 +61,12 @@ void main() {
     test('openCrop seeds draft from current layer cropRect', () {
       container
           .read(documentControllerProvider.notifier)
-          .execute(const SetImageCropCommand(
-            layerId: 'img1',
-            cropRect: Rect.fromLTRB(0.1, 0.2, 0.9, 0.8),
-          ));
+          .execute(
+            const SetImageCropCommand(
+              layerId: 'img1',
+              cropRect: Rect.fromLTRB(0.1, 0.2, 0.9, 0.8),
+            ),
+          );
       container.read(cropControllerProvider.notifier).openCrop('img1');
       final s = container.read(cropControllerProvider);
       expect(s.active, isTrue);
@@ -84,8 +86,29 @@ void main() {
       expect(readLayer().cropRect, ImageLayer.fullCrop);
     });
 
+    test('cancelCrop restores the previous image crop state', () {
+      const original = Rect.fromLTRB(0.1, 0.2, 0.9, 0.8);
+      container
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetImageCropCommand(layerId: 'img1', cropRect: original),
+          );
+
+      container.read(cropControllerProvider.notifier).openCrop('img1');
+      container
+          .read(cropControllerProvider.notifier)
+          .updateDraft(const Rect.fromLTRB(0.2, 0.2, 0.7, 0.7));
+      container.read(cropControllerProvider.notifier).cancelCrop();
+
+      expect(container.read(cropControllerProvider).active, isFalse);
+      expect(readLayer().cropRect, original);
+      expect(readLayer().transform.size, const Size(800, 400));
+    });
+
     test('openCrop on non-image layer leaves session inactive', () {
-      container.read(cropControllerProvider.notifier).openCrop('does-not-exist');
+      container
+          .read(cropControllerProvider.notifier)
+          .openCrop('does-not-exist');
       expect(container.read(cropControllerProvider).active, isFalse);
     });
   });
@@ -161,10 +184,7 @@ void main() {
       for (var iter = 0; iter < 20; iter++) {
         for (final a in presets) {
           container.read(cropControllerProvider.notifier).setAspectRatio(a);
-          expect(
-            container.read(cropControllerProvider).draftCrop,
-            expected(a),
-          );
+          expect(container.read(cropControllerProvider).draftCrop, expected(a));
         }
       }
     });
@@ -175,10 +195,7 @@ void main() {
           .read(cropControllerProvider.notifier)
           .updateDraft(const Rect.fromLTRB(0.05, 0.05, 0.4, 0.4));
       container.read(cropControllerProvider.notifier).setAspectRatio(1.0);
-      expect(
-        container.read(cropControllerProvider).draftCrop,
-        expected(1.0),
-      );
+      expect(container.read(cropControllerProvider).draftCrop, expected(1.0));
     });
 
     test('manual crop then 4:5 returns deterministic centred 4:5', () {
@@ -187,10 +204,7 @@ void main() {
           .read(cropControllerProvider.notifier)
           .updateDraft(const Rect.fromLTRB(0.1, 0.6, 0.3, 0.8));
       container.read(cropControllerProvider.notifier).setAspectRatio(4 / 5);
-      expect(
-        container.read(cropControllerProvider).draftCrop,
-        expected(4 / 5),
-      );
+      expect(container.read(cropControllerProvider).draftCrop, expected(4 / 5));
     });
 
     test('Free preserves current cropRect and clears lock only', () {
@@ -302,9 +316,10 @@ void main() {
       doc.undo(); // pops AddLayerCommand
       // After undoing AddLayerCommand the layer is gone.
       expect(
-        container.read(documentControllerProvider).layers.where(
-              (l) => l.id == 'img1',
-            ),
+        container
+            .read(documentControllerProvider)
+            .layers
+            .where((l) => l.id == 'img1'),
         isEmpty,
       );
     });
@@ -463,8 +478,11 @@ void main() {
           dy: 0.05,
           aspect: 1.0,
         );
-        expect(next.width, closeTo(next.height, 1e-9),
-            reason: 'handle $h should preserve 1:1 aspect');
+        expect(
+          next.width,
+          closeTo(next.height, 1e-9),
+          reason: 'handle $h should preserve 1:1 aspect',
+        );
       }
     });
   });

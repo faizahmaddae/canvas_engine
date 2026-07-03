@@ -25,7 +25,11 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:canvas_engine/features/editor/engine/export/document_png_exporter.dart';
+import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
+import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
+import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/engine/rendering/document_view.dart';
+import 'package:canvas_engine/features/editor/engine/serialization/document_codec.dart';
 import 'package:canvas_engine/features/templates/data/asset_template_repository.dart';
 import 'package:canvas_engine/features/templates/data/template_manifest.dart';
 import 'package:canvas_engine/features/templates/domain/template.dart';
@@ -120,9 +124,11 @@ void main() {
     templatesById = {for (final template in templates) template.id: template};
   });
 
-  Future<Uint8List> exportTemplate(WidgetTester tester, Template t) async {
+  Future<Uint8List> exportDocument(
+    WidgetTester tester,
+    EditorDocument doc,
+  ) async {
     final boundaryKey = GlobalKey();
-    final doc = t.build();
 
     // Make the test surface large enough to host the document at
     // native pixel size — production uses an off-screen overlay
@@ -177,6 +183,9 @@ void main() {
     return bytes!;
   }
 
+  Future<Uint8List> exportTemplate(WidgetTester tester, Template t) =>
+      exportDocument(tester, t.build());
+
   Future<ui.Image> decodePng(WidgetTester tester, Uint8List bytes) async {
     final image = await tester.runAsync(() async {
       final codec = await ui.instantiateImageCodec(bytes);
@@ -225,6 +234,81 @@ void main() {
       );
     });
   }
+
+  group('synthetic Persian and mixed-script exports', () {
+    final cases = <({String id, String content, TextDirectionMode mode})>[
+      (
+        id: 'synthetic_persian_auto',
+        content: 'سلام دنیا\nامروز روشن است',
+        mode: TextDirectionMode.auto,
+      ),
+      (
+        id: 'synthetic_mixed_auto',
+        content: 'Sale ۵۰٪ برای امروز',
+        mode: TextDirectionMode.auto,
+      ),
+      (
+        id: 'synthetic_mixed_forced_rtl',
+        content: 'Sale ۵۰٪ برای امروز',
+        mode: TextDirectionMode.rtl,
+      ),
+      (
+        id: 'synthetic_persian_forced_ltr',
+        content: 'سلام 2026 launch',
+        mode: TextDirectionMode.ltr,
+      ),
+    ];
+
+    for (final c in cases) {
+      testWidgets('exports ${c.id} and preserves text direction in codec', (
+        tester,
+      ) async {
+        final doc = EditorDocument(
+          width: 420,
+          height: 420,
+          layers: [
+            TextLayer(
+              id: c.id,
+              transform: const LayerTransform(
+                position: Offset(32, 96),
+                size: Size(356, 180),
+              ),
+              content: c.content,
+              style: const TextStyleSpec(
+                fontFamily: 'Vazir_Regular',
+                fontSize: 42,
+                color: Color(0xFF111111),
+                alignment: TextAlign.center,
+                lineHeight: 1.25,
+              ),
+              resizeMode: TextResizeMode.resizeBox,
+              textDirectionMode: c.mode,
+            ),
+          ],
+        );
+
+        final restored =
+            DocumentCodec.decode(DocumentCodec.encode(doc)).layerById(c.id)!
+                as TextLayer;
+        expect(restored.content, c.content);
+        expect(restored.textDirectionMode, c.mode);
+
+        final bytes = await exportDocument(tester, doc);
+        expect(
+          bytes.sublist(0, 8),
+          equals(<int>[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]),
+        );
+        expect(bytes.length, greaterThan(1000));
+
+        final image = await decodePng(tester, bytes);
+        expect(image.width, doc.width.round());
+        expect(image.height, doc.height.round());
+        image.dispose();
+
+        File('${outputDir.path}/${c.id}.png').writeAsBytesSync(bytes);
+      });
+    }
+  });
 }
 
 class _MemoryAssetBundle extends CachingAssetBundle {

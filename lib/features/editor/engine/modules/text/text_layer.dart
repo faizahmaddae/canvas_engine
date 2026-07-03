@@ -12,6 +12,7 @@ import '../../effects/editor_effect.dart';
 import 'text_style_spec.dart';
 
 export 'text_style_spec.dart';
+export 'text_direction_utils.dart';
 
 /// How a [TextLayer] reacts when its bounding box is resized.
 ///
@@ -54,21 +55,23 @@ class TextLayer extends EditorLayer {
     required this.style,
     this.resizeMode = TextResizeMode.scaleText,
     this.kind = TextLayerKind.normal,
+    this.textDirectionMode = TextDirectionMode.auto,
     super.name,
     super.visible,
     super.locked,
     super.opacity,
     super.effects,
   }) : super(
-          capabilities: resizeMode == TextResizeMode.scaleText
-              ? LayerCapabilities.textScale
-              : LayerCapabilities.textBox,
-        );
+         capabilities: resizeMode == TextResizeMode.scaleText
+             ? LayerCapabilities.textScale
+             : LayerCapabilities.textBox,
+       );
 
   final String content;
   final TextStyleSpec style;
   final TextResizeMode resizeMode;
   final TextLayerKind kind;
+  final TextDirectionMode textDirectionMode;
 
   /// Convenience: true when this layer is an emoji sticker so
   /// callers don't have to reach for the enum value.
@@ -89,6 +92,7 @@ class TextLayer extends EditorLayer {
     TextStyleSpec? style,
     TextResizeMode? resizeMode,
     TextLayerKind? kind,
+    TextDirectionMode? textDirectionMode,
     Object? name = _kCopySentinel,
     bool? visible,
     bool? locked,
@@ -106,6 +110,7 @@ class TextLayer extends EditorLayer {
       style: style ?? this.style,
       resizeMode: resizeMode ?? this.resizeMode,
       kind: kind ?? this.kind,
+      textDirectionMode: textDirectionMode ?? this.textDirectionMode,
       name: identical(name, _kCopySentinel) ? this.name : name as String?,
       visible: visible ?? this.visible,
       locked: locked ?? this.locked,
@@ -128,28 +133,31 @@ class TextLayer extends EditorLayer {
   EditorLayer withOpacity(double opacity) =>
       copyAll(opacity: opacity.clamp(0.0, 1.0));
 
+  @override
+  EditorLayer withName(String? name) => copyAll(name: name);
+
   TextLayer copyWith({
     String? content,
     TextStyleSpec? style,
     TextResizeMode? resizeMode,
     TextLayerKind? kind,
+    TextDirectionMode? textDirectionMode,
     String? name,
-  }) =>
-      copyAll(
-        content: content,
-        style: style,
-        resizeMode: resizeMode,
-        kind: kind,
-        name: name ?? this.name,
-      );
+  }) => copyAll(
+    content: content,
+    style: style,
+    resizeMode: resizeMode,
+    kind: kind,
+    textDirectionMode: textDirectionMode,
+    name: name ?? this.name,
+  );
 
   static const Object _kCopySentinel = Object();
 
   @override
   // 2 bytes per UTF-16 code unit. Style is small and bounded so it
   // folds into the base; only [content] scales with user input.
-  int get estimatedByteSize =>
-      EditorLayer.kLayerBaseBytes + content.length * 2;
+  int get estimatedByteSize => EditorLayer.kLayerBaseBytes + content.length * 2;
 
   @override
   Widget buildContent(BuildContext context) {
@@ -161,12 +169,14 @@ class TextLayer extends EditorLayer {
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        ...baseJson(),
-        'content': content,
-        'style': style.toJson(),
-        'resizeMode': resizeMode.name,
-        if (kind != TextLayerKind.normal) 'kind': kind.name,
-      };
+    ...baseJson(),
+    'content': content,
+    'style': style.toJson(),
+    'resizeMode': resizeMode.name,
+    if (kind != TextLayerKind.normal) 'kind': kind.name,
+    if (textDirectionMode != TextDirectionMode.auto)
+      'textDirectionMode': textDirectionMode.name,
+  };
 
   /// Decode a [TextLayer] from JSON produced by [toJson]. Unknown /
   /// missing `resizeMode` falls back to [TextResizeMode.scaleText] so
@@ -199,6 +209,13 @@ class TextLayer extends EditorLayer {
             orElse: () => TextLayerKind.normal,
           )
         : TextLayerKind.normal;
+    final directionName = json['textDirectionMode'];
+    final textDirectionMode = directionName is String
+        ? TextDirectionMode.values.firstWhere(
+            (m) => m.name == directionName,
+            orElse: () => TextDirectionMode.auto,
+          )
+        : TextDirectionMode.auto;
     return TextLayer(
       id: id,
       transform: LayerTransform.fromJson(
@@ -210,6 +227,7 @@ class TextLayer extends EditorLayer {
           : const TextStyleSpec(),
       resizeMode: resizeMode,
       kind: kind,
+      textDirectionMode: textDirectionMode,
       name: json['name'] as String?,
       visible: json['visible'] as bool? ?? true,
       locked: json['locked'] as bool? ?? false,
@@ -255,11 +273,18 @@ class TextLayer extends EditorLayer {
           other.content == content &&
           other.style == style &&
           other.resizeMode == resizeMode &&
-          other.kind == kind);
+          other.kind == kind &&
+          other.textDirectionMode == textDirectionMode);
 
   @override
-  int get hashCode =>
-      Object.hash(super.hashCode, content, style, resizeMode, kind);
+  int get hashCode => Object.hash(
+    super.hashCode,
+    content,
+    style,
+    resizeMode,
+    kind,
+    textDirectionMode,
+  );
 }
 
 /// Read-only text layer content.
@@ -339,7 +364,10 @@ class _TextContent extends StatelessWidget {
       fontWeight: style.fontWeight,
       letterSpacing: style.letterSpacing,
       lineHeight: style.lineHeight,
-      textDirection: textDirectionForContent(layer.content),
+      textDirection: textDirectionForContent(
+        layer.content,
+        mode: layer.textDirectionMode,
+      ),
     );
     if (image == null) {
       // Empty content (or rasterisation failed). Reserve the box so
@@ -445,13 +473,17 @@ class _TextContent extends StatelessWidget {
     // covers the bounding box behind the text.
     switch (layer.resizeMode) {
       case TextResizeMode.scaleText:
+        final direction = textDirectionForContent(
+          layer.content,
+          mode: layer.textDirectionMode,
+        );
         final text = _withOutline(
           layer.content,
           textAlign: style.alignment,
           softWrap: false,
           fillStyle: textStyle,
           strokeStyle: outlineStyle,
-          textDirection: textDirectionForContent(layer.content),
+          textDirection: direction,
         );
         return SizedBox.fromSize(
           size: transform.size,
@@ -465,23 +497,24 @@ class _TextContent extends StatelessWidget {
           ),
         );
       case TextResizeMode.resizeBox:
+        final direction = textDirectionForContent(
+          layer.content,
+          mode: layer.textDirectionMode,
+        );
         final text = _withOutline(
           layer.content,
           textAlign: style.alignment,
           softWrap: true,
           fillStyle: textStyle,
           strokeStyle: outlineStyle,
-          textDirection: textDirectionForContent(layer.content),
+          textDirection: direction,
         );
         return SizedBox.fromSize(
           size: transform.size,
           child: _withBackground(
             style,
             ClipRect(
-              child: Align(
-                alignment: layer._align(),
-                child: text,
-              ),
+              child: Align(alignment: layer._align(), child: text),
             ),
           ),
         );
@@ -583,10 +616,7 @@ class TextBackgroundBox extends StatelessWidget {
         radiusPercent: radiusPercent,
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: paddingX,
-          vertical: paddingY,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: paddingX, vertical: paddingY),
         child: child,
       ),
     );
@@ -594,10 +624,7 @@ class TextBackgroundBox extends StatelessWidget {
 }
 
 class _TextBackgroundPainter extends CustomPainter {
-  _TextBackgroundPainter({
-    required this.color,
-    required this.radiusPercent,
-  });
+  _TextBackgroundPainter({required this.color, required this.radiusPercent});
 
   final Color color;
   final double radiusPercent;
@@ -664,8 +691,7 @@ class _TextBackgroundPainter extends CustomPainter {
 ///   across the whole app lifetime.
 class _StickerGlyphRasterCache {
   _StickerGlyphRasterCache._();
-  static final _StickerGlyphRasterCache instance =
-      _StickerGlyphRasterCache._();
+  static final _StickerGlyphRasterCache instance = _StickerGlyphRasterCache._();
 
   /// Rasterisation font size in logical pixels. Picked high enough
   /// that the resulting bitmap stays crisp when [BoxFit.contain]

@@ -79,6 +79,17 @@ void main() {
       expect(out['L0']!.size, const Size(50, 50));
       expect(out['L0']!.rotation, 0.7);
     });
+
+    test('alignToRect aligns a single transform to a target rect', () {
+      final out = engine.alignToRect(
+        t(10, 20, 50, 40),
+        const Rect.fromLTWH(0, 0, 200, 100),
+        AlignAxis.bottom,
+      );
+      expect(out.position.dx, 10);
+      expect(out.position.dy, 60);
+      expect(out.size, const Size(50, 40));
+    });
   });
 
   group('AlignmentEngine.distribute', () {
@@ -105,11 +116,7 @@ void main() {
 
     test('vertical distribute touches only Y', () {
       final out = engine.distribute(
-        mapOf([
-          t(10, 0, 50, 50),
-          t(20, 80, 50, 30),
-          t(30, 200, 50, 50),
-        ]),
+        mapOf([t(10, 0, 50, 50), t(20, 80, 50, 30), t(30, 200, 50, 50)]),
         DistributeAxis.vertical,
       );
       expect(out['L1']!.position.dx, 20);
@@ -117,8 +124,7 @@ void main() {
       expect(out['L1']!.position.dy, closeTo(110, 0.001));
     });
 
-    test('refuses to distribute when inner rects overflow available span',
-        () {
+    test('refuses to distribute when inner rects overflow available span', () {
       // Outer rects flush against each other with no room for inner.
       final input = mapOf([
         t(0, 0, 50, 50),

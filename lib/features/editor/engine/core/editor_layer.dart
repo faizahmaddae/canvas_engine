@@ -78,6 +78,10 @@ abstract class EditorLayer {
   /// Returns a copy with a new [opacity], clamped to `0..1`.
   EditorLayer withOpacity(double opacity);
 
+  /// Returns a copy with a new display [name]. Pass `null` to clear
+  /// the custom name and fall back to the layer type/content default.
+  EditorLayer withName(String? name);
+
   /// Render the layer inside its own local coordinate system (origin at
   /// top-left, extent equal to `transform.size`). The canvas has already
   /// been translated + rotated.
@@ -118,20 +122,20 @@ abstract class EditorLayer {
   /// spread this then add their type-specific fields.
   @protected
   Map<String, dynamic> baseJson() => <String, dynamic>{
-        'type': type,
-        'id': id,
-        'transform': transform.toJson(),
-        if (name != null) 'name': name,
-        if (!visible) 'visible': false,
-        if (locked) 'locked': true,
-        // Only persist when non-default so legacy round-trips stay
-        // byte-identical and existing thumbnails / hashes are stable.
-        if (opacity < 1.0) 'opacity': opacity,
-        // Same omit-when-default rule for effects: an empty stack
-        // costs zero bytes on disk. This is the gate that keeps the
-        // v2 corpus byte-identical under schema v3.
-        if (effects.isNotEmpty) 'effects': effects.toJson(),
-      };
+    'type': type,
+    'id': id,
+    'transform': transform.toJson(),
+    if (name != null) 'name': name,
+    if (!visible) 'visible': false,
+    if (locked) 'locked': true,
+    // Only persist when non-default so legacy round-trips stay
+    // byte-identical and existing thumbnails / hashes are stable.
+    if (opacity < 1.0) 'opacity': opacity,
+    // Same omit-when-default rule for effects: an empty stack
+    // costs zero bytes on disk. This is the gate that keeps the
+    // v2 corpus byte-identical under schema v3.
+    if (effects.isNotEmpty) 'effects': effects.toJson(),
+  };
 
   /// Helper for subclass `fromJson` factories: returns the decoded
   /// [EffectStack] under the `effects` key, or [EffectStack.empty]
@@ -155,13 +159,13 @@ abstract class EditorLayer {
 
   @override
   int get hashCode => Object.hash(
-        id,
-        transform,
-        capabilities,
-        visible,
-        locked,
-        opacity,
-        name,
-        effects,
-      );
+    id,
+    transform,
+    capabilities,
+    visible,
+    locked,
+    opacity,
+    name,
+    effects,
+  );
 }

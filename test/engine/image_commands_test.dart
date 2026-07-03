@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:canvas_engine/features/editor/engine/commands/image_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
+import 'package:canvas_engine/features/editor/engine/effects/editor_effect.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,14 +14,14 @@ import 'package:flutter_test/flutter_test.dart';
 /// the next style edit.
 void main() {
   ImageLayer makeImage({double opacity = 0.5}) => ImageLayer(
-        id: 'img-1',
-        transform: const LayerTransform(
-          position: Offset(0, 0),
-          size: Size(100, 100),
-        ),
-        source: const ImageSource.asset('stub.png'),
-        opacity: opacity,
-      );
+    id: 'img-1',
+    transform: const LayerTransform(
+      position: Offset(0, 0),
+      size: Size(100, 100),
+    ),
+    source: const ImageSource.asset('stub.png'),
+    opacity: opacity,
+  );
 
   group('ImageLayer command opacity preservation', () {
     test('SetImageBorderCommand preserves non-default opacity', () {
@@ -41,6 +42,73 @@ void main() {
   });
 
   group('ReplaceImageSourceCommand crop preservation on undo', () {
+    test('apply preserves transform, order, opacity, mask, and effects', () {
+      final effects = EffectStack(
+        ImageAdjustments(brightness: 0.2, warmth: 12).toEffectStack(),
+      );
+      final bottom = ImageLayer(
+        id: 'bottom',
+        transform: const LayerTransform(
+          position: Offset(0, 0),
+          size: Size(20, 20),
+        ),
+        source: const ImageSource.asset('bottom.png'),
+      );
+      final target = ImageLayer(
+        id: 'img-1',
+        transform: const LayerTransform(
+          position: Offset(12, 34),
+          size: Size(120, 80),
+          rotation: 0.35,
+        ),
+        source: const ImageSource.asset('a.png'),
+        mask: ImageMask.squircle,
+        borderColor: const Color(0xFF123456),
+        borderWidth: 3,
+        shadowColor: const Color(0xFF654321),
+        shadowBlur: 7,
+        shadowOffset: Offset(4, 5),
+        shadowOpacity: 0.4,
+        cropRect: const Rect.fromLTRB(0.1, 0.2, 0.9, 0.8),
+        filterPreset: ImageFilterPreset.dramatic,
+        opacity: 0.45,
+        effects: effects,
+      );
+      final top = ImageLayer(
+        id: 'top',
+        transform: const LayerTransform(
+          position: Offset(40, 40),
+          size: Size(20, 20),
+        ),
+        source: const ImageSource.asset('top.png'),
+      );
+      final before = EditorDocument.empty
+          .addLayer(bottom)
+          .addLayer(target)
+          .addLayer(top);
+
+      final after = const ReplaceImageSourceCommand(
+        layerId: 'img-1',
+        source: ImageSource.asset('b.png'),
+      ).apply(before);
+      final next = after.layerById('img-1') as ImageLayer;
+
+      expect(after.layers.map((l) => l.id), ['bottom', 'img-1', 'top']);
+      expect(next.source, const ImageSource.asset('b.png'));
+      expect(next.transform, target.transform);
+      expect(next.opacity, target.opacity);
+      expect(next.mask, target.mask);
+      expect(next.borderColor, target.borderColor);
+      expect(next.borderWidth, target.borderWidth);
+      expect(next.shadowColor, target.shadowColor);
+      expect(next.shadowBlur, target.shadowBlur);
+      expect(next.shadowOffset, target.shadowOffset);
+      expect(next.shadowOpacity, target.shadowOpacity);
+      expect(next.filterPreset, target.filterPreset);
+      expect(next.effects, effects);
+      expect(next.cropRect, ImageLayer.fullCrop);
+    });
+
     test('apply resets crop, invert restores both source AND crop', () {
       const originalCrop = Rect.fromLTRB(0.1, 0.1, 0.8, 0.8);
       final layer = ImageLayer(

@@ -135,6 +135,47 @@ class SetTextResizeModeCommand extends EditorCommand {
   }
 }
 
+/// Switch a [TextLayer]'s base paragraph direction mode. Undoable in
+/// one step; optional [transform] lets the caller bundle a re-measure
+/// when a forced direction changes wrapped layout metrics.
+class SetTextDirectionModeCommand extends EditorCommand {
+  const SetTextDirectionModeCommand({
+    required this.layerId,
+    required this.mode,
+    this.transform,
+  });
+
+  final String layerId;
+  final TextDirectionMode mode;
+  final LayerTransform? transform;
+
+  @override
+  String get label => 'Text direction';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer is! TextLayer) return doc;
+    if (layer.textDirectionMode == mode && transform == null) return doc;
+    var next = layer.copyWith(textDirectionMode: mode);
+    if (transform != null) {
+      next = next.withTransform(transform!) as TextLayer;
+    }
+    return doc.replaceLayer(next);
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) {
+    final layer = before.layerById(layerId);
+    if (layer is! TextLayer) return _noop;
+    return SetTextDirectionModeCommand(
+      layerId: layerId,
+      mode: layer.textDirectionMode,
+      transform: transform == null ? null : layer.transform,
+    );
+  }
+}
+
 const EditorCommand _noop = _NoopCommand();
 
 class _NoopCommand extends EditorCommand {

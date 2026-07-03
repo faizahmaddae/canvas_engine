@@ -189,7 +189,6 @@ class TextToolController extends Notifier<TextSession> {
     state = TextSession.initial;
   }
 
-
   void togglePanel() {
     if (state.panelOpen) {
       closePanel();
@@ -218,10 +217,7 @@ class TextToolController extends Notifier<TextSession> {
     if (state.panelExpanded && sameTab) {
       state = state.copyWith(panelExpanded: false);
     } else {
-      state = state.copyWith(
-        activeCategory: category,
-        panelExpanded: true,
-      );
+      state = state.copyWith(activeCategory: category, panelExpanded: true);
     }
   }
 
@@ -324,8 +320,7 @@ class TextToolController extends Notifier<TextSession> {
 
   // ─── style writes ────────────────────────────────────────────────
 
-  void setColor(Color color) =>
-      _applyStyle((s) => s.copyWith(color: color));
+  void setColor(Color color) => _applyStyle((s) => s.copyWith(color: color));
 
   void setFontSize(double size) {
     // Manual size mutation (A+/A−/slider/exact px) clears any
@@ -377,7 +372,11 @@ class TextToolController extends Notifier<TextSession> {
     if (layer == null) return requested;
     if (layer.resizeMode != TextResizeMode.scaleText) return requested;
     if (layer.style.fontSize <= 0) return requested;
-    final natural = _measureNaturalSize(layer.content, layer.style);
+    final natural = _measureNaturalSize(
+      layer.content,
+      layer.style,
+      textDirectionMode: layer.textDirectionMode,
+    );
     if (natural.height <= 0) return requested;
     final scale = layer.transform.size.height / natural.height;
     // Only translate when the visual is *larger* than the natural
@@ -399,22 +398,20 @@ class TextToolController extends Notifier<TextSession> {
   /// Switch the typeface. Pass `null` to fall back to the system
   /// default. Family must match a registered entry in
   /// `pubspec.yaml` / `kFontCatalog`.
-  void setFontFamily(String? family) =>
-      _applyStyle((s) => s.copyWith(fontFamily: family, clearFontFamily: family == null));
+  void setFontFamily(String? family) => _applyStyle(
+    (s) => s.copyWith(fontFamily: family, clearFontFamily: family == null),
+  );
 
   /// Bold is exposed as a boolean toggle in Phase-1; mapped to the
   /// nearest standard weight (w400 / w700) so the change is visually
   /// crisp regardless of the font's available weights.
   void setBold(bool bold) => _applyStyle(
-        (s) => s.copyWith(
-          fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
-        ),
-      );
+    (s) => s.copyWith(fontWeight: bold ? FontWeight.w700 : FontWeight.w400),
+  );
 
-  void setItalic(bool italic) =>
-      _applyStyle((s) => s.copyWith(italic: italic));
+  void setItalic(bool italic) => _applyStyle((s) => s.copyWith(italic: italic));
 
-    void setUnderline(bool underline) =>
+  void setUnderline(bool underline) =>
       _applyStyle((s) => s.copyWith(underline: underline));
 
   void setAlignment(TextAlign alignment) =>
@@ -455,16 +452,22 @@ class TextToolController extends Notifier<TextSession> {
     if (enabled) {
       final doc = ref.read(documentControllerProvider);
       final blur = CanvasSizing.scaleDimension(
-          TextColorResolver.kDefaultShadowBlur, doc);
-      final offset =
-          Offset(0, CanvasSizing.scaleDimension(_referenceShadowOffsetDy, doc));
-      _applyStyle((s) => s.shadowColor == null
-          ? s.copyWith(
-              shadowColor: _defaultShadowColor,
-              shadowBlur: blur,
-              shadowOffset: offset,
-            )
-          : s);
+        TextColorResolver.kDefaultShadowBlur,
+        doc,
+      );
+      final offset = Offset(
+        0,
+        CanvasSizing.scaleDimension(_referenceShadowOffsetDy, doc),
+      );
+      _applyStyle(
+        (s) => s.shadowColor == null
+            ? s.copyWith(
+                shadowColor: _defaultShadowColor,
+                shadowBlur: blur,
+                shadowOffset: offset,
+              )
+            : s,
+      );
     } else {
       _applyStyle((s) => s.copyWith(clearShadow: true));
     }
@@ -489,6 +492,7 @@ class TextToolController extends Notifier<TextSession> {
   // huge canvases without per-size special cases.
 
   static const Color _defaultOutlineColor = Color(0xFF000000);
+
   /// Reference outline width (px against the 1080 canvas). Mirrors
   /// [TextStyleSpec.outlineWidth]'s default so a freshly-toggled
   /// outline matches the spec's at-rest value on the reference
@@ -498,15 +502,18 @@ class TextToolController extends Notifier<TextSession> {
   void setOutlineEnabled(bool enabled) {
     if (enabled) {
       final doc = ref.read(documentControllerProvider);
-      final width =
-          CanvasSizing.scaleDimension(_referenceOutlineWidth, doc)
-              .clamp(0.5, 20.0);
-      _applyStyle((s) => s.outlineColor == null
-          ? s.copyWith(
-              outlineColor: _defaultOutlineColor,
-              outlineWidth: width,
-            )
-          : s);
+      final width = CanvasSizing.scaleDimension(
+        _referenceOutlineWidth,
+        doc,
+      ).clamp(0.5, 20.0);
+      _applyStyle(
+        (s) => s.outlineColor == null
+            ? s.copyWith(
+                outlineColor: _defaultOutlineColor,
+                outlineWidth: width,
+              )
+            : s,
+      );
     } else {
       _applyStyle((s) => s.copyWith(clearOutline: true));
     }
@@ -561,19 +568,23 @@ class TextToolController extends Notifier<TextSession> {
       // reads at the same visual proportion on every canvas. Same
       // clamps as the manual setters so the seed value can never
       // land outside the slider range.
-      final padX =
-          CanvasSizing.scaleDimension(_referenceBackgroundPaddingX, doc)
-              .clamp(0.0, 64.0);
-      final padY =
-          CanvasSizing.scaleDimension(_referenceBackgroundPaddingY, doc)
-              .clamp(0.0, 64.0);
-      _applyStyle((s) => s.backgroundColor == null
-          ? s.copyWith(
-              backgroundColor: _defaultBackgroundFor(s.color),
-              backgroundPaddingX: padX,
-              backgroundPaddingY: padY,
-            )
-          : s);
+      final padX = CanvasSizing.scaleDimension(
+        _referenceBackgroundPaddingX,
+        doc,
+      ).clamp(0.0, 64.0);
+      final padY = CanvasSizing.scaleDimension(
+        _referenceBackgroundPaddingY,
+        doc,
+      ).clamp(0.0, 64.0);
+      _applyStyle(
+        (s) => s.backgroundColor == null
+            ? s.copyWith(
+                backgroundColor: _defaultBackgroundFor(s.color),
+                backgroundPaddingX: padX,
+                backgroundPaddingY: padY,
+              )
+            : s,
+      );
     } else {
       _applyStyle((s) => s.copyWith(clearBackground: true));
     }
@@ -653,7 +664,9 @@ class TextToolController extends Notifier<TextSession> {
       ref.read(liveOverlayProvider.notifier).updateAddedLayer(updated);
       return;
     }
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           UpdateTextCommand(
             layerId: layer.id,
             // style-only edit: leave content null so the command's
@@ -670,7 +683,9 @@ class TextToolController extends Notifier<TextSession> {
   void setContent(String content) {
     final layer = selectedTextLayer();
     if (layer == null || content == layer.content) return;
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           UpdateTextCommand(
             layerId: layer.id,
             // content-only edit: leave style null so this never merges
@@ -776,7 +791,9 @@ class TextToolController extends Notifier<TextSession> {
     // "committed + in-flight override" to "committed (with the new
     // style baked in)" with no flicker through the pre-drag state.
     overlay.clear();
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           UpdateTextCommand(
             layerId: layer.id,
             // End-of-drag commit covers the whole live session — content,
@@ -813,7 +830,11 @@ class TextToolController extends Notifier<TextSession> {
   /// wrap column, not a scale) and as a safety fallback.
   double _visualScaleOf(TextLayer layer) {
     if (layer.resizeMode != TextResizeMode.scaleText) return 1.0;
-    final natural = _measureNaturalSize(layer.content, layer.style);
+    final natural = _measureNaturalSize(
+      layer.content,
+      layer.style,
+      textDirectionMode: layer.textDirectionMode,
+    );
     if (natural.height <= 0) return 1.0;
     return layer.transform.size.height / natural.height;
   }
@@ -896,10 +917,7 @@ class TextToolController extends Notifier<TextSession> {
     final styled = _seedDefaultShadowIfMissing(readableStyle, doc);
     final layer = TextLayer(
       id: id,
-      transform: LayerTransform(
-        position: position,
-        size: initialSize,
-      ),
+      transform: LayerTransform(position: position, size: initialSize),
       content: '',
       style: styled,
     );
@@ -941,13 +959,19 @@ class TextToolController extends Notifier<TextSession> {
     // layer — yanking placed text around on every keystroke would
     // be jarring.
     final newSize = s.isNew
-        ? _measureForNewLayer(content, current.style, doc)
+        ? _measureForNewLayer(
+            content,
+            current.style,
+            doc,
+            textDirectionMode: current.textDirectionMode,
+          )
         : _scalePreservedEditSize(
             _measureForMode(
               content,
               current.style,
               current.resizeMode,
               current.transform.size.width,
+              textDirectionMode: current.textDirectionMode,
             ),
             current.resizeMode,
             s.scaleAtBegin,
@@ -958,8 +982,8 @@ class TextToolController extends Notifier<TextSession> {
             size: newSize,
           )
         : (newSize == current.transform.size
-            ? current.transform
-            : current.transform.copyWith(size: newSize));
+              ? current.transform
+              : current.transform.copyWith(size: newSize));
     if (newTransform != current.transform) {
       next = next.withTransform(newTransform) as TextLayer;
     }
@@ -1000,10 +1024,9 @@ class TextToolController extends Notifier<TextSession> {
     final liveLayerBeforeRestore = ref
         .read(renderedDocumentProvider)
         .layerById(s.layerId);
-    final liveStyleAtCommit =
-        (liveLayerBeforeRestore is TextLayer)
-            ? liveLayerBeforeRestore.style
-            : null;
+    final liveStyleAtCommit = (liveLayerBeforeRestore is TextLayer)
+        ? liveLayerBeforeRestore.style
+        : null;
     // Drop the overlay so the committed doc becomes the canonical
     // view again; the single command below carries all the intent.
     // Guarantees one and only one undo entry, regardless of how many
@@ -1046,6 +1069,7 @@ class TextToolController extends Notifier<TextSession> {
         trimmed,
         finalStyle,
         doc,
+        textDirectionMode: s.layerBefore.textDirectionMode,
       );
       final finalLayer = TextLayer(
         id: s.layerId,
@@ -1056,6 +1080,7 @@ class TextToolController extends Notifier<TextSession> {
         content: trimmed,
         style: finalStyle,
         resizeMode: layout.mode,
+        textDirectionMode: s.layerBefore.textDirectionMode,
       );
       docCtrl.execute(AddLayerCommand(finalLayer));
       ref.read(selectionControllerProvider.notifier).select(s.layerId);
@@ -1083,6 +1108,7 @@ class TextToolController extends Notifier<TextSession> {
           finalStyle,
           s.layerBefore.resizeMode,
           s.layerBefore.transform.size.width,
+          textDirectionMode: s.layerBefore.textDirectionMode,
         ),
         s.layerBefore.resizeMode,
         s.scaleAtBegin,
@@ -1150,13 +1176,23 @@ class TextToolController extends Notifier<TextSession> {
     String content,
     TextStyleSpec style,
     TextResizeMode mode,
-    double currentWidth,
-  ) {
+    double currentWidth, {
+    TextDirectionMode textDirectionMode = TextDirectionMode.auto,
+  }) {
     switch (mode) {
       case TextResizeMode.scaleText:
-        return _measureNaturalSize(content, style);
+        return _measureNaturalSize(
+          content,
+          style,
+          textDirectionMode: textDirectionMode,
+        );
       case TextResizeMode.resizeBox:
-        return _measureBoxHeight(content, style, currentWidth);
+        return _measureBoxHeight(
+          content,
+          style,
+          currentWidth,
+          textDirectionMode: textDirectionMode,
+        );
     }
   }
 
@@ -1166,8 +1202,17 @@ class TextToolController extends Notifier<TextSession> {
   /// painter's natural size, so the visual text always fits exactly.
   /// Empty content is rendered at one space's worth of height so a
   /// freshly-staged layer still has a visible, touchable box.
-  Size _measureNaturalSize(String content, TextStyleSpec style) {
-    final painter = _layoutPainter(content, style, double.infinity);
+  Size _measureNaturalSize(
+    String content,
+    TextStyleSpec style, {
+    TextDirectionMode textDirectionMode = TextDirectionMode.auto,
+  }) {
+    final painter = _layoutPainter(
+      content,
+      style,
+      double.infinity,
+      textDirectionMode: textDirectionMode,
+    );
     final size = Size(painter.width, painter.height);
     painter.dispose();
     return size;
@@ -1186,12 +1231,24 @@ class TextToolController extends Notifier<TextSession> {
   Size _measureForNewLayer(
     String content,
     TextStyleSpec style,
-    EditorDocument doc,
-  ) {
+    EditorDocument doc, {
+    TextDirectionMode textDirectionMode = TextDirectionMode.auto,
+  }) {
     final canvasWidth = doc.width;
-    if (canvasWidth <= 0) return _measureNaturalSize(content, style);
+    if (canvasWidth <= 0) {
+      return _measureNaturalSize(
+        content,
+        style,
+        textDirectionMode: textDirectionMode,
+      );
+    }
     final cap = canvasWidth * _newLayerWrapFraction;
-    final painter = _layoutPainter(content, style, cap);
+    final painter = _layoutPainter(
+      content,
+      style,
+      cap,
+      textDirectionMode: textDirectionMode,
+    );
     final size = Size(painter.width, painter.height);
     painter.dispose();
     return size;
@@ -1201,10 +1258,8 @@ class TextToolController extends Notifier<TextSession> {
   /// the new-add live flow so the bounding box grows symmetrically
   /// around the canvas centre instead of anchored to the original
   /// (empty-content) top-left.
-  Offset _centerOnCanvas(Size size, EditorDocument doc) => Offset(
-        doc.width / 2 - size.width / 2,
-        doc.height / 2 - size.height / 2,
-      );
+  Offset _centerOnCanvas(Size size, EditorDocument doc) =>
+      Offset(doc.width / 2 - size.width / 2, doc.height / 2 - size.height / 2);
 
   /// Decide the final ([TextResizeMode], [Size]) for a brand-new
   /// text layer being committed with [content] / [style] onto [doc].
@@ -1222,21 +1277,35 @@ class TextToolController extends Notifier<TextSession> {
   ({TextResizeMode mode, Size size}) _resolveNewLayerLayout(
     String content,
     TextStyleSpec style,
-    EditorDocument doc,
-  ) {
+    EditorDocument doc, {
+    TextDirectionMode textDirectionMode = TextDirectionMode.auto,
+  }) {
     final canvasWidth = doc.width;
     if (canvasWidth <= 0) {
       return (
         mode: TextResizeMode.scaleText,
-        size: _measureNaturalSize(content, style),
+        size: _measureNaturalSize(
+          content,
+          style,
+          textDirectionMode: textDirectionMode,
+        ),
       );
     }
-    final natural = _measureNaturalSize(content, style);
+    final natural = _measureNaturalSize(
+      content,
+      style,
+      textDirectionMode: textDirectionMode,
+    );
     final cap = canvasWidth * _newLayerWrapFraction;
     if (natural.width <= cap) {
       return (mode: TextResizeMode.scaleText, size: natural);
     }
-    final wrapped = _measureBoxHeight(content, style, cap);
+    final wrapped = _measureBoxHeight(
+      content,
+      style,
+      cap,
+      textDirectionMode: textDirectionMode,
+    );
     return (mode: TextResizeMode.resizeBox, size: wrapped);
   }
 
@@ -1252,8 +1321,7 @@ class TextToolController extends Notifier<TextSession> {
   ///
   /// Delegated to [CanvasSizing.referenceCanvasDim] so every insert
   /// flow shares the same "author against 1080" rule.
-  static double get _referenceCanvasSize =>
-      CanvasSizing.referenceCanvasDim;
+  static double get _referenceCanvasSize => CanvasSizing.referenceCanvasDim;
 
   /// Hard floor / ceiling for the auto-scaled font size. The floor
   /// keeps a 100-px sticker canvas from collapsing the type to an
@@ -1288,10 +1356,7 @@ class TextToolController extends Notifier<TextSession> {
   ///
   /// Only `fontSize` is touched; every other field of the style
   /// (colour, weight, family, shadow…) is preserved verbatim.
-  TextStyleSpec _scaleStyleToCanvas(
-    TextStyleSpec base,
-    EditorDocument doc,
-  ) {
+  TextStyleSpec _scaleStyleToCanvas(TextStyleSpec base, EditorDocument doc) {
     final effective = _effectiveCanvasDim(doc);
     if (effective <= 0) return base;
     final raw = base.fontSize * effective / _referenceCanvasSize;
@@ -1315,7 +1380,9 @@ class TextToolController extends Notifier<TextSession> {
   ) {
     if (base.shadowColor != null) return base;
     final blur = CanvasSizing.scaleDimension(
-        TextColorResolver.kDefaultShadowBlur, doc);
+      TextColorResolver.kDefaultShadowBlur,
+      doc,
+    );
     final offset = Offset(
       0,
       CanvasSizing.scaleDimension(_referenceShadowOffsetDy, doc),
@@ -1331,8 +1398,18 @@ class TextToolController extends Notifier<TextSession> {
   /// wrapped at [width]. Used by [TextResizeMode.resizeBox] so the
   /// box height tracks the wrapped paragraph as content / width / style
   /// changes.
-  Size _measureBoxHeight(String content, TextStyleSpec style, double width) {
-    final painter = _layoutPainter(content, style, width);
+  Size _measureBoxHeight(
+    String content,
+    TextStyleSpec style,
+    double width, {
+    TextDirectionMode textDirectionMode = TextDirectionMode.auto,
+  }) {
+    final painter = _layoutPainter(
+      content,
+      style,
+      width,
+      textDirectionMode: textDirectionMode,
+    );
     final h = painter.height;
     painter.dispose();
     return Size(width, h);
@@ -1341,8 +1418,9 @@ class TextToolController extends Notifier<TextSession> {
   TextPainter _layoutPainter(
     String content,
     TextStyleSpec style,
-    double maxWidth,
-  ) {
+    double maxWidth, {
+    TextDirectionMode textDirectionMode = TextDirectionMode.auto,
+  }) {
     return TextPainter(
       text: TextSpan(
         // Empty content collapses to zero height; one space preserves
@@ -1358,7 +1436,7 @@ class TextToolController extends Notifier<TextSession> {
         ),
       ),
       textAlign: style.alignment,
-      textDirection: textDirectionForContent(content),
+      textDirection: textDirectionForContent(content, mode: textDirectionMode),
       maxLines: null,
     )..layout(maxWidth: maxWidth);
   }
@@ -1388,15 +1466,14 @@ class TextToolController extends Notifier<TextSession> {
     final styled = _seedDefaultShadowIfMissing(readableStyle, doc);
     final layer = TextLayer(
       id: id,
-      transform: LayerTransform(
-        position: position,
-        size: layout.size,
-      ),
+      transform: LayerTransform(position: position, size: layout.size),
       content: text,
       style: styled,
       resizeMode: layout.mode,
     );
-    ref.read(documentControllerProvider.notifier).execute(AddLayerCommand(layer));
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(AddLayerCommand(layer));
     ref.read(selectionControllerProvider.notifier).select(id);
     return id;
   }
@@ -1413,20 +1490,23 @@ class TextToolController extends Notifier<TextSession> {
       content: layer.content,
       style: layer.style,
       resizeMode: layer.resizeMode,
+      textDirectionMode: layer.textDirectionMode,
       name: layer.name,
       visible: layer.visible,
       locked: layer.locked,
     );
-    ref.read(documentControllerProvider.notifier).execute(AddLayerCommand(duplicate));
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(AddLayerCommand(duplicate));
     ref.read(selectionControllerProvider.notifier).select(id);
   }
 
   void toggleSelectedLock() {
     final layer = selectedTextLayer();
     if (layer == null) return;
-    ref.read(documentControllerProvider.notifier).execute(
-          SetLayerLockCommand(layerId: layer.id, locked: !layer.locked),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(SetLayerLockCommand(layerId: layer.id, locked: !layer.locked));
   }
 
   void arrangeSelectedForward() {
@@ -1435,9 +1515,9 @@ class TextToolController extends Notifier<TextSession> {
     final doc = ref.read(documentControllerProvider);
     final from = doc.indexOf(layer.id);
     if (from == null || from >= doc.layers.length - 1) return;
-    ref.read(documentControllerProvider.notifier).execute(
-          ReorderLayerCommand(from: from, to: from + 1),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(ReorderLayerCommand(from: from, to: from + 1));
   }
 
   void arrangeSelectedBackward() {
@@ -1446,9 +1526,9 @@ class TextToolController extends Notifier<TextSession> {
     final doc = ref.read(documentControllerProvider);
     final from = doc.indexOf(layer.id);
     if (from == null || from <= 0) return;
-    ref.read(documentControllerProvider.notifier).execute(
-          ReorderLayerCommand(from: from, to: from - 1),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(ReorderLayerCommand(from: from, to: from - 1));
   }
 
   /// Record a colour the user picked from the custom picker. Same MRU
@@ -1457,10 +1537,11 @@ class TextToolController extends Notifier<TextSession> {
   /// the rail surfaces a meaningful history.
   void rememberRecentColor(Color color) {
     final argb = color.toARGB32();
-    final filtered = state.recentColors
-        .where((c) => c.toARGB32() != argb)
-        .toList(growable: true)
-      ..insert(0, color);
+    final filtered =
+        state.recentColors
+            .where((c) => c.toARGB32() != argb)
+            .toList(growable: true)
+          ..insert(0, color);
     if (filtered.length > TextSession._recentsCap) {
       filtered.removeRange(TextSession._recentsCap, filtered.length);
     }
@@ -1537,13 +1618,18 @@ class TextToolController extends Notifier<TextSession> {
     final live = _live;
     if (live != null && live.isNew && live.layerId == layer.id) {
       final doc = ref.read(documentControllerProvider);
-      final newSize = _measureForNewLayer(layer.content, next, doc);
+      final newSize = _measureForNewLayer(
+        layer.content,
+        next,
+        doc,
+        textDirectionMode: layer.textDirectionMode,
+      );
       final newTransform = layer.transform.copyWith(
         position: _centerOnCanvas(newSize, doc),
         size: newSize,
       );
-      final updated = layer.copyWith(style: next).withTransform(newTransform)
-          as TextLayer;
+      final updated =
+          layer.copyWith(style: next).withTransform(newTransform) as TextLayer;
       ref.read(liveOverlayProvider.notifier).updateAddedLayer(updated);
       return;
     }
@@ -1560,6 +1646,7 @@ class TextToolController extends Notifier<TextSession> {
         next,
         layer.resizeMode,
         layer.transform.size.width,
+        textDirectionMode: layer.textDirectionMode,
       );
     }
     final newTransform = (newSize == null || newSize == layer.transform.size)
@@ -1576,7 +1663,9 @@ class TextToolController extends Notifier<TextSession> {
       ref.read(liveOverlayProvider.notifier).replaceLayer(updated);
       return;
     }
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           UpdateTextCommand(
             layerId: layer.id,
             // style edit (optionally with a re-measure transform).
@@ -1616,12 +1705,43 @@ class TextToolController extends Notifier<TextSession> {
       layer.style,
       mode,
       layer.transform.size.width,
+      textDirectionMode: layer.textDirectionMode,
     );
     final newTransform = measured == layer.transform.size
         ? null
         : layer.transform.copyWith(size: measured);
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           SetTextResizeModeCommand(
+            layerId: layer.id,
+            mode: mode,
+            transform: newTransform,
+          ),
+        );
+  }
+
+  /// Switch the paragraph direction mode of the selected text layer.
+  /// Auto mode derives from the first strong script character; RTL
+  /// and LTR force the base direction for mixed-script content.
+  void setTextDirectionMode(TextDirectionMode mode) {
+    final layer = selectedTextLayer();
+    if (layer == null) return;
+    if (layer.textDirectionMode == mode) return;
+    final measured = _measureForMode(
+      layer.content,
+      layer.style,
+      layer.resizeMode,
+      layer.transform.size.width,
+      textDirectionMode: mode,
+    );
+    final newTransform = measured == layer.transform.size
+        ? null
+        : layer.transform.copyWith(size: measured);
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
+          SetTextDirectionModeCommand(
             layerId: layer.id,
             mode: mode,
             transform: newTransform,
@@ -1631,9 +1751,7 @@ class TextToolController extends Notifier<TextSession> {
 }
 
 final textToolControllerProvider =
-    NotifierProvider<TextToolController, TextSession>(
-  TextToolController.new,
-);
+    NotifierProvider<TextToolController, TextSession>(TextToolController.new);
 
 /// Snapshot of an in-flight live text-edit session. Captured at
 /// [TextToolController.beginAddText] / [TextToolController.beginEditText]

@@ -72,12 +72,12 @@ class PaintLayer extends EditorLayer {
     super.locked,
     super.opacity,
     super.effects,
-  })  : normalizedPoints = List.unmodifiable(normalizedPoints),
-        super(
-          capabilities: resizeMode == PaintResizeMode.scale
-              ? _paintCapsScale
-              : _paintCapsFree,
-        );
+  }) : normalizedPoints = List.unmodifiable(normalizedPoints),
+       super(
+         capabilities: resizeMode == PaintResizeMode.scale
+             ? _paintCapsScale
+             : _paintCapsFree,
+       );
 
   final PaintKind kind;
   final List<Offset> normalizedPoints;
@@ -178,6 +178,9 @@ class PaintLayer extends EditorLayer {
   EditorLayer withOpacity(double opacity) =>
       copyAll(opacity: opacity.clamp(0.0, 1.0));
 
+  @override
+  EditorLayer withName(String? name) => copyAll(name: name);
+
   /// Returns a copy with the given fields replaced. The [fillColor]
   /// parameter uses the same sentinel as [copyAll] so callers can
   /// both omit (preserve) and pass `null` (clear) the fill.
@@ -189,16 +192,15 @@ class PaintLayer extends EditorLayer {
     double? blurSigma,
     PaintResizeMode? resizeMode,
     String? name,
-  }) =>
-      copyAll(
-        strokeColor: strokeColor,
-        strokeWidth: strokeWidth,
-        fillColor: fillColor,
-        sides: sides,
-        blurSigma: blurSigma,
-        resizeMode: resizeMode,
-        name: name ?? this.name,
-      );
+  }) => copyAll(
+    strokeColor: strokeColor,
+    strokeWidth: strokeWidth,
+    fillColor: fillColor,
+    sides: sides,
+    blurSigma: blurSigma,
+    resizeMode: resizeMode,
+    name: name ?? this.name,
+  );
 
   /// Per-element cost of [normalizedPoints]: 16 bytes for the two
   /// doubles inside each [Offset], plus ~8 bytes of `List<Offset>`
@@ -227,13 +229,12 @@ class PaintLayer extends EditorLayer {
       // every time. Keyed on the layer's identity via an [Expando]
       // so it can't outlive the layer; PaintLayer is immutable so
       // [blurSigma] never changes for a given instance.
-      final filter = _blurFilterCache[this] ??=
-          ui.ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma);
+      final filter = _blurFilterCache[this] ??= ui.ImageFilter.blur(
+        sigmaX: blurSigma,
+        sigmaY: blurSigma,
+      );
       return ClipRect(
-        child: BackdropFilter(
-          filter: filter,
-          child: const SizedBox.expand(),
-        ),
+        child: BackdropFilter(filter: filter, child: const SizedBox.expand()),
       );
     }
     return CustomPaint(
@@ -251,19 +252,18 @@ class PaintLayer extends EditorLayer {
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        ...baseJson(),
-        'kind': kind.name,
-        'points': normalizedPoints
-            .map((p) => <String, double>{'x': p.dx, 'y': p.dy})
-            .toList(growable: false),
-        'strokeColor': _encodeColor(strokeColor),
-        'strokeWidth': strokeWidth,
-        if (fillColor != null) 'fillColor': _encodeColor(fillColor!),
-        if (kind == PaintKind.polygon || kind == PaintKind.hexagon)
-          'sides': sides,
-        if (kind == PaintKind.blur) 'blurSigma': blurSigma,
-        'resizeMode': resizeMode.name,
-      };
+    ...baseJson(),
+    'kind': kind.name,
+    'points': normalizedPoints
+        .map((p) => <String, double>{'x': p.dx, 'y': p.dy})
+        .toList(growable: false),
+    'strokeColor': _encodeColor(strokeColor),
+    'strokeWidth': strokeWidth,
+    if (fillColor != null) 'fillColor': _encodeColor(fillColor!),
+    if (kind == PaintKind.polygon || kind == PaintKind.hexagon) 'sides': sides,
+    if (kind == PaintKind.blur) 'blurSigma': blurSigma,
+    'resizeMode': resizeMode.name,
+  };
 
   factory PaintLayer.fromJson(Map<String, dynamic> json) {
     final id = json['id'];
@@ -299,8 +299,7 @@ class PaintLayer extends EditorLayer {
       ),
       kind: kind,
       normalizedPoints: List.unmodifiable(points),
-      strokeColor:
-          _decodeColor(json['strokeColor']) ?? const Color(0xFFFF3B30),
+      strokeColor: _decodeColor(json['strokeColor']) ?? const Color(0xFFFF3B30),
       strokeWidth: (json['strokeWidth'] as num?)?.toDouble() ?? 6.0,
       fillColor: _decodeColor(json['fillColor']),
       sides: (kind == PaintKind.polygon || kind == PaintKind.hexagon)
@@ -369,16 +368,16 @@ class PaintLayer extends EditorLayer {
 
   @override
   int get hashCode => Object.hash(
-        super.hashCode,
-        kind,
-        strokeColor,
-        strokeWidth,
-        fillColor,
-        sides,
-        blurSigma,
-        resizeMode,
-        normalizedPoints.length,
-      );
+    super.hashCode,
+    kind,
+    strokeColor,
+    strokeWidth,
+    fillColor,
+    sides,
+    blurSigma,
+    resizeMode,
+    normalizedPoints.length,
+  );
 
   static bool _pointsEqual(List<Offset> a, List<Offset> b) {
     if (identical(a, b)) return true;
@@ -395,8 +394,9 @@ class PaintLayer extends EditorLayer {
 /// is immutable so [PaintLayer.blurSigma] never changes for a given
 /// instance, making this cache a pure win on every frame after the
 /// first.
-final Expando<ui.ImageFilter> _blurFilterCache =
-    Expando<ui.ImageFilter>('PaintLayer.blurFilter');
+final Expando<ui.ImageFilter> _blurFilterCache = Expando<ui.ImageFilter>(
+  'PaintLayer.blurFilter',
+);
 
 /// Stand-alone painter so the in-flight preview overlay can reuse the
 /// exact same rendering as committed [PaintLayer]s — guarantees the
@@ -463,7 +463,11 @@ class PaintLayerPainter extends CustomPainter {
     path.moveTo(first.dx, first.dy);
     if (normalizedPoints.length == 1) {
       // Tap-only: draw a single dot.
-      canvas.drawCircle(first, strokeWidth / 2, stroke..style = PaintingStyle.fill);
+      canvas.drawCircle(
+        first,
+        strokeWidth / 2,
+        stroke..style = PaintingStyle.fill,
+      );
       return;
     }
     for (var i = 1; i < normalizedPoints.length; i++) {
@@ -490,12 +494,18 @@ class PaintLayerPainter extends CustomPainter {
     final headLen = math.max(strokeWidth * 3.5, 12.0);
     final angle = math.atan2(b.dy - a.dy, b.dx - a.dx);
     const sweep = math.pi / 7;
-    final p1 = b -
-        Offset(headLen * math.cos(angle - sweep),
-            headLen * math.sin(angle - sweep));
-    final p2 = b -
-        Offset(headLen * math.cos(angle + sweep),
-            headLen * math.sin(angle + sweep));
+    final p1 =
+        b -
+        Offset(
+          headLen * math.cos(angle - sweep),
+          headLen * math.sin(angle - sweep),
+        );
+    final p2 =
+        b -
+        Offset(
+          headLen * math.cos(angle + sweep),
+          headLen * math.sin(angle + sweep),
+        );
     canvas.drawLine(b, p1, stroke);
     canvas.drawLine(b, p2, stroke);
   }
@@ -589,12 +599,7 @@ class PaintLayerPainter extends CustomPainter {
   /// Regular polygon inscribed in the bounding box. Top vertex is at
   /// 12 o'clock so the user gets a familiar orientation (point-up
   /// hexagon, point-up triangle, etc.).
-  void _paintPolygon(
-    Canvas canvas,
-    Size size,
-    Paint stroke,
-    int sideCount,
-  ) {
+  void _paintPolygon(Canvas canvas, Size size, Paint stroke, int sideCount) {
     final n = sideCount.clamp(3, 24);
     final inset = strokeWidth / 2;
     final w = math.max(0.0, size.width - inset * 2);

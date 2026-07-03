@@ -12,7 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   ProviderContainer makeContainer() {
     final c = ProviderContainer();
-    c.read(documentControllerProvider.notifier)
+    c
+        .read(documentControllerProvider.notifier)
         .newDocument(width: 800, height: 800);
     addTearDown(c.dispose);
     return c;
@@ -47,26 +48,43 @@ void main() {
 
     test('no preset specifies font/size/metric fields — visual-only', () {
       for (final p in kTextStylePresets) {
-        expect(p.spec.fontFamily, isNull,
-            reason: '${p.id} must not carry a fontFamily');
+        expect(
+          p.spec.fontFamily,
+          isNull,
+          reason: '${p.id} must not carry a fontFamily',
+        );
         // Spec defaults: fontSize 16, letterSpacing/lineHeight unset.
         // Re-deriving the default and expecting equality on these
         // four fields guarantees presets only differ by visual props.
         const defaults = TextStyleSpec();
-        expect(p.spec.fontSize, defaults.fontSize,
-            reason: '${p.id} must not carry a fontSize');
-        expect(p.spec.letterSpacing, defaults.letterSpacing,
-            reason: '${p.id} must not carry letterSpacing');
-        expect(p.spec.lineHeight, defaults.lineHeight,
-            reason: '${p.id} must not carry lineHeight');
-        expect(p.spec.alignment, defaults.alignment,
-            reason: '${p.id} must not carry alignment');
+        expect(
+          p.spec.fontSize,
+          defaults.fontSize,
+          reason: '${p.id} must not carry a fontSize',
+        );
+        expect(
+          p.spec.letterSpacing,
+          defaults.letterSpacing,
+          reason: '${p.id} must not carry letterSpacing',
+        );
+        expect(
+          p.spec.lineHeight,
+          defaults.lineHeight,
+          reason: '${p.id} must not carry lineHeight',
+        );
+        expect(
+          p.spec.alignment,
+          defaults.alignment,
+          reason: '${p.id} must not carry alignment',
+        );
       }
     });
 
     test('lookup helpers', () {
-      expect(textStylePresetById(kTextStylePresets.first.id),
-          kTextStylePresets.first);
+      expect(
+        textStylePresetById(kTextStylePresets.first.id),
+        kTextStylePresets.first,
+      );
       expect(textStylePresetById('does_not_exist'), isNull);
       expect(kAllTextStylePresets, kTextStylePresets);
     });
@@ -91,8 +109,11 @@ void main() {
       // hard ceiling so future PRs don't drift back into the
       // 30+ "more is more" anti-pattern.
       expect(kTextStylePresets.length, greaterThanOrEqualTo(12));
-      expect(kTextStylePresets.length, lessThanOrEqualTo(20),
-          reason: 'curated kit — add a preset only after removing one');
+      expect(
+        kTextStylePresets.length,
+        lessThanOrEqualTo(20),
+        reason: 'curated kit — add a preset only after removing one',
+      );
     });
 
     test('every preset id is referenceable + matches the slug rule', () {
@@ -100,8 +121,11 @@ void main() {
       // must be machine-friendly (lowercase + underscores).
       final slug = RegExp(r'^[a-z0-9_]+$');
       for (final p in kTextStylePresets) {
-        expect(slug.hasMatch(p.id), isTrue,
-            reason: '${p.id} is not a valid slug');
+        expect(
+          slug.hasMatch(p.id),
+          isTrue,
+          reason: '${p.id} is not a valid slug',
+        );
         expect(textStylePresetById(p.id), same(p));
       }
     });
@@ -134,8 +158,11 @@ void main() {
         'pop_3d',
       ];
       for (final id in keepIds) {
-        expect(textStylePresetById(id), isNotNull,
-            reason: '$id is a workhorse preset — do not delete');
+        expect(
+          textStylePresetById(id),
+          isNotNull,
+          reason: '$id is a workhorse preset — do not delete',
+        );
       }
     });
 
@@ -165,17 +192,26 @@ void main() {
         'lede',
       ];
       for (final id in removed) {
-        expect(textStylePresetById(id), isNull,
-            reason: '$id was cut for being weak/redundant — do not re-add');
+        expect(
+          textStylePresetById(id),
+          isNull,
+          reason: '$id was cut for being weak/redundant — do not re-add',
+        );
       }
     });
 
     test('every preset name is short + display-ready (<= 12 chars)', () {
       for (final p in kTextStylePresets) {
-        expect(p.name.length, lessThanOrEqualTo(12),
-            reason: '${p.id} name "${p.name}" too long for a chip');
-        expect(p.name.trim(), p.name,
-            reason: '${p.id} name has leading/trailing whitespace');
+        expect(
+          p.name.length,
+          lessThanOrEqualTo(12),
+          reason: '${p.id} name "${p.name}" too long for a chip',
+        );
+        expect(
+          p.name.trim(),
+          p.name,
+          reason: '${p.id} name has leading/trailing whitespace',
+        );
       }
     });
 
@@ -187,8 +223,11 @@ void main() {
     // -----------------------------------------------------------------
     test('Highlight has breathing-room padding (padY >= 4)', () {
       final p = textStylePresetById('highlight')!;
-      expect(p.spec.backgroundPaddingY, greaterThanOrEqualTo(4),
-          reason: 'highlight padY too tight — looks unfinished at large sizes');
+      expect(
+        p.spec.backgroundPaddingY,
+        greaterThanOrEqualTo(4),
+        reason: 'highlight padY too tight — looks unfinished at large sizes',
+      );
     });
 
     test('Sticker outline width is bounded so glyphs stay readable', () {
@@ -197,17 +236,26 @@ void main() {
       // counter-spaces (the inside of "o", "e") collapse at typical
       // body sizes.
       final p = textStylePresetById('sticker')!;
-      expect(p.spec.outlineWidth, lessThanOrEqualTo(4),
-          reason: 'Sticker outline too thick — eats glyph interior');
+      expect(
+        p.spec.outlineWidth,
+        lessThanOrEqualTo(4),
+        reason: 'Sticker outline too thick — eats glyph interior',
+      );
     });
 
     test('Pop preset: hard offset shadow with zero blur (dimensional)', () {
       final p = textStylePresetById('pop_3d')!;
       expect(p.spec.shadowColor, isNotNull);
-      expect(p.spec.shadowBlur, 0.0,
-          reason: 'pop_3d must be a HARD shadow (no blur) for 3D feel');
-      expect(p.spec.shadowOffset, isNot(Offset.zero),
-          reason: 'pop_3d must offset the shadow to read as dimensional');
+      expect(
+        p.spec.shadowBlur,
+        0.0,
+        reason: 'pop_3d must be a HARD shadow (no blur) for 3D feel',
+      );
+      expect(
+        p.spec.shadowOffset,
+        isNot(Offset.zero),
+        reason: 'pop_3d must offset the shadow to read as dimensional',
+      );
     });
 
     test('layered presets stack at least two visual effects', () {
@@ -219,9 +267,13 @@ void main() {
         if (s.backgroundColor != null) n++;
         if (s.outlineColor != null) n++;
         if (s.shadowColor != null) n++;
-        expect(n, greaterThanOrEqualTo(min),
-            reason: '$id needs $min layered effects, found $n');
+        expect(
+          n,
+          greaterThanOrEqualTo(min),
+          reason: '$id needs $min layered effects, found $n',
+        );
       }
+
       requireLayers('caption', 2); // plate + shadow
       requireLayers('sticker', 2); // outline + shadow
     });
@@ -234,12 +286,18 @@ void main() {
       final ordered = orderedTextStylePresets(
         layerStyle: const TextStyleSpec(),
       );
-      expect(ordered.length, kTextStylePresets.length,
-          reason: 'panel must show every preset \u2014 no hidden tail');
+      expect(
+        ordered.length,
+        kTextStylePresets.length,
+        reason: 'panel must show every preset \u2014 no hidden tail',
+      );
       final ids = <String>{};
       for (final p in ordered) {
-        expect(ids.add(p.id), isTrue,
-            reason: '${p.id} appears twice in the panel order');
+        expect(
+          ids.add(p.id),
+          isTrue,
+          reason: '${p.id} appears twice in the panel order',
+        );
       }
     });
 
@@ -261,24 +319,39 @@ void main() {
     test('textIsArabicScript detects Persian content; otherwise Latin', () {
       expect(textIsArabicScript('سلام دنیا'), isTrue);
       expect(textIsArabicScript('Hello world'), isFalse);
+      expect(textIsArabicScript('  ۱۲۳ سلام'), isTrue);
+      expect(textIsArabicScript('Hi سلام'), isFalse);
       expect(textIsArabicScript(''), isFalse);
       expect(textIsArabicScript('!!! 1234'), isFalse);
     });
 
-    test('defaultFontFamilyForContent: Vazir for Persian, Roboto for English',
-        () {
-      expect(defaultFontFamilyForContent('سلام'), 'Vazir_Regular');
-      expect(defaultFontFamilyForContent('Hello'), 'Roboto');
-      expect(defaultFontFamilyForContent(''), 'Roboto');
-    });
+    test(
+      'defaultFontFamilyForContent: Vazir for Persian, Roboto for English',
+      () {
+        expect(defaultFontFamilyForContent('سلام'), 'Vazir_Regular');
+        expect(defaultFontFamilyForContent('Hello'), 'Roboto');
+        expect(defaultFontFamilyForContent(''), 'Roboto');
+      },
+    );
 
-    test('textDirectionForContent: RTL for Persian, LTR otherwise', () {
+    test('textDirectionForContent: auto uses the first strong script', () {
       expect(textDirectionForContent('سلام جهان'), TextDirection.rtl);
       expect(textDirectionForContent('Hello world'), TextDirection.ltr);
       expect(textDirectionForContent(''), TextDirection.ltr);
-      // Mixed → dominant script wins (more Persian → RTL).
+      expect(textDirectionForContent('!!! ۱۲۳ سلام'), TextDirection.rtl);
       expect(textDirectionForContent('سلام Hi'), TextDirection.rtl);
       expect(textDirectionForContent('Hi سلام Hello world'), TextDirection.ltr);
+    });
+
+    test('textDirectionForContent can force RTL or LTR', () {
+      expect(
+        textDirectionForContent('Hello سلام', mode: TextDirectionMode.rtl),
+        TextDirection.rtl,
+      );
+      expect(
+        textDirectionForContent('سلام Hello', mode: TextDirectionMode.ltr),
+        TextDirection.ltr,
+      );
     });
 
     test('isAutoDefaultFontFamily flags only the two auto-defaults', () {
@@ -331,10 +404,7 @@ void main() {
       final c = makeContainer();
       addText(
         c,
-        style: const TextStyleSpec(
-          fontFamily: 'Vazir_Regular',
-          fontSize: 42,
-        ),
+        style: const TextStyleSpec(fontFamily: 'Vazir_Regular', fontSize: 42),
       );
       c.read(selectionControllerProvider.notifier).select('t1');
       final ctrl = c.read(textToolControllerProvider.notifier);
@@ -353,19 +423,12 @@ void main() {
 
     test('preserves the layer bounding box exactly (no auto-resize)', () {
       final c = makeContainer();
-      addText(
-        c,
-        size: const Size(321, 123),
-        position: const Offset(77, 88),
-      );
+      addText(c, size: const Size(321, 123), position: const Offset(77, 88));
       c.read(selectionControllerProvider.notifier).select('t1');
       // Pick a preset that toggles fontWeight (would normally widen
       // glyphs) — the box must still stay put.
-      final preset =
-          kTextStylePresets.firstWhere((p) => p.id == 'badge_red');
-      c
-          .read(textToolControllerProvider.notifier)
-          .applyStylePreset(preset.spec);
+      final preset = kTextStylePresets.firstWhere((p) => p.id == 'badge_red');
+      c.read(textToolControllerProvider.notifier).applyStylePreset(preset.spec);
       final layer =
           c.read(documentControllerProvider).layerById('t1') as TextLayer;
       expect(layer.transform.position, const Offset(77, 88));
@@ -401,11 +464,8 @@ void main() {
 
     test('with no selected layer, mutates defaultStyle (next-add seed)', () {
       final c = makeContainer();
-      final preset =
-          kTextStylePresets.firstWhere((p) => p.id == 'badge_red');
-      c
-          .read(textToolControllerProvider.notifier)
-          .applyStylePreset(preset.spec);
+      final preset = kTextStylePresets.firstWhere((p) => p.id == 'badge_red');
+      c.read(textToolControllerProvider.notifier).applyStylePreset(preset.spec);
       final ds = c.read(textToolControllerProvider).defaultStyle;
       expect(ds.color, preset.spec.color);
       expect(ds.backgroundColor, preset.spec.backgroundColor);
@@ -419,24 +479,13 @@ void main() {
       addText(c);
       c.read(selectionControllerProvider.notifier).select('t1');
       final ctrl = c.read(textToolControllerProvider.notifier);
-      ctrl.setFontSizeFromPreset(
-        size: 24,
-        presetLabel: 'S',
-        layerId: 't1',
-      );
-      expect(
-        c.read(textToolControllerProvider).selectedSizePreset,
-        isNotNull,
-      );
+      ctrl.setFontSizeFromPreset(size: 24, presetLabel: 'S', layerId: 't1');
+      expect(c.read(textToolControllerProvider).selectedSizePreset, isNotNull);
       ctrl.applyStylePreset(kTextStylePresets.first.spec);
-      expect(
-        c.read(textToolControllerProvider).selectedSizePreset,
-        isNull,
-      );
+      expect(c.read(textToolControllerProvider).selectedSizePreset, isNull);
     });
 
-    test('does not leak preset onto defaultStyle when applied to a layer',
-        () {
+    test('does not leak preset onto defaultStyle when applied to a layer', () {
       final c = makeContainer();
       addText(c);
       c.read(selectionControllerProvider.notifier).select('t1');
@@ -473,18 +522,20 @@ void main() {
       expect(layer.style.fontFamily, 'Vazir_Regular');
     });
 
-    test('respects an explicit defaultStyle.fontFamily set by the Font tool',
-        () {
-      final c = makeContainer();
-      final ctrl = c.read(textToolControllerProvider.notifier);
-      ctrl.setFontFamily('Lobster');
-      final id = ctrl.beginAddText();
-      ctrl.previewContent('Hello');
-      ctrl.commitLiveEdit('Hello');
-      final layer =
-          c.read(documentControllerProvider).layerById(id) as TextLayer;
-      expect(layer.style.fontFamily, 'Lobster');
-    });
+    test(
+      'respects an explicit defaultStyle.fontFamily set by the Font tool',
+      () {
+        final c = makeContainer();
+        final ctrl = c.read(textToolControllerProvider.notifier);
+        ctrl.setFontFamily('Lobster');
+        final id = ctrl.beginAddText();
+        ctrl.previewContent('Hello');
+        ctrl.commitLiveEdit('Hello');
+        final layer =
+            c.read(documentControllerProvider).layerById(id) as TextLayer;
+        expect(layer.style.fontFamily, 'Lobster');
+      },
+    );
   });
 
   group('background roundness (percent of box)', () {
@@ -493,13 +544,15 @@ void main() {
       expect(textBackgroundRadiusPx(const Size(800, 400), 0), 0);
     });
 
-    test('100% percent → true pill (radius == min(side)/2) small AND large',
-        () {
-      // Small text box.
-      expect(textBackgroundRadiusPx(const Size(60, 28), 1), 14);
-      // Large text box — still a perfect pill, not a tiny corner.
-      expect(textBackgroundRadiusPx(const Size(800, 200), 1), 100);
-    });
+    test(
+      '100% percent → true pill (radius == min(side)/2) small AND large',
+      () {
+        // Small text box.
+        expect(textBackgroundRadiusPx(const Size(60, 28), 1), 14);
+        // Large text box — still a perfect pill, not a tiny corner.
+        expect(textBackgroundRadiusPx(const Size(800, 200), 1), 100);
+      },
+    );
 
     test('50% percent → visibly rounded (quarter of shorter side)', () {
       expect(textBackgroundRadiusPx(const Size(120, 60), 0.5), 15);
@@ -540,8 +593,11 @@ void main() {
     test('pill-style presets (Badge / CTA / Hashtag) ship at 100%', () {
       for (final id in ['badge_red', 'cta', 'hashtag']) {
         final p = textStylePresetById(id)!;
-        expect(p.spec.backgroundRadius, 1.0,
-            reason: '$id should be a true pill at any size');
+        expect(
+          p.spec.backgroundRadius,
+          1.0,
+          reason: '$id should be a true pill at any size',
+        );
       }
     });
   });

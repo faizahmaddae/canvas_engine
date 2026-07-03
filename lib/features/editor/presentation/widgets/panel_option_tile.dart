@@ -201,7 +201,7 @@ class _Label extends StatelessWidget {
         fontSize: 11,
         fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
         color: color,
-        letterSpacing: 0.2,
+        letterSpacing: 0,
       ),
     );
   }

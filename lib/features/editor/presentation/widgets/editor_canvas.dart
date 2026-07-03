@@ -12,6 +12,7 @@ import '../../application/document_controller.dart';
 import '../../application/editing_controller.dart';
 import '../../application/editor_lifecycle.dart';
 import '../../application/editor_session.dart';
+import '../../application/context_toolbar_controller.dart';
 import '../../application/interaction_controller.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/project_viewport_store.dart';
@@ -23,6 +24,7 @@ import '../../engine/core/layer_transform.dart';
 import '../../engine/core/selection_state.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/interaction/group_engine.dart';
+import '../../engine/modules/image/image_layer.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../engine/modules/paint/paint_layer.dart';
 import '../../engine/modules/shape/shape_layer.dart';
@@ -786,11 +788,12 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                           selection,
                           viewport,
                         ),
-                      // Quick actions pill — duplicate / bring-forward /
-                      // delete. Shown for ANY single-layer selection;
-                      // visibility is further gated inside the builder on
-                      // inline-editing and active transform sessions so
-                      // the bar never chases a moving selection.
+                      // Quick actions pill — fallback structural actions
+                      // for selected layer types that do not yet have a
+                      // contextual toolbar More entry. Visibility is
+                      // further gated inside the builder on inline-editing
+                      // and active transform sessions so the bar never
+                      // chases a moving selection.
                       if (selection.count == 1 &&
                           !_isProtectedSelection(doc, selection) &&
                           !addTextComposerOpen)
@@ -1257,7 +1260,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
         final sheetOpen = ref.watch(
           textToolControllerProvider.select((s) => s.openSheet != null),
         );
-        if (sheetOpen) return const SizedBox.shrink();
+        final contextPanelOpen = ref.watch(
+          contextToolbarControllerProvider.select((panel) => panel != null),
+        );
+        if (sheetOpen || contextPanelOpen) return const SizedBox.shrink();
         return TextFloatingToolbar(layer: textLayer, viewport: viewport);
       },
     );
@@ -1335,17 +1341,20 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
         final sheetOpen = ref.watch(
           shapeToolControllerProvider.select((s) => s.openSlot != null),
         );
-        if (sheetOpen) return const SizedBox.shrink();
+        final contextPanelOpen = ref.watch(
+          contextToolbarControllerProvider.select((panel) => panel != null),
+        );
+        if (sheetOpen || contextPanelOpen) return const SizedBox.shrink();
         return ShapeFloatingToolbar(layer: shapeLayer, viewport: viewport);
       },
     );
   }
 
   /// Quick actions pill (duplicate / bring-forward / delete) for
-  /// layer types that do NOT bring their own contextual floating
-  /// toolbar — currently image and shape. Text and paint layers ship
-  /// their actions inside the `⋯` overflow on their own toolbar so
-  /// the canvas never shows two stacked floating bars at once.
+  /// layer types that do NOT bring their own contextual More entry.
+  /// Text, image, paint, and shape layers route structural actions
+  /// through their contextual toolbars so the canvas never shows two
+  /// stacked action bars at once.
   ///
   /// Hidden during inline-edit and during a transform gesture so the
   /// bar never chases a moving selection.
@@ -1361,13 +1370,14 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
         break;
       }
     }
-    // Normal text + paint + shape suppress the generic quick-actions
-    // overlay because their own floating toolbars own that space and
-    // already expose duplicate/delete via their `⋯` overflow. Emoji
+    // Normal text + image + paint + shape suppress the generic
+    // quick-actions overlay because their contextual toolbars own
+    // that space and expose structural actions through More. Emoji
     // stickers, although stored as TextLayer, do NOT surface the
-    // text toolbar — so they need the generic quick actions to
-    // stay reachable (delete, duplicate, transform).
+    // text toolbar — so they need the generic quick actions to stay
+    // reachable (delete, duplicate, transform).
     if ((layer is TextLayer && !layer.isSticker) ||
+        layer is ImageLayer ||
         layer is PaintLayer ||
         layer is ShapeLayer) {
       return const SizedBox.shrink();

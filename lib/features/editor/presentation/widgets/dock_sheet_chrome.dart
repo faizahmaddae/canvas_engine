@@ -248,7 +248,7 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
               // + ✕ stole ~25 % of the panel's vertical budget on
               // small phones; pros want density.
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 12, 6),
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 12, 6),
                 child: Row(
                   children: [
                     Icon(widget.icon, size: 20, color: scheme.primary),
@@ -259,7 +259,7 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: -0.1,
+                          letterSpacing: 0,
                         ),
                       ),
                     ),
@@ -439,7 +439,7 @@ class _ConfirmChip extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w800,
               color: scheme.onPrimary,
-              letterSpacing: 0.2,
+              letterSpacing: 0,
             ),
           ),
         ),

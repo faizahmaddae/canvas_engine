@@ -12,6 +12,7 @@ import '../../../core/utils/user_error.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
 import '../application/autosave_controller.dart';
+import '../application/context_toolbar_controller.dart';
 import '../application/document_controller.dart';
 import '../application/live_overlay_controller.dart';
 import '../application/editor_lifecycle.dart';
@@ -27,6 +28,7 @@ import '../engine/commands/transform_commands.dart';
 import '../engine/commands/shape_commands.dart';
 import '../engine/core/canvas_sizing.dart';
 import '../engine/core/editor_document.dart';
+import '../engine/core/editor_layer.dart';
 import '../engine/core/layer_transform.dart';
 import '../engine/core/selection_state.dart';
 import '../engine/modules/image/image_layer.dart';
@@ -64,10 +66,11 @@ import '../toolbar/presentation/mode_done_button.dart';
 import 'widgets/editor_canvas.dart';
 import 'widgets/editor_tool_dock.dart';
 import '../toolbar/domain/toolbar_slot.dart';
+import 'widgets/context_tool_panel.dart';
 import 'widgets/editor_toolbar.dart';
 import 'widgets/export_action_sheet.dart';
-import 'widgets/layer_actions.dart';
 import 'widgets/layers_panel.dart';
+import 'widgets/multi_select_mode_toolbar.dart';
 import 'widgets/new_document_dialog.dart';
 
 const _uuid = Uuid();
@@ -144,31 +147,20 @@ class EditorScreen extends ConsumerWidget {
               : AppBar(
                   title: _DocumentTitle(),
                   actions: [
-                    if (_canCenterSelected(ref))
-                      IconButton(
-                        tooltip: l10n.centerSelectedLayerTooltip,
-                        onPressed: () => _centerSelected(context, ref),
-                        icon: const Icon(Icons.filter_center_focus),
+                    Builder(
+                      builder: (ctx) => IconButton(
+                        tooltip: l10n.editorSaveProject,
+                        onPressed: () => _saveProject(ctx, ref),
+                        icon: const Icon(Icons.save_outlined),
                       ),
-                    if (_canDeleteSelected(ref))
-                      Builder(
-                        builder: (ctx) => IconButton(
-                          tooltip: l10n.deleteAction,
-                          onPressed: () {
-                            final id = selection.selectedId;
-                            if (id == null) return;
-                            final layer = ref
-                                .read(documentControllerProvider)
-                                .layerById(id);
-                            if (layer == null) return;
-                            // Routes through LayerActions.delete so the
-                            // photo-mode base-photo confirm dialog applies
-                            // here too.
-                            LayerActions.delete(ctx, ref, layer);
-                          },
-                          icon: const Icon(Icons.delete_outline),
-                        ),
+                    ),
+                    Builder(
+                      builder: (ctx) => IconButton(
+                        tooltip: l10n.editorExport,
+                        onPressed: () => ExportActionSheet.open(ctx),
+                        icon: const Icon(Icons.ios_share_outlined),
                       ),
+                    ),
                     Builder(
                       builder: (ctx) => IconButton(
                         tooltip: l10n.layersTooltip,
@@ -257,7 +249,7 @@ class EditorScreen extends ConsumerWidget {
             ],
           ),
           bottomNavigationBar: Builder(
-            builder: (_) {
+            builder: (dockContext) {
               // Crop Mode owns the screen — hide the regular dock so
               // the Crop bottom bar is the only chrome the user sees.
               final cropActive = ref.watch(
@@ -276,21 +268,28 @@ class EditorScreen extends ConsumerWidget {
               final textOpenSheet = ref.watch(
                 textToolControllerProvider.select((s) => s.openSheet),
               );
+              final contextPanel = ref.watch(contextToolbarControllerProvider);
+              final selectedLayersForActions = selection.hasSelection
+                  ? _selectedLayersForActions(ref, selection)
+                  : const <EditorLayer>[];
+              final multiSelected = selectedLayersForActions.length > 1;
               final selectedTextLayer = _selectedTextLayer(ref);
-              final textSelected = selectedTextLayer != null;
+              final textSelected = selectedTextLayer != null && !multiSelected;
               final selectedStickerLayer = _selectedStickerLayer(ref);
               final stickerSelected =
                   selectedStickerLayer != null &&
                   !paintOpen &&
                   !textOpen &&
-                  !textSelected;
+                  !textSelected &&
+                  !multiSelected;
               final selectedImageLayer = _selectedImageLayer(ref);
               final imageSelected =
                   selectedImageLayer != null &&
                   !paintOpen &&
                   !textOpen &&
                   !textSelected &&
-                  !stickerSelected;
+                  !stickerSelected &&
+                  !multiSelected;
               final selectedShapeLayer = _selectedShapeLayer(ref);
               final shapeSelected =
                   selectedShapeLayer != null &&
@@ -298,11 +297,14 @@ class EditorScreen extends ConsumerWidget {
                   !textOpen &&
                   !textSelected &&
                   !stickerSelected &&
-                  !imageSelected;
+                  !imageSelected &&
+                  !multiSelected;
               final modeKey = paintOpen
                   ? 'paint'
                   : (textOpen || textSelected)
                   ? 'text'
+                  : multiSelected
+                  ? 'multi'
                   : stickerSelected
                   ? 'sticker'
                   : imageSelected
@@ -317,7 +319,15 @@ class EditorScreen extends ConsumerWidget {
               // its small inline expansion row.
               Widget? expanded;
               Object? expandedKey;
-              if ((textOpen || textSelected) &&
+              if (contextPanel != null && selectedLayersForActions.isNotEmpty) {
+                expanded = ContextToolPanelBody(
+                  panel: contextPanel,
+                  layers: selectedLayersForActions,
+                );
+                expandedKey =
+                    'context:${contextPanel.name}:'
+                    '${selectedLayersForActions.map((l) => l.id).join(',')}';
+              } else if ((textOpen || textSelected) &&
                   textSelected &&
                   textOpenSheet != null) {
                 expanded = const TextModeSheetPanel();
@@ -415,6 +425,12 @@ class EditorScreen extends ConsumerWidget {
                     ? const PaintModeToolbar()
                     : (textOpen || textSelected)
                     ? const TextModeToolbar()
+                    : multiSelected
+                    ? MultiSelectModeToolbar(
+                        layers: selectedLayersForActions,
+                        onOpenLayers: () =>
+                            Scaffold.of(dockContext).openEndDrawer(),
+                      )
                     : stickerSelected
                     ? StickerModeToolbar(layer: selectedStickerLayer)
                     : imageSelected
@@ -539,50 +555,18 @@ class EditorScreen extends ConsumerWidget {
     ];
   }
 
-  bool _canDeleteSelected(WidgetRef ref) {
-    final selection = ref.read(selectionControllerProvider);
-    if (!selection.hasSelection) return false;
-    final layer = ref
-        .read(documentControllerProvider)
-        .layerById(selection.selectedId!);
-    return layer?.capabilities.deletable ?? false;
-  }
-
-  bool _canCenterSelected(WidgetRef ref) {
-    final selection = ref.read(selectionControllerProvider);
-    if (!selection.hasSelection) return false;
-    final layer = ref
-        .read(documentControllerProvider)
-        .layerById(selection.selectedId!);
-    return layer != null && !layer.locked && layer.capabilities.movable;
-  }
-
-  void _centerSelected(BuildContext context, WidgetRef ref) {
-    final selection = ref.read(selectionControllerProvider);
-    final id = selection.selectedId;
-    if (id == null) return;
-    final doc = ref.read(documentControllerProvider);
-    final layer = doc.layerById(id);
-    if (layer == null || layer.locked || !layer.capabilities.movable) return;
-
-    final t = layer.transform;
-    final centred = t.copyWith(
-      position: Offset(
-        doc.width / 2 - t.size.width / 2,
-        doc.height / 2 - t.size.height / 2,
-      ),
-    );
-    if (centred.position == t.position) return;
-
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(
-          SetLayerTransformCommand(
-            layerId: id,
-            transform: centred,
-            labelOverride: context.l10n.centerLayerCommand,
-          ),
-        );
+  List<EditorLayer> _selectedLayersForActions(
+    WidgetRef ref,
+    SelectionState selection,
+  ) {
+    final doc = ref.watch(documentControllerProvider);
+    final out = <EditorLayer>[];
+    for (final id in selection.selectedIds) {
+      final layer = doc.layerById(id);
+      if (layer == null || doc.isProtectedBasePhoto(id)) continue;
+      out.add(layer);
+    }
+    return out;
   }
 
   TextLayer? _selectedTextLayer(WidgetRef ref) {

@@ -134,7 +134,7 @@ class ExportController {
     // alternative (clamping only the source pixelRatio) would leave
     // the composer allocating a huge destination image and OOM on
     // low-end devices.
-    final effectiveTarget = _clampTargetSize(target);
+    final effectiveTarget = clampTargetSizeForExport(target: target);
 
     // Choose source raster ratio = the scale factor needed to fill
     // the target rect, clamped so we never up-sample beyond canvas
@@ -165,14 +165,16 @@ class ExportController {
         target: effectiveTarget,
         background: background,
         // PNG keeps alpha; JPG must composite over an opaque fill.
-        opaqueBackground: format == ExportFormat.jpg ||
+        opaqueBackground:
+            format == ExportFormat.jpg ||
             document.backgroundMode == CanvasBackgroundMode.color,
       );
       try {
         switch (format) {
           case ExportFormat.png:
-            final byteData =
-                await composed.toByteData(format: ui.ImageByteFormat.png);
+            final byteData = await composed.toByteData(
+              format: ui.ImageByteFormat.png,
+            );
             if (byteData == null) {
               throw const DocumentExportException(
                 'toByteData returned null — composed image has no pixels',
@@ -197,10 +199,13 @@ class ExportController {
   /// the running device's effective export ceiling
   /// ([DocumentPngExporter.devicePixelCap]). Aspect ratio preserved;
   /// returns [target] unchanged when it already fits.
-  static ui.Size _clampTargetSize(ui.Size target) {
+  static ui.Size clampTargetSizeForExport({
+    required ui.Size target,
+    int? maxPixels,
+  }) {
     final pixels = target.width * target.height;
     if (pixels <= 0) return target;
-    final cap = DocumentPngExporter.devicePixelCap();
+    final cap = maxPixels ?? DocumentPngExporter.devicePixelCap();
     if (pixels <= cap) return target;
     final shrink = math.sqrt(cap / pixels);
     return ui.Size(target.width * shrink, target.height * shrink);
@@ -279,12 +284,7 @@ Future<ui.Image> composeFitContain({
 
   canvas.drawImageRect(
     source,
-    ui.Rect.fromLTWH(
-      0,
-      0,
-      source.width.toDouble(),
-      source.height.toDouble(),
-    ),
+    ui.Rect.fromLTWH(0, 0, source.width.toDouble(), source.height.toDouble()),
     ui.Rect.fromLTWH(destLeft, destTop, destW, destH),
     ui.Paint()
       ..filterQuality = ui.FilterQuality.high
@@ -293,10 +293,7 @@ Future<ui.Image> composeFitContain({
 
   final picture = recorder.endRecording();
   try {
-    return await picture.toImage(
-      target.width.round(),
-      target.height.round(),
-    );
+    return await picture.toImage(target.width.round(), target.height.round());
   } finally {
     picture.dispose();
   }

@@ -77,11 +77,16 @@ class AutosaveController extends Notifier<void> {
     if (_journalProjectId != projectId) {
       _journal = null;
       _journalProjectId = projectId;
-      EditJournal.open(projectId).then((j) {
-        if (_journalProjectId != projectId) return;
-        _journal = j;
-        _journal!.scheduleWrite(ref.read(documentControllerProvider));
-      }).catchError((_) {/* swallow */});
+      EditJournal.open(projectId)
+          .then((j) {
+            if (!ref.mounted) return;
+            if (_journalProjectId != projectId) return;
+            _journal = j;
+            _journal!.scheduleWrite(ref.read(documentControllerProvider));
+          })
+          .catchError((_) {
+            /* swallow */
+          });
       return;
     }
     final journal = _journal;
@@ -95,10 +100,12 @@ class AutosaveController extends Notifier<void> {
   Future<void> flushNow() async {
     _timer?.cancel();
     _timer = null;
+    if (!ref.mounted) return;
     await _flush();
   }
 
   Future<void> _flush() async {
+    if (!ref.mounted) return;
     final session = ref.read(editorSessionProvider);
     final projectId = session?.projectId;
     if (projectId == null) return; // Rule 1.
@@ -150,5 +157,6 @@ class AutosaveController extends Notifier<void> {
   }
 }
 
-final autosaveControllerProvider =
-    NotifierProvider<AutosaveController, void>(AutosaveController.new);
+final autosaveControllerProvider = NotifierProvider<AutosaveController, void>(
+  AutosaveController.new,
+);
