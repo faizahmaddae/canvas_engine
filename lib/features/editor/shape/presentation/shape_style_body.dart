@@ -10,6 +10,7 @@ import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/inline_color_body.dart';
 import '../../application/recent_colors_controller.dart';
 import '../../presentation/widgets/section_label.dart';
+import '../../ui/editor_slider_row.dart';
 import 'shape_panel_shell.dart';
 
 /// Expanded panel body for the Shape sub-tool's "Style" tab.
@@ -114,9 +115,12 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
           ),
           const SizedBox(height: 14),
           SectionLabel(context.l10n.opacityLabel),
-          _OpacitySlider(
+          EditorSliderRow(
             value: layer.fillOpacity,
-            onChange: (v) => _commitFill(opacity: v, live: true),
+            max: 1,
+            format: (v) => '${(v * 100).round()}%',
+            onChanged: (v) => _commitFill(opacity: v, live: true),
+            semanticLabel: context.l10n.opacityLabel,
           ),
           if (supportsRadius) ...[
             const SizedBox(height: 14),
@@ -130,10 +134,12 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
               },
             ),
             const SizedBox(height: 6),
-            _RadiusSlider(
+            EditorSliderRow(
               value: layer.cornerRadius.clamp(0.0, maxRadius),
               max: maxRadius == 0 ? 1 : maxRadius,
-              onChange: (v) => _commitRadius(v, live: true),
+              format: (v) => '${v.round()}',
+              onChanged: (v) => _commitRadius(v, live: true),
+              semanticLabel: context.l10n.cornerRadiusLabel,
             ),
           ],
           // Trailing breathing room so the last control (radius
@@ -142,90 +148,6 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
           // The shell adds 12dp + safe-area below; this is the
           // visual gutter inside the scroll region.
           const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-}
-
-class _OpacitySlider extends StatelessWidget {
-  const _OpacitySlider({required this.value, required this.onChange});
-
-  final double value;
-  final ValueChanged<double> onChange;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final pct = (value.clamp(0.0, 1.0) * 100).round();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 2, 4, 0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Slider(
-              value: value.clamp(0.0, 1.0),
-              min: 0,
-              max: 1,
-              onChanged: onChange,
-            ),
-          ),
-          SizedBox(
-            width: 44,
-            child: Text(
-              '$pct%',
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: scheme.onSurface,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RadiusSlider extends StatelessWidget {
-  const _RadiusSlider({
-    required this.value,
-    required this.max,
-    required this.onChange,
-  });
-
-  final double value;
-  final double max;
-  final ValueChanged<double> onChange;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 2, 4, 0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Slider(
-              value: value.clamp(0.0, max),
-              min: 0,
-              max: max,
-              onChanged: onChange,
-            ),
-          ),
-          SizedBox(
-            width: 44,
-            child: Text(
-              '${value.round()}',
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: scheme.onSurface,
-              ),
-            ),
-          ),
         ],
       ),
     );
