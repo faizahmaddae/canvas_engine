@@ -12,6 +12,7 @@ import '../../../l10n/l10n.dart';
 import '../../editor/application/document_controller.dart';
 import '../../editor/application/editor_lifecycle.dart';
 import '../../editor/application/editor_session.dart';
+import '../../editor/application/project_recovery_service.dart';
 import '../../editor/application/selection_controller.dart';
 import '../../editor/engine/commands/transform_commands.dart';
 import '../../editor/engine/core/editor_document.dart';
@@ -170,11 +171,51 @@ class HomeActions {
     );
   }
 
-  /// Open a saved [Project] from the Recent rail.
-  void openProject(Project p) {
+  /// Open a saved [Project] from the Recent rail. If a crash left a
+  /// journal entry newer than the persisted save, offer to resume it
+  /// before loading.
+  Future<void> openProject(Project p) async {
+    final recovery = ref.read(projectRecoveryServiceProvider);
+    final pendingJson = await recovery.pendingJsonForProject(
+      projectId: p.id,
+      persistedJson: p.documentJson,
+    );
+    if (!context.mounted) return;
+
+    var documentJson = p.documentJson;
+    if (pendingJson != null) {
+      final resume = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(context.l10n.resumeEditsTitle),
+          content: Text(context.l10n.resumeEditsBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(context.l10n.discardAction),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(context.l10n.resumeAction),
+            ),
+          ],
+        ),
+      );
+      if (!context.mounted) return;
+      if (resume ?? false) {
+        documentJson = pendingJson;
+        // Journal stays until the resumed session autosaves — if the
+        // user closes the dialog's editor without an edit, the offer
+        // simply reappears next open, which is the safe direction.
+      } else {
+        await recovery.clearForProject(p.id);
+        if (!context.mounted) return;
+      }
+    }
+
     final docCtrl = ref.read(documentControllerProvider.notifier);
     try {
-      docCtrl.importJson(p.documentJson);
+      docCtrl.importJson(documentJson);
     } catch (e, st) {
       debugLogError('openProject/importJson', e, st);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -192,6 +233,32 @@ class HomeActions {
       projectId: p.id,
     );
     unawaited(ref.read(lastOpenedProjectIdProvider.notifier).set(p.id));
+    _push();
+  }
+
+  /// Resume a crashed never-saved session from the draft journal
+  /// (Home banner action). The session stays unsaved — same state as
+  /// before the crash — so autosave rule 1 still applies until the
+  /// user explicitly saves.
+  void resumeDraft(String draftJson) {
+    final docCtrl = ref.read(documentControllerProvider.notifier);
+    try {
+      docCtrl.importJson(draftJson);
+    } catch (e, st) {
+      debugLogError('resumeDraft/importJson', e, st);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            userMessageFor(e, fallback: context.l10n.somethingWentWrong),
+          ),
+        ),
+      );
+      return;
+    }
+    ref.read(selectionControllerProvider.notifier).clear();
+    ref.read(editorSessionProvider.notifier).state = EditorSession(
+      name: context.l10n.newDesignName,
+    );
     _push();
   }
 

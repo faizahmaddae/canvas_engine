@@ -39,6 +39,16 @@ class AutosaveController extends Notifier<void> {
   /// a backgrounding user doesn't lose more than ~1.5 s of work.
   static const Duration debounce = Duration(milliseconds: 1500);
 
+  /// Journal slot for the never-saved document. Rule 1 keeps unsaved
+  /// docs out of the project store, but a crash mid-first-session was
+  /// total loss — so the journal covers them under this single
+  /// reserved id (one editor session at a time → one draft slot, no
+  /// per-draft bookkeeping). Cleared when the user deliberately
+  /// leaves the editor without saving (leaving an unsaved doc IS the
+  /// discard gesture) and when a first save rebinds the session to a
+  /// real project id.
+  static const String draftJournalId = 'draft';
+
   Timer? _timer;
 
   /// Per-project journal handle. Lazily opened on the first write
@@ -72,15 +82,24 @@ class AutosaveController extends Notifier<void> {
   /// recoverable.
   void _scheduleJournal() {
     final session = ref.read(editorSessionProvider);
-    final projectId = session?.projectId;
-    if (projectId == null) return;
-    if (_journalProjectId != projectId) {
+    if (session == null) return;
+    // Unsaved docs journal under the reserved draft slot so a crash
+    // in a first session is recoverable even though rule 1 keeps the
+    // doc out of the project store.
+    final journalId = session.projectId ?? draftJournalId;
+    if (_journalProjectId != journalId) {
+      // First save mid-session moves journaling from the draft slot
+      // to the real project id — drop the stale draft file so it
+      // can't produce a false "resume draft?" offer later.
+      if (_journalProjectId == draftJournalId) {
+        unawaited(_journal?.clear());
+      }
       _journal = null;
-      _journalProjectId = projectId;
-      EditJournal.open(projectId)
+      _journalProjectId = journalId;
+      EditJournal.open(journalId)
           .then((j) {
             if (!ref.mounted) return;
-            if (_journalProjectId != projectId) return;
+            if (_journalProjectId != journalId) return;
             _journal = j;
             _journal!.scheduleWrite(ref.read(documentControllerProvider));
           })
@@ -97,10 +116,32 @@ class AutosaveController extends Notifier<void> {
   /// Force any pending autosave to run immediately. Intended for
   /// "navigating away from the editor" hooks where the debounce
   /// timer might otherwise drop the latest edits on the floor.
-  Future<void> flushNow() async {
+  ///
+  /// [sessionEnding] distinguishes a deliberate exit (PopScope /
+  /// editor dispose) from an app-lifecycle pause. On a deliberate
+  /// exit with a never-saved document, the draft journal is cleared —
+  /// walking away from an unsaved doc is the product's discard
+  /// gesture, and keeping the journal would produce a bogus "resume
+  /// draft?" offer next launch. On a pause the journal is KEPT: the
+  /// OS may kill the process, and that is exactly the crash case the
+  /// draft slot exists to recover.
+  Future<void> flushNow({bool sessionEnding = false}) async {
     _timer?.cancel();
     _timer = null;
     if (!ref.mounted) return;
+    if (sessionEnding &&
+        ref.read(editorSessionProvider)?.projectId == null) {
+      if (_journalProjectId == draftJournalId) {
+        await _journal?.clear();
+      } else {
+        // Journal handle may not have opened yet (no commit landed);
+        // clear the slot directly so the file cannot linger.
+        try {
+          final j = await EditJournal.open(draftJournalId);
+          await j.clear();
+        } catch (_) {/* swallow — best-effort, same as journal writes */}
+      }
+    }
     await _flush();
   }
 

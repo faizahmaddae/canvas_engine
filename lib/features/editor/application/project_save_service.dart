@@ -11,7 +11,9 @@ import '../../home/application/project_store.dart';
 import '../../home/domain/project.dart';
 import '../engine/export/document_png_exporter.dart';
 import '../engine/rendering/document_thumbnail.dart';
+import 'autosave_controller.dart';
 import 'document_controller.dart';
+import 'edit_journal.dart';
 import 'editor_session.dart';
 
 const _uuid = Uuid();
@@ -111,6 +113,15 @@ class ProjectSaveService {
       _ref.read(editorSessionProvider.notifier).state = EditorSession(
         name: name,
         projectId: id,
+      );
+      // First save: the content now lives under a real project id.
+      // Drop the draft journal slot so it cannot offer a stale
+      // "resume unsaved design?" on a later launch. Best-effort,
+      // like every journal write.
+      unawaited(
+        EditJournal.open(AutosaveController.draftJournalId)
+            .then((j) => j.clear())
+            .catchError((_) {}),
       );
     }
     return project;

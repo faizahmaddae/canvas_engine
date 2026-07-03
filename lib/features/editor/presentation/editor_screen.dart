@@ -138,7 +138,11 @@ class EditorScreen extends ConsumerWidget {
             // flushes as a final safety net, but doing it here is
             // earlier and lets the write race with route teardown
             // rather than after it.
-            unawaited(ref.read(autosaveControllerProvider.notifier).flushNow());
+            unawaited(
+              ref
+                  .read(autosaveControllerProvider.notifier)
+                  .flushNow(sessionEnding: true),
+            );
           }
         },
         child: Scaffold(
@@ -1530,7 +1534,9 @@ class _AutosaveLifecycleScopeState
     // Use the captured notifier — `ref.read` inside `dispose` is
     // unsafe in Riverpod 3 because `BuildContext` is already
     // deactivated by the time finalisation runs.
-    unawaited(_autosave?.flushNow() ?? Future<void>.value());
+    unawaited(
+      _autosave?.flushNow(sessionEnding: true) ?? Future<void>.value(),
+    );
     super.dispose();
   }
 

@@ -1477,6 +1477,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get maskPresetCenter => 'Center';
 
   @override
+  String get resumeEditsTitle => 'Resume unsaved changes?';
+
+  @override
+  String get resumeEditsBody =>
+      'This design closed before its latest changes were saved.';
+
+  @override
+  String get resumeDraftBanner =>
+      'You have an unsaved design from a previous session.';
+
+  @override
+  String get resumeAction => 'Resume';
+
+  @override
+  String get discardAction => 'Discard';
+
+  @override
   String unknownEffectLabel(String type) {
     return 'Unknown effect ($type)';
   }

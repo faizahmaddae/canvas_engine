@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
+import '../../../l10n/l10n.dart';
+import '../../editor/application/project_recovery_service.dart';
 import '../application/project_store.dart';
 import '../../settings/application/settings_controller.dart';
 import '../../templates/application/template_repository_provider.dart';
@@ -28,6 +30,53 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   HomeTemplateLanguageFilter _templateLanguageFilter =
       HomeTemplateLanguageFilter.all;
+
+  /// One draft-recovery offer per Home mount — re-showing the banner
+  /// on every rebuild would nag; a declined offer stays declined
+  /// until the next cold start.
+  bool _draftOfferShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _offerDraftResume());
+  }
+
+  Future<void> _offerDraftResume() async {
+    if (_draftOfferShown || !mounted) return;
+    _draftOfferShown = true;
+    final draftJson =
+        await ref.read(projectRecoveryServiceProvider).pendingDraftJson();
+    if (draftJson == null || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final recovery = ref.read(projectRecoveryServiceProvider);
+    messenger.showMaterialBanner(
+      MaterialBanner(
+        content: Text(context.l10n.resumeDraftBanner),
+        leading: const Icon(Icons.restore_rounded),
+        actions: [
+          TextButton(
+            onPressed: () {
+              messenger.hideCurrentMaterialBanner();
+              recovery.clearDraft();
+            },
+            child: Text(context.l10n.discardAction),
+          ),
+          FilledButton(
+            onPressed: () {
+              messenger.hideCurrentMaterialBanner();
+              // Journal survives until the resumed session either
+              // saves (rebinds + clears) or is deliberately closed
+              // (sessionEnding flush clears) — so a crash *during*
+              // the resumed session is still covered.
+              HomeActions(context, ref).resumeDraft(draftJson);
+            },
+            child: Text(context.l10n.resumeAction),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

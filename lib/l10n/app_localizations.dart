@@ -2894,6 +2894,36 @@ abstract class AppLocalizations {
   /// **'Center'**
   String get maskPresetCenter;
 
+  /// No description provided for @resumeEditsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume unsaved changes?'**
+  String get resumeEditsTitle;
+
+  /// No description provided for @resumeEditsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This design closed before its latest changes were saved.'**
+  String get resumeEditsBody;
+
+  /// No description provided for @resumeDraftBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You have an unsaved design from a previous session.'**
+  String get resumeDraftBanner;
+
+  /// No description provided for @resumeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resumeAction;
+
+  /// No description provided for @discardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discardAction;
+
   /// No description provided for @unknownEffectLabel.
   ///
   /// In en, this message translates to:

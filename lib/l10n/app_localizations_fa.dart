@@ -1481,6 +1481,22 @@ class AppLocalizationsFa extends AppLocalizations {
   String get maskPresetCenter => 'مرکز';
 
   @override
+  String get resumeEditsTitle => 'ادامه تغییرات ذخیره‌نشده؟';
+
+  @override
+  String get resumeEditsBody =>
+      'این طرح پیش از ذخیره شدن آخرین تغییرات بسته شده است.';
+
+  @override
+  String get resumeDraftBanner => 'یک طرح ذخیره‌نشده از جلسه قبلی دارید.';
+
+  @override
+  String get resumeAction => 'ادامه';
+
+  @override
+  String get discardAction => 'حذف';
+
+  @override
   String unknownEffectLabel(String type) {
     return 'افکت ناشناخته ($type)';
   }
