@@ -7,7 +7,7 @@ import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/modules/text/text_layer.dart';
-import '../../presentation/widgets/recent_colors_controller.dart';
+import '../../application/recent_colors_controller.dart';
 import '../application/text_tool_controller.dart';
 import '../domain/text_style_presets.dart'
     show defaultFontFamilyForContent, textDirectionForContent;

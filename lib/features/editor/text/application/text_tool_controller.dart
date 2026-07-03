@@ -13,7 +13,7 @@ import '../../engine/core/canvas_sizing.dart';
 import '../../engine/core/editor_document.dart';
 import '../../engine/core/layer_transform.dart';
 import '../../engine/modules/text/text_layer.dart';
-import '../../presentation/widgets/recent_colors_controller.dart';
+import '../../application/recent_colors_controller.dart';
 import '../domain/text_style_presets.dart';
 import '../domain/text_tool_category.dart';
 import 'text_color_resolver.dart';

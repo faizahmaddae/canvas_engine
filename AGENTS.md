@@ -50,10 +50,11 @@ engine  ──▶  application  ──▶  presentation
 
 **Inverted imports are bugs.** A file in `engine/` must not import
 anything from `application/` or `presentation/`. A file in
-`application/` must not import widgets. CI enforces the engine-level
-rule (`tool/check_import_direction.sh`, run by
-`.github/workflows/ci.yml`); the application-level rule is still
-convention — you enforce it.
+`application/` must not import from `presentation/`. CI enforces both
+directions path-wise (`tool/check_import_direction.sh`, run by
+`.github/workflows/ci.yml`). The finer "application should not import
+widgets at all" preference remains convention — several controllers
+legitimately use `TextPainter`/`BuildContext` today.
 
 ### Engine subfolders
 

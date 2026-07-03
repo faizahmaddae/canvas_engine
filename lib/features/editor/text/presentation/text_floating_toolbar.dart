@@ -10,7 +10,7 @@ import '../../engine/core/viewport_state.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../presentation/widgets/floating_toolbar_positioner.dart';
 import '../../presentation/widgets/layer_actions.dart';
-import '../../presentation/widgets/recent_colors_controller.dart';
+import '../../application/recent_colors_controller.dart';
 import '../../text/presentation/text_direction_mode_picker.dart';
 import '../../text/presentation/text_resize_mode_picker.dart';
 import '../application/text_tool_controller.dart';

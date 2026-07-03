@@ -1,18 +1,14 @@
 #!/usr/bin/env bash
-# Engine import-direction gate.
+# Import-direction gate.
 #
-# AGENTS.md: "Inverted imports are bugs. A file in engine/ must not
-# import anything from application/ or presentation/." This script is
-# the CI teeth for that rule: it fails when any Dart file under
-# lib/features/editor/engine/ imports an application/ or
-# presentation/ directory (relative or package: form) or the app
-# shell (package:canvas_engine/app/).
+# AGENTS.md: "Inverted imports are bugs." engine -> application ->
+# presentation is one-way. This script is the CI teeth for two rules:
 #
-# Scope note: the same rule conceptually applies one level up
-# (application/ must not import presentation/), but two known
-# violations exist today (recent_colors_controller.dart consumers —
-# roadmap Phase 0.6). Extend this script to cover application/ once
-# that lands, so CI is green from day one.
+#   1. No Dart file under lib/features/editor/engine/ imports an
+#      application/ or presentation/ directory (relative or package:
+#      form) or the app shell (package:canvas_engine/app/).
+#   2. No Dart file under any lib/**/application/ directory imports
+#      a presentation/ directory.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -37,7 +33,16 @@ if [[ -n "$app_violations" ]]; then
   status=1
 fi
 
+application_violations=$(find lib -type d -name application \
+  -exec grep -rn --include='*.dart' -E \
+  "^import +'([^']*/)?presentation/" {} + || true)
+if [[ -n "$application_violations" ]]; then
+  echo 'FAIL: application/ imports presentation/:'
+  echo "$application_violations"
+  status=1
+fi
+
 if [[ "$status" -eq 0 ]]; then
-  echo 'OK: engine import direction clean.'
+  echo 'OK: import direction clean (engine + application).'
 fi
 exit "$status"

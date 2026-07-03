@@ -8,7 +8,7 @@ import '../../application/document_controller.dart';
 import '../../engine/commands/shape_commands.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/inline_color_body.dart';
-import '../../presentation/widgets/recent_colors_controller.dart';
+import '../../application/recent_colors_controller.dart';
 import '../../presentation/widgets/section_label.dart';
 import 'shape_panel_shell.dart';
 

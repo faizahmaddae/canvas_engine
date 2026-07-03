@@ -12,7 +12,7 @@ import '../../application/selection_controller.dart';
 import '../../presentation/widgets/dock_tool_strip.dart';
 import '../../presentation/widgets/dock_tool_tile.dart';
 import '../../presentation/widgets/inline_color_body.dart';
-import '../../presentation/widgets/recent_colors_controller.dart';
+import '../../application/recent_colors_controller.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 import '../../toolbar/domain/sub_tool.dart';
 import '../../toolbar/domain/sub_tools/slider_sub_tool.dart';

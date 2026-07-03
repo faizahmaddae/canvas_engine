@@ -10,7 +10,7 @@ import '../../engine/modules/paint/paint_layer.dart';
 import '../../presentation/widgets/floating_action_bar.dart';
 import '../../presentation/widgets/floating_toolbar_positioner.dart';
 import '../../presentation/widgets/layer_actions_sheet.dart';
-import '../../presentation/widgets/recent_colors_controller.dart';
+import '../../application/recent_colors_controller.dart';
 import '../application/paint_tool_controller.dart';
 import 'paint_size_sheet.dart';
 

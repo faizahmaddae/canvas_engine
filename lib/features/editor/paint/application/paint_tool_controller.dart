@@ -5,7 +5,7 @@ import '../../application/document_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/paint_commands.dart';
 import '../../engine/modules/paint/paint_layer.dart';
-import '../../presentation/widgets/recent_colors_controller.dart';
+import '../../application/recent_colors_controller.dart';
 import '../domain/paint_tool_type.dart';
 
 /// Snapshot of the user's current paint configuration.

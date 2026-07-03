@@ -8,7 +8,7 @@ import '../../application/document_controller.dart';
 import '../../engine/core/editor_document.dart';
 import '../../presentation/widgets/editor_tool_panel_shell.dart';
 import '../../presentation/widgets/inline_color_body.dart';
-import '../../presentation/widgets/recent_colors_controller.dart';
+import '../../application/recent_colors_controller.dart';
 import '../application/canvas_commands.dart';
 import '../application/canvas_tool_controller.dart';
 

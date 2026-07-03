@@ -10,7 +10,7 @@ import '../../engine/effects/editor_effect.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../../presentation/widgets/inline_color_body.dart';
 import '../../presentation/widgets/panel_option_tile.dart';
-import '../../presentation/widgets/recent_colors_controller.dart';
+import '../../application/recent_colors_controller.dart';
 import 'image_panel_shell.dart';
 
 /// Expanded panel body for the Image sub-tool's "Adjust" tab.

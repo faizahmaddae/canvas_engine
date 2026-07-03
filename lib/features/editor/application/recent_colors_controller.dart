@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'dart:ui' show Color;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Editor-wide MRU store of colours the user has picked from
