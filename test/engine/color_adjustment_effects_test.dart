@@ -1,3 +1,4 @@
+import 'package:canvas_engine/features/editor/engine/commands/history_stack.dart';
 import 'package:canvas_engine/features/editor/engine/commands/image_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_mask.dart';
@@ -101,37 +102,128 @@ void main() {
       );
     });
 
-    test('preserves user-added non-derived effects when adjusting', () {
-      // Seed a layer whose stack already has a derived brightness +
-      // a hypothetical user-added "future" effect — modelled here
-      // with another BrightnessEffect on a different mask so the
-      // strip-derived-only logic is exercised end-to-end with real
-      // types. (Once a non-color-adjustment effect lands, swap it
-      // in here.)
-      final preserved = const BrightnessEffect(
+    test('preserves a masked derived effect the sliders cannot see', () {
+      // A masked brightness is invisible to fromEffectStack (and so
+      // to the Adjust sliders) — a contrast drag must leave it
+      // untouched, not strip it as a stale derived entry.
+      const preserved = BrightnessEffect(
         amount: 5,
         mask: RectMask(rect: Rect.fromLTRB(0, 0, 0.5, 0.5)),
       );
-      // Construct directly so the seed contains a "user" entry that
-      // *doesn't* live in derivedEffectTypes ... but every concrete
-      // is currently derived. Instead, assert the dual-write does
-      // *not* duplicate derived effects when called twice — which
-      // is the practical user-visible behaviour.
-      final start = _doc(_makeImage(effects: EffectStack(<EditorEffect>[preserved])));
+      final start = _doc(
+        _makeImage(effects: EffectStack(<EditorEffect>[preserved])),
+      );
       final after = const SetImageAdjustmentsCommand(
         layerId: 'img',
         contrast: 1.2,
       ).apply(start);
       final stack = (after.layers.single as ImageLayer).effects.effects;
-      // Old brightness preserved underneath new contrast (derived
-      // strip rebuilt the brightness via toEffectStack — and since
-      // the new adjustments value has brightness == 0, no new
-      // brightness is derived; only the contrast survives among the
-      // derived set, plus the seeded "preserved" brightness — wait,
-      // brightness IS in derivedEffectTypes so the seed is stripped.
-      // This is the documented behaviour: derived types are
-      // canonicalised by the dual-write).
-      expect(stack.map((e) => e.type).toList(), <String>['contrast']);
+      expect(stack.map((e) => e.type).toList(), <String>[
+        'contrast',
+        'brightness',
+      ]);
+      final survivor = stack[1] as BrightnessEffect;
+      expect(survivor.amount, 5);
+      expect(survivor.mask, preserved.mask);
+    });
+
+    test('preserves a disabled derived effect (Effects-panel eyeball)', () {
+      // The headline bug: toggle brightness off in the Effects
+      // panel, drag any Adjust slider — the old strip-and-regenerate
+      // rebuild deleted the disabled effect and its amount.
+      final start = _doc(_makeImage(
+        effects: EffectStack(<EditorEffect>[
+          const BrightnessEffect(amount: 20, enabled: false),
+        ]),
+      ));
+      final after = const SetImageAdjustmentsCommand(
+        layerId: 'img',
+        contrast: 1.2,
+      ).apply(start);
+      final layer = after.layers.single as ImageLayer;
+      expect(layer.adjustments.contrast, 1.2);
+      expect(layer.adjustments.brightness, 0,
+          reason: 'disabled effects stay invisible to the sliders');
+      final disabled = layer.effects.effects
+          .whereType<BrightnessEffect>()
+          .single;
+      expect(disabled.enabled, isFalse);
+      expect(disabled.amount, 20,
+          reason: 'the disabled effect and its amount must survive '
+              'unrelated slider drags');
+    });
+
+    test('edits the live effect in place, preserving user reorder', () {
+      // User reordered brightness *below* saturation in the Effects
+      // panel; dragging the brightness slider must edit it where it
+      // sits, not regenerate the canonical order.
+      final start = _doc(_makeImage(
+        effects: EffectStack(<EditorEffect>[
+          const BrightnessEffect(amount: 12),
+          const SaturationEffect(amount: 0.8),
+        ]),
+      ));
+      final after = const SetImageAdjustmentsCommand(
+        layerId: 'img',
+        brightness: 20,
+      ).apply(start);
+      final stack = (after.layers.single as ImageLayer).effects.effects;
+      expect(stack.map((e) => e.type).toList(), <String>[
+        'brightness',
+        'saturation',
+      ]);
+      expect((stack.first as BrightnessEffect).amount, 20);
+    });
+
+    test('identity drag removes only the live instance, in place', () {
+      final start = _doc(_makeImage(
+        effects: EffectStack(<EditorEffect>[
+          const SaturationEffect(amount: 0.8),
+          const ContrastEffect(amount: 1.2),
+          const BrightnessEffect(amount: 12),
+        ]),
+      ));
+      final after = const SetImageAdjustmentsCommand(
+        layerId: 'img',
+        contrast: 1,
+      ).apply(start);
+      final stack = (after.layers.single as ImageLayer).effects.effects;
+      expect(stack.map((e) => e.type).toList(), <String>[
+        'saturation',
+        'brightness',
+      ]);
+    });
+
+    test('undo restores the exact stack: order, disabled entries', () {
+      // Worst case for a value-replay inverse: a reordered stack
+      // (contrast above... below? — contrast first, saturation
+      // second is NON-canonical) plus a disabled entry, then a drag
+      // to identity which *removes* the contrast. Only a verbatim
+      // stack restore brings back the original arrangement.
+      final seed = EffectStack(<EditorEffect>[
+        const ContrastEffect(amount: 1.2),
+        const SaturationEffect(amount: 0.8),
+        const BrightnessEffect(amount: 20, enabled: false),
+      ]);
+      var doc = _doc(_makeImage(effects: seed));
+      final history = HistoryStack();
+      doc = history.execute(
+        doc,
+        const SetImageAdjustmentsCommand(layerId: 'img', contrast: 1),
+      );
+      expect(
+        (doc.layers.single as ImageLayer)
+            .effects
+            .effects
+            .map((e) => e.type)
+            .toList(),
+        <String>['saturation', 'brightness'],
+      );
+
+      doc = history.undo(doc);
+      expect((doc.layers.single as ImageLayer).effects, equals(seed),
+          reason: 'invert(before).apply(after) must reproduce the '
+              'pre-drag stack verbatim');
     });
 
     test('clearing adjustments empties the derived effect stack', () {

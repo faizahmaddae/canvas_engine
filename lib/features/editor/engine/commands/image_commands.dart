@@ -315,6 +315,19 @@ class SetImageShadowCommand extends EditorCommand {
   }
 }
 
+/// Legacy render order of the five derived colour adjustments
+/// (exposure → warmth → saturation → contrast → brightness), i.e.
+/// the order [ImageAdjustments.toEffectStack] emits. Used to pick a
+/// canonical insertion point when a slider gains a value and no live
+/// instance of its effect exists on the stack yet.
+const Map<String, int> _derivedRank = <String, int>{
+  'exposure': 0,
+  'warmth': 1,
+  'saturation': 2,
+  'contrast': 3,
+  'brightness': 4,
+};
+
 /// Swap an [ImageLayer]'s colour-adjustment knobs (brightness /
 /// contrast / saturation / exposure / warmth) in a single undoable
 /// step. Each field is nullable so callers can change one knob at
@@ -375,14 +388,88 @@ class SetImageAdjustmentsCommand extends EditorCommand {
       warmth: warmth,
     );
     if (next == current) return doc;
-    // Strip the previous derived (color-adjustment) effects from
-    // the stack and re-project the new value, preserving any
-    // user-added effects of *other* types layered on top.
-    final keep = layer.effects.effects
-        .where((e) => !ImageAdjustments.derivedEffectTypes.contains(e.type))
-        .toList(growable: true);
-    final derived = next.toEffectStack();
-    final merged = <EditorEffect>[...derived, ...keep];
+    // Surgically edit the live (enabled, unmasked) derived effects in
+    // place instead of strip-and-regenerate. The old rebuild deleted
+    // every derived-type effect — including *disabled* ones (the
+    // eyeball toggle in the Effects panel) and *masked* ones, which
+    // [ImageAdjustments.fromEffectStack] never read — so a contrast
+    // drag silently destroyed a disabled brightness effect. It also
+    // re-sank the derived cluster to the bottom in canonical order,
+    // discarding any user reordering from the Effects panel.
+    final merged = List<EditorEffect>.of(layer.effects.effects);
+    void surgery({
+      required String type,
+      required double value,
+      required double identity,
+      required EditorEffect Function(double amount) build,
+      required double Function(EditorEffect e) amountOf,
+    }) {
+      // "Live" = the instance the slider actually drives, mirroring
+      // fromEffectStack's read (last enabled, unmasked one wins).
+      final idx = merged.lastIndexWhere(
+        (e) => e.type == type && e.enabled && e.mask == null,
+      );
+      if (value == identity) {
+        // Identity values are removed, not stored, so "drag the
+        // slider back to 0" round-trips byte-identical to never
+        // having touched it.
+        if (idx >= 0) merged.removeAt(idx);
+        return;
+      }
+      if (idx >= 0) {
+        if (amountOf(merged[idx]) != value) merged[idx] = build(value);
+        return;
+      }
+      // No live instance: insert after the last live derived effect
+      // that precedes this knob in the legacy render order
+      // (exposure → warmth → saturation → contrast → brightness),
+      // so an un-reordered stack keeps its canonical shape.
+      final rank = _derivedRank[type]!;
+      var insertAt = 0;
+      for (var i = 0; i < merged.length; i++) {
+        final e = merged[i];
+        final r = _derivedRank[e.type];
+        if (r == null || !e.enabled || e.mask != null) continue;
+        if (r < rank) insertAt = i + 1;
+      }
+      merged.insert(insertAt, build(value));
+    }
+
+    surgery(
+      type: 'exposure',
+      value: next.exposure,
+      identity: 0,
+      build: (v) => ExposureEffect(amount: v),
+      amountOf: (e) => (e as ExposureEffect).amount,
+    );
+    surgery(
+      type: 'warmth',
+      value: next.warmth,
+      identity: 0,
+      build: (v) => WarmthEffect(amount: v),
+      amountOf: (e) => (e as WarmthEffect).amount,
+    );
+    surgery(
+      type: 'saturation',
+      value: next.saturation,
+      identity: 1,
+      build: (v) => SaturationEffect(amount: v),
+      amountOf: (e) => (e as SaturationEffect).amount,
+    );
+    surgery(
+      type: 'contrast',
+      value: next.contrast,
+      identity: 1,
+      build: (v) => ContrastEffect(amount: v),
+      amountOf: (e) => (e as ContrastEffect).amount,
+    );
+    surgery(
+      type: 'brightness',
+      value: next.brightness,
+      identity: 0,
+      build: (v) => BrightnessEffect(amount: v),
+      amountOf: (e) => (e as BrightnessEffect).amount,
+    );
     // copyWith preserves the stack mask by construction — rebuilding
     // via the bare constructor would silently drop a set stackMask.
     final nextEffects = layer.effects
@@ -394,19 +481,13 @@ class SetImageAdjustmentsCommand extends EditorCommand {
   EditorCommand invert(EditorDocument before) {
     final layer = before.layerById(layerId);
     if (layer is! ImageLayer) return _noop;
-    // Capture every knob's prior value (matches the pre-soft-retire
-    // behaviour). The other four are unchanged from `before`, so a
-    // five-knob restore is equivalent to a one-knob restore in
-    // outcome but simpler to reason about for history readers.
-    final adj = ImageAdjustments.fromEffectStack(layer.effects);
-    return SetImageAdjustmentsCommand(
-      layerId: layerId,
-      brightness: adj.brightness,
-      contrast: adj.contrast,
-      saturation: adj.saturation,
-      exposure: adj.exposure,
-      warmth: adj.warmth,
-    );
+    // Restore the entire pre-apply stack verbatim rather than
+    // replaying the five knob values: a knob dragged to identity
+    // *removes* its effect, and re-inserting it by value on undo
+    // would land at the canonical position instead of wherever the
+    // user had reordered it. Only a snapshot reproduces `before`
+    // exactly (ordering, disabled entries, masks, stack mask).
+    return _RestoreEffectsCommand(layerId: layerId, effects: layer.effects);
   }
 
   @override
@@ -424,6 +505,35 @@ class SetImageAdjustmentsCommand extends EditorCommand {
     if ((exposure == null) != (previous.exposure == null)) return null;
     if ((warmth == null) != (previous.warmth == null)) return null;
     return this;
+  }
+}
+
+/// Verbatim restore of a layer's whole [EffectStack]. The inverse of
+/// [SetImageAdjustmentsCommand]: surgical knob edits can remove or
+/// insert effects, so only a full-stack snapshot reproduces the
+/// pre-command state — ordering, disabled entries, per-effect masks,
+/// and the stack mask — exactly on undo.
+class _RestoreEffectsCommand extends EditorCommand {
+  const _RestoreEffectsCommand({required this.layerId, required this.effects});
+
+  final String layerId;
+  final EffectStack effects;
+
+  @override
+  String get label => 'Image adjustments';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer is! ImageLayer) return doc;
+    return doc.replaceLayer(layer.copyAll(effects: effects));
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) {
+    final layer = before.layerById(layerId);
+    if (layer is! ImageLayer) return _noop;
+    return _RestoreEffectsCommand(layerId: layerId, effects: layer.effects);
   }
 }
 
