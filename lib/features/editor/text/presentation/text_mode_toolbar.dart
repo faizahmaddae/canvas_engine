@@ -37,6 +37,7 @@ import '../domain/font_catalog.dart';
 import '../domain/text_style_presets.dart';
 import 'text_floating_toolbar.dart' show showTextMoreSheet;
 
+part 'text_panel_primitives.dart';
 part 'text_resize_tiles.dart';
 part 'text_style_browser.dart';
 
@@ -1404,58 +1405,6 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
   }
 }
 
-/// Pill chip used inside `_LayoutSliderCard`. Compact, flat — no
-/// border or fill on idle so the chip strip reads as the primary
-/// row, not a settings card.
-class _LayoutPresetChip extends StatelessWidget {
-  const _LayoutPresetChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: selected
-          ? scheme.primary.withValues(alpha: 0.14)
-          : scheme.surfaceContainerHighest.withValues(alpha: 0.55),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(
-          color: selected
-              ? scheme.primary.withValues(alpha: 0.45)
-              : Colors.transparent,
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () {
-          EditorHaptics.snap();
-          onTap();
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected ? scheme.primary : scheme.onSurface,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Small section label used by panels that group multiple
 /// affordances (Background → Shape / Color / …). Same visual weight
 /// as the old `_AdvancedGroupHeader` so the eye treats them as
@@ -1477,26 +1426,6 @@ class _PanelSectionLabel extends StatelessWidget {
           letterSpacing: 0,
           color: scheme.onSurfaceVariant,
         ),
-      ),
-    );
-  }
-}
-
-/// Hairline divider rendered above an "Adjust precisely" expanded
-/// body so the appearing sliders read as a clearly-bounded new
-/// block rather than a sudden vertical jump. Shared by Size,
-/// Background, Border, and Shadow precision disclosures.
-class _PrecisionDivider extends StatelessWidget {
-  const _PrecisionDivider({required this.scheme});
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 2, 4, 6),
-      child: Container(
-        height: 1,
-        color: scheme.outlineVariant.withValues(alpha: 0.35),
       ),
     );
   }
