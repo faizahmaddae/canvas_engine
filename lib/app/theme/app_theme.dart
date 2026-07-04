@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_spacing.dart';
+import 'app_tokens.dart';
 
 /// App-wide design system: Material 3 colour schemes derived from a
 /// single seed, plus a UI type scale and shared component shapes.
@@ -59,6 +60,9 @@ abstract final class AppTheme {
     );
 
     return base.copyWith(
+      extensions: [
+        brightness == Brightness.dark ? AppTokens.dark : AppTokens.light,
+      ],
       textTheme: _textTheme(base.textTheme, scheme, uiFamily, uiFallback),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
