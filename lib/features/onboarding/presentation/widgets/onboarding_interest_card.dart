@@ -172,7 +172,7 @@ class _InterestPreview extends StatelessWidget {
             color: palette.canvasPaper,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.78),
+              color: palette.hairline.withValues(alpha: 0.78),
               width: 1,
             ),
           ),
@@ -202,11 +202,11 @@ class BlankCanvasPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = WarmPalette.of(context);
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [Color(0xFFFFFEFC), Color(0xFFF2EEFF)],
+          colors: [palette.surface, palette.accentSoft],
         ),
       ),
       child: Padding(

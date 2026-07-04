@@ -44,10 +44,10 @@ class HeroStartCard extends StatelessWidget {
           final palette = WarmPalette.of(context);
           return DecoratedBox(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: AlignmentDirectional.topStart,
                 end: AlignmentDirectional.bottomEnd,
-                colors: [Color(0xFFFFFEFC), Color(0xFFF1ECFF)],
+                colors: [palette.surface, palette.accentSoft],
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
@@ -357,7 +357,13 @@ class _ToolPill extends StatelessWidget {
     final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: palette.ink,
+        // Fixed graphite, not palette.ink -- ink flips to near-white
+        // in dark mode, which would turn this into a white pill with
+        // invisible white icons on top. This chip depicts a toolbar
+        // affordance in the illustration and is meant to stay dark
+        // regardless of theme, same rationale as the palette's fixed
+        // rose/saffron/accent decorative colours.
+        color: const Color(0xFF17151F),
         borderRadius: BorderRadius.circular(AppRadii.pill),
         boxShadow: [
           BoxShadow(

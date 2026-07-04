@@ -2,20 +2,21 @@ import 'package:canvas_engine/app/theme/warm_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Locks in the Phase 4 §4.3 step-1 constraints: WarmPalette's light
-/// values must stay byte-identical to the former HomePalette/
-/// OnboardingPalette duplicates, and `of(context)` must not yet vary
-/// with brightness (that's step 2, gated on screenshots).
+/// Locks in the Phase 4 §4.3 WarmPalette contract: light values stay
+/// byte-identical to the former HomePalette/OnboardingPalette
+/// duplicates, and `of(context)` now resolves a real dark variant
+/// (step 2 — the behavioural switch, gated on before/after simulator
+/// screenshots) that flips ink/paper while keeping the three brand
+/// accents (accent, rose, saffron) unchanged.
 void main() {
   Widget host(Widget child, {Brightness brightness = Brightness.light}) {
-    return MediaQuery(
-      data: MediaQueryData(platformBrightness: brightness),
-      child: MaterialApp(
-        theme: ThemeData(brightness: Brightness.light),
-        darkTheme: ThemeData(brightness: Brightness.dark),
-        themeMode: ThemeMode.system,
-        home: Scaffold(body: child),
-      ),
+    return MaterialApp(
+      theme: ThemeData(brightness: Brightness.light),
+      darkTheme: ThemeData(brightness: Brightness.dark),
+      themeMode: brightness == Brightness.dark
+          ? ThemeMode.dark
+          : ThemeMode.light,
+      home: Scaffold(body: child),
     );
   }
 
@@ -49,26 +50,13 @@ void main() {
     expect(palette.shadow, const Color(0xFF3A2E46));
   });
 
-  testWidgets('step 1: of(context) returns the same values under a '
-      'dark platform brightness (deliberate — behavioural switch is '
-      'step 2, gated on screenshots)', (tester) async {
-    late WarmPalette light;
-    late WarmPalette dark;
+  testWidgets('dark values match the designed dark variant', (tester) async {
+    late WarmPalette palette;
     await tester.pumpWidget(
       host(
         Builder(
           builder: (context) {
-            light = WarmPalette.of(context);
-            return const SizedBox.shrink();
-          },
-        ),
-      ),
-    );
-    await tester.pumpWidget(
-      host(
-        Builder(
-          builder: (context) {
-            dark = WarmPalette.of(context);
+            palette = WarmPalette.of(context);
             return const SizedBox.shrink();
           },
         ),
@@ -76,8 +64,29 @@ void main() {
       ),
     );
 
-    expect(dark.ink, light.ink);
-    expect(dark.surface, light.surface);
-    expect(dark.backgroundTop, light.backgroundTop);
+    expect(palette.backgroundTop, const Color(0xFF1C1A22));
+    expect(palette.backgroundBottom, const Color(0xFF15131B));
+    expect(palette.surface, const Color(0xFF221F29));
+    expect(palette.surfaceMuted, const Color(0xFF2A2733));
+    expect(palette.canvasPaper, const Color(0xFF262330));
+    expect(palette.ink, const Color(0xFFF2EFF7));
+    expect(palette.muted, const Color(0xFFACA3B9));
+    expect(palette.hairline, const Color(0xFF3B3745));
+    expect(palette.accent, const Color(0xFF7C5CFF));
+    expect(palette.accentPressed, const Color(0xFF6747F2));
+    expect(palette.accentSoft, const Color(0xFF362C55));
+    expect(palette.rose, const Color(0xFFD87995));
+    expect(palette.saffron, const Color(0xFFE5A044));
+    expect(palette.shadow, const Color(0xFF000000));
+
+    // Ink/paper flip vs. the light values (asserted above in the
+    // previous test) and the three brand accents stay fixed.
+    expect(palette.ink, isNot(const Color(0xFF17151F)));
+    expect(palette.surface, isNot(const Color(0xFFFFFEFC)));
+    expect(palette.backgroundTop, isNot(const Color(0xFFFFFBF6)));
+    expect(palette.accent, const Color(0xFF7C5CFF));
+    expect(palette.accentPressed, const Color(0xFF6747F2));
+    expect(palette.rose, const Color(0xFFD87995));
+    expect(palette.saffron, const Color(0xFFE5A044));
   });
 }

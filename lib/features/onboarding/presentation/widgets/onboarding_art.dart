@@ -221,11 +221,11 @@ class _PersianTypeSpecimen extends StatelessWidget {
     final l10n = context.l10n;
     final palette = WarmPalette.of(context);
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [Color(0xFFFFF6EA), Color(0xFFECE7FF)],
+          colors: [palette.surface, palette.accentSoft],
         ),
       ),
       child: Stack(
@@ -482,7 +482,13 @@ class _EditorPill extends StatelessWidget {
     final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: palette.ink,
+        // Fixed graphite, not palette.ink -- ink flips to near-white
+        // in dark mode, which would turn this into a white pill with
+        // invisible white icon/text on top. This chip depicts a
+        // toolbar affordance in the illustration and is meant to
+        // stay dark regardless of theme, same rationale as the
+        // palette's fixed rose/saffron/accent decorative colours.
+        color: const Color(0xFF17151F),
         borderRadius: BorderRadius.circular(AppRadii.pill),
         boxShadow: [
           BoxShadow(

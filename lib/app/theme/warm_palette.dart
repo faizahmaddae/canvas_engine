@@ -16,9 +16,17 @@ import 'package:flutter/material.dart';
 ///      consumer, but [of] always returns [_light] regardless of
 ///      brightness. Zero visual change, including preserving the
 ///      existing light-in-dark-mode bug for now.
-///   2. Behavioural — [of] branches on brightness and returns a
-///      designed [_dark] variant, gated on before/after simulator
-///      screenshots (Phase 4 plan D5).
+///   2. Behavioural (this step) — [of] branches on brightness and
+///      returns a designed [_dark] variant, gated on before/after
+///      simulator screenshots (Phase 4 plan D5).
+///
+/// Dark variant design rule: ink↔paper flips (near-black text becomes
+/// near-white, near-white paper becomes dark slate-plum), the brand
+/// accent and the two decorative accents (rose, saffron) stay exactly
+/// as-is since they're already mid-brightness and read fine on both
+/// backgrounds, and `shadow` drops to a near-black so elevation still
+/// reads against a dark surface (a colour-tinted shadow disappears at
+/// low lightness).
 class WarmPalette {
   const WarmPalette._({
     required this.backgroundTop,
@@ -71,7 +79,31 @@ class WarmPalette {
     shadow: Color(0xFF3A2E46),
   );
 
-  /// Step 1 (mechanical): always the light palette, regardless of
-  /// [context]'s brightness. Step 2 will switch this on brightness.
-  static WarmPalette of(BuildContext context) => _light;
+  /// Dark counterpart of [_light] — see the class doc for the design
+  /// rule. Kept as a warm slate-plum (not a neutral grey or true
+  /// black) so Home/Onboarding/Templates Browse still read as the
+  /// same "warm editorial" surface family in dark mode.
+  static const WarmPalette _dark = WarmPalette._(
+    backgroundTop: Color(0xFF1C1A22),
+    backgroundBottom: Color(0xFF15131B),
+    surface: Color(0xFF221F29),
+    surfaceMuted: Color(0xFF2A2733),
+    canvasPaper: Color(0xFF262330),
+    ink: Color(0xFFF2EFF7),
+    muted: Color(0xFFACA3B9),
+    hairline: Color(0xFF3B3745),
+    accent: Color(0xFF7C5CFF),
+    accentPressed: Color(0xFF6747F2),
+    accentSoft: Color(0xFF362C55),
+    rose: Color(0xFFD87995),
+    saffron: Color(0xFFE5A044),
+    shadow: Color(0xFF000000),
+  );
+
+  /// Resolves against the ambient [Brightness] — see the class doc
+  /// for the two-step migration this landed in.
+  static WarmPalette of(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? _dark : _light;
+  }
 }
