@@ -4,18 +4,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart' as picker;
-import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../../core/utils/haptics.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
+import '../../application/image_import_service.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/modules/image/image_layer.dart';
-
-const _uuid = Uuid();
 
 bool imageSourceIsKnownUnavailable(ImageSource source) {
   final path = source.filePath;
@@ -63,7 +60,7 @@ Future<void> replaceImageLayer(
   }
   if (picked == null) return;
 
-  final stable = await _persistPickedImage(picked.path);
+  final stable = await persistPickedImage(picked.path);
   if (!context.mounted) return;
   ref
       .read(documentControllerProvider.notifier)
@@ -124,16 +121,4 @@ Future<picker.ImageSource?> _pickImageSource(
       );
     },
   );
-}
-
-Future<String> _persistPickedImage(String tempPath) async {
-  final dir = await getApplicationDocumentsDirectory();
-  final folder = Directory('${dir.path}/imported_images');
-  if (!await folder.exists()) await folder.create(recursive: true);
-  final ext = tempPath.contains('.')
-      ? tempPath.substring(tempPath.lastIndexOf('.'))
-      : '.png';
-  final dest = '${folder.path}/${_uuid.v4()}$ext';
-  await File(tempPath).copy(dest);
-  return dest;
 }

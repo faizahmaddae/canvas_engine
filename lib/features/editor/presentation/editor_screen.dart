@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart' as picker;
-import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/utils/haptics.dart';
@@ -14,6 +13,7 @@ import '../../../l10n/l10n.dart';
 import '../application/autosave_controller.dart';
 import '../application/context_toolbar_controller.dart';
 import '../application/document_controller.dart';
+import '../application/image_import_service.dart';
 import '../application/live_overlay_controller.dart';
 import '../application/editor_lifecycle.dart';
 import '../application/editor_session.dart';
@@ -693,7 +693,7 @@ class EditorScreen extends ConsumerWidget {
 
   Future<void> _addImage(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
-    final source = await _pickImageSource(context);
+    final source = await pickImageSource(context);
     if (source == null || !context.mounted) return;
 
     final pick = picker.ImagePicker();
@@ -722,7 +722,7 @@ class EditorScreen extends ConsumerWidget {
 
     final Size dims;
     try {
-      dims = await _resolveImageSize(File(picked.path));
+      dims = await resolveImageSize(File(picked.path));
     } catch (e, st) {
       debugLogError('editor/_addImage/_resolveImageSize', e, st);
       if (!context.mounted) return;
@@ -744,7 +744,7 @@ class EditorScreen extends ConsumerWidget {
 
     // Copy out of the temp picker dir into app-documents so the path
     // remains valid across app restarts and project reloads.
-    final stablePath = await _persistPickedImage(picked.path);
+    final stablePath = await persistPickedImage(picked.path);
     if (!context.mounted) return;
 
     final doc = ref.read(documentControllerProvider);
@@ -782,80 +782,6 @@ class EditorScreen extends ConsumerWidget {
           .execute(AddLayerCommand(layer));
     }
     ref.read(selectionControllerProvider.notifier).select(id);
-  }
-
-  /// Bottom sheet asking the user where the image should come from.
-  /// Returns `null` on dismiss/back so the caller can bail cleanly.
-  Future<picker.ImageSource?> _pickImageSource(BuildContext context) {
-    final l10n = context.l10n;
-    return showModalBottomSheet<picker.ImageSource>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: Text(l10n.galleryAction),
-                onTap: () {
-                  EditorHaptics.tap();
-                  Navigator.pop(ctx, picker.ImageSource.gallery);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_camera_outlined),
-                title: Text(l10n.cameraAction),
-                onTap: () {
-                  EditorHaptics.tap();
-                  Navigator.pop(ctx, picker.ImageSource.camera);
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// Resolve the natural pixel size of [file] without decoding it
-  /// fully into a widget tree.
-  Future<Size> _resolveImageSize(File file) {
-    final stream = FileImage(file).resolve(ImageConfiguration.empty);
-    final completer = Completer<Size>();
-    late final ImageStreamListener listener;
-    listener = ImageStreamListener(
-      (info, _) {
-        if (!completer.isCompleted) {
-          completer.complete(
-            Size(info.image.width.toDouble(), info.image.height.toDouble()),
-          );
-        }
-        stream.removeListener(listener);
-      },
-      onError: (e, _) {
-        if (!completer.isCompleted) completer.completeError(e);
-        stream.removeListener(listener);
-      },
-    );
-    stream.addListener(listener);
-    return completer.future;
-  }
-
-  /// Copy [tempPath] into app-documents so the image survives the
-  /// OS clearing the picker temp dir.
-  Future<String> _persistPickedImage(String tempPath) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final folder = Directory('${dir.path}/imported_images');
-    if (!await folder.exists()) await folder.create(recursive: true);
-    final ext = tempPath.contains('.')
-        ? tempPath.substring(tempPath.lastIndexOf('.'))
-        : '.png';
-    final dest = '${folder.path}/${_uuid.v4()}$ext';
-    await File(tempPath).copy(dest);
-    return dest;
   }
 
   /// Scale [natural] uniformly so it fits inside ~80% of the canvas
