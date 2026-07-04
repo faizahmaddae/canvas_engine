@@ -160,4 +160,15 @@ void main() {
       reason: 'shape switch keeps bounds',
     );
   });
+
+  group('featherBlurSigma (scrim edge softening)', () {
+    test('zero feather stays crisp (zero sigma)', () {
+      expect(featherBlurSigma(0, 2), 0);
+    });
+
+    test('scales with both feather and viewport scale', () {
+      expect(featherBlurSigma(30, 2), closeTo(20, 0.001));
+      expect(featherBlurSigma(9, 1), closeTo(3, 0.001));
+    });
+  });
 }

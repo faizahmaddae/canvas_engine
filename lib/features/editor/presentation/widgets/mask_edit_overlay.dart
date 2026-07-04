@@ -212,6 +212,19 @@ class _MaskEditOverlayState extends ConsumerState<MaskEditOverlay> {
   }
 }
 
+/// Chrome-only approximation of the render path's linear feather
+/// ramp ([RectMask.sampleAlpha]/[EllipseMask.sampleAlpha]) — softens
+/// the scrim edge live during drag so feather is visibly applied
+/// without re-rasterizing the exact per-pixel ramp every frame (the
+/// cost [MaskEditController.updateDraft] already avoids for gesture
+/// drags). [featherLayerPx] is layer-local like [LayerMask.feather];
+/// the committed render path ([StackMaskComposite], via
+/// [StackMaskRasterCache]) stays the source of truth for the actual
+/// falloff shape and is unaffected by this approximation.
+@visibleForTesting
+double featherBlurSigma(double featherLayerPx, double scale) =>
+    (featherLayerPx * scale) / 3;
+
 /// Dim everything outside the region; stroke the region edge. The
 /// region path is built in screen space through the mapper so it
 /// rotates with the layer.
@@ -264,7 +277,12 @@ class _MaskScrimPainter extends CustomPainter {
     final scrim = inverted
         ? region
         : (Path.combine(PathOperation.difference, full, region));
-    canvas.drawPath(scrim, Paint()..color = scrimColor);
+    final scrimPaint = Paint()..color = scrimColor;
+    final sigma = featherBlurSigma(draft.feather, scale);
+    if (sigma > 0) {
+      scrimPaint.maskFilter = MaskFilter.blur(BlurStyle.normal, sigma);
+    }
+    canvas.drawPath(scrim, scrimPaint);
     canvas.drawPath(
       region,
       Paint()
