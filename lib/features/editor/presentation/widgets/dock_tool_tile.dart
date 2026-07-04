@@ -252,6 +252,21 @@ class _DockToolTileState extends State<DockToolTile> {
         child: tile,
       );
     }
-    return tile;
+    // The static category label doubles as the accessible name even
+    // when valueText replaces it on screen ("Font Size" stays the
+    // label, "24 pt" becomes the value) -- otherwise a screen reader
+    // just hears the bare value with no idea what it refers to. The
+    // peek long-press (undo/redo preview) has no AT equivalent and
+    // is intentionally not exposed here; onTap (select this tool)
+    // is the control's core function.
+    return Semantics(
+      label: widget.label,
+      value: widget.valueText,
+      button: true,
+      enabled: enabled,
+      selected: active,
+      onTap: enabled ? widget.onTap : null,
+      child: ExcludeSemantics(child: tile),
+    );
   }
 }

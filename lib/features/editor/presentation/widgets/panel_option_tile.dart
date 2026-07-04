@@ -169,12 +169,20 @@ class _PanelOptionTileState extends State<PanelOptionTile> {
       child: tile,
     );
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => setState(() => _down = true),
-      onTapCancel: () => setState(() => _down = false),
-      onTapUp: (_) => setState(() => _down = false),
-      child: tile,
+    return Semantics(
+      label: widget.label,
+      button: true,
+      selected: selected,
+      onTap: widget.onTap,
+      child: ExcludeSemantics(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) => setState(() => _down = true),
+          onTapCancel: () => setState(() => _down = false),
+          onTapUp: (_) => setState(() => _down = false),
+          child: tile,
+        ),
+      ),
     );
   }
 }
