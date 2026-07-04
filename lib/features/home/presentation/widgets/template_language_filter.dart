@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
-import 'home_style.dart';
 import 'templates_section.dart';
 
 /// Home-only template recommendation filter.
@@ -61,10 +61,11 @@ class _FilterPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final palette = WarmPalette.of(context);
     return Material(
       color: selected
-          ? HomePalette.ink
-          : HomePalette.surface.withValues(alpha: 0.82),
+          ? palette.ink
+          : palette.surface.withValues(alpha: 0.82),
       borderRadius: BorderRadius.circular(AppRadii.pill),
       child: InkWell(
         onTap: onTap,
@@ -78,8 +79,8 @@ class _FilterPill extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadii.pill),
             border: Border.all(
               color: selected
-                  ? HomePalette.ink
-                  : HomePalette.hairline.withValues(alpha: 0.72),
+                  ? palette.ink
+                  : palette.hairline.withValues(alpha: 0.72),
             ),
           ),
           alignment: Alignment.center,
@@ -88,7 +89,7 @@ class _FilterPill extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.labelMedium?.copyWith(
-              color: selected ? Colors.white : HomePalette.muted,
+              color: selected ? Colors.white : palette.muted,
               fontWeight: FontWeight.w800,
             ),
           ),

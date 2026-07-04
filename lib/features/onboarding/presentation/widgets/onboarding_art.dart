@@ -3,10 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../templates/domain/template.dart';
 import '../../../templates/presentation/template_preview.dart';
-import 'onboarding_style.dart';
 
 /// Lightweight Flutter-built illustration for onboarding.
 ///
@@ -42,6 +42,7 @@ class OnboardingTemplateCollage extends StatelessWidget {
           final firstTemplate = templates.isNotEmpty ? templates[0] : null;
           final secondTemplate = templates.length > 1 ? templates[1] : null;
           final thirdTemplate = templates.length > 2 ? templates[2] : null;
+          final palette = WarmPalette.of(context);
 
           return Stack(
             clipBehavior: Clip.none,
@@ -62,7 +63,7 @@ class OnboardingTemplateCollage extends StatelessWidget {
                   width: chipWidth,
                   title: l10n.onboardingArtTypography,
                   subtitle: l10n.onboardingArtPersian,
-                  color: OnboardingPalette.saffron,
+                  color: palette.saffron,
                 ),
               ),
               PositionedDirectional(
@@ -152,17 +153,18 @@ class _TemplateArtCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: OnboardingPalette.surface,
+        color: palette.surface,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: OnboardingPalette.hairline.withValues(alpha: 0.58),
+          color: palette.hairline.withValues(alpha: 0.58),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: OnboardingPalette.shadow.withValues(
+            color: palette.shadow.withValues(
               alpha: elevated ? 0.18 : 0.1,
             ),
             blurRadius: elevated ? 40 : 24,
@@ -196,8 +198,8 @@ class _TemplateArtCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: OnboardingPalette.muted,
+                style: TextStyle(
+                  color: palette.muted,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   height: 1.2,
@@ -217,6 +219,7 @@ class _PersianTypeSpecimen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -233,7 +236,7 @@ class _PersianTypeSpecimen extends StatelessWidget {
             child: Text(
               l10n.onboardingArtAlphabet,
               style: TextStyle(
-                color: OnboardingPalette.accent.withValues(alpha: 0.9),
+                color: palette.accent.withValues(alpha: 0.9),
                 fontFamily: 'BTitrBd',
                 fontSize: 30,
                 fontWeight: FontWeight.w700,
@@ -247,7 +250,7 @@ class _PersianTypeSpecimen extends StatelessWidget {
             child: Text(
               l10n.onboardingArtBeautiful,
               style: TextStyle(
-                color: OnboardingPalette.ink.withValues(alpha: 0.9),
+                color: palette.ink.withValues(alpha: 0.9),
                 fontFamily: 'IranNastaliq',
                 fontSize: 28,
                 height: 1,
@@ -275,14 +278,15 @@ class _TypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: OnboardingPalette.surface.withValues(alpha: 0.86),
+        color: palette.surface.withValues(alpha: 0.86),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: OnboardingPalette.hairline),
+        border: Border.all(color: palette.hairline),
         boxShadow: [
           BoxShadow(
-            color: OnboardingPalette.shadow.withValues(alpha: 0.08),
+            color: palette.shadow.withValues(alpha: 0.08),
             blurRadius: 18,
             offset: const Offset(0, 10),
           ),
@@ -308,8 +312,8 @@ class _TypeChip extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: OnboardingPalette.ink,
+                style: TextStyle(
+                  color: palette.ink,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                   height: 1.2,
@@ -319,8 +323,8 @@ class _TypeChip extends StatelessWidget {
                 subtitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: OnboardingPalette.muted,
+                style: TextStyle(
+                  color: palette.muted,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   height: 1.4,
@@ -339,16 +343,17 @@ class _WorkspaceSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: OnboardingPalette.surfaceMuted.withValues(alpha: 0.82),
+        color: palette.surfaceMuted.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: OnboardingPalette.hairline.withValues(alpha: 0.68),
+          color: palette.hairline.withValues(alpha: 0.68),
         ),
         boxShadow: [
           BoxShadow(
-            color: OnboardingPalette.shadow.withValues(alpha: 0.08),
+            color: palette.shadow.withValues(alpha: 0.08),
             blurRadius: 30,
             offset: const Offset(0, 18),
           ),
@@ -362,10 +367,10 @@ class _WorkspaceSurface extends StatelessWidget {
             end: AppSpacing.lg,
             child: Row(
               children: [
-                for (final color in const [
-                  OnboardingPalette.rose,
-                  OnboardingPalette.saffron,
-                  OnboardingPalette.accent,
+                for (final color in [
+                  palette.rose,
+                  palette.saffron,
+                  palette.accent,
                 ]) ...[
                   Container(
                     width: 7,
@@ -382,7 +387,7 @@ class _WorkspaceSurface extends StatelessWidget {
                   width: 54,
                   height: 7,
                   decoration: BoxDecoration(
-                    color: OnboardingPalette.hairline.withValues(alpha: 0.82),
+                    color: palette.hairline.withValues(alpha: 0.82),
                     borderRadius: BorderRadius.circular(AppRadii.pill),
                   ),
                 ),
@@ -396,10 +401,10 @@ class _WorkspaceSurface extends StatelessWidget {
             bottom: AppSpacing.md,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: OnboardingPalette.canvasPaper.withValues(alpha: 0.58),
+                color: palette.canvasPaper.withValues(alpha: 0.58),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: OnboardingPalette.hairline.withValues(alpha: 0.5),
+                  color: palette.hairline.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -417,20 +422,21 @@ class _PaletteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const colors = [
-      OnboardingPalette.accent,
-      OnboardingPalette.rose,
-      OnboardingPalette.saffron,
-      OnboardingPalette.ink,
+    final palette = WarmPalette.of(context);
+    final colors = [
+      palette.accent,
+      palette.rose,
+      palette.saffron,
+      palette.ink,
     ];
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: OnboardingPalette.surface.withValues(alpha: 0.82),
+        color: palette.surface.withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: OnboardingPalette.hairline),
+        border: Border.all(color: palette.hairline),
         boxShadow: [
           BoxShadow(
-            color: OnboardingPalette.shadow.withValues(alpha: 0.07),
+            color: palette.shadow.withValues(alpha: 0.07),
             blurRadius: 14,
             offset: const Offset(0, 8),
           ),
@@ -473,13 +479,14 @@ class _EditorPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: OnboardingPalette.ink,
+        color: palette.ink,
         borderRadius: BorderRadius.circular(AppRadii.pill),
         boxShadow: [
           BoxShadow(
-            color: OnboardingPalette.shadow.withValues(alpha: 0.16),
+            color: palette.shadow.withValues(alpha: 0.16),
             blurRadius: 18,
             offset: const Offset(0, 10),
           ),

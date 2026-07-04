@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
-import 'onboarding_style.dart';
+import '../../../../app/theme/warm_palette.dart';
 
 /// Shared "primary" CTA used by Welcome / Goal / Ready.
 ///
@@ -28,6 +28,7 @@ class _OnboardingPrimaryButtonState extends State<OnboardingPrimaryButton> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return AnimatedScale(
       scale: _pressed ? 0.985 : 1,
       duration: const Duration(milliseconds: 120),
@@ -41,18 +42,18 @@ class _OnboardingPrimaryButtonState extends State<OnboardingPrimaryButton> {
           child: Ink(
             height: 56,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.centerRight,
                 end: Alignment.centerLeft,
                 colors: [
-                  OnboardingPalette.accent,
-                  OnboardingPalette.accentPressed,
+                  palette.accent,
+                  palette.accentPressed,
                 ],
               ),
               borderRadius: BorderRadius.circular(AppRadii.hero),
               boxShadow: [
                 BoxShadow(
-                  color: OnboardingPalette.accent.withValues(alpha: 0.22),
+                  color: palette.accent.withValues(alpha: 0.22),
                   blurRadius: 24,
                   offset: const Offset(0, 12),
                 ),
@@ -91,7 +92,9 @@ class OnboardingTextButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: onPressed,
-      style: TextButton.styleFrom(foregroundColor: OnboardingPalette.muted),
+      style: TextButton.styleFrom(
+        foregroundColor: WarmPalette.of(context).muted,
+      ),
       child: Text(label),
     );
   }

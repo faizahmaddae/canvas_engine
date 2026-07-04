@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/warm_palette.dart';
 import '../../../l10n/l10n.dart';
 import '../../editor/application/project_recovery_service.dart';
 import '../application/project_store.dart';
@@ -97,7 +98,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
 
     return Scaffold(
-      backgroundColor: HomePalette.backgroundBottom,
+      backgroundColor: WarmPalette.of(context).backgroundBottom,
       body: SafeArea(
         bottom: false,
         child: HomeBackground(

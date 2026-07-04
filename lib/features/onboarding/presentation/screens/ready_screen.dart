@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../templates/application/template_repository_provider.dart';
 import '../../../templates/domain/template.dart';
@@ -85,6 +86,7 @@ class _ReadyScreenState extends ConsumerState<ReadyScreen>
       effectiveTemplatesProvider(Localizations.localeOf(context).languageCode),
     );
     final templates = _resolveTemplates(source, choices.selectedCategories);
+    final palette = WarmPalette.of(context);
     return OnboardingPageShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -93,8 +95,8 @@ class _ReadyScreenState extends ConsumerState<ReadyScreen>
           Text(
             l10n.onboardingReadyTitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: OnboardingPalette.ink,
+            style: TextStyle(
+              color: palette.ink,
               fontSize: 34,
               fontWeight: FontWeight.w900,
               height: 1.25,
@@ -107,8 +109,8 @@ class _ReadyScreenState extends ConsumerState<ReadyScreen>
               child: Text(
                 l10n.onboardingReadySubtitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: OnboardingPalette.muted,
+                style: TextStyle(
+                  color: palette.muted,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   height: 1.7,

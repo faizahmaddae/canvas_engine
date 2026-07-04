@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/project_store.dart';
 import '../../domain/project.dart';
-import 'home_style.dart';
 import 'project_card.dart';
 import 'section_header.dart';
 
@@ -159,6 +159,7 @@ class _Empty extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final palette = WarmPalette.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.only(
         start: AppSpacing.pageGutter,
@@ -167,14 +168,14 @@ class _Empty extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: HomePalette.surface.withValues(alpha: 0.86),
+          color: palette.surface.withValues(alpha: 0.86),
           borderRadius: BorderRadius.circular(AppRadii.card),
           border: Border.all(
-            color: HomePalette.hairline.withValues(alpha: 0.72),
+            color: palette.hairline.withValues(alpha: 0.72),
           ),
           boxShadow: [
             BoxShadow(
-              color: HomePalette.shadow.withValues(alpha: 0.06),
+              color: palette.shadow.withValues(alpha: 0.06),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -190,16 +191,16 @@ class _Empty extends StatelessWidget {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       begin: AlignmentDirectional.topStart,
                       end: AlignmentDirectional.bottomEnd,
-                      colors: [HomePalette.accentSoft, Color(0xFFFFF3E2)],
+                      colors: [palette.accentSoft, const Color(0xFFFFF3E2)],
                     ),
                     borderRadius: BorderRadius.circular(AppRadii.button),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.collections_bookmark_outlined,
-                    color: HomePalette.accent,
+                    color: palette.accent,
                     size: 21,
                   ),
                 ),
@@ -212,7 +213,7 @@ class _Empty extends StatelessWidget {
                       Text(
                         l10n.emptyProjectsTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: HomePalette.ink,
+                          color: palette.ink,
                           fontWeight: FontWeight.w900,
                         ),
                         textAlign: TextAlign.start,
@@ -221,7 +222,7 @@ class _Empty extends StatelessWidget {
                       Text(
                         l10n.emptyProjectsBody,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: HomePalette.muted,
+                          color: palette.muted,
                           height: 1.4,
                         ),
                         textAlign: TextAlign.start,
@@ -241,7 +242,7 @@ class _Empty extends StatelessWidget {
                   icon: const Icon(Icons.auto_awesome_outlined, size: 18),
                   label: Text(l10n.homeChooseTemplateAction),
                   style: TextButton.styleFrom(
-                    foregroundColor: HomePalette.accent,
+                    foregroundColor: palette.accent,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
@@ -250,7 +251,7 @@ class _Empty extends StatelessWidget {
                   icon: const Icon(Icons.add_rounded, size: 18),
                   label: Text(l10n.blankCanvasCta),
                   style: TextButton.styleFrom(
-                    foregroundColor: HomePalette.muted,
+                    foregroundColor: palette.muted,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),

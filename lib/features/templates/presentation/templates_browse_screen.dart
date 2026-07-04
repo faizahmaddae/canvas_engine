@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
+import '../../../app/theme/warm_palette.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
 import '../../home/presentation/widgets/home_style.dart';
@@ -95,7 +96,7 @@ class _TemplatesBrowseScreenState extends ConsumerState<TemplatesBrowseScreen> {
         : l10n.templatesBrowseCategorySubtitle;
 
     return Scaffold(
-      backgroundColor: HomePalette.backgroundBottom,
+      backgroundColor: WarmPalette.of(context).backgroundBottom,
       body: HomeBackground(
         child: SafeArea(
           bottom: false,
@@ -157,6 +158,7 @@ class _BrowseHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final palette = WarmPalette.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(
         AppSpacing.xs,
@@ -167,9 +169,9 @@ class _BrowseHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const BackButton(
-            color: HomePalette.ink,
-            style: ButtonStyle(
+          BackButton(
+            color: palette.ink,
+            style: const ButtonStyle(
               padding: WidgetStatePropertyAll(EdgeInsets.zero),
               visualDensity: VisualDensity.compact,
             ),
@@ -184,7 +186,7 @@ class _BrowseHeader extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.start,
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    color: HomePalette.ink,
+                    color: palette.ink,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0,
                   ),
@@ -196,7 +198,7 @@ class _BrowseHeader extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.start,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: HomePalette.muted,
+                    color: palette.muted,
                     height: 1.25,
                   ),
                 ),
@@ -257,13 +259,14 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final palette = WarmPalette.of(context);
     return SizedBox(
       height: 38,
       child: TextField(
         onChanged: onChanged,
         textInputAction: TextInputAction.search,
         style: theme.textTheme.bodyMedium?.copyWith(
-          color: HomePalette.ink,
+          color: palette.ink,
           fontSize: 13,
           fontWeight: FontWeight.w700,
           letterSpacing: 0,
@@ -271,19 +274,19 @@ class _SearchField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: l10n.templatesSearchHint,
           hintStyle: theme.textTheme.bodyMedium?.copyWith(
-            color: HomePalette.muted,
+            color: palette.muted,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search_rounded,
-            color: HomePalette.muted,
+            color: palette.muted,
             size: 18,
           ),
           prefixIconConstraints: const BoxConstraints(minWidth: 36),
           isDense: true,
           filled: true,
-          fillColor: HomePalette.surface.withValues(alpha: 0.72),
+          fillColor: palette.surface.withValues(alpha: 0.72),
           contentPadding: const EdgeInsetsDirectional.symmetric(
             horizontal: AppSpacing.sm,
             vertical: AppSpacing.sm,
@@ -291,13 +294,13 @@ class _SearchField extends StatelessWidget {
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadii.pill),
             borderSide: BorderSide(
-              color: HomePalette.hairline.withValues(alpha: 0.58),
+              color: palette.hairline.withValues(alpha: 0.58),
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadii.pill),
             borderSide: BorderSide(
-              color: HomePalette.accent.withValues(alpha: 0.54),
+              color: palette.accent.withValues(alpha: 0.54),
             ),
           ),
         ),
@@ -369,10 +372,11 @@ class _LanguageFilterButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final palette = WarmPalette.of(context);
     return PopupMenuButton<_BrowseLanguageFilter>(
       tooltip: l10n.templatesLanguageFilterLabel,
       position: PopupMenuPosition.under,
-      color: HomePalette.backgroundTop,
+      color: palette.backgroundTop,
       elevation: 4,
       onSelected: onChanged,
       itemBuilder: (context) => [
@@ -384,9 +388,9 @@ class _LanguageFilterButton extends StatelessWidget {
               children: [
                 Expanded(child: Text(_languageFilterLabel(l10n, filter))),
                 if (selected == filter)
-                  const Icon(
+                  Icon(
                     Icons.check_rounded,
-                    color: HomePalette.accent,
+                    color: palette.accent,
                     size: 18,
                   ),
               ],
@@ -394,7 +398,7 @@ class _LanguageFilterButton extends StatelessWidget {
           ),
       ],
       child: Material(
-        color: HomePalette.surface.withValues(alpha: 0.72),
+        color: palette.surface.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(AppRadii.pill),
         child: Container(
           height: 30,
@@ -404,7 +408,7 @@ class _LanguageFilterButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadii.pill),
             border: Border.all(
-              color: HomePalette.hairline.withValues(alpha: 0.58),
+              color: palette.hairline.withValues(alpha: 0.58),
             ),
           ),
           child: Row(
@@ -416,16 +420,16 @@ class _LanguageFilterButton extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelMedium?.copyWith(
-                  color: HomePalette.muted,
+                  color: palette.muted,
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0,
                 ),
               ),
               const SizedBox(width: 2),
-              const Icon(
+              Icon(
                 Icons.keyboard_arrow_down_rounded,
-                color: HomePalette.muted,
+                color: palette.muted,
                 size: 16,
               ),
             ],
@@ -441,6 +445,7 @@ class _ChipTrailingFade extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return SizedBox(
       width: AppSpacing.xl,
       child: DecoratedBox(
@@ -449,8 +454,8 @@ class _ChipTrailingFade extends StatelessWidget {
             begin: AlignmentDirectional.centerEnd,
             end: AlignmentDirectional.centerStart,
             colors: [
-              HomePalette.backgroundBottom.withValues(alpha: 0.94),
-              HomePalette.backgroundBottom.withValues(alpha: 0),
+              palette.backgroundBottom.withValues(alpha: 0.94),
+              palette.backgroundBottom.withValues(alpha: 0),
             ],
           ),
         ),
@@ -473,10 +478,11 @@ class _FilterPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final palette = WarmPalette.of(context);
     return Material(
       color: selected
-          ? HomePalette.accent
-          : HomePalette.surface.withValues(alpha: 0.58),
+          ? palette.accent
+          : palette.surface.withValues(alpha: 0.58),
       borderRadius: BorderRadius.circular(AppRadii.pill),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadii.pill),
@@ -490,8 +496,8 @@ class _FilterPill extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadii.pill),
             border: Border.all(
               color: selected
-                  ? HomePalette.accent
-                  : HomePalette.hairline.withValues(alpha: 0.52),
+                  ? palette.accent
+                  : palette.hairline.withValues(alpha: 0.52),
             ),
           ),
           alignment: Alignment.center,
@@ -500,7 +506,7 @@ class _FilterPill extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.labelMedium?.copyWith(
-              color: selected ? Colors.white : HomePalette.muted,
+              color: selected ? Colors.white : palette.muted,
               fontSize: 11,
               fontWeight: FontWeight.w800,
               letterSpacing: 0,
@@ -596,6 +602,7 @@ class _BrowseTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final palette = WarmPalette.of(context);
     return Material(
       key: ValueKey<String>('browse-template-tile-${template.id}'),
       color: Colors.transparent,
@@ -621,7 +628,7 @@ class _BrowseTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.start,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: HomePalette.ink,
+                color: palette.ink,
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 height: 1.15,
@@ -635,7 +642,7 @@ class _BrowseTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.start,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: HomePalette.muted,
+                color: palette.muted,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 height: 1.12,
@@ -657,14 +664,15 @@ class _BrowsePreviewFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: HomePalette.surface,
+        color: palette.surface,
         borderRadius: BorderRadius.circular(AppRadii.card),
-        border: Border.all(color: HomePalette.hairline.withValues(alpha: 0.7)),
+        border: Border.all(color: palette.hairline.withValues(alpha: 0.7)),
         boxShadow: [
           BoxShadow(
-            color: HomePalette.shadow.withValues(alpha: 0.06),
+            color: palette.shadow.withValues(alpha: 0.06),
             blurRadius: 14,
             offset: const Offset(0, 8),
           ),
@@ -694,6 +702,7 @@ class _EmptyTemplatesState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final palette = WarmPalette.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.all(AppSpacing.xl),
       child: Center(
@@ -704,12 +713,12 @@ class _EmptyTemplatesState extends StatelessWidget {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: HomePalette.accentSoft,
+                color: palette.accentSoft,
                 borderRadius: BorderRadius.circular(AppRadii.card),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.auto_awesome_outlined,
-                color: HomePalette.accent,
+                color: palette.accent,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -717,7 +726,7 @@ class _EmptyTemplatesState extends StatelessWidget {
               l10n.noTemplatesFoundTitle,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: HomePalette.ink,
+                color: palette.ink,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -726,7 +735,7 @@ class _EmptyTemplatesState extends StatelessWidget {
               l10n.noTemplatesFoundSubtitle,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: HomePalette.muted,
+                color: palette.muted,
                 height: 1.35,
               ),
             ),

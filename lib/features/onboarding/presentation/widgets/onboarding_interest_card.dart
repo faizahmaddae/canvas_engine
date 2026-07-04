@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../templates/domain/template.dart';
 import '../../../templates/presentation/template_preview.dart';
-import 'onboarding_style.dart';
 
 /// Visual interest picker card used on the Goal screen.
 ///
@@ -39,6 +39,7 @@ class _OnboardingInterestCardState extends State<OnboardingInterestCard> {
   @override
   Widget build(BuildContext context) {
     final selected = widget.selected;
+    final palette = WarmPalette.of(context);
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
       onTapCancel: () => setState(() => _pressed = false),
@@ -58,24 +59,24 @@ class _OnboardingInterestCardState extends State<OnboardingInterestCard> {
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                     colors: [
-                      OnboardingPalette.surface,
-                      OnboardingPalette.accentSoft.withValues(alpha: 0.46),
+                      palette.surface,
+                      palette.accentSoft.withValues(alpha: 0.46),
                     ],
                   )
                 : null,
-            color: selected ? null : OnboardingPalette.surface,
+            color: selected ? null : palette.surface,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: selected
-                  ? OnboardingPalette.accent.withValues(alpha: 0.18)
-                  : OnboardingPalette.hairline,
+                  ? palette.accent.withValues(alpha: 0.18)
+                  : palette.hairline,
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
                 color: selected
-                    ? OnboardingPalette.accent.withValues(alpha: 0.12)
-                    : OnboardingPalette.shadow.withValues(alpha: 0.055),
+                    ? palette.accent.withValues(alpha: 0.12)
+                    : palette.shadow.withValues(alpha: 0.055),
                 blurRadius: selected ? 24 : 13,
                 offset: Offset(0, selected ? 11 : 7),
               ),
@@ -97,8 +98,8 @@ class _OnboardingInterestCardState extends State<OnboardingInterestCard> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: selected
-                            ? OnboardingPalette.ink
-                            : OnboardingPalette.muted,
+                            ? palette.ink
+                            : palette.muted,
                         fontSize: 13,
                         fontWeight: selected
                             ? FontWeight.w900
@@ -122,11 +123,11 @@ class _OnboardingInterestCardState extends State<OnboardingInterestCard> {
                     curve: Curves.easeOutCubic,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: OnboardingPalette.accent,
+                        color: palette.accent,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: OnboardingPalette.accent.withValues(
+                            color: palette.accent.withValues(
                               alpha: 0.26,
                             ),
                             blurRadius: 8,
@@ -162,12 +163,13 @@ class _InterestPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return Center(
       child: AspectRatio(
         aspectRatio: widget.aspectRatio,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: OnboardingPalette.canvasPaper,
+            color: palette.canvasPaper,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.78),
@@ -198,6 +200,7 @@ class BlankCanvasPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -213,10 +216,10 @@ class BlankCanvasPreview extends StatelessWidget {
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: OnboardingPalette.surface.withValues(alpha: 0.64),
+                  color: palette.surface.withValues(alpha: 0.64),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: OnboardingPalette.hairline.withValues(alpha: 0.72),
+                    color: palette.hairline.withValues(alpha: 0.72),
                   ),
                 ),
               ),
@@ -238,7 +241,7 @@ class BlankCanvasPreview extends StatelessWidget {
                             child: Container(
                               height: 8,
                               decoration: BoxDecoration(
-                                color: OnboardingPalette.hairline.withValues(
+                                color: palette.hairline.withValues(
                                   alpha: 0.9,
                                 ),
                                 borderRadius: BorderRadius.circular(
@@ -251,10 +254,10 @@ class BlankCanvasPreview extends StatelessWidget {
                       ),
                       if (showDots) ...[
                         const SizedBox(width: AppSpacing.xs),
-                        for (final color in const [
-                          OnboardingPalette.rose,
-                          OnboardingPalette.saffron,
-                          OnboardingPalette.accent,
+                        for (final color in [
+                          palette.rose,
+                          palette.saffron,
+                          palette.accent,
                         ]) ...[
                           Container(
                             width: 5,
@@ -264,7 +267,7 @@ class BlankCanvasPreview extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                           ),
-                          if (color != OnboardingPalette.accent)
+                          if (color != palette.accent)
                             const SizedBox(width: 2),
                         ],
                       ],
@@ -280,12 +283,12 @@ class BlankCanvasPreview extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: OnboardingPalette.accent.withValues(alpha: 0.12),
+                  color: palette.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.add_rounded,
-                  color: OnboardingPalette.accent,
+                  color: palette.accent,
                   size: 20,
                 ),
               ),
@@ -297,10 +300,10 @@ class BlankCanvasPreview extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: OnboardingPalette.accentSoft.withValues(alpha: 0.8),
+                  color: palette.accentSoft.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: OnboardingPalette.accent.withValues(alpha: 0.12),
+                    color: palette.accent.withValues(alpha: 0.12),
                   ),
                 ),
               ),
@@ -315,7 +318,7 @@ class BlankCanvasPreview extends StatelessWidget {
                     width: 58,
                     height: 7,
                     decoration: BoxDecoration(
-                      color: OnboardingPalette.ink.withValues(alpha: 0.82),
+                      color: palette.ink.withValues(alpha: 0.82),
                       borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                   ),
@@ -324,7 +327,7 @@ class BlankCanvasPreview extends StatelessWidget {
                     width: 38,
                     height: 7,
                     decoration: BoxDecoration(
-                      color: OnboardingPalette.saffron.withValues(alpha: 0.9),
+                      color: palette.saffron.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                   ),
@@ -343,6 +346,7 @@ class TextOnPhotoPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -372,7 +376,7 @@ class TextOnPhotoPreview extends StatelessWidget {
               width: 58,
               height: 58,
               decoration: BoxDecoration(
-                color: OnboardingPalette.ink.withValues(alpha: 0.12),
+                color: palette.ink.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(18),
               ),
             ),
@@ -383,11 +387,11 @@ class TextOnPhotoPreview extends StatelessWidget {
             bottom: AppSpacing.md,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: OnboardingPalette.surface.withValues(alpha: 0.86),
+                color: palette.surface.withValues(alpha: 0.86),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: OnboardingPalette.shadow.withValues(alpha: 0.12),
+                    color: palette.shadow.withValues(alpha: 0.12),
                     blurRadius: 14,
                     offset: const Offset(0, 7),
                   ),
@@ -403,7 +407,7 @@ class TextOnPhotoPreview extends StatelessWidget {
                       width: 64,
                       height: 7,
                       decoration: BoxDecoration(
-                        color: OnboardingPalette.ink.withValues(alpha: 0.86),
+                        color: palette.ink.withValues(alpha: 0.86),
                         borderRadius: BorderRadius.circular(AppRadii.pill),
                       ),
                     ),
@@ -414,7 +418,7 @@ class TextOnPhotoPreview extends StatelessWidget {
                           width: 32,
                           height: 6,
                           decoration: BoxDecoration(
-                            color: OnboardingPalette.accent.withValues(
+                            color: palette.accent.withValues(
                               alpha: 0.64,
                             ),
                             borderRadius: BorderRadius.circular(AppRadii.pill),
@@ -425,7 +429,7 @@ class TextOnPhotoPreview extends StatelessWidget {
                           child: Container(
                             height: 6,
                             decoration: BoxDecoration(
-                              color: OnboardingPalette.hairline.withValues(
+                              color: palette.hairline.withValues(
                                 alpha: 0.86,
                               ),
                               borderRadius: BorderRadius.circular(

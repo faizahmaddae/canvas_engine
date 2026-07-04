@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../templates/domain/template.dart';
 import '../../../templates/presentation/template_presentation_order.dart';
 import '../../../templates/presentation/templates_browse_screen.dart';
 import 'category_row.dart';
-import 'home_style.dart';
 
 enum HomeTemplateLanguageFilter { all, persian, english, mixed }
 
@@ -169,7 +169,7 @@ class TemplatesSection extends StatelessWidget {
           child: Text(
             l10n.templatesTitle,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: HomePalette.ink,
+              color: WarmPalette.of(context).ink,
               fontWeight: FontWeight.w900,
             ),
           ),

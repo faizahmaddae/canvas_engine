@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../l10n/l10n.dart';
-import 'home_style.dart';
 
 /// Compact quick actions for starting from the most common paths.
 /// The heavy brand moment lives in [HeroStartCard]; these tiles stay
@@ -25,6 +25,7 @@ class PrimaryActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final palette = WarmPalette.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.only(
         start: AppSpacing.pageGutter,
@@ -36,7 +37,7 @@ class PrimaryActions extends StatelessWidget {
           Text(
             l10n.homeQuickActionsTitle,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: HomePalette.ink,
+              color: palette.ink,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -49,28 +50,28 @@ class PrimaryActions extends StatelessWidget {
                   title: l10n.blankCanvasCta,
                   subtitle: l10n.blankCanvasSubtitle,
                   icon: Icons.add_rounded,
-                  accent: HomePalette.accent,
+                  accent: palette.accent,
                   onTap: onBlankCanvas,
                 ),
                 _QuickActionData(
                   title: l10n.editPhotoCta,
                   subtitle: l10n.editPhotoSubtitle,
                   icon: Icons.photo_library_rounded,
-                  accent: HomePalette.rose,
+                  accent: palette.rose,
                   onTap: onEditPhoto,
                 ),
                 _QuickActionData(
                   title: l10n.homeTextOnPhotoCta,
                   subtitle: l10n.homeTextOnPhotoSubtitle,
                   icon: Icons.text_fields_rounded,
-                  accent: HomePalette.saffron,
+                  accent: palette.saffron,
                   onTap: onTextOnPhoto,
                 ),
                 _QuickActionData(
                   title: l10n.emptyProjectsCta,
                   subtitle: l10n.pickCanvasSizeBody,
                   icon: Icons.dashboard_customize_rounded,
-                  accent: HomePalette.accentPressed,
+                  accent: palette.accentPressed,
                   onTap: onNewProject,
                 ),
               ];
@@ -124,6 +125,7 @@ class _QuickActionCardState extends State<_QuickActionCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final palette = WarmPalette.of(context);
     final action = widget.action;
     return Semantics(
       button: true,
@@ -137,14 +139,14 @@ class _QuickActionCardState extends State<_QuickActionCard> {
           borderRadius: BorderRadius.circular(AppRadii.card),
           child: Ink(
             decoration: BoxDecoration(
-              color: HomePalette.surface.withValues(alpha: 0.9),
+              color: palette.surface.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(AppRadii.card),
               border: Border.all(
-                color: HomePalette.hairline.withValues(alpha: 0.72),
+                color: palette.hairline.withValues(alpha: 0.72),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: HomePalette.shadow.withValues(alpha: 0.06),
+                  color: palette.shadow.withValues(alpha: 0.06),
                   blurRadius: 14,
                   offset: const Offset(0, 8),
                 ),
@@ -184,7 +186,7 @@ class _QuickActionCardState extends State<_QuickActionCard> {
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.start,
                           style: theme.textTheme.titleSmall?.copyWith(
-                            color: HomePalette.ink,
+                            color: palette.ink,
                             fontWeight: FontWeight.w900,
                             height: 1.18,
                           ),

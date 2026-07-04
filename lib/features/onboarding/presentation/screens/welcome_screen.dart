@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../templates/application/template_repository_provider.dart';
 import '../../../templates/domain/template.dart';
@@ -79,7 +80,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
               key: const ValueKey('onboarding-welcome-skip'),
               onPressed: widget.onSkip,
               style: TextButton.styleFrom(
-                foregroundColor: OnboardingPalette.muted,
+                foregroundColor: WarmPalette.of(context).muted,
               ),
               child: Text(l10n.onboardingSkip),
             ),
@@ -93,6 +94,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                   builder: (context, constraints) {
                     final compact = constraints.maxHeight < 650;
                     final collageHeight = compact ? 276.0 : 310.0;
+                    final palette = WarmPalette.of(context);
                     return SingleChildScrollView(
                       physics: const ClampingScrollPhysics(),
                       child: ConstrainedBox(
@@ -121,8 +123,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                                 child: Text(
                                   l10n.onboardingWelcomeTitle,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: OnboardingPalette.ink,
+                                  style: TextStyle(
+                                    color: palette.ink,
                                     fontSize: 34,
                                     fontWeight: FontWeight.w900,
                                     height: 1.28,
@@ -137,8 +139,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                                 child: Text(
                                   l10n.onboardingWelcomeTagline,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: OnboardingPalette.muted,
+                                  style: TextStyle(
+                                    color: palette.muted,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     height: 1.75,
@@ -174,11 +176,12 @@ class _BrandPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: OnboardingPalette.surface.withValues(alpha: 0.72),
+        color: palette.surface.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(AppRadii.pill),
-        border: Border.all(color: OnboardingPalette.hairline),
+        border: Border.all(color: palette.hairline),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -187,8 +190,8 @@ class _BrandPill extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: const TextStyle(
-            color: OnboardingPalette.accent,
+          style: TextStyle(
+            color: palette.accent,
             fontSize: 15,
             fontWeight: FontWeight.w900,
             height: 1,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../templates/domain/template.dart';
 import '../../../templates/presentation/template_preview.dart';
-import 'home_style.dart';
 
 /// Single template tile rendered inside a category row.
 ///
@@ -41,6 +41,7 @@ class TemplateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final palette = WarmPalette.of(context);
     final doc = template.build();
     final nativeAspect = doc.width / doc.height;
     final aspect = aspectRatioOverride ?? nativeAspect;
@@ -65,15 +66,15 @@ class TemplateCard extends StatelessWidget {
               children: [
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: HomePalette.surface,
+                    color: palette.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: HomePalette.hairline.withValues(alpha: 0.62),
+                      color: palette.hairline.withValues(alpha: 0.62),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: HomePalette.shadow.withValues(alpha: 0.06),
+                        color: palette.shadow.withValues(alpha: 0.06),
                         blurRadius: 14,
                         offset: const Offset(0, 8),
                       ),
@@ -109,7 +110,7 @@ class TemplateCard extends StatelessWidget {
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: HomePalette.ink,
+                    color: palette.ink,
                     height: 1.18,
                     letterSpacing: 0,
                   ),
@@ -121,7 +122,7 @@ class TemplateCard extends StatelessWidget {
                   textAlign: TextAlign.start,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 11,
-                    color: HomePalette.muted,
+                    color: palette.muted,
                     fontWeight: FontWeight.w600,
                     height: 1.15,
                   ),

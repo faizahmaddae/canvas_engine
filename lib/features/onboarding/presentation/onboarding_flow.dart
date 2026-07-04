@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/user_error.dart';
 import '../../settings/application/settings_controller.dart';
 import '../../templates/domain/template.dart';
+import '../../../app/theme/warm_palette.dart';
 import '../application/onboarding_complete_provider.dart';
 import '../application/onboarding_controller.dart';
 import 'screens/goal_screen.dart';
 import 'screens/ready_screen.dart';
 import 'screens/welcome_screen.dart';
-import 'widgets/onboarding_style.dart';
 
 /// Three-screen onboarding: Welcome → Goal → Ready → Home.
 ///
@@ -38,7 +38,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: OnboardingPalette.backgroundBottom,
+      backgroundColor: WarmPalette.of(context).backgroundBottom,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
         switchInCurve: Curves.easeOutCubic,

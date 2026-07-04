@@ -3,10 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../templates/domain/template.dart';
 import '../../../templates/presentation/template_preview.dart';
-import 'home_style.dart';
 
 /// Premium start card for Home.
 ///
@@ -41,6 +41,7 @@ class HeroStartCard extends StatelessWidget {
             width: illustrationWidth,
           );
 
+          final palette = WarmPalette.of(context);
           return DecoratedBox(
             decoration: BoxDecoration(
               gradient: const LinearGradient(
@@ -50,11 +51,11 @@ class HeroStartCard extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: HomePalette.hairline.withValues(alpha: 0.72),
+                color: palette.hairline.withValues(alpha: 0.72),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: HomePalette.shadow.withValues(alpha: 0.11),
+                  color: palette.shadow.withValues(alpha: 0.11),
                   blurRadius: 26,
                   offset: const Offset(0, 14),
                 ),
@@ -87,6 +88,7 @@ class _HeroCopy extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final palette = WarmPalette.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -97,7 +99,7 @@ class _HeroCopy extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.start,
           style: theme.textTheme.titleLarge?.copyWith(
-            color: HomePalette.ink,
+            color: palette.ink,
             fontWeight: FontWeight.w900,
             height: 1.14,
           ),
@@ -109,7 +111,7 @@ class _HeroCopy extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.start,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: HomePalette.muted,
+            color: palette.muted,
             fontWeight: FontWeight.w600,
             height: 1.45,
           ),
@@ -120,8 +122,8 @@ class _HeroCopy extends StatelessWidget {
           icon: const Icon(Icons.auto_awesome_rounded, size: 16),
           label: Text(l10n.homeChooseTemplateAction),
           style: FilledButton.styleFrom(
-            backgroundColor: HomePalette.accentSoft,
-            foregroundColor: HomePalette.accent,
+            backgroundColor: palette.accentSoft,
+            foregroundColor: palette.accent,
             elevation: 0,
             minimumSize: const Size(0, 38),
             padding: const EdgeInsetsDirectional.symmetric(
@@ -146,6 +148,7 @@ class _HeroIllustration extends StatelessWidget {
     final persianStory = _templateById(templates, 'fa_story_fashion_drop');
     final englishFeature = _templateById(templates, 'en_yt_tutorial_blueprint');
     final persianPoster = _templateById(templates, 'fa_promo_app_launch');
+    final palette = WarmPalette.of(context);
     return SizedBox(
       width: width,
       height: 146,
@@ -159,11 +162,11 @@ class _HeroIllustration extends StatelessWidget {
               width: width * 0.7,
               height: 92,
               decoration: BoxDecoration(
-                color: HomePalette.accentSoft.withValues(alpha: 0.42),
+                color: palette.accentSoft.withValues(alpha: 0.42),
                 borderRadius: BorderRadius.circular(26),
                 boxShadow: [
                   BoxShadow(
-                    color: HomePalette.accent.withValues(alpha: 0.14),
+                    color: palette.accent.withValues(alpha: 0.14),
                     blurRadius: 26,
                     offset: const Offset(0, 12),
                   ),
@@ -178,10 +181,10 @@ class _HeroIllustration extends StatelessWidget {
             bottom: 8,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: HomePalette.surfaceMuted.withValues(alpha: 0.82),
+                color: palette.surfaceMuted.withValues(alpha: 0.82),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: HomePalette.hairline.withValues(alpha: 0.62),
+                  color: palette.hairline.withValues(alpha: 0.62),
                 ),
               ),
             ),
@@ -246,14 +249,15 @@ class _TypeMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: HomePalette.surface.withValues(alpha: 0.92),
+        color: palette.surface.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(AppRadii.pill),
-        border: Border.all(color: HomePalette.hairline.withValues(alpha: 0.72)),
+        border: Border.all(color: palette.hairline.withValues(alpha: 0.72)),
         boxShadow: [
           BoxShadow(
-            color: HomePalette.shadow.withValues(alpha: 0.08),
+            color: palette.shadow.withValues(alpha: 0.08),
             blurRadius: 14,
             offset: const Offset(0, 7),
           ),
@@ -264,21 +268,21 @@ class _TypeMark extends StatelessWidget {
         height: 28,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Text(
               'Aa',
               style: TextStyle(
-                color: HomePalette.ink,
+                color: palette.ink,
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
                 height: 1,
               ),
             ),
-            SizedBox(width: 3),
+            const SizedBox(width: 3),
             Text(
               'فا',
               style: TextStyle(
-                color: HomePalette.accent,
+                color: palette.accent,
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
                 height: 1,
@@ -306,14 +310,15 @@ class _MiniTemplateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: HomePalette.surface,
+        color: palette.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: HomePalette.hairline.withValues(alpha: 0.58)),
+        border: Border.all(color: palette.hairline.withValues(alpha: 0.58)),
         boxShadow: [
           BoxShadow(
-            color: HomePalette.shadow.withValues(alpha: elevated ? 0.16 : 0.08),
+            color: palette.shadow.withValues(alpha: elevated ? 0.16 : 0.08),
             blurRadius: elevated ? 22 : 14,
             offset: Offset(0, elevated ? 12 : 7),
           ),
@@ -327,8 +332,8 @@ class _MiniTemplateCard extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: template == null
-                ? const DecoratedBox(
-                    decoration: BoxDecoration(color: HomePalette.canvasPaper),
+                ? DecoratedBox(
+                    decoration: BoxDecoration(color: palette.canvasPaper),
                   )
                 : TemplatePreview(
                     template: template!,
@@ -349,13 +354,14 @@ class _ToolPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = WarmPalette.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: HomePalette.ink,
+        color: palette.ink,
         borderRadius: BorderRadius.circular(AppRadii.pill),
         boxShadow: [
           BoxShadow(
-            color: HomePalette.shadow.withValues(alpha: 0.16),
+            color: palette.shadow.withValues(alpha: 0.16),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),

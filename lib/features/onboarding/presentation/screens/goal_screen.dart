@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../templates/application/template_repository_provider.dart';
@@ -82,6 +83,7 @@ class GoalScreen extends ConsumerWidget {
     final templates = ref.watch(
       effectiveTemplatesProvider(Localizations.localeOf(context).languageCode),
     );
+    final palette = WarmPalette.of(context);
     return OnboardingPageShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -90,8 +92,8 @@ class GoalScreen extends ConsumerWidget {
           Text(
             l10n.onboardingGoalTitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: OnboardingPalette.ink,
+            style: TextStyle(
+              color: palette.ink,
               fontSize: 28,
               fontWeight: FontWeight.w900,
               height: 1.22,
@@ -104,8 +106,8 @@ class GoalScreen extends ConsumerWidget {
               child: Text(
                 l10n.onboardingGoalSubtitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: OnboardingPalette.muted,
+                style: TextStyle(
+                  color: palette.muted,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   height: 1.6,
@@ -142,8 +144,8 @@ class GoalScreen extends ConsumerWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  OnboardingPalette.backgroundBottom.withValues(alpha: 0),
-                  OnboardingPalette.backgroundBottom,
+                  palette.backgroundBottom.withValues(alpha: 0),
+                  palette.backgroundBottom,
                 ],
               ),
             ),

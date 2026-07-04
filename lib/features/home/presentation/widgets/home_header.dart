@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/warm_palette.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/presentation/settings_screen.dart';
-import 'home_style.dart';
 
 /// Home page brand + welcome header.
 ///
@@ -17,6 +17,7 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final palette = WarmPalette.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(
         AppSpacing.pageGutter,
@@ -35,14 +36,14 @@ class HomeHeader extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppRadii.button),
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     begin: AlignmentDirectional.topStart,
                     end: AlignmentDirectional.bottomEnd,
-                    colors: [HomePalette.accent, HomePalette.rose],
+                    colors: [palette.accent, palette.rose],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: HomePalette.accent.withValues(alpha: 0.24),
+                      color: palette.accent.withValues(alpha: 0.24),
                       blurRadius: 18,
                       offset: const Offset(0, 8),
                     ),
@@ -62,7 +63,7 @@ class HomeHeader extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.start,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    color: HomePalette.ink,
+                    color: palette.ink,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0,
                   ),
@@ -77,8 +78,8 @@ class HomeHeader extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.settings_outlined),
                 style: IconButton.styleFrom(
-                  backgroundColor: HomePalette.surface.withValues(alpha: 0.72),
-                  foregroundColor: HomePalette.muted,
+                  backgroundColor: palette.surface.withValues(alpha: 0.72),
+                  foregroundColor: palette.muted,
                 ),
               ),
             ],
@@ -92,7 +93,7 @@ class HomeHeader extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.start,
               style: theme.textTheme.headlineMedium?.copyWith(
-                color: HomePalette.ink,
+                color: palette.ink,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0,
                 height: 1.12,
@@ -108,7 +109,7 @@ class HomeHeader extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.start,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: HomePalette.muted,
+                color: palette.muted,
                 fontWeight: FontWeight.w600,
                 height: 1.45,
               ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
-import 'home_style.dart';
+import '../../../../app/theme/warm_palette.dart';
 
 /// Shared section header used across Home: title on the leading
 /// side, optional text action on the trailing side. Uses
@@ -24,6 +24,7 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final palette = WarmPalette.of(context);
     final canAct = actionLabel != null && onAction != null;
     final titleStyle = compact
         ? theme.textTheme.titleSmall
@@ -38,7 +39,7 @@ class SectionHeader extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.start,
             style: titleStyle?.copyWith(
-              color: HomePalette.ink,
+              color: palette.ink,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -51,7 +52,7 @@ class SectionHeader extends StatelessWidget {
             child: TextButton(
               onPressed: onAction,
               style: TextButton.styleFrom(
-                foregroundColor: HomePalette.accent,
+                foregroundColor: palette.accent,
                 padding: EdgeInsets.zero,
                 minimumSize: Size(0, compact ? 28 : 48),
                 tapTargetSize: compact
