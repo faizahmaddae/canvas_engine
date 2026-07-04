@@ -73,23 +73,21 @@ class TextModeToolbar extends ConsumerStatefulWidget {
     _ToolSpec(
       id: 'font',
       icon: Icons.text_fields_rounded,
-      label: 'Font',
       bodyBuilder: _TextBodies.fontBody,
     ),
     _ToolSpec(
       id: 'size',
       icon: Icons.format_size_rounded,
-      label: 'Size',
-      // No dynamic label: the strip tile reads simply "Size". The
-      // numeric value lives inside the sheet body where it can be
-      // read precisely without crowding the dock with bucket words
-      // ("Body" / "Display" etc.) that varied as the user dragged.
+      // No short dock variant: the strip tile reads simply "Size".
+      // The numeric value lives inside the sheet body where it can
+      // be read precisely without crowding the dock with bucket
+      // words ("Body" / "Display" etc.) that varied as the user
+      // dragged.
       bodyBuilder: _TextBodies.sizeBody,
     ),
     _ToolSpec(
       id: 'color',
       icon: Icons.palette_rounded,
-      label: 'Color',
       bodyBuilder: _TextBodies.colorBody,
     ),
     _ToolSpec(
@@ -98,40 +96,35 @@ class TextModeToolbar extends ConsumerStatefulWidget {
       // who reach for one often want the other in the same flow.
       id: 'styles',
       icon: Icons.auto_awesome_rounded,
-      label: 'Styles',
       bodyBuilder: _TextBodies.stylesBody,
     ),
     _ToolSpec(
       id: 'layout',
       icon: Icons.format_align_center_rounded,
-      label: 'Align',
       bodyBuilder: _TextBodies.layoutBody,
     ),
-    _ToolSpec(id: 'more', icon: Icons.more_horiz_rounded, label: 'More'),
+    _ToolSpec(id: 'more', icon: Icons.more_horiz_rounded),
     _ToolSpec(
       id: 'background',
       // Filled-rectangle glyph reads as a *shape with fill*; clearly
       // distinct from the Color tile's circular swatch so the two
       // adjacent tiles never blur together at a glance.
-      icon: Icons.rectangle_rounded,
-      label: 'Background',
-      // Dock tile is space-constrained — full word ellipsises to
-      // "Backgrou…" which reads like a typo. "BG" + the filled
-      // rectangle icon is unambiguous on the strip; the panel
+      //
+      // Dock tile is space-constrained — the full word ellipsises to
+      // "Backgrou…" which reads like a typo, so this id gets the "BG"
+      // short dock label (see _localizedToolDockLabel); the panel
       // header still shows the full word.
-      dockLabel: 'BG',
+      icon: Icons.rectangle_rounded,
       bodyBuilder: _TextBodies.backgroundBody,
     ),
     _ToolSpec(
       id: 'border',
       icon: Icons.border_outer_rounded,
-      label: 'Border',
       bodyBuilder: _TextBodies.borderBody,
     ),
     _ToolSpec(
       id: 'shadow',
       icon: Icons.blur_on_rounded,
-      label: 'Shadow',
       bodyBuilder: _TextBodies.shadowBody,
     ),
     _ToolSpec(
@@ -140,7 +133,6 @@ class TextModeToolbar extends ConsumerStatefulWidget {
       // the user-visible label changed: "Behavior" → "Resize".
       id: 'behavior',
       icon: Icons.aspect_ratio_rounded,
-      label: 'Resize',
       bodyBuilder: _TextBodies.behaviorBody,
     ),
   ];
@@ -406,27 +398,23 @@ class TextModeSheetPanel extends ConsumerWidget {
 }
 
 /// Spec for a tile in the bottom strip.
+///
+/// [id] is the single source of identity: [specById] lookup, sheet
+/// swipe navigation, and persisted `TextSession.openSheet` state all
+/// key off it — never rename an existing id, only add new ones.
+/// Display text is NOT stored here; [_localizedToolLabel] /
+/// [_localizedToolDockLabel] are the single source for that, keyed
+/// off [id]. This used to also carry hardcoded English `label`/
+/// `dockLabel` fields that nothing actually displayed (every
+/// registered id already had an l10n switch case) — dropped as a
+/// Phase 4 pre-split cleanup so a future rename of the display copy
+/// can never silently desync from a fallback string still baked in
+/// here.
 class _ToolSpec {
-  const _ToolSpec({
-    required this.id,
-    required this.icon,
-    required this.label,
-    this.dockLabel,
-    this.bodyBuilder,
-  });
+  const _ToolSpec({required this.id, required this.icon, this.bodyBuilder});
 
   final String id;
   final IconData icon;
-
-  /// Canonical, full label — used as the panel header title and
-  /// for any spec lookup. Stays human-readable in long form.
-  final String label;
-
-  /// Optional shorter label rendered ONLY on the bottom-strip
-  /// tile, where horizontal space is tight and a long label
-  /// ("Background") would ellipsis to nonsense ("Backgrou…").
-  /// Falls back to [label] when null.
-  final String? dockLabel;
 
   /// Body builder rendered by [TextModeSheetPanel] when this
   /// tool's sheet is open. `null` for tools that handle their
@@ -435,9 +423,9 @@ class _ToolSpec {
 }
 
 String _localizedToolDockLabel(AppLocalizations l10n, _ToolSpec spec) {
-  if (spec.id == 'background' && spec.dockLabel != null) {
-    return l10n.bgShortLabel;
-  }
+  // Only the Background tile shortens on the dock strip ("BG" — the
+  // full word ellipsises to "Backgrou…" at tile width).
+  if (spec.id == 'background') return l10n.bgShortLabel;
   return _localizedToolLabel(l10n, spec);
 }
 
@@ -453,7 +441,10 @@ String _localizedToolLabel(AppLocalizations l10n, _ToolSpec spec) {
     'border' => l10n.borderTool,
     'shadow' => l10n.shadowTool,
     'behavior' => l10n.resizeTool,
-    _ => spec.label,
+    // Unreachable for the current registry (every id above has a
+    // case) — the id itself is a more useful signal than a stale
+    // hardcoded word if a future spec is added without its l10n case.
+    _ => spec.id,
   };
 }
 
@@ -1719,7 +1710,7 @@ class _ShadowPrecisionAdvanced extends ConsumerWidget {
 bool _bgMatches(TextStyleSpec style, _BgPreset p) {
   // Radius is a percent (0..1) now — "Pill" matches anything at
   // (or essentially at) full roundness.
-  final pillish = p.label == 'Pill' && style.backgroundRadius >= 0.99;
+  final pillish = p.id == 'pill' && style.backgroundRadius >= 0.99;
   final radiusEq = pillish || (style.backgroundRadius - p.radius).abs() < 0.02;
   return radiusEq &&
       (style.backgroundPaddingX - p.padX).abs() < 0.5 &&
@@ -1729,7 +1720,7 @@ bool _bgMatches(TextStyleSpec style, _BgPreset p) {
 void _applyBgPreset(WidgetRef ref, _BgPreset p) {
   final ctrl = ref.read(textToolControllerProvider.notifier);
   ctrl.beginStyleDrag();
-  final r = p.label == 'Pill' ? 1.0 : p.radius;
+  final r = p.id == 'pill' ? 1.0 : p.radius;
   ctrl.setBackgroundRadius(r);
   ctrl.setBackgroundPaddingX(p.padX);
   ctrl.setBackgroundPaddingY(p.padY);
@@ -2162,54 +2153,63 @@ class _ToggleSegment extends StatelessWidget {
 /// Macro preset for the Background sub-tool. Each preset writes
 /// radius + padding X + padding Y in one shot. Color and opacity
 /// stay user-controlled.
+///
+/// [id] is a stable internal identity, never displayed — display
+/// text is always looked up separately via l10n at the call site
+/// (see `_backgroundPresets` consumers). Matching/apply logic keys
+/// off [id], not a display string, so renaming a preset's shown
+/// name can never silently break the "Pill" special-case below.
 class _BgPreset {
   const _BgPreset({
-    required this.label,
+    required this.id,
     required this.radius,
     required this.padX,
     required this.padY,
   });
-  final String label;
+  final String id;
   final double radius;
   final double padX;
   final double padY;
 }
 
 const List<_BgPreset> _backgroundPresets = [
-  _BgPreset(label: 'None', radius: 0, padX: 0, padY: 0),
-  _BgPreset(label: 'Pill', radius: 1, padX: 24, padY: 8),
-  _BgPreset(label: 'Card', radius: 0.3, padX: 16, padY: 12),
-  _BgPreset(label: 'Tag', radius: 0.5, padX: 8, padY: 4),
+  _BgPreset(id: 'none', radius: 0, padX: 0, padY: 0),
+  _BgPreset(id: 'pill', radius: 1, padX: 24, padY: 8),
+  _BgPreset(id: 'card', radius: 0.3, padX: 16, padY: 12),
+  _BgPreset(id: 'tag', radius: 0.5, padX: 8, padY: 4),
 ];
 
 /// Macro preset for the Shadow sub-tool. Writes blur + opacity in
 /// one shot. Color and offset stay user-controlled (those are intent,
 /// not aesthetic style).
+///
+/// [id] is a stable internal identity used only for matching/l10n
+/// lookup (see [_shadowPresetLabel]) — never rendered directly.
 class _ShadowPreset {
   const _ShadowPreset({
-    required this.label,
+    required this.id,
     required this.blur,
     required this.opacity,
   });
-  final String label;
+  final String id;
   final double blur;
   final double opacity; // 0..1
 }
 
 const List<_ShadowPreset> _shadowPresets = [
-  _ShadowPreset(label: 'Soft', blur: 16, opacity: 0.30),
-  _ShadowPreset(label: 'Hard', blur: 2, opacity: 0.80),
-  _ShadowPreset(label: 'Glow', blur: 24, opacity: 0.60),
-  _ShadowPreset(label: 'Lift', blur: 8, opacity: 0.50),
+  _ShadowPreset(id: 'soft', blur: 16, opacity: 0.30),
+  _ShadowPreset(id: 'hard', blur: 2, opacity: 0.80),
+  _ShadowPreset(id: 'glow', blur: 24, opacity: 0.60),
+  _ShadowPreset(id: 'lift', blur: 8, opacity: 0.50),
 ];
 
 String _shadowPresetLabel(AppLocalizations l10n, _ShadowPreset preset) {
-  return switch (preset.label) {
-    'Soft' => l10n.softOption,
-    'Hard' => l10n.hardOption,
-    'Glow' => l10n.glowOption,
-    'Lift' => l10n.liftOption,
-    _ => preset.label,
+  return switch (preset.id) {
+    'soft' => l10n.softOption,
+    'hard' => l10n.hardOption,
+    'glow' => l10n.glowOption,
+    'lift' => l10n.liftOption,
+    _ => preset.id,
   };
 }
 
@@ -2372,12 +2372,9 @@ class _SizeBody extends ConsumerWidget {
   }
 }
 
-/// Flattened "Adjust precisely" disclosure used by the Size body.
-///
-/// Replaces the previous nested layout (an `_AdvancedSection`
-/// wrapping an `_InlineSliderRow` whose label was the *second*
-/// expand). One arrow, one tap to reveal value + px-presets +
-/// fine-tune slider — no nested expand, no second arrow.
+/// Flattened "Adjust precisely" disclosure used by the Size body:
+/// one arrow, one tap to reveal value + px-presets + fine-tune
+/// slider — no nested expand, no second arrow.
 ///
 /// Style writes still route through the same controller setter
 /// the dock uses (`setFontSize`), so undo coalescing, the
