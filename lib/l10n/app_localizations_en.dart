@@ -49,6 +49,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create stories, posts, covers, and text-based designs with ready-made templates.';
 
   @override
+  String get onboardingWelcomeSubtitle =>
+      'Persian-first design — stories, posts, and typographic art from ready-made templates.';
+
+  @override
   String get onboardingGetStarted => 'Get Started';
 
   @override

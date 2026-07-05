@@ -1,60 +1,33 @@
 import 'package:canvas_engine/app/theme/app_theme.dart';
-import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
+import 'package:canvas_engine/app/theme/app_tokens.dart';
 import 'package:canvas_engine/features/onboarding/presentation/screens/welcome_screen.dart';
-import 'package:canvas_engine/features/templates/application/template_repository_provider.dart';
-import 'package:canvas_engine/features/templates/domain/template.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Workstream B, Commit 3: WelcomeScreen widget test (design doc §5/
-/// §7) -- renders, CTA + skip dispatch, RTL, dark mode.
+/// Design direction v2: WelcomeScreen calligraphy-hero widget test —
+/// renders (nastaliq hero + flourish + subtitle), CTA + skip
+/// dispatch, RTL, dark mode. No template repository involved
+/// anymore: the v1 card showcase is gone.
 void main() {
-  Template fakeTemplate(String id, TemplateCategory category) {
-    return Template(
-      id: id,
-      name: id,
-      category: category,
-      language: TemplateLanguage.english,
-      build: () => EditorDocument(
-        width: 200,
-        height: 200,
-        layers: const [],
-        backgroundColor: const Color(0xFFF5EFE6),
-      ),
-    );
-  }
-
-  final fakeTemplates = [
-    fakeTemplate('fa_story_warm_pastel', TemplateCategory.story),
-    fakeTemplate('fa_story_cafe_mood', TemplateCategory.instagramStory),
-    fakeTemplate('fa_story_fashion_drop', TemplateCategory.instagramStory),
-  ];
-
   Widget host({
     required VoidCallback onGetStarted,
     required VoidCallback onSkip,
     Brightness brightness = Brightness.light,
     TextDirection textDirection = TextDirection.ltr,
   }) {
-    return ProviderScope(
-      overrides: [
-        effectiveTemplatesProvider.overrideWith((ref, locale) => fakeTemplates),
-      ],
-      child: MaterialApp(
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        themeMode: brightness == Brightness.dark
-            ? ThemeMode.dark
-            : ThemeMode.light,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Directionality(
-          textDirection: textDirection,
-          child: Scaffold(
-            body: WelcomeScreen(onGetStarted: onGetStarted, onSkip: onSkip),
-          ),
+    return MaterialApp(
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: brightness == Brightness.dark
+          ? ThemeMode.dark
+          : ThemeMode.light,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Directionality(
+        textDirection: textDirection,
+        child: Scaffold(
+          body: WelcomeScreen(onGetStarted: onGetStarted, onSkip: onSkip),
         ),
       ),
     );
@@ -68,9 +41,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
   }
 
-  testWidgets('renders the CTA and skip controls', (tester) async {
+  testWidgets('renders the nastaliq hero, subtitle, CTA and skip', (
+    tester,
+  ) async {
     await pump(tester, host(onGetStarted: () {}, onSkip: () {}));
 
+    final hero = tester.widget<Text>(find.text(WelcomeScreen.heroWord));
+    expect(hero.style?.fontFamily, 'IranNastaliq');
     expect(
       find.byKey(const ValueKey('onboarding-get-started')),
       findsOneWidget,
@@ -80,6 +57,22 @@ void main() {
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('hero uses textPrimary and the flourish uses accent', (
+    tester,
+  ) async {
+    await pump(tester, host(onGetStarted: () {}, onSkip: () {}));
+
+    final hero = tester.widget<Text>(find.text(WelcomeScreen.heroWord));
+    expect(hero.style?.color, AppTokens.light.textPrimary);
+
+    final flourish = tester
+        .widgetList<Container>(find.byType(Container))
+        .map((c) => c.decoration)
+        .whereType<BoxDecoration>()
+        .where((d) => d.color == AppTokens.light.accent);
+    expect(flourish, isNotEmpty, reason: 'saffron flourish under the hero');
   });
 
   testWidgets('Get Started dispatches onGetStarted', (tester) async {
@@ -112,26 +105,21 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+    expect(find.text(WelcomeScreen.heroWord), findsOneWidget);
     expect(
       find.byKey(const ValueKey('onboarding-get-started')),
       findsOneWidget,
     );
-    expect(
-      find.byKey(const ValueKey('onboarding-welcome-skip')),
-      findsOneWidget,
-    );
   });
 
-  testWidgets('renders without throwing in dark mode', (tester) async {
+  testWidgets('dark mode flips hero to cream on ink', (tester) async {
     await pump(
       tester,
       host(onGetStarted: () {}, onSkip: () {}, brightness: Brightness.dark),
     );
 
     expect(tester.takeException(), isNull);
-    expect(
-      find.byKey(const ValueKey('onboarding-get-started')),
-      findsOneWidget,
-    );
+    final hero = tester.widget<Text>(find.text(WelcomeScreen.heroWord));
+    expect(hero.style?.color, AppTokens.dark.textPrimary);
   });
 }

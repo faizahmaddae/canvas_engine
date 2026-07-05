@@ -176,6 +176,12 @@ abstract class AppLocalizations {
   /// **'Create stories, posts, covers, and text-based designs with ready-made templates.'**
   String get onboardingWelcomeTagline;
 
+  /// No description provided for @onboardingWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Persian-first design — stories, posts, and typographic art from ready-made templates.'**
+  String get onboardingWelcomeSubtitle;
+
   /// No description provided for @onboardingGetStarted.
   ///
   /// In en, this message translates to:

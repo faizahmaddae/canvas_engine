@@ -49,6 +49,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'استوری، پست، کاور و طرح‌های متنی را با قالب‌های آماده بساز.';
 
   @override
+  String get onboardingWelcomeSubtitle =>
+      'طراحی فارسی‌محور — استوری، پست و طرح‌های تایپوگرافی با قالب‌های آماده.';
+
+  @override
   String get onboardingGetStarted => 'شروع کنیم';
 
   @override
