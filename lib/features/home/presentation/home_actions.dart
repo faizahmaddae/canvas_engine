@@ -311,7 +311,9 @@ class HomeActions {
               size: Size(300, 300),
             ),
             kind: ShapeKind.circle,
-            fillColor: const Color(0xFF7C5CFF),
+            // Saffron — the demo doc should showcase the brand
+            // accent, not the retired violet.
+            fillColor: const Color(0xFFE5A044),
           ),
         ),
         AddLayerCommand(

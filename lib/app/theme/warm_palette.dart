@@ -21,12 +21,12 @@ import 'package:flutter/material.dart';
 ///      simulator screenshots (Phase 4 plan D5).
 ///
 /// Dark variant design rule: ink↔paper flips (near-black text becomes
-/// near-white, near-white paper becomes dark slate-plum), the brand
-/// accent and the two decorative accents (rose, saffron) stay exactly
-/// as-is since they're already mid-brightness and read fine on both
-/// backgrounds, and `shadow` drops to a near-black so elevation still
-/// reads against a dark surface (a colour-tinted shadow disappears at
-/// low lightness).
+/// warm cream, warm paper becomes deep ink), the saffron accent is
+/// tuned brighter per mode (like `AppTokens.accent`), the two
+/// decorative accents (rose, saffron) stay fixed since they're
+/// mid-brightness and read fine on both backgrounds, and `shadow`
+/// drops to a near-black so elevation still reads against a dark
+/// surface (a colour-tinted shadow disappears at low lightness).
 class WarmPalette {
   const WarmPalette._({
     required this.backgroundTop,
@@ -60,41 +60,42 @@ class WarmPalette {
   final Color saffron;
   final Color shadow;
 
-  /// Byte-identical to the former `HomePalette`/`OnboardingPalette`
-  /// static constants.
+  /// v2 recolour: the legacy violet accent and plum-tinted neutrals
+  /// converged on the calligraphy-forward paper/ink/saffron family
+  /// (values from `AppTokens.light`) so no surface outside the
+  /// document canvas can render violet.
   static const WarmPalette _light = WarmPalette._(
-    backgroundTop: Color(0xFFFFFBF6),
-    backgroundBottom: Color(0xFFF3F0FF),
-    surface: Color(0xFFFFFEFC),
-    surfaceMuted: Color(0xFFFAF7F2),
-    canvasPaper: Color(0xFFFFFCF7),
-    ink: Color(0xFF17151F),
-    muted: Color(0xFF746C7E),
-    hairline: Color(0xFFE9DFD7),
-    accent: Color(0xFF7C5CFF),
-    accentPressed: Color(0xFF6747F2),
-    accentSoft: Color(0xFFF1ECFF),
+    backgroundTop: Color(0xFFFBF7EF),
+    backgroundBottom: Color(0xFFF4EEE1),
+    surface: Color(0xFFFBF7EF),
+    surfaceMuted: Color(0xFFEDE5D4),
+    canvasPaper: Color(0xFFFBF7EF),
+    ink: Color(0xFF1F1B16),
+    muted: Color(0xFF6B6155),
+    hairline: Color(0xFFE3D9C6),
+    accent: Color(0xFFC0872A),
+    accentPressed: Color(0xFFA5731E),
+    accentSoft: Color(0xFFF0E4CC),
     rose: Color(0xFFD87995),
     saffron: Color(0xFFE5A044),
-    shadow: Color(0xFF3A2E46),
+    shadow: Color(0xFF1F1B16),
   );
 
-  /// Dark counterpart of [_light] — see the class doc for the design
-  /// rule. Kept as a warm slate-plum (not a neutral grey or true
-  /// black) so Home/Onboarding/Templates Browse still read as the
-  /// same "warm editorial" surface family in dark mode.
+  /// Dark counterpart of [_light] — deep warm ink (values from
+  /// `AppTokens.dark`), not the old slate-plum, so dark mode reads
+  /// as the same paper/ink family as the rest of v2.
   static const WarmPalette _dark = WarmPalette._(
-    backgroundTop: Color(0xFF1C1A22),
-    backgroundBottom: Color(0xFF15131B),
-    surface: Color(0xFF221F29),
-    surfaceMuted: Color(0xFF2A2733),
-    canvasPaper: Color(0xFF262330),
-    ink: Color(0xFFF2EFF7),
-    muted: Color(0xFFACA3B9),
-    hairline: Color(0xFF3B3745),
-    accent: Color(0xFF7C5CFF),
-    accentPressed: Color(0xFF6747F2),
-    accentSoft: Color(0xFF362C55),
+    backgroundTop: Color(0xFF1E1A14),
+    backgroundBottom: Color(0xFF14110D),
+    surface: Color(0xFF1E1A14),
+    surfaceMuted: Color(0xFF26211A),
+    canvasPaper: Color(0xFF221D16),
+    ink: Color(0xFFF2EADB),
+    muted: Color(0xFFA9A090),
+    hairline: Color(0xFF2E2820),
+    accent: Color(0xFFD4A24A),
+    accentPressed: Color(0xFFC0872A),
+    accentSoft: Color(0xFF3A301C),
     rose: Color(0xFFD87995),
     saffron: Color(0xFFE5A044),
     shadow: Color(0xFF000000),

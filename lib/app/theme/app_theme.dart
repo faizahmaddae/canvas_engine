@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'app_spacing.dart';
 import 'app_tokens.dart';
 
-/// App-wide design system: Material 3 colour schemes derived from a
-/// single seed, plus a UI type scale and shared component shapes.
+/// App-wide design system: a Material 3 colour scheme derived from
+/// the v2 warm brand palette ([AppTokens]), plus a UI type scale and
+/// shared component shapes.
 ///
-/// Both [light] and [dark] are produced from the same seed so the
-/// brand identity (violet) carries through; M3 derives the rest.
+/// The violet seed is retired: [ColorScheme] slots are pinned to the
+/// paper/ink/saffron tokens so widgets that read the scheme directly
+/// (ripples, focus rings, tonal fills, snackbars, …) can no longer
+/// produce violet anywhere in the app.
 abstract final class AppTheme {
-  /// Brand seed — a refined violet that reads premium in dark mode
-  /// and stays accessible in light mode after M3's tonal mapping.
-  static const Color seed = Color(0xFF7C5CFF);
 
   /// Primary UI font for Latin scripts. Bundled in `pubspec.yaml`
   /// already (no `google_fonts` dependency needed). Hanken Grotesk
@@ -47,12 +47,51 @@ abstract final class AppTheme {
       _build(Brightness.dark, locale: locale);
 
   static ThemeData _build(Brightness brightness, {Locale? locale}) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: seed,
-      brightness: brightness,
-    );
-    final tokens =
-        brightness == Brightness.dark ? AppTokens.dark : AppTokens.light;
+    final isDark = brightness == Brightness.dark;
+    final tokens = isDark ? AppTokens.dark : AppTokens.light;
+    // The opposite-mode tokens power the inverse slots (SnackBar's
+    // default surface, inverse ripples) — ink chrome on paper and
+    // vice versa.
+    final inverse = isDark ? AppTokens.light : AppTokens.dark;
+    // Saffron-seeded so every slot we DON'T pin below (error ramps,
+    // fixed/dim variants) still harmonises with the warm system,
+    // then every brand-visible slot is pinned to the exact tokens.
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: tokens.accent,
+          brightness: brightness,
+        ).copyWith(
+          primary: tokens.brand,
+          onPrimary: tokens.onBrand,
+          primaryContainer: tokens.brandSoft,
+          onPrimaryContainer: tokens.textPrimary,
+          secondary: tokens.accent,
+          onSecondary: tokens.onBrand,
+          secondaryContainer: tokens.surfaceMuted,
+          onSecondaryContainer: tokens.textPrimary,
+          tertiary: tokens.accentDeep,
+          onTertiary: tokens.onBrand,
+          tertiaryContainer: tokens.surfaceMuted,
+          onTertiaryContainer: tokens.textPrimary,
+          surface: tokens.surface,
+          onSurface: tokens.textPrimary,
+          onSurfaceVariant: tokens.textSecondary,
+          surfaceDim: tokens.surfaceMuted,
+          surfaceBright: tokens.surface,
+          surfaceContainerLowest: isDark ? tokens.pageBg : tokens.surface,
+          surfaceContainerLow: isDark ? tokens.surface : tokens.pageBg,
+          surfaceContainer: isDark ? tokens.surface : tokens.pageBg,
+          surfaceContainerHigh: tokens.surfaceMuted,
+          surfaceContainerHighest: isDark ? tokens.border : tokens.surfaceMuted,
+          outline: tokens.textMuted,
+          outlineVariant: tokens.border,
+          inverseSurface: inverse.surface,
+          onInverseSurface: inverse.textPrimary,
+          inversePrimary: inverse.brand,
+          // Kill M3 elevation tinting outright — elevated surfaces
+          // stay true paper/ink instead of drifting toward the seed.
+          surfaceTint: Colors.transparent,
+        );
     final uiFamily = _uiFamilyFor(locale);
     final uiFallback = _uiFallbackFor(locale);
     final base = ThemeData(
