@@ -5,11 +5,12 @@ import '../theme/app_tokens.dart';
 /// App identity mark (design doc §4) — a placeholder glyph for now,
 /// replace the icon when a real logo mark exists.
 ///
-/// Built to read on a `brandStrong` colour hero (its primary
-/// placement, per §5): a translucent [AppTokens.onBrand] halo behind
-/// an [AppTokens.onBrand] glyph. `onBrand` is fixed white in both
-/// light and dark (design doc §1), so this stays legible on the hero
-/// in either theme without branching on brightness itself.
+/// Built to read on a [AppTokens.brand]-filled surface: a translucent
+/// [AppTokens.onBrand] halo behind an [AppTokens.onBrand] glyph.
+/// Under the v2 palette `onBrand` tracks `brand`'s ink/cream swap
+/// (paper-on-ink in light, ink-on-cream in dark), so the mark stays
+/// legible on a brand fill in either mode without branching on
+/// brightness itself.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 40});
 

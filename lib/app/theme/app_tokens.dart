@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
-/// Design-system colour tokens (Workstream B, design doc §1) — the
-/// seed every new screen builds on instead of hardcoding colours or
-/// reaching for a per-screen palette. Wired into [ThemeData] as a
-/// [ThemeExtension] so `AppTokens.of(context)` always resolves the
-/// instance matching the ambient [Brightness].
+/// Design-system colour tokens — v2 "Persian calligraphy-forward"
+/// palette (docs/design-direction-v2-calligraphy-2026-07.md). The
+/// token *system* is unchanged from the original design doc; only
+/// the *values* pivoted: warm paper/ink neutrals with a single
+/// saffron accent, replacing the generic violet. Wired into
+/// [ThemeData] as a [ThemeExtension] so `AppTokens.of(context)`
+/// always resolves the instance matching the ambient [Brightness].
 ///
-/// Unlike [WarmPalette] (kept for Home/Onboarding's warm-editorial
-/// surfaces until they migrate), most values here stay fixed across
-/// brightness by design: `brand`/`brandStrong`/`brandPressed` and the
-/// three category accents are already mid-to-high saturation and read
-/// on both a near-white and a near-black background. Only the tint
-/// (`brandSoft`) and the neutral surface/text/border ramps flip.
+/// v2 design rule: the primary/CTA fill is **ink on light, cream on
+/// dark** ([brand]/[onBrand] swap roles across modes — they are NOT
+/// fixed across brightness anymore). The three category accents
+/// (rose/saffron/teal) stay fixed; they harmonise with the warm
+/// system. [accent] is the saffron flourish colour and is tuned per
+/// mode for contrast against paper vs. ink.
 class AppTokens extends ThemeExtension<AppTokens> {
   const AppTokens({
     required this.brand,
@@ -19,6 +21,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.brandPressed,
     required this.brandSoft,
     required this.onBrand,
+    required this.accent,
+    required this.accentDeep,
     required this.rose,
     required this.saffron,
     required this.teal,
@@ -34,26 +38,47 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.border,
   });
 
-  // ─── brand ─────────────────────────────────────────────────────
+  // ─── primary (ink / cream) ─────────────────────────────────────
+  /// Primary/CTA fill — ink in light mode, cream in dark.
   final Color brand;
+
+  /// v2 has no separate "hero fill" concept (the old violet hero is
+  /// gone); kept equal to [brand] for API stability.
   final Color brandStrong;
+
+  /// Pressed variant of [brand]. Not in the v2 doc table — derived
+  /// (ink lifted ~10% in light, cream dimmed ~10% in dark).
   final Color brandPressed;
+
+  /// Soft ink-tint background. Not in the v2 doc table — derived
+  /// from the paper/ink ramp for chip/tint use.
   final Color brandSoft;
+
+  /// Text/icon on [brand] — paper on ink (light), ink on cream
+  /// (dark). Mirrors [brand]'s cross-mode swap.
   final Color onBrand;
 
-  // ─── category accents (template thumbs; reused app-wide) ──────
+  // ─── saffron accent ────────────────────────────────────────────
+  /// The single saffron accent (flourishes, marks). Per-mode tuned:
+  /// deeper on paper, brighter on ink.
+  final Color accent;
+
+  /// Deeper saffron stop for pressed/emphasis pairings with
+  /// [accent].
+  final Color accentDeep;
+
+  // ─── category accents (template thumbs; fixed across modes) ───
   final Color rose;
   final Color saffron;
   final Color teal;
 
   /// Dark on-text stop for a label sitting on the matching accent's
-  /// *soft/tinted* background (not the vivid fill itself, which
-  /// pairs with [onBrand]-style light text instead).
+  /// *soft/tinted* background (not the vivid fill itself).
   final Color roseOnText;
   final Color saffronOnText;
   final Color tealOnText;
 
-  // ─── neutrals / surfaces ────────────────────────────────────────
+  // ─── neutrals / surfaces (warm paper ↔ deep ink) ───────────────
   final Color pageBg;
   final Color surface;
   final Color surfaceMuted;
@@ -63,45 +88,49 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final Color border;
 
   static const AppTokens light = AppTokens(
-    brand: Color(0xFF7C5CFF),
-    brandStrong: Color(0xFF6A4BF0),
-    brandPressed: Color(0xFF5A3BD6),
-    brandSoft: Color(0xFFF1ECFF),
-    onBrand: Color(0xFFFFFFFF),
+    brand: Color(0xFF1F1B16),
+    brandStrong: Color(0xFF1F1B16),
+    brandPressed: Color(0xFF3A342B),
+    brandSoft: Color(0xFFE7E0D2),
+    onBrand: Color(0xFFF4EEE1),
+    accent: Color(0xFFC0872A),
+    accentDeep: Color(0xFFA5731E),
     rose: Color(0xFFD87995),
     saffron: Color(0xFFE5A044),
     teal: Color(0xFF22B8A0),
     roseOnText: Color(0xFF5A1E2E),
     saffronOnText: Color(0xFF5A3B10),
     tealOnText: Color(0xFF0C3D34),
-    pageBg: Color(0xFFFBFAF7),
-    surface: Color(0xFFFFFFFF),
-    surfaceMuted: Color(0xFFF4F1EC),
-    textPrimary: Color(0xFF17151F),
-    textSecondary: Color(0xFF6A6472),
-    textMuted: Color(0xFF9A93A2),
-    border: Color(0xFFEAE5DF),
+    pageBg: Color(0xFFF4EEE1),
+    surface: Color(0xFFFBF7EF),
+    surfaceMuted: Color(0xFFEDE5D4),
+    textPrimary: Color(0xFF1F1B16),
+    textSecondary: Color(0xFF6B6155),
+    textMuted: Color(0xFF9C8F7C),
+    border: Color(0xFFE3D9C6),
   );
 
   static const AppTokens dark = AppTokens(
-    brand: Color(0xFF7C5CFF),
-    brandStrong: Color(0xFF6A4BF0),
-    brandPressed: Color(0xFF5A3BD6),
-    brandSoft: Color(0xFF241E3A),
-    onBrand: Color(0xFFFFFFFF),
+    brand: Color(0xFFF2EADB),
+    brandStrong: Color(0xFFF2EADB),
+    brandPressed: Color(0xFFDCD3C0),
+    brandSoft: Color(0xFF2A251E),
+    onBrand: Color(0xFF1F1B16),
+    accent: Color(0xFFD4A24A),
+    accentDeep: Color(0xFFC0872A),
     rose: Color(0xFFD87995),
     saffron: Color(0xFFE5A044),
     teal: Color(0xFF22B8A0),
     roseOnText: Color(0xFF5A1E2E),
     saffronOnText: Color(0xFF5A3B10),
     tealOnText: Color(0xFF0C3D34),
-    pageBg: Color(0xFF0E0E13),
-    surface: Color(0xFF17161D),
-    surfaceMuted: Color(0xFF1F1E27),
-    textPrimary: Color(0xFFF5F3F8),
-    textSecondary: Color(0xFFB4AEC0),
-    textMuted: Color(0xFF7C7688),
-    border: Color(0xFF2A2833),
+    pageBg: Color(0xFF14110D),
+    surface: Color(0xFF1E1A14),
+    surfaceMuted: Color(0xFF26211A),
+    textPrimary: Color(0xFFF2EADB),
+    textSecondary: Color(0xFFA9A090),
+    textMuted: Color(0xFF7C7264),
+    border: Color(0xFF2E2820),
   );
 
   /// Resolves the instance matching the ambient theme's brightness.
@@ -117,6 +146,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
     Color? brandPressed,
     Color? brandSoft,
     Color? onBrand,
+    Color? accent,
+    Color? accentDeep,
     Color? rose,
     Color? saffron,
     Color? teal,
@@ -137,6 +168,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
       brandPressed: brandPressed ?? this.brandPressed,
       brandSoft: brandSoft ?? this.brandSoft,
       onBrand: onBrand ?? this.onBrand,
+      accent: accent ?? this.accent,
+      accentDeep: accentDeep ?? this.accentDeep,
       rose: rose ?? this.rose,
       saffron: saffron ?? this.saffron,
       teal: teal ?? this.teal,
@@ -163,6 +196,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
       brandPressed: c(brandPressed, other.brandPressed),
       brandSoft: c(brandSoft, other.brandSoft),
       onBrand: c(onBrand, other.onBrand),
+      accent: c(accent, other.accent),
+      accentDeep: c(accentDeep, other.accentDeep),
       rose: c(rose, other.rose),
       saffron: c(saffron, other.saffron),
       teal: c(teal, other.teal),

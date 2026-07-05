@@ -3,10 +3,11 @@ import 'package:canvas_engine/app/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Workstream B, Commit 1: locks in the AppTokens contract (design
-/// doc §1) -- both instances resolve their documented values, and
-/// `AppTokens.of(context)` picks the one matching the ambient theme
-/// so widgets never need to branch on Brightness themselves.
+/// Locks in the AppTokens v2 contract (docs/design-direction-v2-
+/// calligraphy-2026-07.md): warm paper/ink neutrals, ink/cream
+/// primary that SWAPS across brightness, per-mode saffron accent,
+/// and fixed category accents. `AppTokens.of(context)` picks the
+/// instance matching the ambient theme.
 void main() {
   Widget host(Widget child, {required Brightness brightness}) {
     return MaterialApp(
@@ -19,51 +20,63 @@ void main() {
     );
   }
 
-  test('light instance matches the documented hex values', () {
+  test('light instance matches the documented v2 hex values', () {
     const t = AppTokens.light;
-    expect(t.brand, const Color(0xFF7C5CFF));
-    expect(t.brandStrong, const Color(0xFF6A4BF0));
-    expect(t.brandPressed, const Color(0xFF5A3BD6));
-    expect(t.brandSoft, const Color(0xFFF1ECFF));
-    expect(t.onBrand, const Color(0xFFFFFFFF));
+    expect(t.brand, const Color(0xFF1F1B16)); // primary/CTA = ink
+    expect(t.onBrand, const Color(0xFFF4EEE1));
+    expect(t.brandStrong, t.brand, reason: 'v2 has no separate hero fill');
+    expect(t.accent, const Color(0xFFC0872A)); // saffron
+    expect(t.accentDeep, const Color(0xFFA5731E));
     expect(t.rose, const Color(0xFFD87995));
     expect(t.saffron, const Color(0xFFE5A044));
     expect(t.teal, const Color(0xFF22B8A0));
-    expect(t.pageBg, const Color(0xFFFBFAF7));
-    expect(t.surface, const Color(0xFFFFFFFF));
-    expect(t.surfaceMuted, const Color(0xFFF4F1EC));
-    expect(t.textPrimary, const Color(0xFF17151F));
-    expect(t.textSecondary, const Color(0xFF6A6472));
-    expect(t.textMuted, const Color(0xFF9A93A2));
-    expect(t.border, const Color(0xFFEAE5DF));
+    expect(t.pageBg, const Color(0xFFF4EEE1)); // warm paper
+    expect(t.surface, const Color(0xFFFBF7EF));
+    expect(t.surfaceMuted, const Color(0xFFEDE5D4));
+    expect(t.textPrimary, const Color(0xFF1F1B16));
+    expect(t.textSecondary, const Color(0xFF6B6155));
+    expect(t.textMuted, const Color(0xFF9C8F7C));
+    expect(t.border, const Color(0xFFE3D9C6));
   });
 
-  test('dark instance flips surfaces/text but keeps brand + accents fixed', () {
+  test('dark instance matches the documented v2 hex values', () {
+    const t = AppTokens.dark;
+    expect(t.brand, const Color(0xFFF2EADB)); // primary/CTA = cream
+    expect(t.onBrand, const Color(0xFF1F1B16));
+    expect(t.brandStrong, t.brand, reason: 'v2 has no separate hero fill');
+    expect(t.accent, const Color(0xFFD4A24A)); // brighter saffron on ink
+    expect(t.accentDeep, const Color(0xFFC0872A));
+    expect(t.pageBg, const Color(0xFF14110D)); // deep ink
+    expect(t.surface, const Color(0xFF1E1A14));
+    expect(t.surfaceMuted, const Color(0xFF26211A));
+    expect(t.textPrimary, const Color(0xFFF2EADB));
+    expect(t.textSecondary, const Color(0xFFA9A090));
+    expect(t.textMuted, const Color(0xFF7C7264));
+    expect(t.border, const Color(0xFF2E2820));
+  });
+
+  test('primary swaps ink/cream across modes; category accents stay '
+      'fixed', () {
     const l = AppTokens.light;
     const d = AppTokens.dark;
 
-    expect(d.pageBg, const Color(0xFF0E0E13));
-    expect(d.surface, const Color(0xFF17161D));
-    expect(d.surfaceMuted, const Color(0xFF1F1E27));
-    expect(d.textPrimary, const Color(0xFFF5F3F8));
-    expect(d.textSecondary, const Color(0xFFB4AEC0));
-    expect(d.textMuted, const Color(0xFF7C7688));
-    expect(d.border, const Color(0xFF2A2833));
-    expect(d.brandSoft, const Color(0xFF241E3A));
+    // The v2 signature: brand/onBrand mirror each other across modes.
+    expect(l.brand, isNot(d.brand));
+    expect(l.brand, d.onBrand); // ink
+    expect(l.onBrand, isNot(d.onBrand));
 
-    // Fixed across brightness -- already mid/high saturation, reads
-    // on both a near-white and a near-black background.
-    expect(d.brand, l.brand);
-    expect(d.brandStrong, l.brandStrong);
-    expect(d.brandPressed, l.brandPressed);
-    expect(d.onBrand, l.onBrand);
+    // Saffron accent is per-mode tuned, deeper stop shifts with it.
+    expect(l.accent, isNot(d.accent));
+    expect(d.accentDeep, l.accent);
+
+    // Category accents fixed — they harmonise with the warm system.
     expect(d.rose, l.rose);
     expect(d.saffron, l.saffron);
     expect(d.teal, l.teal);
 
-    expect(d.surface, isNot(l.surface));
-    expect(d.textPrimary, isNot(l.textPrimary));
+    // Neutrals flip paper <-> ink.
     expect(d.pageBg, isNot(l.pageBg));
+    expect(d.textPrimary, isNot(l.textPrimary));
   });
 
   testWidgets('AppTokens.of resolves light in a light theme', (tester) async {

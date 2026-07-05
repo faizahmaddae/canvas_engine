@@ -23,15 +23,17 @@ void main() {
     expect(icon.color, AppTokens.light.onBrand);
   });
 
-  testWidgets('stays onBrand (fixed white) in dark mode', (tester) async {
+  testWidgets('tracks the per-mode onBrand in dark mode', (tester) async {
     await tester.pumpWidget(
       host(const BrandMark(), brightness: Brightness.dark),
     );
     expect(tester.takeException(), isNull);
 
     final icon = tester.widget<Icon>(find.byType(Icon));
+    // v2: onBrand swaps with brand across modes (ink on cream here),
+    // so the mark keeps reading on a brand fill in either theme.
     expect(icon.color, AppTokens.dark.onBrand);
-    expect(icon.color, AppTokens.light.onBrand);
+    expect(icon.color, isNot(AppTokens.light.onBrand));
   });
 
   testWidgets('respects the size parameter', (tester) async {

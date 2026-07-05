@@ -94,8 +94,25 @@ void main() {
     expect(tester.takeException(), isNull);
     final box = tester.widget<DecoratedBox>(find.byType(DecoratedBox).first);
     final decoration = box.decoration as BoxDecoration;
-    // Category accents stay fixed across brightness.
+    // v2: brand-mapped categories follow the ink/cream swap (cream
+    // card in dark), unlike rose/saffron/teal which stay fixed.
     expect(decoration.color, AppTokens.dark.brand);
-    expect(decoration.color, AppTokens.light.brand);
+    expect(decoration.color, isNot(AppTokens.light.brand));
+  });
+
+  testWidgets('rose category accent stays fixed across brightness', (
+    tester,
+  ) async {
+    final template = _template(
+      id: 't2',
+      category: TemplateCategory.instagramStory,
+    );
+    await tester.pumpWidget(
+      host(TemplateThumb(template: template), brightness: Brightness.dark),
+    );
+    final box = tester.widget<DecoratedBox>(find.byType(DecoratedBox).first);
+    final decoration = box.decoration as BoxDecoration;
+    expect(decoration.color, AppTokens.dark.rose);
+    expect(decoration.color, AppTokens.light.rose);
   });
 }
