@@ -113,10 +113,13 @@ abstract final class AppTheme {
       // sliders, chips, switches in the editor panels, …) stop
       // leaking the violet seed. Screens with explicit token colours
       // are unaffected.
+      // No backgroundColor/foregroundColor here: FilledButton reads
+      // scheme.primary/onPrimary (= brand ink/cream) and
+      // FilledButton.tonal reads scheme.secondaryContainer
+      // (= surfaceMuted + ink) — forcing colours in this style would
+      // apply to BOTH variants and flatten the emphasis hierarchy.
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: tokens.brand,
-          foregroundColor: tokens.onBrand,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.button),
           ),
