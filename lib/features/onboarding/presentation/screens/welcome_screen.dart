@@ -1,21 +1,33 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../app/theme/warm_palette.dart';
+import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/ui/app_content_sheet.dart';
+import '../../../../app/ui/app_primary_button.dart';
+import '../../../../app/ui/brand_mark.dart';
+import '../../../../app/ui/skip_text_button.dart';
+import '../../../../app/ui/template_thumb.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../templates/application/template_repository_provider.dart';
 import '../../../templates/domain/template.dart';
-import '../widgets/onboarding_art.dart';
-import '../widgets/onboarding_buttons.dart';
-import '../widgets/onboarding_style.dart';
 
-/// First onboarding screen.
+/// First onboarding screen — design-system Direction C (design doc
+/// §5): a colour hero (`brandStrong`, ~55% of the height) showcasing
+/// three real templates, and a rising [AppContentSheet] below with
+/// the pitch + primary CTA.
 ///
-/// Design rationale: this screen should immediately read as multilingual
-/// design software with strong Persian typography support. The illustration
-/// mixes real English and Persian templates; the copy stays short so the
-/// user feels welcomed, not pitched.
+/// Design rationale: this screen should immediately read as
+/// multilingual design software with strong Persian typography
+/// support. The showcase mixes real English and Persian templates;
+/// the copy stays short so the user feels welcomed, not pitched.
+///
+/// Fully token-driven — no `WarmPalette` usage (design doc §6). Goal
+/// and Ready keep `WarmPalette`/`OnboardingPrimaryButton` until each
+/// is rebuilt on tokens in its own commit.
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({
     super.key,
@@ -63,6 +75,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final tokens = AppTokens.of(context);
     final templates = _welcomeTemplates(
       ref.watch(
         effectiveTemplatesProvider(
@@ -70,134 +83,148 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
         ),
       ),
     );
-    return OnboardingPageShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: TextButton(
-              key: const ValueKey('onboarding-welcome-skip'),
-              onPressed: widget.onSkip,
-              style: TextButton.styleFrom(
-                foregroundColor: WarmPalette.of(context).muted,
-              ),
-              child: Text(l10n.onboardingSkip),
-            ),
-          ),
-          Expanded(
-            child: FadeTransition(
-              opacity: _entryOpacity,
-              child: SlideTransition(
-                position: _entryOffset,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final compact = constraints.maxHeight < 650;
-                    final collageHeight = compact ? 276.0 : 310.0;
-                    final palette = WarmPalette.of(context);
-                    return SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxHeight < 650;
+        return Column(
+          children: [
+            Expanded(
+              flex: 55,
+              child: ColoredBox(
+                color: tokens.brandStrong,
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.pageGutter,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const BrandMark(),
+                            SkipTextButton(
+                              key: const ValueKey('onboarding-welcome-skip'),
+                              label: l10n.onboardingSkip,
+                              onPressed: widget.onSkip,
+                            ),
+                          ],
                         ),
-                        child: Align(
-                          alignment: Alignment(0, compact ? -0.18 : -0.34),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _BrandPill(label: l10n.appName),
-                              const SizedBox(height: AppSpacing.md),
-                              OnboardingTemplateCollage(
-                                templates: templates,
-                                height: collageHeight,
-                                emphasizeTypography: true,
-                              ),
-                              SizedBox(
-                                height: compact ? AppSpacing.lg : AppSpacing.xl,
-                              ),
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 360,
-                                ),
-                                child: Text(
-                                  l10n.onboardingWelcomeTitle,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: palette.ink,
-                                    fontSize: 34,
-                                    fontWeight: FontWeight.w900,
-                                    height: 1.28,
-                                  ),
+                        Expanded(
+                          child: Center(
+                            child: FadeTransition(
+                              opacity: _entryOpacity,
+                              child: SlideTransition(
+                                position: _entryOffset,
+                                child: _ThumbShowcase(
+                                  templates: templates,
+                                  compact: compact,
                                 ),
                               ),
-                              const SizedBox(height: AppSpacing.md),
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 330,
-                                ),
-                                child: Text(
-                                  l10n.onboardingWelcomeTagline,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: palette.muted,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.75,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          OnboardingPrimaryButton(
-            key: const ValueKey('onboarding-get-started'),
-            label: l10n.onboardingGetStarted,
-            onPressed: widget.onGetStarted,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-      ),
+            Expanded(
+              flex: 45,
+              child: AppContentSheet(
+                child: SafeArea(
+                  top: false,
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        FadeTransition(
+                          opacity: _entryOpacity,
+                          child: SlideTransition(
+                            position: _entryOffset,
+                            child: Column(
+                              children: [
+                                Text(
+                                  l10n.onboardingWelcomeTitle,
+                                  textAlign: TextAlign.center,
+                                  style: AppTypeScale.titleLg.copyWith(
+                                    color: tokens.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  l10n.onboardingWelcomeTagline,
+                                  textAlign: TextAlign.center,
+                                  style: AppTypeScale.body.copyWith(
+                                    color: tokens.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: compact ? AppSpacing.lg : AppSpacing.xl,
+                        ),
+                        AppPrimaryButton(
+                          key: const ValueKey('onboarding-get-started'),
+                          label: l10n.onboardingGetStarted,
+                          onPressed: widget.onGetStarted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-class _BrandPill extends StatelessWidget {
-  const _BrandPill({required this.label});
+/// Three real templates fanned with slight alternating rotation for
+/// energy (design doc §5). Purely a welcome-screen composition —
+/// [TemplateThumb] itself stays a plain, unrotated card so it's
+/// reusable elsewhere (Home, Templates browse) without carrying this
+/// screen's specific arrangement.
+class _ThumbShowcase extends StatelessWidget {
+  const _ThumbShowcase({required this.templates, required this.compact});
 
-  final String label;
+  final List<Template> templates;
+  final bool compact;
+
+  static const _rotationDegrees = 6;
 
   @override
   Widget build(BuildContext context) {
-    final palette = WarmPalette.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: palette.surface.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(AppRadii.pill),
-        border: Border.all(color: palette.hairline),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: palette.accent,
-            fontSize: 15,
-            fontWeight: FontWeight.w900,
-            height: 1,
+    final width = compact ? 84.0 : 100.0;
+    final height = compact ? 112.0 : 134.0;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        for (final (index, template) in templates.indexed)
+          Padding(
+            padding: EdgeInsetsDirectional.only(
+              start: index == 0 ? 0 : AppSpacing.sm,
+            ),
+            child: Transform.rotate(
+              angle: (index.isEven ? -1 : 1) * _rotationDegrees * math.pi / 180,
+              child: TemplateThumb(
+                template: template,
+                width: width,
+                height: height,
+              ),
+            ),
           ),
-        ),
-      ),
+      ],
     );
   }
 }
