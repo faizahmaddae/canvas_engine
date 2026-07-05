@@ -296,7 +296,9 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
                 TextModeToolbar._tools[i],
               ),
               valueText: TextModeToolbar._tools[i].id == 'font'
-                  ? fontEntry?.label
+                  ? fontEntry?.labelFor(
+                      Localizations.localeOf(context).languageCode,
+                    )
                   : null,
               fontFamily: TextModeToolbar._tools[i].id == 'font'
                   ? fontEntry?.family

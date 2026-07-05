@@ -245,7 +245,9 @@ class _FontPickerList extends StatelessWidget {
           );
         }
         final family = item.entry?.family;
-        final label = item.entry?.label ?? ctx.l10n.systemDefaultFont;
+        final label =
+            item.entry?.labelFor(Localizations.localeOf(ctx).languageCode) ??
+                ctx.l10n.systemDefaultFont;
         final selected = family == current;
         return Material(
           color: selected
@@ -855,7 +857,7 @@ class _FontCardStrip extends StatelessWidget {
         final entry = entries[i];
         final entryIsFarsi = entry.script == FontScript.arabic;
         return _FontCard(
-          label: entry.label,
+          label: entry.labelFor(Localizations.localeOf(context).languageCode),
           family: entry.family,
           sample: fontSampleText(entry),
           previewDirection: entryIsFarsi
