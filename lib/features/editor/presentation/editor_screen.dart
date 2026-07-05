@@ -6,9 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart' as picker;
 import 'package:uuid/uuid.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../core/utils/user_error.dart';
 import '../../../l10n/l10n.dart';
+import '../../home/application/project_store.dart';
 import '../application/autosave_controller.dart';
 import '../application/context_toolbar_controller.dart';
 import '../application/document_controller.dart';
@@ -80,6 +82,7 @@ class EditorScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final tokens = AppTokens.of(context);
     final selection = ref.watch(selectionControllerProvider);
     // Subscribe to commit ticks only. The screen-level rebuild is
     // a defensive lifecycle pump — it must fire when the document
@@ -160,18 +163,22 @@ class EditorScreen extends ConsumerWidget {
           }
         },
         child: Scaffold(
+          // v2 top bar: slim, surface-on-tokens, ink icons, hairline
+          // bottom. Primary actions stay visible (back, title
+          // tap-to-rename, export); secondary ones (layers, save,
+          // fit, new document) live in the «⋮» overflow.
           appBar: cropActive || maskEditActive
               ? null
               : AppBar(
-                  title: _DocumentTitle(),
+                  toolbarHeight: 52,
+                  backgroundColor: tokens.surface,
+                  foregroundColor: tokens.textPrimary,
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(1),
+                    child: Container(height: 1, color: tokens.border),
+                  ),
+                  title: const _DocumentTitle(),
                   actions: [
-                    Builder(
-                      builder: (ctx) => IconButton(
-                        tooltip: l10n.editorSaveProject,
-                        onPressed: () => _saveProject(ctx, ref),
-                        icon: const Icon(Icons.save_outlined),
-                      ),
-                    ),
                     Builder(
                       builder: (ctx) => IconButton(
                         tooltip: l10n.editorExport,
@@ -180,32 +187,30 @@ class EditorScreen extends ConsumerWidget {
                       ),
                     ),
                     Builder(
-                      builder: (ctx) => IconButton(
-                        tooltip: l10n.layersTooltip,
-                        onPressed: () => Scaffold.of(ctx).openEndDrawer(),
-                        icon: const Icon(Icons.layers_outlined),
-                      ),
-                    ),
-                    Builder(
                       builder: (ctx) => PopupMenuButton<_OverflowAction>(
                         tooltip: l10n.moreTooltip,
                         icon: const Icon(Icons.more_vert),
+                        color: tokens.surface,
                         onSelected: (action) =>
                             _handleOverflowAction(ctx, ref, action),
                         itemBuilder: (_) => [
                           PopupMenuItem(
-                            value: _OverflowAction.save,
+                            value: _OverflowAction.layers,
                             child: ListTile(
-                              leading: const Icon(Icons.bookmark_add_outlined),
-                              title: Text(l10n.editorSaveProject),
+                              leading: const Icon(Icons.layers_outlined),
+                              iconColor: tokens.textSecondary,
+                              textColor: tokens.textPrimary,
+                              title: Text(l10n.layersTooltip),
                               contentPadding: EdgeInsets.zero,
                             ),
                           ),
                           PopupMenuItem(
-                            value: _OverflowAction.export,
+                            value: _OverflowAction.save,
                             child: ListTile(
-                              leading: const Icon(Icons.ios_share_outlined),
-                              title: Text(l10n.editorExport),
+                              leading: const Icon(Icons.bookmark_add_outlined),
+                              iconColor: tokens.textSecondary,
+                              textColor: tokens.textPrimary,
+                              title: Text(l10n.editorSaveProject),
                               contentPadding: EdgeInsets.zero,
                             ),
                           ),
@@ -214,6 +219,8 @@ class EditorScreen extends ConsumerWidget {
                             value: _OverflowAction.fit,
                             child: ListTile(
                               leading: const Icon(Icons.fit_screen_outlined),
+                              iconColor: tokens.textSecondary,
+                              textColor: tokens.textPrimary,
                               title: Text(l10n.editorFitToScreen),
                               contentPadding: EdgeInsets.zero,
                             ),
@@ -222,6 +229,8 @@ class EditorScreen extends ConsumerWidget {
                             value: _OverflowAction.newDoc,
                             child: ListTile(
                               leading: const Icon(Icons.note_add_outlined),
+                              iconColor: tokens.textSecondary,
+                              textColor: tokens.textPrimary,
                               title: Text(l10n.editorNewDocument),
                               contentPadding: EdgeInsets.zero,
                             ),
@@ -1162,10 +1171,10 @@ class EditorScreen extends ConsumerWidget {
     _OverflowAction action,
   ) {
     switch (action) {
+      case _OverflowAction.layers:
+        Scaffold.of(context).openEndDrawer();
       case _OverflowAction.save:
         _saveProject(context, ref);
-      case _OverflowAction.export:
-        ExportActionSheet.open(context);
       case _OverflowAction.fit:
         _fitViewport(context, ref);
       case _OverflowAction.newDoc:
@@ -1349,8 +1358,11 @@ class _AutosaveLifecycleScopeState
 }
 
 class _DocumentTitle extends ConsumerWidget {
+  const _DocumentTitle();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = AppTokens.of(context);
     final size = ref.watch(
       documentControllerProvider.select(
         (EditorDocument d) => Size(d.width, d.height),
@@ -1360,21 +1372,84 @@ class _DocumentTitle extends ConsumerWidget {
     final session = ref.watch(editorSessionProvider);
     final title = session?.name ?? context.l10n.appName;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(title, overflow: TextOverflow.ellipsis),
-        Text(
-          '${size.width.toInt()} × ${size.height.toInt()} • ${(scale * 100).toStringAsFixed(0)}%',
-          style: Theme.of(context).textTheme.labelSmall,
+    return Tooltip(
+      message: context.l10n.renameAction,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => _renameFlow(context, ref),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textPrimary,
+                    ),
+              ),
+              Text(
+                '${size.width.toInt()} × ${size.height.toInt()} • ${(scale * 100).toStringAsFixed(0)}%',
+                style: Theme.of(context)
+                    .textTheme
+                    .labelSmall
+                    ?.copyWith(color: tokens.textSecondary),
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
+  }
+
+  /// Same dialog contract as the Projects grid rename: prefilled
+  /// name, empty/no-op guarded. Renames the live session so the top
+  /// bar updates immediately; a persisted project is renamed in the
+  /// store too so the change survives without an explicit re-save.
+  Future<void> _renameFlow(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final session = ref.read(editorSessionProvider);
+    final controller = TextEditingController(
+      text: session?.name ?? l10n.appName,
+    );
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.renameProjectTitle),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(labelText: l10n.projectNameLabel),
+          onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancelAction),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: Text(l10n.saveAction),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty) return;
+    if (name == session?.name) return;
+    ref.read(editorSessionProvider.notifier).state =
+        session?.copyWith(name: name) ?? EditorSession(name: name);
+    final projectId = session?.projectId;
+    if (projectId != null) {
+      await ref.read(projectStoreProvider.notifier).rename(projectId, name);
+    }
   }
 }
 
-enum _OverflowAction { save, export, fit, newDoc }
+enum _OverflowAction { layers, save, fit, newDoc }
 
 /// Floating undo/redo rail anchored top-left of the canvas. Mirrors
 /// the [_ModeExitPill] geometry on the right edge so the canvas

@@ -102,21 +102,23 @@ void main() {
 
   void expectMinimalAppBar() {
     final appBar = find.byType(AppBar);
-    expect(
-      find.descendant(of: appBar, matching: find.byTooltip('Save project')),
-      findsOneWidget,
-    );
+    // v2 declutter: Export + overflow are the only visible action
+    // icons; Save and Layers moved into the «⋮» overflow menu.
     expect(
       find.descendant(of: appBar, matching: find.byTooltip('Export')),
       findsOneWidget,
     );
     expect(
-      find.descendant(of: appBar, matching: find.byTooltip('Layers')),
+      find.descendant(of: appBar, matching: find.byTooltip('More')),
       findsOneWidget,
     );
     expect(
-      find.descendant(of: appBar, matching: find.byTooltip('More')),
-      findsOneWidget,
+      find.descendant(of: appBar, matching: find.byTooltip('Save project')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: appBar, matching: find.byTooltip('Layers')),
+      findsNothing,
     );
     expect(
       find.descendant(of: appBar, matching: find.byTooltip('Delete')),
@@ -188,12 +190,17 @@ void main() {
     await pumpEditor(tester, container);
 
     expectMinimalAppBar();
+    // Layers now lives in the «⋮» overflow — open it, then tap the
+    // Layers entry to raise the end drawer.
     await tester.tap(
       find.descendant(
         of: find.byType(AppBar),
-        matching: find.byTooltip('Layers'),
+        matching: find.byTooltip('More'),
       ),
     );
+    await tester.pumpAndSettle();
+    expect(find.text('Save project'), findsOneWidget);
+    await tester.tap(find.text('Layers'));
     await tester.pumpAndSettle();
 
     expect(find.byType(LayersPanel), findsOneWidget);
