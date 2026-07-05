@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
@@ -53,8 +55,7 @@ class RecentProjectsGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     final l10n = context.l10n;
     final projects = ref.watch(projectStoreProvider);
     final lastOpened = ref.watch(lastOpenedProjectIdProvider).value;
@@ -72,18 +73,16 @@ class RecentProjectsGrid extends ConsumerWidget {
             children: [
               Text(
                 l10n.recentTitle,
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: AppTypeScale.title.copyWith(
+                  color: tokens.textPrimary,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
                 ),
               ),
               if (count > 0) ...[
                 const SizedBox(width: 8),
                 Text(
                   '$count',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: AppTypeScale.caption.copyWith(color: tokens.textMuted),
                 ),
               ],
               const Spacer(),
@@ -96,22 +95,12 @@ class RecentProjectsGrid extends ConsumerWidget {
                       horizontal: 8,
                       vertical: 4,
                     ),
-                    foregroundColor: scheme.primary,
+                    foregroundColor: tokens.accent,
+                    textStyle: AppTypeScale.caption.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.seeAllAction,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.1,
-                        ),
-                      ),
-                      SizedBox(width: 2),
-                      Icon(Icons.chevron_right_rounded, size: 18),
-                    ],
-                  ),
+                  child: Text(l10n.seeAllAction),
                 ),
             ],
           ),
@@ -217,8 +206,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     final l10n = context.l10n;
     final p = widget.project;
     final relativeTime = _relativeTime(l10n, p.lastModified);
@@ -236,24 +224,21 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
       duration: const Duration(milliseconds: 120),
       curve: Curves.easeOut,
       child: Material(
-        // Slightly tinted surface (vs. flat scheme.surface) so the
-        // card lifts off the page in dark mode without needing a
-        // heavy border. Looks closer to a real preview tile.
-        color: scheme.surfaceContainerLow,
+        // v2: flat surface card with a hairline \u2014 no elevation, no
+        // tint; the preview carries the colour.
+        color: tokens.surface,
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: widget.onOpen,
           onLongPress: () => _showActionsSheet(context),
           onHighlightChanged: _setPressed,
-          splashColor: scheme.primary.withValues(alpha: 0.10),
-          highlightColor: scheme.primary.withValues(alpha: 0.05),
+          splashColor: tokens.textPrimary.withValues(alpha: 0.06),
+          highlightColor: tokens.textPrimary.withValues(alpha: 0.04),
           child: Ink(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.35),
-              ),
+              border: Border.all(color: tokens.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -263,18 +248,18 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      _Thumb(project: p, usePng: pngIsFresh, scheme: scheme),
+                      _Thumb(project: p, usePng: pngIsFresh),
                       if (widget.isLastOpened)
-                        Positioned(
-                          left: 8,
+                        const PositionedDirectional(
+                          start: 8,
                           top: 8,
-                          child: _LastOpenedBadge(scheme: scheme),
+                          child: _LastOpenedBadge(),
                         ),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 2, 8),
+                  padding: const EdgeInsetsDirectional.fromSTEB(10, 8, 2, 8),
                   child: Row(
                     children: [
                       Expanded(
@@ -285,9 +270,9 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                               p.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.1,
+                              style: AppTypeScale.caption.copyWith(
+                                color: tokens.textPrimary,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -299,8 +284,8 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                             // well in light/dark.
                             Text(
                               '${_formatSize(p.width, p.height)}  \u00B7  $relativeTime',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
+                              style: AppTypeScale.caption.copyWith(
+                                color: tokens.textMuted,
                                 fontSize: 11,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -312,6 +297,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                         iconSize: 18,
                         visualDensity: VisualDensity.compact,
                         tooltip: l10n.moreTooltip,
+                        color: tokens.textSecondary,
                         icon: const Icon(Icons.more_horiz_rounded),
                         onPressed: () => _showActionsSheet(context),
                       ),
@@ -472,11 +458,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
 enum _CardAction { open, rename, duplicate, delete }
 
 class _Thumb extends StatelessWidget {
-  const _Thumb({
-    required this.project,
-    required this.usePng,
-    required this.scheme,
-  });
+  const _Thumb({required this.project, required this.usePng});
 
   final Project project;
 
@@ -485,19 +467,16 @@ class _Thumb extends StatelessWidget {
   /// means we must live-render from `project.documentJson` so a
   /// stale white backdrop never reaches the user.
   final bool usePng;
-  final ColorScheme scheme;
 
   @override
   Widget build(BuildContext context) {
-    // Neutral "page" colour behind the thumbnail. Light grey in
-    // light mode, deeper neutral in dark mode — lets letterboxed
-    // portrait/landscape canvases breathe instead of being
-    // hard-cropped by BoxFit.cover (which previously sliced text /
-    // off-centre subjects out of the preview).
-    final isDark = scheme.brightness == Brightness.dark;
-    final canvasBg = isDark
-        ? scheme.surfaceContainerHighest.withValues(alpha: 0.55)
-        : const Color(0xFFF1F2F5);
+    final tokens = AppTokens.of(context);
+    // Neutral "page" colour behind the thumbnail (paper-muted in
+    // light, ink-muted in dark) — lets letterboxed portrait/
+    // landscape canvases breathe instead of being hard-cropped by
+    // BoxFit.cover (which previously sliced text / off-centre
+    // subjects out of the preview).
+    final canvasBg = tokens.surfaceMuted;
 
     if (usePng) {
       return ColoredBox(
@@ -543,11 +522,7 @@ class _Thumb extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(color: canvasBg),
       child: Center(
-        child: Icon(
-          Icons.image_outlined,
-          size: 28,
-          color: scheme.onSurfaceVariant.withValues(alpha: 0.55),
-        ),
+        child: Icon(Icons.image_outlined, size: 28, color: tokens.textMuted),
       ),
     );
   }
@@ -562,33 +537,28 @@ class _Thumb extends StatelessWidget {
 }
 
 class _LastOpenedBadge extends StatelessWidget {
-  const _LastOpenedBadge({required this.scheme});
-  final ColorScheme scheme;
+  const _LastOpenedBadge();
 
   @override
   Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: scheme.primary,
+        // Saffron badge; saffronOnText is the accent family's dark
+        // on-colour stop and reads on the fill in both modes.
+        color: tokens.accent,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.history_rounded, size: 12, color: scheme.onPrimary),
+          Icon(Icons.history_rounded, size: 12, color: tokens.saffronOnText),
           const SizedBox(width: 4),
           Text(
             context.l10n.lastOpenedLabel,
             style: TextStyle(
-              color: scheme.onPrimary,
+              color: tokens.saffronOnText,
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.1,
@@ -656,18 +626,16 @@ class _SkeletonCardState extends State<_SkeletonCard>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (context, _) {
-        final alpha = 0.25 + (0.20 * _ctrl.value);
-        final base = scheme.surfaceContainerHighest.withValues(alpha: alpha);
+        final alpha = 0.45 + (0.30 * _ctrl.value);
+        final base = tokens.surfaceMuted.withValues(alpha: alpha);
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.4),
-            ),
+            border: Border.all(color: tokens.border),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -718,8 +686,7 @@ class _CompactEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -729,13 +696,13 @@ class _CompactEmpty extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.10),
+              color: tokens.brandSoft,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               Icons.collections_outlined,
               size: 22,
-              color: scheme.primary,
+              color: tokens.accent,
             ),
           ),
           const SizedBox(width: 12),
@@ -746,27 +713,29 @@ class _CompactEmpty extends StatelessWidget {
               children: [
                 Text(
                   l10n.noProjectsYet,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.1,
+                  style: AppTypeScale.body.copyWith(
+                    color: tokens.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    height: 1.4,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   l10n.startByCreatingOne,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                  style: AppTypeScale.caption.copyWith(
+                    color: tokens.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          FilledButton.tonal(
+          TextButton(
             onPressed: onCreate,
-            style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+            style: TextButton.styleFrom(
+              foregroundColor: tokens.accent,
+              textStyle: AppTypeScale.caption.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
             child: Text(l10n.createAction),
