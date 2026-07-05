@@ -111,6 +111,28 @@ void main() {
     expect(tokens.surface, AppTokens.dark.surface);
   });
 
+  test('both ThemeData variants carry the global app font family for '
+      'every locale, with Persian coverage in the fallback chain', () {
+    for (final theme in [
+      AppTheme.light(locale: const Locale('fa')),
+      AppTheme.dark(locale: const Locale('fa')),
+    ]) {
+      expect(theme.textTheme.bodyMedium?.fontFamily, 'Vazir_Regular');
+    }
+    for (final theme in [
+      AppTheme.light(), // system/english locale
+      AppTheme.dark(),
+      AppTheme.light(locale: const Locale('en')),
+    ]) {
+      final body = theme.textTheme.bodyMedium;
+      expect(body?.fontFamily, 'Hanken_Grotesk');
+      // Vazir leads the fallback so Persian glyphs render in the
+      // same app face regardless of UI language — the "system font"
+      // class of bug is a one-place regression here.
+      expect(body?.fontFamilyFallback?.first, 'Vazir_Regular');
+    }
+  });
+
   testWidgets('AppTheme.light/.dark build without throwing', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

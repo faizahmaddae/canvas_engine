@@ -19,11 +19,16 @@ abstract final class AppTheme {
   static const String _latinUiFamily = 'Hanken_Grotesk';
   static const String _persianUiFamily = 'Vazir_Regular';
 
-  /// Persian fallback chain for later localization. Listed via
-  /// `fontFamilyFallback` so Latin glyphs come from Hanken Grotesk
-  /// and any unsupported codepoints fall through to a Persian
-  /// family that's already in `pubspec.yaml`.
+  /// Persian fallback chain under a Latin UI locale. Vazir leads so
+  /// Persian text renders in the SAME app face regardless of the UI
+  /// language — under an English/system locale the base family is
+  /// Hanken Grotesk (which has no Arabic-script glyphs), and without
+  /// Vazir first, Persian strings fell through to IranianSans: a
+  /// different Persian face than fa-locale users see. Latin glyphs
+  /// are unaffected (they resolve from the base family before the
+  /// fallback chain is consulted).
   static const List<String> _latinUiFallback = <String>[
+    _persianUiFamily,
     'IranianSans',
     'B_Yekan',
     'Gandom',
