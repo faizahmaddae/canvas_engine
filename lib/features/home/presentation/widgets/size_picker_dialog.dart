@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/ui/app_primary_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 
@@ -109,9 +112,10 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final tokens = AppTokens.of(context);
     final l10n = context.l10n;
     return Dialog(
+      backgroundColor: tokens.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
@@ -124,15 +128,16 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
               children: [
                 Text(
                   l10n.newDesignTitle,
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: AppTypeScale.title.copyWith(
+                    color: tokens.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   l10n.pickCanvasSizeBody,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  style: AppTypeScale.caption.copyWith(
+                    color: tokens.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -148,8 +153,9 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
                         l10n,
                         _presetGroups[i].kind,
                       ).toUpperCase(),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      style: AppTypeScale.caption.copyWith(
+                        fontSize: 11,
+                        color: tokens.textMuted,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.6,
                       ),
@@ -166,8 +172,9 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
                 const SizedBox(height: 16),
                 Text(
                   l10n.customGroup.toUpperCase(),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  style: AppTypeScale.caption.copyWith(
+                    fontSize: 11,
+                    color: tokens.textMuted,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.6,
                   ),
@@ -183,9 +190,13 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    const Padding(
-                      padding: EdgeInsets.only(top: 14),
-                      child: Icon(Icons.close_rounded, size: 16),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 14),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 16,
+                        color: tokens.textMuted,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -201,23 +212,26 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
                   const SizedBox(height: 8),
                   Text(
                     _customError!,
-                    style: TextStyle(color: theme.colorScheme.error),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ],
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n.cancelAction),
+                AppPrimaryButton(
+                  key: const ValueKey('size-picker-create'),
+                  label: l10n.createCustomAction,
+                  onPressed: _confirmCustom,
+                ),
+                const SizedBox(height: 4),
+                Center(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: tokens.textMuted,
                     ),
-                    const Spacer(),
-                    FilledButton.icon(
-                      onPressed: _confirmCustom,
-                      icon: const Icon(Icons.add_rounded),
-                      label: Text(l10n.createCustomAction),
-                    ),
-                  ],
+                    child: Text(l10n.cancelAction),
+                  ),
                 ),
               ],
             ),
@@ -235,53 +249,63 @@ class _PresetTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     final l10n = context.l10n;
+    // Chevron points "forward" (start -> end), so it mirrors under
+    // RTL — Material has no auto-mirroring chevron glyph.
+    final forwardChevron = Directionality.of(context) == TextDirection.rtl
+        ? Icons.chevron_left_rounded
+        : Icons.chevron_right_rounded;
     return Material(
-      color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      color: tokens.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [scheme.primary, scheme.tertiary],
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: tokens.border),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: tokens.surfaceMuted,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  borderRadius: BorderRadius.circular(10),
+                  child: Icon(preset.icon, color: tokens.textPrimary, size: 20),
                 ),
-                child: Icon(preset.icon, color: scheme.onPrimary, size: 22),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _presetLabel(l10n, preset.kind),
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _presetLabel(l10n, preset.kind),
+                        style: AppTypeScale.caption.copyWith(
+                          color: tokens.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${preset.width.toInt()} × ${preset.height.toInt()} px',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                      const SizedBox(height: 2),
+                      Text(
+                        '${preset.width.toInt()} × ${preset.height.toInt()} px',
+                        style: AppTypeScale.caption.copyWith(
+                          fontSize: 11,
+                          color: tokens.textMuted,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: scheme.outlineVariant),
-            ],
+                Icon(forwardChevron, color: tokens.textMuted),
+              ],
+            ),
           ),
         ),
       ),
@@ -318,15 +342,27 @@ class _DimensionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
     return TextField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: false),
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       onSubmitted: onSubmitted,
+      style: AppTypeScale.body.copyWith(color: tokens.textPrimary, height: 1.4),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: AppTypeScale.caption.copyWith(color: tokens.textMuted),
         isDense: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        filled: true,
+        fillColor: tokens.surface,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: tokens.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: tokens.accent),
+        ),
       ),
     );
   }

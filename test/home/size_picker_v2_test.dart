@@ -1,0 +1,135 @@
+import 'package:canvas_engine/app/theme/app_theme.dart';
+import 'package:canvas_engine/app/theme/app_tokens.dart';
+import 'package:canvas_engine/app/ui/app_primary_button.dart';
+import 'package:canvas_engine/features/home/presentation/widgets/size_picker_dialog.dart';
+import 'package:canvas_engine/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// v2 restyle of the canvas-size sheet: tokens only (no violet),
+/// AppPrimaryButton CTA, hairline preset rows, RTL chevron, dark
+/// aware. All preset + custom-size logic unchanged.
+void main() {
+  Future<CanvasSize?>? dialogResult;
+
+  Future<void> pumpAndOpen(
+    WidgetTester tester, {
+    Brightness brightness = Brightness.light,
+    Locale? locale,
+  }) async {
+    dialogResult = null;
+    await tester.binding.setSurfaceSize(const Size(420, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: brightness == Brightness.dark
+            ? ThemeMode.dark
+            : ThemeMode.light,
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => Center(
+              child: ElevatedButton(
+                onPressed: () => dialogResult = SizePickerDialog.show(context),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('renders on surface with hairline preset rows and no violet', (
+    tester,
+  ) async {
+    await pumpAndOpen(tester);
+
+    final dialog = tester.widget<Dialog>(find.byType(Dialog));
+    expect(dialog.backgroundColor, AppTokens.light.surface);
+
+    // Preset rows: hairline border, no gradient icon well.
+    final inks = tester.widgetList<Ink>(
+      find.descendant(of: find.byType(Dialog), matching: find.byType(Ink)),
+    );
+    final bordered = inks.where((ink) {
+      final decoration = ink.decoration;
+      return decoration is BoxDecoration && decoration.border != null;
+    });
+    expect(bordered, isNotEmpty);
+    for (final ink in bordered) {
+      final border = ((ink.decoration! as BoxDecoration).border!) as Border;
+      expect(border.top.color, AppTokens.light.border);
+    }
+    // No gradient anywhere in the sheet (the old violet icon wells).
+    for (final ink in inks) {
+      final decoration = ink.decoration;
+      if (decoration is BoxDecoration) {
+        expect(decoration.gradient, isNull);
+      }
+    }
+
+    expect(find.byType(AppPrimaryButton), findsOneWidget);
+  });
+
+  testWidgets('tapping a preset returns its CanvasSize', (tester) async {
+    await pumpAndOpen(tester);
+
+    await tester.tap(find.text('Instagram Post'));
+    await tester.pumpAndSettle();
+    final size = await dialogResult!;
+    expect(size?.width, 1080);
+    expect(size?.height, 1080);
+  });
+
+  testWidgets('custom size validates and returns the entered values', (
+    tester,
+  ) async {
+    await pumpAndOpen(tester);
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), '4');
+    await tester.enterText(fields.at(1), '900');
+    await tester.tap(find.byKey(const ValueKey('size-picker-create')));
+    await tester.pump();
+    // Below the 16px floor → validation error, dialog stays open.
+    expect(find.byType(Dialog), findsOneWidget);
+
+    await tester.enterText(fields.at(0), '800');
+    await tester.tap(find.byKey(const ValueKey('size-picker-create')));
+    await tester.pumpAndSettle();
+    final size = await dialogResult!;
+    expect(size?.width, 800);
+    expect(size?.height, 900);
+  });
+
+  testWidgets('RTL: the preset chevron mirrors to point start-ward', (
+    tester,
+  ) async {
+    await pumpAndOpen(tester, locale: const Locale('fa'));
+
+    expect(find.byIcon(Icons.chevron_left_rounded), findsWidgets);
+    expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+  });
+
+  testWidgets('dark mode: ink surface + cream CTA', (tester) async {
+    await pumpAndOpen(tester, brightness: Brightness.dark);
+    expect(tester.takeException(), isNull);
+
+    final dialog = tester.widget<Dialog>(find.byType(Dialog));
+    expect(dialog.backgroundColor, AppTokens.dark.surface);
+
+    final cta = find.descendant(
+      of: find.byType(AppPrimaryButton),
+      matching: find.byType(Ink),
+    );
+    final decoration = tester.widget<Ink>(cta).decoration! as BoxDecoration;
+    expect(decoration.color, AppTokens.dark.brand); // cream
+  });
+}
