@@ -6,7 +6,6 @@ import 'package:canvas_engine/features/home/presentation/home_screen.dart';
 import 'package:canvas_engine/features/onboarding/application/onboarding_controller.dart';
 import 'package:canvas_engine/features/onboarding/presentation/onboarding_flow.dart';
 import 'package:canvas_engine/features/onboarding/presentation/screens/goal_screen.dart';
-import 'package:canvas_engine/features/onboarding/presentation/screens/ready_screen.dart';
 import 'package:canvas_engine/features/onboarding/presentation/screens/welcome_screen.dart';
 import 'package:canvas_engine/features/settings/application/settings_controller.dart';
 import 'package:canvas_engine/features/templates/application/template_repository_provider.dart';
@@ -34,7 +33,6 @@ void main() {
         'lib/features/templates/presentation/templates_browse_screen.dart',
         'lib/features/onboarding/presentation/screens/welcome_screen.dart',
         'lib/features/onboarding/presentation/screens/goal_screen.dart',
-        'lib/features/onboarding/presentation/screens/ready_screen.dart',
       ];
 
       for (final path in screenPaths) {
@@ -176,7 +174,7 @@ void main() {
     );
   });
 
-  testWidgets('goal skip enables every category and advances to Ready', (
+  testWidgets('goal skip enables every category and lands in Persian Home', (
     tester,
   ) async {
     await pumpFirstLaunch(tester);
@@ -189,7 +187,13 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.byType(ReadyScreen), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(
+      Directionality.of(tester.element(find.byType(HomeScreen))),
+      TextDirection.rtl,
+    );
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('onboarding.complete'), isTrue);
     final json = await settingsJson();
     expect(
       json['enabledCategories'],
@@ -197,7 +201,8 @@ void main() {
     );
   });
 
-  testWidgets('goal continue writes the user selection', (tester) async {
+  testWidgets('goal continue writes the user selection and completes '
+      'onboarding', (tester) async {
     await pumpFirstLaunch(tester);
     await goToGoal(tester);
     await tester.pump(const Duration(milliseconds: 500));
@@ -216,41 +221,14 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.byType(ReadyScreen), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('onboarding.complete'), isTrue);
     final json = await settingsJson();
     expect(
       json['enabledCategories'],
       unorderedEquals(['instagramStory', 'poetryPost']),
     );
-  });
-
-  testWidgets('Ready CTA finishes onboarding and lands in Persian Home', (
-    tester,
-  ) async {
-    await pumpFirstLaunch(tester);
-    await goToGoal(tester);
-    await tester.pump(const Duration(milliseconds: 500));
-
-    await tapAndPump(
-      tester,
-      find.byKey(const ValueKey('onboarding-goal-skip')),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-    expect(find.byType(ReadyScreen), findsOneWidget);
-
-    await tapAndPump(
-      tester,
-      find.byKey(const ValueKey('onboarding-ready-cta')),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    expect(find.byType(HomeScreen), findsOneWidget);
-    expect(
-      Directionality.of(tester.element(find.byType(HomeScreen))),
-      TextDirection.rtl,
-    );
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getBool('onboarding.complete'), isTrue);
   });
 
   testWidgets(
@@ -271,11 +249,6 @@ void main() {
       await tapAndPump(
         tester,
         find.byKey(const ValueKey('onboarding-goal-continue')),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-      await tapAndPump(
-        tester,
-        find.byKey(const ValueKey('onboarding-ready-cta')),
       );
       await tester.pump(const Duration(milliseconds: 600));
 

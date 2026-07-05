@@ -8,21 +8,21 @@ import '../../../app/theme/warm_palette.dart';
 import '../application/onboarding_complete_provider.dart';
 import '../application/onboarding_controller.dart';
 import 'screens/goal_screen.dart';
-import 'screens/ready_screen.dart';
 import 'screens/welcome_screen.dart';
 
-/// Three-screen onboarding: Welcome → Goal → Ready → Home.
+/// Two-screen onboarding: Welcome → Goal → Home.
 ///
 /// Language selection is removed entirely — the app ships Persian by
-/// default; users can change it later in Settings. Welcome and Goal
-/// can be skipped (skip on Goal selects every category). Ready has
-/// no skip because the user has already invested in the flow.
+/// default; users can change it later in Settings. Both screens can
+/// be skipped (skip on Goal selects every category); Goal's continue
+/// completes onboarding directly. The old Ready interstitial is gone
+/// — it was a hype screen with no function, redundant with landing
+/// on Home itself.
 ///
 /// Each transition uses an in-place fade + horizontal slide via
-/// [PageRouteBuilder] / [AnimatedSwitcher] rather than a [PageView]
-/// so screen state (animation controllers, render layers) is fully
-/// torn down between screens — keeping the GPU budget for the active
-/// screen alone.
+/// [AnimatedSwitcher] rather than a [PageView] so screen state
+/// (animation controllers, render layers) is fully torn down between
+/// screens — keeping the GPU budget for the active screen alone.
 class OnboardingFlow extends ConsumerStatefulWidget {
   const OnboardingFlow({super.key});
 
@@ -30,7 +30,7 @@ class OnboardingFlow extends ConsumerStatefulWidget {
   ConsumerState<OnboardingFlow> createState() => _OnboardingFlowState();
 }
 
-enum _Step { welcome, goal, ready }
+enum _Step { welcome, goal }
 
 class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
   _Step _step = _Step.welcome;
@@ -64,7 +64,6 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
               onContinue: _continueFromGoals,
               onSkip: _skipGoals,
             ),
-            _Step.ready => ReadyScreen(onStart: _complete),
           },
         ),
       ),
@@ -84,25 +83,12 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
   Future<void> _continueFromGoals() async {
     final choices = ref.read(onboardingControllerProvider);
     await _saveCategories(choices.effectiveCategories);
-    _go(_Step.ready);
+    await _complete();
   }
 
   Future<void> _skipGoals() async {
     await _saveCategories(kDefaultEnabledTemplateCategories);
-    // Reflect the auto-pick in shared state so Ready shows the full
-    // selected preview set rather than an empty confirmation.
-    final controller = ref.read(onboardingControllerProvider.notifier);
-    for (final c in kDefaultEnabledTemplateCategories) {
-      // toggleCategory adds when missing — Skip arrives with an empty
-      // selection, so this fills the set.
-      if (!ref
-          .read(onboardingControllerProvider)
-          .selectedCategories
-          .contains(c)) {
-        controller.toggleCategory(c);
-      }
-    }
-    _go(_Step.ready);
+    await _complete();
   }
 
   Future<void> _saveCategories(Set<TemplateCategory> categories) async {
