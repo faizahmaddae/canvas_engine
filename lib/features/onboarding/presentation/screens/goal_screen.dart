@@ -2,73 +2,57 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../app/theme/warm_palette.dart';
+import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/ui/app_primary_button.dart';
+import '../../../../app/ui/skip_text_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../templates/application/template_repository_provider.dart';
 import '../../../templates/domain/template.dart';
 import '../../application/onboarding_controller.dart';
-import '../widgets/onboarding_buttons.dart';
-import '../widgets/onboarding_interest_card.dart';
-import '../widgets/onboarding_style.dart';
 
-/// The six onboarding interests map onto existing template categories.
+/// The six onboarding goals map onto existing template categories.
 ///
-/// Design rationale: these are phrased as creator jobs (story, ad,
-/// quote, thumbnail, text-on-photo, blank canvas) rather than internal
+/// Design rationale: phrased as creator jobs (story, ad, poetry,
+/// thumbnail, text-on-photo, blank canvas) rather than internal
 /// taxonomy. The persisted category still uses the existing settings
-/// model, so onboarding remains a UI layer change.
+/// model, so onboarding remains a UI-layer concern.
+///
+/// v2 (docs/design-direction-v2-calligraphy-2026-07.md): each goal is
+/// a calm outline icon + name — not a busy template preview. The
+/// calligraphy welcome is the star; this screen stays quiet.
 const List<_GoalSpec> _goals = [
   _GoalSpec(
     category: TemplateCategory.instagramStory,
-    templateId: 'fa_insta_story_v1',
-    aspectRatio: 9 / 16,
+    icon: Icons.amp_stories_outlined,
   ),
   _GoalSpec(
     category: TemplateCategory.promotionalPoster,
-    templateId: 'fa_promo_v1',
-    aspectRatio: 4 / 5,
+    icon: Icons.campaign_outlined,
   ),
   _GoalSpec(
     category: TemplateCategory.poetryPost,
-    templateId: 'fa_poetry_v1',
-    aspectRatio: 1,
+    icon: Icons.auto_stories_outlined,
   ),
   _GoalSpec(
     category: TemplateCategory.youtubeThumbnail,
-    templateId: 'en_yt_thumb_v1',
-    aspectRatio: 16 / 9,
+    icon: Icons.smart_display_outlined,
   ),
-  _GoalSpec(
-    category: TemplateCategory.quote,
-    templateId: 'fa_poetry_overlay_v1',
-    aspectRatio: 1,
-  ),
-  _GoalSpec(
-    category: TemplateCategory.social,
-    templateId: null,
-    aspectRatio: 1,
-  ),
+  _GoalSpec(category: TemplateCategory.quote, icon: Icons.text_fields_outlined),
+  _GoalSpec(category: TemplateCategory.social, icon: Icons.crop_din),
 ];
 
 class _GoalSpec {
-  const _GoalSpec({
-    required this.category,
-    required this.templateId,
-    required this.aspectRatio,
-  });
+  const _GoalSpec({required this.category, required this.icon});
 
   final TemplateCategory category;
-  final String? templateId;
-  final double aspectRatio;
+  final IconData icon;
 }
 
-/// Goal picker.
-///
-/// Design rationale: this page is where the product becomes personal.
-/// The cards use real templates at a meaningful size, while selection
-/// adds a soft purple overlay and checkmark so the chosen interests
-/// feel alive without making the resting grid noisy.
+/// Goal picker — v2 aesthetic. Paper/ink canvas, Persian-sans title
+/// and subtitle, a 2-column grid of quiet surface cards (outline
+/// icon + name; selection = saffron ring + check), and the ink/cream
+/// CTA near the bottom. Fully token-driven.
 class GoalScreen extends ConsumerWidget {
   const GoalScreen({super.key, required this.onContinue, required this.onSkip});
 
@@ -80,96 +64,78 @@ class GoalScreen extends ConsumerWidget {
     final choices = ref.watch(onboardingControllerProvider);
     final controller = ref.read(onboardingControllerProvider.notifier);
     final l10n = context.l10n;
-    final templates = ref.watch(
-      effectiveTemplatesProvider(Localizations.localeOf(context).languageCode),
-    );
-    final palette = WarmPalette.of(context);
-    return OnboardingPageShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            l10n.onboardingGoalTitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: palette.ink,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              height: 1.22,
-            ),
+    final tokens = AppTokens.of(context);
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
+    return ColoredBox(
+      color: tokens.pageBg,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.pageGutter,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 340),
-              child: Text(
-                l10n.onboardingGoalSubtitle,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                l10n.onboardingGoalTitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: palette.muted,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  height: 1.6,
+                style: AppTypeScale.titleLg.copyWith(color: tokens.textPrimary),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 340),
+                  child: Text(
+                    l10n.onboardingGoalSubtitle,
+                    textAlign: TextAlign.center,
+                    style: AppTypeScale.caption.copyWith(
+                      color: tokens.textSecondary,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Expanded(
-            child: GridView.count(
-              padding: const EdgeInsets.only(bottom: 96),
-              crossAxisCount: 2,
-              crossAxisSpacing: AppSpacing.md,
-              mainAxisSpacing: AppSpacing.md,
-              childAspectRatio: 1.2,
-              physics: const BouncingScrollPhysics(),
-              children: [
-                for (final spec in _goals)
-                  _goalCard(
-                    l10n: l10n,
-                    spec: spec,
-                    templates: templates,
-                    selected: choices.selectedCategories.contains(
-                      spec.category,
-                    ),
-                    onTap: () => controller.toggleCategory(spec.category),
-                  ),
-              ],
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  palette.backgroundBottom.withValues(alpha: 0),
-                  palette.backgroundBottom,
-                ],
+              const SizedBox(height: AppSpacing.lg),
+              Expanded(
+                child: GridView.count(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: AppSpacing.md,
+                  mainAxisSpacing: AppSpacing.md,
+                  childAspectRatio: 1.45,
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    for (final spec in _goals)
+                      _GoalCard(
+                        key: ValueKey('onboarding-goal-${spec.category.name}'),
+                        icon: spec.icon,
+                        label: _goalLabel(l10n, spec.category),
+                        selected: choices.selectedCategories.contains(
+                          spec.category,
+                        ),
+                        onTap: () => controller.toggleCategory(spec.category),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.sm),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  OnboardingPrimaryButton(
-                    key: const ValueKey('onboarding-goal-continue'),
-                    label: l10n.onboardingContinue,
-                    onPressed: onContinue,
-                  ),
-                  OnboardingTextButton(
-                    key: const ValueKey('onboarding-goal-skip'),
-                    label: l10n.onboardingSkip,
-                    onPressed: onSkip,
-                  ),
-                ],
+              AppPrimaryButton(
+                key: const ValueKey('onboarding-goal-continue'),
+                label: l10n.onboardingContinue,
+                onPressed: onContinue,
               ),
-            ),
+              Center(
+                child: SkipTextButton(
+                  key: const ValueKey('onboarding-goal-skip'),
+                  label: l10n.onboardingSkip,
+                  onPressed: onSkip,
+                ),
+              ),
+              SizedBox(height: bottomInset + AppSpacing.sm),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -186,37 +152,86 @@ String _goalLabel(AppLocalizations l10n, TemplateCategory category) =>
       _ => l10n.categorySocial,
     };
 
-Widget? _previewFor(TemplateCategory category) => switch (category) {
-  TemplateCategory.quote => const TextOnPhotoPreview(),
-  TemplateCategory.social => const BlankCanvasPreview(),
-  _ => null,
-};
+/// One quiet goal card: surface fill, radius 16, hairline border;
+/// selected = 2px saffron ring + a small saffron check badge in the
+/// top-start corner. Icon and label sit centred.
+class _GoalCard extends StatelessWidget {
+  const _GoalCard({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
-Widget _goalCard({
-  required AppLocalizations l10n,
-  required _GoalSpec spec,
-  required List<Template> templates,
-  required bool selected,
-  required VoidCallback onTap,
-}) {
-  final template = _templateFor(templates, spec.templateId);
-  return OnboardingInterestCard(
-    key: ValueKey('onboarding-goal-${spec.category.name}'),
-    title: _goalLabel(l10n, spec.category),
-    template: template,
-    preview:
-        _previewFor(spec.category) ??
-        (template == null ? const BlankCanvasPreview() : null),
-    aspectRatio: spec.aspectRatio,
-    selected: selected,
-    onTap: onTap,
-  );
-}
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
 
-Template? _templateFor(List<Template> source, String? id) {
-  if (id == null) return null;
-  for (final template in source) {
-    if (template.id == id) return template;
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOutCubic,
+          decoration: BoxDecoration(
+            color: tokens.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected ? tokens.accent : tokens.border,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Stack(
+            children: [
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      icon,
+                      size: 26,
+                      color: selected ? tokens.accent : tokens.textSecondary,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: AppTypeScale.caption.copyWith(
+                          color: tokens.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (selected)
+                PositionedDirectional(
+                  top: AppSpacing.sm,
+                  start: AppSpacing.sm,
+                  child: Icon(
+                    Icons.check_circle,
+                    size: 16,
+                    color: tokens.accent,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
-  return null;
 }
