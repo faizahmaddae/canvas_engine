@@ -584,6 +584,18 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTooltip;
 
+  /// No description provided for @navHomeTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHomeTab;
+
+  /// No description provided for @navProjectsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get navProjectsTab;
+
   /// No description provided for @homeBrandTitle.
   ///
   /// In en, this message translates to:

@@ -81,6 +81,8 @@
   "keepAction": "نگه داشتن",
   "removeAction": "حذف",
   "settingsTooltip": "تنظیمات",
+  "navHomeTab": "خانه",
+  "navProjectsTab": "پروژه\u200cها",
   "homeBrandTitle": "کانواس",
   "homeWelcomeTitle": "امروز چه بسازیم؟",
   "homeWelcomeSubtitle": "از یک قالب شروع کن یا طرحی تازه بساز.",

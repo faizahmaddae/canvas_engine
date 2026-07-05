@@ -262,6 +262,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsTooltip => 'تنظیمات';
 
   @override
+  String get navHomeTab => 'خانه';
+
+  @override
+  String get navProjectsTab => 'پروژه‌ها';
+
+  @override
   String get homeBrandTitle => 'کانواس';
 
   @override

@@ -81,6 +81,8 @@
   "keepAction": "Keep",
   "removeAction": "Remove",
   "settingsTooltip": "Settings",
+  "navHomeTab": "Home",
+  "navProjectsTab": "Projects",
   "homeBrandTitle": "Canvas",
   "homeWelcomeTitle": "What shall we make today?",
   "homeWelcomeSubtitle": "Start from a template or craft something new.",

@@ -261,6 +261,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTooltip => 'Settings';
 
   @override
+  String get navHomeTab => 'Home';
+
+  @override
+  String get navProjectsTab => 'Projects';
+
+  @override
   String get homeBrandTitle => 'Canvas';
 
   @override
