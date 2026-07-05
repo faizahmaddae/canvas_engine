@@ -91,30 +91,22 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('YouTube thumbnails'), findsAtLeastNWidgets(1));
-
       await tester.enterText(find.byType(TextField), 'watch');
       await tester.pumpAndSettle();
 
-      final watchPreviewFinder = find.byKey(
-        const ValueKey('browse-template-preview-en_youtube_watch_this'),
+      final watchTileFinder = find.byKey(
+        const ValueKey('browse-template-tile-en_youtube_watch_this'),
         skipOffstage: false,
       );
-      expect(watchPreviewFinder, findsOneWidget);
+      expect(watchTileFinder, findsOneWidget);
       expect(find.text('Minimal quote'), findsNothing);
 
-      await tester.ensureVisible(watchPreviewFinder);
+      await tester.ensureVisible(watchTileFinder);
       await tester.pumpAndSettle();
-
       expect(find.text('Watch This'), findsOneWidget);
-      final watchPreviewSize = tester.getSize(watchPreviewFinder);
-      expect(
-        watchPreviewSize.width / watchPreviewSize.height,
-        closeTo(16 / 9, 0.01),
-      );
     });
 
-    testWidgets('Browse uses compact portrait rows and wide landscape cards', (
+    testWidgets('Browse lays templates out as a uniform 2-column grid', (
       tester,
     ) async {
       await _pumpBrowseWithTemplates(
@@ -143,26 +135,26 @@ void main() {
       await tester.pumpAndSettle();
 
       final storyFinder = find.byKey(
-        const ValueKey('browse-template-preview-story-layout'),
+        const ValueKey('browse-template-tile-story-layout'),
       );
       final promoFinder = find.byKey(
-        const ValueKey('browse-template-preview-promo-layout'),
+        const ValueKey('browse-template-tile-promo-layout'),
       );
       final youtubeFinder = find.byKey(
-        const ValueKey('browse-template-preview-youtube-layout'),
+        const ValueKey('browse-template-tile-youtube-layout'),
       );
 
+      // v2: one uniform grid — first two share a row, third wraps,
+      // every cell the same size regardless of source aspect ratio.
       final storyTopLeft = tester.getTopLeft(storyFinder);
       final promoTopLeft = tester.getTopLeft(promoFinder);
+      final youtubeTopLeft = tester.getTopLeft(youtubeFinder);
       expect(storyTopLeft.dy, closeTo(promoTopLeft.dy, 0.1));
-      expect(promoTopLeft.dx, greaterThan(storyTopLeft.dx));
+      expect(youtubeTopLeft.dy, greaterThan(storyTopLeft.dy));
 
       final storySize = tester.getSize(storyFinder);
-      final promoSize = tester.getSize(promoFinder);
       final youtubeSize = tester.getSize(youtubeFinder);
-      expect(storySize.width, closeTo(promoSize.width, 0.1));
-      expect(youtubeSize.width, greaterThan(storySize.width * 1.8));
-      expect(youtubeSize.width / youtubeSize.height, closeTo(16 / 9, 0.01));
+      expect(storySize, youtubeSize);
     });
 
     testWidgets('Browse shows an empty state when asset loading fails', (

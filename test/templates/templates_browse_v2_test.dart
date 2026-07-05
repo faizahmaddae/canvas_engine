@@ -1,0 +1,184 @@
+import 'package:canvas_engine/app/theme/app_theme.dart';
+import 'package:canvas_engine/app/theme/app_tokens.dart';
+import 'package:canvas_engine/app/ui/app_filter_chip.dart';
+import 'package:canvas_engine/app/ui/template_thumb.dart';
+import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
+import 'package:canvas_engine/features/templates/domain/template.dart';
+import 'package:canvas_engine/features/templates/presentation/templates_browse_screen.dart';
+import 'package:canvas_engine/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// Navigation doc commit 3: the Templates tab (browse screen) on v2
+/// tokens — search field, category + language AppFilterChips, lazy
+/// 2-col TemplateThumb grid. Filter logic pinned via chip taps.
+void main() {
+  Template template({
+    required String id,
+    required TemplateCategory category,
+    TemplateLanguage language = TemplateLanguage.persian,
+  }) {
+    return Template(
+      id: id,
+      name: id,
+      category: category,
+      language: language,
+      build: () => EditorDocument(
+        width: 200,
+        height: 200,
+        layers: const [],
+        backgroundColor: const Color(0xFFF5EFE6),
+      ),
+    );
+  }
+
+  final catalog = [
+    template(id: 'story-fa', category: TemplateCategory.instagramStory),
+    template(
+      id: 'story-en',
+      category: TemplateCategory.instagramStory,
+      language: TemplateLanguage.english,
+    ),
+    template(id: 'poetry-fa', category: TemplateCategory.poetryPost),
+  ];
+
+  Future<void> pump(
+    WidgetTester tester, {
+    List<Template>? templates,
+    TemplateLanguage initialLanguage = TemplateLanguage.persian,
+    void Function(Template)? onOpen,
+    Brightness brightness = Brightness.light,
+  }) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: brightness == Brightness.dark
+              ? ThemeMode.dark
+              : ThemeMode.light,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: TemplatesBrowseScreen(
+            onOpen: onOpen ?? (_) {},
+            initialLanguage: initialLanguage,
+            templates: templates ?? catalog,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+  }
+
+  testWidgets('renders search, chip rows, and the thumb grid on pageBg', (
+    tester,
+  ) async {
+    await pump(tester);
+
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.byKey(const ValueKey('browse-category-all')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('browse-language-persian')),
+      findsOneWidget,
+    );
+    // initialLanguage persian → only fa templates in the grid.
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-fa')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-en')),
+      findsNothing,
+    );
+
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.backgroundColor, AppTokens.light.pageBg);
+  });
+
+  testWidgets('language chip switches the pool; category chip narrows it', (
+    tester,
+  ) async {
+    await pump(tester);
+
+    await tester.tap(find.byKey(const ValueKey('browse-language-english')));
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-en')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-fa')),
+      findsNothing,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('browse-language-all')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('browse-category-poetryPost')));
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-poetry-fa')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-fa')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('search narrows the grid and empty state appears on no match', (
+    tester,
+  ) async {
+    await pump(tester);
+
+    await tester.enterText(find.byType(TextField), 'poetry');
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-poetry-fa')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-fa')),
+      findsNothing,
+    );
+
+    await tester.enterText(find.byType(TextField), 'zzz-no-match');
+    await tester.pump();
+    expect(find.byType(TemplateThumb), findsNothing);
+    expect(find.text('No templates found'), findsOneWidget);
+  });
+
+  testWidgets('tapping a tile opens the template', (tester) async {
+    Template? opened;
+    await pump(tester, onOpen: (t) => opened = t);
+
+    await tester.tap(
+      find.byKey(const ValueKey('browse-template-tile-story-fa')),
+    );
+    expect(opened?.id, 'story-fa');
+  });
+
+  testWidgets('dark mode: ink canvas, cream selected chip', (tester) async {
+    await pump(tester, brightness: Brightness.dark);
+    expect(tester.takeException(), isNull);
+
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.backgroundColor, AppTokens.dark.pageBg);
+
+    final selectedChip = tester
+        .widgetList<AnimatedContainer>(
+          find.descendant(
+            of: find.byKey(const ValueKey('browse-language-persian')),
+            matching: find.byType(AnimatedContainer),
+          ),
+        )
+        .first;
+    expect(
+      (selectedChip.decoration! as BoxDecoration).color,
+      AppTokens.dark.brand,
+    );
+    expect(find.byType(AppFilterChip), findsAtLeastNWidgets(4));
+  });
+}
