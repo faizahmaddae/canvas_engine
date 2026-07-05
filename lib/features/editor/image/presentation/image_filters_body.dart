@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
@@ -20,7 +21,7 @@ import 'image_panel_shell.dart';
 /// not a generic gradient swatch.
 ///
 /// Selected state matches the unified `DockToolTile` grammar
-/// (2026-05): primary @ 12% pill behind the chip + primary label,
+/// (2026-05): accent @ 12% pill behind the chip + accent label,
 /// no glow shadow, no thick border ring. A small ✓ corner badge
 /// makes the active filter unmistakable at a glance.
 ///
@@ -143,7 +144,7 @@ class _FilterChipState extends State<_FilterChip> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final selected = widget.selected;
     final matrix = imageFilterMatrix(widget.preset);
 
@@ -152,15 +153,15 @@ class _FilterChipState extends State<_FilterChip> {
     // three states share identical bounds. No glow, no outer ring.
     Color bg;
     if (selected) {
-      bg = scheme.primary.withValues(alpha: _down ? 0.18 : 0.12);
+      bg = tokens.accent.withValues(alpha: _down ? 0.18 : 0.12);
     } else if (_down) {
-      bg = scheme.primary.withValues(alpha: 0.10);
+      bg = tokens.accent.withValues(alpha: 0.10);
     } else if (_hover) {
-      bg = scheme.onSurface.withValues(alpha: 0.06);
+      bg = tokens.textPrimary.withValues(alpha: 0.06);
     } else {
       bg = Colors.transparent;
     }
-    final fg = selected ? scheme.primary : scheme.onSurfaceVariant;
+    final fg = selected ? tokens.accent : tokens.textSecondary;
 
     // Real-image preview. Decoded at 128px via cacheWidth so memory
     // stays tiny regardless of source resolution. Falls back to a
@@ -237,9 +238,7 @@ class _FilterChipState extends State<_FilterChip> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: scheme.outlineVariant.withValues(
-                                  alpha: 0.45,
-                                ),
+                                color: tokens.border.withValues(alpha: 0.45),
                                 width: 1,
                               ),
                             ),
@@ -250,7 +249,7 @@ class _FilterChipState extends State<_FilterChip> {
                         Positioned(
                           right: 4,
                           bottom: 4,
-                          child: _SelectedBadge(scheme: scheme),
+                          child: _SelectedBadge(tokens: tokens),
                         ),
                     ],
                   ),
@@ -295,8 +294,8 @@ class _FilterChipState extends State<_FilterChip> {
 /// Small ✓ badge anchored to the thumbnail corner so the active
 /// filter is unmistakable even at a glance, on busy images.
 class _SelectedBadge extends StatelessWidget {
-  const _SelectedBadge({required this.scheme});
-  final ColorScheme scheme;
+  const _SelectedBadge({required this.tokens});
+  final AppTokens tokens;
 
   @override
   Widget build(BuildContext context) {
@@ -307,11 +306,11 @@ class _SelectedBadge extends StatelessWidget {
       width: 16,
       height: 16,
       decoration: BoxDecoration(
-        color: scheme.primary,
+        color: tokens.accent,
         shape: BoxShape.circle,
-        border: Border.all(color: scheme.surface, width: 1.5),
+        border: Border.all(color: tokens.surface, width: 1.5),
       ),
-      child: Icon(Icons.check_rounded, size: 10, color: scheme.onPrimary),
+      child: Icon(Icons.check_rounded, size: 10, color: tokens.onBrand),
     );
   }
 }

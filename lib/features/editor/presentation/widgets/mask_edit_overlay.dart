@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/constants/engine_constants.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
@@ -97,7 +98,7 @@ class _MaskEditOverlayState extends ConsumerState<MaskEditOverlay> {
                   scale: scale,
                   rotation: rotation,
                   scrimColor: Colors.black.withValues(alpha: 0.45),
-                  outlineColor: Theme.of(context).colorScheme.primary,
+                  outlineColor: AppTokens.of(context).accent,
                 ),
               ),
             ),
@@ -160,7 +161,7 @@ class _MaskEditOverlayState extends ConsumerState<MaskEditOverlay> {
               color: Colors.white,
               shape: BoxShape.circle,
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary,
+                color: AppTokens.of(context).accent,
                 width: 2,
               ),
             ),
@@ -311,7 +312,7 @@ class _BottomStrip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ctl = ref.read(maskEditControllerProvider.notifier);
-    final cs = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final featherMax = math.min(
       layer.transform.size.shortestSide / 2,
       LayerMask.maxFeatherPx,
@@ -323,7 +324,7 @@ class _BottomStrip extends ConsumerWidget {
       child: SafeArea(
         top: false,
         child: Material(
-          color: cs.surface.withValues(alpha: 0.95),
+          color: tokens.surface.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(16),
           elevation: 4,
           child: Padding(
@@ -390,6 +391,9 @@ class _BottomStrip extends ConsumerWidget {
                         EditorHaptics.tap();
                         ctl.cancel(restoreSelection: true);
                       },
+                      style: TextButton.styleFrom(
+                        foregroundColor: tokens.accent,
+                      ),
                       child: Text(context.l10n.cancelAction),
                     ),
                     const SizedBox(width: 8),
@@ -398,6 +402,10 @@ class _BottomStrip extends ConsumerWidget {
                         EditorHaptics.tap();
                         ctl.commit();
                       },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: tokens.brand,
+                        foregroundColor: tokens.onBrand,
+                      ),
                       child: Text(context.l10n.doneAction),
                     ),
                   ],

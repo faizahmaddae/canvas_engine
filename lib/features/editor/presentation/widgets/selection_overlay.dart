@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/constants/engine_constants.dart';
 import '../../engine/core/layer_transform.dart';
 import '../../engine/core/selection_state.dart';
@@ -198,7 +199,8 @@ class LayerSelectionOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
+    // v2 selection chrome: saffron accent (was seed violet).
+    final color = AppTokens.of(context).accent;
     final size = transform.size;
     final mapper = LayerSpaceMapper(transform: transform, viewport: viewport);
 
@@ -1104,7 +1106,8 @@ class GroupSelectionOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
+    // v2 selection chrome: saffron accent (was seed violet).
+    final color = AppTokens.of(context).accent;
     // Pick the geometry: oriented quad (rotated frame during gesture)
     // when supplied, otherwise the axis-aligned bounds.
     final Offset tlCanvas;

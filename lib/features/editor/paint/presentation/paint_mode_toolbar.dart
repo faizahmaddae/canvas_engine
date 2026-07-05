@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
@@ -620,7 +621,6 @@ class _GroupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Text(
@@ -629,7 +629,7 @@ class _GroupHeader extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.8,
-          color: scheme.onSurfaceVariant,
+          color: AppTokens.of(context).textSecondary,
         ),
       ),
     );
@@ -653,21 +653,21 @@ class _PaintToolGridTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final theme = Theme.of(context);
     final enabled = onTap != null;
 
     final bgColor = selected
-        ? scheme.primary.withValues(alpha: 0.14)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.40);
+        ? tokens.accent.withValues(alpha: 0.14)
+        : tokens.surfaceMuted.withValues(alpha: 0.40);
     final borderColor = selected
-        ? scheme.primary.withValues(alpha: 0.85)
-        : scheme.outlineVariant.withValues(alpha: 0.35);
+        ? tokens.accent.withValues(alpha: 0.85)
+        : tokens.border.withValues(alpha: 0.35);
     final labelColor = !enabled
-        ? scheme.onSurface.withValues(alpha: 0.32)
+        ? tokens.textPrimary.withValues(alpha: 0.32)
         : selected
-        ? scheme.primary
-        : scheme.onSurface.withValues(alpha: 0.88);
+        ? tokens.accent
+        : tokens.textPrimary.withValues(alpha: 0.88);
 
     return Material(
       color: Colors.transparent,
@@ -685,7 +685,7 @@ class _PaintToolGridTile extends StatelessWidget {
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: scheme.primary.withValues(alpha: 0.20),
+                      color: tokens.accent.withValues(alpha: 0.20),
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
@@ -704,7 +704,7 @@ class _PaintToolGridTile extends StatelessWidget {
                     tool: tool,
                     color: enabled
                         ? paintColor
-                        : scheme.onSurface.withValues(alpha: 0.25),
+                        : tokens.textPrimary.withValues(alpha: 0.25),
                   ),
                 ),
               ),
@@ -971,7 +971,6 @@ Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
           final session = ProviderScope.containerOf(
             context,
           ).read(paintToolControllerProvider);
-          final scheme = Theme.of(context).colorScheme;
           final c = session.strokeColor.withValues(
             alpha: (value / 100).clamp(0.0, 1.0),
           );
@@ -982,7 +981,7 @@ Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
               color: c,
               shape: BoxShape.circle,
               border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.6),
+                color: AppTokens.of(context).border.withValues(alpha: 0.6),
                 width: 1,
               ),
             ),
@@ -1124,13 +1123,13 @@ class _FillChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final fg = selected ? scheme.primary : scheme.onSurface;
+    final tokens = AppTokens.of(context);
+    final fg = selected ? tokens.accent : tokens.textPrimary;
     // Flat: soft tint when selected, faint surface when resting.
     // No border, no elevation — same grammar as Text `_StyleTile`.
     final bg = selected
-        ? scheme.primary.withValues(alpha: 0.12)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.35);
+        ? tokens.accent.withValues(alpha: 0.12)
+        : tokens.surfaceMuted.withValues(alpha: 0.35);
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(14),
@@ -1172,9 +1171,8 @@ class _FillPreviewNone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return CustomPaint(
-      painter: _NoneIconPainter(color: scheme.onSurfaceVariant),
+      painter: _NoneIconPainter(color: AppTokens.of(context).textSecondary),
     );
   }
 }
@@ -1209,13 +1207,12 @@ class _FillPreviewSolid extends StatelessWidget {
   final Color color;
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.6),
+          color: AppTokens.of(context).border.withValues(alpha: 0.6),
           width: 1,
         ),
       ),
@@ -1227,7 +1224,6 @@ class _FillPreviewSweep extends StatelessWidget {
   const _FillPreviewSweep();
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
         gradient: const SweepGradient(
@@ -1243,7 +1239,7 @@ class _FillPreviewSweep extends StatelessWidget {
         ),
         shape: BoxShape.circle,
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.6),
+          color: AppTokens.of(context).border.withValues(alpha: 0.6),
           width: 1,
         ),
       ),
@@ -1366,14 +1362,14 @@ class _DashChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final fg = selected ? scheme.primary : scheme.onSurface;
+    final tokens = AppTokens.of(context);
+    final fg = selected ? tokens.accent : tokens.textPrimary;
     // Flat: same grammar as `_FillChoice` and Text `_StyleTile` —
     // soft tint on select, faint surface at rest, no border or
     // shadow. Preview line + label remain the affordance.
     final bg = selected
-        ? scheme.primary.withValues(alpha: 0.12)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.35);
+        ? tokens.accent.withValues(alpha: 0.12)
+        : tokens.surfaceMuted.withValues(alpha: 0.35);
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(14),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 
 import '../../../../core/utils/haptics.dart';
@@ -76,7 +77,7 @@ class QuickActionCapsule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 140),
       opacity: dimmed ? 0.55 : 1.0,
@@ -104,7 +105,7 @@ class QuickActionCapsule extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         for (final slot in slots)
-                          _SlotButton(slot: slot, scheme: scheme),
+                          _SlotButton(slot: slot, tokens: tokens),
                       ],
                     ),
                   ),
@@ -175,20 +176,20 @@ class QuickActionSlot {
 // ─────────────────────────────────────────────────────────────────
 
 class _SlotButton extends StatelessWidget {
-  const _SlotButton({required this.slot, required this.scheme});
+  const _SlotButton({required this.slot, required this.tokens});
 
   final QuickActionSlot slot;
-  final ColorScheme scheme;
+  final AppTokens tokens;
 
   @override
   Widget build(BuildContext context) {
     final disabled = slot.onTap == null;
     final fill = slot.active
-        ? scheme.primary.withValues(alpha: 0.12)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.55);
+        ? tokens.accent.withValues(alpha: 0.12)
+        : tokens.surfaceMuted.withValues(alpha: 0.55);
     final border = slot.active
-        ? scheme.primary.withValues(alpha: 0.35)
-        : scheme.outlineVariant.withValues(alpha: 0.4);
+        ? tokens.accent.withValues(alpha: 0.35)
+        : tokens.border.withValues(alpha: 0.4);
 
     return Tooltip(
       message: slot.tooltip,
@@ -207,8 +208,8 @@ class _SlotButton extends StatelessWidget {
                     slot.onTap!();
                   },
             borderRadius: BorderRadius.circular(20),
-            splashColor: scheme.primary.withValues(alpha: 0.10),
-            highlightColor: scheme.primary.withValues(alpha: 0.05),
+            splashColor: tokens.accent.withValues(alpha: 0.10),
+            highlightColor: tokens.accent.withValues(alpha: 0.05),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 140),
               curve: Curves.easeOut,
@@ -221,14 +222,14 @@ class _SlotButton extends StatelessWidget {
               ),
               child: DefaultTextStyle.merge(
                 style: TextStyle(
-                  color: slot.active ? scheme.primary : scheme.onSurface,
+                  color: slot.active ? tokens.accent : tokens.textPrimary,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.1,
                   fontSize: 13,
                 ),
                 child: IconTheme.merge(
                   data: IconThemeData(
-                    color: slot.active ? scheme.primary : scheme.onSurface,
+                    color: slot.active ? tokens.accent : tokens.textPrimary,
                     size: 18,
                   ),
                   child: slot.child,
@@ -257,13 +258,13 @@ class _CapsuleIconChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final fill = active
-        ? scheme.primary.withValues(alpha: 0.12)
+        ? tokens.accent.withValues(alpha: 0.12)
         : Colors.transparent;
     final border = active
-        ? scheme.primary.withValues(alpha: 0.35)
-        : scheme.outlineVariant.withValues(alpha: 0.4);
+        ? tokens.accent.withValues(alpha: 0.35)
+        : tokens.border.withValues(alpha: 0.4);
     final btn = Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(12),
@@ -273,8 +274,8 @@ class _CapsuleIconChip extends StatelessWidget {
           onTap();
         },
         borderRadius: BorderRadius.circular(12),
-        splashColor: scheme.primary.withValues(alpha: 0.10),
-        highlightColor: scheme.primary.withValues(alpha: 0.05),
+        splashColor: tokens.accent.withValues(alpha: 0.10),
+        highlightColor: tokens.accent.withValues(alpha: 0.05),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 140),
           curve: Curves.easeOut,
@@ -289,7 +290,7 @@ class _CapsuleIconChip extends StatelessWidget {
           child: Icon(
             icon,
             size: 20,
-            color: active ? scheme.primary : scheme.onSurface,
+            color: active ? tokens.accent : tokens.textPrimary,
           ),
         ),
       ),

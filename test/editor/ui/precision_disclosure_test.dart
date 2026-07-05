@@ -1,3 +1,4 @@
+import 'package:canvas_engine/app/theme/app_tokens.dart';
 import 'package:canvas_engine/features/editor/ui/precision_disclosure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -128,16 +129,17 @@ void main() {
           ),
         ),
       );
-      final scheme = Theme.of(
+      // v2 tokens: muted text while closed, saffron accent when open.
+      final tokens = AppTokens.of(
         tester.element(find.text('Adjust precisely')),
-      ).colorScheme;
+      );
       var value = tester.widget<Text>(find.text('24px'));
-      expect(value.style?.color, scheme.onSurfaceVariant);
+      expect(value.style?.color, tokens.textSecondary);
 
       await tester.tap(find.text('Adjust precisely'));
       await tester.pumpAndSettle();
       value = tester.widget<Text>(find.text('24px'));
-      expect(value.style?.color, scheme.primary);
+      expect(value.style?.color, tokens.accent);
     });
   });
 }

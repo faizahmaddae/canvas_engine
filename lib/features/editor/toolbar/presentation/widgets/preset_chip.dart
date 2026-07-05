@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/utils/haptics.dart';
 
 /// Selected/unselected preset chip used above sliders and inside
@@ -8,8 +9,8 @@ import '../../../../../core/utils/haptics.dart';
 ///
 /// **Phase-2 polish (2026-04):**
 ///   * 44dp minimum height — Apple HIG / Material thumb target.
-///   * Selected = solid `primary` fill + `onPrimary` label + 12dp
-///     primary shadow. Reads under sunlight; matches the active
+///   * Selected = tinted `accent` fill + `accentDeep` label + 12dp
+///     accent shadow. Reads under sunlight; matches the active
 ///     `DockToolTile` grammar so chips and tiles feel like one
 ///     family.
 ///   * Press-scale (0.96) on tap-down — gives every chip the
@@ -44,16 +45,16 @@ class _PresetChipState extends State<PresetChip> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final selected = widget.selected;
     final fill = selected
-        ? scheme.primary
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.55);
-    final fg = selected ? scheme.onPrimary : scheme.onSurface;
+        ? tokens.accent.withValues(alpha: 0.16)
+        : tokens.surfaceMuted.withValues(alpha: 0.55);
+    final fg = selected ? tokens.accentDeep : tokens.textPrimary;
     final shadow = selected
         ? [
             BoxShadow(
-              color: scheme.primary.withValues(alpha: 0.28),
+              color: tokens.accent.withValues(alpha: 0.28),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

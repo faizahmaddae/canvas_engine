@@ -1712,7 +1712,7 @@ class _MultiSelectModeChip extends ConsumerWidget {
     final mode = ref.watch(selectionModeProvider);
     if (mode != SelectionMode.multi) return const SizedBox.shrink();
     final count = ref.watch(selectionControllerProvider.select((s) => s.count));
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Positioned(
       top: 12,
       left: 12,
@@ -1722,7 +1722,7 @@ class _MultiSelectModeChip extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: scheme.primary.withValues(alpha: 0.92),
+            color: tokens.brand.withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(999),
             boxShadow: const [
               BoxShadow(
@@ -1738,13 +1738,13 @@ class _MultiSelectModeChip extends ConsumerWidget {
               Icon(
                 Icons.check_circle_outline,
                 size: 14,
-                color: scheme.onPrimary,
+                color: tokens.onBrand,
               ),
               const SizedBox(width: 6),
               Text(
                 context.l10n.multiSelectCount(count),
                 style: TextStyle(
-                  color: scheme.onPrimary,
+                  color: tokens.onBrand,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1766,11 +1766,11 @@ class _ProtectedBaseBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.92),
+        color: tokens.brand.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(999),
         boxShadow: const [
           BoxShadow(
@@ -1783,12 +1783,12 @@ class _ProtectedBaseBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.lock_outline, size: 12, color: scheme.onPrimary),
+          Icon(Icons.lock_outline, size: 12, color: tokens.onBrand),
           const SizedBox(width: 4),
           Text(
             context.l10n.basePhotoLabel,
             style: TextStyle(
-              color: scheme.onPrimary,
+              color: tokens.onBrand,
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -1828,7 +1828,7 @@ class _GroupMemberOutlines extends ConsumerWidget {
           groupLive[l.id] ?? l.transform,
     ];
     if (transforms.isEmpty) return const SizedBox.shrink();
-    final color = Theme.of(context).colorScheme.primary;
+    final color = AppTokens.of(context).accent;
     return IgnorePointer(
       child: CustomPaint(
         size: Size.infinite,

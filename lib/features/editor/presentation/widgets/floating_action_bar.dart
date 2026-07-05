@@ -22,6 +22,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 
 /// Standard height of a single-row floating glass bar. Kept in sync
@@ -50,11 +51,9 @@ class FloatingGlassBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = (isDark ? Colors.white : Colors.black).withValues(
-      alpha: 0.10,
-    );
+    final borderColor = tokens.border.withValues(alpha: 0.8);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -62,7 +61,7 @@ class FloatingGlassBar extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
           decoration: BoxDecoration(
-            color: scheme.surface.withValues(alpha: isDark ? 0.55 : 0.78),
+            color: tokens.surface.withValues(alpha: isDark ? 0.55 : 0.78),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: borderColor, width: 0.6),
             boxShadow: [
@@ -109,7 +108,7 @@ class FloatingPillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Semantics(
       button: true,
       label: semanticLabel,
@@ -118,7 +117,7 @@ class FloatingPillButton extends StatelessWidget {
         curve: Curves.easeOut,
         decoration: BoxDecoration(
           color: active
-              ? scheme.primary.withValues(alpha: 0.16)
+              ? tokens.accent.withValues(alpha: 0.16)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
@@ -128,8 +127,8 @@ class FloatingPillButton extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(14),
             onTap: onTap,
-            splashColor: scheme.primary.withValues(alpha: 0.10),
-            highlightColor: scheme.primary.withValues(alpha: 0.05),
+            splashColor: tokens.accent.withValues(alpha: 0.10),
+            highlightColor: tokens.accent.withValues(alpha: 0.05),
             child: Container(
               constraints: const BoxConstraints(minWidth: 40, minHeight: 32),
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -154,7 +153,6 @@ class FloatingColorDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: size,
       height: size,
@@ -162,7 +160,7 @@ class FloatingColorDot extends StatelessWidget {
         color: color,
         shape: BoxShape.circle,
         border: Border.all(
-          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.28),
+          color: AppTokens.of(context).border,
           width: 1,
         ),
         boxShadow: [

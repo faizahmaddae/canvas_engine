@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
@@ -27,7 +28,7 @@ Future<ShapeKind?> pickShapeKind(
     showDragHandle: true,
     isScrollControlled: true,
     builder: (ctx) {
-      final scheme = Theme.of(ctx).colorScheme;
+      final tokens = AppTokens.of(ctx);
       final mq = MediaQuery.of(ctx);
       return ConstrainedBox(
         constraints: BoxConstraints(maxHeight: mq.size.height * 0.75),
@@ -46,7 +47,7 @@ Future<ShapeKind?> pickShapeKind(
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
-                      color: scheme.onSurface,
+                      color: tokens.textPrimary,
                       letterSpacing: -0.3,
                     ),
                   ),
@@ -58,7 +59,7 @@ Future<ShapeKind?> pickShapeKind(
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: scheme.onSurfaceVariant,
+                      color: tokens.textSecondary,
                     ),
                   ),
                 ),
@@ -76,7 +77,7 @@ Future<ShapeKind?> pickShapeKind(
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: scheme.onSurfaceVariant,
+                        color: tokens.textSecondary,
                         letterSpacing: 0.6,
                       ),
                     ),
@@ -91,7 +92,7 @@ Future<ShapeKind?> pickShapeKind(
                     children: [
                       for (final entry in _pickerEntriesForSection(
                         l10n,
-                        scheme,
+                        tokens,
                         s,
                       ))
                         _ShapePickerTile(
@@ -117,15 +118,15 @@ Future<ShapeKind?> pickShapeKind(
 }
 
 /// Picker entries for a single section, with section-stable
-/// gradients (alternating primary/tertiary) so each section reads
+/// gradients (alternating accent/accentDeep) so each section reads
 /// as visually coherent.
 List<_ShapePickerEntry> _pickerEntriesForSection(
   AppLocalizations l10n,
-  ColorScheme scheme,
+  AppTokens tokens,
   int sectionIndex,
 ) {
-  final a = scheme.primary;
-  final b = scheme.tertiary;
+  final a = tokens.accent;
+  final b = tokens.accentDeep;
   final entries = kShapeCatalogueSections[sectionIndex].entries;
   return [
     for (var i = 0; i < entries.length; i++)
@@ -182,7 +183,7 @@ class _ShapePickerEntry {
 /// Premium grid tile used in the shape picker. Renders an actual
 /// preview of [kind] inside a gradient panel so users see what
 /// they're picking — not just an icon glyph. Tile lights up with
-/// the primary tint when [selected] is true (used by the Replace
+/// the accent tint when [selected] is true (used by the Replace
 /// flow to mark the current kind).
 class _ShapePickerTile extends StatelessWidget {
   const _ShapePickerTile({
@@ -201,7 +202,7 @@ class _ShapePickerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -210,13 +211,13 @@ class _ShapePickerTile extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: selected
-                ? scheme.primary.withValues(alpha: 0.08)
-                : scheme.surfaceContainer,
+                ? tokens.accent.withValues(alpha: 0.08)
+                : tokens.surfaceMuted,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: selected
-                  ? scheme.primary.withValues(alpha: 0.6)
-                  : scheme.outlineVariant.withValues(alpha: 0.5),
+                  ? tokens.accent.withValues(alpha: 0.6)
+                  : tokens.border.withValues(alpha: 0.5),
               width: selected ? 1.4 : 0.5,
             ),
           ),
@@ -237,7 +238,7 @@ class _ShapePickerTile extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color: selected ? scheme.primary : scheme.onSurface,
+                  color: selected ? tokens.accent : tokens.textPrimary,
                   letterSpacing: -0.1,
                 ),
               ),

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/export_format.dart';
 import '../../application/image_export_service.dart';
@@ -139,8 +140,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -296,8 +296,8 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                       icon: const Icon(Icons.download_rounded),
                       label: Text(context.l10n.saveAction),
                       style: FilledButton.styleFrom(
-                        backgroundColor: scheme.primary,
-                        foregroundColor: scheme.onPrimary,
+                        backgroundColor: tokens.brand,
+                        foregroundColor: tokens.onBrand,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

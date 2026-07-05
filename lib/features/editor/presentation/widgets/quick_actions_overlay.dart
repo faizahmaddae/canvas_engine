@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/core/editor_layer.dart';
@@ -161,13 +162,11 @@ class _BarContent extends StatelessWidget {
     // is slightly heavier than on the style bars because this one is
     // structural (its actions are destructive/duplicative) and we
     // want it to read a touch stronger against busy canvas content.
-    final bg = isDark
-        ? Colors.black.withValues(alpha: 0.72)
-        : Colors.white.withValues(alpha: 0.92);
-    final fg = isDark ? Colors.white : scheme.onSurface;
-    final dividerColor = (isDark ? Colors.white : Colors.black).withValues(
-      alpha: 0.08,
-    );
+    // v2: paper/ink tokens instead of raw white/black glass.
+    final tokens = AppTokens.of(context);
+    final bg = tokens.surface.withValues(alpha: isDark ? 0.90 : 0.94);
+    final fg = tokens.textPrimary;
+    final dividerColor = tokens.border.withValues(alpha: 0.8);
 
     return Material(
       color: Colors.transparent,
@@ -175,16 +174,12 @@ class _BarContent extends StatelessWidget {
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: (isDark ? Colors.white : Colors.black).withValues(
-              alpha: 0.06,
-            ),
-          ),
-          boxShadow: const [
+          border: Border.all(color: tokens.border),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x33000000),
+              color: scheme.shadow.withValues(alpha: 0.2),
               blurRadius: 12,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -203,10 +198,10 @@ class _BarContent extends StatelessWidget {
               tooltip: isLocked
                   ? context.l10n.unlockAction
                   : context.l10n.lockAction,
-              // Locked state tints the pill primary so the user
+              // Locked state tints the pill saffron so the user
               // sees the lock is engaged at a glance — matches the
               // layers panel highlight semantics.
-              color: isLocked ? scheme.primary : fg,
+              color: isLocked ? tokens.accent : fg,
               onTap: onToggleLock,
             ),
             _Divider(color: dividerColor),

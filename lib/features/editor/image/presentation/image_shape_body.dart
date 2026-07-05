@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
@@ -65,7 +66,7 @@ class ImageShapeBody extends ConsumerWidget {
                           mask: option.mask,
                           color:
                               IconTheme.of(ctx).color ??
-                              Theme.of(ctx).colorScheme.onSurfaceVariant,
+                              AppTokens.of(ctx).textSecondary,
                         ),
                       ),
                     ),

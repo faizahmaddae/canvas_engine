@@ -522,7 +522,6 @@ class _PanelSectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 4, 6),
       child: Text(
@@ -531,7 +530,7 @@ class _PanelSectionLabel extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 0,
-          color: scheme.onSurfaceVariant,
+          color: AppTokens.of(context).textSecondary,
         ),
       ),
     );

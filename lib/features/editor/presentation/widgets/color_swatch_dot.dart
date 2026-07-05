@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
+
 /// Shared circular color swatch used by both Paint and Text color
 /// panels so the two surfaces speak one visual language.
 ///
 /// Visual grammar (single source of truth):
 /// - 36×36 circle filled with [color]
-/// - Resting: faint outline (`outlineVariant @ 60%`, 1px)
-/// - Selected: 2.5px `primary` ring + brightness-aware checkmark
+/// - Resting: faint outline (`border @ 60%`, 1px)
+/// - Selected: 2.5px `accent` ring + brightness-aware checkmark
 /// - Press: subtle scale-down (94%) for tactile feedback
 /// - Selection swap is animated (scale + fade) for a calm reveal
 ///
@@ -36,7 +38,7 @@ class _ColorSwatchDotState extends State<ColorSwatchDot> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final selected = widget.selected;
     final color = widget.color;
     // Brightness-aware checkmark: dark colours get a white tick,
@@ -71,8 +73,8 @@ class _ColorSwatchDotState extends State<ColorSwatchDot> {
                 color: color,
                 border: Border.all(
                   color: selected
-                      ? scheme.primary
-                      : scheme.outlineVariant.withValues(alpha: 0.6),
+                      ? tokens.accent
+                      : tokens.border.withValues(alpha: 0.6),
                   width: selected ? 2.5 : 1,
                 ),
               ),

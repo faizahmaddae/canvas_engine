@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
@@ -47,7 +48,7 @@ class CanvasPanelBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final doc = ref.watch(documentControllerProvider);
     final current = doc.backgroundColor;
     final mode = doc.backgroundMode;
@@ -67,7 +68,7 @@ class CanvasPanelBody extends ConsumerWidget {
           if (isPhotoProject)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: _PhotoProjectHint(scheme: scheme),
+              child: _PhotoProjectHint(tokens: tokens),
             ),
           // Header already says "Background" — no duplicate SectionLabel.
           _BackgroundModeToggle(
@@ -77,7 +78,7 @@ class CanvasPanelBody extends ConsumerWidget {
               EditorHaptics.toggle();
               _commitMode(ref, next);
             },
-            scheme: scheme,
+            tokens: tokens,
           ),
           const SizedBox(height: 12),
           Opacity(
@@ -127,12 +128,12 @@ class _BackgroundModeToggle extends StatelessWidget {
   const _BackgroundModeToggle({
     required this.value,
     required this.onChanged,
-    required this.scheme,
+    required this.tokens,
   });
 
   final CanvasBackgroundMode value;
   final ValueChanged<CanvasBackgroundMode> onChanged;
-  final ColorScheme scheme;
+  final AppTokens tokens;
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +141,7 @@ class _BackgroundModeToggle extends StatelessWidget {
       height: 36,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        color: tokens.surfaceMuted.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -150,14 +151,14 @@ class _BackgroundModeToggle extends StatelessWidget {
             label: context.l10n.colorLabel,
             selected: value == CanvasBackgroundMode.color,
             onTap: () => onChanged(CanvasBackgroundMode.color),
-            scheme: scheme,
+            tokens: tokens,
           ),
           _ModeTile(
             key: const ValueKey('canvas-bg-mode-transparent'),
             label: context.l10n.transparentOption,
             selected: value == CanvasBackgroundMode.transparent,
             onTap: () => onChanged(CanvasBackgroundMode.transparent),
-            scheme: scheme,
+            tokens: tokens,
           ),
         ],
       ),
@@ -171,13 +172,13 @@ class _ModeTile extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
-    required this.scheme,
+    required this.tokens,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  final ColorScheme scheme;
+  final AppTokens tokens;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +190,9 @@ class _ModeTile extends StatelessWidget {
           duration: const Duration(milliseconds: 140),
           curve: Curves.easeOut,
           decoration: BoxDecoration(
-            color: selected ? scheme.primary : Colors.transparent,
+            color: selected
+                ? tokens.accent.withValues(alpha: 0.16)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
           ),
           alignment: Alignment.center,
@@ -199,7 +202,7 @@ class _ModeTile extends StatelessWidget {
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.2,
-              color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+              color: selected ? tokens.accentDeep : tokens.textSecondary,
             ),
           ),
         ),
@@ -214,23 +217,23 @@ class _ModeTile extends StatelessWidget {
 /// one short sentence with an icon -- so it doesn't shout over the
 /// real controls.
 class _PhotoProjectHint extends StatelessWidget {
-  const _PhotoProjectHint({required this.scheme});
+  const _PhotoProjectHint({required this.tokens});
 
-  final ColorScheme scheme;
+  final AppTokens tokens;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.08),
+        color: tokens.accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
+        border: Border.all(color: tokens.accent.withValues(alpha: 0.18)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded, size: 16, color: scheme.primary),
+          Icon(Icons.info_outline_rounded, size: 16, color: tokens.accent),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -238,7 +241,7 @@ class _PhotoProjectHint extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11.5,
                 height: 1.35,
-                color: scheme.onSurface.withValues(alpha: 0.78),
+                color: tokens.textPrimary.withValues(alpha: 0.78),
               ),
             ),
           ),

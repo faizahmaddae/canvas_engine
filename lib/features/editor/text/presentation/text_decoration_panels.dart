@@ -12,7 +12,7 @@ part of 'text_mode_toolbar.dart';
 TextStyle? _flatSliderLabelStyle(BuildContext context) {
   final theme = Theme.of(context);
   return theme.textTheme.bodyMedium?.copyWith(
-    color: theme.colorScheme.onSurface,
+    color: AppTokens.of(context).textPrimary,
     fontWeight: FontWeight.w600,
     fontSize: 13,
   );
@@ -23,7 +23,7 @@ TextStyle? _flatSliderLabelStyle(BuildContext context) {
 TextStyle? _flatSliderReadoutStyle(BuildContext context) {
   final theme = Theme.of(context);
   return theme.textTheme.labelMedium?.copyWith(
-    color: theme.colorScheme.onSurfaceVariant,
+    color: AppTokens.of(context).textSecondary,
     fontWeight: FontWeight.w600,
     fontFeatures: const [FontFeature.tabularFigures()],
   );
@@ -39,7 +39,6 @@ class _BackgroundPrecisionAdvanced extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final bg = style.backgroundColor;
     final labelStyle = _flatSliderLabelStyle(context);
@@ -49,7 +48,7 @@ class _BackgroundPrecisionAdvanced extends ConsumerWidget {
       titleOpen: context.l10n.hidePreciseControls,
       chevronSize: 18,
       children: [
-        _PrecisionDivider(scheme: scheme),
+        const _PrecisionDivider(),
         EditorSliderRow(
           label: context.l10n.roundnessLabel,
           labelWidth: 96,
@@ -121,7 +120,6 @@ class _BorderPrecisionAdvanced extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final outline = style.outlineColor;
     final labelStyle = _flatSliderLabelStyle(context);
@@ -131,7 +129,7 @@ class _BorderPrecisionAdvanced extends ConsumerWidget {
       titleOpen: context.l10n.hidePreciseControls,
       chevronSize: 18,
       children: [
-        _PrecisionDivider(scheme: scheme),
+        const _PrecisionDivider(),
         EditorSliderRow(
           label: context.l10n.thicknessLabel,
           labelWidth: 96,
@@ -174,7 +172,6 @@ class _ShadowPrecisionAdvanced extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final shadow = style.shadowColor;
     final labelStyle = _flatSliderLabelStyle(context);
@@ -184,7 +181,7 @@ class _ShadowPrecisionAdvanced extends ConsumerWidget {
       titleOpen: context.l10n.hidePreciseControls,
       chevronSize: 18,
       children: [
-        _PrecisionDivider(scheme: scheme),
+        const _PrecisionDivider(),
         EditorSliderRow(
           label: context.l10n.blurLabel,
           labelWidth: 96,

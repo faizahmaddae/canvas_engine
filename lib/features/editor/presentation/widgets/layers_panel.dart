@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../application/selection_controller.dart';
@@ -169,7 +170,7 @@ class _LayerTile extends ConsumerWidget {
     final protected = doc.isProtectedBasePhoto(layer.id);
     final canDelete = layer.capabilities.deletable && !protected;
     final bg = isSelected
-        ? theme.colorScheme.primary.withValues(alpha: 0.12)
+        ? AppTokens.of(context).accent.withValues(alpha: 0.12)
         : Colors.transparent;
 
     return Material(
@@ -335,7 +336,7 @@ class _IconAction extends StatelessWidget {
     final color = !enabled
         ? Theme.of(context).disabledColor
         : highlighted
-        ? Theme.of(context).colorScheme.primary
+        ? AppTokens.of(context).accent
         : null;
     return IconButton(
       tooltip: tooltip,

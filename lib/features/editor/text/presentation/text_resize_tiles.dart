@@ -6,7 +6,7 @@ part of 'text_mode_toolbar.dart';
 /// Inline two-option tile used by the Resize sheet. Replaces the
 /// prior modal dialog so the user sees both choices and the active
 /// selection without an extra hop. Same visual grammar as the
-/// dialog's `option()` builder it superseded — primary tint + ring
+/// dialog's `option()` builder it superseded — accent tint + ring
 /// when selected, trailing checkmark, hint subtitle in the muted
 /// tone. Selected option lifts on a subtle 1.02 scale + soft glow
 /// so the choice feels physical, not flat.
@@ -27,11 +27,10 @@ class _ResizeOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     return Material(
       color: selected
-          ? scheme.primary.withValues(alpha: 0.08)
+          ? tokens.accent.withValues(alpha: 0.08)
           : Colors.transparent,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
@@ -44,7 +43,7 @@ class _ResizeOptionTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           child: Row(
             children: [
-              // Leading radio: primary-tinted ring + filled dot when
+              // Leading radio: accent-tinted ring + filled dot when
               // selected, plain outline otherwise. Cheaper than the
               // old check-switch and reads as a single-pick group.
               _RadioDot(selected: selected),
@@ -52,7 +51,7 @@ class _ResizeOptionTile extends StatelessWidget {
               Icon(
                 icon,
                 size: 18,
-                color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                color: selected ? tokens.accent : tokens.textSecondary,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -65,7 +64,7 @@ class _ResizeOptionTile extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
-                        color: selected ? scheme.primary : scheme.onSurface,
+                        color: selected ? tokens.accent : tokens.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 1),
@@ -73,7 +72,7 @@ class _ResizeOptionTile extends StatelessWidget {
                       hint,
                       style: TextStyle(
                         fontSize: 11.5,
-                        color: scheme.onSurfaceVariant,
+                        color: tokens.textSecondary,
                       ),
                     ),
                   ],
@@ -88,7 +87,7 @@ class _ResizeOptionTile extends StatelessWidget {
 }
 
 /// Compact radio dot used by [_ResizeOptionTile]. Plain outline ring
-/// in the resting state; primary-tinted ring + filled inner dot when
+/// in the resting state; accent-tinted ring + filled inner dot when
 /// selected. Sized to read at a glance without dominating the row.
 class _RadioDot extends StatelessWidget {
   const _RadioDot({required this.selected});
@@ -97,7 +96,7 @@ class _RadioDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 140),
       curve: Curves.easeOutCubic,
@@ -107,8 +106,8 @@ class _RadioDot extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(
           color: selected
-              ? scheme.primary
-              : scheme.outlineVariant.withValues(alpha: 0.7),
+              ? tokens.accent
+              : tokens.border.withValues(alpha: 0.7),
           width: selected ? 2 : 1.2,
         ),
       ),
@@ -122,7 +121,7 @@ class _RadioDot extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: scheme.primary,
+            color: tokens.accent,
           ),
         ),
       ),

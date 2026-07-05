@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../presentation/widgets/section_label.dart';
@@ -118,15 +119,15 @@ class StrokeHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Container(
       width: double.infinity,
       height: 72,
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        color: tokens.surfaceMuted.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
+          color: tokens.border.withValues(alpha: 0.4),
           width: 1,
         ),
       ),
@@ -251,8 +252,8 @@ class _PaintSizePrecisionAdvancedState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final muted = scheme.onSurfaceVariant;
+    final tokens = AppTokens.of(context);
+    final muted = tokens.textSecondary;
     final clampedValue = widget.value.clamp(widget.min, widget.max).toDouble();
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -275,7 +276,7 @@ class _PaintSizePrecisionAdvancedState
                           ? context.l10n.hidePreciseControls
                           : context.l10n.adjustPrecisely,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface,
+                        color: tokens.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -284,7 +285,7 @@ class _PaintSizePrecisionAdvancedState
                   Text(
                     _format(clampedValue),
                     style: theme.textTheme.labelMedium?.copyWith(
-                      color: _open ? scheme.primary : muted,
+                      color: _open ? tokens.accent : muted,
                       fontWeight: FontWeight.w600,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
@@ -296,7 +297,7 @@ class _PaintSizePrecisionAdvancedState
                     child: Icon(
                       Icons.chevron_right_rounded,
                       size: 18,
-                      color: _open ? scheme.primary : muted,
+                      color: _open ? tokens.accent : muted,
                     ),
                   ),
                 ],

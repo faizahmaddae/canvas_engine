@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 
 /// Canonical "Adjust precisely" expand/collapse disclosure.
@@ -65,13 +66,13 @@ class PrecisionDisclosure extends StatefulWidget {
   final Duration animationDuration;
 
   /// Chevron colour while collapsed. Defaults to
-  /// `colorScheme.onSurfaceVariant`. The icon-header family (shape/
-  /// image) used a constant `scheme.primary` regardless of state;
+  /// `tokens.textSecondary`. The icon-header family (shape/
+  /// image) used a constant accent colour regardless of state;
   /// pass the same colour for both params at a migrated call site to
   /// preserve that exactly.
   final Color? chevronColorClosed;
 
-  /// Chevron colour while expanded. Defaults to `colorScheme.primary`.
+  /// Chevron colour while expanded. Defaults to `tokens.accent`.
   final Color? chevronColorOpen;
 
   final double titleSize;
@@ -86,11 +87,11 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final title = _open ? (widget.titleOpen ?? widget.titleClosed) : widget.titleClosed;
     final chevronColor = _open
-        ? (widget.chevronColorOpen ?? scheme.primary)
-        : (widget.chevronColorClosed ?? scheme.onSurfaceVariant);
+        ? (widget.chevronColorOpen ?? tokens.accent)
+        : (widget.chevronColorClosed ?? tokens.textSecondary);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -113,7 +114,7 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
               child: Row(
                 children: [
                   if (widget.icon != null) ...[
-                    Icon(widget.icon, size: 16, color: scheme.primary),
+                    Icon(widget.icon, size: 16, color: tokens.accent),
                     const SizedBox(width: 8),
                   ],
                   Expanded(
@@ -127,7 +128,7 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
                                 style: TextStyle(
                                   fontSize: widget.titleSize,
                                   fontWeight: FontWeight.w600,
-                                  color: scheme.onSurface,
+                                  color: tokens.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: 1),
@@ -136,7 +137,7 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
-                                  color: scheme.onSurfaceVariant,
+                                  color: tokens.textSecondary,
                                 ),
                               ),
                             ],
@@ -146,7 +147,7 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
                             style: TextStyle(
                               fontSize: widget.titleSize,
                               fontWeight: FontWeight.w600,
-                              color: scheme.onSurface,
+                              color: tokens.textPrimary,
                             ),
                           ),
                   ),

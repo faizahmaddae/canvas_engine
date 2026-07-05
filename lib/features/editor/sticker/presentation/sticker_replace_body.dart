@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
@@ -20,7 +21,7 @@ class StickerReplaceBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return StickerPanelShell(
       title: context.l10n.replaceTool,
       icon: Icons.swap_horiz_rounded,
@@ -34,9 +35,9 @@ class StickerReplaceBody extends ConsumerWidget {
               width: 88,
               height: 88,
               decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest,
+                color: tokens.surfaceMuted,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: scheme.outlineVariant),
+                border: Border.all(color: tokens.border),
               ),
               alignment: Alignment.center,
               child: Text(layer.content, style: const TextStyle(fontSize: 52)),
@@ -49,8 +50,8 @@ class StickerReplaceBody extends ConsumerWidget {
               icon: const Icon(Icons.swap_horiz_rounded),
               label: Text(context.l10n.chooseAnotherStickerAction),
               style: FilledButton.styleFrom(
-                backgroundColor: scheme.primary,
-                foregroundColor: scheme.onPrimary,
+                backgroundColor: tokens.brand,
+                foregroundColor: tokens.onBrand,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 12,

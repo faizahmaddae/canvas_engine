@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../l10n/l10n.dart';
 import '../../editor/presentation/widgets/color_swatch_dot.dart';
 import '../../editor/presentation/widgets/section_label.dart';
@@ -121,11 +122,9 @@ class _ColorPickerSheetState extends State<ColorPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     // A single, soft, near-paper surface for the whole sheet — no inner
     // cards, just space and typography.
-    final sheetColor = isDark ? const Color(0xFF1B1B1E) : Colors.white;
+    final sheetColor = AppTokens.of(context).surface;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.86,
@@ -219,14 +218,13 @@ class _ColorPickerSheetState extends State<ColorPickerSheet> {
 class _GrabHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Center(
       child: Container(
         width: 36,
         height: 4,
         margin: const EdgeInsets.only(top: 10, bottom: 4),
         decoration: BoxDecoration(
-          color: scheme.onSurface.withValues(alpha: 0.14),
+          color: AppTokens.of(context).textPrimary.withValues(alpha: 0.14),
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -243,7 +241,6 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 14, 14),
       child: Row(
@@ -261,7 +258,7 @@ class _Header extends StatelessWidget {
           TextButton(
             onPressed: onDone,
             style: TextButton.styleFrom(
-              foregroundColor: scheme.primary,
+              foregroundColor: AppTokens.of(context).accent,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -466,7 +463,6 @@ class _LabeledSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -486,7 +482,7 @@ class _LabeledSlider extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.4,
-                  color: scheme.onSurfaceVariant,
+                  color: AppTokens.of(context).textSecondary,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -645,11 +641,12 @@ class _HexLineState extends State<_HexLine> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final accent = widget.invalid
         ? scheme.error
         : (_focused
-              ? scheme.onSurface
-              : scheme.onSurface.withValues(alpha: 0.10));
+              ? tokens.textPrimary
+              : tokens.textPrimary.withValues(alpha: 0.10));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -662,7 +659,7 @@ class _HexLineState extends State<_HexLine> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  color: tokens.textSecondary.withValues(alpha: 0.7),
                   letterSpacing: 0.1,
                 ),
               ),
@@ -695,7 +692,7 @@ class _HexLineState extends State<_HexLine> {
             fontSize: 17,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.8,
-            color: scheme.onSurface,
+            color: tokens.textPrimary,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
           inputFormatters: [
@@ -707,7 +704,7 @@ class _HexLineState extends State<_HexLine> {
             contentPadding: const EdgeInsets.symmetric(vertical: 6),
             hintText: '#RRGGBB',
             hintStyle: TextStyle(
-              color: scheme.onSurface.withValues(alpha: 0.25),
+              color: tokens.textPrimary.withValues(alpha: 0.25),
               fontWeight: FontWeight.w600,
               letterSpacing: 0.8,
             ),

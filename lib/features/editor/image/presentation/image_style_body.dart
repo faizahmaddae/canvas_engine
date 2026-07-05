@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
@@ -213,7 +214,7 @@ class _StyleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return SizedBox(
       width: 72,
       child: Column(
@@ -229,14 +230,14 @@ class _StyleTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: selected
-                      ? scheme.primary
-                      : scheme.outlineVariant.withValues(alpha: 0.4),
+                      ? tokens.accent
+                      : tokens.border.withValues(alpha: 0.4),
                   width: selected ? 2 : 1,
                 ),
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                          color: scheme.primary.withValues(alpha: 0.22),
+                          color: tokens.accent.withValues(alpha: 0.22),
                           blurRadius: 12,
                           offset: const Offset(0, 3),
                         ),
@@ -255,7 +256,7 @@ class _StyleTile extends StatelessWidget {
                         colorFilter: ColorFilter.matrix(
                           preset.adjustments.colorMatrix,
                         ),
-                        child: _thumb(source, scheme),
+                        child: _thumb(source, tokens.surfaceMuted),
                       ),
                       if (selected)
                         Align(
@@ -264,14 +265,14 @@ class _StyleTile extends StatelessWidget {
                             padding: const EdgeInsets.all(2),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: scheme.primary,
+                                color: tokens.accent,
                                 shape: BoxShape.circle,
                               ),
                               padding: const EdgeInsets.all(2),
                               child: Icon(
                                 Icons.check_rounded,
                                 size: 12,
-                                color: scheme.onPrimary,
+                                color: tokens.onBrand,
                               ),
                             ),
                           ),
@@ -290,7 +291,7 @@ class _StyleTile extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: selected ? scheme.primary : scheme.onSurfaceVariant,
+              color: selected ? tokens.accent : tokens.textSecondary,
               letterSpacing: 0.2,
             ),
           ),
@@ -299,7 +300,7 @@ class _StyleTile extends StatelessWidget {
     );
   }
 
-  Widget _thumb(ImageSource src, ColorScheme scheme) {
+  Widget _thumb(ImageSource src, Color fallbackFill) {
     if (src.assetName != null) {
       return Image.asset(
         src.assetName!,
@@ -321,6 +322,6 @@ class _StyleTile extends StatelessWidget {
         gaplessPlayback: true,
       );
     }
-    return Container(color: scheme.surfaceContainerHighest);
+    return Container(color: fallbackFill);
   }
 }

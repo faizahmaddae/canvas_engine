@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
@@ -100,7 +101,6 @@ class _StackMaskSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final current = layer.effects.stackMask;
     // An on-canvas edit usually produces a mask matching no preset —
@@ -129,7 +129,9 @@ class _StackMaskSection extends ConsumerWidget {
           const SizedBox(height: 2),
           Text(
             context.l10n.selectiveMaskHint,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            style: tt.bodySmall?.copyWith(
+              color: AppTokens.of(context).textSecondary,
+            ),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -192,7 +194,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       child: Column(
@@ -201,7 +203,7 @@ class _EmptyState extends StatelessWidget {
           Icon(
             Icons.auto_awesome_outlined,
             size: 28,
-            color: cs.onSurfaceVariant,
+            color: tokens.textSecondary,
           ),
           const SizedBox(height: 8),
           Text(
@@ -216,7 +218,7 @@ class _EmptyState extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: tokens.textSecondary),
           ),
         ],
       ),
@@ -300,7 +302,7 @@ class _EffectRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cs = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final view = effectDisplay(context, effect);
     final dim = !effect.enabled;
     final tt = Theme.of(context).textTheme;
@@ -309,7 +311,7 @@ class _EffectRow extends ConsumerWidget {
       key: key,
       padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
       child: Material(
-        color: cs.surfaceContainerHighest.withValues(alpha: dim ? 0.4 : 1),
+        color: tokens.surfaceMuted.withValues(alpha: dim ? 0.4 : 1),
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
@@ -334,7 +336,7 @@ class _EffectRow extends ConsumerWidget {
                     child: Icon(
                       Icons.drag_handle_rounded,
                       size: 18,
-                      color: cs.onSurfaceVariant,
+                      color: tokens.textSecondary,
                     ),
                   ),
                 ),
@@ -342,7 +344,7 @@ class _EffectRow extends ConsumerWidget {
                 Icon(
                   view.icon,
                   size: 18,
-                  color: dim ? cs.onSurfaceVariant : cs.primary,
+                  color: dim ? tokens.textSecondary : tokens.accent,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -357,14 +359,16 @@ class _EffectRow extends ConsumerWidget {
                           decoration: dim
                               ? TextDecoration.lineThrough
                               : TextDecoration.none,
-                          color: dim ? cs.onSurfaceVariant : cs.onSurface,
+                          color: dim
+                              ? tokens.textSecondary
+                              : tokens.textPrimary,
                         ),
                       ),
                       if (view.summary.isNotEmpty)
                         Text(
                           view.summary,
                           style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
+                            color: tokens.textSecondary,
                           ),
                         ),
                     ],

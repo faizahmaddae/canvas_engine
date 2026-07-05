@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
+
 /// Horizontally scrollable tool strip with **edge-fade gradients**
 /// that appear only when there is more content to scroll to in
 /// that direction.
@@ -89,8 +91,7 @@ class _DockToolStripState extends State<DockToolStrip> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final fade = scheme.surfaceContainer;
+    final fade = AppTokens.of(context).surfaceMuted;
     return SizedBox(
       height: widget.height,
       child: NotificationListener<ScrollMetricsNotification>(

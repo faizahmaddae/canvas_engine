@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../engine/core/viewport_state.dart';
@@ -50,8 +51,7 @@ class PaintFloatingToolbar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final media = MediaQuery.of(context);
     final size = media.size;
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tokens = AppTokens.of(context);
 
     final anchor = FloatingToolbarPositioner.resolve(
       layerPosition: layer.transform.position,
@@ -74,7 +74,7 @@ class PaintFloatingToolbar extends ConsumerWidget {
 
     final ctrl = ref.read(paintToolControllerProvider.notifier);
     final isScale = layer.resizeMode == PaintResizeMode.scale;
-    final fg = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final fg = tokens.textPrimary;
 
     final bar = FloatingGlassBar(
       child: Row(
@@ -126,7 +126,7 @@ class PaintFloatingToolbar extends ConsumerWidget {
             child: ResizeModePillContent(
               isScale: isScale,
               foreground: fg,
-              activeColor: scheme.primary,
+              activeColor: tokens.accent,
             ),
           ),
           const SizedBox(width: 4),

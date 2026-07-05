@@ -160,7 +160,6 @@ class _SizePrecisionAdvanced extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final clampedValue = value.clamp(min, max).toDouble();
     return PrecisionDisclosure(
@@ -175,7 +174,7 @@ class _SizePrecisionAdvanced extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _PrecisionDivider(scheme: scheme),
+              const _PrecisionDivider(),
               const SizedBox(height: 8),
               // px presets reuse the Layout chip so the two
               // panels share one visual vocabulary.
@@ -255,10 +254,10 @@ class _SizeStepperRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     Widget btn({required IconData icon, required VoidCallback onTap}) {
       return Material(
-        color: scheme.primary.withValues(alpha: 0.10),
+        color: tokens.accent.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -266,7 +265,7 @@ class _SizeStepperRow extends StatelessWidget {
           child: SizedBox(
             width: 56,
             height: 44,
-            child: Center(child: Icon(icon, size: 22, color: scheme.primary)),
+            child: Center(child: Icon(icon, size: 22, color: tokens.accent)),
           ),
         ),
       );
@@ -284,13 +283,13 @@ class _SizeStepperRow extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: tokens.surfaceMuted.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 '${value.round()} px',
                 style: theme.textTheme.titleSmall?.copyWith(
-                  color: scheme.onSurface,
+                  color: tokens.textPrimary,
                   fontWeight: FontWeight.w700,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 
 /// Shared primary tile used by the main toolbar and every
@@ -80,7 +81,7 @@ class _DockToolTileState extends State<DockToolTile> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final enabled = widget.enabled;
     final active = widget.active;
     final compact = widget.compact;
@@ -100,11 +101,11 @@ class _DockToolTileState extends State<DockToolTile> {
     // Hover  = onSurface @ 6% fill (only when not active).
     // Press  = scale 0.97 (tactile feedback only — no lift).
     final fg = !enabled
-        ? scheme.onSurface.withValues(alpha: 0.35)
-        : (active ? scheme.primary : scheme.onSurface);
+        ? tokens.textPrimary.withValues(alpha: 0.35)
+        : (active ? tokens.accent : tokens.textPrimary);
     final iconColor = !enabled
-        ? scheme.onSurfaceVariant.withValues(alpha: 0.35)
-        : (active ? scheme.primary : scheme.onSurfaceVariant);
+        ? tokens.textSecondary.withValues(alpha: 0.35)
+        : (active ? tokens.accent : tokens.textSecondary);
 
     final tileWidth = compact ? 56.0 : 66.0;
     final iconSize = compact ? 24.0 : 28.0;
@@ -115,11 +116,11 @@ class _DockToolTileState extends State<DockToolTile> {
     if (active) {
       // Pressed-while-active deepens the selection slightly so the
       // user gets tap feedback without changing tile bounds.
-      bg = scheme.primary.withValues(alpha: _down ? 0.18 : 0.12);
+      bg = tokens.accent.withValues(alpha: _down ? 0.18 : 0.12);
     } else if (_down && enabled) {
-      bg = scheme.primary.withValues(alpha: 0.10);
+      bg = tokens.accent.withValues(alpha: 0.10);
     } else if (_hover && enabled) {
-      bg = scheme.onSurface.withValues(alpha: 0.06);
+      bg = tokens.textPrimary.withValues(alpha: 0.06);
     } else {
       bg = Colors.transparent;
     }
@@ -134,8 +135,8 @@ class _DockToolTileState extends State<DockToolTile> {
           shape: BoxShape.circle,
           border: Border.all(
             color: active
-                ? scheme.primary.withValues(alpha: 0.85)
-                : scheme.outlineVariant.withValues(alpha: 0.6),
+                ? tokens.accent.withValues(alpha: 0.85)
+                : tokens.border.withValues(alpha: 0.6),
             width: active ? 1.5 : 1.5,
           ),
         ),

@@ -57,7 +57,7 @@ Future<_FontPickResult> _showFontPickerSheet(
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.06),
     builder: (sheetCtx) {
-      final scheme = Theme.of(sheetCtx).colorScheme;
+      final tokens = AppTokens.of(sheetCtx);
       final media = MediaQuery.of(sheetCtx);
       final maxHeight = media.size.height * 0.7;
       return Align(
@@ -67,7 +67,7 @@ Future<_FontPickResult> _showFontPickerSheet(
           child: Container(
             margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             decoration: BoxDecoration(
-              color: scheme.surface,
+              color: tokens.surface,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -114,7 +114,7 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -124,7 +124,7 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
+              color: tokens.border.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -137,7 +137,7 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
               Icon(
                 Icons.font_download_outlined,
                 size: 18,
-                color: scheme.primary,
+                color: tokens.accent,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -156,7 +156,7 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
                   child: Icon(
                     Icons.close_rounded,
                     size: 18,
-                    color: scheme.onSurfaceVariant,
+                    color: tokens.textSecondary,
                   ),
                 ),
               ),
@@ -229,14 +229,14 @@ class _FontPickerList extends StatelessWidget {
       itemCount: items.length,
       itemBuilder: (ctx, i) {
         final item = items[i];
-        final scheme = Theme.of(ctx).colorScheme;
+        final tokens = AppTokens.of(ctx);
         if (item.kind == _PickerItemKind.categoryHeader) {
           return Padding(
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
             child: Text(
               item.headerLabel!.toUpperCase(),
               style: Theme.of(ctx).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+                color: tokens.textSecondary,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
                 fontSize: 11,
@@ -249,7 +249,7 @@ class _FontPickerList extends StatelessWidget {
         final selected = family == current;
         return Material(
           color: selected
-              ? scheme.primary.withValues(alpha: 0.10)
+              ? tokens.accent.withValues(alpha: 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           child: InkWell(
@@ -271,7 +271,7 @@ class _FontPickerList extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: family,
                         fontSize: 18,
-                        color: selected ? scheme.primary : scheme.onSurface,
+                        color: selected ? tokens.accent : tokens.textPrimary,
                         fontWeight: selected
                             ? FontWeight.w700
                             : FontWeight.w500,
@@ -279,7 +279,7 @@ class _FontPickerList extends StatelessWidget {
                     ),
                   ),
                   if (selected)
-                    Icon(Icons.check_rounded, size: 18, color: scheme.primary),
+                    Icon(Icons.check_rounded, size: 18, color: tokens.accent),
                 ],
               ),
             ),
@@ -622,7 +622,7 @@ class _ScriptTabSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     Widget pill({
       required String label,
       required bool selected,
@@ -641,7 +641,7 @@ class _ScriptTabSwitcher extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected
-                ? scheme.primary.withValues(alpha: 0.14)
+                ? tokens.accent.withValues(alpha: 0.14)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
@@ -653,7 +653,7 @@ class _ScriptTabSwitcher extends StatelessWidget {
                 fontFamily: fontFamily,
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                color: selected ? tokens.accent : tokens.textSecondary,
                 letterSpacing: 0.1,
               ),
             ),
@@ -665,7 +665,7 @@ class _ScriptTabSwitcher extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        color: tokens.surfaceMuted.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -739,7 +739,7 @@ class _FontCategoryFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final l10n = context.l10n;
     final cats = _categoriesFor(script);
     // Secondary-weight chips: no resting border (the chip row used
@@ -764,7 +764,7 @@ class _FontCategoryFilter extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             color: selected
-                ? scheme.primary.withValues(alpha: 0.12)
+                ? tokens.accent.withValues(alpha: 0.12)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(14),
           ),
@@ -782,7 +782,7 @@ class _FontCategoryFilter extends StatelessWidget {
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected ? scheme.primary : scheme.onSurfaceVariant,
+              color: selected ? tokens.accent : tokens.textSecondary,
               letterSpacing: 0.1,
             ),
           ),
@@ -901,12 +901,12 @@ class _FontCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final bg = selected
-        ? scheme.primary.withValues(alpha: 0.12)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.35);
+        ? tokens.accent.withValues(alpha: 0.12)
+        : tokens.surfaceMuted.withValues(alpha: 0.35);
     final border = selected
-        ? scheme.primary.withValues(alpha: 0.5)
+        ? tokens.accent.withValues(alpha: 0.5)
         : Colors.transparent;
     return Material(
       type: MaterialType.transparency,
@@ -947,7 +947,7 @@ class _FontCard extends StatelessWidget {
                         height: 1.0,
                         // Preview must read as the font's real
                         // personality — never tint it for selection.
-                        color: scheme.onSurface,
+                        color: tokens.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -963,7 +963,7 @@ class _FontCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                  color: selected ? tokens.accent : tokens.textSecondary,
                   letterSpacing: 0.1,
                 ),
               ),
@@ -986,7 +986,7 @@ class _AllFontsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
@@ -999,7 +999,7 @@ class _AllFontsCard extends StatelessWidget {
           width: 84,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+            color: tokens.surfaceMuted.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -1011,7 +1011,7 @@ class _AllFontsCard extends StatelessWidget {
                   child: Icon(
                     Icons.grid_view_rounded,
                     size: 22,
-                    color: scheme.primary,
+                    color: tokens.accent,
                   ),
                 ),
               ),
@@ -1024,7 +1024,7 @@ class _AllFontsCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: scheme.primary,
+                  color: tokens.accent,
                   letterSpacing: 0.1,
                 ),
               ),

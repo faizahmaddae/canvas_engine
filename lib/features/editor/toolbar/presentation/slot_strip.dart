@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../presentation/widgets/dock_tool_strip.dart';
 import '../../presentation/widgets/dock_tool_tile.dart';
@@ -74,7 +75,6 @@ class _SlotStripState extends State<SlotStrip> {
     final compact =
         media.size.shortestSide < 380 ||
         media.orientation == Orientation.landscape;
-    final scheme = Theme.of(context).colorScheme;
 
     final children = <Widget>[];
     SlotTier? prevTier;
@@ -83,7 +83,7 @@ class _SlotStripState extends State<SlotStrip> {
       // belong to different tiers. The grouping is data-driven so
       // reorders can't drift the divider position.
       if (prevTier != null && slot.tier != prevTier) {
-        children.add(_TierDivider(scheme: scheme));
+        children.add(const _TierDivider());
       }
       children.add(
         Padding(
@@ -117,12 +117,10 @@ class _SlotStripState extends State<SlotStrip> {
 
 /// Thin vertical hairline that separates two tiers in [SlotStrip].
 /// Visually consistent with `_TierGap` in text/paint toolbars
-/// (13dp wide gutter, 28dp tall 1dp hairline at outlineVariant α
+/// (13dp wide gutter, 28dp tall 1dp hairline at the border token α
 /// 0.45) so the entire editor feels like one design system.
 class _TierDivider extends StatelessWidget {
-  const _TierDivider({required this.scheme});
-
-  final ColorScheme scheme;
+  const _TierDivider();
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +130,7 @@ class _TierDivider extends StatelessWidget {
         child: Container(
           width: 1,
           height: 28,
-          color: scheme.outlineVariant.withValues(alpha: 0.45),
+          color: AppTokens.of(context).border.withValues(alpha: 0.45),
         ),
       ),
     );

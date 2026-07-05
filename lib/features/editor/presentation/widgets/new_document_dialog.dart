@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
@@ -256,7 +257,8 @@ class _NewDocumentDialogState extends State<NewDocumentDialog> {
 
   Widget _buildPresetBody(ThemeData theme) {
     final l10n = context.l10n;
-    final color = theme.colorScheme.primary;
+    final tokens = AppTokens.of(context);
+    final color = tokens.accent;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 320),
       child: ListView.builder(
@@ -313,7 +315,7 @@ class _NewDocumentDialogState extends State<NewDocumentDialog> {
                 child: Text(
                   _presetGroupLabel(l10n, p.group!).toUpperCase(),
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: tokens.textSecondary,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.6,
                   ),

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/context_toolbar_controller.dart';
@@ -55,7 +56,6 @@ class TextFloatingToolbar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final media = MediaQuery.of(context);
     final size = media.size;
-    final scheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
     final style = layer.style;
 
@@ -86,7 +86,6 @@ class TextFloatingToolbar extends ConsumerWidget {
     // transform changes; properties (color/size) just rebuild the
     // child widgets without flicker.
     final bar = _BarContent(
-      scheme: scheme,
       brightness: brightness,
       style: style,
       onEditText: () => showEditTextLayerFlow(context, ref, layer),
@@ -139,7 +138,6 @@ class TextFloatingToolbar extends ConsumerWidget {
 
 class _BarContent extends StatelessWidget {
   const _BarContent({
-    required this.scheme,
     required this.brightness,
     required this.style,
     required this.onEditText,
@@ -149,7 +147,6 @@ class _BarContent extends StatelessWidget {
     required this.onMore,
   });
 
-  final ColorScheme scheme;
   final Brightness brightness;
   final TextStyleSpec style;
   final VoidCallback onEditText;
@@ -160,11 +157,10 @@ class _BarContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
     final isDark = brightness == Brightness.dark;
-    final borderColor = (isDark ? Colors.white : Colors.black).withValues(
-      alpha: 0.10,
-    );
-    final fg = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final borderColor = tokens.border;
+    final fg = tokens.textPrimary;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -172,7 +168,7 @@ class _BarContent extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
           decoration: BoxDecoration(
-            color: scheme.surface.withValues(alpha: isDark ? 0.55 : 0.78),
+            color: tokens.surface.withValues(alpha: isDark ? 0.55 : 0.78),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: borderColor, width: 0.6),
             boxShadow: [
@@ -264,7 +260,7 @@ class _PillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Semantics(
       button: true,
       label: semanticLabel,
@@ -274,8 +270,8 @@ class _PillButton extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
           onTap: onTap,
-          splashColor: scheme.primary.withValues(alpha: 0.10),
-          highlightColor: scheme.primary.withValues(alpha: 0.05),
+          splashColor: tokens.accent.withValues(alpha: 0.10),
+          highlightColor: tokens.accent.withValues(alpha: 0.05),
           child: Container(
             constraints: const BoxConstraints(minWidth: 40, minHeight: 32),
             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -322,6 +318,7 @@ class _TextMoreSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final canForward = LayerActions.canBringForward(parentRef, layer);
     final canBackward = LayerActions.canSendBackward(parentRef, layer);
     final style = layer.style;
@@ -373,11 +370,11 @@ class _TextMoreSheet extends StatelessWidget {
             ListTile(
               leading: Icon(
                 Icons.format_bold_rounded,
-                color: style.isBold ? scheme.primary : null,
+                color: style.isBold ? tokens.accent : null,
               ),
               title: Text(l10n.boldAction),
               trailing: style.isBold
-                  ? Icon(Icons.check_rounded, color: scheme.primary)
+                  ? Icon(Icons.check_rounded, color: tokens.accent)
                   : null,
               onTap: () => parentRef
                   .read(textToolControllerProvider.notifier)
@@ -386,11 +383,11 @@ class _TextMoreSheet extends StatelessWidget {
             ListTile(
               leading: Icon(
                 Icons.format_italic_rounded,
-                color: style.italic ? scheme.primary : null,
+                color: style.italic ? tokens.accent : null,
               ),
               title: Text(l10n.italicAction),
               trailing: style.italic
-                  ? Icon(Icons.check_rounded, color: scheme.primary)
+                  ? Icon(Icons.check_rounded, color: tokens.accent)
                   : null,
               onTap: () => parentRef
                   .read(textToolControllerProvider.notifier)
@@ -399,11 +396,11 @@ class _TextMoreSheet extends StatelessWidget {
             ListTile(
               leading: Icon(
                 Icons.format_underline_rounded,
-                color: style.underline ? scheme.primary : null,
+                color: style.underline ? tokens.accent : null,
               ),
               title: Text(l10n.underlineAction),
               trailing: style.underline
-                  ? Icon(Icons.check_rounded, color: scheme.primary)
+                  ? Icon(Icons.check_rounded, color: tokens.accent)
                   : null,
               onTap: () => parentRef
                   .read(textToolControllerProvider.notifier)
@@ -527,17 +524,13 @@ class _ColorDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 18,
       height: 18,
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.28),
-          width: 1,
-        ),
+        border: Border.all(color: AppTokens.of(context).border, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.10),

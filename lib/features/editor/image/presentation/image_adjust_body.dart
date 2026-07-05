@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
@@ -104,6 +105,7 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
     final adj = widget.layer.adjustments;
     final activePreset = _matchPreset(adj);
     final vignette = _activeVignette(widget.layer);
+    final tokens = AppTokens.of(context);
 
     return ImagePanelShell(
       title: context.l10n.adjustTool,
@@ -119,8 +121,8 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
             icon: Icons.tune_rounded,
             titleClosed: context.l10n.adjustPrecisely,
             subtitle: context.l10n.adjustPreciselySubtitle,
-            chevronColorClosed: Theme.of(context).colorScheme.primary,
-            chevronColorOpen: Theme.of(context).colorScheme.primary,
+            chevronColorClosed: tokens.accent,
+            chevronColorOpen: tokens.accent,
             children: [
               const SizedBox(height: 4),
               EditorSliderRow(
@@ -183,8 +185,8 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
             icon: Icons.vignette_outlined,
             titleClosed: context.l10n.vignetteLabel,
             subtitle: context.l10n.vignetteSubtitle,
-            chevronColorClosed: Theme.of(context).colorScheme.primary,
-            chevronColorOpen: Theme.of(context).colorScheme.primary,
+            chevronColorClosed: tokens.accent,
+            chevronColorOpen: tokens.accent,
             children: [
               const SizedBox(height: 4),
               EditorSliderRow(

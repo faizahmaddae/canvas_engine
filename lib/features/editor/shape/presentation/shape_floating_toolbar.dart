@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/modules/shape/shape_layer.dart';
@@ -41,8 +42,7 @@ class ShapeFloatingToolbar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final media = MediaQuery.of(context);
     final size = media.size;
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tokens = AppTokens.of(context);
 
     final anchor = FloatingToolbarPositioner.resolve(
       layerPosition: layer.transform.position,
@@ -68,7 +68,7 @@ class ShapeFloatingToolbar extends ConsumerWidget {
     // is actually doing — including the kind-based default for shapes
     // that have never had an explicit pick.
     final isScale = layer.effectiveResizeMode == ShapeResizeMode.scale;
-    final fg = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final fg = tokens.textPrimary;
 
     final bar = FloatingGlassBar(
       child: Row(
@@ -88,7 +88,7 @@ class ShapeFloatingToolbar extends ConsumerWidget {
             child: ResizeModePillContent(
               isScale: isScale,
               foreground: fg,
-              activeColor: scheme.primary,
+              activeColor: tokens.accent,
             ),
           ),
         ],

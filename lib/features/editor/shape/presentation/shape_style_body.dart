@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
@@ -217,14 +218,14 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     // Unified `DockToolTile`-aligned chip grammar (2026-05):
     // single bg channel, no glow, no heavy surface fill on rest.
-    // Selected = primary @ 12%, unselected = transparent so the
+    // Selected = accent @ 12%, unselected = transparent so the
     // chip row reads as a clean inline control.
     final bg = selected
-        ? scheme.primary.withValues(alpha: 0.12)
-        : scheme.onSurface.withValues(alpha: 0.04);
+        ? tokens.accent.withValues(alpha: 0.12)
+        : tokens.textPrimary.withValues(alpha: 0.04);
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
@@ -249,7 +250,7 @@ class _Chip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                  color: selected ? tokens.accent : tokens.textSecondary,
                   letterSpacing: 0,
                 ),
               ),

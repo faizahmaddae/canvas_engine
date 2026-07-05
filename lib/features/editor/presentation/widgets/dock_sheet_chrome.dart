@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../core/utils/haptics.dart';
 
@@ -160,7 +161,7 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final media = MediaQuery.of(context);
     // Effective max height: fraction of screen, clamped by the dp
     // ceiling so landscape phones / tablets stay sane.
@@ -177,14 +178,14 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
           // sheet reads as a *floating* panel — not a flat strip.
           // Combined with the soft top shadow below this gives the
           // canonical "sheet just landed" event without animation.
-          color: scheme.surfaceContainerHigh,
+          color: tokens.surfaceMuted,
           border: Border(
             bottom: BorderSide(
-              color: scheme.outlineVariant.withValues(alpha: 0.5),
+              color: tokens.border.withValues(alpha: 0.5),
               width: 0.5,
             ),
             top: BorderSide(
-              color: scheme.outlineVariant.withValues(alpha: 0.4),
+              color: tokens.border.withValues(alpha: 0.4),
               width: 0.5,
             ),
           ),
@@ -234,7 +235,7 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
                         width: 36,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: scheme.outlineVariant.withValues(alpha: 0.8),
+                          color: tokens.border.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -251,7 +252,7 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
                 padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 12, 6),
                 child: Row(
                   children: [
-                    Icon(widget.icon, size: 20, color: scheme.primary),
+                    Icon(widget.icon, size: 20, color: tokens.accent),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -301,7 +302,7 @@ class _UndoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Semantics(
       label: context.l10n.undoLastChangeSemantics,
       button: true,
@@ -326,7 +327,7 @@ class _UndoChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+              color: tokens.surfaceMuted.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
@@ -335,7 +336,7 @@ class _UndoChip extends StatelessWidget {
                 Icon(
                   Icons.undo_rounded,
                   size: 14,
-                  color: scheme.onSurfaceVariant,
+                  color: tokens.textSecondary,
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -343,7 +344,7 @@ class _UndoChip extends StatelessWidget {
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: scheme.onSurfaceVariant,
+                    color: tokens.textSecondary,
                   ),
                 ),
               ],
@@ -366,7 +367,7 @@ class _CloseChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Semantics(
       label: context.l10n.closePanelSemantics,
       button: true,
@@ -381,13 +382,13 @@ class _CloseChip extends StatelessWidget {
           height: 28,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+            color: tokens.surfaceMuted.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(
             Icons.close_rounded,
             size: 16,
-            color: scheme.onSurfaceVariant,
+            color: tokens.textSecondary,
           ),
         ),
       ),
@@ -408,7 +409,7 @@ class _ConfirmChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Semantics(
       label: label,
       button: true,
@@ -423,11 +424,11 @@ class _ConfirmChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: scheme.primary,
+            color: tokens.brand,
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: scheme.primary.withValues(alpha: 0.25),
+                color: tokens.brand.withValues(alpha: 0.25),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -438,7 +439,7 @@ class _ConfirmChip extends StatelessWidget {
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w800,
-              color: scheme.onPrimary,
+              color: tokens.onBrand,
               letterSpacing: 0,
             ),
           ),

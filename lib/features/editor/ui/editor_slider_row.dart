@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 
 /// Haptic feedback profile for [EditorSliderRow]. Kept as a caller
@@ -131,7 +132,7 @@ class EditorSliderRow extends StatefulWidget {
   final String? semanticLabel;
 
   /// Overrides the label column's [TextStyle]. Defaults to the
-  /// shape/image family's look (12px, `onSurfaceVariant`). The
+  /// shape/image family's look (12px, `textSecondary`). The
   /// text-panel family uses a distinctly larger/bolder style
   /// (`bodyMedium` base, 13px, `onSurface`) — pass it explicitly
   /// there rather than letting the default silently change its feel.
@@ -189,7 +190,7 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final clamped = widget.value.clamp(widget.min, widget.max);
     final label = widget.label;
 
@@ -229,7 +230,7 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
                       TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: scheme.onSurfaceVariant,
+                        color: tokens.textSecondary,
                       ),
                 ),
               ),
@@ -244,7 +245,7 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
                       TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
+                        color: tokens.textPrimary,
                       ),
                 ),
               ),

@@ -1,6 +1,7 @@
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/l10n.dart';
 
@@ -19,7 +20,7 @@ Future<String?> showStickerPickerSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    backgroundColor: Theme.of(context).colorScheme.surface,
+    backgroundColor: AppTokens.of(context).surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -45,7 +46,7 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final height = MediaQuery.sizeOf(context).height * 0.55;
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
@@ -60,7 +61,7 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: scheme.onSurfaceVariant,
+                color: tokens.textSecondary,
                 letterSpacing: 1.0,
               ),
             ),
@@ -77,7 +78,7 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
                 if (!snap.hasData) {
                   return const SizedBox.shrink();
                 }
-                return _buildPicker(context, scheme, height, snap.data!);
+                return _buildPicker(context, tokens, height, snap.data!);
               },
             ),
           ),
@@ -88,7 +89,7 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
 
   Widget _buildPicker(
     BuildContext context,
-    ColorScheme scheme,
+    AppTokens tokens,
     double height,
     Category initCategory,
   ) {
@@ -101,12 +102,12 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
         height: height,
         emojiViewConfig: EmojiViewConfig(
           emojiSizeMax: 30,
-          backgroundColor: scheme.surface,
+          backgroundColor: tokens.surface,
           columns: 8,
           verticalSpacing: 2,
           horizontalSpacing: 2,
           gridPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          noRecents: _NoRecentsHint(scheme: scheme),
+          noRecents: _NoRecentsHint(tokens: tokens),
         ),
         viewOrderConfig: const ViewOrderConfig(
           top: EmojiPickerItem.searchBar,
@@ -114,16 +115,16 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
           bottom: EmojiPickerItem.emojiView,
         ),
         searchViewConfig: SearchViewConfig(
-          backgroundColor: scheme.surface,
-          buttonIconColor: scheme.onSurfaceVariant,
+          backgroundColor: tokens.surface,
+          buttonIconColor: tokens.textSecondary,
           hintText: context.l10n.searchEmojisHint,
         ),
         categoryViewConfig: CategoryViewConfig(
-          backgroundColor: scheme.surface,
-          iconColor: scheme.onSurfaceVariant,
-          iconColorSelected: scheme.primary,
-          indicatorColor: scheme.primary,
-          dividerColor: scheme.outlineVariant.withValues(alpha: 0.3),
+          backgroundColor: tokens.surface,
+          iconColor: tokens.textSecondary,
+          iconColorSelected: tokens.accent,
+          indicatorColor: tokens.accent,
+          dividerColor: tokens.border.withValues(alpha: 0.3),
           // Smileys for first-run users so the sheet never opens on
           // an empty Recent tab; Recent thereafter once they've used
           // at least one sticker.
@@ -132,13 +133,13 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
         bottomActionBarConfig: BottomActionBarConfig(
           enabled: false,
           showBackspaceButton: false,
-          backgroundColor: scheme.surface,
-          buttonColor: scheme.surface,
-          buttonIconColor: scheme.onSurfaceVariant,
+          backgroundColor: tokens.surface,
+          buttonColor: tokens.surface,
+          buttonIconColor: tokens.textSecondary,
         ),
         skinToneConfig: SkinToneConfig(
-          dialogBackgroundColor: scheme.surfaceContainerHigh,
-          indicatorColor: scheme.primary,
+          dialogBackgroundColor: tokens.surfaceMuted,
+          indicatorColor: tokens.accent,
         ),
         // The plugin's compatibility check goes through a
         // platform channel that isn't registered on a hot
@@ -157,9 +158,9 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
 /// package's terse default ("No Recents") with a guiding line so
 /// the empty state never reads as broken.
 class _NoRecentsHint extends StatelessWidget {
-  const _NoRecentsHint({required this.scheme});
+  const _NoRecentsHint({required this.tokens});
 
-  final ColorScheme scheme;
+  final AppTokens tokens;
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +173,7 @@ class _NoRecentsHint extends StatelessWidget {
             Icon(
               Icons.emoji_emotions_outlined,
               size: 36,
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+              color: tokens.textSecondary.withValues(alpha: 0.7),
             ),
             const SizedBox(height: 10),
             Text(
@@ -180,7 +181,7 @@ class _NoRecentsHint extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: scheme.onSurface,
+                color: tokens.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
@@ -189,7 +190,7 @@ class _NoRecentsHint extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
-                color: scheme.onSurfaceVariant,
+                color: tokens.textSecondary,
                 height: 1.3,
               ),
             ),

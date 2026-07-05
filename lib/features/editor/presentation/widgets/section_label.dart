@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
+
 /// Canonical small section label used inside editor panels
 /// and bottom sheets.
 ///
@@ -8,7 +10,7 @@ import 'package:flutter/material.dart';
 /// across every surface):
 ///   * sentence-case/localized text
 ///   * 11 sp, weight 700, letterSpacing 0
-///   * `colorScheme.onSurfaceVariant`
+///   * `AppTokens.textSecondary`
 ///   * 4 / 4 / 4 / 6 inset (extra bottom space for visual breathing
 ///     room before the section content)
 ///
@@ -40,7 +42,6 @@ class SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: padding,
       child: Text(
@@ -49,7 +50,7 @@ class SectionLabel extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: letterSpacing,
-          color: scheme.onSurfaceVariant,
+          color: AppTokens.of(context).textSecondary,
         ),
       ),
     );

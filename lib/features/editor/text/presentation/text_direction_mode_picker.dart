@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../engine/modules/text/text_layer.dart';
 
@@ -16,13 +17,13 @@ Future<TextDirectionMode?> pickTextDirectionMode(
   return showDialog<TextDirectionMode>(
     context: context,
     builder: (ctx) {
-      final scheme = Theme.of(ctx).colorScheme;
+      final tokens = AppTokens.of(ctx);
 
       Widget tile(TextDirectionMode mode, String title, IconData icon) {
         final selected = mode == current;
         return Material(
           color: selected
-              ? scheme.primary.withValues(alpha: 0.10)
+              ? tokens.accent.withValues(alpha: 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           child: InkWell(
@@ -37,7 +38,7 @@ Future<TextDirectionMode?> pickTextDirectionMode(
                 children: [
                   Icon(
                     icon,
-                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                    color: selected ? tokens.accent : tokens.textSecondary,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -45,12 +46,11 @@ Future<TextDirectionMode?> pickTextDirectionMode(
                       title,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: selected ? scheme.primary : scheme.onSurface,
+                        color: selected ? tokens.accent : tokens.textPrimary,
                       ),
                     ),
                   ),
-                  if (selected)
-                    Icon(Icons.check_rounded, color: scheme.primary),
+                  if (selected) Icon(Icons.check_rounded, color: tokens.accent),
                 ],
               ),
             ),

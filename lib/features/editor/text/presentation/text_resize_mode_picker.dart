@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../engine/modules/text/text_layer.dart';
 
@@ -21,7 +22,7 @@ Future<TextResizeMode?> pickTextResizeMode(
   return showDialog<TextResizeMode>(
     context: context,
     builder: (ctx) {
-      final scheme = Theme.of(ctx).colorScheme;
+      final tokens = AppTokens.of(ctx);
 
       Widget tile(
         TextResizeMode mode,
@@ -32,7 +33,7 @@ Future<TextResizeMode?> pickTextResizeMode(
         final selected = mode == current;
         return Material(
           color: selected
-              ? scheme.primary.withValues(alpha: 0.10)
+              ? tokens.accent.withValues(alpha: 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           child: InkWell(
@@ -49,7 +50,7 @@ Future<TextResizeMode?> pickTextResizeMode(
                 children: [
                   Icon(
                     icon,
-                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                    color: selected ? tokens.accent : tokens.textSecondary,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -60,7 +61,9 @@ Future<TextResizeMode?> pickTextResizeMode(
                           title,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: selected ? scheme.primary : scheme.onSurface,
+                            color: selected
+                                ? tokens.accent
+                                : tokens.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -68,14 +71,13 @@ Future<TextResizeMode?> pickTextResizeMode(
                           subtitle,
                           style: TextStyle(
                             fontSize: 12,
-                            color: scheme.onSurfaceVariant,
+                            color: tokens.textSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (selected)
-                    Icon(Icons.check_rounded, color: scheme.primary),
+                  if (selected) Icon(Icons.check_rounded, color: tokens.accent),
                 ],
               ),
             ),

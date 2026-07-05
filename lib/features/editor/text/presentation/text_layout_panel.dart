@@ -105,7 +105,7 @@ class _LayoutPanelState extends ConsumerState<_LayoutPanel> {
 /// vertical chrome, and keeps the affordance unmistakable.
 ///
 /// Selected state matches the rest of the editor's pilot grammar
-/// (primary @ 14% fill + 45% border) so users don't relearn.
+/// (accent @ 14% fill + 45% border) so users don't relearn.
 class _AlignmentSegmentedControl extends StatelessWidget {
   const _AlignmentSegmentedControl({
     required this.isLeft,
@@ -125,10 +125,9 @@ class _AlignmentSegmentedControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        color: AppTokens.of(context).surfaceMuted.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(3),
@@ -230,8 +229,8 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final muted = scheme.onSurfaceVariant;
+    final tokens = AppTokens.of(context);
+    final muted = tokens.textSecondary;
     final clampedValue = widget.value.clamp(widget.min, widget.max).toDouble();
     final selectedIndex = _selectedPresetIndex();
     return Column(
@@ -254,14 +253,14 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
                   Icon(
                     widget.icon,
                     size: 18,
-                    color: widget.expanded ? scheme.primary : muted,
+                    color: widget.expanded ? tokens.accent : muted,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       widget.label,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface,
+                        color: tokens.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -278,10 +277,8 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(999),
                       color: widget.expanded
-                          ? scheme.primary.withValues(alpha: 0.1)
-                          : scheme.surfaceContainerHighest.withValues(
-                              alpha: 0.5,
-                            ),
+                          ? tokens.accent.withValues(alpha: 0.1)
+                          : tokens.surfaceMuted.withValues(alpha: 0.5),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -289,7 +286,7 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
                         Text(
                           widget.format(clampedValue),
                           style: theme.textTheme.labelMedium?.copyWith(
-                            color: widget.expanded ? scheme.primary : muted,
+                            color: widget.expanded ? tokens.accent : muted,
                             fontWeight: FontWeight.w700,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
@@ -301,7 +298,7 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
                           child: Icon(
                             Icons.chevron_right_rounded,
                             size: 16,
-                            color: widget.expanded ? scheme.primary : muted,
+                            color: widget.expanded ? tokens.accent : muted,
                           ),
                         ),
                       ],
@@ -379,7 +376,7 @@ class _LayoutSliderCardState extends ConsumerState<_LayoutSliderCard> {
 
 /// Compact 3-button segmented control. Used as the inner row of
 /// `_AlignmentSegmentedControl` (Layout panel). Each segment is a
-/// 36×32 pill with a primary-tint selected state.
+/// 36×32 pill with an accent-tint selected state.
 ///
 /// **Editor toggle rule (paint + text):**
 ///   * Single on/off feature → `_CompactRow` + trailing
@@ -402,18 +399,18 @@ class _ToggleSegment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
         color: selected
-            ? scheme.primary.withValues(alpha: 0.14)
+            ? tokens.accent.withValues(alpha: 0.14)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: selected
-              ? scheme.primary.withValues(alpha: 0.45)
+              ? tokens.accent.withValues(alpha: 0.45)
               : Colors.transparent,
           width: 1,
         ),
@@ -434,7 +431,7 @@ class _ToggleSegment extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 18,
-                color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                color: selected ? tokens.accent : tokens.textSecondary,
               ),
             ),
           ),

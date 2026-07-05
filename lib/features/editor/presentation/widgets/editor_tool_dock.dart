@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
+
 /// Bottom dock that swaps between **modes** (main / paint / text …)
 /// without ever stacking surfaces on top of the canvas.
 ///
@@ -60,14 +62,14 @@ class EditorToolDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final media = MediaQuery.of(context);
     final compact =
         media.size.shortestSide < 380 ||
         media.orientation == Orientation.landscape;
     final stripHeight = height ?? (compact ? 64.0 : 80.0);
     return Material(
-      color: scheme.surfaceContainer,
+      color: tokens.surfaceMuted,
       elevation: 0,
       child: SafeArea(
         top: false,
@@ -75,7 +77,7 @@ class EditorToolDock extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.5),
+                color: tokens.border.withValues(alpha: 0.5),
                 width: 0.5,
               ),
             ),

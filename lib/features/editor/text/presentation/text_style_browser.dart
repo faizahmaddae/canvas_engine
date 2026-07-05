@@ -135,7 +135,7 @@ class _StyleChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     return SizedBox(
       width: _chipWidth,
       child: InkWell(
@@ -163,7 +163,7 @@ class _StyleChip extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                  color: selected ? tokens.accent : tokens.textSecondary,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
@@ -214,7 +214,6 @@ class _StylePreviewTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final hasOutline = spec.outlineColor != null;
     final hasBg = spec.backgroundColor != null;
     // Adaptive card: pick the card colour against the preset's
@@ -297,7 +296,9 @@ class _StylePreviewTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: selected ? Border.all(color: scheme.primary, width: 1.5) : null,
+        border: selected
+            ? Border.all(color: AppTokens.of(context).accent, width: 1.5)
+            : null,
       ),
       alignment: Alignment.center,
       child: tileContent,

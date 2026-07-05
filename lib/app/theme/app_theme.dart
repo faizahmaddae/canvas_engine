@@ -51,6 +51,8 @@ abstract final class AppTheme {
       seedColor: seed,
       brightness: brightness,
     );
+    final tokens =
+        brightness == Brightness.dark ? AppTokens.dark : AppTokens.light;
     final uiFamily = _uiFamilyFor(locale);
     final uiFallback = _uiFallbackFor(locale);
     final base = ThemeData(
@@ -65,12 +67,17 @@ abstract final class AppTheme {
     );
 
     return base.copyWith(
-      extensions: [
-        brightness == Brightness.dark ? AppTokens.dark : AppTokens.light,
-      ],
+      extensions: [tokens],
       textTheme: _textTheme(base.textTheme, scheme, uiFamily, uiFallback),
+      // v2: Material component DEFAULTS read the warm tokens too, so
+      // widgets that never set an explicit colour (dialog buttons,
+      // sliders, chips, switches in the editor panels, …) stop
+      // leaking the violet seed. Screens with explicit token colours
+      // are unaffected.
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
+          backgroundColor: tokens.brand,
+          foregroundColor: tokens.onBrand,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.button),
           ),
@@ -83,6 +90,93 @@ abstract final class AppTheme {
             letterSpacing: -0.1,
           ).copyWith(fontFamily: uiFamily, fontFamilyFallback: uiFallback),
         ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: tokens.accentDeep),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: tokens.textPrimary,
+          side: BorderSide(color: tokens.border),
+        ),
+      ),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: tokens.accent,
+        thumbColor: tokens.accent,
+        inactiveTrackColor: tokens.surfaceMuted,
+        overlayColor: tokens.accent.withValues(alpha: 0.12),
+      ),
+      chipTheme: ChipThemeData(
+        selectedColor: tokens.accent.withValues(alpha: 0.16),
+        checkmarkColor: tokens.accentDeep,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? tokens.surface
+              : tokens.textMuted,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? tokens.accent
+              : tokens.surfaceMuted,
+        ),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? tokens.accent
+              : tokens.border,
+        ),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? tokens.accent
+              : Colors.transparent,
+        ),
+        checkColor: WidgetStatePropertyAll(tokens.surface),
+        side: BorderSide(color: tokens.border, width: 1.5),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? tokens.accent
+              : tokens.textMuted,
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? tokens.accent.withValues(alpha: 0.16)
+                : Colors.transparent,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? tokens.accentDeep
+                : tokens.textSecondary,
+          ),
+          side: WidgetStatePropertyAll(BorderSide(color: tokens.border)),
+        ),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: tokens.accent,
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: tokens.accent,
+        selectionColor: tokens.accent.withValues(alpha: 0.28),
+        selectionHandleColor: tokens.accent,
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: tokens.surface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: tokens.surface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: tokens.surface,
+        surfaceTintColor: Colors.transparent,
       ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
@@ -100,8 +194,8 @@ abstract final class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         height: 68,
-        backgroundColor: scheme.surface,
-        indicatorColor: scheme.primary.withValues(alpha: 0.16),
+        backgroundColor: tokens.surface,
+        indicatorColor: tokens.accent.withValues(alpha: 0.16),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
@@ -111,13 +205,13 @@ abstract final class AppTheme {
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
             fontSize: 11,
             letterSpacing: 0,
-            color: selected ? scheme.primary : scheme.onSurfaceVariant,
+            color: selected ? tokens.accentDeep : tokens.textSecondary,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? scheme.primary : scheme.onSurfaceVariant,
+            color: selected ? tokens.accentDeep : tokens.textSecondary,
             size: 24,
           );
         }),

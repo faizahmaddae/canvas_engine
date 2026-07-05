@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
@@ -30,7 +31,7 @@ class StickerSizeBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final currentSide = layer.transform.size.shortestSide;
     return StickerPanelShell(
       title: context.l10n.sizeTool,
@@ -50,7 +51,7 @@ class StickerSizeBody extends ConsumerWidget {
                   label: p.label,
                   selected: (currentSide - p.side).abs() < 1,
                   onTap: () => _apply(ref, p.side),
-                  scheme: scheme,
+                  tokens: tokens,
                 ),
             ],
           ),
@@ -84,21 +85,21 @@ class _SizeChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
-    required this.scheme,
+    required this.tokens,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  final ColorScheme scheme;
+  final AppTokens tokens;
 
   @override
   Widget build(BuildContext context) {
     final bg = selected
-        ? scheme.primary.withValues(alpha: 0.14)
-        : scheme.surfaceContainerHighest;
-    final border = selected ? scheme.primary : scheme.outlineVariant;
-    final fg = selected ? scheme.primary : scheme.onSurface;
+        ? tokens.accent.withValues(alpha: 0.14)
+        : tokens.surfaceMuted;
+    final border = selected ? tokens.accent : tokens.border;
+    final fg = selected ? tokens.accent : tokens.textPrimary;
     return Material(
       color: bg,
       borderRadius: BorderRadius.circular(14),
@@ -117,7 +118,7 @@ class _SizeChip extends StatelessWidget {
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: scheme.primary.withValues(alpha: 0.18),
+                      color: tokens.accent.withValues(alpha: 0.18),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),

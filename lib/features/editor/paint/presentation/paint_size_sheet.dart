@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../application/document_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/modules/paint/paint_layer.dart';
@@ -35,7 +36,7 @@ class _PaintSizeSheet extends ConsumerWidget {
     final session = ref.watch(paintToolControllerProvider);
     final controller = ref.read(paintToolControllerProvider.notifier);
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
 
     // When a paint layer is selected, the sheet edits THAT layer and
     // its current values must drive the body — otherwise the user
@@ -67,7 +68,7 @@ class _PaintSizeSheet extends ConsumerWidget {
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         decoration: BoxDecoration(
-          color: scheme.surface,
+          color: tokens.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -87,7 +88,7 @@ class _PaintSizeSheet extends ConsumerWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: scheme.outlineVariant.withValues(alpha: 0.6),
+                  color: tokens.border.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -115,7 +116,7 @@ class _PaintSizeSheet extends ConsumerWidget {
                 Icon(
                   Icons.format_color_fill_rounded,
                   size: 22,
-                  color: scheme.onSurfaceVariant,
+                  color: tokens.textSecondary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

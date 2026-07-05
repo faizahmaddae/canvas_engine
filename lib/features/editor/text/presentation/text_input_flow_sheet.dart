@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
@@ -110,7 +111,7 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final direction = textDirectionForContent(
       _controller.text,
@@ -123,7 +124,7 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
         decoration: BoxDecoration(
-          color: scheme.surface,
+          color: tokens.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
@@ -144,7 +145,7 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: scheme.outlineVariant,
+                    color: tokens.border,
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -169,7 +170,7 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
-                      foregroundColor: scheme.onSurfaceVariant,
+                      foregroundColor: tokens.textSecondary,
                       visualDensity: VisualDensity.compact,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -183,6 +184,8 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                     key: const ValueKey('add-text-confirm'),
                     onPressed: _canSubmit ? _submit : null,
                     style: FilledButton.styleFrom(
+                      backgroundColor: tokens.brand,
+                      foregroundColor: tokens.onBrand,
                       visualDensity: VisualDensity.compact,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 18,
@@ -218,7 +221,7 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                 // surfaced as suggestions inside the composer.
                 enableSuggestions: false,
                 autocorrect: false,
-                cursorColor: scheme.primary,
+                cursorColor: tokens.accent,
                 cursorWidth: 2,
                 scrollPadding: const EdgeInsets.all(20),
                 // Direction + alignment + font follow the dominant
@@ -251,28 +254,26 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                   hintTextDirection: direction,
                   hintStyle: TextStyle(
                     fontFamily: defaultFontFamilyForContent(_controller.text),
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    color: tokens.textSecondary.withValues(alpha: 0.7),
                   ),
                   isDense: true,
                   filled: true,
-                  fillColor: scheme.surfaceContainerHighest.withValues(
-                    alpha: 0.45,
-                  ),
+                  fillColor: tokens.surfaceMuted.withValues(alpha: 0.45),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide(
-                      color: scheme.outlineVariant.withValues(alpha: 0.4),
+                      color: tokens.border.withValues(alpha: 0.4),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide(
-                      color: scheme.outlineVariant.withValues(alpha: 0.4),
+                      color: tokens.border.withValues(alpha: 0.4),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: scheme.primary, width: 1.6),
+                    borderSide: BorderSide(color: tokens.accent, width: 1.6),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -505,7 +506,7 @@ class _ColorTray extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     // De-dupe palette against recents so the same swatch doesn't
     // appear twice. Recents win the slot.
     final recentArgbs = recents.map((c) => c.toARGB32()).toSet();
@@ -515,7 +516,7 @@ class _ColorTray extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.28),
+        color: tokens.surfaceMuted.withValues(alpha: 0.28),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -527,7 +528,7 @@ class _ColorTray extends StatelessWidget {
             child: Text(
               context.l10n.colorsLabel,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
+                color: tokens.textSecondary,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.2,
               ),
@@ -596,7 +597,7 @@ class _PaletteDotState extends State<_PaletteDot> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     // Compute a checkmark colour with sufficient contrast against
     // the swatch — black on light, white on dark.
     final luminance = widget.color.computeLuminance();
@@ -625,13 +626,13 @@ class _PaletteDotState extends State<_PaletteDot> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: widget.selected ? scheme.primary : Colors.transparent,
+              color: widget.selected ? tokens.accent : Colors.transparent,
               width: widget.selected ? 2 : 0,
             ),
             boxShadow: widget.selected
                 ? [
                     BoxShadow(
-                      color: scheme.primary.withValues(alpha: 0.20),
+                      color: tokens.accent.withValues(alpha: 0.20),
                       blurRadius: 8,
                       offset: const Offset(0, 1),
                     ),
@@ -646,7 +647,7 @@ class _PaletteDotState extends State<_PaletteDot> {
               color: widget.color,
               shape: BoxShape.circle,
               border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.55),
+                color: tokens.border.withValues(alpha: 0.55),
                 width: 1,
               ),
             ),
@@ -680,7 +681,7 @@ class _MoreColorButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Tooltip(
       message: context.l10n.moreColorsTooltip,
       child: InkWell(
@@ -692,13 +693,9 @@ class _MoreColorButton extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: scheme.outlineVariant, width: 1.2),
+            border: Border.all(color: tokens.border, width: 1.2),
           ),
-          child: Icon(
-            Icons.add_rounded,
-            size: 20,
-            color: scheme.onSurfaceVariant,
-          ),
+          child: Icon(Icons.add_rounded, size: 20, color: tokens.textSecondary),
         ),
       ),
     );
@@ -735,10 +732,10 @@ class _QuickPillState extends State<_QuickPill> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final ringColor = widget.active
-        ? scheme.primary
-        : scheme.outlineVariant.withValues(alpha: 0.45);
+        ? tokens.accent
+        : tokens.border.withValues(alpha: 0.45);
     return Tooltip(
       message: widget.tooltip,
       child: GestureDetector(
@@ -757,7 +754,7 @@ class _QuickPillState extends State<_QuickPill> {
             padding: const EdgeInsets.fromLTRB(8, 4, 14, 4),
             decoration: BoxDecoration(
               color: widget.active
-                  ? scheme.primary.withValues(alpha: 0.12)
+                  ? tokens.accent.withValues(alpha: 0.12)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
@@ -775,9 +772,7 @@ class _QuickPillState extends State<_QuickPill> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: widget.active
-                        ? scheme.primary
-                        : scheme.onSurfaceVariant,
+                    color: widget.active ? tokens.accent : tokens.textSecondary,
                   ),
                 ),
               ],
@@ -798,15 +793,15 @@ class _BoldGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Container(
       width: 22,
       height: 22,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: active
-            ? scheme.primary.withValues(alpha: 0.18)
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+            ? tokens.accent.withValues(alpha: 0.18)
+            : tokens.surfaceMuted.withValues(alpha: 0.6),
         shape: BoxShape.circle,
       ),
       child: Text(
@@ -815,7 +810,7 @@ class _BoldGlyph extends StatelessWidget {
           fontSize: 13,
           fontWeight: FontWeight.w800,
           height: 1.0,
-          color: active ? scheme.primary : scheme.onSurface,
+          color: active ? tokens.accent : tokens.textPrimary,
         ),
       ),
     );
@@ -830,7 +825,7 @@ class _ColorDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Container(
       width: 22,
       height: 22,
@@ -838,7 +833,7 @@ class _ColorDot extends StatelessWidget {
         color: color,
         shape: BoxShape.circle,
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.7),
+          color: tokens.border.withValues(alpha: 0.7),
           width: 1,
         ),
       ),

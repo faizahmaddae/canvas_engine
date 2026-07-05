@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_tokens.dart';
+
 /// 3×3 grid of direction cells for offset-based controls (shadow
 /// direction today; any future 2D-offset knob).
 ///
@@ -115,12 +117,12 @@ class _DirectionPadCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final isCenter = dx == 0 && dy == 0;
     return Material(
       color: selected
-          ? scheme.primary.withValues(alpha: 0.16)
-          : scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          ? tokens.accent.withValues(alpha: 0.16)
+          : tokens.surfaceMuted.withValues(alpha: 0.4),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
@@ -130,14 +132,14 @@ class _DirectionPadCell extends StatelessWidget {
               ? Icon(
                   Icons.center_focus_strong_outlined,
                   size: 16,
-                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                  color: selected ? tokens.accent : tokens.textSecondary,
                 )
               : Transform.rotate(
                   angle: _arrowAngle(dx, dy),
                   child: Icon(
                     Icons.arrow_upward_rounded,
                     size: 16,
-                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                    color: selected ? tokens.accent : tokens.textSecondary,
                   ),
                 ),
         ),

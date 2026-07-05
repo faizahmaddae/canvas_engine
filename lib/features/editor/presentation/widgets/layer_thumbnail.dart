@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../../engine/modules/shape/shape_layer.dart';
@@ -40,7 +41,7 @@ class LayerThumbnail extends StatelessWidget {
     final theme = Theme.of(context);
     const radius = 8.0;
     final box = BoxDecoration(
-      color: theme.colorScheme.surfaceContainerHighest,
+      color: AppTokens.of(context).surfaceMuted,
       border: Border.all(color: theme.dividerColor, width: 1),
       borderRadius: BorderRadius.circular(radius),
     );

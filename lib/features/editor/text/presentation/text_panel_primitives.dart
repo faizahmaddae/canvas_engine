@@ -24,16 +24,16 @@ class _LayoutPresetChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Material(
       color: selected
-          ? scheme.primary.withValues(alpha: 0.14)
-          : scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+          ? tokens.accent.withValues(alpha: 0.14)
+          : tokens.surfaceMuted.withValues(alpha: 0.55),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
         side: BorderSide(
           color: selected
-              ? scheme.primary.withValues(alpha: 0.45)
+              ? tokens.accent.withValues(alpha: 0.45)
               : Colors.transparent,
           width: 1,
         ),
@@ -51,7 +51,7 @@ class _LayoutPresetChip extends StatelessWidget {
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected ? scheme.primary : scheme.onSurface,
+              color: selected ? tokens.accent : tokens.textPrimary,
             ),
           ),
         ),
@@ -65,8 +65,7 @@ class _LayoutPresetChip extends StatelessWidget {
 /// block rather than a sudden vertical jump. Shared by Size,
 /// Background, Border, and Shadow precision disclosures.
 class _PrecisionDivider extends StatelessWidget {
-  const _PrecisionDivider({required this.scheme});
-  final ColorScheme scheme;
+  const _PrecisionDivider();
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +73,7 @@ class _PrecisionDivider extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(4, 2, 4, 6),
       child: Container(
         height: 1,
-        color: scheme.outlineVariant.withValues(alpha: 0.35),
+        color: AppTokens.of(context).border.withValues(alpha: 0.35),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/l10n.dart';
 import 'preset_chip.dart';
@@ -115,7 +116,7 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final label = widget.label ?? context.l10n.presetsLabel;
     final live = _liveValue;
     final onPreset = widget.presets.any(
@@ -137,7 +138,7 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: scheme.onSurfaceVariant,
+                    color: tokens.textSecondary,
                     letterSpacing: 0.4,
                   ),
                 ),
@@ -147,7 +148,7 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: onPreset ? scheme.primary : scheme.onSurface,
+                  color: onPreset ? tokens.accent : tokens.textPrimary,
                   letterSpacing: -0.4,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
@@ -184,7 +185,7 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
         const SizedBox(height: 14),
         Container(
           height: 1,
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
+          color: tokens.border.withValues(alpha: 0.4),
         ),
         const SizedBox(height: 10),
         if (widget.fineTuneLabel.isNotEmpty)
@@ -195,7 +196,7 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.75),
+                color: tokens.textSecondary.withValues(alpha: 0.75),
                 letterSpacing: 0.3,
               ),
             ),
@@ -214,8 +215,8 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
                   thumbShape: const RoundSliderThumbShape(
                     enabledThumbRadius: 8,
                   ),
-                  activeTrackColor: scheme.primary.withValues(alpha: 0.85),
-                  inactiveTrackColor: scheme.outlineVariant.withValues(
+                  activeTrackColor: tokens.accent.withValues(alpha: 0.85),
+                  inactiveTrackColor: tokens.border.withValues(
                     alpha: 0.5,
                   ),
                 ),

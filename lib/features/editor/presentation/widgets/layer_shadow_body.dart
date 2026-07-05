@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
@@ -101,6 +102,7 @@ class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = AppTokens.of(context);
     final fields = adapter.read(layer);
     final hasShadow = fields.opacity > 0;
     final activePreset = _matchShadowPreset(fields);
@@ -163,10 +165,10 @@ class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
               icon: Icons.tune_rounded,
               titleClosed: context.l10n.adjustPrecisely,
               subtitle: context.l10n.blurDirectionOpacitySubtitle,
-              // The icon-header family used a constant primary
+              // The icon-header family used a constant accent
               // chevron regardless of open state — preserve exactly.
-              chevronColorClosed: Theme.of(context).colorScheme.primary,
-              chevronColorOpen: Theme.of(context).colorScheme.primary,
+              chevronColorClosed: tokens.accent,
+              chevronColorOpen: tokens.accent,
               children: [
                 const SizedBox(height: 4),
                 Center(

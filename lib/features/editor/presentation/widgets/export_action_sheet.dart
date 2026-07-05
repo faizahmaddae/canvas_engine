@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
@@ -72,6 +73,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = AppTokens.of(context);
     final doc = ref.watch(documentControllerProvider);
     final canvasW = doc.width.round();
     final canvasH = doc.height.round();
@@ -103,14 +105,13 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.6),
+                      color: tokens.surfaceMuted.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       l10n.canvasDimensions(canvasW, canvasH),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: tokens.textSecondary,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
@@ -371,16 +372,16 @@ class _QualityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     final outW = (canvasWidth * quality.pixelRatio).round();
     final outH = (canvasHeight * quality.pixelRatio).round();
 
     final bg = selected
-        ? scheme.primary.withValues(alpha: 0.10)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.4);
+        ? tokens.accent.withValues(alpha: 0.10)
+        : tokens.surfaceMuted.withValues(alpha: 0.4);
     final border = selected
-        ? scheme.primary.withValues(alpha: 0.6)
-        : scheme.outlineVariant.withValues(alpha: 0.5);
+        ? tokens.accent.withValues(alpha: 0.6)
+        : tokens.border.withValues(alpha: 0.5);
 
     return Material(
       color: bg,
@@ -403,16 +404,14 @@ class _QualityCard extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: selected
-                      ? scheme.primary
-                      : scheme.surfaceContainerHigh,
+                      ? tokens.accent.withValues(alpha: 0.16)
+                      : tokens.surfaceMuted,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   quality.multiplier,
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: selected
-                        ? scheme.onPrimary
-                        : scheme.onSurfaceVariant,
+                    color: selected ? tokens.accentDeep : tokens.textSecondary,
                     fontWeight: FontWeight.w700,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
@@ -433,7 +432,7 @@ class _QualityCard extends StatelessWidget {
                     Text(
                       '$outW × $outH px',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                        color: tokens.textSecondary,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
@@ -444,7 +443,7 @@ class _QualityCard extends StatelessWidget {
                 selected
                     ? Icons.check_circle_rounded
                     : Icons.radio_button_unchecked,
-                color: selected ? scheme.primary : scheme.outlineVariant,
+                color: selected ? tokens.accent : tokens.border,
                 size: 22,
               ),
             ],
@@ -472,23 +471,23 @@ class _FormatSegmented extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        color: tokens.surfaceMuted.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
           for (final f in ExportFormat.values)
-            Expanded(child: _segmentItem(theme, scheme, f)),
+            Expanded(child: _segmentItem(theme, tokens, f)),
         ],
       ),
     );
   }
 
-  Widget _segmentItem(ThemeData theme, ColorScheme scheme, ExportFormat f) {
+  Widget _segmentItem(ThemeData theme, AppTokens tokens, ExportFormat f) {
     final selected = f == value;
     return GestureDetector(
       onTap: enabled ? () => onChanged(f) : null,
@@ -499,13 +498,15 @@ class _FormatSegmented extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? scheme.primary : Colors.transparent,
+          color: selected
+              ? tokens.accent.withValues(alpha: 0.16)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(9),
         ),
         child: Text(
           f.label,
           style: theme.textTheme.labelLarge?.copyWith(
-            color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+            color: selected ? tokens.accentDeep : tokens.textSecondary,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -542,7 +543,7 @@ class _JpgQualitySlider extends StatelessWidget {
               Text(
                 context.l10n.qualityLabel,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: AppTokens.of(context).textSecondary,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
                 ),
@@ -594,7 +595,7 @@ class _SizePickerRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     return SizedBox(
       height: 38,
       child: ListView.separated(
@@ -618,7 +619,7 @@ class _SizePickerRow extends StatelessWidget {
             selected: selected,
             enabled: enabled,
             onTap: () => onChanged(preset),
-            scheme: scheme,
+            tokens: tokens,
             theme: theme,
           );
         },
@@ -633,7 +634,7 @@ class _SizeChip extends StatelessWidget {
     required this.selected,
     required this.enabled,
     required this.onTap,
-    required this.scheme,
+    required this.tokens,
     required this.theme,
   });
 
@@ -641,23 +642,23 @@ class _SizeChip extends StatelessWidget {
   final bool selected;
   final bool enabled;
   final VoidCallback onTap;
-  final ColorScheme scheme;
+  final AppTokens tokens;
   final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
     final bg = selected
-        ? scheme.primary
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.5);
-    final fg = selected ? scheme.onPrimary : scheme.onSurfaceVariant;
+        ? tokens.accent.withValues(alpha: 0.16)
+        : tokens.surfaceMuted.withValues(alpha: 0.5);
+    final fg = selected ? tokens.accentDeep : tokens.textSecondary;
     return Material(
       color: bg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
           color: selected
-              ? scheme.primary
-              : scheme.outlineVariant.withValues(alpha: 0.5),
+              ? tokens.accent
+              : tokens.border.withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -699,7 +700,7 @@ class _PresetOutputSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     final target = size.target!;
     final tw = target.width.round();
     final th = target.height.round();
@@ -712,16 +713,16 @@ class _PresetOutputSummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        color: tokens.surfaceMuted.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(color: tokens.border.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
           Icon(
             Icons.aspect_ratio_rounded,
             size: 20,
-            color: scheme.onSurfaceVariant,
+            color: tokens.textSecondary,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -741,7 +742,7 @@ class _PresetOutputSummary extends StatelessWidget {
                       ? context.l10n.matchesCanvasAspect
                       : context.l10n.letterboxExportHint,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                    color: tokens.textSecondary,
                   ),
                 ),
               ],

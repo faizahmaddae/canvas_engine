@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
+
 /// Shared selection tile used by every panel preset row — Adjust
 /// presets (Original / Pop / Soft / Warm / Cool), Border thickness,
 /// Shape mask, Shadow style, Background style, etc.
@@ -8,12 +10,12 @@ import 'package:flutter/material.dart';
 /// by the Adjust preset chip in
 /// `lib/features/editor/image/presentation/image_adjust_body.dart`:
 ///
-///   * resting fill: `surfaceContainerHighest @ 35%` (subtle dark
+///   * resting fill: `surfaceMuted @ 35%` (subtle dark
 ///     card surface — NOT transparent)
-///   * hover: `onSurface @ 6%`
-///   * pressed: `primary @ 10%`
-///   * selected: `primary @ 12%` (deepens to `18%` while pressed)
-///   * fg: active = `primary`, else `onSurfaceVariant`
+///   * hover: `textPrimary @ 6%`
+///   * pressed: `accent @ 10%`
+///   * selected: `accent @ 12%` (deepens to `18%` while pressed)
+///   * fg: active = `accent`, else `textSecondary`
 ///   * label weight: w600 → w700 when active
 ///   * radius 10
 ///   * AnimatedContainer 160ms easeOutCubic for the bg
@@ -77,20 +79,20 @@ class _PanelOptionTileState extends State<PanelOptionTile> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final selected = widget.selected;
 
-    final fg = selected ? scheme.primary : scheme.onSurfaceVariant;
+    final fg = selected ? tokens.accent : tokens.textSecondary;
 
     Color bg;
     if (selected) {
-      bg = scheme.primary.withValues(alpha: _down ? 0.18 : 0.12);
+      bg = tokens.accent.withValues(alpha: _down ? 0.18 : 0.12);
     } else if (_down) {
-      bg = scheme.primary.withValues(alpha: 0.10);
+      bg = tokens.accent.withValues(alpha: 0.10);
     } else if (_hover) {
-      bg = scheme.onSurface.withValues(alpha: 0.06);
+      bg = tokens.textPrimary.withValues(alpha: 0.06);
     } else {
-      bg = scheme.surfaceContainerHighest.withValues(alpha: 0.35);
+      bg = tokens.surfaceMuted.withValues(alpha: 0.35);
     }
 
     final hasGlyph = widget.icon != null || widget.preview != null;

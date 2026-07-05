@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 
@@ -27,6 +28,7 @@ class ModeDoneButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Material(
       color: Colors.transparent,
@@ -40,15 +42,12 @@ class ModeDoneButton extends StatelessWidget {
           height: 36,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: scheme.surface.withValues(alpha: 0.92),
+            color: tokens.surface.withValues(alpha: 0.94),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
-              width: 0.5,
-            ),
+            border: Border.all(color: tokens.border),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
+                color: scheme.shadow.withValues(alpha: 0.12),
                 blurRadius: 12,
                 offset: const Offset(0, 2),
               ),
@@ -57,14 +56,14 @@ class ModeDoneButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 16, color: scheme.primary),
+              Icon(icon, size: 16, color: tokens.accent),
               const SizedBox(width: 6),
               Text(
                 label ?? context.l10n.doneAction,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: scheme.onSurface,
+                  color: tokens.textPrimary,
                   letterSpacing: -0.1,
                 ),
               ),

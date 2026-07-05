@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../core/utils/haptics.dart';
 
@@ -129,9 +130,9 @@ class InlineColorBody extends StatelessWidget {
                     child: Text(
                       context.l10n.recentLabel,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(
+                        color: AppTokens.of(
                           context,
-                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.75),
+                        ).textSecondary.withValues(alpha: 0.75),
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0,
                       ),
@@ -195,7 +196,7 @@ class _GroupLabel extends StatelessWidget {
       child: Text(
         text,
         style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
+          color: AppTokens.of(context).textSecondary.withValues(alpha: 0.85),
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
         ),
@@ -229,7 +230,7 @@ class _PolishedSwatchState extends State<_PolishedSwatch> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     final selected = widget.selected;
     final color = widget.color;
     final checkColor =
@@ -261,8 +262,8 @@ class _PolishedSwatchState extends State<_PolishedSwatch> {
                 color: color,
                 border: Border.all(
                   color: selected
-                      ? scheme.primary
-                      : scheme.outlineVariant.withValues(alpha: 0.55),
+                      ? tokens.accent
+                      : tokens.border.withValues(alpha: 0.55),
                   width: selected ? 2.0 : 1,
                 ),
               ),
@@ -315,7 +316,7 @@ class _CurrentColorStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
     return Row(
       children: [
         AnimatedContainer(
@@ -326,7 +327,7 @@ class _CurrentColorStrip extends StatelessWidget {
             color: color,
             shape: BoxShape.circle,
             border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.7),
+              color: tokens.border.withValues(alpha: 0.7),
               width: 1,
             ),
           ),
@@ -338,7 +339,7 @@ class _CurrentColorStrip extends StatelessWidget {
             fontFeatures: const [FontFeature.tabularFigures()],
             fontWeight: FontWeight.w700,
             letterSpacing: 0,
-            color: scheme.onSurface,
+            color: tokens.textPrimary,
           ),
         ),
         const Spacer(),
@@ -359,7 +360,7 @@ class _CustomColorPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Material(
       color: Colors.transparent,
       shape: const StadiumBorder(),
@@ -374,7 +375,7 @@ class _CustomColorPill extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
+              color: tokens.border.withValues(alpha: 0.6),
               width: 1,
             ),
           ),
@@ -403,7 +404,7 @@ class _CustomColorPill extends StatelessWidget {
                 context.l10n.customLabel,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: scheme.onSurface,
+                  color: tokens.textPrimary,
                 ),
               ),
             ],
