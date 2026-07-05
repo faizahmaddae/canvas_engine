@@ -301,7 +301,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeTextOnPhotoSubtitle => 'با یک چیدمان متنی آماده شروع کن';
 
   @override
-  String get recentTitle => 'اخیر';
+  String get homeRecentNewTile => 'جدید';
+
+  @override
+  String get recentTitle => 'کارهای اخیر';
 
   @override
   String get seeAllAction => 'مشاهده همه';

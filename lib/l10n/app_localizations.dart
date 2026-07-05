@@ -662,10 +662,16 @@ abstract class AppLocalizations {
   /// **'Start with a designed type layout'**
   String get homeTextOnPhotoSubtitle;
 
+  /// No description provided for @homeRecentNewTile.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get homeRecentNewTile;
+
   /// No description provided for @recentTitle.
   ///
   /// In en, this message translates to:
-  /// **'Recent'**
+  /// **'Recent work'**
   String get recentTitle;
 
   /// No description provided for @seeAllAction.

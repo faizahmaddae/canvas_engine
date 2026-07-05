@@ -8,7 +8,6 @@ import '../../editor/application/project_recovery_service.dart';
 import '../application/project_store.dart';
 import '../../settings/application/settings_controller.dart';
 import '../../templates/application/template_repository_provider.dart';
-import '../../templates/domain/template.dart';
 import 'home_actions.dart';
 import 'widgets/home_header.dart';
 import 'widgets/quick_action_card.dart';
@@ -88,13 +87,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final enabledCategories = ref.watch(enabledCategoriesProvider);
     final recentProjects = ref.watch(projectStoreProvider);
     final hasRecentProjects = recentProjects.value?.isNotEmpty ?? false;
-    final showBottomRecent =
-        !hasRecentProjects &&
-        (recentProjects.hasValue || recentProjects.hasError);
-    final effectiveLanguages = _effectiveLanguages(
-      _templateLanguageFilter,
-      contentLanguages,
-    );
 
     return Scaffold(
       backgroundColor: AppTokens.of(context).pageBg,
@@ -141,9 +133,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               SliverToBoxAdapter(
                 child: RecentProjectsSection(
                   onCreate: actions.createNew,
-                  onChooseTemplate: () => actions.openTemplates(
-                    initialLanguage: _initialBrowseLanguage(effectiveLanguages),
-                  ),
                   onOpen: actions.openProject,
                   onSeeAll: actions.openRecentAll,
                 ),
@@ -164,43 +153,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            if (showBottomRecent) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
-              SliverToBoxAdapter(
-                child: RecentProjectsSection(
-                  onCreate: actions.createNew,
-                  onChooseTemplate: () => actions.openTemplates(
-                    initialLanguage: _initialBrowseLanguage(effectiveLanguages),
-                  ),
-                  onOpen: actions.openProject,
-                  onSeeAll: actions.openRecentAll,
-                ),
-              ),
-            ],
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
           ],
         ),
       ),
     );
   }
-}
-
-Set<TemplateLanguage> _effectiveLanguages(
-  HomeTemplateLanguageFilter filter,
-  Set<TemplateLanguage> contentLanguages,
-) => switch (filter) {
-  HomeTemplateLanguageFilter.all => contentLanguages,
-  HomeTemplateLanguageFilter.persian => {TemplateLanguage.persian},
-  HomeTemplateLanguageFilter.english => {TemplateLanguage.english},
-  HomeTemplateLanguageFilter.mixed => {
-    TemplateLanguage.english,
-    TemplateLanguage.persian,
-  },
-};
-
-TemplateLanguage _initialBrowseLanguage(Set<TemplateLanguage> languages) {
-  if (languages.contains(TemplateLanguage.persian)) {
-    return TemplateLanguage.persian;
-  }
-  return TemplateLanguage.english;
 }
