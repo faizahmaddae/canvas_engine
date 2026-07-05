@@ -24,6 +24,7 @@ class TemplateThumb extends StatelessWidget {
     this.height = 128,
     this.borderRadius = AppRadii.button,
     this.boxShadow,
+    this.outlined = false,
   });
 
   final Template template;
@@ -38,10 +39,19 @@ class TemplateThumb extends StatelessWidget {
   /// keeps the card flat.
   final List<BoxShadow>? boxShadow;
 
+  /// Quiet variant for dense browsers: hairline surface card with a
+  /// near-full-bleed preview and a muted caption — the preview IS
+  /// the card. The default (filled) variant keeps the category-
+  /// colour frame for teaser rails, where the accent encodes
+  /// meaning at a glance.
+  final bool outlined;
+
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    final fill = _categoryFill(template.category, tokens);
+    final fill = outlined
+        ? tokens.surface
+        : _categoryFill(template.category, tokens);
     return SizedBox(
       width: width,
       height: height,
@@ -49,10 +59,11 @@ class TemplateThumb extends StatelessWidget {
         decoration: BoxDecoration(
           color: fill,
           borderRadius: BorderRadius.circular(borderRadius),
+          border: outlined ? Border.all(color: tokens.border) : null,
           boxShadow: boxShadow,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(6),
+          padding: EdgeInsets.all(outlined ? 3 : 6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -64,16 +75,21 @@ class TemplateThumb extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                template.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: tokens.onBrand,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
+              Padding(
+                padding: EdgeInsetsDirectional.symmetric(
+                  horizontal: outlined ? 4 : 0,
+                ),
+                child: Text(
+                  template.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: outlined ? tokens.textSecondary : tokens.onBrand,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
                 ),
               ),
             ],

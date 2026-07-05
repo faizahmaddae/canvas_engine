@@ -73,7 +73,9 @@ class RecentProjectsGrid extends ConsumerWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                l10n.recentTitle,
+                // «پروژه‌ها» — matches the tab label; «کارهای اخیر»
+                // stays the Home rail's title.
+                l10n.navProjectsTab,
                 style: AppTypeScale.title.copyWith(
                   color: tokens.textPrimary,
                   fontWeight: FontWeight.w700,

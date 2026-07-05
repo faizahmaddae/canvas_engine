@@ -360,7 +360,13 @@ class _TemplatesGrid extends StatelessWidget {
         return GestureDetector(
           key: ValueKey('browse-template-tile-${template.id}'),
           onTap: () => onOpen(template),
-          child: TemplateThumb(template: template, borderRadius: 16),
+          // Outlined: in the dense browser the preview is the card;
+          // the coloured category frame stays a rail-only treatment.
+          child: TemplateThumb(
+            template: template,
+            borderRadius: 16,
+            outlined: true,
+          ),
         );
       },
     );
