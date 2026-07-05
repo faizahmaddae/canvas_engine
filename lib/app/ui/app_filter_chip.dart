@@ -16,11 +16,17 @@ class AppFilterChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.compact = false,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+
+  /// Smaller footprint for SECONDARY filter rows (e.g. the browse
+  /// screen's «زبان» row) so they read as subordinate to the primary
+  /// chip row above them.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +39,9 @@ class AppFilterChip extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           curve: Curves.easeOutCubic,
-          height: 34,
-          padding: const EdgeInsetsDirectional.symmetric(
-            horizontal: AppSpacing.lg,
+          height: compact ? 26 : 34,
+          padding: EdgeInsetsDirectional.symmetric(
+            horizontal: compact ? AppSpacing.md : AppSpacing.lg,
           ),
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -48,6 +54,7 @@ class AppFilterChip extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTypeScale.caption.copyWith(
+              fontSize: compact ? 11 : 13,
               color: selected ? tokens.onBrand : tokens.textSecondary,
               fontWeight: FontWeight.w700,
               height: 1.2,

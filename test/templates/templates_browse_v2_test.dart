@@ -160,6 +160,59 @@ void main() {
     expect(opened?.id, 'story-fa');
   });
 
+  testWidgets('story categories collapse onto ONE chip that filters both', (
+    tester,
+  ) async {
+    final withBothStories = [
+      ...catalog,
+      template(id: 'plain-story', category: TemplateCategory.story),
+    ];
+    await pump(tester, templates: withBothStories);
+
+    // One canonical chip: instagramStory hosts the shared «استوری»
+    // label; no separate chip for the plain story category.
+    expect(
+      find.byKey(const ValueKey('browse-category-instagramStory')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('browse-category-story')), findsNothing);
+
+    // Selecting it shows templates from BOTH story categories.
+    await tester.tap(
+      find.byKey(const ValueKey('browse-category-instagramStory')),
+    );
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-fa')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-plain-story')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-poetry-fa')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('language row is the compact secondary control with a label', (
+    tester,
+  ) async {
+    await pump(tester);
+
+    // The «زبان:» prefix disambiguates the row from the category
+    // chips; language chips render in the compact size.
+    expect(find.text('Language:'), findsOneWidget);
+    final languageChip = tester.getSize(
+      find.byKey(const ValueKey('browse-language-all')),
+    );
+    final categoryChip = tester.getSize(
+      find.byKey(const ValueKey('browse-category-all')),
+    );
+    expect(languageChip.height, lessThan(categoryChip.height));
+  });
+
   testWidgets('dark mode: ink canvas, cream selected chip', (tester) async {
     await pump(tester, brightness: Brightness.dark);
     expect(tester.takeException(), isNull);

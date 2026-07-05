@@ -58,8 +58,12 @@ class _TemplatesBrowseScreenState extends ConsumerState<TemplatesBrowseScreen> {
     widget.initialLanguage,
   );
 
-  /// `null` = "All".
-  late TemplateCategory? _categoryFilter = widget.initialCategory;
+  /// `null` = "All". Always stored CANONICAL (see
+  /// [_canonicalChipCategory]): selecting the one «استوری» chip
+  /// filters both story-flavoured categories.
+  late TemplateCategory? _categoryFilter = widget.initialCategory == null
+      ? null
+      : _canonicalChipCategory(widget.initialCategory!);
 
   String _searchQuery = '';
 
@@ -84,7 +88,11 @@ class _TemplatesBrowseScreenState extends ConsumerState<TemplatesBrowseScreen> {
     final categoryPool = _categoryFilter == null
         ? languagePool
         : languagePool
-              .where((template) => template.category == _categoryFilter)
+              .where(
+                (template) =>
+                    _canonicalChipCategory(template.category) ==
+                    _categoryFilter,
+              )
               .toList(growable: false);
     final visible = orderTemplatesForBrowse(
       templates: _filterBySearch(categoryPool, _searchQuery, l10n),
@@ -94,10 +102,16 @@ class _TemplatesBrowseScreenState extends ConsumerState<TemplatesBrowseScreen> {
       ),
       selectedCategory: _categoryFilter,
     );
-    final categories = orderedTemplateCategories(
+    // Chips are unique per canonical category (dedupe: instagramStory
+    // and story share the «استوری» label — one chip, not two).
+    final categories = <TemplateCategory>[];
+    for (final category in orderedTemplateCategories(
       languagePool,
       selected: _categoryFilter,
-    );
+    )) {
+      final canonical = _canonicalChipCategory(category);
+      if (!categories.contains(canonical)) categories.add(canonical);
+    }
 
     return Scaffold(
       backgroundColor: tokens.pageBg,
@@ -264,6 +278,10 @@ class _CategoryChips extends StatelessWidget {
   }
 }
 
+/// Compact SECONDARY control (refinement pass): a small «زبان:»
+/// label followed by compact chips, so the language row can't be
+/// mistaken for the primary category row above it — the two rows
+/// previously stacked two identical «همه» chips.
 class _LanguageChips extends StatelessWidget {
   const _LanguageChips({required this.selected, required this.onChanged});
 
@@ -273,22 +291,36 @@ class _LanguageChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final tokens = AppTokens.of(context);
     return SizedBox(
-      height: 36,
+      height: 28,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsetsDirectional.symmetric(
           horizontal: AppSpacing.pageGutter,
         ),
-        itemCount: _BrowseLanguageFilter.values.length,
+        itemCount: _BrowseLanguageFilter.values.length + 1,
         separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (context, index) {
-          final value = _BrowseLanguageFilter.values[index];
+          if (index == 0) {
+            return Center(
+              child: Text(
+                '${l10n.templatesLanguageFilterLabel}:',
+                style: AppTypeScale.caption.copyWith(
+                  fontSize: 11,
+                  color: tokens.textMuted,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            );
+          }
+          final value = _BrowseLanguageFilter.values[index - 1];
           return AppFilterChip(
             key: ValueKey('browse-language-${value.name}'),
             label: _languageFilterLabel(l10n, value),
             selected: selected == value,
+            compact: true,
             onTap: () => onChanged(value),
           );
         },
@@ -372,6 +404,15 @@ class _EmptyTemplatesState extends StatelessWidget {
 }
 
 // ─── filter logic (unchanged from the strip-era browser) ──────────
+
+/// Chip-level category grouping: `story` and `instagramStory` share
+/// the «استوری» chip label, so they collapse onto one canonical chip
+/// — showing both would render two identical chips whose selections
+/// each miss half the story templates.
+TemplateCategory _canonicalChipCategory(TemplateCategory category) =>
+    category == TemplateCategory.story
+    ? TemplateCategory.instagramStory
+    : category;
 
 enum _BrowseLanguageFilter { all, persian, english, mixed }
 
