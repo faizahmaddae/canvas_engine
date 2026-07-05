@@ -256,10 +256,27 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(390, 2200));
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
-      expect(find.text('استوری اینستاگرام'), findsAtLeastNWidgets(1));
-      expect(find.text('تامبنیل یوتیوب'), findsAtLeastNWidgets(1));
-      expect(find.text('شعر و نقل‌قول'), findsNothing);
-      expect(find.text('پست تبلیغاتی'), findsNothing);
+      // v2 Home shows one curated grid instead of category strips:
+      // enabled categories surface their curated leads, disabled
+      // categories contribute nothing.
+      expect(
+        find.byKey(const ValueKey('home-template-fa_story_fashion_drop')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('home-template-en_yt_tutorial_blueprint')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(
+          const ValueKey('home-template-fa_poetry_black_gold_nastaliq'),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('home-template-fa_promo_app_launch')),
+        findsNothing,
+      );
     },
   );
 

@@ -24,17 +24,21 @@ void main() {
 
       await _pumpHomeSection(tester, templates: templates);
 
+      // v2 grid: the curated leads (kHomeRecommendedTemplateIds order)
+      // fill the 2-col teaser.
       expect(
-        find.byKey(const ValueKey('template-card-size-fa_insta_story_v1')),
-        findsAtLeastNWidgets(1),
+        find.byKey(const ValueKey('home-template-fa_story_fashion_drop')),
+        findsOneWidget,
       );
       expect(
-        find.byKey(const ValueKey('template-card-size-fa_story_today')),
-        findsAtLeastNWidgets(1),
+        find.byKey(const ValueKey('home-template-fa_promo_app_launch')),
+        findsOneWidget,
       );
       expect(
-        find.byKey(const ValueKey('template-card-size-fa_quote_minimal')),
-        findsAtLeastNWidgets(1),
+        find.byKey(
+          const ValueKey('home-template-fa_poetry_black_gold_nastaliq'),
+        ),
+        findsOneWidget,
       );
     });
 
@@ -66,13 +70,13 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
-      expect(find.text('Recommended to start'), findsOneWidget);
+      expect(find.text('Templates'), findsOneWidget);
       expect(
         find.byKey(
-          const ValueKey('template-card-size-fa_story_fashion_drop'),
+          const ValueKey('home-template-fa_story_fashion_drop'),
           skipOffstage: false,
         ),
-        findsAtLeastNWidgets(1),
+        findsOneWidget,
       );
     });
 
