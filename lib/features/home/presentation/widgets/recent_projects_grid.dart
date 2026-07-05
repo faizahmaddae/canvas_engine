@@ -15,6 +15,7 @@ import '../../../editor/engine/serialization/document_codec.dart';
 import '../../application/project_delete_service.dart';
 import '../../application/project_store.dart';
 import '../../domain/project.dart';
+import 'project_thumb.dart' show EmptyDesignPlaceholder, isEmptyDesignJson;
 
 const _uuid = Uuid();
 
@@ -477,6 +478,16 @@ class _Thumb extends StatelessWidget {
     // BoxFit.cover (which previously sliced text / off-centre
     // subjects out of the preview).
     final canvasBg = tokens.surfaceMuted;
+
+    // Navigation-doc rule, same as the Home rail: an empty design
+    // must never read as a blank white thumbnail — its PNG (and its
+    // live render) are featureless canvas-colour rectangles.
+    if (isEmptyDesignJson(project.documentJson)) {
+      return ColoredBox(
+        color: canvasBg,
+        child: EmptyDesignPlaceholder(name: project.name),
+      );
+    }
 
     if (usePng) {
       return ColoredBox(

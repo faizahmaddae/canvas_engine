@@ -38,25 +38,11 @@ class ProjectThumb extends StatelessWidget {
       project.thumbnailPath != null &&
       project.thumbnailVersion >= Project.currentThumbnailVersion;
 
-  /// True when the saved document has no layers — its thumbnail
-  /// would be a featureless canvas-colour rectangle. Decoding the
-  /// stored JSON envelope is cheap at rail counts (≤8) and only the
-  /// top-level `layers` list is inspected.
-  bool get _isEmptyDesign {
-    try {
-      final doc = jsonDecode(project.documentJson);
-      if (doc is! Map<String, dynamic>) return false;
-      final layers = doc['layers'];
-      return layers is List && layers.isEmpty;
-    } on FormatException {
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    final showPreview = _hasFreshThumbnail && !_isEmptyDesign;
+    final showPreview =
+        _hasFreshThumbnail && !isEmptyDesignJson(project.documentJson);
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
@@ -78,9 +64,9 @@ class ProjectThumb extends StatelessWidget {
                       File(project.thumbnailPath!),
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) =>
-                          _EmptyDesignPlaceholder(name: project.name),
+                          EmptyDesignPlaceholder(name: project.name),
                     )
-                  : _EmptyDesignPlaceholder(name: project.name),
+                  : EmptyDesignPlaceholder(name: project.name),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
@@ -96,11 +82,35 @@ class ProjectThumb extends StatelessWidget {
   }
 }
 
+/// True when the saved document would preview as a blank white
+/// rectangle: no layers AND the default white background (the codec
+/// omits `background` at the default, and writes a bare ARGB int for
+/// solid colours). A layer-less canvas with a deliberate colour or
+/// gradient background is real content and still previews live.
+///
+/// Decoding the stored JSON envelope is cheap at card counts; only
+/// the top-level `layers` / `background` entries are inspected.
+/// Shared by the Home rail's [ProjectThumb] and the Projects tab's
+/// grid card so "never a blank white thumbnail" holds everywhere.
+bool isEmptyDesignJson(String documentJson) {
+  const whiteArgb = 0xFFFFFFFF;
+  try {
+    final doc = jsonDecode(documentJson);
+    if (doc is! Map<String, dynamic>) return false;
+    final layers = doc['layers'];
+    if (layers is! List || layers.isNotEmpty) return false;
+    final background = doc['background'];
+    return background == null || background == whiteArgb;
+  } on FormatException {
+    return false;
+  }
+}
+
 /// Subtle mark+label placeholder for projects with nothing to
 /// preview: the saffron diamond over the project name on
 /// surfaceMuted — reads as "yours, not started" rather than broken.
-class _EmptyDesignPlaceholder extends StatelessWidget {
-  const _EmptyDesignPlaceholder({required this.name});
+class EmptyDesignPlaceholder extends StatelessWidget {
+  const EmptyDesignPlaceholder({super.key, required this.name});
 
   final String name;
 

@@ -8,6 +8,7 @@ import 'package:canvas_engine/app/theme/app_theme.dart';
 import 'package:canvas_engine/app/theme/app_tokens.dart';
 import 'package:canvas_engine/features/home/application/project_store.dart';
 import 'package:canvas_engine/features/home/domain/project.dart';
+import 'package:canvas_engine/features/home/presentation/widgets/project_thumb.dart';
 import 'package:canvas_engine/features/home/presentation/widgets/recent_projects_grid.dart';
 
 Project _seed({
@@ -16,6 +17,7 @@ Project _seed({
   double w = 1080,
   double h = 1080,
   Duration ago = const Duration(minutes: 5),
+  String documentJson = '{}',
 }) {
   final t = DateTime.now().subtract(ago);
   return Project(
@@ -25,7 +27,7 @@ Project _seed({
     height: h,
     createdAt: t,
     lastModified: t,
-    documentJson: '{}',
+    documentJson: documentJson,
   );
 }
 
@@ -155,6 +157,26 @@ void main() {
     );
     final border = (ink.decoration! as BoxDecoration).border! as Border;
     expect(border.top.color, AppTokens.light.border);
+  });
+
+  testWidgets('empty design shows the diamond+name placeholder, never a '
+      'blank thumbnail', (tester) async {
+    await _pumpHome(
+      tester,
+      projects: [
+        _seed(id: 'empty', name: 'Fresh start', documentJson: '{"layers":[]}'),
+        _seed(id: 'plain', name: 'Untitled', ago: const Duration(minutes: 9)),
+      ],
+    );
+
+    // The empty design renders the shared placeholder inside its
+    // grid card; the non-empty one does not.
+    final placeholders = find.byType(EmptyDesignPlaceholder);
+    expect(placeholders, findsOneWidget);
+    expect(
+      find.descendant(of: placeholders, matching: find.text('Fresh start')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('v2: dark mode renders ink tokens without throwing', (
