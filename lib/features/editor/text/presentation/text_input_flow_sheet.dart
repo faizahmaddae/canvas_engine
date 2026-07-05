@@ -784,7 +784,7 @@ class _QuickPillState extends State<_QuickPill> {
   }
 }
 
-/// Bold pill's leading glyph — a typographic "B" inside a circle so
+/// Bold pill's leading glyph — the Material bold icon in a circle so
 /// it visually rhymes with the Color pill's leading colour dot.
 class _BoldGlyph extends StatelessWidget {
   const _BoldGlyph({required this.active});
@@ -804,14 +804,13 @@ class _BoldGlyph extends StatelessWidget {
             : tokens.surfaceMuted.withValues(alpha: 0.6),
         shape: BoxShape.circle,
       ),
-      child: Text(
-        'B',
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-          height: 1.0,
-          color: active ? tokens.accent : tokens.textPrimary,
-        ),
+      // Weight icon, not a Latin 'B' — the label beside it is Persian
+      // (پررنگ) and the sibling toggles use the Material format icons
+      // (format_italic / format_underline), so bold matches the set.
+      child: Icon(
+        Icons.format_bold_rounded,
+        size: 15,
+        color: active ? tokens.accent : tokens.textPrimary,
       ),
     );
   }
