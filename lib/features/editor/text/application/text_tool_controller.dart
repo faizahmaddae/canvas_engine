@@ -898,7 +898,12 @@ class TextToolController extends Notifier<TextSession> {
     // reads against what's underneath; otherwise auto-pick black or
     // white so brand-new text is never invisible (e.g. white-on-
     // white on a fresh canvas).
+    //
+    // Seed the default (Persian) font at STAGE time, not just at
+    // commit — the live layer previews every keystroke, and a null
+    // family would flash the system face until the commit fixes it.
     final readableStyle = scaledStyle.copyWith(
+      fontFamily: scaledStyle.fontFamily ?? defaultFontFamilyForContent(''),
       color: TextColorResolver.resolve(
         requested: scaledStyle.color,
         doc: doc,
@@ -1455,7 +1460,10 @@ class TextToolController extends Notifier<TextSession> {
     final layout = _resolveNewLayerLayout(text, scaledStyle, doc);
     final position = _centerOnCanvas(layout.size, doc);
     // Smart default colour — see [beginAddText] for the rationale.
+    // Default (Persian) font seeded here too so quick-added text
+    // never renders in the system face.
     final readableStyle = scaledStyle.copyWith(
+      fontFamily: scaledStyle.fontFamily ?? defaultFontFamilyForContent(text),
       color: TextColorResolver.resolve(
         requested: scaledStyle.color,
         doc: doc,

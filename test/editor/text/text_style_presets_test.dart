@@ -326,11 +326,11 @@ void main() {
     });
 
     test(
-      'defaultFontFamilyForContent: Vazir for Persian, Roboto for English',
+      'defaultFontFamilyForContent: Vazir for every script (Persian-first)',
       () {
         expect(defaultFontFamilyForContent('سلام'), 'Vazir_Regular');
-        expect(defaultFontFamilyForContent('Hello'), 'Roboto');
-        expect(defaultFontFamilyForContent(''), 'Roboto');
+        expect(defaultFontFamilyForContent('Hello'), 'Vazir_Regular');
+        expect(defaultFontFamilyForContent(''), 'Vazir_Regular');
       },
     );
 
@@ -500,7 +500,8 @@ void main() {
   });
 
   group('default font on new text creation', () {
-    test('English content commits with Roboto when no font was picked', () {
+    test('English content commits with Vazir when no font was picked '
+        '(Persian-first default)', () {
       final c = makeContainer();
       final ctrl = c.read(textToolControllerProvider.notifier);
       final id = ctrl.beginAddText();
@@ -508,7 +509,7 @@ void main() {
       ctrl.commitLiveEdit('Hello world');
       final layer =
           c.read(documentControllerProvider).layerById(id) as TextLayer;
-      expect(layer.style.fontFamily, 'Roboto');
+      expect(layer.style.fontFamily, 'Vazir_Regular');
     });
 
     test('Persian content commits with Vazir when no font was picked', () {

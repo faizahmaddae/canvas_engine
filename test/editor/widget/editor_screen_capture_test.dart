@@ -91,8 +91,11 @@ ProviderContainer _sampleEditor({bool withSelection = false}) {
           size: Size(800, 240),
         ),
         content: 'نوروزتان پیروز',
-        // Ink on the white doc so the sample text is visible.
+        // Ink on the white doc so the sample text is visible; Vazir
+        // like a real freshly-created layer (the Persian-first
+        // default) so captures show the true content face.
         style: const TextStyleSpec(
+          fontFamily: 'Vazir_Regular',
           fontSize: 96,
           color: Color(0xFF1F1B16),
         ),

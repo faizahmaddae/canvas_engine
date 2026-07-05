@@ -1595,10 +1595,11 @@ void main() {
     });
 
     group('script-aware defaults', () {
-      // Bug-3: new text picks the right default font + direction
-      // for its dominant script, and edits re-pick the auto-default
-      // when the script flips (only when the user hasn't picked a
-      // font themselves).
+      // v2 Persian-first: new text always ships in Vazir (direction
+      // still follows the dominant script), and edits re-pick the
+      // auto-default (only when the user hasn't picked a font
+      // themselves) — which migrates legacy auto-Roboto layers to
+      // Vazir on their next edit.
 
       test('add Persian content commits with Vazir + RTL-friendly content', () {
         final c = makeContainer();
@@ -1612,7 +1613,7 @@ void main() {
         expect(textDirectionForContent(layer.content), TextDirection.rtl);
       });
 
-      test('add English content commits with Roboto + LTR', () {
+      test('add English content commits with Vazir + LTR', () {
         final c = makeContainer();
         final ctrl = c.read(textToolControllerProvider.notifier);
         ctrl.beginAddText();
@@ -1620,12 +1621,11 @@ void main() {
         ctrl.commitLiveEdit('Hello');
         final layer =
             c.read(documentControllerProvider).layers.single as TextLayer;
-        expect(layer.style.fontFamily, 'Roboto');
+        expect(layer.style.fontFamily, 'Vazir_Regular');
         expect(textDirectionForContent(layer.content), TextDirection.ltr);
       });
 
-      test('editing flips Roboto → Vazir when content becomes '
-          'predominantly Persian', () {
+      test('editing migrates a legacy auto-Roboto layer to Vazir', () {
         final c = makeContainer();
         final layer = addText(
           c,

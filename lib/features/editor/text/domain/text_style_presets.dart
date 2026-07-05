@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../engine/modules/text/text_direction_utils.dart';
 import '../../engine/modules/text/text_style_spec.dart';
 import 'font_catalog.dart';
 
@@ -339,36 +338,35 @@ TextStylePreset? textStylePresetById(String id) {
 
 // ─── default-font helpers (text creation only) ───────────────────
 //
-// These power the "new text gets a sensible default font for its
-// script" rule. Never used by the Styles sheet — Styles is purely
-// visual and must not touch font family.
+// These power the "new text ships in the app's Persian face" rule.
+// Never used by the Styles sheet — Styles is purely visual and must
+// not touch font family.
 
-/// Default font family for freshly-typed text, picked by script:
-///   * Arabic / Persian → Vazir (`Vazir_Regular`)
-///   * Latin / fallback → Roboto
+/// Default font family for freshly-typed text: Vazir
+/// (`Vazir_Regular`) — always, regardless of script. This is a
+/// Persian-typography-first product, so a brand-new layer ships in
+/// the app's Persian face; Vazir carries proper Latin glyphs, so
+/// mixed/English content still reads well. After creation the font
+/// is fully under user control via the Font tool — Styles never
+/// overrides it.
 ///
-/// Used by the controller at the moment of text creation so a brand-
-/// new layer ships with a font that actually shapes the user's
-/// content. After creation the font is fully under user control via
-/// the Font tool — Styles never overrides it.
+/// [content] stays in the signature so call sites keep declaring
+/// what the default is *for* — if a per-script default ever returns,
+/// only this body changes.
 String defaultFontFamilyForContent(String content) {
-  // Sanity check the catalog is wired correctly. Falls back to a
+  // Sanity check the catalog is wired correctly. Falls back to the
   // hard-coded family if the entry was renamed.
-  String pick(String preferred) {
-    for (final entry in kFontCatalog) {
-      if (entry.family == preferred) return entry.family;
-    }
-    return preferred;
+  for (final entry in kFontCatalog) {
+    if (entry.family == 'Vazir_Regular') return entry.family;
   }
-
-  return textIsArabicScript(content)
-      ? pick('Vazir_Regular')
-      : pick('Roboto');
+  return 'Vazir_Regular';
 }
 
-/// True when [family] is one of the two auto-defaults the controller
-/// assigns based on script. Used so we only re-pick the font on edit
-/// when the user hasn't explicitly chosen something else.
+/// True when [family] is an auto-default the controller assigned
+/// (never explicitly picked by the user). `Roboto` stays listed for
+/// documents created before the Persian-first default, so editing
+/// one of those re-picks the current default instead of silently
+/// keeping a Latin face the user never chose.
 bool isAutoDefaultFontFamily(String? family) {
   return family == 'Vazir_Regular' || family == 'Roboto';
 }

@@ -224,12 +224,12 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                 cursorColor: tokens.accent,
                 cursorWidth: 2,
                 scrollPadding: const EdgeInsets.all(20),
-                // Direction + alignment + font follow the dominant
-                // script of the current content so the editor mirrors
-                // what the canvas will render: Persian/Arabic → RTL,
-                // right-aligned, Vazir; Latin (and empty) → LTR,
-                // left-aligned, Roboto. Recomputed on every change
-                // so a script flip mid-typing updates live.
+                // Direction + alignment follow the dominant script of
+                // the current content so the editor mirrors what the
+                // canvas will render: Persian/Arabic → RTL,
+                // right-aligned; Latin → LTR, left-aligned. The font
+                // is the app's Persian default (Vazir) for every
+                // script — it carries Latin glyphs too.
                 textDirection: direction,
                 textAlign: direction == TextDirection.rtl
                     ? TextAlign.right
