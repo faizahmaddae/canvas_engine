@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
 import '../../application/document_controller.dart';
@@ -585,8 +586,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
               _gestureStartViewport = null;
               _gestureStartFocal = null;
             },
+            // v2 workspace: warm paper-muted in light, deep ink in
+            // dark — never pure black. The canvas floats on it.
             child: ColoredBox(
-              color: const Color(0xFF111318),
+              color: AppTokens.of(context).surfaceMuted,
               child: ClipRect(
                 // Outer Stack: viewport-transformed canvas board (bottom)
                 // + screen-space chrome (top). Selection handles + HUD live

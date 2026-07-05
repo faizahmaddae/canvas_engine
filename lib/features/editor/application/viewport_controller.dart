@@ -154,32 +154,30 @@ class ViewportController extends Notifier<ViewportState> {
   /// Picks sensible per-axis "fit" padding for [screenSize] using its
   /// shortest side as the form-factor signal.
   ///
-  /// On phones we deliberately collapse the **horizontal** padding to
-  /// zero so the canvas spans the full workspace width — a typical
-  /// portrait phone has plenty of vertical room but pixels to spare are
-  /// rare on the horizontal axis. Vertical padding is retained so the
-  /// canvas never touches the app-bar / floating actions.
+  /// v2 workspace contract: the canvas *floats* on the muted
+  /// workspace with a comfortable margin on every side — its shadow,
+  /// rounded corners and hairline border need room to read as a
+  /// sheet of paper. The old edge-to-edge phone fit is gone with the
+  /// black letterbox it was designed against.
   ///
-  /// Tablets and desktops use symmetric padding for classic editor feel.
-  ///
-  ///   shortestSide ≤ 480  → h=0,  v=8    (compact phones)
-  ///   480 … 720           → h=0…8, v=8…14 (large phones)
-  ///   720 … 1024          → h=8…24, v=14…24 (tablets, lerp → symmetric)
+  ///   shortestSide ≤ 480  → h=16, v=16   (compact phones)
+  ///   480 … 720           → h=16…20, v=16…20 (large phones)
+  ///   720 … 1024          → h=20…28, v=20…28 (tablets)
   ///   shortestSide ≥ 1024 → h=32, v=32   (desktop)
   static ({double horizontal, double vertical}) adaptivePaddingFor(
     Size screenSize,
   ) {
     final shortest = screenSize.shortestSide;
     if (shortest <= 480) {
-      return (horizontal: 0, vertical: 8);
+      return (horizontal: 16, vertical: 16);
     }
     if (shortest <= 720) {
       final t = (shortest - 480) / (720 - 480);
-      return (horizontal: t * 8, vertical: 8 + t * (14 - 8));
+      return (horizontal: 16 + t * (20 - 16), vertical: 16 + t * (20 - 16));
     }
     if (shortest <= 1024) {
       final t = (shortest - 720) / (1024 - 720);
-      return (horizontal: 8 + t * (24 - 8), vertical: 14 + t * (24 - 14));
+      return (horizontal: 20 + t * (28 - 20), vertical: 20 + t * (28 - 20));
     }
     return (horizontal: 32, vertical: 32);
   }

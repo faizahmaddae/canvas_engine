@@ -179,6 +179,7 @@ class EditorScreen extends ConsumerWidget {
                   ),
                   title: const _DocumentTitle(),
                   actions: [
+                    const _UndoRedoActions(),
                     Builder(
                       builder: (ctx) => IconButton(
                         tooltip: l10n.editorExport,
@@ -245,17 +246,6 @@ class EditorScreen extends ConsumerWidget {
           body: Stack(
             children: [
               const EditorCanvas(),
-              // Floating undo/redo rail anchored top-left of the
-              // canvas — keeps the AppBar slim while giving the two
-              // most-used commands a permanent, thumb-reachable home
-              // that mirrors the Done pill's top-right anchor for
-              // visual symmetry. Hidden in Crop Mode.
-              if (!cropActive && !maskEditActive)
-                const Positioned(
-                  top: 8,
-                  left: 8,
-                  child: SafeArea(child: _UndoRedoRail()),
-                ),
               // Always-visible exit pill anchored top-right of the
               // canvas. Shows whenever a tool mode (paint / text) is
               // active so the user has a permanent, discoverable way
@@ -1451,153 +1441,48 @@ class _DocumentTitle extends ConsumerWidget {
 
 enum _OverflowAction { layers, save, fit, newDoc }
 
-/// Floating undo/redo rail anchored top-left of the canvas. Mirrors
-/// the [_ModeExitPill] geometry on the right edge so the canvas
-/// frame reads as a symmetric, glass-on-canvas chrome layer rather
-/// than a stack of unrelated chips.
+/// Undo/redo, promoted into the top bar (v2): the two most-used
+/// commands sit beside Export instead of floating over the canvas,
+/// freeing the workspace for the document itself.
 ///
-/// Each button auto-dims via reduced opacity when its action is
-/// unavailable instead of disappearing — keeps the rail's footprint
+/// Each button disables (theme-dimmed) when its action is
+/// unavailable instead of disappearing — keeps the bar's footprint
 /// stable so muscle memory holds across edit states.
-class _UndoRedoRail extends ConsumerWidget {
-  const _UndoRedoRail();
+class _UndoRedoActions extends ConsumerWidget {
+  const _UndoRedoActions();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Undo/redo button enable state only changes on real commits —
     // never on overlay previews. Subscribe to the commit counter so
-    // a 60-fps slider drag doesn't repaint this rail.
+    // a 60-fps slider drag doesn't repaint these buttons.
     ref.watch(documentCommitVersionProvider);
     final doc = ref.read(documentControllerProvider.notifier);
-    final scheme = Theme.of(context).colorScheme;
 
-    return Container(
-      height: 36,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            scheme.surface.withValues(alpha: 0.96),
-            scheme.surfaceContainerHighest.withValues(alpha: 0.88),
-          ],
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: context.l10n.undoTooltip,
+          onPressed: doc.canUndo
+              ? () {
+                  EditorHaptics.tap();
+                  doc.undo();
+                }
+              : null,
+          icon: const Icon(Icons.undo_rounded),
         ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.6),
-          width: 0.5,
+        IconButton(
+          tooltip: context.l10n.redoTooltip,
+          onPressed: doc.canRedo
+              ? () {
+                  EditorHaptics.tap();
+                  doc.redo();
+                }
+              : null,
+          icon: const Icon(Icons.redo_rounded),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.14),
-            blurRadius: 14,
-            offset: const Offset(0, 3),
-          ),
-          BoxShadow(
-            color: scheme.primary.withValues(alpha: 0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 0),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _RailButton(
-            icon: Icons.undo_rounded,
-            tooltip: context.l10n.undoTooltip,
-            enabled: doc.canUndo,
-            onTap: () {
-              EditorHaptics.tap();
-              doc.undo();
-            },
-            tint: scheme.primary,
-          ),
-          Container(
-            width: 0.5,
-            height: 18,
-            color: scheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-          _RailButton(
-            icon: Icons.redo_rounded,
-            tooltip: context.l10n.redoTooltip,
-            enabled: doc.canRedo,
-            onTap: () {
-              EditorHaptics.tap();
-              doc.redo();
-            },
-            tint: scheme.primary,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RailButton extends StatefulWidget {
-  const _RailButton({
-    required this.icon,
-    required this.tooltip,
-    required this.enabled,
-    required this.onTap,
-    required this.tint,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final bool enabled;
-  final VoidCallback onTap;
-  final Color tint;
-
-  @override
-  State<_RailButton> createState() => _RailButtonState();
-}
-
-class _RailButtonState extends State<_RailButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: widget.tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(22),
-          onTap: widget.enabled ? widget.onTap : null,
-          onHighlightChanged: (v) =>
-              setState(() => _pressed = v && widget.enabled),
-          child: AnimatedScale(
-            scale: _pressed ? 0.88 : 1.0,
-            duration: const Duration(milliseconds: 120),
-            curve: Curves.easeOutCubic,
-            child: SizedBox(
-              width: 44,
-              height: 36,
-              child: ShaderMask(
-                shaderCallback: (bounds) {
-                  if (!widget.enabled) {
-                    final c = scheme.onSurfaceVariant.withValues(alpha: 0.32);
-                    return LinearGradient(colors: [c, c]).createShader(bounds);
-                  }
-                  return LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      widget.tint,
-                      Color.lerp(widget.tint, scheme.tertiary, 0.55) ??
-                          widget.tint,
-                    ],
-                  ).createShader(bounds);
-                },
-                blendMode: BlendMode.srcIn,
-                child: Icon(widget.icon, size: 18),
-              ),
-            ),
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

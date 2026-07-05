@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../engine/core/viewport_state.dart';
 
 /// Editor-style framing for the logical canvas.
@@ -7,7 +8,7 @@ import '../../engine/core/viewport_state.dart';
 /// Renders three pieces of professional chrome around the document:
 ///
 ///   1. A soft drop shadow underneath the canvas, so the document feels
-///      elevated above the dark workbench.
+///      elevated above the calm workspace.
 ///   2. A semi-transparent dim mask covering everything *outside* the
 ///      canvas. Off-canvas portions of layers are still visible (we
 ///      don't clip them) but visually recede so the user instantly
@@ -15,6 +16,13 @@ import '../../engine/core/viewport_state.dart';
 ///   3. A 1-px hairline border around the canvas, so the boundary
 ///      between in-output and out-of-output is unambiguous even on
 ///      empty regions.
+///
+/// v2 identity: every colour comes from the ambient theme
+/// ([AppTokens] + [ColorScheme]) — the workspace is warm paper-muted
+/// in light and deep ink in dark, never pure black — and the canvas
+/// corners are slightly rounded so the document reads as a floating
+/// sheet. The rounding is *chrome only*: layers are never clipped;
+/// the dim mask simply covers the sub-pixel corner nubs.
 ///
 /// All three pieces are painted in *screen space* using the canvas's
 /// projected screen-space rect, so they stay crisp at any zoom and
@@ -31,6 +39,9 @@ class CanvasFraming extends StatelessWidget {
     required this.layer,
     this.borderEmphasis = CanvasBorderEmphasis.standard,
   });
+
+  /// Slight screen-space corner rounding of the floating canvas.
+  static const double cornerRadius = 6;
 
   /// Logical canvas size in document pixels.
   final Size docSize;
@@ -63,13 +74,26 @@ class CanvasFraming extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Positioned.fill(
       child: IgnorePointer(
         child: CustomPaint(
           painter: _CanvasFramingPainter(
             canvasRect: _canvasScreenRect(),
             layer: layer,
-            borderEmphasis: borderEmphasis,
+            // Dimming matches the workspace hue so off-canvas content
+            // recedes into the workspace instead of into a black wash.
+            dimColor: tokens.surfaceMuted.withValues(alpha: 0.78),
+            borderColor: switch (borderEmphasis) {
+              CanvasBorderEmphasis.standard => tokens.border,
+              CanvasBorderEmphasis.subtle =>
+                tokens.border.withValues(alpha: 0.45),
+            },
+            // scheme.shadow is the theme's shadow ink; dark mode needs
+            // a stronger halo to read against the deep-ink workspace.
+            shadowColor: scheme.shadow.withValues(alpha: isDark ? 0.5 : 0.22),
           ),
         ),
       ),
@@ -81,7 +105,7 @@ class CanvasFraming extends StatelessWidget {
 /// both the under-document shadow and the over-document dim+border.
 enum CanvasFramingLayer { shadowBelow, dimAndBorderAbove }
 
-/// How loudly the canvas border reads against the workbench.
+/// How loudly the canvas border reads against the workspace.
 ///
 ///   * [standard] -- the default. Suitable for blank/design canvases
 ///     where the border is the only edge cue.
@@ -95,32 +119,21 @@ class _CanvasFramingPainter extends CustomPainter {
   _CanvasFramingPainter({
     required this.canvasRect,
     required this.layer,
-    required this.borderEmphasis,
+    required this.dimColor,
+    required this.borderColor,
+    required this.shadowColor,
   });
 
   final Rect canvasRect;
   final CanvasFramingLayer layer;
-  final CanvasBorderEmphasis borderEmphasis;
+  final Color dimColor;
+  final Color borderColor;
+  final Color shadowColor;
 
-  /// Subtle dim applied to off-canvas regions. Matches the workbench
-  /// hue so the dimming reads as continuous shadowing rather than a
-  /// translucent black wash.
-  static const Color _dimColor = Color(0x66050608);
-
-  /// Hairline boundary stroke -- standard emphasis. Slightly lighter
-  /// than the workbench so the canvas edge is unmistakable on every
-  /// background.
-  static const Color _borderColorStandard = Color(0x55FFFFFF);
-
-  /// Subtle variant -- about 40% as strong. Keeps the artboard hint
-  /// without competing with content edges (typical of photo projects
-  /// where the base photo already paints to the canvas edge).
-  static const Color _borderColorSubtle = Color(0x22FFFFFF);
-
-  Color get _borderColor => switch (borderEmphasis) {
-    CanvasBorderEmphasis.standard => _borderColorStandard,
-    CanvasBorderEmphasis.subtle => _borderColorSubtle,
-  };
+  RRect get _canvasRRect => RRect.fromRectAndRadius(
+        canvasRect,
+        const Radius.circular(CanvasFraming.cornerRadius),
+      );
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -134,42 +147,48 @@ class _CanvasFramingPainter extends CustomPainter {
   }
 
   void _paintShadow(Canvas canvas) {
-    // Inflated, blurred dark rect — gives the document a soft floating
-    // shadow on the workbench. Painted under the document, so the dark
+    // Inflated, blurred rect — gives the document a soft floating
+    // shadow on the workspace. Painted under the document, so the
     // halo only shows around the canvas edges (the document itself
     // covers the shadow inside).
     final paint = Paint()
-      ..color = const Color(0x80000000)
+      ..color = shadowColor
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
-    canvas.drawRect(canvasRect.translate(0, 4).inflate(2), paint);
+    canvas.drawRRect(
+      _canvasRRect.shift(const Offset(0, 4)).inflate(2),
+      paint,
+    );
   }
 
   void _paintDimMask(Canvas canvas, Size size) {
-    // Even-odd fill: the outer rect minus the canvas rect leaves a
-    // frame shape covering only the off-canvas region. Layers extending
-    // outside the canvas are dimmed by this overlay but remain fully
-    // visible for selection and recovery.
+    // Even-odd fill: the outer rect minus the (rounded) canvas rect
+    // leaves a frame shape covering only the off-canvas region. Layers
+    // extending outside the canvas are dimmed by this overlay but
+    // remain fully visible for selection and recovery.
     final viewport = Offset.zero & size;
     final path = Path()
       ..fillType = PathFillType.evenOdd
       ..addRect(viewport)
-      ..addRect(canvasRect);
-    canvas.drawPath(path, Paint()..color = _dimColor);
+      ..addRRect(_canvasRRect);
+    canvas.drawPath(path, Paint()..color = dimColor);
   }
 
   void _paintBorder(Canvas canvas) {
-    // 1-logical-px stroke aligned to pixel centres for crispness.
+    // 1-logical-px stroke; anti-aliased because the rounded corners
+    // would otherwise stair-step.
     final paint = Paint()
-      ..color = _borderColor
+      ..color = borderColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..isAntiAlias = false;
-    canvas.drawRect(canvasRect, paint);
+      ..isAntiAlias = true;
+    canvas.drawRRect(_canvasRRect, paint);
   }
 
   @override
   bool shouldRepaint(_CanvasFramingPainter old) =>
       old.canvasRect != canvasRect ||
       old.layer != layer ||
-      old.borderEmphasis != borderEmphasis;
+      old.dimColor != dimColor ||
+      old.borderColor != borderColor ||
+      old.shadowColor != shadowColor;
 }

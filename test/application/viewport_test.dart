@@ -113,27 +113,27 @@ void main() {
       expect(c.read(viewportControllerProvider), before);
     });
 
-    test('adaptivePaddingFor collapses horizontal padding on phones', () {
-      // Compact phone — zero horizontal padding so canvas is edge-to-edge;
-      // small vertical padding to clear the app-bar / FAB row.
+    test('adaptivePaddingFor gives every form factor a floating margin', () {
+      // v2 workspace: the canvas floats with a comfortable symmetric
+      // margin on every side — no edge-to-edge fits anywhere.
       final phone =
           ViewportController.adaptivePaddingFor(const Size(360, 800));
-      expect(phone.horizontal, 0);
-      expect(phone.vertical, 8);
+      expect(phone.horizontal, 16);
+      expect(phone.vertical, 16);
 
-      // Large phone — horizontal lerps up from 0, vertical lerps up from 8.
+      // Large phone — both axes lerp up from 16.
       final largePhone =
           ViewportController.adaptivePaddingFor(const Size(600, 900));
-      expect(largePhone.horizontal, greaterThan(0));
-      expect(largePhone.horizontal, lessThan(8));
-      expect(largePhone.vertical, greaterThan(8));
+      expect(largePhone.horizontal, greaterThan(16));
+      expect(largePhone.horizontal, lessThan(20));
+      expect(largePhone.vertical, greaterThan(16));
 
-      // Tablet — symmetric-ish breathing room.
+      // Tablet — symmetric breathing room.
       final tablet =
           ViewportController.adaptivePaddingFor(const Size(820, 1180));
-      expect(tablet.horizontal, greaterThan(8));
-      expect(tablet.horizontal, lessThan(24));
-      expect(tablet.vertical, greaterThan(14));
+      expect(tablet.horizontal, greaterThan(20));
+      expect(tablet.horizontal, lessThan(28));
+      expect(tablet.vertical, tablet.horizontal);
 
       // Desktop — full symmetric margin.
       final desktop =
@@ -142,10 +142,9 @@ void main() {
       expect(desktop.vertical, 32);
     });
 
-    test('fit on phone spans the full viewport width (no side gaps)', () {
-      // 360-wide phone with a 1080x1080 canvas: horizontal padding is
-      // zero, so the full 360 px is available and the canvas fills edge
-      // to edge. Vertical padding should never force side gaps.
+    test('fit on phone leaves the floating margin on both sides', () {
+      // 360-wide phone with a 1080x1080 canvas: 16px padding per side
+      // leaves 328px of workspace width for the canvas.
       final c = ProviderContainer();
       addTearDown(c.dispose);
       c.read(viewportControllerProvider.notifier).fit(
@@ -153,15 +152,15 @@ void main() {
             canvasSize: const Size(1080, 1080),
           );
       final v = c.read(viewportControllerProvider);
-      expect(v.scale, closeTo(360 / 1080, 1e-9));
-      // Square canvas at full width ⇒ rendered width == screen width ⇒
-      // translation.dx must be exactly zero (no side gap).
-      expect(v.translation.dx, closeTo(0, 1e-6));
+      expect(v.scale, closeTo(328 / 1080, 1e-9));
+      // Square canvas at padded width ⇒ side gap is exactly the margin.
+      expect(v.translation.dx, closeTo(16, 1e-6));
     });
 
     test('fit on phone still centres a landscape canvas horizontally', () {
-      // Canvas wider than tall, rendered at screen width ⇒ leftover
-      // height gets split top/bottom; horizontal translation is zero.
+      // Canvas wider than tall, rendered at padded screen width ⇒
+      // leftover height gets split top/bottom; horizontal translation
+      // is the floating margin.
       final c = ProviderContainer();
       addTearDown(c.dispose);
       c.read(viewportControllerProvider.notifier).fit(
@@ -169,12 +168,12 @@ void main() {
             canvasSize: const Size(1920, 1080),
           );
       final v = c.read(viewportControllerProvider);
-      expect(v.scale, closeTo(360 / 1920, 1e-9));
-      expect(v.translation.dx, closeTo(0, 1e-6));
+      expect(v.scale, closeTo(328 / 1920, 1e-9));
+      expect(v.translation.dx, closeTo(16, 1e-6));
       // Vertical centring: (800 - 1080 * scale) / 2.
       expect(
         v.translation.dy,
-        closeTo((800 - 1080 * (360 / 1920)) / 2, 1e-6),
+        closeTo((800 - 1080 * (328 / 1920)) / 2, 1e-6),
       );
     });
 
