@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_spacing.dart';
-import '../../../app/theme/warm_palette.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../l10n/l10n.dart';
 import '../../editor/application/project_recovery_service.dart';
 import '../application/project_store.dart';
@@ -10,10 +10,8 @@ import '../../settings/application/settings_controller.dart';
 import '../../templates/application/template_repository_provider.dart';
 import '../../templates/domain/template.dart';
 import 'home_actions.dart';
-import 'widgets/hero_start_card.dart';
 import 'widgets/home_header.dart';
-import 'widgets/home_style.dart';
-import 'widgets/primary_actions.dart';
+import 'widgets/quick_action_card.dart';
 import 'widgets/recent_projects_section.dart';
 import 'widgets/template_language_filter.dart';
 import 'widgets/templates_section.dart';
@@ -46,8 +44,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _offerDraftResume() async {
     if (_draftOfferShown || !mounted) return;
     _draftOfferShown = true;
-    final draftJson =
-        await ref.read(projectRecoveryServiceProvider).pendingDraftJson();
+    final draftJson = await ref
+        .read(projectRecoveryServiceProvider)
+        .pendingDraftJson();
     if (draftJson == null || !mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     final recovery = ref.read(projectRecoveryServiceProvider);
@@ -98,106 +97,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
 
     return Scaffold(
-      backgroundColor: WarmPalette.of(context).backgroundBottom,
+      backgroundColor: AppTokens.of(context).pageBg,
       body: SafeArea(
         bottom: false,
-        child: HomeBackground(
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              const SliverToBoxAdapter(child: HomeHeader()),
-              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            const SliverToBoxAdapter(child: HomeHeader()),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+            // Create row (redesign doc §3): two equal cards, the
+            // filled ink card is THE primary action.
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsetsDirectional.symmetric(
+                  horizontal: AppSpacing.pageGutter,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: QuickActionCard(
+                        key: const ValueKey('home-create-new'),
+                        label: context.l10n.blankCanvasCta,
+                        icon: Icons.add_rounded,
+                        filled: true,
+                        onTap: actions.createNew,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: QuickActionCard(
+                        key: const ValueKey('home-edit-photo'),
+                        label: context.l10n.editPhotoCta,
+                        icon: Icons.photo_outlined,
+                        onTap: actions.importPhoto,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (hasRecentProjects) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
               SliverToBoxAdapter(
-                child: HeroStartCard(
-                  templates: templates,
+                child: RecentProjectsSection(
+                  onCreate: actions.createNew,
                   onChooseTemplate: () => actions.openTemplates(
                     initialLanguage: _initialBrowseLanguage(effectiveLanguages),
                   ),
+                  onOpen: actions.openProject,
+                  onSeeAll: actions.openRecentAll,
                 ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
-              SliverToBoxAdapter(
-                child: PrimaryActions(
-                  onEditPhoto: actions.importPhoto,
-                  onBlankCanvas: actions.createNew,
-                  onNewProject: actions.createNew,
-                  onTextOnPhoto: () => _openTemplateById(
-                    actions,
-                    templates,
-                    'fa_poetry_overlay_v1',
-                  ),
-                ),
-              ),
-              if (hasRecentProjects) ...[
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: AppSpacing.lg),
-                ),
-                SliverToBoxAdapter(
-                  child: RecentProjectsSection(
-                    onCreate: actions.createNew,
-                    onChooseTemplate: () => actions.openTemplates(
-                      initialLanguage: _initialBrowseLanguage(
-                        effectiveLanguages,
-                      ),
-                    ),
-                    onOpen: actions.openProject,
-                    onSeeAll: actions.openRecentAll,
-                  ),
-                ),
-              ],
-              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
-              SliverToBoxAdapter(
-                child: TemplatesSection(
-                  onOpen: actions.openTemplate,
-                  templates: templates,
-                  contentLanguages: contentLanguages,
-                  enabledCategories: enabledCategories,
-                  languageFilter: _templateLanguageFilter,
-                  filter: TemplateLanguageFilter(
-                    selected: _templateLanguageFilter,
-                    onChanged: (value) =>
-                        setState(() => _templateLanguageFilter = value),
-                  ),
-                ),
-              ),
-              if (showBottomRecent) ...[
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: AppSpacing.lg),
-                ),
-                SliverToBoxAdapter(
-                  child: RecentProjectsSection(
-                    onCreate: actions.createNew,
-                    onChooseTemplate: () => actions.openTemplates(
-                      initialLanguage: _initialBrowseLanguage(
-                        effectiveLanguages,
-                      ),
-                    ),
-                    onOpen: actions.openProject,
-                    onSeeAll: actions.openRecentAll,
-                  ),
-                ),
-              ],
-              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
             ],
-          ),
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+            SliverToBoxAdapter(
+              child: TemplatesSection(
+                onOpen: actions.openTemplate,
+                templates: templates,
+                contentLanguages: contentLanguages,
+                enabledCategories: enabledCategories,
+                languageFilter: _templateLanguageFilter,
+                filter: TemplateLanguageFilter(
+                  selected: _templateLanguageFilter,
+                  onChanged: (value) =>
+                      setState(() => _templateLanguageFilter = value),
+                ),
+              ),
+            ),
+            if (showBottomRecent) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+              SliverToBoxAdapter(
+                child: RecentProjectsSection(
+                  onCreate: actions.createNew,
+                  onChooseTemplate: () => actions.openTemplates(
+                    initialLanguage: _initialBrowseLanguage(effectiveLanguages),
+                  ),
+                  onOpen: actions.openProject,
+                  onSeeAll: actions.openRecentAll,
+                ),
+              ),
+            ],
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
+          ],
         ),
       ),
     );
   }
-}
-
-void _openTemplateById(
-  HomeActions actions,
-  List<Template> templates,
-  String id,
-) {
-  for (final template in templates) {
-    if (template.id == id) {
-      actions.openTemplate(template);
-      return;
-    }
-  }
-  actions.openTemplates(initialCategory: TemplateCategory.poetryPost);
 }
 
 Set<TemplateLanguage> _effectiveLanguages(

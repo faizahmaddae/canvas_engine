@@ -265,11 +265,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeBrandTitle => 'کانواس';
 
   @override
-  String get homeWelcomeTitle => 'امروز چی می‌سازی؟';
+  String get homeWelcomeTitle => 'امروز چه بسازیم؟';
 
   @override
-  String get homeWelcomeSubtitle =>
-      'از قالب آماده شروع کن یا عکس خودت را ویرایش کن.';
+  String get homeWelcomeSubtitle => 'از یک قالب شروع کن یا طرحی تازه بساز.';
 
   @override
   String get homeHeroTitle => 'با قالب آماده شروع کن';
@@ -290,7 +289,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get editPhotoSubtitle => 'یک تصویر باز کنید و ویرایش را شروع کنید';
 
   @override
-  String get blankCanvasCta => 'طرح جدید';
+  String get blankCanvasCta => 'طرحِ جدید';
 
   @override
   String get blankCanvasSubtitle => 'از صفر شروع کن';

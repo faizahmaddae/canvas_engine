@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../app/theme/warm_palette.dart';
+import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/ui/saffron_diamond.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/presentation/settings_screen.dart';
 
-/// Home page brand + welcome header.
+/// Home chrome (home redesign doc §1–2): wordmark «کانواس» + the
+/// saffron-diamond mark at the start, a settings icon in a quiet
+/// paper circle at the end, then the greeting headline + subtitle.
 ///
-/// The top row stays compact so Settings remains easy to reach, while
-/// the larger welcome copy gives Home the same intentional tone as the
-/// onboarding screens.
+/// Calm chrome — paper/ink/saffron only, no gradients or shadows;
+/// the colour on Home comes from the content below.
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = context.l10n;
-    final palette = WarmPalette.of(context);
+    final tokens = AppTokens.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(
         AppSpacing.pageGutter,
@@ -29,91 +31,56 @@ class HomeHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppRadii.button),
-                  gradient: LinearGradient(
-                    begin: AlignmentDirectional.topStart,
-                    end: AlignmentDirectional.bottomEnd,
-                    colors: [palette.accent, palette.rose],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: palette.accent.withValues(alpha: 0.24),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.auto_awesome_mosaic_rounded,
-                  color: Colors.white,
-                  size: 23,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
+              const SaffronDiamond(),
+              const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
                   l10n.homeBrandTitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.start,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: palette.ink,
+                  style: AppTypeScale.title.copyWith(
+                    color: tokens.textPrimary,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 0,
+                    height: 1.2,
                   ),
                 ),
               ),
-              IconButton.filledTonal(
+              IconButton(
                 tooltip: l10n.settingsTooltip,
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const SettingsScreen(),
                   ),
                 ),
-                icon: const Icon(Icons.settings_outlined),
+                icon: const Icon(Icons.settings_outlined, size: 20),
                 style: IconButton.styleFrom(
-                  backgroundColor: palette.surface.withValues(alpha: 0.72),
-                  foregroundColor: palette.muted,
+                  backgroundColor: tokens.surface,
+                  foregroundColor: tokens.textSecondary,
+                  shape: const CircleBorder(),
+                  side: BorderSide(color: tokens.border),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Text(
-              l10n.homeWelcomeTitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.start,
-              style: theme.textTheme.headlineMedium?.copyWith(
-                color: palette.ink,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0,
-                height: 1.12,
-              ),
+          const SizedBox(height: AppSpacing.xl),
+          Text(
+            l10n.homeWelcomeTitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              height: 1.4,
+              color: tokens.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 390),
-            child: Text(
-              l10n.homeWelcomeSubtitle,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.start,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: palette.muted,
-                fontWeight: FontWeight.w600,
-                height: 1.45,
-              ),
-            ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l10n.homeWelcomeSubtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypeScale.caption.copyWith(color: tokens.textSecondary),
           ),
         ],
       ),

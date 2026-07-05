@@ -593,13 +593,13 @@ abstract class AppLocalizations {
   /// No description provided for @homeWelcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'What are you creating today?'**
+  /// **'What shall we make today?'**
   String get homeWelcomeTitle;
 
   /// No description provided for @homeWelcomeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Start with a template or edit your own photo.'**
+  /// **'Start from a template or craft something new.'**
   String get homeWelcomeSubtitle;
 
   /// No description provided for @homeHeroTitle.

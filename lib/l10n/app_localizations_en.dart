@@ -264,11 +264,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeBrandTitle => 'Canvas';
 
   @override
-  String get homeWelcomeTitle => 'What are you creating today?';
+  String get homeWelcomeTitle => 'What shall we make today?';
 
   @override
   String get homeWelcomeSubtitle =>
-      'Start with a template or edit your own photo.';
+      'Start from a template or craft something new.';
 
   @override
   String get homeHeroTitle => 'Start with a template';

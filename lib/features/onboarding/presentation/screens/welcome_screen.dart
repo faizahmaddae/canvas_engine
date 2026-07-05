@@ -4,6 +4,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/ui/app_primary_button.dart';
+import '../../../../app/ui/saffron_diamond.dart';
 import '../../../../app/ui/skip_text_button.dart';
 import '../../../../l10n/l10n.dart';
 
@@ -96,7 +97,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _SaffronDiamond(color: tokens.accent),
+                      const SaffronDiamond(),
                       SkipTextButton(
                         key: const ValueKey('onboarding-welcome-skip'),
                         label: l10n.onboardingSkip,
@@ -178,27 +179,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-/// Small saffron diamond identity mark (design doc: "a small saffron
-/// diamond mark", restrained) — a rotated square, no glyph, no halo.
-class _SaffronDiamond extends StatelessWidget {
-  const _SaffronDiamond({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      // Optical margin so the rotated square's point doesn't kiss
-      // the gutter edge.
-      padding: const EdgeInsets.all(6),
-      child: Transform.rotate(
-        angle: 0.785398, // 45° — square reads as a diamond
-        child: Container(width: 12, height: 12, color: color),
       ),
     );
   }
