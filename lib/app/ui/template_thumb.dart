@@ -9,20 +9,34 @@ import '../theme/app_tokens.dart';
 /// mini live preview, and a label. Reused on Home, Templates browse,
 /// and the welcome screen's showcase.
 ///
-/// Flat by design (design doc §3: "colour blocks do the work, no
+/// Flat by default (design doc §3: "colour blocks do the work, no
 /// decorative shadows") — the vivid category fill is the entire
-/// visual treatment, no elevation.
+/// visual treatment. [boxShadow] is an opt-in escape hatch for the
+/// one surface that floats the cards free of any backing panel (the
+/// welcome hero, where a soft drop shadow reads them as lifted off
+/// the colour block); it defaults to none so every other consumer
+/// stays flat.
 class TemplateThumb extends StatelessWidget {
   const TemplateThumb({
     super.key,
     required this.template,
     this.width = 96,
     this.height = 128,
+    this.borderRadius = AppRadii.button,
+    this.boxShadow,
   });
 
   final Template template;
   final double width;
   final double height;
+
+  /// Card corner radius. Defaults to [AppRadii.button] (12) — design
+  /// doc §3's "thumb: 12". The welcome showcase passes 16.
+  final double borderRadius;
+
+  /// Optional drop shadow for floating (panel-free) placements. Null
+  /// keeps the card flat.
+  final List<BoxShadow>? boxShadow;
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +48,8 @@ class TemplateThumb extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: fill,
-          // Design doc §3 "thumb: 12" coincides with the existing
-          // button radius -- reused directly (see AppRadii doc).
-          borderRadius: BorderRadius.circular(AppRadii.button),
+          borderRadius: BorderRadius.circular(borderRadius),
+          boxShadow: boxShadow,
         ),
         child: Padding(
           padding: const EdgeInsets.all(6),
@@ -46,7 +59,7 @@ class TemplateThumb extends StatelessWidget {
               Expanded(
                 child: TemplatePreview(
                   template: template,
-                  borderRadius: 8,
+                  borderRadius: borderRadius - 4,
                   fit: BoxFit.cover,
                 ),
               ),

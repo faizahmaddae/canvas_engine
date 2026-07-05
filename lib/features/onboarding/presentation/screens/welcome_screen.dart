@@ -16,14 +16,14 @@ import '../../../templates/application/template_repository_provider.dart';
 import '../../../templates/domain/template.dart';
 
 /// First onboarding screen — design-system Direction C (design doc
-/// §5): a colour hero (`brandStrong`, ~55% of the height) showcasing
+/// §5): a colour hero (`brandStrong`, ~56% of the height) showcasing
 /// three real templates, and a rising [AppContentSheet] below with
 /// the pitch + primary CTA.
 ///
 /// Design rationale: this screen should immediately read as
 /// multilingual design software with strong Persian typography
-/// support. The showcase mixes real English and Persian templates;
-/// the copy stays short so the user feels welcomed, not pitched.
+/// support. The showcase is a curated, warm-toned trio so the hero
+/// reads as one designed set, not three unrelated cards.
 ///
 /// Fully token-driven — no `WarmPalette` usage (design doc §6). Goal
 /// and Ready keep `WarmPalette`/`OnboardingPrimaryButton` until each
@@ -76,6 +76,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final tokens = AppTokens.of(context);
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     final templates = _welcomeTemplates(
       ref.watch(
         effectiveTemplatesProvider(
@@ -89,8 +90,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
         final compact = constraints.maxHeight < 650;
         return Column(
           children: [
+            // Colour hero (~56%). Enlarged, fanned cards fill it so
+            // there's no dead violet band above the sheet.
             Expanded(
-              flex: 55,
+              flex: 56,
               child: ColoredBox(
                 color: tokens.brandStrong,
                 child: SafeArea(
@@ -133,52 +136,56 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                 ),
               ),
             ),
+            // Rising sheet (~44%). Title + tagline pinned to the top,
+            // CTA pinned to the bottom (padding = safe-area + 20), the
+            // slack between them absorbed by a Spacer — no white void
+            // under the button.
             Expanded(
-              flex: 45,
+              flex: 44,
               child: AppContentSheet(
-                child: SafeArea(
-                  top: false,
-                  child: SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        FadeTransition(
-                          opacity: _entryOpacity,
-                          child: SlideTransition(
-                            position: _entryOffset,
-                            child: Column(
-                              children: [
-                                Text(
-                                  l10n.onboardingWelcomeTitle,
-                                  textAlign: TextAlign.center,
-                                  style: AppTypeScale.titleLg.copyWith(
-                                    color: tokens.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                Text(
-                                  l10n.onboardingWelcomeTagline,
-                                  textAlign: TextAlign.center,
-                                  style: AppTypeScale.body.copyWith(
-                                    color: tokens.textSecondary,
-                                  ),
-                                ),
-                              ],
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  compact ? AppSpacing.lg : AppSpacing.xl,
+                  AppSpacing.xl,
+                  bottomInset + 20,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FadeTransition(
+                      opacity: _entryOpacity,
+                      child: SlideTransition(
+                        position: _entryOffset,
+                        child: Column(
+                          children: [
+                            Text(
+                              l10n.onboardingWelcomeTitle,
+                              textAlign: TextAlign.center,
+                              style: AppTypeScale.titleLg.copyWith(
+                                color: tokens.textPrimary,
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              l10n.onboardingWelcomeTagline,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypeScale.body.copyWith(
+                                color: tokens.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
-                        SizedBox(
-                          height: compact ? AppSpacing.lg : AppSpacing.xl,
-                        ),
-                        AppPrimaryButton(
-                          key: const ValueKey('onboarding-get-started'),
-                          label: l10n.onboardingGetStarted,
-                          onPressed: widget.onGetStarted,
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    const Spacer(),
+                    AppPrimaryButton(
+                      key: const ValueKey('onboarding-get-started'),
+                      label: l10n.onboardingGetStarted,
+                      onPressed: widget.onGetStarted,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -189,51 +196,109 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   }
 }
 
-/// Three real templates fanned with slight alternating rotation for
-/// energy (design doc §5). Purely a welcome-screen composition —
-/// [TemplateThumb] itself stays a plain, unrotated card so it's
-/// reusable elsewhere (Home, Templates browse) without carrying this
-/// screen's specific arrangement.
+/// Three real templates fanned like a hand of cards for energy
+/// (design doc §5): side cards tilted ±8° and dropped slightly, the
+/// centre card upright, raised, and drawn in front. The cards float
+/// directly on the hero — no backing panel — each lifted by a soft
+/// drop shadow.
+///
+/// Purely a welcome-screen composition; [TemplateThumb] itself stays
+/// a plain flat card so it's reusable elsewhere (Home, Templates
+/// browse) without carrying this arrangement or its shadows.
 class _ThumbShowcase extends StatelessWidget {
   const _ThumbShowcase({required this.templates, required this.compact});
 
   final List<Template> templates;
   final bool compact;
 
-  static const _rotationDegrees = 6;
+  static const _sideShadow = [
+    BoxShadow(
+      color: Color(0x33000000), // black @ 0.20
+      blurRadius: 26,
+      offset: Offset(0, 10),
+    ),
+  ];
+  static const _centerShadow = [
+    BoxShadow(
+      color: Color(0x3D000000), // black @ 0.24
+      blurRadius: 32,
+      offset: Offset(0, 14),
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final width = compact ? 84.0 : 100.0;
-    final height = compact ? 112.0 : 134.0;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        for (final (index, template) in templates.indexed)
-          Padding(
-            padding: EdgeInsetsDirectional.only(
-              start: index == 0 ? 0 : AppSpacing.sm,
-            ),
-            child: Transform.rotate(
-              angle: (index.isEven ? -1 : 1) * _rotationDegrees * math.pi / 180,
+    // Degrade gracefully if the curated ids ever go missing (e.g. a
+    // locale with a trimmed catalog): just row whatever we have.
+    if (templates.length < 3) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final t in templates)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
               child: TemplateThumb(
-                template: template,
-                width: width,
-                height: height,
+                template: t,
+                width: 100,
+                height: 138,
+                borderRadius: 16,
+                boxShadow: _sideShadow,
               ),
             ),
+        ],
+      );
+    }
+
+    Widget card(
+      Template template, {
+      required double left,
+      required double top,
+      required double angleDeg,
+      required bool centre,
+    }) {
+      return Positioned(
+        left: left,
+        top: top,
+        child: Transform.rotate(
+          angle: angleDeg * math.pi / 180,
+          child: TemplateThumb(
+            template: template,
+            width: centre ? 112 : 106,
+            height: centre ? 152 : 146,
+            borderRadius: 16,
+            boxShadow: centre ? _centerShadow : _sideShadow,
           ),
-      ],
+        ),
+      );
+    }
+
+    return Transform.scale(
+      scale: compact ? 0.86 : 1.0,
+      child: SizedBox(
+        width: 250,
+        height: 196,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            card(templates[0], left: 6, top: 30, angleDeg: -8, centre: false),
+            card(templates[2], left: 138, top: 30, angleDeg: 8, centre: false),
+            // Centre last → painted in front of both side cards.
+            card(templates[1], left: 69, top: 8, angleDeg: 0, centre: true),
+          ],
+        ),
+      ),
     );
   }
 }
 
 List<Template> _welcomeTemplates(List<Template> source) {
+  // A cohesive warm-toned trio (cream card on a warm gradient), so the
+  // hero reads as one designed set. Centre id is the amber centrepiece.
   const ids = [
-    'fa_insta_story_v1',
-    'en_quote_editorial_gradient',
-    'fa_promo_v1',
+    'fa_story_warm_pastel', // peach/pink — left
+    'fa_story_cafe_mood', // warm amber — centre (front)
+    'fa_story_fashion_drop', // warm maroon — right
   ];
   return [
     for (final id in ids)

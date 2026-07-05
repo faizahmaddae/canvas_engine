@@ -27,9 +27,9 @@ void main() {
   }
 
   final fakeTemplates = [
-    fakeTemplate('fa_insta_story_v1', TemplateCategory.instagramStory),
-    fakeTemplate('en_quote_editorial_gradient', TemplateCategory.quote),
-    fakeTemplate('fa_promo_v1', TemplateCategory.promotionalPoster),
+    fakeTemplate('fa_story_warm_pastel', TemplateCategory.story),
+    fakeTemplate('fa_story_cafe_mood', TemplateCategory.instagramStory),
+    fakeTemplate('fa_story_fashion_drop', TemplateCategory.instagramStory),
   ];
 
   Widget host({
