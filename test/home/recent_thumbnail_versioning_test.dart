@@ -10,7 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../support/temp_projects_dir.dart';
 
-
 /// Recent project thumbnails must reflect the actual EditorDocument
 /// — including canvas background colour. Older PNGs were captured
 /// with an opaque white backdrop; the Recent grid now treats those
@@ -38,15 +37,12 @@ Project _projectWithDoc({
   );
 }
 
-Future<void> _pumpRecent(
-  WidgetTester tester,
-  Project project,
-) async {
+Future<void> _pumpRecent(WidgetTester tester, Project project) async {
   SharedPreferences.setMockInitialValues({});
   final dir = tempProjectsDir();
-  final container = ProviderContainer(overrides: [
-    projectsDirectoryProvider.overrideWith((ref) async => dir),
-  ]);
+  final container = ProviderContainer(
+    overrides: [projectsDirectoryProvider.overrideWith((ref) async => dir)],
+  );
   addTearDown(container.dispose);
   // Real file IO — run outside the fake-async zone.
   await tester.runAsync(() async {
@@ -60,10 +56,7 @@ Future<void> _pumpRecent(
       child: MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
-            child: RecentProjectsGrid(
-              onCreate: () {},
-              onOpen: (_) {},
-            ),
+            child: RecentProjectsGrid(onCreate: () {}, onOpen: (_) {}),
           ),
         ),
       ),
@@ -101,29 +94,28 @@ void main() {
     },
   );
 
-  testWidgets(
-    'project with no thumbnail still renders via DocumentThumbnail',
-    (tester) async {
-      const teal = Color(0xFF008080);
-      final doc = EditorDocument(
-        width: 200,
-        height: 300,
-        layers: const [],
-        backgroundColor: teal,
-      );
-      final p = _projectWithDoc(id: 'fresh-teal', doc: doc);
-      await _pumpRecent(tester, p);
+  testWidgets('project with no thumbnail still renders via DocumentThumbnail', (
+    tester,
+  ) async {
+    const teal = Color(0xFF008080);
+    final doc = EditorDocument(
+      width: 200,
+      height: 300,
+      layers: const [],
+      backgroundColor: teal,
+    );
+    final p = _projectWithDoc(id: 'fresh-teal', doc: doc);
+    await _pumpRecent(tester, p);
 
-      expect(find.byType(DocumentThumbnail), findsOneWidget);
-      final box = tester.widget<ColoredBox>(
-        find.descendant(
-          of: find.byType(DocumentThumbnail),
-          matching: find.byType(ColoredBox),
-        ),
-      );
-      expect(box.color, teal);
-    },
-  );
+    expect(find.byType(DocumentThumbnail), findsOneWidget);
+    final box = tester.widget<ColoredBox>(
+      find.descendant(
+        of: find.byType(DocumentThumbnail),
+        matching: find.byType(ColoredBox),
+      ),
+    );
+    expect(box.color, teal);
+  });
 
   test('Project.toJson/fromJson round-trips thumbnailVersion', () {
     final p = Project(
@@ -140,8 +132,7 @@ void main() {
     expect(back.thumbnailVersion, Project.currentThumbnailVersion);
   });
 
-  test('legacy JSON without thumbnailVersion decodes as 0 (stale)',
-      () {
+  test('legacy JSON without thumbnailVersion decodes as 0 (stale)', () {
     final json = <String, Object?>{
       'id': 'legacy',
       'name': 'Legacy',

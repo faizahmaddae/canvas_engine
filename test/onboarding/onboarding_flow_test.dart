@@ -29,7 +29,7 @@ void main() {
     () {
       const screenPaths = [
         'lib/features/home/presentation/home_screen.dart',
-        'lib/features/home/presentation/widgets/templates_section.dart',
+        'lib/features/home/presentation/widgets/suggested_templates_rail.dart',
         'lib/features/templates/presentation/templates_browse_screen.dart',
         'lib/features/onboarding/presentation/screens/welcome_screen.dart',
         'lib/features/onboarding/presentation/screens/goal_screen.dart',

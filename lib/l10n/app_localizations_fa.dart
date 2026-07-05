@@ -307,6 +307,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeTextOnPhotoSubtitle => 'با یک چیدمان متنی آماده شروع کن';
 
   @override
+  String get homeSuggestedTitle => 'پیشنهادی';
+
+  @override
   String get homeRecentNewTile => 'جدید';
 
   @override

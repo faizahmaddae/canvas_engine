@@ -307,6 +307,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeTextOnPhotoSubtitle => 'Start with a designed type layout';
 
   @override
+  String get homeSuggestedTitle => 'Suggested';
+
+  @override
   String get homeRecentNewTile => 'New';
 
   @override

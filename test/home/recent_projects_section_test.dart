@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../support/temp_projects_dir.dart';
 
-
 import 'package:canvas_engine/features/home/application/project_store.dart';
 import 'package:canvas_engine/features/home/domain/project.dart';
 import 'package:canvas_engine/features/home/presentation/widgets/recent_projects_grid.dart';
@@ -34,9 +33,9 @@ Future<void> _pumpHome(
 }) async {
   SharedPreferences.setMockInitialValues({});
   final dir = tempProjectsDir();
-  final container = ProviderContainer(overrides: [
-    projectsDirectoryProvider.overrideWith((ref) async => dir),
-  ]);
+  final container = ProviderContainer(
+    overrides: [projectsDirectoryProvider.overrideWith((ref) async => dir)],
+  );
   addTearDown(container.dispose);
   // Hydrate the store BEFORE first frame so the section renders the
   // grid (not the skeleton) on first pump. Real file IO — must run
@@ -54,10 +53,7 @@ Future<void> _pumpHome(
       child: MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
-            child: RecentProjectsGrid(
-              onCreate: () {},
-              onOpen: (_) {},
-            ),
+            child: RecentProjectsGrid(onCreate: () {}, onOpen: (_) {}),
           ),
         ),
       ),
@@ -73,9 +69,7 @@ void main() {
   ) async {
     await _pumpHome(
       tester,
-      projects: [
-        _seed(id: 'p1', name: 'Birthday card', w: 1080, h: 1080),
-      ],
+      projects: [_seed(id: 'p1', name: 'Birthday card', w: 1080, h: 1080)],
     );
 
     expect(find.text('Birthday card'), findsOneWidget);
@@ -92,14 +86,10 @@ void main() {
     );
   });
 
-  testWidgets('non-integer dimensions render with one decimal', (
-    tester,
-  ) async {
+  testWidgets('non-integer dimensions render with one decimal', (tester) async {
     await _pumpHome(
       tester,
-      projects: [
-        _seed(id: 'p1', name: 'Imported', w: 1234.5, h: 800),
-      ],
+      projects: [_seed(id: 'p1', name: 'Imported', w: 1234.5, h: 800)],
     );
     expect(find.textContaining('1234.5 \u00D7 800'), findsOneWidget);
   });
@@ -108,23 +98,18 @@ void main() {
     var created = 0;
     SharedPreferences.setMockInitialValues({});
     final dir = tempProjectsDir();
-    final container = ProviderContainer(overrides: [
-      projectsDirectoryProvider.overrideWith((ref) async => dir),
-    ]);
-    addTearDown(container.dispose);
-    await tester.runAsync(
-      () => container.read(projectStoreProvider.future),
+    final container = ProviderContainer(
+      overrides: [projectsDirectoryProvider.overrideWith((ref) async => dir)],
     );
+    addTearDown(container.dispose);
+    await tester.runAsync(() => container.read(projectStoreProvider.future));
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
           home: Scaffold(
-            body: RecentProjectsGrid(
-              onCreate: () => created++,
-              onOpen: (_) {},
-            ),
+            body: RecentProjectsGrid(onCreate: () => created++, onOpen: (_) {}),
           ),
         ),
       ),

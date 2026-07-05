@@ -457,9 +457,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
     );
     if (ok ?? false) {
       final name = widget.project.name;
-      await ref
-          .read(projectDeleteServiceProvider)
-          .delete(widget.project.id);
+      await ref.read(projectDeleteServiceProvider).delete(widget.project.id);
       messenger.showSnackBar(
         SnackBar(
           content: Text(l10n.deletedProject(name)),

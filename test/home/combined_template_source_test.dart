@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/home/presentation/home_screen.dart';
-import 'package:canvas_engine/features/home/presentation/widgets/templates_section.dart';
+import 'package:canvas_engine/features/home/presentation/widgets/suggested_templates_rail.dart';
 import 'package:canvas_engine/features/templates/application/template_repository_provider.dart';
 import 'package:canvas_engine/features/templates/data/asset_template_repository.dart';
 import 'package:canvas_engine/features/templates/data/combined_template_repository.dart';
@@ -70,7 +70,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
-      expect(find.text('Templates'), findsOneWidget);
+      expect(find.text('Suggested'), findsOneWidget);
       expect(
         find.byKey(
           const ValueKey('home-template-fa_story_fashion_drop'),
@@ -239,7 +239,11 @@ Future<void> _pumpHomeSection(
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SingleChildScrollView(
-          child: TemplatesSection(onOpen: (_) {}, templates: templates),
+          child: SuggestedTemplatesRail(
+            onOpen: (_) {},
+            onSeeAll: () {},
+            templates: templates,
+          ),
         ),
       ),
     ),

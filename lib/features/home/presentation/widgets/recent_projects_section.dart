@@ -103,14 +103,16 @@ class RecentProjectsSection extends ConsumerWidget {
             itemCount: shown.length + 1,
             separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
             itemBuilder: (context, index) {
-              if (index == shown.length) {
+              // «جدید» leads the rail (navigation doc): first item =
+              // the start edge, which RTL puts on the right.
+              if (index == 0) {
                 return NewProjectTile(
                   key: const ValueKey('home-recent-new-tile'),
                   label: l10n.homeRecentNewTile,
                   onTap: onCreate,
                 );
               }
-              final project = shown[index];
+              final project = shown[index - 1];
               return ProjectThumb(
                 key: ValueKey('home-recent-${project.id}'),
                 project: project,

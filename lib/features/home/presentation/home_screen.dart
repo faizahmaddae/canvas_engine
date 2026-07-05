@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/navigation/nav_shell.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../l10n/l10n.dart';
@@ -12,8 +13,7 @@ import 'home_actions.dart';
 import 'widgets/home_header.dart';
 import 'widgets/quick_action_card.dart';
 import 'widgets/recent_projects_section.dart';
-import 'widgets/template_language_filter.dart';
-import 'widgets/templates_section.dart';
+import 'widgets/suggested_templates_rail.dart';
 
 /// Home root content. Composed of small, independently-tested widgets
 /// and routes every editor-launching action through [HomeActions] so
@@ -26,9 +26,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  HomeTemplateLanguageFilter _templateLanguageFilter =
-      HomeTemplateLanguageFilter.all;
-
   /// One draft-recovery offer per Home mount — re-showing the banner
   /// on every rebuild would nag; a declined offer stays declined
   /// until the next cold start.
@@ -134,23 +131,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: RecentProjectsSection(
                   onCreate: actions.createNew,
                   onOpen: actions.openProject,
-                  onSeeAll: actions.openRecentAll,
+                  // Launcher rails jump to their tab instead of
+                  // pushing duplicate routes (navigation doc).
+                  onSeeAll: () =>
+                      ref.read(navShellIndexProvider.notifier).select(2),
                 ),
               ),
             ],
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
             SliverToBoxAdapter(
-              child: TemplatesSection(
+              child: SuggestedTemplatesRail(
                 onOpen: actions.openTemplate,
+                onSeeAll: () =>
+                    ref.read(navShellIndexProvider.notifier).select(1),
                 templates: templates,
                 contentLanguages: contentLanguages,
                 enabledCategories: enabledCategories,
-                languageFilter: _templateLanguageFilter,
-                filter: TemplateLanguageFilter(
-                  selected: _templateLanguageFilter,
-                  onChanged: (value) =>
-                      setState(() => _templateLanguageFilter = value),
-                ),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),

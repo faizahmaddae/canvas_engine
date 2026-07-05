@@ -26,9 +26,9 @@ void main() {
 
   Future<ProjectContainer> container({Directory? dir}) async {
     final d = dir ?? tempProjectsDir();
-    final c = ProviderContainer(overrides: [
-      projectsDirectoryProvider.overrideWith((ref) async => d),
-    ]);
+    final c = ProviderContainer(
+      overrides: [projectsDirectoryProvider.overrideWith((ref) async => d)],
+    );
     addTearDown(c.dispose);
     // Wait for AsyncNotifier.build() to resolve.
     await c.read(projectStoreProvider.future);
@@ -73,8 +73,7 @@ void main() {
 
   test('rename updates name + bumps lastModified', () async {
     final c = await container();
-    final original =
-        _make('id', 'before', when: DateTime.utc(2025, 1, 1));
+    final original = _make('id', 'before', when: DateTime.utc(2025, 1, 1));
     await c.notifier.upsert(original);
     await c.notifier.rename('id', 'after');
     final updated = c.list.firstWhere((p) => p.id == 'id');
@@ -82,15 +81,17 @@ void main() {
     expect(updated.lastModified.isAfter(original.lastModified), isTrue);
   });
 
-  test('persists across container instances via the shared directory',
-      () async {
-    final sharedDir = tempProjectsDir();
-    final c1 = await container(dir: sharedDir);
-    await c1.notifier.upsert(_make('persist', 'PP'));
+  test(
+    'persists across container instances via the shared directory',
+    () async {
+      final sharedDir = tempProjectsDir();
+      final c1 = await container(dir: sharedDir);
+      await c1.notifier.upsert(_make('persist', 'PP'));
 
-    final c2 = await container(dir: sharedDir);
-    expect(c2.list.map((p) => p.id), contains('persist'));
-  });
+      final c2 = await container(dir: sharedDir);
+      expect(c2.list.map((p) => p.id), contains('persist'));
+    },
+  );
 
   // ─── file-store specifics ────────────────────────────────────────
 
@@ -100,49 +101,62 @@ void main() {
     await c.notifier.upsert(_make('a', 'A'));
     await c.notifier.upsert(_make('b', 'B'));
 
-    final names = dir
-        .listSync()
-        .map((e) => e.path.split(Platform.pathSeparator).last)
-        .toList()
-      ..sort();
+    final names =
+        dir
+            .listSync()
+            .map((e) => e.path.split(Platform.pathSeparator).last)
+            .toList()
+          ..sort();
     expect(names, ['a.json', 'b.json']);
   });
 
-  test('a corrupt file is quarantined; the rest of the library survives',
-      () async {
-    final dir = tempProjectsDir();
-    File('${dir.path}${Platform.pathSeparator}good.json').writeAsStringSync(
-      jsonEncode(_make('good', 'Good').toJson()),
-    );
-    File('${dir.path}${Platform.pathSeparator}bad.json')
-        .writeAsStringSync('{not json');
+  test(
+    'a corrupt file is quarantined; the rest of the library survives',
+    () async {
+      final dir = tempProjectsDir();
+      File(
+        '${dir.path}${Platform.pathSeparator}good.json',
+      ).writeAsStringSync(jsonEncode(_make('good', 'Good').toJson()));
+      File(
+        '${dir.path}${Platform.pathSeparator}bad.json',
+      ).writeAsStringSync('{not json');
 
-    final c = await container(dir: dir);
-    expect(c.list.map((p) => p.id), ['good'],
-        reason: 'one corrupt byte must cost one project, not the library');
-    final names = dir
-        .listSync()
-        .map((e) => e.path.split(Platform.pathSeparator).last)
-        .toList();
-    expect(names.where((n) => n.startsWith('bad.json.corrupt')), hasLength(1),
-        reason: 'corrupt bytes are quarantined for recovery, not deleted');
-  });
+      final c = await container(dir: dir);
+      expect(
+        c.list.map((p) => p.id),
+        ['good'],
+        reason: 'one corrupt byte must cost one project, not the library',
+      );
+      final names = dir
+          .listSync()
+          .map((e) => e.path.split(Platform.pathSeparator).last)
+          .toList();
+      expect(
+        names.where((n) => n.startsWith('bad.json.corrupt')),
+        hasLength(1),
+        reason: 'corrupt bytes are quarantined for recovery, not deleted',
+      );
+    },
+  );
 
   test('delete removes the project file from disk', () async {
     final dir = tempProjectsDir();
     final c = await container(dir: dir);
     await c.notifier.upsert(_make('x', 'X'));
-    expect(File('${dir.path}${Platform.pathSeparator}x.json').existsSync(),
-        isTrue);
+    expect(
+      File('${dir.path}${Platform.pathSeparator}x.json').existsSync(),
+      isTrue,
+    );
     await c.notifier.delete('x');
-    expect(File('${dir.path}${Platform.pathSeparator}x.json').existsSync(),
-        isFalse);
+    expect(
+      File('${dir.path}${Platform.pathSeparator}x.json').existsSync(),
+      isFalse,
+    );
   });
 
   // ─── legacy prefs migration ──────────────────────────────────────
 
-  test('migrates the legacy prefs blob to files and removes the key',
-      () async {
+  test('migrates the legacy prefs blob to files and removes the key', () async {
     final legacy = [
       _make('m1', 'One', when: DateTime.utc(2025, 3, 1)).toJson(),
       _make('m2', 'Two', when: DateTime.utc(2025, 4, 1)).toJson(),
@@ -155,31 +169,38 @@ void main() {
     expect(c.list.map((p) => p.id), ['m2', 'm1']);
 
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('home.projects.v1'), isNull,
-        reason: 'key removed only after every file verifiably reads back');
+    expect(
+      prefs.getString('home.projects.v1'),
+      isNull,
+      reason: 'key removed only after every file verifiably reads back',
+    );
   });
 
-  test('unreadable legacy blob is kept for forensics, store starts empty',
-      () async {
-    SharedPreferences.setMockInitialValues({
-      'home.projects.v1': '{definitely not a list',
-    });
-    final c = await container();
-    expect(c.list, isEmpty);
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('home.projects.v1'), isNotNull,
-        reason: 'never destroy bytes we could not migrate');
-  });
+  test(
+    'unreadable legacy blob is kept for forensics, store starts empty',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'home.projects.v1': '{definitely not a list',
+      });
+      final c = await container();
+      expect(c.list, isEmpty);
+      final prefs = await SharedPreferences.getInstance();
+      expect(
+        prefs.getString('home.projects.v1'),
+        isNotNull,
+        reason: 'never destroy bytes we could not migrate',
+      );
+    },
+  );
 
   test('existing files win over the legacy blob on migration', () async {
     final dir = tempProjectsDir();
     // File version is newer authority than the blob's copy of m1.
-    File('${dir.path}${Platform.pathSeparator}m1.json').writeAsStringSync(
-      jsonEncode(_make('m1', 'File wins').toJson()),
-    );
+    File(
+      '${dir.path}${Platform.pathSeparator}m1.json',
+    ).writeAsStringSync(jsonEncode(_make('m1', 'File wins').toJson()));
     SharedPreferences.setMockInitialValues({
-      'home.projects.v1':
-          jsonEncode([_make('m1', 'Blob loses').toJson()]),
+      'home.projects.v1': jsonEncode([_make('m1', 'Blob loses').toJson()]),
     });
 
     final c = await container(dir: dir);
@@ -257,8 +278,7 @@ void main() {
     expect(round.lastModified, modified);
   });
 
-  test('legacy Project JSON without createdAt falls back to lastModified',
-      () {
+  test('legacy Project JSON without createdAt falls back to lastModified', () {
     final modified = DateTime.utc(2025, 1, 2);
     // Simulates a record persisted by an older app version that
     // didn't write `createdAt`.
@@ -271,12 +291,14 @@ void main() {
       'documentJson': '{}',
     };
     final loaded = Project.fromJson(legacy);
-    expect(loaded.createdAt, modified,
-        reason: 'fallback keeps the record sortable + non-null');
+    expect(
+      loaded.createdAt,
+      modified,
+      reason: 'fallback keeps the record sortable + non-null',
+    );
   });
 
-  test('duplicate stamps a fresh createdAt independent of source',
-      () async {
+  test('duplicate stamps a fresh createdAt independent of source', () async {
     final c = await container();
     await c.notifier.upsert(
       Project(

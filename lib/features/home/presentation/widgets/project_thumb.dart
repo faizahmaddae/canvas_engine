@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,17 +6,20 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../app/ui/saffron_diamond.dart';
 import '../../domain/project.dart';
 
-/// One recent-work thumbnail on Home's horizontal rail (home
-/// redesign doc §4). Quiet chrome: hairline-bordered surface card,
-/// radius 12, the project's PNG thumbnail as the colour, the name in
-/// a small caption beneath.
+/// One recent-work thumbnail on Home's horizontal rail. Quiet
+/// chrome: hairline-bordered surface card, radius 12, the project's
+/// PNG thumbnail as the colour, the name in a small caption beneath.
 ///
-/// Falls back to a plain surface card with the project name centred
-/// when no usable thumbnail exists (no path, stale version, deleted
-/// file) — the rail is a teaser, not a renderer, so it never decodes
-/// the document just for a preview.
+/// Navigation-doc fix: a still-empty project (no layers yet) must
+/// never read as a blank white card — its saved PNG *is* blank, so
+/// rendering it looks broken. Empty projects get the subtle
+/// mark+label placeholder instead, as do projects with no usable
+/// thumbnail (no path, stale version, deleted file). The rail is a
+/// teaser, not a renderer — it never decodes the document for a
+/// preview.
 class ProjectThumb extends StatelessWidget {
   const ProjectThumb({
     super.key,
@@ -34,9 +38,25 @@ class ProjectThumb extends StatelessWidget {
       project.thumbnailPath != null &&
       project.thumbnailVersion >= Project.currentThumbnailVersion;
 
+  /// True when the saved document has no layers — its thumbnail
+  /// would be a featureless canvas-colour rectangle. Decoding the
+  /// stored JSON envelope is cheap at rail counts (≤8) and only the
+  /// top-level `layers` list is inspected.
+  bool get _isEmptyDesign {
+    try {
+      final doc = jsonDecode(project.documentJson);
+      if (doc is! Map<String, dynamic>) return false;
+      final layers = doc['layers'];
+      return layers is List && layers.isEmpty;
+    } on FormatException {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
+    final showPreview = _hasFreshThumbnail && !_isEmptyDesign;
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
@@ -53,14 +73,14 @@ class ProjectThumb extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadii.button),
                 border: Border.all(color: tokens.border),
               ),
-              child: _hasFreshThumbnail
+              child: showPreview
                   ? Image.file(
                       File(project.thumbnailPath!),
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) =>
-                          _NamePlaceholder(name: project.name),
+                          _EmptyDesignPlaceholder(name: project.name),
                     )
-                  : _NamePlaceholder(name: project.name),
+                  : _EmptyDesignPlaceholder(name: project.name),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
@@ -76,8 +96,11 @@ class ProjectThumb extends StatelessWidget {
   }
 }
 
-class _NamePlaceholder extends StatelessWidget {
-  const _NamePlaceholder({required this.name});
+/// Subtle mark+label placeholder for projects with nothing to
+/// preview: the saffron diamond over the project name on
+/// surfaceMuted — reads as "yours, not started" rather than broken.
+class _EmptyDesignPlaceholder extends StatelessWidget {
+  const _EmptyDesignPlaceholder({required this.name});
 
   final String name;
 
@@ -87,12 +110,19 @@ class _NamePlaceholder extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Text(
-          name,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: AppTypeScale.caption.copyWith(color: tokens.textMuted),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SaffronDiamond(size: 10),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTypeScale.caption.copyWith(color: tokens.textMuted),
+            ),
+          ],
         ),
       ),
     );

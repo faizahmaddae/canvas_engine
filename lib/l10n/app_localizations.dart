@@ -674,6 +674,12 @@ abstract class AppLocalizations {
   /// **'Start with a designed type layout'**
   String get homeTextOnPhotoSubtitle;
 
+  /// No description provided for @homeSuggestedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get homeSuggestedTitle;
+
   /// No description provided for @homeRecentNewTile.
   ///
   /// In en, this message translates to:

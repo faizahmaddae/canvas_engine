@@ -132,19 +132,30 @@ void main() {
         // Distinct timestamps so the newest-first cap is
         // deterministic: p0 newest … p8 oldest (the one cut).
         for (var i = 0; i < 9; i++)
-          seed(id: 'p$i', name: 'P $i', ago: Duration(minutes: i + 1)),
+          seed(
+            id: 'p$i',
+            name: 'P $i',
+            ago: Duration(minutes: i + 1),
+          ),
       ],
     );
 
     expect(find.byKey(const ValueKey('home-recent-see-all')), findsOneWidget);
-    // 8 shown (previewLimit) + the new tile; the 9th project is cut.
-    // The rail is a lazy horizontal list, so drag it to the end
-    // before asserting on the tail.
+    // «جدید» leads the rail (navigation doc), then the 8 newest;
+    // the 9th project is cut. The rail is a lazy horizontal list,
+    // so drag to the end before asserting on the tail.
+    final tileX = tester
+        .getTopLeft(find.byKey(const ValueKey('home-recent-new-tile')))
+        .dx;
+    final firstProjectX = tester
+        .getTopLeft(find.byKey(const ValueKey('home-recent-p0')))
+        .dx;
+    expect(tileX, lessThan(firstProjectX), reason: 'tile leads in LTR');
+
     await tester.drag(find.byType(ListView), const Offset(-900, 0));
     await tester.pump();
     expect(find.byKey(const ValueKey('home-recent-p7')), findsOneWidget);
     expect(find.byKey(const ValueKey('home-recent-p8')), findsNothing);
-    expect(find.byKey(const ValueKey('home-recent-new-tile')), findsOneWidget);
   });
 
   testWidgets('dark mode renders without throwing', (tester) async {
