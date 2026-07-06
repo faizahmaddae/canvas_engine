@@ -34,6 +34,10 @@ Future<String?> showTextInputFlowSheet(
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
+    // Very light — typing is the one flow where a whisper of dim is
+    // acceptable (focus moves to the composer), but the default 54%
+    // barrier hid the live preview on the canvas behind the sheet.
+    barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.2),
     builder: (_) => _TextInputFlowSheet(
       initial: initial,
       title: title ?? context.l10n.addTextTitle,

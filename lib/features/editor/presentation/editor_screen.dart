@@ -64,7 +64,6 @@ import '../text/presentation/add_text_composer_state.dart';
 import '../text/presentation/text_input_flow_sheet.dart';
 import '../text/presentation/text_mode_toolbar.dart';
 import '../toolbar/presentation/mode_done_button.dart';
-import '../ui/editor_scrim.dart';
 import 'widgets/editor_canvas.dart';
 import 'widgets/editor_tool_dock.dart';
 import '../toolbar/domain/toolbar_slot.dart';
@@ -131,9 +130,8 @@ class EditorScreen extends ConsumerWidget {
     final maskEditActive = ref.watch(
       maskEditControllerProvider.select((s) => s.active),
     );
-    // One resolution drives BOTH the dock (bar + expanded panel) and
-    // the canvas scrim, so "a panel is open" can never disagree
-    // between the two.
+    // Single resolution of the dock's mode/expanded panel, shared by
+    // the bottomNavigationBar builder below.
     final dock = _resolveDock(ref, selection);
 
     return _AutosaveLifecycleScope(
@@ -250,23 +248,12 @@ class EditorScreen extends ConsumerWidget {
           endDrawer: const LayersPanel(),
           body: Stack(
             children: [
+              // NO scrim over the canvas while control panels are
+              // open — this is an editor: the user must see the live
+              // effect of colour/size/font changes. The panel's own
+              // elevation (rounded top + upward shadow + hairline)
+              // is what separates it from the canvas.
               const EditorCanvas(),
-              // Scrim between canvas and floating chrome: whenever an
-              // in-dock panel is open the canvas dims, matching the
-              // modal sheets' barrier — every panel now separates
-              // from the canvas the same way. IgnorePointer keeps
-              // canvas taps live (tap-on-canvas still dismisses).
-              if (!cropActive && !maskEditActive)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 240),
-                      curve: Curves.easeOutCubic,
-                      opacity: dock.expanded != null ? 1.0 : 0.0,
-                      child: ColoredBox(color: editorScrimColor(context)),
-                    ),
-                  ),
-                ),
               // Always-visible exit pill anchored top-right of the
               // canvas. Shows whenever a tool mode (paint / text) is
               // active so the user has a permanent, discoverable way

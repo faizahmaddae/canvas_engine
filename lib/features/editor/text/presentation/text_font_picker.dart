@@ -55,10 +55,10 @@ Future<_FontPickResult> _showFontPickerSheet(
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    // The one canonical editor scrim — same dim the in-dock panels
-    // apply to the canvas, so every panel/sheet separates the same
-    // way (this sheet used to barely dim at 6% black).
-    barrierColor: editorScrimColor(context),
+    // Near-transparent barrier ON PURPOSE: this is a control panel —
+    // the user must keep seeing the live font change on the canvas
+    // behind the sheet. The sheet's own elevation separates it.
+    barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.06),
     builder: (sheetCtx) {
       final tokens = AppTokens.of(sheetCtx);
       final media = MediaQuery.of(sheetCtx);
