@@ -31,7 +31,7 @@ import '../../toolbar/presentation/sub_tool_sheet.dart';
 import '../application/text_tool_controller.dart';
 import '../domain/font_catalog.dart';
 import 'text_bodies.dart';
-import 'text_floating_toolbar.dart' show showTextMoreSheet;
+import '../../presentation/panels/text/more_sheet.dart' show showTextMoreSheet;
 
 
 /// Bottom dock for text mode — Canva-style.

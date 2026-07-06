@@ -1,8 +1,10 @@
+// The text More sheet — reached from the one text bar's «بیشتر»
+// tile (the floating pill was removed in text-tool redesign step 1;
+// these tests moved from text_floating_toolbar_test.dart).
 import 'package:canvas_engine/features/editor/application/context_toolbar_controller.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
-import 'package:canvas_engine/features/editor/engine/core/viewport_state.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
-import 'package:canvas_engine/features/editor/text/presentation/text_floating_toolbar.dart';
+import 'package:canvas_engine/features/editor/presentation/panels/text/more_sheet.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,44 +19,6 @@ void main() {
       home: Scaffold(body: child),
     ),
   );
-
-  testWidgets('selected text floating toolbar exposes Edit text directly', (
-    tester,
-  ) async {
-    const layer = TextLayer(
-      id: 'text-1',
-      transform: LayerTransform(
-        position: Offset(100, 100),
-        size: Size(160, 80),
-      ),
-      content: 'Hello',
-      style: TextStyleSpec(fontSize: 24),
-    );
-
-    await tester.pumpWidget(
-      wrap(
-        const SizedBox.expand(
-          child: Stack(
-            children: [
-              TextFloatingToolbar(
-                layer: layer,
-                viewport: ViewportState.identity,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.byIcon(Icons.edit_rounded), findsOneWidget);
-    expect(
-      find.byWidgetPredicate(
-        (w) => w is Semantics && w.properties.label == 'Edit text',
-      ),
-      findsOneWidget,
-    );
-  });
 
   testWidgets('text More sheet exposes direction mode control', (tester) async {
     const layer = TextLayer(

@@ -42,9 +42,8 @@ import '../../shape/application/shape_tool_controller.dart';
 import '../../paint/presentation/paint_floating_toolbar.dart';
 import '../../paint/presentation/paint_gesture_surface.dart';
 import '../../shape/presentation/shape_floating_toolbar.dart';
-import '../../text/application/text_tool_controller.dart';
+import '../../text/presentation/text_edit_flow.dart';
 import '../../text/presentation/add_text_composer_state.dart';
-import '../../text/presentation/text_floating_toolbar.dart';
 import 'animated_guides_layer.dart';
 import 'canvas_framing.dart';
 import 'mask_edit_overlay.dart';
@@ -517,14 +516,21 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
               _handleLongPress(d.globalPosition, doc.layers);
             },
             onDoubleTapDown: (d) {
-              // Double-tap is reserved for future non-text editable
-              // affordances. Text editing is initiated exclusively from
-              // the floating toolbar's edit pill so users never have to
-              // discover two ways to do the same thing.
+              // Double-tap IS the on-canvas edit affordance for text
+              // (text-tool redesign step 1): the floating pill that
+              // used to own "edit" is gone, so double-tapping a text
+              // layer selects it and opens the keyboard editor.
+              // Emoji stickers stay excluded — they're TextLayers but
+              // have no editable text flow.
               final local = _toCanvas(d.globalPosition);
               final hit = _hitTest(doc.layers, local);
               if (hit == null || !hit.capabilities.editable) return;
-              if (hit is TextLayer) return;
+              if (hit is TextLayer) {
+                if (hit.isSticker) return;
+                ref.read(selectionControllerProvider.notifier).select(hit.id);
+                unawaited(showEditTextLayerFlow(context, ref, hit));
+                return;
+              }
               ref.read(selectionControllerProvider.notifier).select(hit.id);
               ref.read(editingControllerProvider.notifier).start(hit.id);
             },
@@ -778,24 +784,13 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                           !addTextComposerOpen &&
                           !maskEditActive)
                         _buildHud(doc.layers, selection, viewport),
-                      // Floating contextual text toolbar — appears next to
-                      // the selected text layer with the high-frequency
-                      // controls (color / size / bold). Mounted in the
-                      // screen-space chrome so it stays a constant size at
-                      // any zoom and never reflows the canvas.
-                      if (selection.count == 1 &&
-                          !addTextComposerOpen &&
-                          !maskEditActive)
-                        _buildTextFloatingToolbar(
-                          doc.layers,
-                          selection,
-                          viewport,
-                        ),
-                      // Floating contextual paint toolbar — symmetric with
-                      // the text toolbar above. Appears next to a selected
-                      // paint layer with stroke color, size, and resize
-                      // behavior toggle. Mutually exclusive with the text
-                      // toolbar (each builder type-checks its layer kind).
+                      // The floating text toolbar is GONE (text-tool
+                      // redesign step 1): the one bottom text bar owns
+                      // every control it carried, and double-tap on the
+                      // text layer opens the editor.
+                      // Floating contextual paint toolbar. Appears next to
+                      // a selected paint layer with stroke color, size, and
+                      // resize behavior toggle (type-checks its layer kind).
                       if (selection.count == 1 &&
                           !addTextComposerOpen &&
                           !maskEditActive)
@@ -1258,59 +1253,6 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           viewport: viewport,
           activeHandle: handle,
         );
-      },
-    );
-  }
-
-  /// Floating contextual toolbar for the selected text layer. Hidden
-  /// while the layer is being inline-edited (the keyboard owns the
-  /// screen) or while a transform gesture is in flight (we don't want
-  /// the bar to chase the layer mid-drag).
-  Widget _buildTextFloatingToolbar(
-    List<EditorLayer> layers,
-    SelectionState selection,
-    ViewportState viewport,
-  ) {
-    EditorLayer? layer;
-    for (final l in layers) {
-      if (l.id == selection.selectedId) {
-        layer = l;
-        break;
-      }
-    }
-    if (layer is! TextLayer) return const SizedBox.shrink();
-    // Emoji stickers are stored as TextLayer but do NOT surface the
-    // text-specific quick controls (Aa / size / bold). They get the
-    // generic quick-actions pill instead, plus the dedicated
-    // Sticker sub-tools in the bottom dock. Without this guard
-    // both the text floating toolbar AND the quick-actions pill
-    // would render simultaneously, stacking two bars on screen.
-    if (layer.isSticker) return const SizedBox.shrink();
-    final textLayer = layer;
-    return Consumer(
-      builder: (context, ref, _) {
-        final isEditing = ref.watch(
-          editingControllerProvider.select((id) => id == textLayer.id),
-        );
-        if (isEditing) return const SizedBox.shrink();
-        final inSession = ref.watch(
-          interactionControllerProvider.select(
-            (s) => s.session?.layerId == textLayer.id,
-          ),
-        );
-        if (inSession) return const SizedBox.shrink();
-        // Hide while any bottom-dock sub-tool sheet is open — the
-        // sheet is the source of truth for that property and the
-        // floating bar would only stack on top of the sheet handle
-        // on small phones.
-        final sheetOpen = ref.watch(
-          textToolControllerProvider.select((s) => s.openSheet != null),
-        );
-        final contextPanelOpen = ref.watch(
-          contextToolbarControllerProvider.select((panel) => panel != null),
-        );
-        if (sheetOpen || contextPanelOpen) return const SizedBox.shrink();
-        return TextFloatingToolbar(layer: textLayer, viewport: viewport);
       },
     );
   }

@@ -156,11 +156,15 @@ void main() {
     await pumpEditor(tester, container);
 
     expectMinimalAppBar();
+    // The floating pill (which carried the 'Edit text' button) is
+    // gone — text editing enters via double-tap on the layer
+    // (covered by text_double_tap_edit_test.dart). No pill chrome
+    // should render over the canvas.
     expect(
       find.byWidgetPredicate(
         (w) => w is Semantics && w.properties.label == 'Edit text',
       ),
-      findsOneWidget,
+      findsNothing,
     );
   });
 
