@@ -4,31 +4,6 @@
 // imports there, never here.
 part of 'text_mode_toolbar.dart';
 
-/// Label style shared by every migrated flat-row slider in the
-/// Background/Border/Shadow precision disclosures — larger and
-/// bolder than [EditorSliderRow]'s shape/image default, so the
-/// text-panel row keeps its existing look after unifying onto the
-/// shared primitive.
-TextStyle? _flatSliderLabelStyle(BuildContext context) {
-  final theme = Theme.of(context);
-  return theme.textTheme.bodyMedium?.copyWith(
-    color: AppTokens.of(context).textPrimary,
-    fontWeight: FontWeight.w600,
-    fontSize: 13,
-  );
-}
-
-/// Readout style shared by the same rows — tabular figures keep the
-/// digits from jittering width while dragging.
-TextStyle? _flatSliderReadoutStyle(BuildContext context) {
-  final theme = Theme.of(context);
-  return theme.textTheme.labelMedium?.copyWith(
-    color: AppTokens.of(context).textSecondary,
-    fontWeight: FontWeight.w600,
-    fontFeatures: const [FontFeature.tabularFigures()],
-  );
-}
-
 /// "Adjust precisely" disclosure for the Background panel. Same
 /// flat header treatment as `_SizePrecisionAdvanced` and the
 /// Layout cards: whole row is tappable, single chevron, no nested
@@ -41,14 +16,14 @@ class _BackgroundPrecisionAdvanced extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final bg = style.backgroundColor;
-    final labelStyle = _flatSliderLabelStyle(context);
-    final readoutStyle = _flatSliderReadoutStyle(context);
+    final labelStyle = flatSliderLabelStyle(context);
+    final readoutStyle = flatSliderReadoutStyle(context);
     return PrecisionDisclosure(
       titleClosed: context.l10n.adjustPrecisely,
       titleOpen: context.l10n.hidePreciseControls,
       chevronSize: 18,
       children: [
-        const _PrecisionDivider(),
+        const PrecisionDivider(),
         EditorSliderRow(
           label: context.l10n.roundnessLabel,
           labelWidth: 96,
@@ -122,14 +97,14 @@ class _BorderPrecisionAdvanced extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final outline = style.outlineColor;
-    final labelStyle = _flatSliderLabelStyle(context);
-    final readoutStyle = _flatSliderReadoutStyle(context);
+    final labelStyle = flatSliderLabelStyle(context);
+    final readoutStyle = flatSliderReadoutStyle(context);
     return PrecisionDisclosure(
       titleClosed: context.l10n.adjustPrecisely,
       titleOpen: context.l10n.hidePreciseControls,
       chevronSize: 18,
       children: [
-        const _PrecisionDivider(),
+        const PrecisionDivider(),
         EditorSliderRow(
           label: context.l10n.thicknessLabel,
           labelWidth: 96,
@@ -174,14 +149,14 @@ class _ShadowPrecisionAdvanced extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final shadow = style.shadowColor;
-    final labelStyle = _flatSliderLabelStyle(context);
-    final readoutStyle = _flatSliderReadoutStyle(context);
+    final labelStyle = flatSliderLabelStyle(context);
+    final readoutStyle = flatSliderReadoutStyle(context);
     return PrecisionDisclosure(
       titleClosed: context.l10n.adjustPrecisely,
       titleOpen: context.l10n.hidePreciseControls,
       chevronSize: 18,
       children: [
-        const _PrecisionDivider(),
+        const PrecisionDivider(),
         EditorSliderRow(
           label: context.l10n.blurLabel,
           labelWidth: 96,

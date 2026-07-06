@@ -147,7 +147,7 @@ class _TextBodies {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _PanelSectionLabel(context.l10n.shapeLabel),
+        PanelSectionLabel(context.l10n.shapeLabel),
         _StyleTileRow(
           tiles: [
             _StyleTile(
@@ -255,7 +255,7 @@ class _TextBodies {
         // label so the STYLE header is not pinned to the sheet edge,
         // especially when the Adjust-precisely disclosure is open.
         const SizedBox(height: 6),
-        _PanelSectionLabel(context.l10n.styleLabel),
+        PanelSectionLabel(context.l10n.styleLabel),
         _StyleTileRow(
           tiles: [
             _StyleTile(
@@ -360,7 +360,7 @@ class _TextBodies {
       children: [
         // Match Background/Border breathing room above first label.
         const SizedBox(height: 6),
-        _PanelSectionLabel(context.l10n.styleLabel),
+        PanelSectionLabel(context.l10n.styleLabel),
         _StyleTileRow(
           tiles: [
             _StyleTile(
@@ -421,7 +421,7 @@ class _TextBodies {
             },
           ),
           const SizedBox(height: 10),
-          _PanelSectionLabel(context.l10n.directionLabel),
+          PanelSectionLabel(context.l10n.directionLabel),
           // Constrain width so the pad reads as a secondary control,
           // not a hero element. Centred to keep the panel balanced.
           Align(
@@ -485,7 +485,7 @@ class _TextBodies {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 6),
-        _PanelSectionLabel(context.l10n.behaviorLabel),
+        PanelSectionLabel(context.l10n.behaviorLabel),
         _ResizeOptionTile(
           icon: Icons.zoom_out_map_rounded,
           title: context.l10n.scaleTextTitle,
@@ -512,30 +512,6 @@ class _TextBodies {
   }
 }
 
-/// Small section label used by panels that group multiple
-/// affordances (Background → Shape / Color / …). Same visual weight
-/// as the old `_AdvancedGroupHeader` so the eye treats them as
-/// peer-level dividers, not nested headers.
-class _PanelSectionLabel extends StatelessWidget {
-  const _PanelSectionLabel(this.label);
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 4, 6),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0,
-          color: AppTokens.of(context).textSecondary,
-        ),
-      ),
-    );
-  }
-}
 
 /// Curated 8-swatch palette shared by Color / Background / Border /
 /// Shadow sub-tools. Hand-picked so a normal user lands on a

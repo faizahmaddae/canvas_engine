@@ -89,14 +89,14 @@ class _SizeBody extends ConsumerWidget {
         // presets — both self-explanatory). The disclosure below
         // gives precise access without a header.
         const SizedBox(height: 6),
-        _SizeStepperRow(
+        SizeStepperRow(
           value: style.fontSize,
           min: _absoluteMinFontSize,
           max: _absoluteMaxFontSize,
           onChange: ctrl.setFontSize,
         ),
         const SizedBox(height: 12),
-        _WordChipRow(
+        WordChipRow(
           options: presets,
           current: style.fontSize,
           selectedLabel: selectedLabel,
@@ -174,7 +174,7 @@ class _SizePrecisionAdvanced extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const _PrecisionDivider(),
+              const PrecisionDivider(),
               const SizedBox(height: 8),
               // px presets reuse the Layout chip so the two
               // panels share one visual vocabulary.
@@ -183,7 +183,7 @@ class _SizePrecisionAdvanced extends ConsumerWidget {
                 runSpacing: 6,
                 children: [
                   for (final p in _pxPresets)
-                    _LayoutPresetChip(
+                    LayoutPresetChip(
                       label: _format(p),
                       selected: (p - clampedValue).abs() < 0.001,
                       onTap: () => onChange(p.clamp(min, max).toDouble()),
@@ -218,176 +218,3 @@ class _SizePrecisionAdvanced extends ConsumerWidget {
   }
 }
 
-/// "A−" / "A+" double-button stepper used in the Size sub-tool. Each
-/// tap nudges the live font size by a perceptual step so the user
-/// gets visible change without having to drag a slider. Long-press
-/// repeats. The buttons round-trip through the controller so undo
-/// coalescing and box auto-fit behaviour stay identical to the
-/// slider path.
-class _SizeStepperRow extends StatelessWidget {
-  const _SizeStepperRow({
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChange,
-  });
-
-  final double value;
-  final double min;
-  final double max;
-  final ValueChanged<double> onChange;
-
-  /// Perceptual step: ~10% of the current value (rounded), with a
-  /// floor so very small sizes still nudge by at least 1 px.
-  double get _step {
-    final s = (value * 0.1).roundToDouble();
-    return s < 1 ? 1 : s;
-  }
-
-  void _bump(int dir) {
-    final next = (value + dir * _step).clamp(min, max).toDouble();
-    if ((next - value).abs() < 0.01) return;
-    EditorHaptics.tap();
-    onChange(next);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = AppTokens.of(context);
-    Widget btn({required IconData icon, required VoidCallback onTap}) {
-      return Material(
-        color: tokens.accent.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: SizedBox(
-            width: 56,
-            height: 44,
-            child: Center(child: Icon(icon, size: 22, color: tokens.accent)),
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      children: [
-        btn(icon: Icons.text_decrease_rounded, onTap: () => _bump(-1)),
-        // Live value pill in the middle — same vocabulary as the
-        // Layout panel's value pill so the two panels feel like
-        // one family. Tabular figures so 12 → 24 → 120 doesn't
-        // shift the centred layout.
-        Expanded(
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: tokens.surfaceMuted.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                '${value.round()} px',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: tokens.textPrimary,
-                  fontWeight: FontWeight.w700,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
-          ),
-        ),
-        btn(icon: Icons.text_increase_rounded, onTap: () => _bump(1)),
-      ],
-    );
-  }
-}
-
-/// Word-preset chip row (e.g. Tight / Normal / Wide) — replaces a
-/// numeric slider with a 1-tap human-readable choice. Each preset
-/// commits via the caller-supplied write function.
-///
-/// Selection is **nearest-match**, not range/threshold based:
-/// exactly one chip — the one whose value is closest to [current]
-/// — is highlighted at all times. This guarantees a single
-/// selected chip even when canvas-aware preset values collapse
-/// onto the same clamped value, and it gives the user a clear
-/// "this is the closest named size" anchor while they nudge with
-/// the stepper or slider.
-class _WordChipRow extends StatelessWidget {
-  const _WordChipRow({
-    required this.options,
-    required this.current,
-    required this.onPick,
-    this.selectedLabel,
-    this.tolerance,
-  });
-
-  final List<({String label, double value})> options;
-  final double current;
-  final ValueChanged<double> onPick;
-
-  /// Explicit selection override. When non-null and matches one of
-  /// the option labels, exactly that chip is highlighted regardless
-  /// of [current]. Used for sticky preset selection (e.g. "user
-  /// just tapped M") that must not flip to a different chip when
-  /// canvas-aware clamping makes preset values numerically close.
-  final String? selectedLabel;
-
-  /// Optional max distance from [current] to the nearest preset for
-  /// the nearest fallback to count as "selected". When null, the
-  /// nearest chip is always highlighted (legacy line-height /
-  /// letter-spacing behaviour).
-  final double? tolerance;
-
-  @override
-  Widget build(BuildContext context) {
-    final selectedIndex = _selectedIndex();
-    // Same chip vocabulary as the Layout panel (compact pill, no
-    // hero shadow). Lets Size and Layout read as one family — and
-    // the row sheds ~10dp of vertical weight vs the old
-    // `PresetChip`.
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.zero,
-        itemCount: options.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (_, i) {
-          final o = options[i];
-          return _LayoutPresetChip(
-            label: o.label,
-            selected: i == selectedIndex,
-            onTap: () => onPick(o.value),
-          );
-        },
-      ),
-    );
-  }
-
-  /// Resolves which chip index (if any) is selected. Explicit
-  /// [selectedLabel] wins; otherwise falls back to nearest-by-value
-  /// — gated by [tolerance] when provided so manual edits that
-  /// land far from any preset clear the selection entirely.
-  int _selectedIndex() {
-    if (selectedLabel != null) {
-      for (var i = 0; i < options.length; i++) {
-        if (options[i].label == selectedLabel) return i;
-      }
-    }
-    if (options.isEmpty) return -1;
-    var bestIndex = 0;
-    var bestDelta = (current - options.first.value).abs();
-    for (var i = 1; i < options.length; i++) {
-      final delta = (current - options[i].value).abs();
-      if (delta < bestDelta) {
-        bestDelta = delta;
-        bestIndex = i;
-      }
-    }
-    if (tolerance != null && bestDelta > tolerance!) return -1;
-    return bestIndex;
-  }
-}
