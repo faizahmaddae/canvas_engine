@@ -79,6 +79,7 @@ class EditorToolPanelShell extends StatelessWidget {
     super.key,
     required this.title,
     required this.icon,
+    this.headerValue,
     required this.onClose,
     required this.child,
     this.onUndo,
@@ -98,6 +99,10 @@ class EditorToolPanelShell extends StatelessWidget {
 
   final String title;
   final IconData icon;
+
+  /// Optional live value chip for the header (see
+  /// [DockSheetChrome.headerValue]).
+  final String? headerValue;
 
   /// Called when the user dismisses the panel (drag-handle tap,
   /// swipe-down on the handle, or the header ✕ when shown).
@@ -183,6 +188,7 @@ class EditorToolPanelShell extends StatelessWidget {
     return DockSheetChrome(
       title: title,
       icon: icon,
+      headerValue: headerValue,
       maxHeightFraction: maxHeightFraction,
       maxHeightDp: maxHeightDp,
       onClose: onClose,

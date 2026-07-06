@@ -382,9 +382,32 @@ class TextModeSheetPanel extends ConsumerWidget {
     // tools use — surface elevation, Done pill, sibling-swipe.
     // Body widget is unchanged; only the surrounding chrome is
     // unified.
+    // Unified header grammar: panels with ONE canonical live value
+    // surface it as a small chip at the header's end. Watching the
+    // layer via the dispatch rebuild keeps the chip live while the
+    // user drags a slider below.
+    final style = layer.style;
+    final headerValue = switch (sheetId) {
+      'size' => '${style.fontSize.round()}px',
+      'border' =>
+        style.outlineColor == null
+            ? context.l10n.offOption
+            : '${style.outlineWidth.round()}px',
+      'background' =>
+        style.backgroundColor == null
+            ? context.l10n.offOption
+            : '${(style.backgroundColor!.a * 100).round()}%',
+      'behavior' =>
+        layer.resizeMode == TextResizeMode.scaleText
+            ? context.l10n.scaleTextTitle
+            : context.l10n.reflowBoxTitle,
+      _ => null,
+    };
+
     final subTool = WidgetSubTool(
       headerTitle: _localizedToolLabel(context.l10n, spec),
       headerIcon: spec.icon,
+      headerValue: headerValue,
       builder: (ctx, _) => spec.bodyBuilder!(ctx, ref, layer),
     );
 

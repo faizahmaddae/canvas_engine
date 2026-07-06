@@ -20,6 +20,11 @@ abstract class SubTool {
   /// Icon rendered in the sheet header.
   IconData get headerIcon;
 
+  /// Optional live value rendered as a small chip at the header's
+  /// end (e.g. "24px" on Size, "80%" on Background). Null hides the
+  /// chip — most panels have no single canonical readout.
+  String? get headerValue => null;
+
   /// Maximum height of the body as a fraction of screen height.
   /// Defaults to the unified [kEditorPanelMaxHeightFraction] so
   /// every panel — Text, Paint, Image, Shape, Sticker, Canvas —

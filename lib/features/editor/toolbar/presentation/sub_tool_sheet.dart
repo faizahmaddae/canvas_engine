@@ -72,6 +72,7 @@ class SubToolSheet extends ConsumerWidget {
     return EditorToolPanelShell(
       title: subTool.headerTitle,
       icon: subTool.headerIcon,
+      headerValue: subTool.headerValue,
       maxHeightFraction: subTool.maxHeightFraction,
       onClose: onClose,
       onUndo: onUndo,

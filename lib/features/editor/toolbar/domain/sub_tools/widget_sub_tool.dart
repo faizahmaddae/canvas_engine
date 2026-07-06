@@ -15,6 +15,7 @@ class WidgetSubTool extends SubTool {
   const WidgetSubTool({
     required this.headerTitle,
     required this.headerIcon,
+    this.headerValue,
     required this.builder,
     bool supportsSiblingSwipe = true,
   }) : _supportsSiblingSwipe = supportsSiblingSwipe;
@@ -23,6 +24,8 @@ class WidgetSubTool extends SubTool {
   final String headerTitle;
   @override
   final IconData headerIcon;
+  @override
+  final String? headerValue;
 
   // Backing field for the [SubTool.supportsSiblingSwipe] override.
   // Kept private + getter override so this never *shadows* the

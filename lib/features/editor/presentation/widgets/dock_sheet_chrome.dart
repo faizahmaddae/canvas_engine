@@ -49,6 +49,7 @@ class DockSheetChrome extends StatefulWidget {
     super.key,
     required this.title,
     required this.icon,
+    this.headerValue,
     required this.child,
     required this.onClose,
     this.onUndo,
@@ -65,6 +66,11 @@ class DockSheetChrome extends StatefulWidget {
 
   final String title;
   final IconData icon;
+
+  /// Optional live value chip rendered after the title (e.g.
+  /// "24px" / "80%"). Part of the unified panel-header grammar:
+  /// title at the start, value + action chips at the end.
+  final String? headerValue;
   final Widget child;
   final VoidCallback onClose;
 
@@ -264,6 +270,10 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
                         ),
                       ),
                     ),
+                    if (widget.headerValue != null) ...[
+                      _HeaderValueChip(value: widget.headerValue!),
+                      const SizedBox(width: 8),
+                    ],
                     if (widget.onUndo != null)
                       _UndoChip(onUndo: widget.onUndo!),
                     if (widget.headerAction != null) ...[
@@ -443,6 +453,35 @@ class _ConfirmChip extends StatelessWidget {
               letterSpacing: 0,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small live-value chip in the sheet header — the unified panel
+/// grammar's end-of-header readout ("24px", "80%", "Off"). Same
+/// visual vocabulary as the LayoutSliderCard value pill so header
+/// and body readouts read as one family. Non-interactive.
+class _HeaderValueChip extends StatelessWidget {
+  const _HeaderValueChip({required this.value});
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: tokens.surfaceMuted.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        value,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: tokens.textSecondary,
+          fontWeight: FontWeight.w700,
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
     );
