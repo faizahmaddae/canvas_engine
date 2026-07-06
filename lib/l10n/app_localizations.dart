@@ -2228,6 +2228,102 @@ abstract class AppLocalizations {
   /// **'Opacity'**
   String get opacityLabel;
 
+  /// No description provided for @stylePresetClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get stylePresetClassic;
+
+  /// No description provided for @stylePresetQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote'**
+  String get stylePresetQuote;
+
+  /// No description provided for @stylePresetHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight'**
+  String get stylePresetHighlight;
+
+  /// No description provided for @stylePresetShadowSoft.
+  ///
+  /// In en, this message translates to:
+  /// **'Shadow'**
+  String get stylePresetShadowSoft;
+
+  /// No description provided for @stylePresetContrast.
+  ///
+  /// In en, this message translates to:
+  /// **'Contrast'**
+  String get stylePresetContrast;
+
+  /// No description provided for @stylePresetGlass.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass'**
+  String get stylePresetGlass;
+
+  /// No description provided for @stylePresetCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Caption'**
+  String get stylePresetCaption;
+
+  /// No description provided for @stylePresetSubtitleBand.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle'**
+  String get stylePresetSubtitleBand;
+
+  /// No description provided for @stylePresetCta.
+  ///
+  /// In en, this message translates to:
+  /// **'CTA'**
+  String get stylePresetCta;
+
+  /// No description provided for @stylePresetBadgeRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Badge'**
+  String get stylePresetBadgeRed;
+
+  /// No description provided for @stylePresetHashtag.
+  ///
+  /// In en, this message translates to:
+  /// **'Hashtag'**
+  String get stylePresetHashtag;
+
+  /// No description provided for @stylePresetOutline.
+  ///
+  /// In en, this message translates to:
+  /// **'Outline'**
+  String get stylePresetOutline;
+
+  /// No description provided for @stylePresetNeon.
+  ///
+  /// In en, this message translates to:
+  /// **'Neon'**
+  String get stylePresetNeon;
+
+  /// No description provided for @stylePresetPoster.
+  ///
+  /// In en, this message translates to:
+  /// **'Poster'**
+  String get stylePresetPoster;
+
+  /// No description provided for @stylePresetSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker'**
+  String get stylePresetSticker;
+
+  /// No description provided for @stylePresetPop3d.
+  ///
+  /// In en, this message translates to:
+  /// **'Pop'**
+  String get stylePresetPop3d;
+
   /// No description provided for @effectStrokeLabel.
   ///
   /// In en, this message translates to:

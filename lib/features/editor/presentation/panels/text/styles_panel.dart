@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/utils/haptics.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../../application/recent_colors_controller.dart';
@@ -304,6 +305,32 @@ class _ShadowEffectSection extends ConsumerWidget {
   }
 }
 
+
+/// Localized display name for a style preset. Keys off the stable
+/// preset id (never the hardcoded English `name`, which stays as the
+/// domain fallback for ids added without an l10n case).
+String textStylePresetLabel(AppLocalizations l10n, TextStylePreset p) {
+  return switch (p.id) {
+    'classic' => l10n.stylePresetClassic,
+    'quote' => l10n.stylePresetQuote,
+    'highlight' => l10n.stylePresetHighlight,
+    'shadow_soft' => l10n.stylePresetShadowSoft,
+    'contrast' => l10n.stylePresetContrast,
+    'glass' => l10n.stylePresetGlass,
+    'caption' => l10n.stylePresetCaption,
+    'subtitle_band' => l10n.stylePresetSubtitleBand,
+    'cta' => l10n.stylePresetCta,
+    'badge_red' => l10n.stylePresetBadgeRed,
+    'hashtag' => l10n.stylePresetHashtag,
+    'outline' => l10n.stylePresetOutline,
+    'neon' => l10n.stylePresetNeon,
+    'poster' => l10n.stylePresetPoster,
+    'sticker' => l10n.stylePresetSticker,
+    'pop_3d' => l10n.stylePresetPop3d,
+    _ => p.name,
+  };
+}
+
 /// Horizontal scroll list of [_StyleChip]s. Chips are 86dp tall
 /// (preview tile + name + breathing room) and the row reserves a
 /// uniform 16dp leading inset so the first chip never looks
@@ -347,7 +374,7 @@ class _StylesRow extends StatelessWidget {
               height: 40,
               child: _StylePreviewTile(spec: p.spec),
             ),
-            label: p.name,
+            label: textStylePresetLabel(context.l10n, p),
             selected: p.id == activeId,
             width: 76,
             onTap: () {

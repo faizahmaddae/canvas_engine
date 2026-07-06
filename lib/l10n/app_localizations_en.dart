@@ -1141,6 +1141,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opacityLabel => 'Opacity';
 
   @override
+  String get stylePresetClassic => 'Classic';
+
+  @override
+  String get stylePresetQuote => 'Quote';
+
+  @override
+  String get stylePresetHighlight => 'Highlight';
+
+  @override
+  String get stylePresetShadowSoft => 'Shadow';
+
+  @override
+  String get stylePresetContrast => 'Contrast';
+
+  @override
+  String get stylePresetGlass => 'Glass';
+
+  @override
+  String get stylePresetCaption => 'Caption';
+
+  @override
+  String get stylePresetSubtitleBand => 'Subtitle';
+
+  @override
+  String get stylePresetCta => 'CTA';
+
+  @override
+  String get stylePresetBadgeRed => 'Badge';
+
+  @override
+  String get stylePresetHashtag => 'Hashtag';
+
+  @override
+  String get stylePresetOutline => 'Outline';
+
+  @override
+  String get stylePresetNeon => 'Neon';
+
+  @override
+  String get stylePresetPoster => 'Poster';
+
+  @override
+  String get stylePresetSticker => 'Sticker';
+
+  @override
+  String get stylePresetPop3d => 'Pop';
+
+  @override
   String get effectStrokeLabel => 'Stroke';
 
   @override

@@ -1142,6 +1142,54 @@ class AppLocalizationsFa extends AppLocalizations {
   String get opacityLabel => 'شفافیت';
 
   @override
+  String get stylePresetClassic => 'کلاسیک';
+
+  @override
+  String get stylePresetQuote => 'نقل‌قول';
+
+  @override
+  String get stylePresetHighlight => 'هایلایت';
+
+  @override
+  String get stylePresetShadowSoft => 'سایه';
+
+  @override
+  String get stylePresetContrast => 'کنتراست';
+
+  @override
+  String get stylePresetGlass => 'شیشه‌ای';
+
+  @override
+  String get stylePresetCaption => 'کپشن';
+
+  @override
+  String get stylePresetSubtitleBand => 'زیرنویس';
+
+  @override
+  String get stylePresetCta => 'فراخوان';
+
+  @override
+  String get stylePresetBadgeRed => 'نشان';
+
+  @override
+  String get stylePresetHashtag => 'هشتگ';
+
+  @override
+  String get stylePresetOutline => 'دورخط';
+
+  @override
+  String get stylePresetNeon => 'نئون';
+
+  @override
+  String get stylePresetPoster => 'پوستر';
+
+  @override
+  String get stylePresetSticker => 'استیکر';
+
+  @override
+  String get stylePresetPop3d => 'پاپ';
+
+  @override
   String get effectStrokeLabel => 'خط دور';
 
   @override

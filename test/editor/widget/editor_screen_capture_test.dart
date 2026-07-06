@@ -156,6 +156,7 @@ void main() {
     bool withSelection = false,
     bool withFilterPanel = false,
     String? openSheet,
+    Future<void> Function(WidgetTester tester)? interact,
   }) async {
     tester.view.physicalSize = const Size(440, 956);
     tester.view.devicePixelRatio = 1.0;
@@ -197,6 +198,10 @@ void main() {
     await tester.pump();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
+    if (interact != null) {
+      await interact(tester);
+      await tester.pumpAndSettle();
+    }
 
     expect(find.byType(AppBar), findsOneWidget);
 
@@ -338,6 +343,34 @@ void main() {
         brightness: Brightness.dark,
         fileName: 'editor_${name}_panel_dark.png',
         openSheet: sheet,
+      );
+    });
+  }
+
+  for (final (b, name) in [
+    (Brightness.light, 'light'),
+    (Brightness.dark, 'dark'),
+  ]) {
+    testWidgets('EditorScreen visual capture — shadow effect, $name', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: b,
+        fileName: 'editor_effects_shadow_$name.png',
+        openSheet: 'styles',
+        interact: (t) async {
+          // Open the سایه effect section, then enable via the Soft
+          // preset tile (icon finder — locale-independent).
+          final chip = find.byWidgetPredicate(
+            (w) =>
+                w is Text && w.data == 'سایه' && w.style?.fontSize == 12.5,
+          );
+          await t.tap(chip);
+          await t.pumpAndSettle();
+          await t.tap(find.byIcon(Icons.cloud_outlined));
+          await t.pumpAndSettle();
+        },
       );
     });
   }
