@@ -85,7 +85,7 @@ class CanvasFraming extends StatelessWidget {
             layer: layer,
             // Dimming matches the workspace hue so off-canvas content
             // recedes into the workspace instead of into a black wash.
-            dimColor: tokens.surfaceMuted.withValues(alpha: 0.78),
+            dimColor: tokens.workspace.withValues(alpha: 0.78),
             borderColor: switch (borderEmphasis) {
               CanvasBorderEmphasis.standard => tokens.border,
               CanvasBorderEmphasis.subtle =>

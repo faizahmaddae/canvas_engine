@@ -91,7 +91,10 @@ class _DockToolStripState extends State<DockToolStrip> {
 
   @override
   Widget build(BuildContext context) {
-    final fade = AppTokens.of(context).surfaceMuted;
+    // Edge fades must match the dock's ACTUAL surface (the elevated
+    // chrome colour), not the workspace tone, or the fade reads as a
+    // dirty smudge on the lighter bar.
+    final fade = AppTokens.of(context).surface;
     return SizedBox(
       height: widget.height,
       child: NotificationListener<ScrollMetricsNotification>(

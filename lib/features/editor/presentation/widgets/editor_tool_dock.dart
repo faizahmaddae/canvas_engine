@@ -68,20 +68,30 @@ class EditorToolDock extends StatelessWidget {
         media.size.shortestSide < 380 ||
         media.orientation == Orientation.landscape;
     final stripHeight = height ?? (compact ? 64.0 : 80.0);
-    return Material(
-      color: tokens.surfaceMuted,
-      elevation: 0,
-      child: SafeArea(
-        top: false,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: tokens.border.withValues(alpha: 0.5),
-                width: 0.5,
-              ),
-            ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Elevated chrome: the dock sits on tokens.surface (a step
+    // lighter than the tokens.workspace behind the canvas), with a
+    // top hairline + a soft upward shadow so the bar reads as a
+    // distinct layer floating above the workspace instead of
+    // camouflaging into it.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        border: Border(top: BorderSide(color: tokens.border)),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(
+              context,
+            ).colorScheme.shadow.withValues(alpha: isDark ? 0.4 : 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
           ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: SafeArea(
+          top: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

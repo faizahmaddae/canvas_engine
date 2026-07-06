@@ -586,10 +586,12 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
               _gestureStartViewport = null;
               _gestureStartFocal = null;
             },
-            // v2 workspace: warm paper-muted in light, deep ink in
-            // dark — never pure black. The canvas floats on it.
+            // v2 workspace: a step deeper than the chrome's surface
+            // (warm in light, deep ink in dark — never pure black)
+            // so the bars/panels visibly float above it and the
+            // canvas floats on it.
             child: ColoredBox(
-              color: AppTokens.of(context).surfaceMuted,
+              color: AppTokens.of(context).workspace,
               child: ClipRect(
                 // Outer Stack: viewport-transformed canvas board (bottom)
                 // + screen-space chrome (top). Selection handles + HUD live

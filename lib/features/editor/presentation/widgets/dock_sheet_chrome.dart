@@ -174,11 +174,12 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
       constraints: BoxConstraints(maxHeight: maxHeight),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          // Lift one tonal step above the canvas backdrop so the
-          // sheet reads as a *floating* panel — not a flat strip.
-          // Combined with the soft top shadow below this gives the
-          // canonical "sheet just landed" event without animation.
-          color: tokens.surfaceMuted,
+          // The panel sits on the same elevated chrome surface as
+          // the dock bar (a step lighter than the workspace) so bar
+          // + panel read as ONE floating chrome layer. Combined with
+          // the soft top shadow below this gives the canonical
+          // "sheet just landed" event without animation.
+          color: tokens.surface,
           border: Border(
             bottom: BorderSide(
               color: tokens.border.withValues(alpha: 0.5),

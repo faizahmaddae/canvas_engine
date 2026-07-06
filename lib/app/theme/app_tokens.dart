@@ -32,6 +32,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.pageBg,
     required this.surface,
     required this.surfaceMuted,
+    required this.workspace,
     required this.textPrimary,
     required this.textSecondary,
     required this.textMuted,
@@ -82,6 +83,12 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final Color pageBg;
   final Color surface;
   final Color surfaceMuted;
+
+  /// Editor canvas workspace — one step deeper than [surfaceMuted]
+  /// so the editor's chrome (bars/panels on [surface]) visibly
+  /// floats above it. Editor-scoped by convention: ordinary screens
+  /// keep using [pageBg]/[surfaceMuted].
+  final Color workspace;
   final Color textPrimary;
   final Color textSecondary;
   final Color textMuted;
@@ -104,6 +111,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     pageBg: Color(0xFFF4EEE1),
     surface: Color(0xFFFBF7EF),
     surfaceMuted: Color(0xFFEDE5D4),
+    workspace: Color(0xFFE7DCC4),
     textPrimary: Color(0xFF1F1B16),
     textSecondary: Color(0xFF6B6155),
     textMuted: Color(0xFF9C8F7C),
@@ -127,6 +135,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     pageBg: Color(0xFF14110D),
     surface: Color(0xFF1E1A14),
     surfaceMuted: Color(0xFF26211A),
+    workspace: Color(0xFF191510),
     textPrimary: Color(0xFFF2EADB),
     textSecondary: Color(0xFFA9A090),
     textMuted: Color(0xFF7C7264),
@@ -157,6 +166,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     Color? pageBg,
     Color? surface,
     Color? surfaceMuted,
+    Color? workspace,
     Color? textPrimary,
     Color? textSecondary,
     Color? textMuted,
@@ -179,6 +189,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       pageBg: pageBg ?? this.pageBg,
       surface: surface ?? this.surface,
       surfaceMuted: surfaceMuted ?? this.surfaceMuted,
+      workspace: workspace ?? this.workspace,
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       textMuted: textMuted ?? this.textMuted,
@@ -207,6 +218,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       pageBg: c(pageBg, other.pageBg),
       surface: c(surface, other.surface),
       surfaceMuted: c(surfaceMuted, other.surfaceMuted),
+      workspace: c(workspace, other.workspace),
       textPrimary: c(textPrimary, other.textPrimary),
       textSecondary: c(textSecondary, other.textSecondary),
       textMuted: c(textMuted, other.textMuted),
