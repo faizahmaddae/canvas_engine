@@ -8,6 +8,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../app/theme/app_tokens.dart';
+import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../../application/live_overlay_controller.dart';
 import '../../../engine/core/editor_document.dart';
@@ -17,7 +19,6 @@ import '../../../ui/editor_slider_row.dart';
 import '../../../ui/precision_disclosure.dart';
 import '../../widgets/controls/panel_chip.dart';
 import '../../widgets/controls/precision_divider.dart';
-import '../../widgets/controls/stepper_row.dart';
 
 /// Broad safety clamp for direct font-size mutation (stepper +
 /// exact slider). Intentionally far wider than the named-preset
@@ -65,6 +66,33 @@ double _lengthFactor(String content) {
   return 0.6;
 }
 
+/// Practical range for the main size slider. The absolute clamps
+/// (4..2000) stay on the precision disclosure's fine-tune slider;
+/// the main slider spans the canvas-aware useful band so a thumb
+/// pixel maps to a meaningful step.
+const double _sliderMin = 8;
+
+double _sliderMax(List<({String label, double value})> presets) {
+  var maxPreset = 0.0;
+  for (final p in presets) {
+    if (p.value > maxPreset) maxPreset = p.value;
+  }
+  return maxPreset <= 0 ? 200 : (maxPreset * 2).clamp(64, _absoluteMaxFontSize);
+}
+
+/// Perceptual nudge shared with the old stepper: ±10% of the current
+/// value (rounded), floored at 1px, clamped to the absolute range.
+void _bump(TextToolController ctrl, double value, int dir) {
+  final s = (value * 0.1).roundToDouble();
+  final step = s < 1 ? 1 : s;
+  final next = (value + dir * step)
+      .clamp(_absoluteMinFontSize, _absoluteMaxFontSize)
+      .toDouble();
+  if ((next - value).abs() < 0.01) return;
+  EditorHaptics.tap();
+  ctrl.setFontSize(next);
+}
+
 /// Body for the Text Size sub-tool. Owns no local state — the
 /// "sticky preset" highlight lives on `TextSession` so it survives
 /// rebuilds/remounts that can otherwise drop a `StatefulWidget`'s
@@ -101,15 +129,45 @@ class SizeBody extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Match the Layout panel rhythm: no all-caps section
-        // labels (the stepper IS the value, the chip row IS the
-        // presets — both self-explanatory). The disclosure below
-        // gives precise access without a header.
+        // labels (the slider IS the value — the live px chip sits
+        // in the panel header — and the chip row IS the presets;
+        // both self-explanatory). The disclosure below gives
+        // precise full-range access without a header.
         const SizedBox(height: 6),
-        SizeStepperRow(
-          value: style.fontSize,
-          min: _absoluteMinFontSize,
-          max: _absoluteMaxFontSize,
-          onChange: ctrl.setFontSize,
+        // − / slider / ＋ — the unified size control (replaces the
+        // old A−/px/A＋ three-box stepper). The slider covers the
+        // practical canvas-aware range; the nudge buttons keep the
+        // stepper's perceptual ±10% step; the precision disclosure
+        // still exposes the absolute 4..2000 envelope.
+        Row(
+          children: [
+            _NudgeButton(
+              icon: Icons.remove_rounded,
+              semanticLabel: context.l10n.sizeDecreaseAction,
+              onTap: () => _bump(ctrl, style.fontSize, -1),
+            ),
+            Expanded(
+              child: EditorSliderRow(
+                value: style.fontSize.clamp(
+                  _sliderMin,
+                  _sliderMax(presets),
+                ),
+                min: _sliderMin,
+                max: _sliderMax(presets),
+                format: (v) => '${v.toStringAsFixed(0)}px',
+                showReadout: false,
+                onChanged: ctrl.setFontSize,
+                onDragStart: ctrl.beginStyleDrag,
+                onDragEnd: ctrl.endStyleDrag,
+                haptics: EditorSliderHaptics.startTickEnd,
+              ),
+            ),
+            _NudgeButton(
+              icon: Icons.add_rounded,
+              semanticLabel: context.l10n.sizeIncreaseAction,
+              onTap: () => _bump(ctrl, style.fontSize, 1),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         WordChipRow(
@@ -234,3 +292,40 @@ class _SizePrecisionAdvanced extends ConsumerWidget {
   }
 }
 
+
+/// Compact −/＋ nudge button flanking the size slider. Same visual
+/// vocabulary as the old stepper buttons (accent-tint fill, 12
+/// radius) so the control keeps its identity in the new layout.
+class _NudgeButton extends StatelessWidget {
+  const _NudgeButton({
+    required this.icon,
+    required this.semanticLabel,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String semanticLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Semantics(
+      label: semanticLabel,
+      button: true,
+      child: Material(
+        color: tokens.accent.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 40,
+            child: Center(child: Icon(icon, size: 20, color: tokens.accent)),
+          ),
+        ),
+      ),
+    );
+  }
+}

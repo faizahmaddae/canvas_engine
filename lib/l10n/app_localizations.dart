@@ -1994,6 +1994,18 @@ abstract class AppLocalizations {
   /// **'Size'**
   String get sizeTool;
 
+  /// No description provided for @sizeIncreaseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase size'**
+  String get sizeIncreaseAction;
+
+  /// No description provided for @sizeDecreaseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease size'**
+  String get sizeDecreaseAction;
+
   /// No description provided for @borderTool.
   ///
   /// In en, this message translates to:

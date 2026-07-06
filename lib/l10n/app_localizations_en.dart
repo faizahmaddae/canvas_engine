@@ -1020,6 +1020,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sizeTool => 'Size';
 
   @override
+  String get sizeIncreaseAction => 'Increase size';
+
+  @override
+  String get sizeDecreaseAction => 'Decrease size';
+
+  @override
   String get borderTool => 'Border';
 
   @override

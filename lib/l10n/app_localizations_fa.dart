@@ -1021,6 +1021,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sizeTool => 'اندازه';
 
   @override
+  String get sizeIncreaseAction => 'بزرگ‌تر';
+
+  @override
+  String get sizeDecreaseAction => 'کوچک‌تر';
+
+  @override
   String get borderTool => 'کادر';
 
   @override

@@ -316,6 +316,8 @@
   "strokeSizeSemantics": "اندازه خط",
   "styleTool": "استایل",
   "sizeTool": "اندازه",
+  "sizeIncreaseAction": "بزرگ‌تر",
+  "sizeDecreaseAction": "کوچک‌تر",
   "borderTool": "کادر",
   "shadowTool": "سایه",
   "effectsTool": "افکت‌ها",

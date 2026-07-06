@@ -334,6 +334,8 @@
   "strokeSizeSemantics": "Stroke size",
   "styleTool": "Style",
   "sizeTool": "Size",
+  "sizeIncreaseAction": "Increase size",
+  "sizeDecreaseAction": "Decrease size",
   "borderTool": "Border",
   "shadowTool": "Shadow",
   "effectsTool": "Effects",
