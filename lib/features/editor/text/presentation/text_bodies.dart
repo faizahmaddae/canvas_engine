@@ -112,7 +112,7 @@ class _TextBodies {
     WidgetRef ref,
     TextLayer layer,
   ) {
-    return _StylesBody(layer: layer);
+    return StylesBody(layer: layer);
   }
 
   // ─── Style ───────────────────────────────────────────────────────
@@ -148,15 +148,15 @@ class _TextBodies {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         PanelSectionLabel(context.l10n.shapeLabel),
-        _StyleTileRow(
+        StyleTileRow(
           tiles: [
-            _StyleTile(
+            StyleTile(
               icon: Icons.block_rounded,
               label: context.l10n.noneOption,
               selected: !hasBg,
               onTap: () => ctrl.setBackgroundEnabled(false),
             ),
-            _StyleTile(
+            StyleTile(
               icon: Icons.crop_16_9_rounded,
               label: context.l10n.pillOption,
               selected: hasBg && _bgMatches(style, _backgroundPresets[1]),
@@ -165,7 +165,7 @@ class _TextBodies {
                 _applyBgPreset(ref, _backgroundPresets[1]);
               },
             ),
-            _StyleTile(
+            StyleTile(
               icon: Icons.crop_square_rounded,
               label: context.l10n.cardOption,
               selected: hasBg && _bgMatches(style, _backgroundPresets[2]),
@@ -174,7 +174,7 @@ class _TextBodies {
                 _applyBgPreset(ref, _backgroundPresets[2]);
               },
             ),
-            _StyleTile(
+            StyleTile(
               icon: Icons.local_offer_outlined,
               label: context.l10n.tagOption,
               selected: hasBg && _bgMatches(style, _backgroundPresets[3]),
@@ -256,15 +256,15 @@ class _TextBodies {
         // especially when the Adjust-precisely disclosure is open.
         const SizedBox(height: 6),
         PanelSectionLabel(context.l10n.styleLabel),
-        _StyleTileRow(
+        StyleTileRow(
           tiles: [
-            _StyleTile(
+            StyleTile(
               icon: Icons.block_rounded,
               label: context.l10n.noneOption,
               selected: !hasOutline,
               onTap: () => ctrl.setOutlineEnabled(false),
             ),
-            _StyleTile(
+            StyleTile(
               icon: Icons.horizontal_rule_rounded,
               label: context.l10n.hairlineOption,
               iconSize: 16,
@@ -274,7 +274,7 @@ class _TextBodies {
                 ctrl.setOutlineWidth(0.5);
               },
             ),
-            _StyleTile(
+            StyleTile(
               icon: Icons.horizontal_rule_rounded,
               label: context.l10n.solidOption,
               iconSize: 22,
@@ -284,7 +284,7 @@ class _TextBodies {
                 ctrl.setOutlineWidth(2);
               },
             ),
-            _StyleTile(
+            StyleTile(
               icon: Icons.horizontal_rule_rounded,
               label: context.l10n.boldAction,
               iconSize: 30,
@@ -361,16 +361,16 @@ class _TextBodies {
         // Match Background/Border breathing room above first label.
         const SizedBox(height: 6),
         PanelSectionLabel(context.l10n.styleLabel),
-        _StyleTileRow(
+        StyleTileRow(
           tiles: [
-            _StyleTile(
+            StyleTile(
               icon: Icons.block_rounded,
               label: context.l10n.noneOption,
               selected: !hasShadow,
               onTap: () => ctrl.setShadowEnabled(false),
             ),
             for (int i = 0; i < _shadowPresets.length; i++)
-              _StyleTile(
+              StyleTile(
                 icon: _shadowPresetIcons[i],
                 label: _shadowPresetLabel(context.l10n, _shadowPresets[i]),
                 selected: hasShadow && _shadowMatches(style, _shadowPresets[i]),

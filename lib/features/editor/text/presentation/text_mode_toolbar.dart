@@ -28,6 +28,7 @@ import '../../engine/core/editor_document.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../presentation/panels/text/font_picker/inline_browser.dart';
 import '../../presentation/panels/text/font_picker/picker_sheet.dart';
+import '../../presentation/panels/text/styles_panel.dart';
 import '../../presentation/widgets/controls/panel_chip.dart';
 import '../../presentation/widgets/controls/precision_divider.dart';
 import '../../presentation/widgets/controls/section_label.dart';
@@ -37,7 +38,6 @@ import '../../presentation/widgets/controls/toggle_segment.dart';
 import '../../presentation/widgets/dock_tool_strip.dart';
 import '../../presentation/widgets/dock_tool_tile.dart';
 import '../../presentation/widgets/inline_color_body.dart';
-import '../../presentation/widgets/panel_option_tile.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/editor_tier_gap.dart';
 import '../../ui/panel_direction_pad.dart';
@@ -48,7 +48,6 @@ import '../../toolbar/domain/sub_tools/widget_sub_tool.dart';
 import '../../toolbar/presentation/sub_tool_sheet.dart';
 import '../application/text_tool_controller.dart';
 import '../domain/font_catalog.dart';
-import '../domain/text_style_presets.dart';
 import 'text_floating_toolbar.dart' show showTextMoreSheet;
 
 part 'text_bodies.dart';
@@ -56,7 +55,6 @@ part 'text_decoration_panels.dart';
 part 'text_layout_panel.dart';
 part 'text_resize_tiles.dart';
 part 'text_size_panel.dart';
-part 'text_style_browser.dart';
 
 /// Bottom dock for text mode — Canva-style.
 ///

@@ -1,7 +1,19 @@
-// Styles sheet body for the text-mode toolbar, split out of
-// text_mode_toolbar.dart. Part file: every symbol resolves via the
-// library root's imports — add imports there, never here.
-part of 'text_mode_toolbar.dart';
+// Styles panel (Phase 2A commit 3): extracted verbatim from the
+// text_mode_toolbar part-file library (text_style_browser.dart +
+// text_decoration_panels.dart). Rename-only promotions for the
+// symbols the library consumes; everything else stays private.
+
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../../app/theme/app_tokens.dart';
+import '../../../../../core/utils/haptics.dart';
+import '../../../text/application/text_tool_controller.dart';
+import '../../../text/domain/text_style_presets.dart';
+import '../../../engine/modules/text/text_layer.dart';
+import '../../widgets/panel_option_tile.dart';
 
 // ─── Styles sheet body ──────────────────────────────────────────
 //
@@ -21,16 +33,16 @@ part of 'text_mode_toolbar.dart';
 // only the visual subset — fontFamily, fontSize, content,
 // position, rotation, and the bounding box are all preserved.
 
-class _StylesBody extends ConsumerStatefulWidget {
-  const _StylesBody({required this.layer});
+class StylesBody extends ConsumerStatefulWidget {
+  const StylesBody({super.key, required this.layer});
 
   final TextLayer layer;
 
   @override
-  ConsumerState<_StylesBody> createState() => _StylesBodyState();
+  ConsumerState<StylesBody> createState() => _StylesBodyState();
 }
 
-class _StylesBodyState extends ConsumerState<_StylesBody> {
+class _StylesBodyState extends ConsumerState<StylesBody> {
   /// Active chip highlight: a preset is "current" iff merging its
   /// visual subset onto the layer's style is a no-op. Same merge
   /// rule the controller uses on apply.
@@ -304,4 +316,70 @@ class _StylePreviewTile extends StatelessWidget {
       child: tileContent,
     );
   }
+}
+
+// ─── Canva-style sub-tool helpers ───────────────────────────────────
+//
+// Shared widgets for the "presets-first, advanced-hidden" sub-tool
+// redesign. The canvas above each sheet is the live preview, so these
+// helpers focus on fast 1-tap choices instead of large preview tiles.
+
+/// Single-select tile group for visual style presets (Background
+/// shape, Shadow style, Border style, etc). Each tile renders
+/// through the shared [PanelOptionTile] so selection / hover /
+/// pressed states match the Adjust preset chip.
+class StyleTileRow extends StatelessWidget {
+  const StyleTileRow({super.key, required this.tiles});
+
+  final List<StyleTile> tiles;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 72,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.zero,
+        itemCount: tiles.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final t = tiles[i];
+          return PanelOptionTile(
+            icon: t.icon,
+            iconSize: t.iconSize,
+            label: t.label,
+            selected: t.selected,
+            onTap: () {
+              EditorHaptics.toggle();
+              t.onTap();
+            },
+            width: 76,
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Value spec consumed by [StyleTileRow]. Keeps the call sites
+/// declarative — actual chrome lives in [PanelOptionTile].
+class StyleTile {
+  const StyleTile({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.iconSize = 22,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  /// Icon size override — e.g. border thickness presets render the
+  /// same horizontal-rule glyph at 16/22/28 so the preview itself
+  /// communicates Thin / Medium / Thick.
+  final double iconSize;
 }
