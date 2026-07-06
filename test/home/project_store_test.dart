@@ -249,6 +249,21 @@ void main() {
     expect(loaded, 'proj-1');
   });
 
+  test('LastOpenedProjectController.set works before the first build '
+      'completes (cold-start open crashed on a late prefs field)', () async {
+    final c = ProviderContainer();
+    addTearDown(c.dispose);
+    // Deliberately NO `await ...future` first: opening a project
+    // straight from a cold home screen calls set() while build() is
+    // still resolving SharedPreferences.
+    await c.read(lastOpenedProjectIdProvider.notifier).set('cold-open');
+    expect(c.read(lastOpenedProjectIdProvider).value, 'cold-open');
+
+    final c2 = ProviderContainer();
+    addTearDown(c2.dispose);
+    expect(await c2.read(lastOpenedProjectIdProvider.future), 'cold-open');
+  });
+
   test('LastOpenedProjectController.set(null) clears value', () async {
     final c = ProviderContainer();
     addTearDown(c.dispose);

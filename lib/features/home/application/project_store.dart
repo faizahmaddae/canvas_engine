@@ -222,19 +222,24 @@ class ProjectStore extends AsyncNotifier<List<Project>> {
 class LastOpenedProjectController extends AsyncNotifier<String?> {
   static const String _key = 'home.last_opened_project.v1';
 
-  late SharedPreferences _prefs;
-
   @override
   Future<String?> build() async {
-    _prefs = await SharedPreferences.getInstance();
-    return _prefs.getString(_key);
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_key);
   }
 
+  /// Resolves SharedPreferences on demand instead of caching it in a
+  /// `late` field from [build]: [set] can legally run BEFORE the
+  /// first build completes (open a project straight from a cold
+  /// home screen) and the late field crashed that path.
+  /// `getInstance()` is a cached singleton, so this costs nothing
+  /// after the first call.
   Future<void> set(String? id) async {
+    final prefs = await SharedPreferences.getInstance();
     if (id == null) {
-      await _prefs.remove(_key);
+      await prefs.remove(_key);
     } else {
-      await _prefs.setString(_key, id);
+      await prefs.setString(_key, id);
     }
     state = AsyncData(id);
   }
