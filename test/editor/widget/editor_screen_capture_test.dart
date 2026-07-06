@@ -69,6 +69,7 @@ ProviderContainer _sampleEditor({
   bool withSelection = false,
   bool withSizePanel = false,
   bool withFilterPanel = false,
+  bool withFontPanel = false,
 }) {
   final container = ProviderContainer();
   container.read(editorSessionProvider.notifier).state =
@@ -129,13 +130,17 @@ ProviderContainer _sampleEditor({
         .read(imageToolControllerProvider.notifier)
         .toggleSlot(ImageToolSlot.filters);
   }
-  if (withSelection || withSizePanel) {
+  if (withSelection || withSizePanel || withFontPanel) {
     container.read(selectionControllerProvider.notifier).select('text-1');
   }
   if (withSizePanel) {
-    // In-dock Size sheet open — exercises the elevated panel + the
-    // canvas scrim behind it.
+    // In-dock Size sheet open — exercises the elevated panel.
     container.read(textToolControllerProvider.notifier).openSheet('size');
+  }
+  if (withFontPanel) {
+    // The tallest in-dock body — proves the panel cap + internal
+    // scrolling keep the canvas visible.
+    container.read(textToolControllerProvider.notifier).openSheet('font');
   }
   return container;
 }
@@ -158,6 +163,7 @@ void main() {
     bool withSelection = false,
     bool withSizePanel = false,
     bool withFilterPanel = false,
+    bool withFontPanel = false,
   }) async {
     tester.view.physicalSize = const Size(440, 956);
     tester.view.devicePixelRatio = 1.0;
@@ -170,6 +176,7 @@ void main() {
       withSelection: withSelection,
       withSizePanel: withSizePanel,
       withFilterPanel: withFilterPanel,
+      withFontPanel: withFontPanel,
     );
     addTearDown(container.dispose);
 
@@ -291,6 +298,28 @@ void main() {
       brightness: Brightness.dark,
       fileName: 'editor_filters_dark.png',
       withFilterPanel: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — font panel, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_font_panel_light.png',
+      withFontPanel: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — font panel, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_font_panel_dark.png',
+      withFontPanel: true,
     );
   });
 }
