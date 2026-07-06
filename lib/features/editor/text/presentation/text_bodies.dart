@@ -159,28 +159,28 @@ class _TextBodies {
             StyleTile(
               icon: Icons.crop_16_9_rounded,
               label: context.l10n.pillOption,
-              selected: hasBg && _bgMatches(style, _backgroundPresets[1]),
+              selected: hasBg && bgMatches(style, backgroundPresets[1]),
               onTap: () {
                 enableIfNeeded();
-                _applyBgPreset(ref, _backgroundPresets[1]);
+                applyBgPreset(ref, backgroundPresets[1]);
               },
             ),
             StyleTile(
               icon: Icons.crop_square_rounded,
               label: context.l10n.cardOption,
-              selected: hasBg && _bgMatches(style, _backgroundPresets[2]),
+              selected: hasBg && bgMatches(style, backgroundPresets[2]),
               onTap: () {
                 enableIfNeeded();
-                _applyBgPreset(ref, _backgroundPresets[2]);
+                applyBgPreset(ref, backgroundPresets[2]);
               },
             ),
             StyleTile(
               icon: Icons.local_offer_outlined,
               label: context.l10n.tagOption,
-              selected: hasBg && _bgMatches(style, _backgroundPresets[3]),
+              selected: hasBg && bgMatches(style, backgroundPresets[3]),
               onTap: () {
                 enableIfNeeded();
-                _applyBgPreset(ref, _backgroundPresets[3]);
+                applyBgPreset(ref, backgroundPresets[3]);
               },
             ),
           ],
@@ -220,7 +220,7 @@ class _TextBodies {
             },
           ),
           const SizedBox(height: 6),
-          _BackgroundPrecisionAdvanced(style: style),
+          BackgroundPrecisionAdvanced(style: style),
         ],
       ],
     );
@@ -329,7 +329,7 @@ class _TextBodies {
             },
           ),
           const SizedBox(height: 6),
-          _BorderPrecisionAdvanced(style: style),
+          BorderPrecisionAdvanced(style: style),
         ],
       ],
     );
@@ -369,16 +369,16 @@ class _TextBodies {
               selected: !hasShadow,
               onTap: () => ctrl.setShadowEnabled(false),
             ),
-            for (int i = 0; i < _shadowPresets.length; i++)
+            for (int i = 0; i < shadowPresets.length; i++)
               StyleTile(
-                icon: _shadowPresetIcons[i],
-                label: _shadowPresetLabel(context.l10n, _shadowPresets[i]),
-                selected: hasShadow && _shadowMatches(style, _shadowPresets[i]),
+                icon: shadowPresetIcons[i],
+                label: shadowPresetLabel(context.l10n, shadowPresets[i]),
+                selected: hasShadow && shadowMatches(style, shadowPresets[i]),
                 onTap: () {
                   enableIfNeeded();
-                  _applyShadowPreset(
+                  applyShadowPreset(
                     ref,
-                    _shadowPresets[i],
+                    shadowPresets[i],
                     baseColor: style.shadowColor ?? const Color(0xFF000000),
                   );
                 },
@@ -430,7 +430,7 @@ class _TextBodies {
               width: 168,
               child: PanelDirectionPad(
                 offset: style.shadowOffset,
-                magnitude: _shadowDirectionMagnitude(style.shadowOffset),
+                magnitude: shadowDirectionMagnitude(style.shadowOffset),
                 size: 144,
                 onPick: (off) {
                   EditorHaptics.toggle();
@@ -440,7 +440,7 @@ class _TextBodies {
             ),
           ),
           const SizedBox(height: 6),
-          _ShadowPrecisionAdvanced(style: style),
+          ShadowPrecisionAdvanced(style: style),
         ],
       ],
     );

@@ -28,6 +28,9 @@ import '../../engine/core/editor_document.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../presentation/panels/text/font_picker/inline_browser.dart';
 import '../../presentation/panels/text/font_picker/picker_sheet.dart';
+import '../../presentation/panels/text/precision/background_precision.dart';
+import '../../presentation/panels/text/precision/border_precision.dart';
+import '../../presentation/panels/text/precision/shadow_precision.dart';
 import '../../presentation/panels/text/styles_panel.dart';
 import '../../presentation/widgets/controls/panel_chip.dart';
 import '../../presentation/widgets/controls/precision_divider.dart';
@@ -51,7 +54,6 @@ import '../domain/font_catalog.dart';
 import 'text_floating_toolbar.dart' show showTextMoreSheet;
 
 part 'text_bodies.dart';
-part 'text_decoration_panels.dart';
 part 'text_layout_panel.dart';
 part 'text_resize_tiles.dart';
 part 'text_size_panel.dart';
