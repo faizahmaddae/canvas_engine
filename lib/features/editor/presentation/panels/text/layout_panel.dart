@@ -6,7 +6,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../../engine/modules/text/text_layer.dart';
 import '../../../text/application/text_tool_controller.dart';
@@ -133,33 +132,25 @@ class _AlignmentSegmentedControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTokens.of(context).surfaceMuted.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(3),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ToggleSegment(
-            icon: Icons.format_align_left_rounded,
-            selected: isLeft,
-            onTap: onLeft,
-          ),
-          ToggleSegment(
-            icon: Icons.format_align_center_rounded,
-            selected: isCenter,
-            onTap: onCenter,
-          ),
-          ToggleSegment(
-            icon: Icons.format_align_right_rounded,
-            selected: isRight,
-            onTap: onRight,
-          ),
-        ],
-      ),
+    // Kit group wrapper — the pill styling used to be re-rolled here.
+    return ToggleSegmentGroup(
+      children: [
+        ToggleSegment(
+          icon: Icons.format_align_left_rounded,
+          selected: isLeft,
+          onTap: onLeft,
+        ),
+        ToggleSegment(
+          icon: Icons.format_align_center_rounded,
+          selected: isCenter,
+          onTap: onCenter,
+        ),
+        ToggleSegment(
+          icon: Icons.format_align_right_rounded,
+          selected: isRight,
+          onTap: onRight,
+        ),
+      ],
     );
   }
 }
-

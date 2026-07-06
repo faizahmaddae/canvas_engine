@@ -67,9 +67,8 @@ Future<void> _loadMaterialIcons() async {
 
 ProviderContainer _sampleEditor({
   bool withSelection = false,
-  bool withSizePanel = false,
   bool withFilterPanel = false,
-  bool withFontPanel = false,
+  String? openSheet,
 }) {
   final container = ProviderContainer();
   container.read(editorSessionProvider.notifier).state =
@@ -130,17 +129,11 @@ ProviderContainer _sampleEditor({
         .read(imageToolControllerProvider.notifier)
         .toggleSlot(ImageToolSlot.filters);
   }
-  if (withSelection || withSizePanel || withFontPanel) {
+  if (withSelection || openSheet != null) {
     container.read(selectionControllerProvider.notifier).select('text-1');
   }
-  if (withSizePanel) {
-    // In-dock Size sheet open — exercises the elevated panel.
-    container.read(textToolControllerProvider.notifier).openSheet('size');
-  }
-  if (withFontPanel) {
-    // The tallest in-dock body — proves the panel cap + internal
-    // scrolling keep the canvas visible.
-    container.read(textToolControllerProvider.notifier).openSheet('font');
+  if (openSheet != null) {
+    container.read(textToolControllerProvider.notifier).openSheet(openSheet);
   }
   return container;
 }
@@ -161,9 +154,8 @@ void main() {
     required Brightness brightness,
     required String fileName,
     bool withSelection = false,
-    bool withSizePanel = false,
     bool withFilterPanel = false,
-    bool withFontPanel = false,
+    String? openSheet,
   }) async {
     tester.view.physicalSize = const Size(440, 956);
     tester.view.devicePixelRatio = 1.0;
@@ -174,9 +166,8 @@ void main() {
 
     final container = _sampleEditor(
       withSelection: withSelection,
-      withSizePanel: withSizePanel,
       withFilterPanel: withFilterPanel,
-      withFontPanel: withFontPanel,
+      openSheet: openSheet,
     );
     addTearDown(container.dispose);
 
@@ -264,7 +255,7 @@ void main() {
       tester,
       brightness: Brightness.light,
       fileName: 'editor_panel_light.png',
-      withSizePanel: true,
+      openSheet: 'size',
     );
   });
 
@@ -275,7 +266,7 @@ void main() {
       tester,
       brightness: Brightness.dark,
       fileName: 'editor_panel_dark.png',
-      withSizePanel: true,
+      openSheet: 'size',
     );
   });
 
@@ -308,7 +299,7 @@ void main() {
       tester,
       brightness: Brightness.light,
       fileName: 'editor_font_panel_light.png',
-      withFontPanel: true,
+      openSheet: 'font',
     );
   });
 
@@ -319,7 +310,35 @@ void main() {
       tester,
       brightness: Brightness.dark,
       fileName: 'editor_font_panel_dark.png',
-      withFontPanel: true,
+      openSheet: 'font',
     );
   });
+
+  for (final (sheet, name) in [
+    ('color', 'color'),
+    ('styles', 'styles'),
+    ('layout', 'align'),
+  ]) {
+    testWidgets('EditorScreen visual capture — $name panel, light', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: Brightness.light,
+        fileName: 'editor_${name}_panel_light.png',
+        openSheet: sheet,
+      );
+    });
+
+    testWidgets('EditorScreen visual capture — $name panel, dark', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: Brightness.dark,
+        fileName: 'editor_${name}_panel_dark.png',
+        openSheet: sheet,
+      );
+    });
+  }
 }

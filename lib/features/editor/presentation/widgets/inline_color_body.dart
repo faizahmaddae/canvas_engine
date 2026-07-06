@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_tokens.dart';
+import 'controls/section_label.dart';
+import 'controls/slider_row.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../core/utils/haptics.dart';
 
@@ -114,8 +116,7 @@ class InlineColorBody extends StatelessWidget {
         SizedBox(height: compactRecents && showRecents ? 8 : 14),
         if (showRecents) ...[
           if (!compactRecents) ...[
-            _GroupLabel(context.l10n.recentLabel),
-            const SizedBox(height: 8),
+            PanelSectionLabel(context.l10n.recentLabel),
           ],
           SizedBox(
             height: recentRowHeight,
@@ -159,8 +160,7 @@ class InlineColorBody extends StatelessWidget {
           ),
           SizedBox(height: compactRecents ? 12 : 14),
         ],
-        _GroupLabel(context.l10n.paletteLabel),
-        const SizedBox(height: 8),
+        PanelSectionLabel(context.l10n.paletteLabel),
         Wrap(
           spacing: 10,
           runSpacing: 10,
@@ -175,32 +175,6 @@ class InlineColorBody extends StatelessWidget {
         ),
         const SizedBox(height: 4),
       ],
-    );
-  }
-}
-
-/// Subtle micro-label that names a swatch group without
-/// dominating it. Sentence case + low-contrast onSurfaceVariant +
-/// `labelSmall` weight; a touch of letter-spacing keeps it
-/// legible at small sizes. Reads as caption, not as a heading.
-class _GroupLabel extends StatelessWidget {
-  const _GroupLabel(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(start: 4),
-      child: Text(
-        text,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: AppTokens.of(context).textSecondary.withValues(alpha: 0.85),
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0,
-        ),
-      ),
     );
   }
 }
@@ -315,7 +289,6 @@ class _CurrentColorStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final tokens = AppTokens.of(context);
     return Row(
       children: [
@@ -333,15 +306,9 @@ class _CurrentColorStrip extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        Text(
-          _hex(color),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontFeatures: const [FontFeature.tabularFigures()],
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0,
-            color: tokens.textPrimary,
-          ),
-        ),
+        // Kit readout style — the same tabular readout grammar the
+        // slider rows use, so value readouts match across panels.
+        Text(_hex(color), style: flatSliderReadoutStyle(context)),
         const Spacer(),
         _CustomColorPill(onTap: onCustom),
       ],

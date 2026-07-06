@@ -74,3 +74,27 @@ class ToggleSegment extends StatelessWidget {
     );
   }
 }
+
+/// Tinted pill that groups a tightly-related set of [ToggleSegment]s
+/// (the "grouped triple" case from the toggle rule above). Extracted
+/// from the Layout panel's alignment control so every segmented pill
+/// in the editor shares one wrapper instead of re-rolling the
+/// Container styling per panel.
+class ToggleSegmentGroup extends StatelessWidget {
+  const ToggleSegmentGroup({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: tokens.surfaceMuted.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: children),
+    );
+  }
+}

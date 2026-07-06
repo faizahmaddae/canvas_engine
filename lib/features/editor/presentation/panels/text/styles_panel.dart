@@ -8,7 +8,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/utils/haptics.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../text/domain/text_style_presets.dart';
@@ -59,7 +58,7 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
     final layer = widget.layer;
     final ctrl = ref.read(textToolControllerProvider.notifier);
     void apply(TextStylePreset p) {
-      EditorHaptics.tap();
+      // Haptics fire at the tile (kit convention) — not here.
       ctrl.applyStylePreset(p.spec);
     }
 
@@ -91,9 +90,9 @@ class _StylesRow extends StatelessWidget {
   final String? activeId;
   final ValueChanged<TextStylePreset> onPick;
 
-  // Chip vertical layout: 52 (preview tile) + 8 (gap) + ~16 (label)
-  // + 10 (padding top+bottom) ≈ 86.
-  static const double _rowHeight = 86;
+  // Kit tile vertical layout: 40 preview + label ≈ 76 (matches the
+  // StyleTileRow rail below so the two rails read identically).
+  static const double _rowHeight = 76;
 
   @override
   Widget build(BuildContext context) {
@@ -110,78 +109,24 @@ class _StylesRow extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: 6),
         itemBuilder: (context, i) {
           final p = presets[i];
-          return _StyleChip(
-            preset: p,
+          // Kit tile: preview slot carries the "Aa" specimen; the
+          // tile owns label + selection chrome (the old bespoke
+          // _StyleChip and its in-preview selection ring are gone).
+          return PanelOptionTile(
+            preview: SizedBox(
+              width: 44,
+              height: 40,
+              child: _StylePreviewTile(spec: p.spec),
+            ),
+            label: p.name,
             selected: p.id == activeId,
-            onTap: () => onPick(p),
+            width: 76,
+            onTap: () {
+              EditorHaptics.toggle();
+              onPick(p);
+            },
           );
         },
-      ),
-    );
-  }
-}
-
-/// Featherweight vertical chip: preview tile on top, style name
-/// below. No frame around the chip — the preview tile itself is
-/// the visual unit, and the label is just a caption.
-///
-/// Selection state uses ONE strong cue: a 1.5px primary ring
-/// drawn directly around the preview tile. No checkmark badge,
-/// no row-tint, no chrome — keeps the panel light and scannable.
-class _StyleChip extends StatelessWidget {
-  const _StyleChip({
-    required this.preset,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final TextStylePreset preset;
-  final bool selected;
-  final VoidCallback onTap;
-
-  // Tile dimensions are fixed so chips line up perfectly across
-  // varying preset visuals (small radius vs pill shape, etc.).
-  static const double _tileSize = 52;
-  static const double _chipWidth = 68;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = AppTokens.of(context);
-    return SizedBox(
-      width: _chipWidth,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Preview tile — selection ring is drawn as an
-              // overlay on the tile itself rather than around the
-              // whole chip, so the visual "focus" lands where the
-              // user is actually looking (the sample, not the
-              // label).
-              SizedBox(
-                width: _tileSize,
-                height: _tileSize,
-                child: _StylePreviewTile(spec: preset.spec, selected: selected),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                preset.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: selected ? tokens.accent : tokens.textSecondary,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -200,10 +145,9 @@ class _StyleChip extends StatelessWidget {
 /// preset is actually used on a real canvas — no preview lies, no
 /// "row of dark boxes" feeling.
 class _StylePreviewTile extends StatelessWidget {
-  const _StylePreviewTile({required this.spec, this.selected = false});
+  const _StylePreviewTile({required this.spec});
 
   final TextStyleSpec spec;
-  final bool selected;
   static const String _previewText = 'Aa';
   static const double _previewFontSize = 22;
 
@@ -304,13 +248,12 @@ class _StylePreviewTile extends StatelessWidget {
     // Tile chrome — adaptive card with an optional selection ring
     // around its edge (only visible cue for the selected state,
     // since the chip itself has no frame).
+    // Selection chrome lives on the kit PanelOptionTile now — the
+    // preview stays selection-agnostic content.
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: selected
-            ? Border.all(color: AppTokens.of(context).accent, width: 1.5)
-            : null,
+        borderRadius: BorderRadius.circular(10),
       ),
       alignment: Alignment.center,
       child: tileContent,
