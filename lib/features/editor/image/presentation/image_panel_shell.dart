@@ -25,11 +25,17 @@ class ImagePanelShell extends ConsumerWidget {
     required this.title,
     required this.icon,
     required this.child,
+    this.bodyPadding,
   });
 
   final String title;
   final IconData icon;
   final Widget child;
+
+  /// Passed through to [EditorToolPanelShell.bodyPadding]. Fixed-
+  /// height bodies (e.g. the Filters strip) use it to drop the
+  /// default 24dp bottom clearance that only scrolling panels need.
+  final EdgeInsetsGeometry? bodyPadding;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,6 +46,7 @@ class ImagePanelShell extends ConsumerWidget {
       onClose: ctrl.closePanel,
       onPrev: ctrl.openPrevSlot,
       onNext: ctrl.openNextSlot,
+      bodyPadding: bodyPadding,
       child: child,
     );
   }

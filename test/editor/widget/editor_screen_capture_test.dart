@@ -17,8 +17,10 @@ import 'package:canvas_engine/features/editor/application/editor_session.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
+import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
+import 'package:canvas_engine/features/editor/image/application/image_tool_controller.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
 import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
@@ -66,6 +68,7 @@ Future<void> _loadMaterialIcons() async {
 ProviderContainer _sampleEditor({
   bool withSelection = false,
   bool withSizePanel = false,
+  bool withFilterPanel = false,
 }) {
   final container = ProviderContainer();
   container.read(editorSessionProvider.notifier).state =
@@ -106,6 +109,26 @@ ProviderContainer _sampleEditor({
       ),
     ),
   );
+  if (withFilterPanel) {
+    // Image layer (missing file → placeholder render, fine for a
+    // layout capture) + the Filters slot open.
+    ctrl.execute(
+      AddLayerCommand(
+        ImageLayer(
+          id: 'img-1',
+          transform: const LayerTransform(
+            position: Offset(140, 140),
+            size: Size(800, 500),
+          ),
+          source: const ImageSource.file('/nonexistent-capture-image.png'),
+        ),
+      ),
+    );
+    container.read(selectionControllerProvider.notifier).select('img-1');
+    container
+        .read(imageToolControllerProvider.notifier)
+        .toggleSlot(ImageToolSlot.filters);
+  }
   if (withSelection || withSizePanel) {
     container.read(selectionControllerProvider.notifier).select('text-1');
   }
@@ -134,6 +157,7 @@ void main() {
     required String fileName,
     bool withSelection = false,
     bool withSizePanel = false,
+    bool withFilterPanel = false,
   }) async {
     tester.view.physicalSize = const Size(440, 956);
     tester.view.devicePixelRatio = 1.0;
@@ -145,6 +169,7 @@ void main() {
     final container = _sampleEditor(
       withSelection: withSelection,
       withSizePanel: withSizePanel,
+      withFilterPanel: withFilterPanel,
     );
     addTearDown(container.dispose);
 
@@ -244,6 +269,28 @@ void main() {
       brightness: Brightness.dark,
       fileName: 'editor_panel_dark.png',
       withSizePanel: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — filters panel, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_filters_light.png',
+      withFilterPanel: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — filters panel, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_filters_dark.png',
+      withFilterPanel: true,
     );
   });
 }

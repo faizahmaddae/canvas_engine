@@ -50,6 +50,10 @@ class ImageFiltersBody extends ConsumerWidget {
     return ImagePanelShell(
       title: context.l10n.filtersTool,
       icon: Icons.auto_fix_high_outlined,
+      // Fixed-height strip — no scroll run-out, so the default 24dp
+      // bottom clearance would just be dead space between the chips
+      // and the tool strip below.
+      bodyPadding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

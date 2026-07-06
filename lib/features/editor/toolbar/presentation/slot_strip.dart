@@ -116,21 +116,22 @@ class _SlotStripState extends State<SlotStrip> {
 }
 
 /// Thin vertical hairline that separates two tiers in [SlotStrip].
-/// Visually consistent with `_TierGap` in text/paint toolbars
-/// (13dp wide gutter, 28dp tall 1dp hairline at the border token α
-/// 0.45) so the entire editor feels like one design system.
+/// Mirrors `EditorTierGap` (20dp gutter, 1×30 hairline at the border
+/// token α 0.7 — keep the two in sync) so the divider reads as an
+/// INTENTIONAL group boundary (add-tools vs edit-tools), not an
+/// accidental gap between tiles.
 class _TierDivider extends StatelessWidget {
   const _TierDivider();
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 13,
+      width: 20,
       child: Center(
         child: Container(
           width: 1,
-          height: 28,
-          color: AppTokens.of(context).border.withValues(alpha: 0.45),
+          height: 30,
+          color: AppTokens.of(context).border.withValues(alpha: 0.7),
         ),
       ),
     );

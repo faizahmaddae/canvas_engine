@@ -21,15 +21,17 @@ ToolbarSlot _slot(String id, IconData icon, SlotTier tier) => ToolbarSlot(
 Widget _wrap(Widget child) =>
     MaterialApp(home: Scaffold(body: SizedBox(width: 800, height: 80, child: child)));
 
-/// Finder for the divider's 1-dp wide × 28-dp tall hairline. The
-/// divider widget itself is private so we identify it via its visible
-/// `Container` geometry — stable enough for a regression check
-/// without coupling to the internal class name.
+/// Finder for the divider's 1-dp wide × 30-dp tall hairline (the
+/// chrome-separation pass widened the divider so it reads as an
+/// intentional group boundary). The divider widget itself is private
+/// so we identify it via its visible `Container` geometry — stable
+/// enough for a regression check without coupling to the internal
+/// class name.
 Finder _hairlineFinder() => find.byWidgetPredicate((w) {
       if (w is! Container) return false;
       final c = w.constraints;
       if (c == null) return false;
-      return c.maxWidth == 1 && c.maxHeight == 28;
+      return c.maxWidth == 1 && c.maxHeight == 30;
     });
 
 void main() {
