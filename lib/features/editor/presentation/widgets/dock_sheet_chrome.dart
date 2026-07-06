@@ -180,13 +180,12 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
           // the soft top shadow below this gives the canonical
           // "sheet just landed" event without animation.
           color: tokens.surface,
+          // Bottom hairline only — the panel's top edge IS the
+          // dock's top edge, which already draws the sheet's 1px
+          // outline; a second line here doubled it.
           border: Border(
             bottom: BorderSide(
               color: tokens.border.withValues(alpha: 0.5),
-              width: 0.5,
-            ),
-            top: BorderSide(
-              color: tokens.border.withValues(alpha: 0.4),
               width: 0.5,
             ),
           ),

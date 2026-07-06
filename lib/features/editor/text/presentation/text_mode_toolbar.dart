@@ -25,6 +25,7 @@ import '../../presentation/widgets/dock_tool_strip.dart';
 import '../../presentation/widgets/dock_tool_tile.dart';
 import '../../presentation/widgets/inline_color_body.dart';
 import '../../presentation/widgets/panel_option_tile.dart';
+import '../../ui/editor_scrim.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/editor_tier_gap.dart';
 import '../../ui/panel_direction_pad.dart';

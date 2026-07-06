@@ -64,6 +64,7 @@ import '../text/presentation/add_text_composer_state.dart';
 import '../text/presentation/text_input_flow_sheet.dart';
 import '../text/presentation/text_mode_toolbar.dart';
 import '../toolbar/presentation/mode_done_button.dart';
+import '../ui/editor_scrim.dart';
 import 'widgets/editor_canvas.dart';
 import 'widgets/editor_tool_dock.dart';
 import '../toolbar/domain/toolbar_slot.dart';
@@ -130,6 +131,10 @@ class EditorScreen extends ConsumerWidget {
     final maskEditActive = ref.watch(
       maskEditControllerProvider.select((s) => s.active),
     );
+    // One resolution drives BOTH the dock (bar + expanded panel) and
+    // the canvas scrim, so "a panel is open" can never disagree
+    // between the two.
+    final dock = _resolveDock(ref, selection);
 
     return _AutosaveLifecycleScope(
       child: PopScope(
@@ -246,6 +251,22 @@ class EditorScreen extends ConsumerWidget {
           body: Stack(
             children: [
               const EditorCanvas(),
+              // Scrim between canvas and floating chrome: whenever an
+              // in-dock panel is open the canvas dims, matching the
+              // modal sheets' barrier — every panel now separates
+              // from the canvas the same way. IgnorePointer keeps
+              // canvas taps live (tap-on-canvas still dismisses).
+              if (!cropActive && !maskEditActive)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeOutCubic,
+                      opacity: dock.expanded != null ? 1.0 : 0.0,
+                      child: ColoredBox(color: editorScrimColor(context)),
+                    ),
+                  ),
+                ),
               // Always-visible exit pill anchored top-right of the
               // canvas. Shows whenever a tool mode (paint / text) is
               // active so the user has a permanent, discoverable way
@@ -269,201 +290,35 @@ class EditorScreen extends ConsumerWidget {
             builder: (dockContext) {
               // Crop Mode owns the screen — hide the regular dock so
               // the Crop bottom bar is the only chrome the user sees.
-              final cropActive = ref.watch(
-                cropControllerProvider.select((s) => s.active),
-              );
-              if (cropActive) return const SizedBox.shrink();
               // Mask-edit: its bottom strip replaces the dock.
-              final maskActive = ref.watch(
-                maskEditControllerProvider.select((s) => s.active),
-              );
-              if (maskActive) return const SizedBox.shrink();
-              final paintOpen = ref.watch(
-                paintToolControllerProvider.select((s) => s.panelOpen),
-              );
-              final textOpen = ref.watch(
-                textToolControllerProvider.select((s) => s.panelOpen),
-              );
-              final paintOpenSlot = ref.watch(
-                paintToolControllerProvider.select((s) => s.openSlot),
-              );
-              final textOpenSheet = ref.watch(
-                textToolControllerProvider.select((s) => s.openSheet),
-              );
-              final contextPanel = ref.watch(contextToolbarControllerProvider);
-              final selectedLayersForActions = selection.hasSelection
-                  ? _selectedLayersForActions(ref, selection)
-                  : const <EditorLayer>[];
-              final multiSelected = selectedLayersForActions.length > 1;
-              final selectedTextLayer = _selectedTextLayer(ref);
-              final textSelected = selectedTextLayer != null && !multiSelected;
-              final selectedStickerLayer = _selectedStickerLayer(ref);
-              final stickerSelected =
-                  selectedStickerLayer != null &&
-                  !paintOpen &&
-                  !textOpen &&
-                  !textSelected &&
-                  !multiSelected;
-              final selectedImageLayer = _selectedImageLayer(ref);
-              final imageSelected =
-                  selectedImageLayer != null &&
-                  !paintOpen &&
-                  !textOpen &&
-                  !textSelected &&
-                  !stickerSelected &&
-                  !multiSelected;
-              final selectedShapeLayer = _selectedShapeLayer(ref);
-              final shapeSelected =
-                  selectedShapeLayer != null &&
-                  !paintOpen &&
-                  !textOpen &&
-                  !textSelected &&
-                  !stickerSelected &&
-                  !imageSelected &&
-                  !multiSelected;
-              final modeKey = paintOpen
-                  ? 'paint'
-                  : (textOpen || textSelected)
-                  ? 'text'
-                  : multiSelected
-                  ? 'multi'
-                  : stickerSelected
-                  ? 'sticker'
-                  : imageSelected
-                  ? 'image'
-                  : shapeSelected
-                  ? 'shape'
-                  : 'main';
-
-              // Resolve the dock's `expanded` slot. Text mode renders
-              // its tool sheets here (Canva-style: canvas reflows above
-              // the dock instead of being overlaid). Paint still uses
-              // its small inline expansion row.
-              Widget? expanded;
-              Object? expandedKey;
-              if (contextPanel != null && selectedLayersForActions.isNotEmpty) {
-                expanded = ContextToolPanelBody(
-                  panel: contextPanel,
-                  layers: selectedLayersForActions,
-                );
-                expandedKey =
-                    'context:${contextPanel.name}:'
-                    '${selectedLayersForActions.map((l) => l.id).join(',')}';
-              } else if ((textOpen || textSelected) &&
-                  textSelected &&
-                  textOpenSheet != null) {
-                expanded = const TextModeSheetPanel();
-                expandedKey = 'text-sheet:$textOpenSheet';
-              } else if (paintOpen && paintOpenSlot != null) {
-                expanded = const PaintModeInlineExpansion();
-                expandedKey = 'paint-inline:$paintOpenSlot';
-              } else if (stickerSelected) {
-                final stickerOpenSlot = ref.watch(
-                  stickerToolControllerProvider.select((s) => s.openSlot),
-                );
-                switch (stickerOpenSlot) {
-                  case StickerToolSlot.size:
-                    expanded = StickerSizeBody(layer: selectedStickerLayer);
-                    expandedKey = 'sticker-size:${selectedStickerLayer.id}';
-                  case StickerToolSlot.replace:
-                    expanded = StickerReplaceBody(layer: selectedStickerLayer);
-                    expandedKey = 'sticker-replace:${selectedStickerLayer.id}';
-                  case StickerToolSlot.style:
-                    expanded = StickerStyleBody(layer: selectedStickerLayer);
-                    expandedKey = 'sticker-style:${selectedStickerLayer.id}';
-                  case null:
-                    break;
-                }
-              } else if (imageSelected) {
-                final imageOpenSlot = ref.watch(
-                  imageToolControllerProvider.select((s) => s.openSlot),
-                );
-                switch (imageOpenSlot) {
-                  case ImageToolSlot.shape:
-                    expanded = ImageShapeBody(layer: selectedImageLayer);
-                    expandedKey = 'image-shape:${selectedImageLayer.id}';
-                  case ImageToolSlot.style:
-                    expanded = ImageStyleBody(layer: selectedImageLayer);
-                    expandedKey = 'image-style:${selectedImageLayer.id}';
-                  case ImageToolSlot.border:
-                    expanded = ImageBorderBody(layer: selectedImageLayer);
-                    expandedKey = 'image-border:${selectedImageLayer.id}';
-                  case ImageToolSlot.shadow:
-                    expanded = ImageShadowBody(layer: selectedImageLayer);
-                    expandedKey = 'image-shadow:${selectedImageLayer.id}';
-                  case ImageToolSlot.adjust:
-                    expanded = ImageAdjustBody(layer: selectedImageLayer);
-                    expandedKey = 'image-adjust:${selectedImageLayer.id}';
-                  case ImageToolSlot.effects:
-                    expanded = ImageEffectsBody(layer: selectedImageLayer);
-                    expandedKey = 'image-effects:${selectedImageLayer.id}';
-                  case ImageToolSlot.filters:
-                    expanded = ImageFiltersBody(layer: selectedImageLayer);
-                    expandedKey = 'image-filters:${selectedImageLayer.id}';
-                  case ImageToolSlot.crop:
-                  case ImageToolSlot.replace:
-                  case null:
-                    // 'crop' opens the full-screen CropModeOverlay;
-                    // 'replace' is a one-shot picker. Neither owns an
-                    // inline dock body.
-                    break;
-                }
-              } else if (shapeSelected) {
-                final shapeOpenSlot = ref.watch(
-                  shapeToolControllerProvider.select((s) => s.openSlot),
-                );
-                switch (shapeOpenSlot) {
-                  case ShapeToolSlot.style:
-                    expanded = ShapeStyleBody(layer: selectedShapeLayer);
-                    expandedKey = 'shape-style:${selectedShapeLayer.id}';
-                  case ShapeToolSlot.border:
-                    expanded = ShapeBorderBody(layer: selectedShapeLayer);
-                    expandedKey = 'shape-border:${selectedShapeLayer.id}';
-                  case ShapeToolSlot.shadow:
-                    expanded = ShapeShadowBody(layer: selectedShapeLayer);
-                    expandedKey = 'shape-shadow:${selectedShapeLayer.id}';
-                  case ShapeToolSlot.replace:
-                  case null:
-                    break;
-                }
-              } else {
-                // No layer selected. The Canvas tool is the only entry
-                // that opens a panel from this state — it edits the
-                // document itself, not a layer.
-                final canvasOpen = ref.watch(
-                  canvasToolControllerProvider.select((s) => s.panelOpen),
-                );
-                if (canvasOpen) {
-                  expanded = const CanvasPanelBody();
-                  expandedKey = 'canvas-panel';
-                }
+              if (cropActive || maskEditActive) {
+                return const SizedBox.shrink();
               }
-
               return EditorToolDock(
-                modeKey: modeKey,
-                expanded: expanded,
-                expandedKey: expandedKey,
-                child: paintOpen
+                modeKey: dock.modeKey,
+                expanded: dock.expanded,
+                expandedKey: dock.expandedKey,
+                child: dock.paintOpen
                     ? const PaintModeToolbar()
-                    : (textOpen || textSelected)
+                    : dock.textMode
                     ? const TextModeToolbar()
-                    : multiSelected
+                    : dock.multiSelected
                     ? MultiSelectModeToolbar(
-                        layers: selectedLayersForActions,
+                        layers: dock.selectedLayersForActions,
                         onOpenLayers: () =>
                             Scaffold.of(dockContext).openEndDrawer(),
                       )
-                    : stickerSelected
-                    ? StickerModeToolbar(layer: selectedStickerLayer)
-                    : imageSelected
-                    ? ImageModeToolbar(layer: selectedImageLayer)
-                    : shapeSelected
+                    : dock.selectedStickerLayer != null
+                    ? StickerModeToolbar(layer: dock.selectedStickerLayer!)
+                    : dock.selectedImageLayer != null
+                    ? ImageModeToolbar(layer: dock.selectedImageLayer!)
+                    : dock.selectedShapeLayer != null
                     ? ShapeModeToolbar(
-                        layer: selectedShapeLayer,
+                        layer: dock.selectedShapeLayer!,
                         onReplaceTap: () => _openReplaceShapePicker(
                           context,
                           ref,
-                          selectedShapeLayer,
+                          dock.selectedShapeLayer!,
                         ),
                       )
                     : EditorToolbar(
@@ -575,6 +430,185 @@ class EditorScreen extends ConsumerWidget {
         onTap: () => _openCanvas(ref),
       ),
     ];
+  }
+
+  /// Resolves everything the bottom dock renders — mode key, chip
+  /// strip variant flags and the optional expanded panel — in ONE
+  /// place, so the canvas scrim (which dims whenever a panel is
+  /// open) and the dock itself can never disagree. The `selected*`
+  /// layer fields are pre-gated: non-null only when that mode owns
+  /// the strip. Text mode renders its tool sheets in the expanded
+  /// slot (Canva-style: canvas reflows above the dock instead of
+  /// being overlaid); paint keeps its small inline expansion row.
+  _DockResolution _resolveDock(WidgetRef ref, SelectionState selection) {
+    final paintOpen = ref.watch(
+      paintToolControllerProvider.select((s) => s.panelOpen),
+    );
+    final textOpen = ref.watch(
+      textToolControllerProvider.select((s) => s.panelOpen),
+    );
+    final paintOpenSlot = ref.watch(
+      paintToolControllerProvider.select((s) => s.openSlot),
+    );
+    final textOpenSheet = ref.watch(
+      textToolControllerProvider.select((s) => s.openSheet),
+    );
+    final contextPanel = ref.watch(contextToolbarControllerProvider);
+    final selectedLayersForActions = selection.hasSelection
+        ? _selectedLayersForActions(ref, selection)
+        : const <EditorLayer>[];
+    final multiSelected = selectedLayersForActions.length > 1;
+    final selectedTextLayer = _selectedTextLayer(ref);
+    final textSelected = selectedTextLayer != null && !multiSelected;
+    final selectedStickerLayer = _selectedStickerLayer(ref);
+    final stickerSelected =
+        selectedStickerLayer != null &&
+        !paintOpen &&
+        !textOpen &&
+        !textSelected &&
+        !multiSelected;
+    final selectedImageLayer = _selectedImageLayer(ref);
+    final imageSelected =
+        selectedImageLayer != null &&
+        !paintOpen &&
+        !textOpen &&
+        !textSelected &&
+        !stickerSelected &&
+        !multiSelected;
+    final selectedShapeLayer = _selectedShapeLayer(ref);
+    final shapeSelected =
+        selectedShapeLayer != null &&
+        !paintOpen &&
+        !textOpen &&
+        !textSelected &&
+        !stickerSelected &&
+        !imageSelected &&
+        !multiSelected;
+    final modeKey = paintOpen
+        ? 'paint'
+        : (textOpen || textSelected)
+        ? 'text'
+        : multiSelected
+        ? 'multi'
+        : stickerSelected
+        ? 'sticker'
+        : imageSelected
+        ? 'image'
+        : shapeSelected
+        ? 'shape'
+        : 'main';
+
+    Widget? expanded;
+    Object? expandedKey;
+    if (contextPanel != null && selectedLayersForActions.isNotEmpty) {
+      expanded = ContextToolPanelBody(
+        panel: contextPanel,
+        layers: selectedLayersForActions,
+      );
+      expandedKey =
+          'context:${contextPanel.name}:'
+          '${selectedLayersForActions.map((l) => l.id).join(',')}';
+    } else if ((textOpen || textSelected) &&
+        textSelected &&
+        textOpenSheet != null) {
+      expanded = const TextModeSheetPanel();
+      expandedKey = 'text-sheet:$textOpenSheet';
+    } else if (paintOpen && paintOpenSlot != null) {
+      expanded = const PaintModeInlineExpansion();
+      expandedKey = 'paint-inline:$paintOpenSlot';
+    } else if (stickerSelected) {
+      final stickerOpenSlot = ref.watch(
+        stickerToolControllerProvider.select((s) => s.openSlot),
+      );
+      switch (stickerOpenSlot) {
+        case StickerToolSlot.size:
+          expanded = StickerSizeBody(layer: selectedStickerLayer);
+          expandedKey = 'sticker-size:${selectedStickerLayer.id}';
+        case StickerToolSlot.replace:
+          expanded = StickerReplaceBody(layer: selectedStickerLayer);
+          expandedKey = 'sticker-replace:${selectedStickerLayer.id}';
+        case StickerToolSlot.style:
+          expanded = StickerStyleBody(layer: selectedStickerLayer);
+          expandedKey = 'sticker-style:${selectedStickerLayer.id}';
+        case null:
+          break;
+      }
+    } else if (imageSelected) {
+      final imageOpenSlot = ref.watch(
+        imageToolControllerProvider.select((s) => s.openSlot),
+      );
+      switch (imageOpenSlot) {
+        case ImageToolSlot.shape:
+          expanded = ImageShapeBody(layer: selectedImageLayer);
+          expandedKey = 'image-shape:${selectedImageLayer.id}';
+        case ImageToolSlot.style:
+          expanded = ImageStyleBody(layer: selectedImageLayer);
+          expandedKey = 'image-style:${selectedImageLayer.id}';
+        case ImageToolSlot.border:
+          expanded = ImageBorderBody(layer: selectedImageLayer);
+          expandedKey = 'image-border:${selectedImageLayer.id}';
+        case ImageToolSlot.shadow:
+          expanded = ImageShadowBody(layer: selectedImageLayer);
+          expandedKey = 'image-shadow:${selectedImageLayer.id}';
+        case ImageToolSlot.adjust:
+          expanded = ImageAdjustBody(layer: selectedImageLayer);
+          expandedKey = 'image-adjust:${selectedImageLayer.id}';
+        case ImageToolSlot.effects:
+          expanded = ImageEffectsBody(layer: selectedImageLayer);
+          expandedKey = 'image-effects:${selectedImageLayer.id}';
+        case ImageToolSlot.filters:
+          expanded = ImageFiltersBody(layer: selectedImageLayer);
+          expandedKey = 'image-filters:${selectedImageLayer.id}';
+        case ImageToolSlot.crop:
+        case ImageToolSlot.replace:
+        case null:
+          // 'crop' opens the full-screen CropModeOverlay; 'replace'
+          // is a one-shot picker. Neither owns an inline dock body.
+          break;
+      }
+    } else if (shapeSelected) {
+      final shapeOpenSlot = ref.watch(
+        shapeToolControllerProvider.select((s) => s.openSlot),
+      );
+      switch (shapeOpenSlot) {
+        case ShapeToolSlot.style:
+          expanded = ShapeStyleBody(layer: selectedShapeLayer);
+          expandedKey = 'shape-style:${selectedShapeLayer.id}';
+        case ShapeToolSlot.border:
+          expanded = ShapeBorderBody(layer: selectedShapeLayer);
+          expandedKey = 'shape-border:${selectedShapeLayer.id}';
+        case ShapeToolSlot.shadow:
+          expanded = ShapeShadowBody(layer: selectedShapeLayer);
+          expandedKey = 'shape-shadow:${selectedShapeLayer.id}';
+        case ShapeToolSlot.replace:
+        case null:
+          break;
+      }
+    } else {
+      // No layer selected. The Canvas tool is the only entry that
+      // opens a panel from this state — it edits the document
+      // itself, not a layer.
+      final canvasOpen = ref.watch(
+        canvasToolControllerProvider.select((s) => s.panelOpen),
+      );
+      if (canvasOpen) {
+        expanded = const CanvasPanelBody();
+        expandedKey = 'canvas-panel';
+      }
+    }
+
+    return (
+      expanded: expanded,
+      expandedKey: expandedKey,
+      modeKey: modeKey,
+      paintOpen: paintOpen,
+      textMode: textOpen || textSelected,
+      multiSelected: multiSelected,
+      selectedLayersForActions: selectedLayersForActions,
+      selectedStickerLayer: stickerSelected ? selectedStickerLayer : null,
+      selectedImageLayer: imageSelected ? selectedImageLayer : null,
+      selectedShapeLayer: shapeSelected ? selectedShapeLayer : null,
+    );
   }
 
   List<EditorLayer> _selectedLayersForActions(
@@ -1321,9 +1355,7 @@ class _AutosaveLifecycleScopeState
     // Use the captured notifier — `ref.read` inside `dispose` is
     // unsafe in Riverpod 3 because `BuildContext` is already
     // deactivated by the time finalisation runs.
-    unawaited(
-      _autosave?.flushNow(sessionEnding: true) ?? Future<void>.value(),
-    );
+    unawaited(_autosave?.flushNow(sessionEnding: true) ?? Future<void>.value());
     super.dispose();
   }
 
@@ -1377,17 +1409,16 @@ class _DocumentTitle extends ConsumerWidget {
                 title,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.textPrimary,
-                    ),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: tokens.textPrimary,
+                ),
               ),
               Text(
                 '${size.width.toInt()} × ${size.height.toInt()} • ${(scale * 100).toStringAsFixed(0)}%',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelSmall
-                    ?.copyWith(color: tokens.textSecondary),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: tokens.textSecondary),
               ),
             ],
           ),
@@ -1440,6 +1471,23 @@ class _DocumentTitle extends ConsumerWidget {
 }
 
 enum _OverflowAction { layers, save, fit, newDoc }
+
+/// Everything [_resolveDock] hands the dock + scrim. The `selected*`
+/// layer fields are pre-gated to the mode that owns the chip strip
+/// (null otherwise), so the dock child picks its toolbar by simple
+/// null checks in priority order.
+typedef _DockResolution = ({
+  Widget? expanded,
+  Object? expandedKey,
+  String modeKey,
+  bool paintOpen,
+  bool textMode,
+  bool multiSelected,
+  List<EditorLayer> selectedLayersForActions,
+  TextLayer? selectedStickerLayer,
+  ImageLayer? selectedImageLayer,
+  ShapeLayer? selectedShapeLayer,
+});
 
 /// Undo/redo, promoted into the top bar (v2): the two most-used
 /// commands sit beside Export instead of floating over the canvas,
@@ -1539,4 +1587,3 @@ class _ModeExitPill extends ConsumerWidget {
     );
   }
 }
-

@@ -19,6 +19,7 @@ import 'package:canvas_engine/features/editor/engine/commands/transform_commands
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
+import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
 import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +63,10 @@ Future<void> _loadMaterialIcons() async {
   await loader.load();
 }
 
-ProviderContainer _sampleEditor({bool withSelection = false}) {
+ProviderContainer _sampleEditor({
+  bool withSelection = false,
+  bool withSizePanel = false,
+}) {
   final container = ProviderContainer();
   container.read(editorSessionProvider.notifier).state =
       const EditorSession(name: 'پوستر نوروز');
@@ -102,8 +106,13 @@ ProviderContainer _sampleEditor({bool withSelection = false}) {
       ),
     ),
   );
-  if (withSelection) {
+  if (withSelection || withSizePanel) {
     container.read(selectionControllerProvider.notifier).select('text-1');
+  }
+  if (withSizePanel) {
+    // In-dock Size sheet open — exercises the elevated panel + the
+    // canvas scrim behind it.
+    container.read(textToolControllerProvider.notifier).openSheet('size');
   }
   return container;
 }
@@ -124,6 +133,7 @@ void main() {
     required Brightness brightness,
     required String fileName,
     bool withSelection = false,
+    bool withSizePanel = false,
   }) async {
     tester.view.physicalSize = const Size(440, 956);
     tester.view.devicePixelRatio = 1.0;
@@ -132,7 +142,10 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    final container = _sampleEditor(withSelection: withSelection);
+    final container = _sampleEditor(
+      withSelection: withSelection,
+      withSizePanel: withSizePanel,
+    );
     addTearDown(container.dispose);
 
     final boundaryKey = GlobalKey();
@@ -209,6 +222,28 @@ void main() {
       brightness: Brightness.dark,
       fileName: 'editor_selection_dark.png',
       withSelection: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — size panel, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_panel_light.png',
+      withSizePanel: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — size panel, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_panel_dark.png',
+      withSizePanel: true,
     );
   });
 }

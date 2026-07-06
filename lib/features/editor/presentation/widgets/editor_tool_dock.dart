@@ -70,15 +70,20 @@ class EditorToolDock extends StatelessWidget {
     final stripHeight = height ?? (compact ? 64.0 : 80.0);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Elevated chrome: the dock sits on tokens.surface (a step
-    // lighter than the tokens.workspace behind the canvas), with a
-    // top hairline + a soft upward shadow so the bar reads as a
-    // distinct layer floating above the workspace instead of
-    // camouflaging into it.
+    // lighter than the tokens.workspace behind the canvas), with
+    // rounded top corners, a top hairline and a soft upward shadow —
+    // the AppContentSheet grammar — so bar + expanded panel read as
+    // ONE floating sheet above the workspace instead of camouflaging
+    // into it.
+    const topRadius = Radius.circular(18);
     return DecoratedBox(
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: tokens.surface,
-        border: Border(top: BorderSide(color: tokens.border)),
-        boxShadow: [
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.vertical(top: topRadius),
+          side: BorderSide(color: tokens.border),
+        ),
+        shadows: [
           BoxShadow(
             color: Theme.of(
               context,
@@ -88,38 +93,79 @@ class EditorToolDock extends StatelessWidget {
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Expanded zone ──────────────────────────────────
-              // AnimatedSize collapses to 0 when [expanded] is
-              // null and grows to the panel's intrinsic height
-              // otherwise. AnimatedSwitcher inside cross-fades
-              // between different panels (e.g. category change).
-              // `easeOutQuint` gives a premium "settle" feel —
-              // fast initial expansion, soft tail — that reads as
-              // intentional motion rather than mechanical resize.
-              ClipRect(
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 240),
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.bottomCenter,
-                  child: AnimatedSwitcher(
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: topRadius),
+        child: Material(
+          color: Colors.transparent,
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Expanded zone ──────────────────────────────────
+                // AnimatedSize collapses to 0 when [expanded] is
+                // null and grows to the panel's intrinsic height
+                // otherwise. AnimatedSwitcher inside cross-fades
+                // between different panels (e.g. category change).
+                // `easeOutQuint` gives a premium "settle" feel —
+                // fast initial expansion, soft tail — that reads as
+                // intentional motion rather than mechanical resize.
+                ClipRect(
+                  child: AnimatedSize(
                     duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.bottomCenter,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 240),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        // Subtle upward slide (4% of height) +
+                        // fade — the panel "rises" into place
+                        // instead of flat-fading. Matches the
+                        // bottom-sheet motion users expect from
+                        // premium iOS / Material 3 surfaces.
+                        final slide = Tween<Offset>(
+                          begin: const Offset(0, 0.04),
+                          end: Offset.zero,
+                        ).animate(animation);
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(position: slide, child: child),
+                        );
+                      },
+                      layoutBuilder: (currentChild, previousChildren) {
+                        return Stack(
+                          alignment: Alignment.bottomCenter,
+                          children: [...previousChildren, ?currentChild],
+                        );
+                      },
+                      child: expanded == null
+                          ? const SizedBox(width: double.infinity, height: 0)
+                          : KeyedSubtree(
+                              key: ValueKey(
+                                expandedKey ?? expanded.runtimeType,
+                              ),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: expanded,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+                // ── Chip strip ────────────────────────────────────
+                // Fixed-height row that mirrors the previous dock
+                // surface. Mode swaps slide + cross-fade in here.
+                SizedBox(
+                  height: stripHeight,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
                     switchInCurve: Curves.easeOutCubic,
                     switchOutCurve: Curves.easeInCubic,
                     transitionBuilder: (child, animation) {
-                      // Subtle upward slide (4% of height) +
-                      // fade — the panel "rises" into place
-                      // instead of flat-fading. Matches the
-                      // bottom-sheet motion users expect from
-                      // premium iOS / Material 3 surfaces.
                       final slide = Tween<Offset>(
-                        begin: const Offset(0, 0.04),
+                        begin: const Offset(0.06, 0),
                         end: Offset.zero,
                       ).animate(animation);
                       return FadeTransition(
@@ -129,51 +175,15 @@ class EditorToolDock extends StatelessWidget {
                     },
                     layoutBuilder: (currentChild, previousChildren) {
                       return Stack(
-                        alignment: Alignment.bottomCenter,
+                        alignment: Alignment.center,
                         children: [...previousChildren, ?currentChild],
                       );
                     },
-                    child: expanded == null
-                        ? const SizedBox(width: double.infinity, height: 0)
-                        : KeyedSubtree(
-                            key: ValueKey(expandedKey ?? expanded.runtimeType),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: expanded,
-                            ),
-                          ),
+                    child: KeyedSubtree(key: ValueKey(modeKey), child: child),
                   ),
                 ),
-              ),
-              // ── Chip strip ────────────────────────────────────
-              // Fixed-height row that mirrors the previous dock
-              // surface. Mode swaps slide + cross-fade in here.
-              SizedBox(
-                height: stripHeight,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) {
-                    final slide = Tween<Offset>(
-                      begin: const Offset(0.06, 0),
-                      end: Offset.zero,
-                    ).animate(animation);
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(position: slide, child: child),
-                    );
-                  },
-                  layoutBuilder: (currentChild, previousChildren) {
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [...previousChildren, ?currentChild],
-                    );
-                  },
-                  child: KeyedSubtree(key: ValueKey(modeKey), child: child),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
