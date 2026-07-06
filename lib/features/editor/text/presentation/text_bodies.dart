@@ -20,7 +20,7 @@ class _TextBodies {
   static Widget fontBody(BuildContext context, WidgetRef ref, TextLayer layer) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final current = layer.style.fontFamily;
-    return _InlineFontBody(
+    return InlineFontBody(
       layerId: layer.id,
       current: current,
       content: layer.content,
@@ -32,12 +32,12 @@ class _TextBodies {
       // is currently browsing. They can still switch script inside
       // the sheet — we just don't drop them into a mixed list.
       onBrowseAll: (script) async {
-        final picked = await _showFontPickerSheet(
+        final picked = await showFontPickerSheet(
           context,
           current: current,
           initialScript: script,
         );
-        if (picked == _FontPickResult.unchanged) return;
+        if (picked == FontPickResult.unchanged) return;
         EditorHaptics.confirm();
         ctrl.setFontFamily(picked.family);
       },

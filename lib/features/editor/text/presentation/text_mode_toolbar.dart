@@ -6,6 +6,11 @@
 /// imports here.
 library;
 
+export '../../presentation/panels/text/font_picker/cards.dart'
+    show fontSampleText;
+export '../../presentation/panels/text/font_picker/inline_browser.dart'
+    show recommendedFontEntries;
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -21,6 +26,8 @@ import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/core/editor_document.dart';
 import '../../engine/modules/text/text_layer.dart';
+import '../../presentation/panels/text/font_picker/inline_browser.dart';
+import '../../presentation/panels/text/font_picker/picker_sheet.dart';
 import '../../presentation/widgets/controls/panel_chip.dart';
 import '../../presentation/widgets/controls/precision_divider.dart';
 import '../../presentation/widgets/controls/section_label.dart';
@@ -46,7 +53,6 @@ import 'text_floating_toolbar.dart' show showTextMoreSheet;
 
 part 'text_bodies.dart';
 part 'text_decoration_panels.dart';
-part 'text_font_picker.dart';
 part 'text_layout_panel.dart';
 part 'text_resize_tiles.dart';
 part 'text_size_panel.dart';
