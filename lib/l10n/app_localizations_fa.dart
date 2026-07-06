@@ -1142,6 +1142,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get opacityLabel => 'شفافیت';
 
   @override
+  String get effectStrokeLabel => 'خط دور';
+
+  @override
+  String get effectGradientLabel => 'گرادیان';
+
+  @override
+  String get distanceLabel => 'فاصله';
+
+  @override
   String get blurLabel => 'محو';
 
   @override

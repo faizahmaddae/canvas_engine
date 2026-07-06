@@ -381,3 +381,17 @@ class _CustomColorPill extends StatelessWidget {
     );
   }
 }
+
+/// Curated 8-swatch palette shared by the colour-bearing text
+/// panels (Color / Background / Border / Shadow / Effects). Hand-picked so a normal user lands on a
+/// visually-pleasing choice in 1 tap.
+const List<Color> kCuratedTextSwatches = [
+  Color(0xFF000000), // Black
+  Color(0xFFFFFFFF), // White
+  Color(0xFFEF5350), // Red
+  Color(0xFFFFB300), // Amber
+  Color(0xFF66BB6A), // Green
+  Color(0xFF42A5F5), // Blue
+  Color(0xFFAB47BC), // Purple
+  Color(0xFF8D6E63), // Brown
+];

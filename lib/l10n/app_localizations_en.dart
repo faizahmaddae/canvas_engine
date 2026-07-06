@@ -1141,6 +1141,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opacityLabel => 'Opacity';
 
   @override
+  String get effectStrokeLabel => 'Stroke';
+
+  @override
+  String get effectGradientLabel => 'Gradient';
+
+  @override
+  String get distanceLabel => 'Distance';
+
+  @override
   String get blurLabel => 'Blur';
 
   @override

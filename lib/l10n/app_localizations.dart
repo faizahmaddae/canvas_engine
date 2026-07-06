@@ -2228,6 +2228,24 @@ abstract class AppLocalizations {
   /// **'Opacity'**
   String get opacityLabel;
 
+  /// No description provided for @effectStrokeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stroke'**
+  String get effectStrokeLabel;
+
+  /// No description provided for @effectGradientLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradient'**
+  String get effectGradientLabel;
+
+  /// No description provided for @distanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get distanceLabel;
+
   /// No description provided for @blurLabel.
   ///
   /// In en, this message translates to:

@@ -89,4 +89,26 @@ void main() {
       expect(painting.height, 2.0);
     });
   });
+
+  test('toJson omits every shadow key while shadowColor is null', () {
+    // Additive-serialization gate for the shadow effect: documents
+    // without a shadow must encode WITHOUT shadow keys, so pre-shadow
+    // fixtures stay byte-identical forever.
+    final json = const TextStyleSpec(fontSize: 24).toJson();
+    expect(json.containsKey('shadowColor'), isFalse);
+    expect(json.containsKey('shadowBlur'), isFalse);
+    expect(json.containsKey('shadowDx'), isFalse);
+    expect(json.containsKey('shadowDy'), isFalse);
+  });
+
+  test('full shadow (colour + blur + offset) round-trips exactly', () {
+    const original = TextStyleSpec(
+      shadowColor: Color(0x8C1F1B16),
+      shadowBlur: 18,
+      shadowOffset: Offset(-6, 9),
+    );
+    final restored = TextStyleSpec.fromJson(original.toJson());
+    expect(restored, original);
+    expect(restored.toJson(), original.toJson());
+  });
 }

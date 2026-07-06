@@ -215,7 +215,7 @@ class TextBodies {
           InlineColorBody(
             current: style.backgroundColor!,
             recents: ref.watch(recentColorsControllerProvider),
-            palette: _curatedSwatches,
+            palette: kCuratedTextSwatches,
             compactRecents: true,
             onPick: (c) {
               // Preserve current alpha so the user keeps any opacity
@@ -326,7 +326,7 @@ class TextBodies {
           InlineColorBody(
             current: style.outlineColor!,
             recents: ref.watch(recentColorsControllerProvider),
-            palette: _curatedSwatches,
+            palette: kCuratedTextSwatches,
             compactRecents: true,
             onPick: (c) {
               final a = style.outlineColor?.a ?? 1.0;
@@ -418,7 +418,7 @@ class TextBodies {
           InlineColorBody(
             current: style.shadowColor!,
             recents: ref.watch(recentColorsControllerProvider),
-            palette: _curatedSwatches,
+            palette: kCuratedTextSwatches,
             compactRecents: true,
             onPick: (c) {
               final a = style.shadowColor?.a ?? 0.5;
@@ -534,16 +534,4 @@ class TextBodies {
 }
 
 
-/// Curated 8-swatch palette shared by Color / Background / Border /
-/// Shadow sub-tools. Hand-picked so a normal user lands on a
-/// visually-pleasing choice in 1 tap.
-const List<Color> _curatedSwatches = [
-  Color(0xFF000000), // Black
-  Color(0xFFFFFFFF), // White
-  Color(0xFFEF5350), // Red
-  Color(0xFFFFB300), // Amber
-  Color(0xFF66BB6A), // Green
-  Color(0xFF42A5F5), // Blue
-  Color(0xFFAB47BC), // Purple
-  Color(0xFF8D6E63), // Brown
-];
+

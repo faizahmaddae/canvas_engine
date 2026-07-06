@@ -9,6 +9,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/utils/haptics.dart';
+import '../../../../../l10n/l10n.dart';
+import '../../../../color_picker/presentation/color_picker_sheet.dart';
+import '../../../application/recent_colors_controller.dart';
+import '../../../ui/editor_slider_row.dart';
+import '../../../ui/panel_direction_pad.dart';
+import '../../widgets/controls/panel_chip.dart';
+import '../../widgets/controls/section_label.dart';
+import '../../widgets/controls/slider_row.dart';
+import '../../widgets/inline_color_body.dart';
+import 'precision/shadow_precision.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../text/domain/text_style_presets.dart';
 import '../../../engine/modules/text/text_layer.dart';
@@ -41,7 +51,17 @@ class StylesBody extends ConsumerStatefulWidget {
   ConsumerState<StylesBody> createState() => _StylesBodyState();
 }
 
+/// Effect categories offered below the preset rail (text-tool
+/// redesign §3, "Style & Effects"). Only [shadow] is wired today —
+/// the rest render as visibly disabled chips so the grammar (and the
+/// user's mental map) is already in place when they land.
+enum _EffectCategory { stroke, shadow, glow, background, gradient }
+
 class _StylesBodyState extends ConsumerState<StylesBody> {
+  /// Open effect sub-section. Panel-local by design: closing the
+  /// sheet resets to the collapsed presets-only view.
+  _EffectCategory? _openEffect;
+
   /// Active chip highlight: a preset is "current" iff merging its
   /// visual subset onto the layer's style is a no-op. Same merge
   /// rule the controller uses on apply.
@@ -68,9 +88,218 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
     // enough to scroll comfortably.
     final presets = orderedTextStylePresets(layerStyle: layer.style);
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: _StylesRow(presets: presets, activeId: activeId, onPick: apply),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: _StylesRow(
+            presets: presets,
+            activeId: activeId,
+            onPick: apply,
+          ),
+        ),
+        const SizedBox(height: 10),
+        _EffectChipsRow(
+          open: _openEffect,
+          onToggle: (c) =>
+              setState(() => _openEffect = _openEffect == c ? null : c),
+        ),
+        // Sub-section area — grows/collapses under the chips.
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: _openEffect == _EffectCategory.shadow
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: _ShadowEffectSection(layer: layer),
+                )
+              : const SizedBox(width: double.infinity, height: 0),
+        ),
+      ],
+    );
+  }
+}
+
+/// Category chips: خط دور · سایه · درخشش · زمینه · گرادیان. Only
+/// Shadow is interactive this step; the others are rendered at
+/// reduced opacity behind an [IgnorePointer] so the vocabulary is
+/// visible but honestly inert until each lands.
+class _EffectChipsRow extends StatelessWidget {
+  const _EffectChipsRow({required this.open, required this.onToggle});
+
+  final _EffectCategory? open;
+  final ValueChanged<_EffectCategory> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    Widget chip(_EffectCategory c, String label, {bool enabled = false}) {
+      final child = LayoutPresetChip(
+        label: label,
+        selected: open == c,
+        onTap: () => onToggle(c),
+      );
+      if (enabled) return child;
+      return Opacity(opacity: 0.38, child: IgnorePointer(child: child));
+    }
+
+    return SizedBox(
+      height: 36,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        children: [
+          chip(_EffectCategory.stroke, l10n.effectStrokeLabel),
+          const SizedBox(width: 6),
+          chip(_EffectCategory.shadow, l10n.shadowTool, enabled: true),
+          const SizedBox(width: 6),
+          chip(_EffectCategory.glow, l10n.glowOption),
+          const SizedBox(width: 6),
+          chip(_EffectCategory.background, l10n.backgroundTool),
+          const SizedBox(width: 6),
+          chip(_EffectCategory.gradient, l10n.effectGradientLabel),
+        ],
+      ),
+    );
+  }
+}
+
+/// The wired سایه sub-section: colour (the shared compact colour
+/// control) + distance/blur sliders + direction pad — all on the
+/// shared kit, all writing through the same drag-coalesced
+/// controller setters the Shadow tile panel uses, so undo behaviour
+/// is identical from either entry point.
+class _ShadowEffectSection extends ConsumerWidget {
+  const _ShadowEffectSection({required this.layer});
+
+  final TextLayer layer;
+
+  /// Distance slider ceiling. Matches the direction pad's clamp so
+  /// the two controls can never fight over the offset magnitude.
+  static const double _maxDistance = 24;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ctrl = ref.read(textToolControllerProvider.notifier);
+    final style = layer.style;
+    final hasShadow = style.shadowColor != null;
+    final labelStyle = flatSliderLabelStyle(context);
+    final readoutStyle = flatSliderReadoutStyle(context);
+    final distance = style.shadowOffset.distance.clamp(0.0, _maxDistance);
+
+    void setDistance(double v) {
+      // Preserve the current direction; a fresh (zero-ish) offset
+      // falls back to straight down so the first drag reads as a
+      // natural drop shadow.
+      final d = style.shadowOffset.distance;
+      final dir = d < 0.01
+          ? const Offset(0, 1)
+          : style.shadowOffset / d;
+      ctrl.setShadowOffset(dir * v);
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!hasShadow)
+          // Off state: one tap on a preset enables the shadow with a
+          // sensible look (same tiles as the Shadow panel — one
+          // vocabulary, one behaviour).
+          StyleTileRow(
+            tiles: [
+              for (int i = 0; i < shadowPresets.length; i++)
+                StyleTile(
+                  icon: shadowPresetIcons[i],
+                  label: shadowPresetLabel(context.l10n, shadowPresets[i]),
+                  selected: false,
+                  onTap: () {
+                    ctrl.setShadowEnabled(true);
+                    applyShadowPreset(
+                      ref,
+                      shadowPresets[i],
+                      baseColor: const Color(0xFF000000),
+                    );
+                  },
+                ),
+            ],
+          )
+        else ...[
+          InlineColorBody(
+            current: style.shadowColor!,
+            recents: ref.watch(recentColorsControllerProvider),
+            palette: kCuratedTextSwatches,
+            compactRecents: true,
+            onPick: (c) {
+              final a = style.shadowColor?.a ?? 0.5;
+              ctrl.setShadowColor(c.withValues(alpha: a));
+            },
+            onCustom: () async {
+              final original = style.shadowColor!;
+              final picked = await showColorPickerSheet(
+                context,
+                initial: original,
+                recents: ref.read(recentColorsControllerProvider),
+                onLiveChange: ctrl.setShadowColor,
+                title: context.l10n.shadowColorTitle,
+              );
+              if (picked == null) {
+                ctrl.setShadowColor(original);
+                return;
+              }
+              ctrl.setShadowColor(picked);
+              ctrl.rememberRecentColor(picked);
+            },
+          ),
+          const SizedBox(height: 8),
+          EditorSliderRow(
+            label: context.l10n.distanceLabel,
+            labelWidth: 96,
+            value: distance.toDouble(),
+            max: _maxDistance,
+            format: (v) => '${v.toStringAsFixed(0)}px',
+            onChanged: setDistance,
+            onDragStart: ctrl.beginStyleDrag,
+            onDragEnd: ctrl.endStyleDrag,
+            haptics: EditorSliderHaptics.startTickEnd,
+            labelStyle: labelStyle,
+            readoutStyle: readoutStyle,
+          ),
+          EditorSliderRow(
+            label: context.l10n.blurLabel,
+            labelWidth: 96,
+            value: style.shadowBlur,
+            max: 40,
+            format: (v) => '${v.toStringAsFixed(0)}px',
+            onChanged: ctrl.setShadowBlur,
+            onDragStart: ctrl.beginStyleDrag,
+            onDragEnd: ctrl.endStyleDrag,
+            haptics: EditorSliderHaptics.startTickEnd,
+            labelStyle: labelStyle,
+            readoutStyle: readoutStyle,
+          ),
+          const SizedBox(height: 4),
+          PanelSectionLabel(context.l10n.directionLabel),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: SizedBox(
+              width: 168,
+              child: PanelDirectionPad(
+                offset: style.shadowOffset,
+                magnitude: shadowDirectionMagnitude(style.shadowOffset),
+                size: 144,
+                onPick: (off) {
+                  EditorHaptics.toggle();
+                  ctrl.setShadowOffset(off);
+                },
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
