@@ -1,7 +1,23 @@
-// Size sub-tool panel for the text-mode toolbar, split out of
-// text_mode_toolbar.dart. Part file: every symbol resolves via the
-// library root's imports — add imports there, never here.
-part of 'text_mode_toolbar.dart';
+// Size panel (Phase 2A commit 5): extracted verbatim from the
+// text_mode_toolbar part-file library (text_size_panel.dart). Rename-only
+// promotion of the library-dispatch entry point; everything else
+// stays private.
+
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../../l10n/l10n.dart';
+import '../../../application/live_overlay_controller.dart';
+import '../../../engine/core/editor_document.dart';
+import '../../../engine/modules/text/text_layer.dart';
+import '../../../text/application/text_tool_controller.dart';
+import '../../../ui/editor_slider_row.dart';
+import '../../../ui/precision_disclosure.dart';
+import '../../widgets/controls/panel_chip.dart';
+import '../../widgets/controls/precision_divider.dart';
+import '../../widgets/controls/stepper_row.dart';
 
 /// Broad safety clamp for direct font-size mutation (stepper +
 /// exact slider). Intentionally far wider than the named-preset
@@ -58,8 +74,8 @@ double _lengthFactor(String content) {
 /// is lost). Keying the pin by layer id ensures switching to a
 /// different text layer does not inherit the previous layer's
 /// highlight.
-class _SizeBody extends ConsumerWidget {
-  const _SizeBody({required this.layer});
+class SizeBody extends ConsumerWidget {
+  const SizeBody({super.key, required this.layer});
   final TextLayer layer;
 
   @override

@@ -1,22 +1,32 @@
-// Layout sub-tool panel for the text-mode toolbar, split out of
-// text_mode_toolbar.dart. Part file: every symbol resolves via the
-// library root's imports — add imports there, never here.
-part of 'text_mode_toolbar.dart';
+// Layout panel (Phase 2A commit 5): extracted verbatim from the
+// text_mode_toolbar part-file library (text_layout_panel.dart). Rename-only
+// promotion of the library-dispatch entry point; everything else
+// stays private.
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../../app/theme/app_tokens.dart';
+import '../../../../../l10n/l10n.dart';
+import '../../../engine/modules/text/text_layer.dart';
+import '../../../text/application/text_tool_controller.dart';
+import '../../widgets/controls/slider_row.dart';
+import '../../widgets/controls/toggle_segment.dart';
 
 // ─── Layout panel (mobile-first redesign) ───────────────────────────
 //
 // Owns the "which precision slider is open" state so opening one
 // closes the other (spec: only one slider expanded at a time).
 
-class _LayoutPanel extends ConsumerStatefulWidget {
-  const _LayoutPanel({required this.layer});
+class LayoutPanel extends ConsumerStatefulWidget {
+  const LayoutPanel({super.key, required this.layer});
   final TextLayer layer;
 
   @override
-  ConsumerState<_LayoutPanel> createState() => _LayoutPanelState();
+  ConsumerState<LayoutPanel> createState() => _LayoutPanelState();
 }
 
-class _LayoutPanelState extends ConsumerState<_LayoutPanel> {
+class _LayoutPanelState extends ConsumerState<LayoutPanel> {
   // null | 'lineHeight' | 'letterSpacing'
   String? _openId;
 

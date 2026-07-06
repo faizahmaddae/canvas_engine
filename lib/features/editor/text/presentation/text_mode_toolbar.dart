@@ -11,52 +11,28 @@ export '../../presentation/panels/text/font_picker/cards.dart'
 export '../../presentation/panels/text/font_picker/inline_browser.dart'
     show recommendedFontEntries;
 
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../../settings/application/settings_controller.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
-import '../../engine/core/editor_document.dart';
 import '../../engine/modules/text/text_layer.dart';
-import '../../presentation/panels/text/font_picker/inline_browser.dart';
-import '../../presentation/panels/text/font_picker/picker_sheet.dart';
-import '../../presentation/panels/text/precision/background_precision.dart';
-import '../../presentation/panels/text/precision/border_precision.dart';
-import '../../presentation/panels/text/precision/shadow_precision.dart';
-import '../../presentation/panels/text/styles_panel.dart';
-import '../../presentation/widgets/controls/panel_chip.dart';
-import '../../presentation/widgets/controls/precision_divider.dart';
-import '../../presentation/widgets/controls/section_label.dart';
-import '../../presentation/widgets/controls/slider_row.dart';
-import '../../presentation/widgets/controls/stepper_row.dart';
-import '../../presentation/widgets/controls/toggle_segment.dart';
 import '../../presentation/widgets/dock_tool_strip.dart';
 import '../../presentation/widgets/dock_tool_tile.dart';
-import '../../presentation/widgets/inline_color_body.dart';
-import '../../ui/editor_slider_row.dart';
 import '../../ui/editor_tier_gap.dart';
-import '../../ui/panel_direction_pad.dart';
-import '../../ui/precision_disclosure.dart';
-import '../../application/recent_colors_controller.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 import '../../toolbar/domain/sub_tools/widget_sub_tool.dart';
 import '../../toolbar/presentation/sub_tool_sheet.dart';
 import '../application/text_tool_controller.dart';
 import '../domain/font_catalog.dart';
+import 'text_bodies.dart';
 import 'text_floating_toolbar.dart' show showTextMoreSheet;
 
-part 'text_bodies.dart';
-part 'text_layout_panel.dart';
-part 'text_resize_tiles.dart';
-part 'text_size_panel.dart';
 
 /// Bottom dock for text mode — Canva-style.
 ///
@@ -102,7 +78,7 @@ class TextModeToolbar extends ConsumerStatefulWidget {
     _ToolSpec(
       id: 'font',
       icon: Icons.text_fields_rounded,
-      bodyBuilder: _TextBodies.fontBody,
+      bodyBuilder: TextBodies.fontBody,
     ),
     _ToolSpec(
       id: 'size',
@@ -112,12 +88,12 @@ class TextModeToolbar extends ConsumerStatefulWidget {
       // be read precisely without crowding the dock with bucket
       // words ("Body" / "Display" etc.) that varied as the user
       // dragged.
-      bodyBuilder: _TextBodies.sizeBody,
+      bodyBuilder: TextBodies.sizeBody,
     ),
     _ToolSpec(
       id: 'color',
       icon: Icons.palette_rounded,
-      bodyBuilder: _TextBodies.colorBody,
+      bodyBuilder: TextBodies.colorBody,
     ),
     _ToolSpec(
       // One-tap visual style presets. Sits next to Font because
@@ -125,12 +101,12 @@ class TextModeToolbar extends ConsumerStatefulWidget {
       // who reach for one often want the other in the same flow.
       id: 'styles',
       icon: Icons.auto_awesome_rounded,
-      bodyBuilder: _TextBodies.stylesBody,
+      bodyBuilder: TextBodies.stylesBody,
     ),
     _ToolSpec(
       id: 'layout',
       icon: Icons.format_align_center_rounded,
-      bodyBuilder: _TextBodies.layoutBody,
+      bodyBuilder: TextBodies.layoutBody,
     ),
     _ToolSpec(id: 'more', icon: Icons.more_horiz_rounded),
     _ToolSpec(
@@ -144,17 +120,17 @@ class TextModeToolbar extends ConsumerStatefulWidget {
       // short dock label (see _localizedToolDockLabel); the panel
       // header still shows the full word.
       icon: Icons.rectangle_rounded,
-      bodyBuilder: _TextBodies.backgroundBody,
+      bodyBuilder: TextBodies.backgroundBody,
     ),
     _ToolSpec(
       id: 'border',
       icon: Icons.border_outer_rounded,
-      bodyBuilder: _TextBodies.borderBody,
+      bodyBuilder: TextBodies.borderBody,
     ),
     _ToolSpec(
       id: 'shadow',
       icon: Icons.blur_on_rounded,
-      bodyBuilder: _TextBodies.shadowBody,
+      bodyBuilder: TextBodies.shadowBody,
     ),
     _ToolSpec(
       // Sheet id is kept as 'behavior' so any persisted session
@@ -162,7 +138,7 @@ class TextModeToolbar extends ConsumerStatefulWidget {
       // the user-visible label changed: "Behavior" → "Resize".
       id: 'behavior',
       icon: Icons.aspect_ratio_rounded,
-      bodyBuilder: _TextBodies.behaviorBody,
+      bodyBuilder: TextBodies.behaviorBody,
     ),
   ];
 

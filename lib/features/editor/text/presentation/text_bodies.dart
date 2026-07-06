@@ -1,13 +1,34 @@
-// Per-category body builders for the text-mode toolbar, split out
-// of text_mode_toolbar.dart. Part file: every symbol resolves via
-// the library root's imports — add imports there, never here.
-part of 'text_mode_toolbar.dart';
+// Sheet-body builders for the text-mode toolbar (Phase 2A commit 5:
+// the last part file becomes a standalone import — the library is
+// now bar + registry + dispatch only). Rename-only promotion of
+// TextBodies, the registry's builder table.
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
+import '../../../color_picker/presentation/color_picker_sheet.dart';
+import '../../engine/modules/text/text_layer.dart';
+import '../../presentation/panels/text/font_picker/inline_browser.dart';
+import '../../presentation/panels/text/font_picker/picker_sheet.dart';
+import '../../presentation/panels/text/layout_panel.dart';
+import '../../presentation/panels/text/precision/background_precision.dart';
+import '../../presentation/panels/text/precision/border_precision.dart';
+import '../../presentation/panels/text/precision/shadow_precision.dart';
+import '../../presentation/panels/text/resize_panel.dart';
+import '../../presentation/panels/text/size_panel.dart';
+import '../../presentation/panels/text/styles_panel.dart';
+import '../../presentation/widgets/controls/section_label.dart';
+import '../../presentation/widgets/inline_color_body.dart';
+import '../../ui/panel_direction_pad.dart';
+import '../../application/recent_colors_controller.dart';
+import '../application/text_tool_controller.dart';
 
 /// Holder for the per-category body builders. Each method takes
 /// (context, ref, layer) and returns a vertical column of compact
 /// rows / sliders / segmented toggles.
-class _TextBodies {
-  const _TextBodies();
+class TextBodies {
+  const TextBodies();
 
   // ─── Font ────────────────────────────────────────────────────────
   //
@@ -97,7 +118,7 @@ class _TextBodies {
   // and the precise numeric slider tucked under "Advanced". The
   // canvas above shows the live result; no in-sheet hero needed.
   static Widget sizeBody(BuildContext context, WidgetRef ref, TextLayer layer) {
-    return _SizeBody(layer: layer);
+    return SizeBody(layer: layer);
   }
 
   // ─── Styles (one-tap presets) ────────────────────────────────────
@@ -463,7 +484,7 @@ class _TextBodies {
     WidgetRef ref,
     TextLayer layer,
   ) {
-    return _LayoutPanel(layer: layer);
+    return LayoutPanel(layer: layer);
   }
 
   // ─── Resize ──────────────────────────────────────────────────────
@@ -486,7 +507,7 @@ class _TextBodies {
       children: [
         const SizedBox(height: 6),
         PanelSectionLabel(context.l10n.behaviorLabel),
-        _ResizeOptionTile(
+        ResizeOptionTile(
           icon: Icons.zoom_out_map_rounded,
           title: context.l10n.scaleTextTitle,
           hint: context.l10n.cornerDragScalesTextHint,
@@ -497,7 +518,7 @@ class _TextBodies {
           },
         ),
         const SizedBox(height: 2),
-        _ResizeOptionTile(
+        ResizeOptionTile(
           icon: Icons.crop_landscape_rounded,
           title: context.l10n.reflowBoxTitle,
           hint: context.l10n.cornerDragWrapWidthHint,
