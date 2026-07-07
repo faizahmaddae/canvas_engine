@@ -60,9 +60,9 @@
         "h": 40.0,
         "r": 0.0
       },
-      "content": "EDITORIAL",
+      "content": "یادداشت",
       "style": {
-        "fontFamily": "Chivo_Mono",
+        "fontFamily": "Vazir_Regular",
         "fontSize": 34.0,
         "color": 4294829706,
         "fontWeight": 700,
@@ -104,7 +104,7 @@
         "h": 62.0,
         "r": 0.0
       },
-      "content": "برای کپشن‌های جدی و حرفه‌ای",
+      "content": "— از یادداشت‌های سردبیر",
       "style": {
         "fontFamily": "Vazir_Regular",
         "fontSize": 38.0,

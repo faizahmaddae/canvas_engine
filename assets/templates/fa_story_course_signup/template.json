@@ -5,7 +5,7 @@
     "en": "Persian Course Signup Story",
     "fa": "استوری ثبت‌نام دوره"
   },
-  "category": "story",
+  "category": "instagramStory",
   "contentLanguage": "persian",
   "thumbnail": "assets/templates/fa_story_course_signup/thumbnail.png",
   "document": "assets/templates/fa_story_course_signup/document.json",

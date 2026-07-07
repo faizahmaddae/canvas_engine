@@ -29,7 +29,7 @@
         "r": 0.0
       },
       "kind": "circle",
-      "fillColor": 4289222135,
+      "fillColor": 4292457324,
       "strokeWidth": 0.0
     },
     {
@@ -72,7 +72,7 @@
       },
       "content": "تولدت",
       "style": {
-        "fontFamily": "Lalezar",
+        "fontFamily": "BTitrBd",
         "fontSize": 220.0,
         "color": 4292552567,
         "fontWeight": 900,
@@ -116,9 +116,9 @@
       },
       "content": "بهترین‌ها برایت",
       "style": {
-        "fontFamily": "Vazir_Regular",
+        "fontFamily": "Shabnam",
         "fontSize": 56.0,
-        "color": 4285211048,
+        "color": 4288485197,
         "fontWeight": 600,
         "letterSpacing": 0.0,
         "lineHeight": 1.2,

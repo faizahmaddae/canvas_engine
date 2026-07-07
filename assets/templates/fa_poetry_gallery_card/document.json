@@ -90,20 +90,20 @@
       "type": "text",
       "id": "verse",
       "transform": {
-        "x": 170.0,
-        "y": 835.0,
-        "w": 740.0,
-        "h": 175.0,
+        "x": 140.0,
+        "y": 830.0,
+        "w": 800.0,
+        "h": 195.0,
         "r": 0.0
       },
-      "content": "دل اگر روشن شود\nراه خودش پیدا می‌شود",
+      "content": "بیا تا گل برافشانیم و می در ساغر اندازیم\nفلک را سقف بشکافیم و طرحی نو دراندازیم",
       "style": {
         "fontFamily": "IranNastaliq",
-        "fontSize": 68.0,
+        "fontSize": 60.0,
         "color": 4286781507,
         "fontWeight": 600,
         "letterSpacing": 0.0,
-        "lineHeight": 1.35,
+        "lineHeight": 1.9,
         "alignment": "center"
       },
       "resizeMode": "scaleText"
@@ -118,7 +118,7 @@
         "h": 58.0,
         "r": 0.0
       },
-      "content": "برای کپشن شاعرانه",
+      "content": "حافظ",
       "style": {
         "fontFamily": "Vazir_Regular",
         "fontSize": 38.0,

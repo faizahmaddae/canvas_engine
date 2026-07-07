@@ -4,8 +4,8 @@
   "height": 1920.0,
   "background": {
     "type": "linear",
-    "startColor": 4279706964,
-    "endColor": 4281413249,
+    "startColor": 4278922794,
+    "endColor": 4279385912,
     "angleDegrees": 155.0
   },
   "layers": [
@@ -50,8 +50,8 @@
       "strokeWidth": 0.0,
       "fill": {
         "type": "linear",
-        "startColor": 4280640491,
-        "endColor": 4286331629,
+        "startColor": 4281109629,
+        "endColor": 4280249954,
         "angleDegrees": 135.0
       },
       "cornerRadius": 52.0
@@ -60,20 +60,20 @@
       "type": "text",
       "id": "number",
       "transform": {
-        "x": 188.0,
-        "y": 445.0,
-        "w": 188.0,
-        "h": 134.0,
+        "x": 176.0,
+        "y": 452.0,
+        "w": 212.0,
+        "h": 148.0,
         "r": 0.0
       },
-      "content": "۴",
+      "content": "۴\nجلسه",
       "style": {
         "fontFamily": "BTitrBd",
         "fontSize": 128.0,
         "color": 4294967295,
         "fontWeight": 800,
         "letterSpacing": 0.0,
-        "lineHeight": 1.05,
+        "lineHeight": 1.0,
         "alignment": "center"
       },
       "resizeMode": "scaleText"
@@ -174,7 +174,7 @@
       "style": {
         "fontFamily": "Vazir_Regular",
         "fontSize": 46.0,
-        "color": 4280171146,
+        "color": 4281109629,
         "fontWeight": 700,
         "letterSpacing": 0.0,
         "lineHeight": 1.05,
@@ -196,7 +196,7 @@
       "style": {
         "fontFamily": "Vazir_Regular",
         "fontSize": 44.0,
-        "color": 4282595530,
+        "color": 4281153352,
         "fontWeight": 600,
         "letterSpacing": 0.0,
         "lineHeight": 1.05,
@@ -218,7 +218,7 @@
       "style": {
         "fontFamily": "Vazir_Regular",
         "fontSize": 44.0,
-        "color": 4285343961,
+        "color": 4283061608,
         "fontWeight": 600,
         "letterSpacing": 0.0,
         "lineHeight": 1.05,
@@ -242,7 +242,7 @@
       "fill": {
         "type": "linear",
         "startColor": 4294286859,
-        "endColor": 4293870660,
+        "endColor": 4293238852,
         "angleDegrees": 90.0
       },
       "cornerRadius": 55.0

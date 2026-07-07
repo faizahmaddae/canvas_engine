@@ -18,7 +18,7 @@ Run `flutter test test/editor/templates/template_system_audit_test.dart` after t
 
 - `en_quote_minimal` — quote, english
 - `en_sale_bold` — sale, english
-- `en_story_quote` — story, english
+- `en_story_quote` — instagramStory, english
 - `en_birthday_confetti` — greeting, english
 - `en_announcement` — social, english
 - `en_event_market` — event, english
@@ -28,13 +28,13 @@ Run `flutter test test/editor/templates/template_system_audit_test.dart` after t
 - `en_food_menu` — food, english
 - `en_food_coffee` — food, english
 - `en_sale_flash` — sale, english
-- `en_story_motivation` — story, english
+- `en_story_motivation` — instagramStory, english
 - `en_greeting_thanks` — greeting, english
 - `en_business_quote` — business, english
 - `en_event_concert` — event, english
 - `fa_quote_minimal` — quote, persian
 - `fa_sale_bold` — sale, persian
-- `fa_story_quote` — story, persian
+- `fa_story_quote` — instagramStory, persian
 - `fa_birthday` — greeting, persian
 - `fa_announcement` — social, persian
 - `fa_event` — event, persian
@@ -48,7 +48,7 @@ Run `flutter test test/editor/templates/template_system_audit_test.dart` after t
 - `fa_concert` — event, persian
 - `en_sale_modern_gradient` — sale, english
 - `en_quote_editorial_gradient` — quote, english
-- `fa_story_warm_pastel` — story, persian
+- `fa_story_warm_pastel` — instagramStory, persian
 - `fa_insta_story_v1` — instagramStory, persian
 - `en_yt_thumb_v1` — youtubeThumbnail, english
 - `fa_poetry_v1` — poetryPost, persian
@@ -75,7 +75,7 @@ Run `flutter test test/editor/templates/template_system_audit_test.dart` after t
 - `fa_story_product_reveal` — instagramStory, persian
 - `fa_story_daily_offer` — instagramStory, persian
 - `fa_story_cafe_mood` — instagramStory, persian
-- `fa_story_course_signup` — story, persian
+- `fa_story_course_signup` — instagramStory, persian
 - `fa_post_brand_intro` — social, persian
 - `fa_post_minimal_tip` — social, persian
 - `fa_post_event_countdown` — event, persian
@@ -101,7 +101,7 @@ Run `flutter test test/editor/templates/template_system_audit_test.dart` after t
 - `fa_cafe_breakfast_special` — food, persian
 - `fa_restaurant_live_night` — event, persian
 - `fa_food_dessert_launch` — food, persian
-- `fa_edu_webinar_story` — story, persian
+- `fa_edu_webinar_story` — instagramStory, persian
 - `fa_edu_workshop_poster` — promotionalPoster, persian
 - `fa_edu_exam_prep_post` — social, persian
 - `fa_edu_course_tip_carousel` — social, persian

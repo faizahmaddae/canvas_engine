@@ -5,7 +5,7 @@
     "en": "Persian Webinar Story",
     "fa": "استوری وبینار آموزشی"
   },
-  "category": "story",
+  "category": "instagramStory",
   "contentLanguage": "persian",
   "thumbnail": "assets/templates/fa_edu_webinar_story/thumbnail.png",
   "document": "assets/templates/fa_edu_webinar_story/document.json",

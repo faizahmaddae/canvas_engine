@@ -5,7 +5,7 @@
   "background": {
     "type": "linear",
     "startColor": 4279310375,
-    "endColor": 4281413249,
+    "endColor": 4284100124,
     "angleDegrees": 140.0
   },
   "layers": [
@@ -25,7 +25,7 @@
       "fill": {
         "type": "linear",
         "startColor": 4294966251,
-        "endColor": 4294174975,
+        "endColor": 4294305488,
         "angleDegrees": 170.0
       },
       "cornerRadius": 56.0,
@@ -62,20 +62,20 @@
       "type": "text",
       "id": "verse",
       "transform": {
-        "x": 175.0,
-        "y": 340.0,
-        "w": 730.0,
-        "h": 260.0,
+        "x": 150.0,
+        "y": 360.0,
+        "w": 780.0,
+        "h": 300.0,
         "r": 0.0
       },
-      "content": "هر شب\nبه امید\nصبحی روشن",
+      "content": "در ازل پرتو حسنت ز تجلی دم زد\nعشق پیدا شد و آتش به همه عالم زد",
       "style": {
         "fontFamily": "IranNastaliq",
-        "fontSize": 80.0,
-        "color": 4281413249,
+        "fontSize": 72.0,
+        "color": 4290272312,
         "fontWeight": 600,
         "letterSpacing": 0.0,
-        "lineHeight": 1.35,
+        "lineHeight": 1.9,
         "alignment": "center"
       },
       "resizeMode": "scaleText"
@@ -91,7 +91,7 @@
         "r": 0.0
       },
       "kind": "roundedRectangle",
-      "fillColor": 4289170426,
+      "fillColor": 4290807594,
       "strokeWidth": 0.0,
       "cornerRadius": 4.0
     },
@@ -105,11 +105,11 @@
         "h": 70.0,
         "r": 0.0
       },
-      "content": "نام شاعر",
+      "content": "حافظ",
       "style": {
         "fontFamily": "Vazir_Regular",
         "fontSize": 42.0,
-        "color": 4285343961,
+        "color": 4290272312,
         "fontWeight": 600,
         "letterSpacing": 0.0,
         "lineHeight": 1.05,

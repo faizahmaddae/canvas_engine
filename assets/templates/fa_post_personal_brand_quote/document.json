@@ -5,7 +5,7 @@
   "background": {
     "type": "radial",
     "centerColor": 4294832888,
-    "edgeColor": 4281413249,
+    "edgeColor": 4281109629,
     "focalX": -0.15,
     "focalY": -0.25,
     "radius": 1.2
@@ -46,7 +46,7 @@
       "strokeWidth": 0.0,
       "fill": {
         "type": "linear",
-        "startColor": 4289222135,
+        "startColor": 4293238852,
         "endColor": 4294538006,
         "angleDegrees": 180.0
       },
@@ -62,11 +62,11 @@
         "h": 110.0,
         "r": 0.0
       },
-      "content": "”",
+      "content": "«»",
       "style": {
-        "fontFamily": "Playfair_Display",
+        "fontFamily": "Vazir_Regular",
         "fontSize": 112.0,
-        "color": 4289222135,
+        "color": 4293238852,
         "fontWeight": 800,
         "letterSpacing": 0.0,
         "lineHeight": 1.05,
@@ -110,7 +110,7 @@
       "style": {
         "fontFamily": "Vazir_Regular",
         "fontSize": 38.0,
-        "color": 4285343961,
+        "color": 4281109629,
         "fontWeight": 700,
         "letterSpacing": 0.0,
         "lineHeight": 1.05,
@@ -145,7 +145,7 @@
       },
       "content": "@yourname",
       "style": {
-        "fontFamily": "Chivo_Mono",
+        "fontFamily": "Vazir_Regular",
         "fontSize": 38.0,
         "color": 4294829706,
         "fontWeight": 700,

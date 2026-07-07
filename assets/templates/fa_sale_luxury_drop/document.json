@@ -5,7 +5,7 @@
   "background": {
     "type": "linear",
     "startColor": 4278322711,
-    "endColor": 4282058596,
+    "endColor": 4278852413,
     "angleDegrees": 135.0
   },
   "layers": [
@@ -25,7 +25,7 @@
       "fill": {
         "type": "radial",
         "centerColor": 4294829706,
-        "edgeColor": 4289222135,
+        "edgeColor": 4292393082,
         "focalX": -0.2,
         "focalY": -0.2,
         "radius": 1.0
@@ -139,7 +139,7 @@
       },
       "content": "تا ۴۰٪",
       "style": {
-        "fontFamily": "BTitrBd",
+        "fontFamily": "Shabnam",
         "fontSize": 124.0,
         "color": 4294967295,
         "fontWeight": 800,
@@ -163,7 +163,7 @@
       "style": {
         "fontFamily": "Vazir_Regular",
         "fontSize": 42.0,
-        "color": 4292728574,
+        "color": 4293450165,
         "fontWeight": 500,
         "letterSpacing": 0.0,
         "lineHeight": 1.05,
@@ -200,7 +200,7 @@
       "style": {
         "fontFamily": "Lalezar",
         "fontSize": 52.0,
-        "color": 4280163147,
+        "color": 4279179050,
         "fontWeight": 700,
         "letterSpacing": 0.0,
         "lineHeight": 1.05,

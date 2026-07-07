@@ -40,7 +40,7 @@ const _requiredTextById = <String, List<String>>{
   ],
   'fa_promo_app_launch': ['اپلیکیشن', 'دانلود کنید', 'شروع رایگان'],
   'fa_story_fashion_drop': ['کالکشن', 'مشاهده کالکشن'],
-  'fa_post_product_carousel_cover': ['۳ دلیل', 'مزیت اول', '۱ / ۵'],
+  'fa_post_product_carousel_cover': ['۳ دلیل', 'کاور کاروسل محصول', '۱ / ۵'],
   'fa_story_today': [
     'امروز',
     '٪۳۰ تخفیف',

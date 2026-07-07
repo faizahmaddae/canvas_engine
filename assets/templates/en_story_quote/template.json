@@ -5,7 +5,7 @@
     "en": "Story quote",
     "fa": "Story quote"
   },
-  "category": "story",
+  "category": "instagramStory",
   "contentLanguage": "english",
   "thumbnail": "assets/templates/en_story_quote/thumbnail.png",
   "document": "assets/templates/en_story_quote/document.json",

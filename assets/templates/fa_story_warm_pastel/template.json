@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "fa_story_warm_pastel",
   "title": {
-    "en": "استوری پاستلی",
+    "en": "Persian Pastel Story",
     "fa": "استوری پاستلی"
   },
-  "category": "story",
+  "category": "instagramStory",
   "contentLanguage": "persian",
   "thumbnail": "assets/templates/fa_story_warm_pastel/thumbnail.png",
   "document": "assets/templates/fa_story_warm_pastel/document.json",

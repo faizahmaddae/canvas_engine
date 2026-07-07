@@ -27,7 +27,7 @@
       "fill": {
         "type": "linear",
         "startColor": 4280472558,
-        "endColor": 4289170426,
+        "endColor": 4278751666,
         "angleDegrees": 180.0
       },
       "cornerRadius": 48.0,
@@ -64,12 +64,12 @@
         "h": 120.0,
         "r": 0.0
       },
-      "content": "”",
+      "content": "«»",
       "style": {
-        "fontFamily": "Playfair_Display",
+        "fontFamily": "BTitrBd",
         "fontSize": 118.0,
         "color": 4280472558,
-        "fontWeight": 800,
+        "fontWeight": 700,
         "letterSpacing": 0.0,
         "lineHeight": 1.05,
         "alignment": "center"
@@ -147,7 +147,7 @@
       },
       "content": "ذخیره کن",
       "style": {
-        "fontFamily": "Lalezar",
+        "fontFamily": "Shabnam",
         "fontSize": 38.0,
         "color": 4279179050,
         "fontWeight": 700,

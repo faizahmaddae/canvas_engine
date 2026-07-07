@@ -89,7 +89,7 @@
       "id": "page-text",
       "transform": {"x": 180.0, "y": 154.0, "w": 110.0, "h": 38.0, "r": 0.0},
       "content": "۱ / ۵",
-      "style": {"fontFamily": "Chivo_Mono", "fontSize": 36.0, "color": 4294967295, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
+      "style": {"fontFamily": "Vazir_Regular", "fontSize": 36.0, "color": 4294967295, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "center"},
       "resizeMode": "scaleText"
     },
     {
@@ -163,7 +163,7 @@
       "type": "text",
       "id": "bullet-one-text",
       "transform": {"x": 184.0, "y": 627.0, "w": 270.0, "h": 40.0, "r": 0.0},
-      "content": "مزیت اول محصول",
+      "content": "ارسال سریع",
       "style": {"fontFamily": "Vazir_Regular", "fontSize": 31.0, "color": 4279179050, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
       "resizeMode": "scaleText"
     },
@@ -171,7 +171,7 @@
       "type": "text",
       "id": "bullet-two-text",
       "transform": {"x": 184.0, "y": 723.0, "w": 270.0, "h": 40.0, "r": 0.0},
-      "content": "نتیجه قابل لمس",
+      "content": "ضمانت بازگشت",
       "style": {"fontFamily": "Vazir_Regular", "fontSize": 31.0, "color": 4279179050, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
       "resizeMode": "scaleText"
     },
@@ -179,7 +179,7 @@
       "type": "text",
       "id": "bullet-three-text",
       "transform": {"x": 184.0, "y": 819.0, "w": 270.0, "h": 40.0, "r": 0.0},
-      "content": "دعوت به خرید",
+      "content": "پرداخت امن",
       "style": {"fontFamily": "Vazir_Regular", "fontSize": 31.0, "color": 4279179050, "fontWeight": 700, "letterSpacing": 0.0, "lineHeight": 1.05, "alignment": "right"},
       "resizeMode": "scaleText"
     }

@@ -5,7 +5,7 @@
     "en": "Story motivation",
     "fa": "Story motivation"
   },
-  "category": "story",
+  "category": "instagramStory",
   "contentLanguage": "english",
   "thumbnail": "assets/templates/en_story_motivation/thumbnail.png",
   "document": "assets/templates/en_story_motivation/document.json",

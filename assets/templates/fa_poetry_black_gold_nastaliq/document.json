@@ -49,20 +49,20 @@
       "type": "text",
       "id": "verse",
       "transform": {
-        "x": 170.0,
-        "y": 355.0,
-        "w": 740.0,
-        "h": 270.0,
+        "x": 140.0,
+        "y": 365.0,
+        "w": 800.0,
+        "h": 300.0,
         "r": 0.0
       },
-      "content": "به سکوت شب\nگفتم از تو\nروشن‌تر نیست",
+      "content": "سعدیا مرد نکونام نمیرد هرگز\nمرده آن است که نامش به نکویی نبرند",
       "style": {
         "fontFamily": "IranNastaliq",
-        "fontSize": 78.0,
+        "fontSize": 70.0,
         "color": 4294502324,
         "fontWeight": 600,
         "letterSpacing": 0.0,
-        "lineHeight": 1.38,
+        "lineHeight": 1.9,
         "alignment": "center"
       },
       "resizeMode": "scaleText"
@@ -92,7 +92,7 @@
         "h": 70.0,
         "r": 0.0
       },
-      "content": "نام شاعر",
+      "content": "سعدی",
       "style": {
         "fontFamily": "Vazir_Regular",
         "fontSize": 40.0,
