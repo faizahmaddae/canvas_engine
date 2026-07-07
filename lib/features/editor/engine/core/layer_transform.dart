@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
+
 import '../../../../../core/utils/geometry.dart';
 
 /// Immutable affine-like transform for a layer.
@@ -24,10 +26,8 @@ class LayerTransform {
   /// Rotation in radians around [center].
   final double rotation;
 
-  Offset get center => Offset(
-        position.dx + size.width / 2,
-        position.dy + size.height / 2,
-      );
+  Offset get center =>
+      Offset(position.dx + size.width / 2, position.dy + size.height / 2);
 
   Rect get localRect => Offset.zero & size;
 
@@ -46,11 +46,7 @@ class LayerTransform {
     ];
   }
 
-  LayerTransform copyWith({
-    Offset? position,
-    Size? size,
-    double? rotation,
-  }) {
+  LayerTransform copyWith({Offset? position, Size? size, double? rotation}) {
     return LayerTransform(
       position: position ?? this.position,
       size: size ?? this.size,
@@ -78,13 +74,46 @@ class LayerTransform {
   /// Stable JSON shape: `{x, y, w, h, r}`. Plain primitive fields keep
   /// the file format diff-friendly and stable across Flutter versions
   /// (no `Offset`/`Size` class names that could change).
-  Map<String, dynamic> toJson() => <String, dynamic>{
-        'x': position.dx,
-        'y': position.dy,
-        'w': size.width,
-        'h': size.height,
-        'r': rotation,
-      };
+  ///
+  /// Non-finite guard: a `NaN` / `±Infinity` field can only ever arrive
+  /// from a math bug (every legitimate pose is a real number), but JSON
+  /// cannot represent one — a single non-finite value would make
+  /// `JsonEncoder.convert` throw, rendering the whole document unsaveable
+  /// and silently dropping the crash-recovery journal write (which
+  /// swallows encode errors). Coerce to `0` so a transient bad frame
+  /// never bricks save/autosave; `assert` in debug so the upstream bug
+  /// still surfaces during development. Finite documents (all of them)
+  /// serialize byte-for-byte identically.
+  Map<String, dynamic> toJson() {
+    // Warn loudly in debug (a non-finite field is always an upstream
+    // math bug worth chasing) but NEVER throw — the coercion below has to
+    // run so save / autosave still succeed. The always-true assert body
+    // is compiled out of release entirely.
+    assert(() {
+      final ok =
+          position.dx.isFinite &&
+          position.dy.isFinite &&
+          size.width.isFinite &&
+          size.height.isFinite &&
+          rotation.isFinite;
+      if (!ok) {
+        debugPrint('LayerTransform.toJson coerced a non-finite field: $this');
+      }
+      return true;
+    }());
+    return <String, dynamic>{
+      'x': _finite(position.dx),
+      'y': _finite(position.dy),
+      'w': _finite(size.width),
+      'h': _finite(size.height),
+      'r': _finite(rotation),
+    };
+  }
+
+  /// Returns [v] when finite, else `0` — the save-boundary fallback that
+  /// keeps a bug-produced non-finite pose from making the document
+  /// unencodable. See [toJson].
+  static double _finite(double v) => v.isFinite ? v : 0.0;
 
   /// Inverse of [toJson]. Throws [FormatException] on missing or
   /// non-numeric fields — surfaced by `DocumentCodec` as a

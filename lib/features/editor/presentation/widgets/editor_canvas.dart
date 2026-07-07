@@ -558,7 +558,15 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
               final s = ref.read(appSettingsProvider);
               if (!s.canvasPanEnabled && !s.canvasZoomEnabled) return;
               _gestureStartViewport = ref.read(viewportControllerProvider);
-              _gestureStartFocal = d.focalPoint;
+              // Body-LOCAL, not global: the viewport `translation` this
+              // focal is solved against is defined by `fit()` from the
+              // LayoutBuilder's `constraints.biggest` (this GestureDetector's
+              // own box). `d.focalPoint` is global, so mixing it with a
+              // body-local translation drifts the anchored canvas point by
+              // the AppBar/status-bar offset during zoom. `localFocalPoint`
+              // shares translation's origin. (Pan is delta-based so the
+              // offset cancels — only scale exposed the bug.)
+              _gestureStartFocal = d.localFocalPoint;
             },
             onScaleUpdate: (d) {
               if (ref.read(interactionControllerProvider).isActive) return;
@@ -575,8 +583,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
               // recognisers live deeper in the tree and never reach this
               // background handler.
               final settings = ref.read(appSettingsProvider);
+              // Body-local to match `_gestureStartFocal` and the viewport
+              // translation space (see onScaleStart).
               final effectiveFocal = settings.canvasPanEnabled
-                  ? d.focalPoint
+                  ? d.localFocalPoint
                   : focal;
               final effectiveScale = settings.canvasZoomEnabled ? d.scale : 1.0;
               ref

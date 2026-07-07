@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:canvas_engine/features/editor/engine/commands/shape_commands.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
@@ -15,33 +16,30 @@ void main() {
   const engine = InteractionEngine();
 
   ShapeLayer makeRect() => const ShapeLayer(
-        id: 'rect-1',
-        transform: LayerTransform(
-          position: Offset(50, 50),
-          size: Size(200, 100),
-        ),
-        kind: ShapeKind.rectangle,
-      );
+    id: 'rect-1',
+    transform: LayerTransform(position: Offset(50, 50), size: Size(200, 100)),
+    kind: ShapeKind.rectangle,
+  );
 
   ShapeLayer makeCircle() => const ShapeLayer(
-        id: 'circle-1',
-        transform: LayerTransform(
-          position: Offset(0, 0),
-          size: Size(120, 120),
-        ),
-        kind: ShapeKind.circle,
-      );
+    id: 'circle-1',
+    transform: LayerTransform(position: Offset(0, 0), size: Size(120, 120)),
+    kind: ShapeKind.circle,
+  );
 
   group('ShapeLayer — capabilities', () {
-    test('rectangle: movable/resizable/rotatable/deletable, not editable, free aspect', () {
-      final c = makeRect().capabilities;
-      expect(c.movable, isTrue);
-      expect(c.resizable, isTrue);
-      expect(c.rotatable, isTrue);
-      expect(c.deletable, isTrue);
-      expect(c.editable, isFalse);
-      expect(c.keepsAspectRatio, isFalse);
-    });
+    test(
+      'rectangle: movable/resizable/rotatable/deletable, not editable, free aspect',
+      () {
+        final c = makeRect().capabilities;
+        expect(c.movable, isTrue);
+        expect(c.resizable, isTrue);
+        expect(c.rotatable, isTrue);
+        expect(c.deletable, isTrue);
+        expect(c.editable, isFalse);
+        expect(c.keepsAspectRatio, isFalse);
+      },
+    );
 
     test('circle locks aspect by default (mirrors Paint scale mode)', () {
       // Bug fix: dragging a circle's corner used to stretch it into an
@@ -66,8 +64,11 @@ void main() {
         ShapeKind.cross,
       };
       for (final k in ShapeKind.values) {
-        expect(isAspectLockedShapeKind(k), aspectLocked.contains(k),
-            reason: 'mismatch for $k');
+        expect(
+          isAspectLockedShapeKind(k),
+          aspectLocked.contains(k),
+          reason: 'mismatch for $k',
+        );
         final layer = ShapeLayer(
           id: 'k-${k.name}',
           transform: const LayerTransform(
@@ -76,8 +77,11 @@ void main() {
           ),
           kind: k,
         );
-        expect(layer.capabilities.keepsAspectRatio, aspectLocked.contains(k),
-            reason: 'capability mismatch for $k');
+        expect(
+          layer.capabilities.keepsAspectRatio,
+          aspectLocked.contains(k),
+          reason: 'capability mismatch for $k',
+        );
       }
     });
   });
@@ -120,13 +124,14 @@ void main() {
       final s = engine.startRotate(
         layerId: shape.id,
         transform: shape.transform,
-        pointer: Offset(shape.transform.center.dx + 50,
-            shape.transform.center.dy), // +X
+        pointer: Offset(
+          shape.transform.center.dx + 50,
+          shape.transform.center.dy,
+        ), // +X
       );
       final next = engine.updateRotate(
         s,
-        Offset(shape.transform.center.dx,
-            shape.transform.center.dy + 50), // +Y
+        Offset(shape.transform.center.dx, shape.transform.center.dy + 50), // +Y
       );
       expect(next.rotation, closeTo(math.pi / 2, 1e-6));
     });
@@ -271,10 +276,7 @@ void main() {
       // must respect that even though rectangles default to free.
       const shape = ShapeLayer(
         id: 'rect-scale',
-        transform: LayerTransform(
-          position: Offset(0, 0),
-          size: Size(200, 100),
-        ),
+        transform: LayerTransform(position: Offset(0, 0), size: Size(200, 100)),
         kind: ShapeKind.rectangle,
         resizeMode: ShapeResizeMode.scale,
       );
@@ -304,10 +306,7 @@ void main() {
       // must allow stretch even though circles default to scale.
       const shape = ShapeLayer(
         id: 'circle-free',
-        transform: LayerTransform(
-          position: Offset(0, 0),
-          size: Size(120, 120),
-        ),
+        transform: LayerTransform(position: Offset(0, 0), size: Size(120, 120)),
         kind: ShapeKind.circle,
         resizeMode: ShapeResizeMode.free,
       );
@@ -339,10 +338,7 @@ void main() {
     test('explicit resizeMode is persisted and restored', () {
       const original = ShapeLayer(
         id: 'rect-scale',
-        transform: LayerTransform(
-          position: Offset(0, 0),
-          size: Size(200, 100),
-        ),
+        transform: LayerTransform(position: Offset(0, 0), size: Size(200, 100)),
         kind: ShapeKind.rectangle,
         resizeMode: ShapeResizeMode.scale,
       );
@@ -366,10 +362,7 @@ void main() {
     test('null resizeMode is omitted; explicit free is persisted', () {
       const free = ShapeLayer(
         id: 'circle-free',
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: Size(100, 100),
-        ),
+        transform: LayerTransform(position: Offset.zero, size: Size(100, 100)),
         kind: ShapeKind.circle,
         resizeMode: ShapeResizeMode.free,
       );
@@ -378,6 +371,64 @@ void main() {
       final restored = ShapeLayer.fromJson(json);
       expect(restored.resizeMode, ShapeResizeMode.free);
       expect(restored.capabilities.keepsAspectRatio, isFalse);
+    });
+  });
+
+  group('SetShapeResizeModeCommand — invert', () {
+    // Circle with a null (kind-default) resizeMode; its effective mode
+    // resolves to scale. Setting it to an explicit `scale` is a real
+    // change (null -> scale), and undo must restore the null so the
+    // document serializes byte-identically to before the edit.
+    EditorDocument seedCircle() => EditorDocument(layers: [makeCircle()]);
+
+    test('restores a null (kind-default) resizeMode on undo', () {
+      final before = seedCircle();
+      expect(before.layerById('circle-1')! is ShapeLayer, isTrue);
+      final layer0 = before.layerById('circle-1')! as ShapeLayer;
+      expect(layer0.resizeMode, isNull);
+      expect(layer0.effectiveResizeMode, ShapeResizeMode.scale);
+
+      const cmd = SetShapeResizeModeCommand(
+        layerId: 'circle-1',
+        mode: ShapeResizeMode.scale,
+      );
+      final after = cmd.apply(before);
+      final movedLayer = after.layerById('circle-1')! as ShapeLayer;
+      expect(
+        movedLayer.resizeMode,
+        ShapeResizeMode.scale,
+        reason: 'apply stores the explicit override',
+      );
+
+      // invert(before).apply(after) must reproduce `before` exactly.
+      final restored = cmd.invert(before).apply(after);
+      final restoredLayer = restored.layerById('circle-1')! as ShapeLayer;
+      expect(
+        restoredLayer.resizeMode,
+        isNull,
+        reason: 'undo clears the override back to the kind default',
+      );
+      expect(restoredLayer, equals(layer0));
+    });
+
+    test('undo round-trips byte-identical JSON', () {
+      final before = seedCircle();
+      const cmd = SetShapeResizeModeCommand(
+        layerId: 'circle-1',
+        mode: ShapeResizeMode.scale,
+      );
+      final after = cmd.apply(before);
+      final restored = cmd.invert(before).apply(after);
+
+      final beforeJson = (before.layerById('circle-1')! as ShapeLayer).toJson();
+      final restoredJson = (restored.layerById('circle-1')! as ShapeLayer)
+          .toJson();
+      expect(
+        restoredJson.containsKey('resizeMode'),
+        isFalse,
+        reason: 'a restored kind-default must omit the field, as before',
+      );
+      expect(restoredJson, equals(beforeJson));
     });
   });
 }

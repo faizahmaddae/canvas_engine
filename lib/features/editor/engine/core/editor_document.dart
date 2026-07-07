@@ -16,8 +16,9 @@ const Color kDefaultCanvasBackground = Color(0xFFFFFFFF);
 
 /// Default [BackgroundFill] — a solid white fill, equivalent to the
 /// historical `backgroundColor: kDefaultCanvasBackground` default.
-const BackgroundFill kDefaultCanvasBackgroundFill =
-    SolidBackground(color: kDefaultCanvasBackground);
+const BackgroundFill kDefaultCanvasBackgroundFill = SolidBackground(
+  color: kDefaultCanvasBackground,
+);
 
 /// What the user is editing.
 ///
@@ -77,29 +78,28 @@ class EditorDocument {
     this.backgroundMode = kDefaultCanvasBackgroundMode,
     this.basePhotoLayerId,
     this.projectKind = kDefaultProjectKind,
-  })  : background = background ??
-            (backgroundColor != null
-                ? SolidBackground(color: backgroundColor)
-                : kDefaultCanvasBackgroundFill),
-        // Skip the wrap if the caller already handed us an
-        // unmodifiable view (the common path: copyWith re-passes
-        // `this.layers`, which is already wrapped). This preserves
-        // reference identity so `next.layers == doc.layers` stays
-        // an `identical` match for unchanged copies — a real
-        // performance contract relied on by hot equality checks.
-        //
-        // Wrap with `UnmodifiableListView` rather than
-        // `List.unmodifiable` so the wrap is O(1) and the wrapper
-        // type is publicly named — production callers always hand
-        // us a freshly built list (`[...layers, x]`) that no other
-        // code retains a reference to, so the view's read-through
-        // semantics are not a leak.
-        layers = layers is UnmodifiableListView<EditorLayer>
-            ? layers
-            : UnmodifiableListView<EditorLayer>(layers),
-        _layerIndex = {
-          for (var i = 0; i < layers.length; i++) layers[i].id: i,
-        };
+  }) : background =
+           background ??
+           (backgroundColor != null
+               ? SolidBackground(color: backgroundColor)
+               : kDefaultCanvasBackgroundFill),
+       // Skip the wrap if the caller already handed us an
+       // unmodifiable view (the common path: copyWith re-passes
+       // `this.layers`, which is already wrapped). This preserves
+       // reference identity so `next.layers == doc.layers` stays
+       // an `identical` match for unchanged copies — a real
+       // performance contract relied on by hot equality checks.
+       //
+       // Wrap with `UnmodifiableListView` rather than
+       // `List.unmodifiable` so the wrap is O(1) and the wrapper
+       // type is publicly named — production callers always hand
+       // us a freshly built list (`[...layers, x]`) that no other
+       // code retains a reference to, so the view's read-through
+       // semantics are not a leak.
+       layers = layers is UnmodifiableListView<EditorLayer>
+           ? layers
+           : UnmodifiableListView<EditorLayer>(layers),
+       _layerIndex = {for (var i = 0; i < layers.length; i++) layers[i].id: i};
 
   /// Z-ordered list of layers (bottom = 0, top = last). The list is
   /// wrapped with [List.unmodifiable] at construction so callers
@@ -128,10 +128,10 @@ class EditorDocument {
     'an approximation of the dominant tone.',
   )
   Color get backgroundColor => switch (background) {
-        SolidBackground(:final color) => color,
-        LinearGradientBackground(:final startColor) => startColor,
-        RadialGradientBackground(:final centerColor) => centerColor,
-      };
+    SolidBackground(:final color) => color,
+    LinearGradientBackground(:final startColor) => startColor,
+    RadialGradientBackground(:final centerColor) => centerColor,
+  };
 
   /// Whether the canvas backdrop is a solid colour or transparent.
   /// See [CanvasBackgroundMode] for the rationale.
@@ -181,7 +181,8 @@ class EditorDocument {
     Object? basePhotoLayerId = _sentinel,
     ProjectKind? projectKind,
   }) {
-    final BackgroundFill nextBackground = background ??
+    final BackgroundFill nextBackground =
+        background ??
         (backgroundColor != null
             ? SolidBackground(color: backgroundColor)
             : this.background);
@@ -213,8 +214,7 @@ class EditorDocument {
   }
 
   EditorDocument removeLayer(String id) {
-    final nextLayers =
-        layers.where((l) => l.id != id).toList(growable: false);
+    final nextLayers = layers.where((l) => l.id != id).toList(growable: false);
     // Clear the base-photo pointer if its target was just removed —
     // otherwise the resolver would dereference a ghost id and the
     // JSON would persist a dangling reference.
@@ -233,10 +233,28 @@ class EditorDocument {
   /// Reorder [layers] by moving the item at [from] to [to]. Both indices
   /// are into [layers] (bottom = 0, top = length-1). No-op if either
   /// index is out of range or equal.
+  ///
+  /// Base-photo invariant: in a [ProjectKind.photo] project the base
+  /// photo IS the project and stays pinned to the bottom of the z-order
+  /// (index 0, painted first by `DocumentView`). Any reorder that would
+  /// lift the base photo off the bottom, or slide another layer beneath
+  /// it, is refused — otherwise Send-backward or a layers-panel drag
+  /// would silently bury user content under the opaque photo. This is
+  /// the single choke-point every reorder surface (toolbar + panel drag)
+  /// funnels through, so guarding here protects all of them at once and
+  /// mirrors the delete-protection [isProtectedBasePhoto] already
+  /// enforces. Design projects (no base photo) are unaffected.
   EditorDocument reorderLayer(int from, int to) {
     if (from == to) return this;
     if (from < 0 || from >= layers.length) return this;
     if (to < 0 || to >= layers.length) return this;
+    final baseId = basePhotoLayerId;
+    if (projectKind == ProjectKind.photo && baseId != null) {
+      final baseIndex = _layerIndex[baseId];
+      if (baseIndex != null && (from == baseIndex || to <= baseIndex)) {
+        return this;
+      }
+    }
     final next = [...layers];
     final moved = next.removeAt(from);
     next.insert(to, moved);
@@ -257,14 +275,14 @@ class EditorDocument {
 
   @override
   int get hashCode => Object.hash(
-        width,
-        height,
-        background,
-        backgroundMode,
-        basePhotoLayerId,
-        projectKind,
-        Object.hashAll(layers),
-      );
+    width,
+    height,
+    background,
+    backgroundMode,
+    basePhotoLayerId,
+    projectKind,
+    Object.hashAll(layers),
+  );
 }
 
 const Object _sentinel = Object();

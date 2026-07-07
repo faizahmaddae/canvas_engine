@@ -161,6 +161,10 @@ class LayerActions {
     final doc = ref.read(documentControllerProvider);
     final index = doc.indexOf(layer.id);
     if (index == null || index >= doc.layers.length - 1) return;
+    // The base photo is pinned to the bottom of a photo project; never
+    // lift it over user content. (The engine `reorderLayer` clamp is the
+    // backstop — this keeps the button and the command in agreement.)
+    if (doc.isProtectedBasePhoto(layer.id)) return;
     HapticFeedback.selectionClick().catchError((_) {});
     ref
         .read(documentControllerProvider.notifier)
@@ -173,6 +177,10 @@ class LayerActions {
     final doc = ref.read(documentControllerProvider);
     final index = doc.indexOf(layer.id);
     if (index == null || index <= 0) return;
+    // Don't slide a layer beneath the pinned base photo — it would be
+    // fully obscured by the opaque photo (silent content loss). Mirrors
+    // the engine `reorderLayer` clamp so the button and command agree.
+    if (doc.isProtectedBasePhoto(doc.layers[index - 1].id)) return;
     HapticFeedback.selectionClick().catchError((_) {});
     ref
         .read(documentControllerProvider.notifier)
@@ -211,13 +219,17 @@ class LayerActions {
   static bool canBringForward(WidgetRef ref, EditorLayer layer) {
     final doc = ref.read(documentControllerProvider);
     final index = doc.indexOf(layer.id);
-    return index != null && index < doc.layers.length - 1;
+    if (index == null || index >= doc.layers.length - 1) return false;
+    // The base photo cannot move up off the bottom.
+    return !doc.isProtectedBasePhoto(layer.id);
   }
 
   static bool canSendBackward(WidgetRef ref, EditorLayer layer) {
     final doc = ref.read(documentControllerProvider);
     final index = doc.indexOf(layer.id);
-    return index != null && index > 0;
+    if (index == null || index <= 0) return false;
+    // Can't send below the pinned base photo directly beneath.
+    return !doc.isProtectedBasePhoto(doc.layers[index - 1].id);
   }
 }
 

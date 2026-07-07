@@ -129,8 +129,9 @@ class AutosaveController extends Notifier<void> {
     _timer?.cancel();
     _timer = null;
     if (!ref.mounted) return;
-    if (sessionEnding &&
-        ref.read(editorSessionProvider)?.projectId == null) {
+    final discardingDraft =
+        sessionEnding && ref.read(editorSessionProvider)?.projectId == null;
+    if (discardingDraft) {
       if (_journalProjectId == draftJournalId) {
         await _journal?.clear();
       } else {
@@ -139,8 +140,38 @@ class AutosaveController extends Notifier<void> {
         try {
           final j = await EditJournal.open(draftJournalId);
           await j.clear();
-        } catch (_) {/* swallow — best-effort, same as journal writes */}
+        } catch (_) {
+          /* swallow — best-effort, same as journal writes */
+        }
       }
+    } else {
+      // Force the crash-recovery journal to disk NOW instead of waiting
+      // out its 750 ms debounce. This is the going-to-background path:
+      // the OS can suspend then kill the process before the pending
+      // debounce Timer ever fires, and for a never-saved draft the
+      // journal is the ONLY persistence (the project-store [_flush]
+      // below no-ops without a projectId). Without this the last
+      // <=750 ms of edits are lost with no journal on disk to recover.
+      //
+      // The handle opens asynchronously on commit ([_scheduleJournal]),
+      // and a pause can land before that open resolves — so open it
+      // inline here rather than skipping when [_journal] is still null.
+      // Otherwise the very first edits of a session (the most fragile,
+      // never-yet-persisted ones) would be exactly what's lost. Reads
+      // state only; the racing async open stays the canonical owner of
+      // [_journal]. Best-effort, like every journal write.
+      final journalId =
+          ref.read(editorSessionProvider)?.projectId ?? draftJournalId;
+      final doc = ref.read(documentControllerProvider);
+      var journal = _journal;
+      if (journal == null || _journalProjectId != journalId) {
+        try {
+          journal = await EditJournal.open(journalId);
+        } catch (_) {
+          journal = null;
+        }
+      }
+      await journal?.flushNow(doc);
     }
     await _flush();
   }

@@ -188,10 +188,7 @@ class SetShapeRadiusCommand extends EditorCommand {
   EditorCommand invert(EditorDocument before) {
     final layer = before.layerById(layerId);
     if (layer is! ShapeLayer) return _noop;
-    return SetShapeRadiusCommand(
-      layerId: layerId,
-      radius: layer.cornerRadius,
-    );
+    return SetShapeRadiusCommand(layerId: layerId, radius: layer.cornerRadius);
   }
 
   @override
@@ -212,10 +209,7 @@ class SetShapeRadiusCommand extends EditorCommand {
 ///
 /// No-op when the new kind matches the current one.
 class ReplaceShapeKindCommand extends EditorCommand {
-  const ReplaceShapeKindCommand({
-    required this.layerId,
-    required this.kind,
-  });
+  const ReplaceShapeKindCommand({required this.layerId, required this.kind});
 
   final String layerId;
   final ShapeKind kind;
@@ -283,8 +277,7 @@ class SetShapeShadowCommand extends EditorCommand {
     final newColor = color ?? layer.shadowColor;
     final newBlur = blur ?? layer.shadowBlur;
     final newOffset = offset ?? layer.shadowOffset;
-    final newOpacity =
-        (opacity ?? layer.shadowOpacity).clamp(0.0, 1.0);
+    final newOpacity = (opacity ?? layer.shadowOpacity).clamp(0.0, 1.0);
     if (newColor == layer.shadowColor &&
         newBlur == layer.shadowBlur &&
         newOffset == layer.shadowOffset &&
@@ -339,13 +332,19 @@ class SetShapeShadowCommand extends EditorCommand {
 /// cornerRadius) are preserved so flipping the toggle never
 /// disturbs the rest of the shape.
 class SetShapeResizeModeCommand extends EditorCommand {
-  const SetShapeResizeModeCommand({
-    required this.layerId,
-    required this.mode,
-  });
+  const SetShapeResizeModeCommand({required this.layerId, required this.mode});
 
   final String layerId;
-  final ShapeResizeMode mode;
+
+  /// Target stored resize mode. `null` clears the per-instance override
+  /// so the layer falls back to its kind default
+  /// ([ShapeLayer.effectiveResizeMode]). Nullable — not `effectiveResizeMode`
+  /// — because the stored field is what serialization and undo must
+  /// reproduce exactly: capturing the resolved default in [invert] would
+  /// convert a byte-omitted `null` into an explicit value, corrupting
+  /// round-trip byte-identity and leaving undo unable to restore the
+  /// original state.
+  final ShapeResizeMode? mode;
 
   @override
   String get label => 'Shape resize mode';
@@ -354,19 +353,20 @@ class SetShapeResizeModeCommand extends EditorCommand {
   EditorDocument apply(EditorDocument doc) {
     final layer = doc.layerById(layerId);
     if (layer is! ShapeLayer) return doc;
-    if (layer.effectiveResizeMode == mode && layer.resizeMode == mode) {
-      return doc;
-    }
-    return doc.replaceLayer(layer.copyWith(resizeMode: mode));
+    // Compare against the raw stored field so null (kind-default) and an
+    // explicit value that happens to equal the default are distinct
+    // states — otherwise undo could never round-trip back to `null`.
+    if (layer.resizeMode == mode) return doc;
+    // copyAll honours an explicit `null` (its sentinel default is a
+    // private token, not null), so this can clear the override; copyWith
+    // could not.
+    return doc.replaceLayer(layer.copyAll(resizeMode: mode));
   }
 
   @override
   EditorCommand invert(EditorDocument before) {
     final layer = before.layerById(layerId);
     if (layer is! ShapeLayer) return _noop;
-    return SetShapeResizeModeCommand(
-      layerId: layerId,
-      mode: layer.effectiveResizeMode,
-    );
+    return SetShapeResizeModeCommand(layerId: layerId, mode: layer.resizeMode);
   }
 }

@@ -155,7 +155,13 @@ class _LayerTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final doc = ref.watch(documentControllerProvider);
+    // Watch only this row's protected-base status, not the whole
+    // document by value. A plain `ref.watch(documentControllerProvider)`
+    // rebuilt EVERY mounted tile on any committed edit (visibility,
+    // lock, transform, effect, reorder) because the document `==` folds
+    // in the full layer list — 50 tiles re-running their thumbnails on a
+    // single toggle. `.select` collapses that to a rebuild only when
+    // this tile's own protected flag actually flips.
     // Two reasons we hide the row's delete button:
     //   1. The layer's own capability flag forbids it (e.g. a future
     //      pinned background).
@@ -167,7 +173,11 @@ class _LayerTile extends ConsumerWidget {
     //      [LayerActions.delete] and shows a confirm dialog) --
     //      we keep the destructive action one step away from a
     //      casual mis-tap in the panel.
-    final protected = doc.isProtectedBasePhoto(layer.id);
+    final protected = ref.watch(
+      documentControllerProvider.select(
+        (d) => d.isProtectedBasePhoto(layer.id),
+      ),
+    );
     final canDelete = layer.capabilities.deletable && !protected;
     final bg = isSelected
         ? AppTokens.of(context).accent.withValues(alpha: 0.12)
@@ -195,17 +205,39 @@ class _LayerTile extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  ReorderableDragStartListener(
-                    index: displayIndex,
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: Icon(
-                        Icons.drag_indicator,
-                        size: 18,
-                        color: Colors.grey,
+                  // Locked layers are not drag-reorderable: the lock
+                  // contract (EditorLayer.locked) protects a layer from
+                  // being moved, and z-order is a move. This also pins the
+                  // base photo — imported locked — to the bottom, so a
+                  // drag can't bury content under it (the engine
+                  // `reorderLayer` clamp is the backstop; this removes the
+                  // affordance so the tile doesn't visually jump and snap
+                  // back). The handle shows dimmed rather than vanishing so
+                  // the row layout stays stable.
+                  if (layer.locked)
+                    Opacity(
+                      opacity: 0.35,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: Icon(
+                          Icons.drag_indicator,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    )
+                  else
+                    ReorderableDragStartListener(
+                      index: displayIndex,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: Icon(
+                          Icons.drag_indicator,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
                       ),
                     ),
-                  ),
                   LayerThumbnail(layer: layer),
                   const SizedBox(width: 12),
                   Expanded(

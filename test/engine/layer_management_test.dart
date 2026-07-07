@@ -66,8 +66,7 @@ void main() {
   });
 
   group('RemoveLayerCommand undo restores z-order', () {
-    List<String> ids(EditorDocument d) =>
-        d.layers.map((l) => l.id).toList();
+    List<String> ids(EditorDocument d) => d.layers.map((l) => l.id).toList();
 
     test('middle-layer delete restores at the original index', () {
       final before = seed(); // [a, b, c]
@@ -77,9 +76,13 @@ void main() {
       expect(ids(after), ['a', 'c']);
 
       final restored = inverse.apply(after);
-      expect(ids(restored), ['a', 'b', 'c'],
-          reason: 'invert(before).apply(after) must reproduce the '
-              'pre-delete z-order, not append the layer on top');
+      expect(
+        ids(restored),
+        ['a', 'b', 'c'],
+        reason:
+            'invert(before).apply(after) must reproduce the '
+            'pre-delete z-order, not append the layer on top',
+      );
     });
 
     test('bottom-layer delete restores at index 0 through HistoryStack', () {
@@ -109,9 +112,13 @@ void main() {
       expect(ids(after), ['a', 'c']);
 
       final restored = inverse.apply(after);
-      expect(ids(restored), ['a', 'b', 'c', 'd'],
-          reason: 'reversed index-captured inserts must rebuild the '
-              'original order, not flip the restored layers');
+      expect(
+        ids(restored),
+        ['a', 'b', 'c', 'd'],
+        reason:
+            'reversed index-captured inserts must rebuild the '
+            'original order, not flip the restored layers',
+      );
     });
 
     test('layerById/indexOf stay consistent after an undone delete', () {
@@ -212,6 +219,58 @@ void main() {
       expect(doc.layerById('a')!.id, 'a');
       expect(doc.indexOf('a'), 2);
       expect(doc.indexOf('b'), 0);
+    });
+  });
+
+  group('EditorDocument.reorderLayer — base-photo invariant', () {
+    // Photo project: 'base' pinned at index 0 (bottom), content above.
+    EditorDocument photoDoc() {
+      var doc = EditorDocument.empty;
+      doc = AddLayerCommand(rect('base')).apply(doc);
+      doc = AddLayerCommand(rect('a')).apply(doc);
+      doc = AddLayerCommand(rect('b')).apply(doc);
+      return doc.copyWith(
+        projectKind: ProjectKind.photo,
+        basePhotoLayerId: 'base',
+      );
+    }
+
+    test('refuses to slide a layer beneath the base photo', () {
+      final doc = photoDoc();
+      // sendBackward on the layer directly above the base: (from:1,to:0).
+      final r = doc.reorderLayer(1, 0);
+      expect(
+        r.layers.map((l) => l.id).toList(),
+        ['base', 'a', 'b'],
+        reason:
+            'move to index 0 must be refused so content stays above '
+            'the opaque base photo',
+      );
+      expect(identical(r, doc), isTrue, reason: 'refused reorder is a no-op');
+    });
+
+    test('refuses to lift the base photo off the bottom', () {
+      final doc = photoDoc();
+      // bringForward the base: (from:0,to:1).
+      final r = doc.reorderLayer(0, 1);
+      expect(r.layers.map((l) => l.id).toList(), ['base', 'a', 'b']);
+      expect(identical(r, doc), isTrue);
+    });
+
+    test('still allows reordering content layers above the base', () {
+      final doc = photoDoc();
+      // Swap the two content layers — both stay above the base.
+      final r = doc.reorderLayer(2, 1);
+      expect(r.layers.map((l) => l.id).toList(), ['base', 'b', 'a']);
+    });
+
+    test('design projects are unaffected (control)', () {
+      // Same bottom move, no photo kind → it succeeds.
+      var doc = EditorDocument.empty;
+      doc = AddLayerCommand(rect('base')).apply(doc);
+      doc = AddLayerCommand(rect('a')).apply(doc);
+      final r = doc.reorderLayer(1, 0);
+      expect(r.layers.map((l) => l.id).toList(), ['a', 'base']);
     });
   });
 

@@ -35,27 +35,32 @@ ShapeLayer _shape(String id) => ShapeLayer(
   fillColor: const Color(0xFFFFFFFF),
 );
 
-File _journalFile(Directory docs, String id) =>
-    File('${docs.path}${Platform.pathSeparator}journal'
-        '${Platform.pathSeparator}$id.json');
+File _journalFile(Directory docs, String id) => File(
+  '${docs.path}${Platform.pathSeparator}journal'
+  '${Platform.pathSeparator}$id.json',
+);
 
 Future<ProviderContainer> _editorContainer() async {
   SharedPreferences.setMockInitialValues(const {});
   final projectsDir = tempProjectsDir();
-  final c = ProviderContainer(overrides: [
-    projectsDirectoryProvider.overrideWith((ref) async => projectsDir),
-  ]);
+  final c = ProviderContainer(
+    overrides: [
+      projectsDirectoryProvider.overrideWith((ref) async => projectsDir),
+    ],
+  );
   addTearDown(c.dispose);
   await c.read(projectStoreProvider.future);
   c.read(autosaveControllerProvider);
-  c.read(documentControllerProvider.notifier)
+  c
+      .read(documentControllerProvider.notifier)
       .newDocument(width: 1000, height: 1000);
   return c;
 }
 
 /// Journal writes are debounced (750 ms) real timers — wait them out.
-Future<void> _settleJournal() =>
-    Future<void>.delayed(EditJournal.writeDebounce + const Duration(milliseconds: 150));
+Future<void> _settleJournal() => Future<void>.delayed(
+  EditJournal.writeDebounce + const Duration(milliseconds: 150),
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -63,14 +68,15 @@ void main() {
   group('ProjectRecoveryService', () {
     const service = ProjectRecoveryService();
 
-    test('offers journal JSON that differs from the persisted save',
-        () async {
+    test('offers journal JSON that differs from the persisted save', () async {
       installFakeDocumentsDir();
       final c = await _editorContainer();
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(_shape('crashed-layer')));
-      final crashedJson =
-          c.read(documentControllerProvider.notifier).exportJson();
+      final crashedJson = c
+          .read(documentControllerProvider.notifier)
+          .exportJson();
       final journal = await EditJournal.open('p1');
       await journal.flushNow(c.read(documentControllerProvider));
 
@@ -78,8 +84,11 @@ void main() {
         projectId: 'p1',
         persistedJson: '{"version":1,"width":1,"height":1,"layers":[]}',
       );
-      expect(pending, crashedJson,
-          reason: 'a journal newer than the save must be offered');
+      expect(
+        pending,
+        crashedJson,
+        reason: 'a journal newer than the save must be offered',
+      );
     });
 
     test('byte-identical journal is redundant and self-clears', () async {
@@ -94,10 +103,16 @@ void main() {
         projectId: 'p2',
         persistedJson: json,
       );
-      expect(pending, isNull,
-          reason: 'autosave landed before the crash — nothing to offer');
-      expect(_journalFile(docs, 'p2').existsSync(), isFalse,
-          reason: 'redundant journal must not re-prompt on every open');
+      expect(
+        pending,
+        isNull,
+        reason: 'autosave landed before the crash — nothing to offer',
+      );
+      expect(
+        _journalFile(docs, 'p2').existsSync(),
+        isFalse,
+        reason: 'redundant journal must not re-prompt on every open',
+      );
     });
 
     test('no journal → no offer; clearForProject is idempotent', () async {
@@ -112,65 +127,115 @@ void main() {
       await service.clearForProject('ghost'); // must not throw
     });
 
-    test('draft slot round-trips through pendingDraftJson/clearDraft',
-        () async {
-      final docs = installFakeDocumentsDir();
-      final c = await _editorContainer();
-      c.read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(_shape('draft-layer')));
-      final journal =
-          await EditJournal.open(AutosaveController.draftJournalId);
-      await journal.flushNow(c.read(documentControllerProvider));
+    test(
+      'draft slot round-trips through pendingDraftJson/clearDraft',
+      () async {
+        final docs = installFakeDocumentsDir();
+        final c = await _editorContainer();
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(AddLayerCommand(_shape('draft-layer')));
+        final journal = await EditJournal.open(
+          AutosaveController.draftJournalId,
+        );
+        await journal.flushNow(c.read(documentControllerProvider));
 
-      final draft = await service.pendingDraftJson();
-      expect(draft, contains('draft-layer'));
+        final draft = await service.pendingDraftJson();
+        expect(draft, contains('draft-layer'));
 
-      await service.clearDraft();
-      expect(
-        _journalFile(docs, AutosaveController.draftJournalId).existsSync(),
-        isFalse,
-      );
-      expect(await service.pendingDraftJson(), isNull);
-    });
+        await service.clearDraft();
+        expect(
+          _journalFile(docs, AutosaveController.draftJournalId).existsSync(),
+          isFalse,
+        );
+        expect(await service.pendingDraftJson(), isNull);
+      },
+    );
   });
 
   group('draft journal slot (autosave wiring)', () {
-    test('unsaved session journals to draft; pause keeps it, exit clears',
-        () async {
-      final docs = installFakeDocumentsDir();
-      final c = await _editorContainer();
-      c.read(editorSessionProvider.notifier).state =
-          const EditorSession(name: 'Untitled');
+    test(
+      'unsaved session journals to draft; pause keeps it, exit clears',
+      () async {
+        final docs = installFakeDocumentsDir();
+        final c = await _editorContainer();
+        c.read(editorSessionProvider.notifier).state = const EditorSession(
+          name: 'Untitled',
+        );
 
-      c.read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(_shape('a')));
-      await _settleJournal();
-      final draftFile =
-          _journalFile(docs, AutosaveController.draftJournalId);
-      expect(draftFile.existsSync(), isTrue,
-          reason: 'never-saved docs must journal under the draft slot');
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(AddLayerCommand(_shape('a')));
+        await _settleJournal();
+        final draftFile = _journalFile(docs, AutosaveController.draftJournalId);
+        expect(
+          draftFile.existsSync(),
+          isTrue,
+          reason: 'never-saved docs must journal under the draft slot',
+        );
 
-      // App-pause style flush: journal must SURVIVE (the OS may kill
-      // the process next — that is the recovery case).
-      await c.read(autosaveControllerProvider.notifier).flushNow();
-      expect(draftFile.existsSync(), isTrue,
-          reason: 'a pause flush is not a discard gesture');
+        // App-pause style flush: journal must SURVIVE (the OS may kill
+        // the process next — that is the recovery case).
+        await c.read(autosaveControllerProvider.notifier).flushNow();
+        expect(
+          draftFile.existsSync(),
+          isTrue,
+          reason: 'a pause flush is not a discard gesture',
+        );
 
-      // Deliberate exit: leaving an unsaved doc is the product's
-      // discard gesture — the draft must not haunt the next launch.
-      await c
-          .read(autosaveControllerProvider.notifier)
-          .flushNow(sessionEnding: true);
-      expect(draftFile.existsSync(), isFalse);
-    });
+        // Deliberate exit: leaving an unsaved doc is the product's
+        // discard gesture — the draft must not haunt the next launch.
+        await c
+            .read(autosaveControllerProvider.notifier)
+            .flushNow(sessionEnding: true);
+        expect(draftFile.existsSync(), isFalse);
+      },
+    );
+
+    test(
+      'pause flush persists the draft immediately, before the debounce',
+      () async {
+        final docs = installFakeDocumentsDir();
+        final c = await _editorContainer();
+        c.read(editorSessionProvider.notifier).state = const EditorSession(
+          name: 'Untitled',
+        );
+
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(AddLayerCommand(_shape('unflushed')));
+        // Deliberately do NOT settle: the 750 ms journal debounce has not
+        // fired. This is the regression — a pause here must force the
+        // journal to disk NOW, or an OS kill of the suspended process
+        // would lose these edits with no journal to recover.
+        final draftFile = _journalFile(docs, AutosaveController.draftJournalId);
+        expect(
+          draftFile.existsSync(),
+          isFalse,
+          reason: 'precondition: the debounce has not written yet',
+        );
+
+        await c.read(autosaveControllerProvider.notifier).flushNow();
+
+        expect(
+          draftFile.existsSync(),
+          isTrue,
+          reason: 'pause flush must persist the draft before the debounce',
+        );
+        expect(draftFile.readAsStringSync(), contains('unflushed'));
+      },
+    );
 
     test('saved sessions journal under their own project id', () async {
       final docs = installFakeDocumentsDir();
       final c = await _editorContainer();
-      c.read(editorSessionProvider.notifier).state =
-          const EditorSession(name: 'Saved', projectId: 'proj-9');
+      c.read(editorSessionProvider.notifier).state = const EditorSession(
+        name: 'Saved',
+        projectId: 'proj-9',
+      );
 
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(_shape('a')));
       await _settleJournal();
 
