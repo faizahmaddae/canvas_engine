@@ -289,8 +289,9 @@ class ImageLayer extends EditorLayer {
                 IgnorePointer(
                   child: CustomPaint(
                     painter: _CustomPaintEffectsPainter(
-                      effects:
-                          effects.customPaintEffects.toList(growable: false),
+                      effects: effects.customPaintEffects.toList(
+                        growable: false,
+                      ),
                     ),
                   ),
                 ),
@@ -330,9 +331,9 @@ class ImageLayer extends EditorLayer {
       for (final seg in rest) {
         current = switch (seg) {
           MatrixSegment(:final matrix) => ColorFiltered(
-              colorFilter: ColorFilter.matrix(matrix),
-              child: current,
-            ),
+            colorFilter: ColorFilter.matrix(matrix),
+            child: current,
+          ),
           MaskedEffectSegment(:final effect, :final matrix) =>
             StackMaskComposite(
               mask: effect.mask!,
@@ -344,37 +345,36 @@ class ImageLayer extends EditorLayer {
               ),
             ),
           CustomPaintSegment(:final effects) => Stack(
-              fit: StackFit.expand,
-              children: [
-                current,
-                IgnorePointer(
-                  child: CustomPaint(
-                    painter: _CustomPaintEffectsPainter(effects: effects),
-                  ),
+            fit: StackFit.expand,
+            children: [
+              current,
+              IgnorePointer(
+                child: CustomPaint(
+                  painter: _CustomPaintEffectsPainter(effects: effects),
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
           // The overlay draws on top, so clipping just the overlay
           // implements the §5 composite for this kind; the empty base
           // shows nothing until the mask raster lands (no unmasked
           // flash).
           MaskedCustomPaintSegment(:final effect) => Stack(
-              fit: StackFit.expand,
-              children: [
-                current,
-                IgnorePointer(
-                  child: StackMaskComposite(
-                    mask: effect.mask!,
-                    size: transform.size,
-                    base: const SizedBox.expand(),
-                    painted: CustomPaint(
-                      painter:
-                          _CustomPaintEffectsPainter(effects: [effect]),
-                    ),
+            fit: StackFit.expand,
+            children: [
+              current,
+              IgnorePointer(
+                child: StackMaskComposite(
+                  mask: effect.mask!,
+                  size: transform.size,
+                  base: const SizedBox.expand(),
+                  painted: CustomPaint(
+                    painter: _CustomPaintEffectsPainter(effects: [effect]),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
         };
       }
       painted = current;
@@ -450,6 +450,30 @@ class ImageLayer extends EditorLayer {
               ],
             )
           : body,
+    );
+  }
+
+  /// The [ImageProvider] this layer paints — same bytes and decode-size
+  /// hint [buildContent] uses — or `null` for a missing / degenerate
+  /// source. Exposed so the exporter can [precacheImage] it before an
+  /// off-screen snapshot: a cold [ImageCache] otherwise rasterises a
+  /// blank frame for a layer the on-screen canvas has not painted yet.
+  /// Keep the source→provider mapping in lock-step with [_loadableImage]
+  /// (the `Image.asset/.network/.file` constructors build these exact
+  /// providers under the hood, wrapped in the same `cacheWidth` resize).
+  ImageProvider? exportImageProvider() {
+    final ImageProvider? base = switch (source) {
+      ImageSource(:final assetName?) => AssetImage(assetName),
+      ImageSource(:final networkUrl?) => NetworkImage(networkUrl),
+      ImageSource(:final filePath?) =>
+        File(filePath).existsSync() ? FileImage(File(filePath)) : null,
+      _ => null,
+    };
+    if (base == null) return null;
+    return ResizeImage.resizeIfNeeded(
+      _decodeCacheWidth(transform.size.width),
+      null,
+      base,
     );
   }
 

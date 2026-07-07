@@ -8,7 +8,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../core/editor_document.dart';
+import '../core/layer_mask.dart';
+import '../modules/image/image_layer.dart';
 import '../rendering/document_view.dart';
+import '../rendering/stack_mask_raster_cache.dart';
 import 'png_color_space.dart';
 
 /// Thrown when the document cannot be rasterised. Wraps the underlying
@@ -189,8 +192,7 @@ class DocumentPngExporter {
       honorTransparentMode: true,
     );
     try {
-      final byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
         throw const DocumentExportException(
           'toByteData returned null — render produced no pixels',
@@ -269,6 +271,22 @@ class DocumentPngExporter {
       // this, the boundary's render object exists but has no
       // composited layer yet, and `toImage` returns a blank PNG.
       await completer.future;
+      // Prewarm the async render inputs (image decodes + stack-mask
+      // alpha rasters) so this single-frame snapshot matches the editor,
+      // which converges over several frames. From a cold cache without
+      // this, image layers rasterise blank and masked effects paint
+      // their un-masked base. Bounded + best-effort — never worse than
+      // the pre-prewarm behaviour. See [prewarm]. Guarded because the
+      // caller context crossed the `completer.future` await; if it has
+      // unmounted the export surface is already compromised, so skipping
+      // prewarm is the safe fallback.
+      if (context.mounted) {
+        await prewarm(document, context);
+      }
+      // Two settle frames: the first lets any StackMaskComposite that
+      // flipped to "raster ready" during prewarm rebuild; the second
+      // paints it before the snapshot.
+      await _waitForFrame();
       await _waitForFrame();
 
       final renderObject = boundaryKey.currentContext?.findRenderObject();
@@ -309,8 +327,7 @@ class DocumentPngExporter {
     ui.Image? image;
     try {
       image = await renderObject.toImage(pixelRatio: pixelRatio);
-      final byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) {
         throw const DocumentExportException(
           'toByteData returned null — render produced no pixels',
@@ -337,6 +354,88 @@ class DocumentPngExporter {
     });
     SchedulerBinding.instance.scheduleFrame();
     return completer.future;
+  }
+
+  /// Upper bound on the prewarm wait. A hung network decode or a mask
+  /// rasterise that never completes must not stall the export — after
+  /// this the snapshot proceeds with whatever is ready (no worse than
+  /// having no prewarm step at all).
+  static const Duration _prewarmTimeout = Duration(seconds: 5);
+
+  /// Prewarm the asynchronous inputs an off-screen snapshot needs so a
+  /// single captured frame matches the editor (which converges over
+  /// several frames). Two cold-cache failure modes this closes:
+  ///
+  ///   * an image layer whose bytes are not yet in the process
+  ///     [ImageCache] rasterises blank — the export frame paints before
+  ///     the async decode lands;
+  ///   * a stack-mask / per-effect-mask effect paints its UN-masked base
+  ///     until its alpha raster resolves (async `decodeImageFromPixels`
+  ///     in [StackMaskRasterCache]).
+  ///
+  /// Both are latent on the interactive path (the on-screen canvas has
+  /// already decoded the image and rasterised the mask) but reachable
+  /// from a save/autosave thumbnail or a headless export taken right
+  /// after a programmatic document load, before that layer ever painted.
+  ///
+  /// Best-effort and bounded by [_prewarmTimeout]: failures are
+  /// swallowed and a hang cannot block the snapshot, so this step can
+  /// only ever improve parity, never regress it. `public` (not private)
+  /// so tests can drive it deterministically — the full [export] overlay
+  /// path deadlocks under `tester.runAsync` (it waits on a post-frame
+  /// callback no test pump fires), so the prewarm contract is verified
+  /// through this seam instead.
+  static Future<void> prewarm(
+    EditorDocument document,
+    BuildContext context,
+  ) async {
+    final futures = <Future<void>>[];
+    for (final layer in document.layers) {
+      // Hidden layers are not painted, and only ImageLayer renders
+      // pixels + the effect/mask stack — mirror both so we never warm an
+      // input the snapshot won't read.
+      if (!layer.visible) continue;
+      if (layer is! ImageLayer) continue;
+      final provider = layer.exportImageProvider();
+      if (provider != null) {
+        // Nested (not `&&`) so the analyzer tracks the mounted guard;
+        // masks below still warm even if the caller's context has gone.
+        if (context.mounted) {
+          futures.add(precacheImage(provider, context).catchError((_) {}));
+        }
+      }
+      final w = layer.transform.size.width.round();
+      final h = layer.transform.size.height.round();
+      if (w <= 0 || h <= 0) continue;
+      for (final mask in _masksFor(layer)) {
+        final completer = Completer<void>();
+        StackMaskRasterCache.instance.request(mask, w, h, () {
+          if (!completer.isCompleted) completer.complete();
+        });
+        futures.add(completer.future);
+      }
+    }
+    if (futures.isEmpty) return;
+    await Future.wait(
+      futures,
+    ).timeout(_prewarmTimeout, onTimeout: () => const <void>[]);
+  }
+
+  /// The masks the segmented renderer will rasterise for [layer]: the
+  /// stack-level mask plus every *enabled* effect's own mask. Mirrors
+  /// the contribution rule in `ImageLayer.buildContent` /
+  /// `EffectStack.renderSegments` — a disabled effect never paints, so
+  /// its mask is skipped. Sizes are the layer-local logical extent
+  /// (`transform.size`, rounded), the exact key
+  /// `StackMaskComposite`/`StackMaskRasterCache` use.
+  static Iterable<LayerMask> _masksFor(ImageLayer layer) sync* {
+    final stack = layer.effects;
+    final stackMask = stack.stackMask;
+    if (stackMask != null) yield stackMask;
+    for (final effect in stack.effects) {
+      final mask = effect.mask;
+      if (mask != null && effect.enabled) yield mask;
+    }
   }
 }
 
