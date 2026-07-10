@@ -1,0 +1,141 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": 4291394388,
+  "layers": [
+    {
+      "type": "text",
+      "id": "capacity-chip",
+      "transform": {
+        "x": 690.0,
+        "y": 120.0,
+        "w": 280.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "\u0638\u0631\u0641\u06cc\u062a \u0645\u062d\u062f\u0648\u062f",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 36.0,
+        "color": 4294372834,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center",
+        "backgroundColor": 4283051552,
+        "backgroundRadius": 0.5,
+        "backgroundPaddingX": 26.0,
+        "backgroundPaddingY": 12.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "wheel",
+      "transform": {
+        "x": 180.0,
+        "y": 280.0,
+        "w": 720.0,
+        "h": 720.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294372834,
+      "strokeWidth": 0.0,
+      "shadowOpacity": 0.16,
+      "shadowBlur": 40.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 16.0,
+      "shadowColor": 4283051552
+    },
+    {
+      "type": "shape",
+      "id": "wheel-ring",
+      "transform": {
+        "x": 240.0,
+        "y": 340.0,
+        "w": 600.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4283051552,
+      "strokeWidth": 2.0,
+      "fillOpacity": 0.0,
+      "strokeColor": 1279929888
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 290.0,
+        "y": 570.0,
+        "w": 500.0,
+        "h": 120.0,
+        "r": 0.0
+      },
+      "content": "\u06a9\u0627\u0631\u06af\u0627\u0647 \u0633\u0641\u0627\u0644\u06af\u0631\u06cc",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 76.0,
+        "color": 4283051552,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "orn-diamond",
+      "transform": {
+        "x": 522.0,
+        "y": 742.0,
+        "w": 36.0,
+        "h": 36.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291394388,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "info-band",
+      "transform": {
+        "x": 0.0,
+        "y": 1170.0,
+        "w": 1080.0,
+        "h": 180.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4283051552,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "info",
+      "transform": {
+        "x": 140.0,
+        "y": 1232.0,
+        "w": 800.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0634\u0646\u0628\u0647\u200c\u0647\u0627 \u00b7 \u062f\u0648 \u062c\u0644\u0633\u0647 \u00b7 \u0647\u0645\u0631\u0627\u0647 \u0628\u0627 \u0627\u0628\u0632\u0627\u0631",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4294372834,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

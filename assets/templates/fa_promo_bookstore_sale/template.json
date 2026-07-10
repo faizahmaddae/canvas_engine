@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_bookstore_sale",
+  "title": {
+    "en": "Book Week Sale Poster",
+    "fa": "پوستر هفته‌ی کتاب"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_bookstore_sale/thumbnail.png",
+  "document": "assets/templates/fa_promo_bookstore_sale/document.json",
+  "tags": [
+    "persian",
+    "books",
+    "sale",
+    "literary",
+    "bookstore",
+    "editorial"
+  ]
+}

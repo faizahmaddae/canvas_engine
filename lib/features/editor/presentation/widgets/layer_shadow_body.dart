@@ -6,13 +6,11 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
-import '../../application/recent_colors_controller.dart';
 import '../../engine/commands/editor_command.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/panel_direction_pad.dart';
 import '../../ui/precision_disclosure.dart';
-import 'inline_color_body.dart';
 import 'panel_option_tile.dart';
 import 'section_label.dart';
 
@@ -40,8 +38,9 @@ class ShadowPanelAdapter<L extends EditorLayer> {
   })
   command;
 
-  final ({Color color, double blur, Offset offset, double opacity})
-  Function(L layer)
+  final ({Color color, double blur, Offset offset, double opacity}) Function(
+    L layer,
+  )
   read;
 
   /// Wraps [child] in the per-tool `Shape`/`ImagePanelShell`. Kept as
@@ -65,7 +64,11 @@ class ShadowPanelAdapter<L extends EditorLayer> {
 /// — sliding blur won't reset the offset, picking a colour won't
 /// reset opacity, etc.
 class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
-  const LayerShadowBody({super.key, required this.layer, required this.adapter});
+  const LayerShadowBody({
+    super.key,
+    required this.layer,
+    required this.adapter,
+  });
 
   final L layer;
   final ShadowPanelAdapter<L> adapter;
@@ -130,35 +133,15 @@ class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
           if (hasShadow) ...[
             const SizedBox(height: 12),
             SectionLabel(context.l10n.colorLabel),
-            // Approved compact color UI — fed by the app-wide
-            // [recentColorsControllerProvider] so customs picked
-            // in any colour panel surface here too.
-            InlineColorBody(
-              current: fields.color,
-              recents: ref.watch(recentColorsControllerProvider),
-              palette: InlineColorBody.defaultPalette,
-              compactRecents: true,
-              onPick: (picked) {
-                EditorHaptics.toggle();
-                _commit(ref, c: picked);
-              },
-              onCustom: () async {
-                final original = fields.color;
-                final picked = await showColorPickerSheet(
-                  context,
-                  initial: original,
-                  recents: ref.read(recentColorsControllerProvider),
-                  onLiveChange: (c) => _commit(ref, c: c, live: true),
-                  title: context.l10n.shadowColorTitle,
-                );
-                if (picked == null) {
-                  _commit(ref, c: original);
-                  return;
-                }
-                ref
-                    .read(recentColorsControllerProvider.notifier)
-                    .remember(picked);
-              },
+            // The shared two-level picker, embedded. Drags stream
+            // live (transient) commits; settled changes commit for
+            // real so each pick is one undo step. Recents and alpha
+            // policy live inside the picker.
+            ColorPickerBody(
+              initial: fields.color,
+              title: context.l10n.shadowColorTitle,
+              onChanged: (c) => _commit(ref, c: c, live: true),
+              onCommitted: (c) => _commit(ref, c: c),
             ),
             const SizedBox(height: 2),
             PrecisionDisclosure(

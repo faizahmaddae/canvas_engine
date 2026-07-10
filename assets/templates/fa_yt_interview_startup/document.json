@@ -1,0 +1,185 @@
+{
+  "version": 2,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": 4279384114,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "glow-top",
+      "transform": {
+        "x": 360.0,
+        "y": -320.0,
+        "w": 560.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4290765778,
+      "strokeWidth": 0.0,
+      "opacity": 0.08
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 360.0,
+        "y": 64.0,
+        "w": 820.0,
+        "h": 130.0,
+        "r": 0.0
+      },
+      "content": "\u06af\u0641\u062a\u200c\u0648\u06af\u0648 \u0628\u0627 \u0628\u0646\u06cc\u0627\u0646\u200c\u06af\u0630\u0627\u0631",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 84.0,
+        "color": 4294439138,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.15,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-saffron",
+      "transform": {
+        "x": 900.0,
+        "y": 226.0,
+        "w": 280.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 4293238852,
+      "strokeWidth": 4.0
+    },
+    {
+      "type": "shape",
+      "id": "card-guest",
+      "transform": {
+        "x": 668.0,
+        "y": 280.0,
+        "w": 512.0,
+        "h": 340.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4280181074,
+        "endColor": 4279190071,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 32.0,
+      "shadowOpacity": 0.28,
+      "shadowBlur": 34.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 14.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "avatar-guest",
+      "transform": {
+        "x": 849.0,
+        "y": 330.0,
+        "w": 150.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4290765778,
+      "strokeWidth": 0.0,
+      "fillOpacity": 0.25
+    },
+    {
+      "type": "shape",
+      "id": "card-host",
+      "transform": {
+        "x": 100.0,
+        "y": 280.0,
+        "w": 512.0,
+        "h": 340.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4280972383,
+        "endColor": 4279650876,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 32.0,
+      "shadowOpacity": 0.28,
+      "shadowBlur": 34.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 14.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "avatar-host",
+      "transform": {
+        "x": 281.0,
+        "y": 330.0,
+        "w": 150.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4290765778,
+      "strokeWidth": 0.0,
+      "fillOpacity": 0.25
+    },
+    {
+      "type": "text",
+      "id": "name-guest",
+      "transform": {
+        "x": 698.0,
+        "y": 642.0,
+        "w": 452.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "\u0645\u0647\u0645\u0627\u0646: \u0633\u0627\u0631\u0627 \u0627\u0645\u06cc\u0646\u06cc",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 36.0,
+        "color": 4290765778,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "name-host",
+      "transform": {
+        "x": 130.0,
+        "y": 642.0,
+        "w": 452.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "\u0645\u06cc\u0632\u0628\u0627\u0646",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 36.0,
+        "color": 4290765778,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -8,13 +8,11 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
-import '../../application/recent_colors_controller.dart';
 import '../../engine/commands/editor_command.dart';
 import '../../engine/core/canvas_sizing.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/precision_disclosure.dart';
-import 'inline_color_body.dart';
 import 'panel_option_tile.dart';
 import 'section_label.dart';
 
@@ -89,7 +87,11 @@ class BorderPanelAdapter<L extends EditorLayer> {
 /// straight merge, since the two panels have real behavioural
 /// divergences (see [BorderPanelAdapter]'s doc).
 class LayerBorderBody<L extends EditorLayer> extends ConsumerWidget {
-  const LayerBorderBody({super.key, required this.layer, required this.adapter});
+  const LayerBorderBody({
+    super.key,
+    required this.layer,
+    required this.adapter,
+  });
 
   final L layer;
   final BorderPanelAdapter<L> adapter;
@@ -184,40 +186,18 @@ class LayerBorderBody<L extends EditorLayer> extends ConsumerWidget {
           if (!stroked) ...[
             const SizedBox(height: 12),
             SectionLabel(context.l10n.colorLabel),
-            // Approved compact color UI — fed by the app-wide
-            // [recentColorsControllerProvider] so customs picked in
-            // any colour panel are surfaced here too.
-            InlineColorBody(
-              current: displayColor,
-              recents: ref.watch(recentColorsControllerProvider),
-              palette: InlineColorBody.defaultPalette,
-              compactRecents: true,
-              onPick: (picked) {
-                EditorHaptics.toggle();
-                _commit(ref, c: picked, w: hasBorder ? null : medium);
-              },
-              onCustom: () async {
-                final original = displayColor;
-                final picked = await showColorPickerSheet(
-                  context,
-                  initial: original,
-                  recents: ref.read(recentColorsControllerProvider),
-                  onLiveChange: (c) => _commit(
-                    ref,
-                    c: c,
-                    w: hasBorder ? null : medium,
-                    live: true,
-                  ),
-                  title: context.l10n.borderColorTitle,
-                );
-                if (picked == null) {
-                  _commit(ref, c: original);
-                  return;
-                }
-                ref
-                    .read(recentColorsControllerProvider.notifier)
-                    .remember(picked);
-              },
+            // The shared two-level picker, embedded. Picking a
+            // colour with no border yet promotes the width to
+            // `medium` so the pick is immediately visible. Drags
+            // stream live commits; settled changes seal the undo
+            // step. Recents and alpha policy live in the picker.
+            ColorPickerBody(
+              initial: displayColor,
+              title: context.l10n.borderColorTitle,
+              onChanged: (c) =>
+                  _commit(ref, c: c, w: hasBorder ? null : medium, live: true),
+              onCommitted: (c) =>
+                  _commit(ref, c: c, w: hasBorder ? null : medium),
             ),
             if (adapter.showPrecisionSlider) ...[
               const SizedBox(height: 6),

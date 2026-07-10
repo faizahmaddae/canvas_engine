@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_rumi_asl_khish",
+  "title": {
+    "en": "Rumi Mystic Circle Poetry Post",
+    "fa": "شعر مولانا — اصل خویش"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_rumi_asl_khish/thumbnail.png",
+  "document": "assets/templates/fa_poetry_rumi_asl_khish/document.json",
+  "tags": [
+    "persian",
+    "poetry",
+    "rumi",
+    "nastaliq",
+    "mystic",
+    "dark",
+    "amber"
+  ]
+}

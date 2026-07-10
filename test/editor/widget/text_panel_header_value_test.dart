@@ -1,6 +1,8 @@
-// Unified panel-header grammar: panels with one canonical live value
-// surface it as a chip at the header's end (Size -> px, Border ->
-// px/Off, Background -> %/Off, Resize -> mode word).
+// Panel-header grammar after the 2026-07 passes: headers are title +
+// ✕ only. The last header value chip (Size px) moved into the size
+// panel body as the tappable exact-size chip; Border / Background /
+// Resize lost their standalone sheets entirely (decoration lives in
+// the Styles panel's effect sections, resize behaviour under «بیشتر»).
 
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
@@ -63,22 +65,26 @@ void main() {
     return container;
   }
 
-  testWidgets('Size header carries the live px chip', (tester) async {
-    await pumpWithSheet(tester, 'size');
-    expect(find.text('48px'), findsWidgets);
-  });
-
-  testWidgets('Border header reads Off while no outline is set', (
+  testWidgets('Size sheet shows exactly one px readout (body chip)', (
     tester,
   ) async {
-    await pumpWithSheet(tester, 'border');
-    expect(find.text('Off'), findsOneWidget);
+    await pumpWithSheet(tester, 'size');
+    // The tappable body chip is the ONLY px readout — the header
+    // no longer duplicates it.
+    expect(find.text('48px'), findsOneWidget);
   });
 
-  testWidgets('Resize header names the active mode', (tester) async {
-    await pumpWithSheet(tester, 'behavior');
-    // Default mode is scale-text; its title appears in the header
-    // chip (and again on the mode tile below).
-    expect(find.text('Scale text'), findsWidgets);
+  testWidgets('removed decoration sheet ids render no panel', (tester) async {
+    // Stale persisted TextSession.openSheet ids from before the bar
+    // consolidation must resolve to nothing instead of crashing.
+    for (final staleId in ['border', 'background', 'shadow', 'behavior']) {
+      final c = await pumpWithSheet(tester, staleId);
+      expect(find.text('Off'), findsNothing);
+      expect(
+        c.read(textToolControllerProvider).openSheet,
+        staleId,
+        reason: 'session keeps the id; the sheet host just renders nothing',
+      );
+    }
   });
 }

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_live_music_night",
+  "title": {
+    "en": "Live Music Night Story",
+    "fa": "استوری شب موسیقی زنده"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_live_music_night/thumbnail.png",
+  "document": "assets/templates/fa_story_live_music_night/document.json",
+  "tags": [
+    "persian",
+    "story",
+    "music",
+    "event",
+    "neon",
+    "duotone"
+  ]
+}

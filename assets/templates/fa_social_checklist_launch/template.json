@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_social_checklist_launch",
+  "title": {
+    "en": "Pre-Launch Checklist Post",
+    "fa": "پست چک‌لیست قبل از انتشار"
+  },
+  "category": "social",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_social_checklist_launch/thumbnail.png",
+  "document": "assets/templates/fa_social_checklist_launch/document.json",
+  "tags": [
+    "persian",
+    "social",
+    "checklist",
+    "launch",
+    "content",
+    "dark",
+    "mint"
+  ]
+}

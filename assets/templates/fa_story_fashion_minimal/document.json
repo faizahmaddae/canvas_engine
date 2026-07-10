@@ -1,0 +1,100 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4294045158,
+  "layers": [
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 420.0,
+        "y": 170.0,
+        "w": 560.0,
+        "h": 330.0,
+        "r": 0.0
+      },
+      "content": "\u0645\u062c\u0645\u0648\u0639\u0647\u200c\u06cc\n\u067e\u0627\u06cc\u06cc\u0632",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 110.0,
+        "color": 4279900181,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.3,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-mid",
+      "transform": {
+        "x": 620.0,
+        "y": 580.0,
+        "w": 360.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 4279900181,
+      "strokeWidth": 3.0
+    },
+    {
+      "type": "shape",
+      "id": "photo-frame",
+      "transform": {
+        "x": 270.0,
+        "y": 720.0,
+        "w": 540.0,
+        "h": 840.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4293584088,
+        "endColor": 4292399298,
+        "angleDegrees": 180.0
+      }
+    },
+    {
+      "type": "shape",
+      "id": "slash-saffron",
+      "transform": {
+        "x": 600.0,
+        "y": 705.0,
+        "w": 460.0,
+        "h": 30.0,
+        "r": -0.62
+      },
+      "kind": "rectangle",
+      "fillColor": 4293238852,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "coming-soon",
+      "transform": {
+        "x": 440.0,
+        "y": 1680.0,
+        "w": 200.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0647\u200c\u0632\u0648\u062f\u06cc",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4279900181,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

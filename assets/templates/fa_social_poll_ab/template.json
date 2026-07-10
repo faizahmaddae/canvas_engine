@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_social_poll_ab",
+  "title": {
+    "en": "A or B Poll Post",
+    "fa": "پست نظرسنجی الف یا ب"
+  },
+  "category": "social",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_social_poll_ab/thumbnail.png",
+  "document": "assets/templates/fa_social_poll_ab/document.json",
+  "tags": [
+    "persian",
+    "social",
+    "poll",
+    "question",
+    "engagement",
+    "coral",
+    "teal"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_ferdowsi_tavana",
+  "title": {
+    "en": "Ferdowsi Monumental Poetry Post",
+    "fa": "شعر فردوسی — توانا بود"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_ferdowsi_tavana/thumbnail.png",
+  "document": "assets/templates/fa_poetry_ferdowsi_tavana/document.json",
+  "tags": [
+    "persian",
+    "poetry",
+    "ferdowsi",
+    "shahnameh",
+    "monumental",
+    "lapis",
+    "bold"
+  ]
+}

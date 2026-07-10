@@ -1,0 +1,174 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4287865746,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "orn-diamond",
+      "transform": {
+        "x": 526.0,
+        "y": 320.0,
+        "w": 28.0,
+        "h": 28.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292453441,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "book-cover",
+      "transform": {
+        "x": 230.0,
+        "y": 400.0,
+        "w": 620.0,
+        "h": 820.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4280562474,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "cover-frame",
+      "transform": {
+        "x": 262.0,
+        "y": 432.0,
+        "w": 556.0,
+        "h": 756.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292453441,
+      "strokeWidth": 2.0,
+      "fillOpacity": 0.0,
+      "strokeColor": 4292453441
+    },
+    {
+      "type": "shape",
+      "id": "bookmark-ribbon",
+      "transform": {
+        "x": 696.0,
+        "y": 400.0,
+        "w": 52.0,
+        "h": 300.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292453441,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bookmark-notch",
+      "transform": {
+        "x": 696.0,
+        "y": 674.0,
+        "w": 52.0,
+        "h": 26.0,
+        "r": 0.0
+      },
+      "kind": "triangle",
+      "fillColor": 4280562474,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 300.0,
+        "y": 660.0,
+        "w": 480.0,
+        "h": 300.0,
+        "r": 0.0
+      },
+      "content": "\u062c\u0644\u0633\u0647\u200c\u06cc\n\u06a9\u062a\u0627\u0628\u200c\u062e\u0648\u0627\u0646\u06cc",
+      "style": {
+        "fontFamily": "BNazanin",
+        "fontSize": 96.0,
+        "color": 4294308326,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.45,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-title",
+      "transform": {
+        "x": 470.0,
+        "y": 1004.0,
+        "w": 140.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 4292453441,
+      "strokeWidth": 3.0
+    },
+    {
+      "type": "text",
+      "id": "schedule",
+      "transform": {
+        "x": 290.0,
+        "y": 1330.0,
+        "w": 500.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u067e\u0646\u062c\u200c\u0634\u0646\u0628\u0647\u200c\u0647\u0627 \u00b7 \u0633\u0627\u0639\u062a \u06f1\u06f8",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4280562474,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "this-week",
+      "transform": {
+        "x": 240.0,
+        "y": 1420.0,
+        "w": 600.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "\u06a9\u062a\u0627\u0628 \u0627\u06cc\u0646 \u0647\u0641\u062a\u0647: \u0628\u0648\u0641 \u06a9\u0648\u0631",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4280562474,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-footer",
+      "transform": {
+        "x": 490.0,
+        "y": 1540.0,
+        "w": 100.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 4292453441,
+      "strokeWidth": 3.0
+    }
+  ]
+}

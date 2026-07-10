@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
+import '../../application/canvas_capture.dart';
 import '../../application/document_controller.dart';
 import '../../application/editing_controller.dart';
 import '../../application/editor_lifecycle.dart';
@@ -42,7 +43,9 @@ import '../../shape/application/shape_tool_controller.dart';
 import '../../paint/presentation/paint_floating_toolbar.dart';
 import '../../paint/presentation/paint_gesture_surface.dart';
 import '../../shape/presentation/shape_floating_toolbar.dart';
+import '../../text/application/text_tool_controller.dart';
 import '../../text/presentation/text_edit_flow.dart';
+import '../../text/presentation/text_quick_capsule.dart';
 import '../../text/presentation/add_text_composer_state.dart';
 import 'animated_guides_layer.dart';
 import 'canvas_framing.dart';
@@ -439,8 +442,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
     // Mask-edit mode replaces the selection chrome with its own
     // overlay: handles, HUD, floating toolbars and quick actions all
     // hide while the region editor owns the layer.
-    final maskEditActive =
-        ref.watch(maskEditControllerProvider.select((s) => s.active));
+    final maskEditActive = ref.watch(
+      maskEditControllerProvider.select((s) => s.active),
+    );
     final docSize = Size(doc.width, doc.height);
 
     return LayoutBuilder(
@@ -649,68 +653,80 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                           child: SizedBox(
                             width: doc.width,
                             height: doc.height,
-                            child: Stack(
-                              key: _canvasKey,
-                              clipBehavior: Clip.none,
-                              children: [
-                                // The document's own background. When
-                                // mode is `color`, paints the picked
-                                // solid fill -- the Canvas tool's
-                                // colour change shows up here and on
-                                // PNG export. When mode is
-                                // `transparent`, paints a tiled
-                                // checkerboard so the user can see
-                                // through to "empty" -- the export
-                                // pipeline writes alpha instead.
-                                Positioned.fill(
-                                  child:
-                                      doc.backgroundMode ==
-                                          CanvasBackgroundMode.transparent
-                                      ? const CanvasCheckerboard()
-                                      : BackgroundFillBox(fill: doc.background),
-                                ),
-                                for (final layer in doc.layers)
-                                  if (layer.visible)
-                                    _LayerGestureWrapper(
-                                      key: ValueKey(layer.id),
-                                      layer: layer,
-                                      isActive: activeLayerId == layer.id,
+                            // Snapshot boundary for the colour
+                            // picker's eyedropper: sits inside the
+                            // viewport transform so a capture is
+                            // 1 px per logical canvas unit at any
+                            // zoom. The dim mask + border framing
+                            // paint above (outside) it, so samples
+                            // are the raw design colours.
+                            child: RepaintBoundary(
+                              key: ref.watch(canvasBoardBoundaryKeyProvider),
+                              child: Stack(
+                                key: _canvasKey,
+                                clipBehavior: Clip.none,
+                                children: [
+                                  // The document's own background. When
+                                  // mode is `color`, paints the picked
+                                  // solid fill -- the Canvas tool's
+                                  // colour change shows up here and on
+                                  // PNG export. When mode is
+                                  // `transparent`, paints a tiled
+                                  // checkerboard so the user can see
+                                  // through to "empty" -- the export
+                                  // pipeline writes alpha instead.
+                                  Positioned.fill(
+                                    child:
+                                        doc.backgroundMode ==
+                                            CanvasBackgroundMode.transparent
+                                        ? const CanvasCheckerboard()
+                                        : BackgroundFillBox(
+                                            fill: doc.background,
+                                          ),
+                                  ),
+                                  for (final layer in doc.layers)
+                                    if (layer.visible)
+                                      _LayerGestureWrapper(
+                                        key: ValueKey(layer.id),
+                                        layer: layer,
+                                        isActive: activeLayerId == layer.id,
+                                      ),
+                                  // Per-member outlines for multi-select.
+                                  // Drawn inside the viewport transform so
+                                  // they hug each layer's rotated rect
+                                  // pixel-accurately. No handles — the
+                                  // group selection chrome (screen-space)
+                                  // owns transformation.
+                                  if (selection.count > 1)
+                                    _GroupMemberOutlines(
+                                      layers: doc.layers,
+                                      selection: selection,
+                                      viewportScale: viewport.scale,
                                     ),
-                                // Per-member outlines for multi-select.
-                                // Drawn inside the viewport transform so
-                                // they hug each layer's rotated rect
-                                // pixel-accurately. No handles — the
-                                // group selection chrome (screen-space)
-                                // owns transformation.
-                                if (selection.count > 1)
-                                  _GroupMemberOutlines(
-                                    layers: doc.layers,
-                                    selection: selection,
+                                  // Engine-driven alignment + spacing
+                                  // overlays. Wrapped together so a single
+                                  // opacity fade governs appearance and
+                                  // disappearance, eliminating flicker as
+                                  // snaps engage and release. Both painters
+                                  // counter-scale stroke widths by
+                                  // viewport.scale so guides stay 1px on
+                                  // screen at any zoom.
+                                  AnimatedGuidesLayer(
+                                    snapGuides: snapGuides,
+                                    spacingGuides: spacingGuides,
                                     viewportScale: viewport.scale,
                                   ),
-                                // Engine-driven alignment + spacing
-                                // overlays. Wrapped together so a single
-                                // opacity fade governs appearance and
-                                // disappearance, eliminating flicker as
-                                // snaps engage and release. Both painters
-                                // counter-scale stroke widths by
-                                // viewport.scale so guides stay 1px on
-                                // screen at any zoom.
-                                AnimatedGuidesLayer(
-                                  snapGuides: snapGuides,
-                                  spacingGuides: spacingGuides,
-                                  viewportScale: viewport.scale,
-                                ),
-                                // Paint drawing surface — mounted only when
-                                // a paint tool is active. Sits as the
-                                // topmost child of the doc board so it
-                                // claims canvas-area gestures before any
-                                // layer wrapper, and provides drag-to-draw
-                                // + tap-to-erase. Coordinates arrive in
-                                // canvas-local space because we're inside
-                                // the viewport transform.
-                                PaintGestureSurface(docSize: docSize),
-                              ],
+                                  // Paint drawing surface — mounted only when
+                                  // a paint tool is active. Sits as the
+                                  // topmost child of the doc board so it
+                                  // claims canvas-area gestures before any
+                                  // layer wrapper, and provides drag-to-draw
+                                  // + tap-to-erase. Coordinates arrive in
+                                  // canvas-local space because we're inside
+                                  // the viewport transform.
+                                  PaintGestureSurface(docSize: docSize),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -794,10 +810,15 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                           !addTextComposerOpen &&
                           !maskEditActive)
                         _buildHud(doc.layers, selection, viewport),
-                      // The floating text toolbar is GONE (text-tool
-                      // redesign step 1): the one bottom text bar owns
-                      // every control it carried, and double-tap on the
-                      // text layer opens the editor.
+                      // Floating text quick-capsule (re-added,
+                      // redesigned): a lean edit/font/size/color/more
+                      // pill over the selection. Routes to the SAME
+                      // panels the bottom bar opens — quick in-place
+                      // access, not a second full bar.
+                      if (selection.count == 1 &&
+                          !addTextComposerOpen &&
+                          !maskEditActive)
+                        _buildTextQuickCapsule(doc.layers, selection, viewport),
                       // Floating contextual paint toolbar. Appears next to
                       // a selected paint layer with stroke color, size, and
                       // resize behavior toggle (type-checks its layer kind).
@@ -853,8 +874,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                       // Mask-edit chrome: region scrim/outline, drag
                       // handles, and the bottom strip. Mounted above
                       // every other chrome piece it replaces.
-                      if (maskEditActive)
-                        MaskEditOverlay(viewport: viewport),
+                      if (maskEditActive) MaskEditOverlay(viewport: viewport),
                       const _MultiSelectModeChip(),
                     ],
                   ),
@@ -1263,6 +1283,58 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           viewport: viewport,
           activeHandle: handle,
         );
+      },
+    );
+  }
+
+  /// Floating text quick-capsule for the selected (non-sticker) text
+  /// layer. Hidden while a transform gesture is in flight, while the
+  /// inline editor is active, and while any text dock sheet or
+  /// context panel is open — it just opened that surface; stacking
+  /// on top of it would be noise. Emoji stickers are excluded (they
+  /// carry no text flow; the generic quick-actions pill serves them).
+  Widget _buildTextQuickCapsule(
+    List<EditorLayer> layers,
+    SelectionState selection,
+    ViewportState viewport,
+  ) {
+    EditorLayer? layer;
+    for (final l in layers) {
+      if (l.id == selection.selectedId) {
+        layer = l;
+        break;
+      }
+    }
+    if (layer is! TextLayer || layer.isSticker) {
+      return const SizedBox.shrink();
+    }
+    final textLayer = layer;
+    return Consumer(
+      builder: (context, ref, _) {
+        final isEditing = ref.watch(
+          editingControllerProvider.select((id) => id == textLayer.id),
+        );
+        if (isEditing) return const SizedBox.shrink();
+        final inSession = ref.watch(
+          interactionControllerProvider.select(
+            (s) => s.session?.layerId == textLayer.id,
+          ),
+        );
+        if (inSession) return const SizedBox.shrink();
+        // Mirror the paint/shape guard: hide while any text dock
+        // surface (sheet, inline slot, expanded panel) is open so
+        // the capsule never stacks on the panel it routes to.
+        final dockBusy = ref.watch(
+          textToolControllerProvider.select(
+            (s) => s.openSheet != null || s.openSlot != null || s.panelExpanded,
+          ),
+        );
+        if (dockBusy) return const SizedBox.shrink();
+        final contextPanelOpen = ref.watch(
+          contextToolbarControllerProvider.select((panel) => panel != null),
+        );
+        if (contextPanelOpen) return const SizedBox.shrink();
+        return TextQuickCapsule(layer: textLayer, viewport: viewport);
       },
     );
   }
@@ -1689,11 +1761,7 @@ class _MultiSelectModeChip extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.check_circle_outline,
-                size: 14,
-                color: tokens.onBrand,
-              ),
+              Icon(Icons.check_circle_outline, size: 14, color: tokens.onBrand),
               const SizedBox(width: 6),
               Text(
                 context.l10n.multiSelectCount(count),

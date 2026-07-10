@@ -156,7 +156,6 @@
   "removeBasePhotoCommand": "Remove base photo",
   "removeBasePhotoBody": "This is the photo your project was built from. Removing it turns this into a blank design project. You can undo this.",
   "recentLabel": "Recent",
-  "paletteLabel": "Palette",
   "customLabel": "Custom",
   "scaleLabel": "Scale",
   "freeLabel": "Free",
@@ -396,6 +395,18 @@
   "thicknessLabel": "Thickness",
   "fillColorTitle": "Fill color",
   "shadowColorTitle": "Shadow color",
+  "shadowOffsetPadSemantics": "Shadow direction and distance",
+  "@shadowOffsetPadSemantics": {
+    "description": "Accessibility label for the 2D shadow offset pad — dragging the dot sets shadow direction and distance together."
+  },
+  "textQuickActionsSemantics": "Text quick actions",
+  "@textQuickActionsSemantics": {
+    "description": "Accessibility label for the floating quick-capsule shown above a selected text layer."
+  },
+  "exactSizeTitle": "Exact size",
+  "@exactSizeTitle": {
+    "description": "Title of the numeric-entry dialog opened by tapping the size panel's value chip."
+  },
   "blurDirectionOpacitySubtitle": "Blur, direction, opacity",
   "backgroundColorTitle": "Background color",
   "borderColorTitle": "Border color",
@@ -443,7 +454,8 @@
   "fontCategoryTraditional": "Traditional",
   "fontCategoryNastaliq": "Nastaliq",
   "hexLabel": "Hex",
-  "invalidLabel": "Invalid",
+  "eyedropperTooltip": "Eyedropper",
+  "copyColorTooltip": "Copy color code",
   "toolLabel": "Tool",
   "chooseToolTitle": "Choose a tool",
   "thinOption": "Thin",

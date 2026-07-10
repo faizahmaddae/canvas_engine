@@ -1,0 +1,203 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4293383870,
+  "layers": [
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 240.0,
+        "y": 90.0,
+        "w": 600.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "content": "\u067e\u06cc\u0634\u0646\u0647\u0627\u062f \u0627\u0645\u0631\u0648\u0632",
+      "style": {
+        "fontFamily": "Eliya_Regular",
+        "fontSize": 80.0,
+        "color": 4282067485,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.4,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "board",
+      "transform": {
+        "x": 140.0,
+        "y": 300.0,
+        "w": 800.0,
+        "h": 460.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4282067485,
+      "strokeWidth": 0.0,
+      "cornerRadius": 32.0,
+      "shadowOpacity": 0.2,
+      "shadowBlur": 28.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 10.0,
+      "shadowColor": 4282067485
+    },
+    {
+      "type": "text",
+      "id": "item-1-name",
+      "transform": {
+        "x": 470.0,
+        "y": 396.0,
+        "w": 400.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0644\u0627\u062a\u0647 \u0632\u0639\u0641\u0631\u0627\u0646\u06cc",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4294701796,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "item-1-price",
+      "transform": {
+        "x": 210.0,
+        "y": 402.0,
+        "w": 240.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "\u06f9\u06f5 \u0647\u0632\u0627\u0631 \u062a\u0648\u0645\u0627\u0646",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 32.0,
+        "color": 4293383870,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "board-divider",
+      "transform": {
+        "x": 210.0,
+        "y": 522.0,
+        "w": 660.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 1290262206,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "text",
+      "id": "item-2-name",
+      "transform": {
+        "x": 470.0,
+        "y": 596.0,
+        "w": 400.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u06a9\u06cc\u06a9 \u0647\u0648\u06cc\u062c \u062e\u0627\u0646\u06af\u06cc",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4294701796,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "item-2-price",
+      "transform": {
+        "x": 210.0,
+        "y": 602.0,
+        "w": 240.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "\u06f8\u06f0 \u0647\u0632\u0627\u0631 \u062a\u0648\u0645\u0627\u0646",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 32.0,
+        "color": 4293383870,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "mug-handle",
+      "transform": {
+        "x": 105.0,
+        "y": 850.0,
+        "w": 90.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4288696877,
+      "strokeWidth": 0.0,
+      "cornerRadius": 24.0
+    },
+    {
+      "type": "shape",
+      "id": "mug-body",
+      "transform": {
+        "x": 150.0,
+        "y": 790.0,
+        "w": 210.0,
+        "h": 210.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4288696877,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "cafe-name",
+      "transform": {
+        "x": 390.0,
+        "y": 910.0,
+        "w": 300.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "content": "\u06a9\u0627\u0641\u0647 \u062f\u0646\u062c",
+      "style": {
+        "fontFamily": "Eliya_Regular",
+        "fontSize": 56.0,
+        "color": 4282067485,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.4,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

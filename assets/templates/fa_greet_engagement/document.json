@@ -1,0 +1,210 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294505450,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "bracket-tl-h",
+      "transform": {
+        "x": 90.0,
+        "y": 89.0,
+        "w": 90.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 2362024523,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-tl-v",
+      "transform": {
+        "x": 45.0,
+        "y": 134.0,
+        "w": 90.0,
+        "h": 2.0,
+        "r": 1.5707963267948966
+      },
+      "kind": "line",
+      "fillColor": 2362024523,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-tr-h",
+      "transform": {
+        "x": 900.0,
+        "y": 89.0,
+        "w": 90.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 2362024523,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-tr-v",
+      "transform": {
+        "x": 945.0,
+        "y": 134.0,
+        "w": 90.0,
+        "h": 2.0,
+        "r": 1.5707963267948966
+      },
+      "kind": "line",
+      "fillColor": 2362024523,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-bl-h",
+      "transform": {
+        "x": 90.0,
+        "y": 989.0,
+        "w": 90.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 2362024523,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-bl-v",
+      "transform": {
+        "x": 45.0,
+        "y": 944.0,
+        "w": 90.0,
+        "h": 2.0,
+        "r": 1.5707963267948966
+      },
+      "kind": "line",
+      "fillColor": 2362024523,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-br-h",
+      "transform": {
+        "x": 900.0,
+        "y": 989.0,
+        "w": 90.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 2362024523,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-br-v",
+      "transform": {
+        "x": 945.0,
+        "y": 944.0,
+        "w": 90.0,
+        "h": 2.0,
+        "r": 1.5707963267948966
+      },
+      "kind": "line",
+      "fillColor": 2362024523,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "shape",
+      "id": "ring-right",
+      "transform": {
+        "x": 420.0,
+        "y": 170.0,
+        "w": 150.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4291404363,
+      "strokeWidth": 3.5,
+      "fillOpacity": 0.0,
+      "strokeColor": 4291404363
+    },
+    {
+      "type": "shape",
+      "id": "ring-left",
+      "transform": {
+        "x": 510.0,
+        "y": 170.0,
+        "w": 150.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4291404363,
+      "strokeWidth": 3.5,
+      "fillOpacity": 0.0,
+      "strokeColor": 4291404363
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 140.0,
+        "y": 400.0,
+        "w": 800.0,
+        "h": 320.0,
+        "r": 0.0
+      },
+      "content": "\u0645\u0628\u0627\u0631\u06a9 \u0628\u0627\u062f",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 150.0,
+        "color": 4291404363,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.9,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "wish",
+      "transform": {
+        "x": 240.0,
+        "y": 790.0,
+        "w": 600.0,
+        "h": 64.0,
+        "r": 0.0
+      },
+      "content": "\u0646\u0627\u0645\u0632\u062f\u06cc\u200c\u062a\u0627\u0646 \u062e\u062c\u0633\u062a\u0647",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 44.0,
+        "color": 4285825900,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "finial-diamond",
+      "transform": {
+        "x": 529.0,
+        "y": 900.0,
+        "w": 22.0,
+        "h": 22.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291404363,
+      "strokeWidth": 0.0
+    }
+  ]
+}

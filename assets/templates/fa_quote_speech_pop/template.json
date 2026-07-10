@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_quote_speech_pop",
+  "title": {
+    "en": "Speech Bubble Pop Quote",
+    "fa": "نقل‌قول حباب گفت‌وگو"
+  },
+  "category": "quote",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_quote_speech_pop/thumbnail.png",
+  "document": "assets/templates/fa_quote_speech_pop/document.json",
+  "tags": [
+    "persian",
+    "quote",
+    "playful",
+    "speech-bubble",
+    "coral",
+    "bold"
+  ]
+}

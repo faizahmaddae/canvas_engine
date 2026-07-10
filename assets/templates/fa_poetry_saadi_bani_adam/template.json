@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_saadi_bani_adam",
+  "title": {
+    "en": "Saadi Bani Adam Editorial Poetry Post",
+    "fa": "شعر سعدی — بنی‌آدم"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_saadi_bani_adam/thumbnail.png",
+  "document": "assets/templates/fa_poetry_saadi_bani_adam/document.json",
+  "tags": [
+    "persian",
+    "poetry",
+    "saadi",
+    "editorial",
+    "minimal",
+    "terracotta"
+  ]
+}

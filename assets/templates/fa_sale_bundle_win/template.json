@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_sale_bundle_win",
+  "title": {
+    "en": "Buy Two Get Three Bundle Post",
+    "fa": "پیشنهاد دو بخر سه ببر"
+  },
+  "category": "sale",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_sale_bundle_win/thumbnail.png",
+  "document": "assets/templates/fa_sale_bundle_win/document.json",
+  "tags": [
+    "persian",
+    "sale",
+    "bundle",
+    "deal",
+    "friendly",
+    "offer"
+  ]
+}

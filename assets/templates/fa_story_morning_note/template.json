@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_morning_note",
+  "title": {
+    "en": "Gentle Morning Note Story",
+    "fa": "استوری یادداشت صبحگاهی"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_morning_note/thumbnail.png",
+  "document": "assets/templates/fa_story_morning_note/document.json",
+  "tags": [
+    "persian",
+    "morning",
+    "note",
+    "handwriting",
+    "personal",
+    "warm"
+  ]
+}

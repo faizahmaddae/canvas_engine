@@ -1,11 +1,14 @@
-// Size panel (Phase 2A commit 5): extracted verbatim from the
-// text_mode_toolbar part-file library (text_size_panel.dart). Rename-only
-// promotion of the library-dispatch entry point; everything else
-// stays private.
+// Size panel — compact redesign (2026-07): one control row (tappable
+// value chip → exact-px keypad dialog, slider, −/＋ nudge pair) plus
+// the S/M/L/XL/XXL preset chips. The value chip is the panel's ONLY
+// px readout (the header chip and the «تنظیم دقیق» disclosure are
+// gone); precise entry moved from the disclosure's fine-tune slider
+// to the keypad dialog, which covers the same absolute 4..2000 range.
 
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../app/theme/app_tokens.dart';
@@ -16,17 +19,11 @@ import '../../../engine/core/editor_document.dart';
 import '../../../engine/modules/text/text_layer.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../ui/editor_slider_row.dart';
-import '../../../ui/precision_disclosure.dart';
 import '../../widgets/controls/panel_chip.dart';
-import '../../widgets/controls/precision_divider.dart';
 
-/// Broad safety clamp for direct font-size mutation (stepper +
-/// exact slider). Intentionally far wider than the named-preset
-/// range so A+ can climb past XXL and A- can shrink below S.
-///
-/// Used to live as `_TextBodies._absoluteMinFontSize` — moved here
-/// with the rest of the size-preset math since this panel is its
-/// only caller (Phase 4 plan §5.1).
+/// Broad safety clamp for direct font-size mutation (nudge + exact
+/// keypad entry). Intentionally far wider than the named-preset
+/// range so ＋ can climb past XXL and − can shrink below S.
 const double _absoluteMinFontSize = 4;
 const double _absoluteMaxFontSize = 2000;
 
@@ -43,8 +40,7 @@ List<({String label, double value})> _canvasAwareSizePresets(
 ) {
   final base = math.min(doc.width, doc.height);
   final lengthFactor = _lengthFactor(content);
-  double p(double f) =>
-      (base * f * lengthFactor).clamp(8.0, 600.0).toDouble();
+  double p(double f) => (base * f * lengthFactor).clamp(8.0, 600.0).toDouble();
   return [
     (label: 'S', value: p(0.06)),
     (label: 'M', value: p(0.10)),
@@ -67,9 +63,9 @@ double _lengthFactor(String content) {
 }
 
 /// Practical range for the main size slider. The absolute clamps
-/// (4..2000) stay on the precision disclosure's fine-tune slider;
-/// the main slider spans the canvas-aware useful band so a thumb
-/// pixel maps to a meaningful step.
+/// (4..2000) stay on the exact-size keypad; the slider spans the
+/// canvas-aware useful band so a thumb pixel maps to a meaningful
+/// step.
 const double _sliderMin = 8;
 
 double _sliderMax(List<({String label, double value})> presets) {
@@ -128,30 +124,21 @@ class SizeBody extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Match the Layout panel rhythm: no all-caps section
-        // labels (the slider IS the value — the live px chip sits
-        // in the panel header — and the chip row IS the presets;
-        // both self-explanatory). The disclosure below gives
-        // precise full-range access without a header.
         const SizedBox(height: 6),
-        // − / slider / ＋ — the unified size control (replaces the
-        // old A−/px/A＋ three-box stepper). The slider covers the
-        // practical canvas-aware range; the nudge buttons keep the
-        // stepper's perceptual ±10% step; the precision disclosure
-        // still exposes the absolute 4..2000 envelope.
+        // The whole size story in one row: the tappable value chip
+        // IS the precise entry point (keypad dialog, absolute
+        // 4..2000), the slider covers the practical canvas-aware
+        // band, and the −/＋ pair keeps the perceptual ±10% nudge.
         Row(
           children: [
-            _NudgeButton(
-              icon: Icons.remove_rounded,
-              semanticLabel: context.l10n.sizeDecreaseAction,
-              onTap: () => _bump(ctrl, style.fontSize, -1),
+            _SizeValueChip(
+              value: style.fontSize,
+              onTap: () => _promptExactSize(context, ctrl, style.fontSize),
             ),
+            const SizedBox(width: 4),
             Expanded(
               child: EditorSliderRow(
-                value: style.fontSize.clamp(
-                  _sliderMin,
-                  _sliderMax(presets),
-                ),
+                value: style.fontSize.clamp(_sliderMin, _sliderMax(presets)),
                 min: _sliderMin,
                 max: _sliderMax(presets),
                 format: (v) => '${v.toStringAsFixed(0)}px',
@@ -160,8 +147,15 @@ class SizeBody extends ConsumerWidget {
                 onDragStart: ctrl.beginStyleDrag,
                 onDragEnd: ctrl.endStyleDrag,
                 haptics: EditorSliderHaptics.startTickEnd,
+                semanticLabel: context.l10n.sizeTool,
               ),
             ),
+            _NudgeButton(
+              icon: Icons.remove_rounded,
+              semanticLabel: context.l10n.sizeDecreaseAction,
+              onTap: () => _bump(ctrl, style.fontSize, -1),
+            ),
+            const SizedBox(width: 4),
             _NudgeButton(
               icon: Icons.add_rounded,
               semanticLabel: context.l10n.sizeIncreaseAction,
@@ -169,7 +163,7 @@ class SizeBody extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         WordChipRow(
           options: presets,
           current: style.fontSize,
@@ -195,107 +189,129 @@ class SizeBody extends ConsumerWidget {
             }
           },
         ),
-        const SizedBox(height: 6),
-        _SizePrecisionAdvanced(
-          value: style.fontSize,
-          min: _absoluteMinFontSize,
-          max: _absoluteMaxFontSize,
-          onChange: ctrl.setFontSize,
-        ),
       ],
     );
   }
 }
 
-/// Flattened "Adjust precisely" disclosure used by the Size body:
-/// one arrow, one tap to reveal value + px-presets + fine-tune
-/// slider — no nested expand, no second arrow.
-///
-/// Style writes still route through the same controller setter
-/// the dock uses (`setFontSize`), so undo coalescing, the
-/// scale-aware translation in `_translateFontSizeForVisualScale`,
-/// and the box auto-fit behaviour are all preserved verbatim.
-class _SizePrecisionAdvanced extends ConsumerWidget {
-  const _SizePrecisionAdvanced({
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChange,
-  });
+/// Numeric-keypad prompt for an exact pixel size. Commits through
+/// the same `setFontSize` path as every other size control, so the
+/// scale-aware translation and box auto-fit behaviour hold.
+Future<void> _promptExactSize(
+  BuildContext context,
+  TextToolController ctrl,
+  double current,
+) async {
+  EditorHaptics.tap();
+  final picked = await showDialog<double>(
+    context: context,
+    builder: (_) => _ExactSizeDialog(initial: current),
+  );
+  if (picked == null) return;
+  final clamped = picked
+      .clamp(_absoluteMinFontSize, _absoluteMaxFontSize)
+      .toDouble();
+  if ((clamped - current).abs() < 0.01) return;
+  EditorHaptics.confirm();
+  ctrl.setFontSize(clamped);
+}
 
-  final double value;
-  final double min;
-  final double max;
-  final ValueChanged<double> onChange;
+/// Owns the text controller so it outlives the dialog route's exit
+/// animation (disposing it right after `showDialog` returns races
+/// the still-mounted TextField).
+class _ExactSizeDialog extends StatefulWidget {
+  const _ExactSizeDialog({required this.initial});
 
-  static const List<double> _pxPresets = [12, 16, 24, 32, 48, 64, 96];
-
-  String _format(double v) => '${v.toStringAsFixed(0)}px';
+  final double initial;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ctrl = ref.read(textToolControllerProvider.notifier);
-    final clampedValue = value.clamp(min, max).toDouble();
-    return PrecisionDisclosure(
-      titleClosed: context.l10n.adjustPrecisely,
-      titleOpen: context.l10n.hidePreciseControls,
-      headerValue: _format(clampedValue),
-      chevronSize: 18,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const PrecisionDivider(),
-              const SizedBox(height: 8),
-              // px presets reuse the Layout chip so the two
-              // panels share one visual vocabulary.
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  for (final p in _pxPresets)
-                    LayoutPresetChip(
-                      label: _format(p),
-                      selected: (p - clampedValue).abs() < 0.001,
-                      onTap: () => onChange(p.clamp(min, max).toDouble()),
-                    ),
-                ],
-              ),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  trackHeight: 2,
-                  overlayShape: const RoundSliderOverlayShape(
-                    overlayRadius: 14,
-                  ),
-                ),
-                child: EditorSliderRow(
-                  value: clampedValue,
-                  min: min,
-                  max: max,
-                  showReadout: false,
-                  format: _format,
-                  onChanged: onChange,
-                  onDragStart: ctrl.beginStyleDrag,
-                  onDragEnd: ctrl.endStyleDrag,
-                  haptics: EditorSliderHaptics.startTickEnd,
-                  semanticLabel: context.l10n.sizeTool,
-                ),
-              ),
-            ],
-          ),
+  State<_ExactSizeDialog> createState() => _ExactSizeDialogState();
+}
+
+class _ExactSizeDialogState extends State<_ExactSizeDialog> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initial.round().toString(),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    Navigator.of(context).pop(double.tryParse(_controller.text.trim()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.exactSizeTitle),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        keyboardType: const TextInputType.numberWithOptions(decimal: false),
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        textAlign: TextAlign.center,
+        decoration: const InputDecoration(suffixText: 'px'),
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancelAction),
         ),
+        FilledButton(onPressed: _submit, child: Text(l10n.applyAction)),
       ],
     );
   }
 }
 
+/// The panel's single live px readout — a tappable pill that opens
+/// the exact-size keypad. Same pill grammar as the header value
+/// chips it replaces (tabular figures, muted fill).
+class _SizeValueChip extends StatelessWidget {
+  const _SizeValueChip({required this.value, required this.onTap});
 
-/// Compact −/＋ nudge button flanking the size slider. Same visual
-/// vocabulary as the old stepper buttons (accent-tint fill, 12
-/// radius) so the control keeps its identity in the new layout.
+  final double value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Semantics(
+      button: true,
+      label: context.l10n.exactSizeTitle,
+      child: Material(
+        color: tokens.surfaceMuted.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 58),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            alignment: Alignment.center,
+            child: Text(
+              '${value.round()}px',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: tokens.textPrimary,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact −/＋ nudge button beside the size slider. Same visual
+/// vocabulary as the old stepper buttons (accent-tint fill) at a
+/// tighter footprint so the single control row stays light.
 class _NudgeButton extends StatelessWidget {
   const _NudgeButton({
     required this.icon,
@@ -315,14 +331,14 @@ class _NudgeButton extends StatelessWidget {
       button: true,
       child: Material(
         color: tokens.accent.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           onTap: onTap,
           child: SizedBox(
-            width: 44,
-            height: 40,
-            child: Center(child: Icon(icon, size: 20, color: tokens.accent)),
+            width: 36,
+            height: 36,
+            child: Center(child: Icon(icon, size: 18, color: tokens.accent)),
           ),
         ),
       ),

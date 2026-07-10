@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_greet_engagement",
+  "title": {
+    "en": "Engagement Congratulations Card",
+    "fa": "تبریک نامزدی"
+  },
+  "category": "greeting",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_greet_engagement/thumbnail.png",
+  "document": "assets/templates/fa_greet_engagement/document.json",
+  "tags": [
+    "persian",
+    "greeting",
+    "engagement",
+    "nastaliq",
+    "gold",
+    "delicate"
+  ]
+}

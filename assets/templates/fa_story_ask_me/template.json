@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_ask_me",
+  "title": {
+    "en": "Ask Me Anything Story",
+    "fa": "استوری از من بپرس"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_ask_me/thumbnail.png",
+  "document": "assets/templates/fa_story_ask_me/document.json",
+  "tags": [
+    "persian",
+    "story",
+    "qa",
+    "question",
+    "playful",
+    "coral"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_yt_reaction_price",
+  "title": {
+    "en": "Price Shock Reaction Thumbnail",
+    "fa": "تامنیل واکنش به قیمت‌ها"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_yt_reaction_price/thumbnail.png",
+  "document": "assets/templates/fa_yt_reaction_price/document.json",
+  "tags": [
+    "persian",
+    "youtube",
+    "thumbnail",
+    "reaction",
+    "bold"
+  ]
+}

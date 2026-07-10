@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_biz_hiring_modern",
+  "title": {
+    "en": "Modern Hiring Announcement Post",
+    "fa": "آگهی استخدام مدرن"
+  },
+  "category": "business",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_biz_hiring_modern/thumbnail.png",
+  "document": "assets/templates/fa_biz_hiring_modern/document.json",
+  "tags": [
+    "persian",
+    "business",
+    "hiring",
+    "job",
+    "modern",
+    "minimal"
+  ]
+}

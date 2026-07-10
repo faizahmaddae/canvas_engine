@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_quote_gradient_dusk",
+  "title": {
+    "en": "Dusk Gradient Quote Story",
+    "fa": "استوری نقل‌قول گرگ‌ومیش"
+  },
+  "category": "quote",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_quote_gradient_dusk/thumbnail.png",
+  "document": "assets/templates/fa_quote_gradient_dusk/document.json",
+  "tags": [
+    "persian",
+    "quote",
+    "gradient",
+    "dusk",
+    "story",
+    "modern"
+  ]
+}

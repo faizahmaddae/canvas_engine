@@ -11,7 +11,6 @@ export '../../presentation/panels/text/font_picker/cards.dart'
 export '../../presentation/panels/text/font_picker/inline_browser.dart'
     show recommendedFontEntries;
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,7 +23,6 @@ import '../../application/selection_controller.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../presentation/widgets/dock_tool_strip.dart';
 import '../../presentation/widgets/dock_tool_tile.dart';
-import '../../ui/editor_tier_gap.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 import '../../toolbar/domain/sub_tools/widget_sub_tool.dart';
 import '../../toolbar/presentation/sub_tool_sheet.dart';
@@ -33,28 +31,27 @@ import '../domain/font_catalog.dart';
 import 'text_bodies.dart';
 import '../../presentation/panels/text/more_sheet.dart' show showTextMoreSheet;
 
-
 /// Bottom dock for text mode — Canva-style.
 ///
-/// The dock is a single horizontally scrollable strip of large
-/// icon+label tiles. Each tile opens an in-dock compact panel so
-/// the canvas stays visible while the user edits.
+/// The dock is one non-scrolling strip of six large icon+label
+/// tiles. Each tile opens an in-dock compact panel so the canvas
+/// stays visible while the user edits.
 ///
 /// Tiles (left → right):
 ///   * Font — opens the typeface picker.
 ///   * Size — opens a slider sheet with presets.
 ///   * Color — opens the colour picker (live preview on the layer).
-///   * Style — one-tap visual style presets.
+///   * Style — one-tap visual style presets PLUS the effect
+///     sections (خط دور / سایه / زمینه). The old standalone
+///     Background / Border / Shadow tiles duplicated these chips
+///     and forced the bar to scroll — consolidated 2026-07.
 ///   * Align — alignment, line height, letter spacing.
-///   * More — structural text actions shared with the floating bar.
-///   * Background — fill, padding, corner radius.
-///   * Border — glyph outline (color + width).
-///   * Shadow — color, blur, offset.
-///   * Resize — resize mode (scale text vs resize box).
+///   * More — structural text actions (edit, B/I/U, reorder, lock,
+///     resize behaviour, text direction, delete).
 ///
-/// Bold / Italic / Underline live in the floating bar's More sheet
-/// and inside the Style body that the input-flow sheet renders, not
-/// on the bottom dock — they're toggle actions, not category sheets.
+/// Bold / Italic / Underline live in the More sheet and inside the
+/// Style body that the input-flow sheet renders, not on the bottom
+/// dock — they're toggle actions, not category sheets.
 class TextModeToolbar extends ConsumerStatefulWidget {
   const TextModeToolbar({super.key});
 
@@ -67,13 +64,14 @@ class TextModeToolbar extends ConsumerStatefulWidget {
 
   // ─── Tool registry ─────────────────────────────────────────────
   //
-  // Flat, scrollable strip ordered by expected frequency of use so
-  // the first viewport carries Font / Size / Color / Style / Align /
-  // More. Deeper text decoration tools remain one short swipe away.
+  // Six tiles, no scroll: Font / Size / Color / Style / Align /
+  // More. Decoration (background / border / shadow) is reached via
+  // the Style panel's effect chips; resize behaviour via More →
+  // resize-behavior — no duplicate paths, no hidden tier-2 swipe.
   //
   // Bold / Italic / Underline are deliberately NOT a tile here —
   // they're toggle actions (not category sheets) and live in the
-  // floating bar's "More" sheet.
+  // "More" sheet.
   static final List<_ToolSpec> _tools = <_ToolSpec>[
     _ToolSpec(
       id: 'font',
@@ -109,37 +107,10 @@ class TextModeToolbar extends ConsumerStatefulWidget {
       bodyBuilder: TextBodies.layoutBody,
     ),
     _ToolSpec(id: 'more', icon: Icons.more_horiz_rounded),
-    _ToolSpec(
-      id: 'background',
-      // Filled-rectangle glyph reads as a *shape with fill*; clearly
-      // distinct from the Color tile's circular swatch so the two
-      // adjacent tiles never blur together at a glance.
-      //
-      // Dock tile is space-constrained — the full word ellipsises to
-      // "Backgrou…" which reads like a typo, so this id gets the "BG"
-      // short dock label (see _localizedToolDockLabel); the panel
-      // header still shows the full word.
-      icon: Icons.rectangle_rounded,
-      bodyBuilder: TextBodies.backgroundBody,
-    ),
-    _ToolSpec(
-      id: 'border',
-      icon: Icons.border_outer_rounded,
-      bodyBuilder: TextBodies.borderBody,
-    ),
-    _ToolSpec(
-      id: 'shadow',
-      icon: Icons.blur_on_rounded,
-      bodyBuilder: TextBodies.shadowBody,
-    ),
-    _ToolSpec(
-      // Sheet id is kept as 'behavior' so any persisted session
-      // state (TextSession.openSheet) keeps routing correctly. Only
-      // the user-visible label changed: "Behavior" → "Resize".
-      id: 'behavior',
-      icon: Icons.aspect_ratio_rounded,
-      bodyBuilder: TextBodies.behaviorBody,
-    ),
+    // 'background' / 'border' / 'shadow' / 'behavior' specs removed
+    // in the bar consolidation. A stale persisted
+    // TextSession.openSheet with one of those ids resolves to no
+    // spec and renders nothing — safe.
   ];
 
   /// Resolve a tool id → its spec. Used by [TextModeSheetPanel] to
@@ -177,36 +148,8 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
   final _scroll = ScrollController();
   String? _lastOpen;
 
-  // Session-scoped guard so the discovery peek fires at most once
-  // per app run — first-time users see hidden tier-2 tools exist;
-  // returning users aren't pestered.
-  static bool _peekedThisSession = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (!_peekedThisSession) {
-      _peekedThisSession = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _runPeek());
-    }
-  }
-
-  Future<void> _runPeek() async {
-    if (!mounted || !_scroll.hasClients) return;
-    final pos = _scroll.position;
-    if (pos.maxScrollExtent <= 0) return;
-    await _scroll.animateTo(
-      48,
-      duration: const Duration(milliseconds: 360),
-      curve: Curves.easeOutCubic,
-    );
-    if (!mounted || !_scroll.hasClients) return;
-    await _scroll.animateTo(
-      0,
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeOutCubic,
-    );
-  }
+  // The tier-2 discovery peek is gone with tier-2 itself — six
+  // tiles fit the viewport, nothing is hidden behind a swipe.
 
   @override
   void dispose() {
@@ -275,10 +218,9 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
             : MainAxisAlignment.center,
         children: [
           for (final i in _toolOrder(context, ref)) ...[
-            if (_isTierBoundary(context, ref, i)) const EditorTierGap(),
             DockToolTile(
               icon: TextModeToolbar._tools[i].icon,
-              label: _localizedToolDockLabel(
+              label: _localizedToolLabel(
                 context.l10n,
                 TextModeToolbar._tools[i],
               ),
@@ -340,13 +282,6 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
   List<int> _toolOrder(BuildContext ctx, WidgetRef ref) {
     return List<int>.generate(TextModeToolbar._tools.length, (i) => i);
   }
-
-  bool _isTierBoundary(BuildContext ctx, WidgetRef ref, int rawIndex) {
-    // Boundary always sits before the deeper decoration tools
-    // (Font / Size / Color / Style / Align / More ▸ Background / Border /
-    // Shadow / Resize). Stable across left/right handed mode.
-    return rawIndex == 6;
-  }
 }
 
 /// In-dock sheet panel: routes the active sheet id → its body and
@@ -382,32 +317,12 @@ class TextModeSheetPanel extends ConsumerWidget {
     // tools use — surface elevation, Done pill, sibling-swipe.
     // Body widget is unchanged; only the surrounding chrome is
     // unified.
-    // Unified header grammar: panels with ONE canonical live value
-    // surface it as a small chip at the header's end. Watching the
-    // layer via the dispatch rebuild keeps the chip live while the
-    // user drags a slider below.
-    final style = layer.style;
-    final headerValue = switch (sheetId) {
-      'size' => '${style.fontSize.round()}px',
-      'border' =>
-        style.outlineColor == null
-            ? context.l10n.offOption
-            : '${style.outlineWidth.round()}px',
-      'background' =>
-        style.backgroundColor == null
-            ? context.l10n.offOption
-            : '${(style.backgroundColor!.a * 100).round()}%',
-      'behavior' =>
-        layer.resizeMode == TextResizeMode.scaleText
-            ? context.l10n.scaleTextTitle
-            : context.l10n.reflowBoxTitle,
-      _ => null,
-    };
-
+    // No header value chips: the last holdout (Size px) moved into
+    // the panel body as the tappable exact-size chip, so the header
+    // is title + ✕ only.
     final subTool = WidgetSubTool(
       headerTitle: _localizedToolLabel(context.l10n, spec),
       headerIcon: spec.icon,
-      headerValue: headerValue,
       builder: (ctx, _) => spec.bodyBuilder!(ctx, ref, layer),
     );
 
@@ -452,13 +367,6 @@ class _ToolSpec {
   final Widget Function(BuildContext, WidgetRef, TextLayer)? bodyBuilder;
 }
 
-String _localizedToolDockLabel(AppLocalizations l10n, _ToolSpec spec) {
-  // Only the Background tile shortens on the dock strip ("BG" — the
-  // full word ellipsises to "Backgrou…" at tile width).
-  if (spec.id == 'background') return l10n.bgShortLabel;
-  return _localizedToolLabel(l10n, spec);
-}
-
 String _localizedToolLabel(AppLocalizations l10n, _ToolSpec spec) {
   return switch (spec.id) {
     'font' => l10n.fontTool,
@@ -467,14 +375,9 @@ String _localizedToolLabel(AppLocalizations l10n, _ToolSpec spec) {
     'size' => l10n.sizeTool,
     'layout' => l10n.alignAction,
     'more' => l10n.moreActionsSemantics,
-    'background' => l10n.backgroundTool,
-    'border' => l10n.borderTool,
-    'shadow' => l10n.shadowTool,
-    'behavior' => l10n.resizeTool,
     // Unreachable for the current registry (every id above has a
     // case) — the id itself is a more useful signal than a stale
     // hardcoded word if a future spec is added without its l10n case.
     _ => spec.id,
   };
 }
-

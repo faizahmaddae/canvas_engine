@@ -1,0 +1,66 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4293715934,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "rule-vertical",
+      "transform": {
+        "x": 940.0,
+        "y": 300.0,
+        "w": 6.0,
+        "h": 480.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4290350917,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 204.0,
+        "y": 452.0,
+        "w": 700.0,
+        "h": 128.0,
+        "r": 0.0
+      },
+      "content": "\u06a9\u0645\u060c \u0627\u0645\u0627 \u062f\u0631\u0633\u062a.",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 96.0,
+        "color": 4280689438,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 644.0,
+        "y": 942.0,
+        "w": 260.0,
+        "h": 40.0,
+        "r": 0.0
+      },
+      "content": "\u0627\u0635\u0648\u0644 \u06a9\u0627\u0631",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 28.0,
+        "color": 2569413406,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_quote_minimal_rule",
+  "title": {
+    "en": "Minimal Rule Quote Card",
+    "fa": "نقل‌قول مینیمال با خط"
+  },
+  "category": "quote",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_quote_minimal_rule/thumbnail.png",
+  "document": "assets/templates/fa_quote_minimal_rule/document.json",
+  "tags": [
+    "persian",
+    "quote",
+    "minimal",
+    "restraint",
+    "brass",
+    "clean"
+  ]
+}

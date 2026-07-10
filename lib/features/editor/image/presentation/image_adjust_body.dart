@@ -9,9 +9,7 @@ import '../../application/document_controller.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/effects/editor_effect.dart';
 import '../../engine/modules/image/image_layer.dart';
-import '../../presentation/widgets/inline_color_body.dart';
 import '../../presentation/widgets/panel_option_tile.dart';
-import '../../application/recent_colors_controller.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/precision_disclosure.dart';
 import 'image_panel_shell.dart';
@@ -210,33 +208,14 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 onChanged: (v) => _commitVignette(feather: v, live: true),
               ),
               const SizedBox(height: 8),
-              InlineColorBody(
-                current: vignette.color,
-                recents: ref.watch(recentColorsControllerProvider),
-                palette: InlineColorBody.defaultPalette,
-                compactRecents: true,
-                onPick: (picked) {
-                  EditorHaptics.toggle();
-                  _commitVignette(color: picked);
-                },
-                onCustom: () async {
-                  final original = vignette.color;
-                  final picked = await showColorPickerSheet(
-                    context,
-                    initial: original,
-                    recents: ref.read(recentColorsControllerProvider),
-                    onLiveChange: (c) =>
-                        _commitVignette(color: c, live: true),
-                    title: context.l10n.vignetteColorTitle,
-                  );
-                  if (picked == null) {
-                    _commitVignette(color: original);
-                    return;
-                  }
-                  ref
-                      .read(recentColorsControllerProvider.notifier)
-                      .remember(picked);
-                },
+              // The shared two-level picker, embedded. Drags stream
+              // live (transient) commits; settled changes commit
+              // for real. Recents and alpha policy live inside it.
+              ColorPickerBody(
+                initial: vignette.color,
+                title: context.l10n.vignetteColorTitle,
+                onChanged: (c) => _commitVignette(color: c, live: true),
+                onCommitted: (c) => _commitVignette(color: c),
               ),
             ],
           ),
@@ -412,4 +391,3 @@ VignetteEffect _activeVignette(ImageLayer layer) {
     feather: VignetteEffect.defaultFeather,
   );
 }
-

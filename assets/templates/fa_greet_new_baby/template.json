@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_greet_new_baby",
+  "title": {
+    "en": "New Baby Welcome Card",
+    "fa": "تبریک نوزاد"
+  },
+  "category": "greeting",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_greet_new_baby/thumbnail.png",
+  "document": "assets/templates/fa_greet_new_baby/document.json",
+  "tags": [
+    "persian",
+    "greeting",
+    "baby",
+    "moon",
+    "stars",
+    "soft"
+  ]
+}

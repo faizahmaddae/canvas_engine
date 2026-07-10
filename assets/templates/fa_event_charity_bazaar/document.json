@@ -1,0 +1,234 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": 4293910728,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "rule-bunting",
+      "transform": {
+        "x": 80.0,
+        "y": 118.0,
+        "w": 920.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 2574924623,
+      "strokeWidth": 3.0
+    },
+    {
+      "type": "shape",
+      "id": "bunting-flag-1",
+      "transform": {
+        "x": 148.0,
+        "y": 120.0,
+        "w": 70.0,
+        "h": 62.0,
+        "r": 3.141592653589793
+      },
+      "kind": "triangle",
+      "fillColor": 4286200655,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bunting-flag-2",
+      "transform": {
+        "x": 266.0,
+        "y": 120.0,
+        "w": 70.0,
+        "h": 62.0,
+        "r": 3.141592653589793
+      },
+      "kind": "triangle",
+      "fillColor": 4286350416,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bunting-flag-3",
+      "transform": {
+        "x": 384.0,
+        "y": 120.0,
+        "w": 70.0,
+        "h": 62.0,
+        "r": 3.141592653589793
+      },
+      "kind": "triangle",
+      "fillColor": 4286200655,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bunting-flag-4",
+      "transform": {
+        "x": 502.0,
+        "y": 120.0,
+        "w": 70.0,
+        "h": 62.0,
+        "r": 3.141592653589793
+      },
+      "kind": "triangle",
+      "fillColor": 4286350416,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bunting-flag-5",
+      "transform": {
+        "x": 620.0,
+        "y": 120.0,
+        "w": 70.0,
+        "h": 62.0,
+        "r": 3.141592653589793
+      },
+      "kind": "triangle",
+      "fillColor": 4286200655,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bunting-flag-6",
+      "transform": {
+        "x": 738.0,
+        "y": 120.0,
+        "w": 70.0,
+        "h": 62.0,
+        "r": 3.141592653589793
+      },
+      "kind": "triangle",
+      "fillColor": 4286350416,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bunting-flag-7",
+      "transform": {
+        "x": 856.0,
+        "y": 120.0,
+        "w": 70.0,
+        "h": 62.0,
+        "r": 3.141592653589793
+      },
+      "kind": "triangle",
+      "fillColor": 4286200655,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 100.0,
+        "y": 420.0,
+        "w": 880.0,
+        "h": 210.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0627\u0632\u0627\u0631\u0686\u0647\u200c\u06cc \u062e\u06cc\u0631\u06cc\u0647",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 130.0,
+        "color": 4286200655,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "info",
+      "transform": {
+        "x": 140.0,
+        "y": 700.0,
+        "w": 800.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0647 \u0646\u0641\u0639 \u06a9\u0648\u062f\u06a9\u0627\u0646 \u00b7 \u062c\u0645\u0639\u0647 \u0648 \u0634\u0646\u0628\u0647",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4283054636,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "awning-scallop-1",
+      "transform": {
+        "x": 340.0,
+        "y": 923.3333333333334,
+        "w": 133.33333333333334,
+        "h": 133.33333333333334,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4286200655,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "awning-scallop-2",
+      "transform": {
+        "x": 473.33333333333337,
+        "y": 923.3333333333334,
+        "w": 133.33333333333334,
+        "h": 133.33333333333334,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4286200655,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "awning-scallop-3",
+      "transform": {
+        "x": 606.6666666666667,
+        "y": 923.3333333333334,
+        "w": 133.33333333333334,
+        "h": 133.33333333333334,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4286200655,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "awning-body",
+      "transform": {
+        "x": 340.0,
+        "y": 900.0,
+        "w": 400.0,
+        "h": 90.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4286200655,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "stall-ground",
+      "transform": {
+        "x": 300.0,
+        "y": 1140.0,
+        "w": 480.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 4286350416,
+      "strokeWidth": 4.0
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294505706,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "frame-outer",
+      "transform": {
+        "x": 80.0,
+        "y": 80.0,
+        "w": 920.0,
+        "h": 920.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4280380238,
+      "strokeWidth": 2.5,
+      "fillOpacity": 0.0,
+      "strokeColor": 4280380238
+    },
+    {
+      "type": "shape",
+      "id": "frame-inner",
+      "transform": {
+        "x": 102.0,
+        "y": 102.0,
+        "w": 876.0,
+        "h": 876.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4280380238,
+      "strokeWidth": 1.2,
+      "fillOpacity": 0.0,
+      "strokeColor": 1931569998
+    },
+    {
+      "type": "shape",
+      "id": "finial",
+      "transform": {
+        "x": 522.0,
+        "y": 62.0,
+        "w": 36.0,
+        "h": 36.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291404363,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "crescent-disc",
+      "transform": {
+        "x": 490.0,
+        "y": 210.0,
+        "w": 100.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4291404363,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "crescent-mask",
+      "transform": {
+        "x": 520.0,
+        "y": 194.0,
+        "w": 100.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294505706,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "star",
+      "transform": {
+        "x": 610.0,
+        "y": 218.0,
+        "w": 26.0,
+        "h": 26.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291404363,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "hero",
+      "transform": {
+        "x": 190.0,
+        "y": 400.0,
+        "w": 700.0,
+        "h": 240.0,
+        "r": 0.0
+      },
+      "content": "\u0639\u06cc\u062f \u0641\u0637\u0631 \u0645\u0628\u0627\u0631\u06a9",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 96.0,
+        "color": 4280380238,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.8,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "subline",
+      "transform": {
+        "x": 290.0,
+        "y": 720.0,
+        "w": 500.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0637\u0627\u0639\u0627\u062a \u0648 \u0639\u0628\u0627\u062f\u0627\u062a\u062a\u0627\u0646 \u0642\u0628\u0648\u0644",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 38.0,
+        "color": 4285227349,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

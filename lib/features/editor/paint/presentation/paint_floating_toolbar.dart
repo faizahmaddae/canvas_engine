@@ -11,7 +11,6 @@ import '../../engine/modules/paint/paint_layer.dart';
 import '../../presentation/widgets/floating_action_bar.dart';
 import '../../presentation/widgets/floating_toolbar_positioner.dart';
 import '../../presentation/widgets/layer_actions_sheet.dart';
-import '../../application/recent_colors_controller.dart';
 import '../application/paint_tool_controller.dart';
 import 'paint_size_sheet.dart';
 
@@ -82,22 +81,14 @@ class PaintFloatingToolbar extends ConsumerWidget {
         children: [
           FloatingPillButton(
             semanticLabel: context.l10n.strokeColorTitle,
-            onTap: () async {
-              final original = layer.strokeColor;
-              final picked = await showColorPickerSheet(
-                context,
-                initial: original,
-                recents: ref.read(recentColorsControllerProvider),
-                onLiveChange: ctrl.setStrokeColor,
-                title: context.l10n.strokeColorTitle,
-              );
-              if (picked == null) {
-                ctrl.setStrokeColor(original);
-                return;
-              }
-              ctrl.setStrokeColor(picked);
-              ctrl.rememberRecentColor(picked);
-            },
+            // The shared picker sheet — live, undimmed, recents
+            // handled inside; nothing to restore or re-commit.
+            onTap: () => showColorPickerSheet(
+              context,
+              initial: layer.strokeColor,
+              onLiveChange: ctrl.setStrokeColor,
+              title: context.l10n.strokeColorTitle,
+            ),
             child: FloatingColorDot(color: layer.strokeColor),
           ),
           const SizedBox(width: 4),

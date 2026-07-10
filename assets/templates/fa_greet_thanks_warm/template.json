@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_greet_thanks_warm",
+  "title": {
+    "en": "Warm Thank-You Card",
+    "fa": "کارت تشکر صمیمانه"
+  },
+  "category": "greeting",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_greet_thanks_warm/thumbnail.png",
+  "document": "assets/templates/fa_greet_thanks_warm/document.json",
+  "tags": [
+    "persian",
+    "greeting",
+    "thanks",
+    "warm",
+    "script",
+    "terracotta"
+  ]
+}

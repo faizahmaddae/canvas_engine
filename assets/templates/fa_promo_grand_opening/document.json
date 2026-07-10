@@ -1,0 +1,238 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": 4294439656,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "confetti-1",
+      "transform": {
+        "x": 160.0,
+        "y": 180.0,
+        "w": 26.0,
+        "h": 26.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291666761,
+      "strokeWidth": 0.0,
+      "opacity": 0.9
+    },
+    {
+      "type": "shape",
+      "id": "confetti-2",
+      "transform": {
+        "x": 872.0,
+        "y": 160.0,
+        "w": 20.0,
+        "h": 20.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291666761,
+      "strokeWidth": 0.0,
+      "opacity": 0.7
+    },
+    {
+      "type": "shape",
+      "id": "confetti-3",
+      "transform": {
+        "x": 300.0,
+        "y": 330.0,
+        "w": 16.0,
+        "h": 16.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291666761,
+      "strokeWidth": 0.0,
+      "opacity": 0.6
+    },
+    {
+      "type": "shape",
+      "id": "confetti-4",
+      "transform": {
+        "x": 812.0,
+        "y": 356.0,
+        "w": 22.0,
+        "h": 22.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291666761,
+      "strokeWidth": 0.0,
+      "opacity": 0.8
+    },
+    {
+      "type": "shape",
+      "id": "confetti-5",
+      "transform": {
+        "x": 200.0,
+        "y": 1010.0,
+        "w": 20.0,
+        "h": 20.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291666761,
+      "strokeWidth": 0.0,
+      "opacity": 0.7
+    },
+    {
+      "type": "shape",
+      "id": "confetti-6",
+      "transform": {
+        "x": 856.0,
+        "y": 1064.0,
+        "w": 24.0,
+        "h": 24.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291666761,
+      "strokeWidth": 0.0,
+      "opacity": 0.85
+    },
+    {
+      "type": "shape",
+      "id": "confetti-7",
+      "transform": {
+        "x": 520.0,
+        "y": 236.0,
+        "w": 18.0,
+        "h": 18.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4291666761,
+      "strokeWidth": 0.0,
+      "opacity": 0.5
+    },
+    {
+      "type": "shape",
+      "id": "ribbon-a",
+      "transform": {
+        "x": -40.0,
+        "y": 630.0,
+        "w": 1160.0,
+        "h": 54.0,
+        "r": 0.055
+      },
+      "kind": "rectangle",
+      "fillColor": 4291666761,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "ribbon-b",
+      "transform": {
+        "x": -40.0,
+        "y": 642.0,
+        "w": 1160.0,
+        "h": 54.0,
+        "r": -0.055
+      },
+      "kind": "rectangle",
+      "fillColor": 4290285885,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "frame",
+      "transform": {
+        "x": 70.0,
+        "y": 70.0,
+        "w": 940.0,
+        "h": 1210.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4280179272,
+      "strokeWidth": 2.5,
+      "fillOpacity": 0.0,
+      "strokeColor": 4280179272
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 160.0,
+        "y": 575.0,
+        "w": 760.0,
+        "h": 170.0,
+        "r": 0.0
+      },
+      "content": "\u0627\u0641\u062a\u062a\u0627\u062d \u0634\u062f\u06cc\u0645",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 130.0,
+        "color": 4280179272,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "address",
+      "transform": {
+        "x": 240.0,
+        "y": 812.0,
+        "w": 600.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "content": "\u0634\u0639\u0628\u0647\u200c\u06cc \u062f\u0648\u0645 \u00b7 \u062e\u06cc\u0627\u0628\u0627\u0646 \u0648\u0644\u06cc\u0639\u0635\u0631",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 44.0,
+        "color": 4280179272,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "date-chip",
+      "transform": {
+        "x": 420.0,
+        "y": 932.0,
+        "w": 240.0,
+        "h": 84.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4291666761,
+      "strokeWidth": 0.0,
+      "cornerRadius": 42.0
+    },
+    {
+      "type": "text",
+      "id": "date",
+      "transform": {
+        "x": 450.0,
+        "y": 950.0,
+        "w": 180.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "\u0627\u0632 \u06f1\u06f5 \u0645\u0631\u062f\u0627\u062f",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 38.0,
+        "color": 4294439656,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

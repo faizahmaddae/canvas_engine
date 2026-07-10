@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_event_film_night",
+  "title": {
+    "en": "Rooftop Film Night Story",
+    "fa": "استوری شب فیلم پشت‌بام"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_event_film_night/thumbnail.png",
+  "document": "assets/templates/fa_event_film_night/document.json",
+  "tags": [
+    "persian",
+    "event",
+    "film",
+    "cinema",
+    "night",
+    "noir"
+  ]
+}

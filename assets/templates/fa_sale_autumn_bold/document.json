@@ -1,0 +1,146 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4291057438,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "leaf-1",
+      "transform": {
+        "x": 148.0,
+        "y": 138.0,
+        "w": 58.0,
+        "h": 58.0,
+        "r": 0.45
+      },
+      "kind": "diamond",
+      "fillColor": 4293238852,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "leaf-2",
+      "transform": {
+        "x": 516.0,
+        "y": 96.0,
+        "w": 40.0,
+        "h": 40.0,
+        "r": -0.55
+      },
+      "kind": "diamond",
+      "fillColor": 4293238852,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "leaf-3",
+      "transform": {
+        "x": 866.0,
+        "y": 186.0,
+        "w": 50.0,
+        "h": 50.0,
+        "r": 0.85
+      },
+      "kind": "diamond",
+      "fillColor": 4293238852,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 140.0,
+        "y": 280.0,
+        "w": 800.0,
+        "h": 430.0,
+        "r": 0.0
+      },
+      "content": "\u062d\u0631\u0627\u062c\n\u067e\u0627\u06cc\u06cc\u0632\u0647",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 220.0,
+        "color": 4294372573,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.05,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "discount-chip",
+      "transform": {
+        "x": 330.0,
+        "y": 790.0,
+        "w": 420.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294372573,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0
+    },
+    {
+      "type": "text",
+      "id": "discount",
+      "transform": {
+        "x": 366.0,
+        "y": 812.0,
+        "w": 348.0,
+        "h": 50.0,
+        "r": 0.0
+      },
+      "content": "\u062a\u0627 \u06f4\u06f0\u066a \u062a\u062e\u0641\u06cc\u0641",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 44.0,
+        "color": 4280424978,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta-pill",
+      "transform": {
+        "x": 365.0,
+        "y": 926.0,
+        "w": 350.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280424978,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0
+    },
+    {
+      "type": "text",
+      "id": "cta",
+      "transform": {
+        "x": 397.0,
+        "y": 948.0,
+        "w": 286.0,
+        "h": 50.0,
+        "r": 0.0
+      },
+      "content": "\u0647\u0645\u06cc\u0646 \u062d\u0627\u0644\u0627 \u0628\u062e\u0631",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4294372573,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

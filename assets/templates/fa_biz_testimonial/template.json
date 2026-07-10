@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_biz_testimonial",
+  "title": {
+    "en": "Client Testimonial Quote Post",
+    "fa": "پست نظر مشتری"
+  },
+  "category": "business",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_biz_testimonial/thumbnail.png",
+  "document": "assets/templates/fa_biz_testimonial/document.json",
+  "tags": [
+    "persian",
+    "business",
+    "testimonial",
+    "quote",
+    "client",
+    "minimal"
+  ]
+}

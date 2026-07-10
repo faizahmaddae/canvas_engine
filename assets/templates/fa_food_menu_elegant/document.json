@@ -1,0 +1,398 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": 4280294939,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "orn-diamond",
+      "transform": {
+        "x": 526.0,
+        "y": 132.0,
+        "w": 28.0,
+        "h": 28.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292650303,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "rule-head-right",
+      "transform": {
+        "x": 584.0,
+        "y": 145.0,
+        "w": 100.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3000804671,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "shape",
+      "id": "rule-head-left",
+      "transform": {
+        "x": 396.0,
+        "y": 145.0,
+        "w": 100.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3000804671,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "text",
+      "id": "header",
+      "transform": {
+        "x": 240.0,
+        "y": 190.0,
+        "w": 600.0,
+        "h": 120.0,
+        "r": 0.0
+      },
+      "content": "\u0645\u0646\u0648\u06cc \u0634\u0628",
+      "style": {
+        "fontFamily": "BNazanin",
+        "fontSize": 92.0,
+        "color": 4294109913,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-header",
+      "transform": {
+        "x": 380.0,
+        "y": 344.0,
+        "w": 320.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 4292650303,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "text",
+      "id": "dish-1-name",
+      "transform": {
+        "x": 520.0,
+        "y": 440.0,
+        "w": 450.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0686\u0644\u0648\u06a9\u0628\u0627\u0628 \u0633\u0644\u0637\u0627\u0646\u06cc",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4294109913,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "dish-1-leader",
+      "transform": {
+        "x": 370.0,
+        "y": 474.0,
+        "w": 130.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 1089661657,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "text",
+      "id": "dish-1-price",
+      "transform": {
+        "x": 110.0,
+        "y": 444.0,
+        "w": 240.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "\u06f6\u06f8\u06f0",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4292650303,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "dish-2-name",
+      "transform": {
+        "x": 520.0,
+        "y": 585.0,
+        "w": 450.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0627\u0642\u0627\u0644\u06cc\u200c\u067e\u0644\u0648 \u0628\u0627 \u0645\u0627\u0647\u06cc\u0686\u0647",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4294109913,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "dish-2-leader",
+      "transform": {
+        "x": 370.0,
+        "y": 619.0,
+        "w": 130.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 1089661657,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "text",
+      "id": "dish-2-price",
+      "transform": {
+        "x": 110.0,
+        "y": 589.0,
+        "w": 240.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "\u06f7\u06f5\u06f0",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4292650303,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "dish-3-name",
+      "transform": {
+        "x": 520.0,
+        "y": 730.0,
+        "w": 450.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u062e\u0648\u0631\u0634 \u0641\u0633\u0646\u062c\u0627\u0646",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4294109913,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "dish-3-leader",
+      "transform": {
+        "x": 370.0,
+        "y": 764.0,
+        "w": 130.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 1089661657,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "text",
+      "id": "dish-3-price",
+      "transform": {
+        "x": 110.0,
+        "y": 734.0,
+        "w": 240.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "\u06f4\u06f2\u06f0",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4292650303,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "dish-4-name",
+      "transform": {
+        "x": 520.0,
+        "y": 875.0,
+        "w": 450.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0632\u0631\u0634\u06a9\u200c\u067e\u0644\u0648 \u0628\u0627 \u0645\u0631\u063a",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4294109913,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "dish-4-leader",
+      "transform": {
+        "x": 370.0,
+        "y": 909.0,
+        "w": 130.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 1089661657,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "text",
+      "id": "dish-4-price",
+      "transform": {
+        "x": 110.0,
+        "y": 879.0,
+        "w": 240.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "\u06f3\u06f9\u06f0",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 38.0,
+        "color": 4292650303,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "price-note",
+      "transform": {
+        "x": 340.0,
+        "y": 985.0,
+        "w": 400.0,
+        "h": 36.0,
+        "r": 0.0
+      },
+      "content": "\u0642\u06cc\u0645\u062a\u200c\u0647\u0627 \u0628\u0647 \u0647\u0632\u0627\u0631 \u062a\u0648\u0645\u0627\u0646",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 24.0,
+        "color": 2364730073,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-footer",
+      "transform": {
+        "x": 380.0,
+        "y": 1085.0,
+        "w": 320.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 2161943871,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "text",
+      "id": "restaurant-name",
+      "transform": {
+        "x": 340.0,
+        "y": 1125.0,
+        "w": 400.0,
+        "h": 72.0,
+        "r": 0.0
+      },
+      "content": "\u0631\u0633\u062a\u0648\u0631\u0627\u0646 \u0627\u0631\u06a9\u06cc\u062f\u0647",
+      "style": {
+        "fontFamily": "BNazanin",
+        "fontSize": 48.0,
+        "color": 4292650303,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "hours",
+      "transform": {
+        "x": 340.0,
+        "y": 1220.0,
+        "w": 400.0,
+        "h": 40.0,
+        "r": 0.0
+      },
+      "content": "\u0633\u0631\u0648 \u0627\u0632 \u0633\u0627\u0639\u062a \u06f1\u06f9 \u062a\u0627 \u06f2\u06f3",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 28.0,
+        "color": 3002264281,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

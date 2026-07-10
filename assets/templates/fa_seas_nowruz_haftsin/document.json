@@ -1,0 +1,149 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294439652,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "ring",
+      "transform": {
+        "x": 240.0,
+        "y": 150.0,
+        "w": 600.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4291404363,
+      "strokeWidth": 2.0,
+      "fillOpacity": 0.0,
+      "strokeColor": 2362024523
+    },
+    {
+      "type": "text",
+      "id": "hero",
+      "transform": {
+        "x": 190.0,
+        "y": 300.0,
+        "w": 700.0,
+        "h": 260.0,
+        "r": 0.0
+      },
+      "content": "\u0646\u0648\u0631\u0648\u0632\u062a\u0627\u0646 \u067e\u06cc\u0631\u0648\u0632",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 96.0,
+        "color": 4281301596,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.8,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "bowl",
+      "transform": {
+        "x": 440.0,
+        "y": 664.0,
+        "w": 200.0,
+        "h": 22.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4291404363,
+      "strokeWidth": 0.0,
+      "cornerRadius": 11.0
+    },
+    {
+      "type": "shape",
+      "id": "sabzeh",
+      "transform": {
+        "x": 475.0,
+        "y": 560.0,
+        "w": 130.0,
+        "h": 130.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4281301596,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "petal-1",
+      "transform": {
+        "x": 350.0,
+        "y": 620.0,
+        "w": 34.0,
+        "h": 34.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293371572,
+      "strokeWidth": 0.0,
+      "opacity": 0.9
+    },
+    {
+      "type": "shape",
+      "id": "petal-2",
+      "transform": {
+        "x": 700.0,
+        "y": 585.0,
+        "w": 26.0,
+        "h": 26.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293371572,
+      "strokeWidth": 0.0,
+      "opacity": 0.75
+    },
+    {
+      "type": "text",
+      "id": "subline",
+      "transform": {
+        "x": 290.0,
+        "y": 780.0,
+        "w": 500.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "\u0633\u0627\u0644 \u0646\u0648\u060c \u062f\u0644 \u0646\u0648",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4281542943,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "year-chip",
+      "transform": {
+        "x": 420.0,
+        "y": 890.0,
+        "w": 240.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "\u0646\u0648\u0631\u0648\u0632 \u06f1\u06f4\u06f0\u06f5",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 32.0,
+        "color": 4287265896,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

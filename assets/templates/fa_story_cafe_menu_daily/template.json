@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_cafe_menu_daily",
+  "title": {
+    "en": "Cafe Daily Menu Story",
+    "fa": "استوری منوی روز کافه"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_cafe_menu_daily/thumbnail.png",
+  "document": "assets/templates/fa_story_cafe_menu_daily/document.json",
+  "tags": [
+    "persian",
+    "cafe",
+    "menu",
+    "food",
+    "chalkboard",
+    "warm"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_quote_literary_margin",
+  "title": {
+    "en": "Literary Margin Quote Card",
+    "fa": "نقل‌قول ادبی حاشیه‌دار"
+  },
+  "category": "quote",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_quote_literary_margin/thumbnail.png",
+  "document": "assets/templates/fa_quote_literary_margin/document.json",
+  "tags": [
+    "persian",
+    "quote",
+    "literary",
+    "minimal",
+    "paper",
+    "classic"
+  ]
+}

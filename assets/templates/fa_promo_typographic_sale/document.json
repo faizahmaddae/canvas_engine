@@ -1,0 +1,177 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": 4294373347,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "bloom",
+      "transform": {
+        "x": 430.0,
+        "y": 270.0,
+        "w": 640.0,
+        "h": 640.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293238852,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "big-number",
+      "transform": {
+        "x": 100.0,
+        "y": 330.0,
+        "w": 780.0,
+        "h": 620.0,
+        "r": 0.0
+      },
+      "content": "\u06f5\u06f0\u066a",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 430.0,
+        "color": 4280097043,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "stripe",
+      "transform": {
+        "x": -80.0,
+        "y": 905.0,
+        "w": 1240.0,
+        "h": 96.0,
+        "r": -0.1
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293414970,
+      "strokeWidth": 0.0,
+      "cornerRadius": 48.0
+    },
+    {
+      "type": "text",
+      "id": "stripe-label",
+      "transform": {
+        "x": 250.0,
+        "y": 915.0,
+        "w": 580.0,
+        "h": 76.0,
+        "r": -0.1
+      },
+      "content": "\u0641\u0642\u0637 \u062a\u0627 \u0622\u062e\u0631 \u0647\u0641\u062a\u0647",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 48.0,
+        "color": 4294964969,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "kicker-chip",
+      "transform": {
+        "x": 660.0,
+        "y": 110.0,
+        "w": 330.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280097043,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 680.0,
+        "y": 126.0,
+        "w": 290.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "\u062d\u0631\u0627\u062c \u062a\u0627\u0628\u0633\u062a\u0627\u0646\u0647",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4294964969,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 260.0,
+        "y": 240.0,
+        "w": 730.0,
+        "h": 104.0,
+        "r": 0.0
+      },
+      "content": "\u0647\u0645\u0647\u200c\u0686\u06cc\u0632 \u0646\u0635\u0641 \u0642\u06cc\u0645\u062a",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 76.0,
+        "color": 4280097043,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta-chip",
+      "transform": {
+        "x": 310.0,
+        "y": 1180.0,
+        "w": 460.0,
+        "h": 98.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4280097043,
+      "strokeWidth": 0.0,
+      "cornerRadius": 49.0
+    },
+    {
+      "type": "text",
+      "id": "cta",
+      "transform": {
+        "x": 340.0,
+        "y": 1200.0,
+        "w": 400.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "\u0647\u0645\u06cc\u0646 \u062d\u0627\u0644\u0627 \u062e\u0631\u06cc\u062f \u06a9\u0646\u06cc\u062f",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 44.0,
+        "color": 4294964969,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

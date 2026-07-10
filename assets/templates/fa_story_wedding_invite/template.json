@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_wedding_invite",
+  "title": {
+    "en": "Persian Wedding Invitation Story",
+    "fa": "استوری دعوت عروسی"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_wedding_invite/thumbnail.png",
+  "document": "assets/templates/fa_story_wedding_invite/document.json",
+  "tags": [
+    "persian",
+    "wedding",
+    "invitation",
+    "elegant",
+    "nastaliq",
+    "gold"
+  ]
+}

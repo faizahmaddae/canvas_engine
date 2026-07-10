@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_sale_min_30",
+  "title": {
+    "en": "Minimal 30 Percent Off Post",
+    "fa": "تخفیف مینیمال سی درصد"
+  },
+  "category": "sale",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_sale_min_30/thumbnail.png",
+  "document": "assets/templates/fa_sale_min_30/document.json",
+  "tags": [
+    "persian",
+    "sale",
+    "minimal",
+    "discount",
+    "typographic"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_yt_tutorial_figma",
+  "title": {
+    "en": "Figma Tutorial Thumbnail",
+    "fa": "تامنیل آموزش فیگما"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_yt_tutorial_figma/thumbnail.png",
+  "document": "assets/templates/fa_yt_tutorial_figma/document.json",
+  "tags": [
+    "persian",
+    "youtube",
+    "thumbnail",
+    "tutorial",
+    "tech",
+    "clean"
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4280562518,
+    "endColor": 4280166986,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "arch",
+      "transform": {
+        "x": 120.0,
+        "y": 110.0,
+        "w": 840.0,
+        "h": 1130.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4292457324,
+      "strokeWidth": 2.0,
+      "fillOpacity": 0.0,
+      "strokeColor": 3218715500,
+      "cornerRadius": 340.0
+    },
+    {
+      "type": "shape",
+      "id": "crescent-disc",
+      "transform": {
+        "x": 470.0,
+        "y": 240.0,
+        "w": 140.0,
+        "h": 140.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4292457324,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "crescent-mask",
+      "transform": {
+        "x": 512.0,
+        "y": 218.0,
+        "w": 140.0,
+        "h": 140.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4280562518,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "hero",
+      "transform": {
+        "x": 190.0,
+        "y": 480.0,
+        "w": 700.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "\u0627\u0641\u0637\u0627\u0631\u060c \u06a9\u0646\u0627\u0631 \u0647\u0645",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 92.0,
+        "color": 4294307808,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.8,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "schedule",
+      "transform": {
+        "x": 240.0,
+        "y": 790.0,
+        "w": 600.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0647\u0631 \u0634\u0628\u060c \u0633\u0627\u0639\u062a \u06f2\u06f0:\u06f3\u06f0",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4292457324,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "venue",
+      "transform": {
+        "x": 240.0,
+        "y": 880.0,
+        "w": 600.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "\u0633\u0641\u0631\u0647\u200c\u062e\u0627\u0646\u0647\u200c\u06cc \u0633\u0646\u062a\u06cc \u0627\u0631\u063a\u0648\u0627\u0646",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 36.0,
+        "color": 4294307808,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule",
+      "transform": {
+        "x": 440.0,
+        "y": 1010.0,
+        "w": 200.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 2581181292,
+      "strokeWidth": 3.0
+    },
+    {
+      "type": "text",
+      "id": "note",
+      "transform": {
+        "x": 290.0,
+        "y": 1060.0,
+        "w": 500.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "content": "\u062d\u0636\u0648\u0631\u062a\u0627\u0646 \u06af\u0631\u0645\u0627\u06cc \u0633\u0641\u0631\u0647\u200c\u06cc \u0645\u0627\u0633\u062a",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 30.0,
+        "color": 4289311950,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_seas_nowruz_story",
+  "title": {
+    "en": "Nowruz Goldfish Story",
+    "fa": "استوری نوروز — ماهی قرمز"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_seas_nowruz_story/thumbnail.png",
+  "document": "assets/templates/fa_seas_nowruz_story/document.json",
+  "tags": [
+    "persian",
+    "seasonal",
+    "nowruz",
+    "story",
+    "minimal"
+  ]
+}

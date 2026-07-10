@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_bakery_sangak",
+  "title": {
+    "en": "Sangak Bakery Poster",
+    "fa": "پوستر نانوایی سنگک"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_bakery_sangak/thumbnail.png",
+  "document": "assets/templates/fa_promo_bakery_sangak/document.json",
+  "tags": [
+    "persian",
+    "bakery",
+    "bread",
+    "food",
+    "heritage",
+    "warm"
+  ]
+}

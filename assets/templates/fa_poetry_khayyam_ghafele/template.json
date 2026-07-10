@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_khayyam_ghafele",
+  "title": {
+    "en": "Khayyam Dusk Caravan Poetry Post",
+    "fa": "شعر خیام — قافله عمر"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_khayyam_ghafele/thumbnail.png",
+  "document": "assets/templates/fa_poetry_khayyam_ghafele/document.json",
+  "tags": [
+    "persian",
+    "poetry",
+    "khayyam",
+    "script",
+    "dusk",
+    "warm",
+    "minimal"
+  ]
+}

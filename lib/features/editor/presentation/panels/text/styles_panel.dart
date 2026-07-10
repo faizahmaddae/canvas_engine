@@ -11,15 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../l10n/l10n.dart';
-import '../../../../color_picker/presentation/color_picker_sheet.dart';
-import '../../../application/recent_colors_controller.dart';
-import '../../../ui/editor_slider_row.dart';
-import '../../../ui/panel_direction_pad.dart';
 import '../../widgets/controls/panel_chip.dart';
-import '../../widgets/controls/section_label.dart';
-import '../../widgets/controls/slider_row.dart';
-import '../../widgets/inline_color_body.dart';
-import 'precision/shadow_precision.dart';
+import 'effect_sections.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../text/domain/text_style_presets.dart';
 import '../../../engine/modules/text/text_layer.dart';
@@ -53,9 +46,11 @@ class StylesBody extends ConsumerStatefulWidget {
 }
 
 /// Effect categories offered below the preset rail (text-tool
-/// redesign §3, "Style & Effects"). Only [shadow] is wired today —
-/// the rest render as visibly disabled chips so the grammar (and the
-/// user's mental map) is already in place when they land.
+/// redesign §3, "Style & Effects"). Stroke (کادر), shadow and
+/// background are wired — they are THE home for text decoration now
+/// that the bar consolidation removed their standalone dock tiles.
+/// Glow and gradient render as visibly disabled chips so the grammar
+/// (and the user's mental map) is already in place when they land.
 enum _EffectCategory { stroke, shadow, glow, background, gradient }
 
 class _StylesBodyState extends ConsumerState<StylesBody> {
@@ -89,18 +84,32 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
     // enough to scroll comfortably.
     final presets = orderedTextStylePresets(layerStyle: layer.style);
 
+    // With an effect section open, the preset rail hides: the sheet
+    // shows chips + the active section only. Keeps the whole panel
+    // under the dock cap with zero internal scrolling — re-tapping
+    // the chip (or switching sheets) brings the rail back.
+    final sectionOpen = _openEffect != null;
+
+    final section = switch (_openEffect) {
+      _EffectCategory.shadow => ShadowEffectSection(layer: layer),
+      _EffectCategory.background => BackgroundEffectSection(layer: layer),
+      _EffectCategory.stroke => BorderEffectSection(layer: layer),
+      _ => null,
+    };
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: _StylesRow(
-            presets: presets,
-            activeId: activeId,
-            onPick: apply,
+        if (!sectionOpen)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: _StylesRow(
+              presets: presets,
+              activeId: activeId,
+              onPick: apply,
+            ),
           ),
-        ),
         const SizedBox(height: 10),
         _EffectChipsRow(
           open: _openEffect,
@@ -112,20 +121,20 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
           alignment: Alignment.topCenter,
-          child: _openEffect == _EffectCategory.shadow
-              ? Padding(
+          child: section == null
+              ? const SizedBox(width: double.infinity, height: 0)
+              : Padding(
                   padding: const EdgeInsets.only(top: 10),
-                  child: _ShadowEffectSection(layer: layer),
-                )
-              : const SizedBox(width: double.infinity, height: 0),
+                  child: section,
+                ),
         ),
       ],
     );
   }
 }
 
-/// Category chips: خط دور · سایه · درخشش · زمینه · گرادیان. Only
-/// Shadow is interactive this step; the others are rendered at
+/// Category chips: خط دور · سایه · درخشش · زمینه · گرادیان. Stroke,
+/// Shadow and Background are interactive; glow / gradient render at
 /// reduced opacity behind an [IgnorePointer] so the vocabulary is
 /// visible but honestly inert until each lands.
 class _EffectChipsRow extends StatelessWidget {
@@ -153,13 +162,15 @@ class _EffectChipsRow extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.zero,
         children: [
-          chip(_EffectCategory.stroke, l10n.effectStrokeLabel),
+          chip(_EffectCategory.stroke, l10n.effectStrokeLabel, enabled: true),
           const SizedBox(width: 6),
           chip(_EffectCategory.shadow, l10n.shadowTool, enabled: true),
           const SizedBox(width: 6),
           chip(_EffectCategory.glow, l10n.glowOption),
           const SizedBox(width: 6),
-          chip(_EffectCategory.background, l10n.backgroundTool),
+          // Short label (زمینه) — chip row real estate; the full
+          // word (پس‌زمینه) stays on titles like the colour sheet.
+          chip(_EffectCategory.background, l10n.bgShortLabel, enabled: true),
           const SizedBox(width: 6),
           chip(_EffectCategory.gradient, l10n.effectGradientLabel),
         ],
@@ -167,144 +178,6 @@ class _EffectChipsRow extends StatelessWidget {
     );
   }
 }
-
-/// The wired سایه sub-section: colour (the shared compact colour
-/// control) + distance/blur sliders + direction pad — all on the
-/// shared kit, all writing through the same drag-coalesced
-/// controller setters the Shadow tile panel uses, so undo behaviour
-/// is identical from either entry point.
-class _ShadowEffectSection extends ConsumerWidget {
-  const _ShadowEffectSection({required this.layer});
-
-  final TextLayer layer;
-
-  /// Distance slider ceiling. Matches the direction pad's clamp so
-  /// the two controls can never fight over the offset magnitude.
-  static const double _maxDistance = 24;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ctrl = ref.read(textToolControllerProvider.notifier);
-    final style = layer.style;
-    final hasShadow = style.shadowColor != null;
-    final labelStyle = flatSliderLabelStyle(context);
-    final readoutStyle = flatSliderReadoutStyle(context);
-    final distance = style.shadowOffset.distance.clamp(0.0, _maxDistance);
-
-    void setDistance(double v) {
-      // Preserve the current direction; a fresh (zero-ish) offset
-      // falls back to straight down so the first drag reads as a
-      // natural drop shadow.
-      final d = style.shadowOffset.distance;
-      final dir = d < 0.01
-          ? const Offset(0, 1)
-          : style.shadowOffset / d;
-      ctrl.setShadowOffset(dir * v);
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (!hasShadow)
-          // Off state: one tap on a preset enables the shadow with a
-          // sensible look (same tiles as the Shadow panel — one
-          // vocabulary, one behaviour).
-          StyleTileRow(
-            tiles: [
-              for (int i = 0; i < shadowPresets.length; i++)
-                StyleTile(
-                  icon: shadowPresetIcons[i],
-                  label: shadowPresetLabel(context.l10n, shadowPresets[i]),
-                  selected: false,
-                  onTap: () {
-                    ctrl.setShadowEnabled(true);
-                    applyShadowPreset(
-                      ref,
-                      shadowPresets[i],
-                      baseColor: const Color(0xFF000000),
-                    );
-                  },
-                ),
-            ],
-          )
-        else ...[
-          InlineColorBody(
-            current: style.shadowColor!,
-            recents: ref.watch(recentColorsControllerProvider),
-            palette: kCuratedTextSwatches,
-            compactRecents: true,
-            onPick: (c) {
-              final a = style.shadowColor?.a ?? 0.5;
-              ctrl.setShadowColor(c.withValues(alpha: a));
-            },
-            onCustom: () async {
-              final original = style.shadowColor!;
-              final picked = await showColorPickerSheet(
-                context,
-                initial: original,
-                recents: ref.read(recentColorsControllerProvider),
-                onLiveChange: ctrl.setShadowColor,
-                title: context.l10n.shadowColorTitle,
-              );
-              if (picked == null) {
-                ctrl.setShadowColor(original);
-                return;
-              }
-              ctrl.setShadowColor(picked);
-              ctrl.rememberRecentColor(picked);
-            },
-          ),
-          const SizedBox(height: 8),
-          EditorSliderRow(
-            label: context.l10n.distanceLabel,
-            labelWidth: 96,
-            value: distance.toDouble(),
-            max: _maxDistance,
-            format: (v) => '${v.toStringAsFixed(0)}px',
-            onChanged: setDistance,
-            onDragStart: ctrl.beginStyleDrag,
-            onDragEnd: ctrl.endStyleDrag,
-            haptics: EditorSliderHaptics.startTickEnd,
-            labelStyle: labelStyle,
-            readoutStyle: readoutStyle,
-          ),
-          EditorSliderRow(
-            label: context.l10n.blurLabel,
-            labelWidth: 96,
-            value: style.shadowBlur,
-            max: 40,
-            format: (v) => '${v.toStringAsFixed(0)}px',
-            onChanged: ctrl.setShadowBlur,
-            onDragStart: ctrl.beginStyleDrag,
-            onDragEnd: ctrl.endStyleDrag,
-            haptics: EditorSliderHaptics.startTickEnd,
-            labelStyle: labelStyle,
-            readoutStyle: readoutStyle,
-          ),
-          const SizedBox(height: 4),
-          PanelSectionLabel(context.l10n.directionLabel),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: SizedBox(
-              width: 168,
-              child: PanelDirectionPad(
-                offset: style.shadowOffset,
-                magnitude: shadowDirectionMagnitude(style.shadowOffset),
-                size: 144,
-                onPick: (off) {
-                  EditorHaptics.toggle();
-                  ctrl.setShadowOffset(off);
-                },
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
 
 /// Localized display name for a style preset. Keys off the stable
 /// preset id (never the hardcoded English `name`, which stays as the
@@ -517,68 +390,6 @@ class _StylePreviewTile extends StatelessWidget {
   }
 }
 
-// ─── Canva-style sub-tool helpers ───────────────────────────────────
-//
-// Shared widgets for the "presets-first, advanced-hidden" sub-tool
-// redesign. The canvas above each sheet is the live preview, so these
-// helpers focus on fast 1-tap choices instead of large preview tiles.
-
-/// Single-select tile group for visual style presets (Background
-/// shape, Shadow style, Border style, etc). Each tile renders
-/// through the shared [PanelOptionTile] so selection / hover /
-/// pressed states match the Adjust preset chip.
-class StyleTileRow extends StatelessWidget {
-  const StyleTileRow({super.key, required this.tiles});
-
-  final List<StyleTile> tiles;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 72,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.zero,
-        itemCount: tiles.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          final t = tiles[i];
-          return PanelOptionTile(
-            icon: t.icon,
-            iconSize: t.iconSize,
-            label: t.label,
-            selected: t.selected,
-            onTap: () {
-              EditorHaptics.toggle();
-              t.onTap();
-            },
-            width: 76,
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Value spec consumed by [StyleTileRow]. Keeps the call sites
-/// declarative — actual chrome lives in [PanelOptionTile].
-class StyleTile {
-  const StyleTile({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.iconSize = 22,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  /// Icon size override — e.g. border thickness presets render the
-  /// same horizontal-rule glyph at 16/22/28 so the preview itself
-  /// communicates Thin / Medium / Thick.
-  final double iconSize;
-}
+// StyleTileRow / StyleTile (the 72dp icon-tile rail) retired in the
+// compactness pass — every decoration surface now uses the 36dp
+// preset-chip rows in `effect_sections.dart`.

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_hafez_turk_shirazi",
+  "title": {
+    "en": "Hafez Divan Night Poetry Post",
+    "fa": "شعر حافظ — ترک شیرازی"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_hafez_turk_shirazi/thumbnail.png",
+  "document": "assets/templates/fa_poetry_hafez_turk_shirazi/document.json",
+  "tags": [
+    "persian",
+    "poetry",
+    "hafez",
+    "nastaliq",
+    "classic",
+    "gold",
+    "divan"
+  ]
+}

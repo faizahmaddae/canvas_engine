@@ -491,9 +491,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get recentLabel => 'اخیر';
 
   @override
-  String get paletteLabel => 'پالت';
-
-  @override
   String get customLabel => 'سفارشی';
 
   @override
@@ -1211,6 +1208,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get shadowColorTitle => 'رنگ سایه';
 
   @override
+  String get shadowOffsetPadSemantics => 'جهت و فاصله سایه';
+
+  @override
+  String get textQuickActionsSemantics => 'دسترسی سریع متن';
+
+  @override
+  String get exactSizeTitle => 'اندازه دقیق';
+
+  @override
   String get blurDirectionOpacitySubtitle => 'محو، جهت، شفافیت';
 
   @override
@@ -1353,7 +1359,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get hexLabel => 'کد رنگ';
 
   @override
-  String get invalidLabel => 'نامعتبر';
+  String get eyedropperTooltip => 'قطره‌چکان';
+
+  @override
+  String get copyColorTooltip => 'کپی کد رنگ';
 
   @override
   String get toolLabel => 'ابزار';

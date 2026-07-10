@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_motiv_slow_growth",
+  "title": {
+    "en": "Slow Growth Motivational Post",
+    "fa": "رشد آهسته"
+  },
+  "category": "motivational",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_motiv_slow_growth/thumbnail.png",
+  "document": "assets/templates/fa_motiv_slow_growth/document.json",
+  "tags": [
+    "persian",
+    "motivational",
+    "growth",
+    "plant",
+    "calm",
+    "illustration"
+  ]
+}

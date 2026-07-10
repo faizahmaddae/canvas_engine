@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": 4293452502,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "title-band",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "w": 1080.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4281091952,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "collection",
+      "transform": {
+        "x": 390.0,
+        "y": 34.0,
+        "w": 300.0,
+        "h": 82.0,
+        "r": 0.0
+      },
+      "content": "\u0634\u0627\u0647\u0646\u0627\u0645\u0647",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 56.0,
+        "color": 4293452502,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 90.0,
+        "y": 460.0,
+        "w": 900.0,
+        "h": 420.0,
+        "r": 0.0
+      },
+      "content": "\u062a\u0648\u0627\u0646\u0627 \u0628\u0648\u062f \u0647\u0631 \u06a9\u0647 \u062f\u0627\u0646\u0627 \u0628\u0648\u062f\n\u0632 \u062f\u0627\u0646\u0634 \u062f\u0644 \u067e\u06cc\u0631 \u0628\u0631\u0646\u0627 \u0628\u0648\u062f",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 100.0,
+        "color": 4280492318,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.55,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-gold",
+      "transform": {
+        "x": 340.0,
+        "y": 950.0,
+        "w": 400.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 4291402041,
+      "strokeWidth": 3.0
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 420.0,
+        "y": 1180.0,
+        "w": 240.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0641\u0631\u062f\u0648\u0633\u06cc",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 40.0,
+        "color": 4280492318,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": 4293849588,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "glow",
+      "transform": {
+        "x": 160.0,
+        "y": 380.0,
+        "w": 760.0,
+        "h": 760.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4282215408,
+      "strokeWidth": 0.0,
+      "opacity": 0.1
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 280.0,
+        "y": 120.0,
+        "w": 700.0,
+        "h": 250.0,
+        "r": 0.0
+      },
+      "content": "\u06a9\u0627\u0631\u0647\u0627\u062a \u0631\u0627\n\u0633\u0627\u062f\u0647 \u06a9\u0646",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 100.0,
+        "color": 4279967268,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.3,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "phone-body",
+      "transform": {
+        "x": 365.0,
+        "y": 430.0,
+        "w": 350.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4279967268,
+      "strokeWidth": 0.0,
+      "cornerRadius": 52.0,
+      "shadowOpacity": 0.18,
+      "shadowBlur": 36.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 14.0,
+      "shadowColor": 4279967268
+    },
+    {
+      "type": "shape",
+      "id": "phone-screen",
+      "transform": {
+        "x": 387.0,
+        "y": 452.0,
+        "w": 306.0,
+        "h": 556.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4284187378,
+        "endColor": 4282215408,
+        "angleDegrees": 180.0
+      },
+      "cornerRadius": 38.0
+    },
+    {
+      "type": "shape",
+      "id": "phone-camera",
+      "transform": {
+        "x": 531.0,
+        "y": 468.0,
+        "w": 18.0,
+        "h": 18.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293849588,
+      "strokeWidth": 0.0,
+      "opacity": 0.9
+    },
+    {
+      "type": "shape",
+      "id": "phone-home",
+      "transform": {
+        "x": 485.0,
+        "y": 968.0,
+        "w": 110.0,
+        "h": 8.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293849588,
+      "strokeWidth": 0.0,
+      "cornerRadius": 4.0,
+      "opacity": 0.85
+    },
+    {
+      "type": "text",
+      "id": "feature-line",
+      "transform": {
+        "x": 190.0,
+        "y": 1078.0,
+        "w": 700.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "\u0641\u0647\u0631\u0633\u062a\u060c \u06cc\u0627\u062f\u0622\u0648\u0631\u060c \u062a\u0645\u0631\u06a9\u0632 \u2014 \u062f\u0631 \u06cc\u06a9 \u0627\u067e",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4279967268,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "cta-chip",
+      "transform": {
+        "x": 400.0,
+        "y": 1180.0,
+        "w": 280.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4282215408,
+      "strokeWidth": 0.0,
+      "cornerRadius": 46.0
+    },
+    {
+      "type": "text",
+      "id": "cta",
+      "transform": {
+        "x": 430.0,
+        "y": 1202.0,
+        "w": 220.0,
+        "h": 50.0,
+        "r": 0.0
+      },
+      "content": "\u0646\u0635\u0628 \u0631\u0627\u06cc\u06af\u0627\u0646",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4293849588,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

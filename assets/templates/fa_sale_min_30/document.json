@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4293452762,
+  "layers": [
+    {
+      "type": "text",
+      "id": "figure",
+      "transform": {
+        "x": 240.0,
+        "y": 330.0,
+        "w": 600.0,
+        "h": 380.0,
+        "r": 0.0
+      },
+      "content": "\u06f3\u06f0\u066a",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 300.0,
+        "color": 4280557852,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "slash",
+      "transform": {
+        "x": 290.0,
+        "y": 722.0,
+        "w": 500.0,
+        "h": 26.0,
+        "r": -0.06
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4292831568,
+      "strokeWidth": 0.0,
+      "cornerRadius": 13.0
+    },
+    {
+      "type": "text",
+      "id": "support",
+      "transform": {
+        "x": 340.0,
+        "y": 802.0,
+        "w": 400.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "\u0631\u0648\u06cc \u0647\u0645\u0647\u200c\u0686\u06cc\u0632\u060c \u0647\u0645\u06cc\u0646 \u0647\u0641\u062a\u0647",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 36.0,
+        "color": 4280557852,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_app_minimal",
+  "title": {
+    "en": "Minimal App Launch Poster",
+    "fa": "پوستر معرفی اپلیکیشن"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_app_minimal/thumbnail.png",
+  "document": "assets/templates/fa_promo_app_minimal/document.json",
+  "tags": [
+    "persian",
+    "app",
+    "tech",
+    "minimal",
+    "clean",
+    "product"
+  ]
+}

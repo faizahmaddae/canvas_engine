@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_fashion_minimal",
+  "title": {
+    "en": "Minimal Fashion Collection Story",
+    "fa": "استوری مینیمال مجموعه پاییز"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_fashion_minimal/thumbnail.png",
+  "document": "assets/templates/fa_story_fashion_minimal/document.json",
+  "tags": [
+    "persian",
+    "fashion",
+    "minimal",
+    "collection",
+    "editorial"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_hafez_saffron",
+  "title": {
+    "en": "Hafez Saffron Poetry Card",
+    "fa": "شعر حافظ زعفرانی"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_hafez_saffron/thumbnail.png",
+  "document": "assets/templates/fa_poetry_hafez_saffron/document.json",
+  "tags": [
+    "persian",
+    "poetry",
+    "hafez",
+    "nastaliq",
+    "saffron",
+    "minimal"
+  ]
+}

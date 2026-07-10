@@ -1,7 +1,9 @@
-// Style & Effects — the shadow sub-section (text-tool redesign 3-A).
-// The استایل panel carries the effect category chips; tapping Shadow
-// opens the wired sub-section whose controls write through the same
-// drag-coalesced setters as the Shadow tile panel.
+// Style & Effects — the effect sections (compactness pass 2026-07).
+// The استایل panel carries the effect category chips; Stroke, Shadow
+// and Background are wired (they are the ONLY home for decoration
+// after the bar consolidation). The shadow section pairs a 2D offset
+// pad (direction + distance in one drag) with a blur slider and a
+// mini swatch row.
 
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
@@ -10,6 +12,7 @@ import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
+import 'package:canvas_engine/features/editor/ui/panel_offset_pad.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,27 +67,27 @@ void main() {
     return container;
   }
 
-
   /// The effect chips render at 12.5px (LayoutPresetChip) — the dock
   /// tile and preset labels use 11px, so font size disambiguates.
   Finder effectChip(String label) => find.byWidgetPredicate(
-        (w) => w is Text && w.data == label && w.style?.fontSize == 12.5,
-      );
+    (w) => w is Text && w.data == label && w.style?.fontSize == 12.5,
+  );
 
   TextLayer layerOf(ProviderContainer c) =>
       c.read(documentControllerProvider).layerById('text-1')! as TextLayer;
 
-  testWidgets('effect chips render; only Shadow responds', (tester) async {
+  testWidgets('effect chips render; glow/gradient stay inert', (tester) async {
     await pumpStyles(tester);
     expect(effectChip('Stroke'), findsOneWidget);
     expect(effectChip('Shadow'), findsOneWidget);
     expect(effectChip('Glow'), findsOneWidget);
     expect(effectChip('Gradient'), findsOneWidget);
 
-    // Disabled chip: tapping Stroke opens nothing.
-    await tester.tap(effectChip('Stroke'), warnIfMissed: false);
+    // Disabled chip: tapping Glow opens nothing (no preset row).
+    await tester.tap(effectChip('Glow'), warnIfMissed: false);
     await tester.pumpAndSettle();
-    expect(find.text('Distance'), findsNothing);
+    expect(find.text('Soft'), findsNothing);
+    expect(find.byType(PanelOffsetPad), findsNothing);
   });
 
   testWidgets('Shadow chip opens the section; preset enables a shadow', (
@@ -95,19 +98,20 @@ void main() {
 
     await tester.tap(effectChip('Shadow'));
     await tester.pumpAndSettle();
-    // Off state: preset tiles, no sliders yet.
+    // Off state: preset chips only — the pad/blur row appears once
+    // a shadow exists.
     expect(find.text('Soft'), findsOneWidget);
-    expect(find.text('Distance'), findsNothing);
+    expect(find.byType(PanelOffsetPad), findsNothing);
 
     await tester.tap(find.text('Soft'));
     await tester.pumpAndSettle();
     expect(layerOf(c).style.shadowColor, isNotNull);
-    // Wired controls appear.
-    expect(find.text('Distance'), findsOneWidget);
+    // The compact control row appears: 2D offset pad + blur slider.
+    expect(find.byType(PanelOffsetPad), findsOneWidget);
     expect(find.text('Blur'), findsOneWidget);
   });
 
-  testWidgets('distance slider preserves direction, changes magnitude', (
+  testWidgets('offset pad drag writes direction AND distance together', (
     tester,
   ) async {
     final c = await pumpStyles(
@@ -122,13 +126,86 @@ void main() {
     await tester.tap(effectChip('Shadow'));
     await tester.pumpAndSettle();
 
+    final pad = find.byType(PanelOffsetPad);
+    expect(pad, findsOneWidget);
+
+    // Drag from the pad centre toward bottom-right: the emitted
+    // offset must point the same way (dx>0, dy>0) with magnitude
+    // clamped to the pad's 24px ceiling — one gesture, both facts.
+    final center = tester.getCenter(pad);
+    final gesture = await tester.startGesture(center);
+    await tester.pump();
+    await gesture.moveBy(const Offset(30, 30));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    final off = layerOf(c).style.shadowOffset;
+    expect(off.dx, greaterThan(0));
+    expect(off.dy, greaterThan(0));
+    expect(off.dx, closeTo(off.dy, 0.01)); // 45° drag → 45° offset
+    expect(off.distance, lessThanOrEqualTo(24 + 1e-6));
+
+    // A commit went through the drag-coalescing window: exactly one
+    // extra undo step for the whole gesture.
+    final ctrl = c.read(documentControllerProvider.notifier);
+    ctrl.undo();
+    expect(
+      layerOf(c).style.shadowOffset,
+      const Offset(3, 4),
+      reason: 'whole pad drag must collapse into one undo entry',
+    );
+  });
+
+  testWidgets('setShadowOffset preserves the pad contract (same setter)', (
+    tester,
+  ) async {
+    final c = await pumpStyles(
+      tester,
+      style: const TextStyleSpec(
+        fontSize: 48,
+        shadowColor: Color(0x80000000),
+        shadowBlur: 8,
+        shadowOffset: Offset(3, 4),
+      ),
+    );
     final ctrl = c.read(textToolControllerProvider.notifier);
-    // Drive the setter the slider uses (widget-level drag is flaky
-    // across slider theme metrics; the mapping is the contract).
     ctrl.setShadowOffset(const Offset(3, 4) / 5 * 10);
     await tester.pump();
     final off = layerOf(c).style.shadowOffset;
     expect(off.distance, closeTo(10, 1e-6));
     expect(off.dx / off.dy, closeTo(3 / 4, 1e-6));
+  });
+
+  testWidgets('Background chip opens section; pill preset enables fill', (
+    tester,
+  ) async {
+    final c = await pumpStyles(tester);
+    expect(layerOf(c).style.backgroundColor, isNull);
+
+    await tester.tap(effectChip('BG'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pill'));
+    await tester.pumpAndSettle();
+
+    final style = layerOf(c).style;
+    expect(style.backgroundColor, isNotNull);
+    expect(style.backgroundRadius, closeTo(1.0, 0.01));
+  });
+
+  testWidgets('Stroke chip opens section; solid preset enables outline', (
+    tester,
+  ) async {
+    final c = await pumpStyles(tester);
+    expect(layerOf(c).style.outlineColor, isNull);
+
+    await tester.tap(effectChip('Stroke'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Solid'));
+    await tester.pumpAndSettle();
+
+    final style = layerOf(c).style;
+    expect(style.outlineColor, isNotNull);
+    expect(style.outlineWidth, closeTo(2, 0.01));
   });
 }

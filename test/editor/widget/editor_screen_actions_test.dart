@@ -156,15 +156,16 @@ void main() {
     await pumpEditor(tester, container);
 
     expectMinimalAppBar();
-    // The floating pill (which carried the 'Edit text' button) is
-    // gone — text editing enters via double-tap on the layer
-    // (covered by text_double_tap_edit_test.dart). No pill chrome
-    // should render over the canvas.
+    // The redesigned quick-capsule floats over the selection and
+    // carries the 'Edit text' pill again (fast in-place access; the
+    // bottom bar stays the full surface). Its own contracts live in
+    // text_quick_capsule_test.dart — here we only pin that the
+    // APP BAR stays minimal while it shows.
     expect(
       find.byWidgetPredicate(
         (w) => w is Semantics && w.properties.label == 'Edit text',
       ),
-      findsNothing,
+      findsOneWidget,
     );
   });
 

@@ -1,0 +1,136 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4279505190,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "light-magenta",
+      "transform": {
+        "x": 110.0,
+        "y": 240.0,
+        "w": 560.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4292428967,
+      "strokeWidth": 0.0,
+      "opacity": 0.8
+    },
+    {
+      "type": "shape",
+      "id": "light-cyan",
+      "transform": {
+        "x": 430.0,
+        "y": 140.0,
+        "w": 560.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4282367441,
+      "strokeWidth": 0.0,
+      "opacity": 0.8
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 80.0,
+        "y": 540.0,
+        "w": 920.0,
+        "h": 170.0,
+        "r": 0.0
+      },
+      "content": "\u0634\u0628 \u0645\u0648\u0633\u06cc\u0642\u06cc \u0632\u0646\u062f\u0647",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 104.0,
+        "color": 4294110433,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.15,
+        "alignment": "center",
+        "shadowColor": 2568229158,
+        "shadowBlur": 24.0,
+        "shadowDx": 0.0,
+        "shadowDy": 10.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-top",
+      "transform": {
+        "x": 390.0,
+        "y": 1330.0,
+        "w": 300.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3862937041,
+      "strokeWidth": 3.0
+    },
+    {
+      "type": "text",
+      "id": "date",
+      "transform": {
+        "x": 240.0,
+        "y": 1400.0,
+        "w": 600.0,
+        "h": 78.0,
+        "r": 0.0
+      },
+      "content": "\u062c\u0645\u0639\u0647 \u06f9 \u0645\u0631\u062f\u0627\u062f",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 52.0,
+        "color": 4294110433,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "venue",
+      "transform": {
+        "x": 240.0,
+        "y": 1510.0,
+        "w": 600.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "\u06a9\u0627\u0641\u0647 \u0647\u0646\u0631\u060c \u062a\u0647\u0631\u0627\u0646",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 3438472417,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-bottom",
+      "transform": {
+        "x": 440.0,
+        "y": 1640.0,
+        "w": 200.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3862937041,
+      "strokeWidth": 3.0
+    }
+  ]
+}

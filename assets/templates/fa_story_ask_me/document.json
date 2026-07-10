@@ -1,0 +1,204 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4294437061,
+  "layers": [
+    {
+      "type": "text",
+      "id": "q-mark-1",
+      "transform": {
+        "x": 130.0,
+        "y": 230.0,
+        "w": 150.0,
+        "h": 210.0,
+        "r": -0.26
+      },
+      "content": "\u061f",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 170.0,
+        "color": 4280688921,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText",
+      "opacity": 0.9
+    },
+    {
+      "type": "text",
+      "id": "q-mark-2",
+      "transform": {
+        "x": 760.0,
+        "y": 170.0,
+        "w": 120.0,
+        "h": 165.0,
+        "r": 0.3
+      },
+      "content": "\u061f",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 130.0,
+        "color": 4280688921,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText",
+      "opacity": 0.55
+    },
+    {
+      "type": "text",
+      "id": "q-mark-3",
+      "transform": {
+        "x": 470.0,
+        "y": 110.0,
+        "w": 85.0,
+        "h": 120.0,
+        "r": -0.12
+      },
+      "content": "\u061f",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 95.0,
+        "color": 4280688921,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText",
+      "opacity": 0.35
+    },
+    {
+      "type": "text",
+      "id": "q-mark-4",
+      "transform": {
+        "x": 170.0,
+        "y": 1440.0,
+        "w": 105.0,
+        "h": 145.0,
+        "r": 0.22
+      },
+      "content": "\u061f",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 115.0,
+        "color": 4280688921,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText",
+      "opacity": 0.5
+    },
+    {
+      "type": "text",
+      "id": "q-mark-5",
+      "transform": {
+        "x": 750.0,
+        "y": 1490.0,
+        "w": 160.0,
+        "h": 220.0,
+        "r": -0.3
+      },
+      "content": "\u061f",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 175.0,
+        "color": 4280688921,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText",
+      "opacity": 0.85
+    },
+    {
+      "type": "text",
+      "id": "q-mark-6",
+      "transform": {
+        "x": 480.0,
+        "y": 1690.0,
+        "w": 90.0,
+        "h": 125.0,
+        "r": 0.15
+      },
+      "content": "\u061f",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 100.0,
+        "color": 4280688921,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText",
+      "opacity": 0.35
+    },
+    {
+      "type": "shape",
+      "id": "bubble",
+      "transform": {
+        "x": 120.0,
+        "y": 600.0,
+        "w": 840.0,
+        "h": 540.0,
+        "r": 0.0
+      },
+      "kind": "quoteBubble",
+      "fillColor": 4292897358,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 230.0,
+        "y": 770.0,
+        "w": 620.0,
+        "h": 170.0,
+        "r": 0.0
+      },
+      "content": "\u0627\u0632 \u0645\u0646 \u0628\u067e\u0631\u0633!",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 96.0,
+        "color": 4294437061,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.15,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 190.0,
+        "y": 1250.0,
+        "w": 700.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "content": "\u0633\u0624\u0627\u0644\u200c\u0647\u0627\u062a\u0648 \u062a\u0648 \u0627\u0633\u062a\u0648\u0631\u06cc \u0628\u0641\u0631\u0633\u062a",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 46.0,
+        "color": 4280688921,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

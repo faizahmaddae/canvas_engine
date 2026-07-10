@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_food_menu_elegant",
+  "title": {
+    "en": "Elegant Dinner Menu Poster",
+    "fa": "منوی شام شیک"
+  },
+  "category": "food",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_food_menu_elegant/thumbnail.png",
+  "document": "assets/templates/fa_food_menu_elegant/document.json",
+  "tags": [
+    "persian",
+    "food",
+    "menu",
+    "restaurant",
+    "elegant",
+    "fine-dining"
+  ]
+}

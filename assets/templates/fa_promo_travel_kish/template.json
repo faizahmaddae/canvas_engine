@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_travel_kish",
+  "title": {
+    "en": "Kish Island Travel Poster",
+    "fa": "پوستر سفر به کیش"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_travel_kish/thumbnail.png",
+  "document": "assets/templates/fa_promo_travel_kish/document.json",
+  "tags": [
+    "persian",
+    "travel",
+    "kish",
+    "sea",
+    "azure",
+    "vacation"
+  ]
+}

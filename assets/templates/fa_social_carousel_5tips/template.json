@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_social_carousel_5tips",
+  "title": {
+    "en": "Five Tips Carousel Cover",
+    "fa": "کاور کاروسل ۵ نکته"
+  },
+  "category": "social",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_social_carousel_5tips/thumbnail.png",
+  "document": "assets/templates/fa_social_carousel_5tips/document.json",
+  "tags": [
+    "persian",
+    "social",
+    "carousel",
+    "tips",
+    "photography",
+    "cover",
+    "teal"
+  ]
+}

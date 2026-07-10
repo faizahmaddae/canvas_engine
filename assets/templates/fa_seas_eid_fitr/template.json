@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_seas_eid_fitr",
+  "title": {
+    "en": "Eid al-Fitr Greeting",
+    "fa": "عید فطر مبارک"
+  },
+  "category": "greeting",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_seas_eid_fitr/thumbnail.png",
+  "document": "assets/templates/fa_seas_eid_fitr/document.json",
+  "tags": [
+    "persian",
+    "seasonal",
+    "eid",
+    "nastaliq",
+    "elegant"
+  ]
+}

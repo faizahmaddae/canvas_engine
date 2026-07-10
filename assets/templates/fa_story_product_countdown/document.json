@@ -1,0 +1,152 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": 4279833874,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "orn-diamond",
+      "transform": {
+        "x": 526.0,
+        "y": 230.0,
+        "w": 28.0,
+        "h": 28.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4293238852,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 440.0,
+        "y": 340.0,
+        "w": 200.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "\u0641\u0642\u0637",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 46.0,
+        "color": 3656707809,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "big-number",
+      "transform": {
+        "x": 310.0,
+        "y": 410.0,
+        "w": 460.0,
+        "h": 680.0,
+        "r": 0.0
+      },
+      "content": "\u06f3",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 600.0,
+        "color": 4293238852,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "sub",
+      "transform": {
+        "x": 190.0,
+        "y": 1100.0,
+        "w": 700.0,
+        "h": 110.0,
+        "r": 0.0
+      },
+      "content": "\u0631\u0648\u0632 \u062a\u0627 \u0645\u0639\u0631\u0641\u06cc",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 84.0,
+        "color": 4294242017,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.1,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "product-body",
+      "transform": {
+        "x": 400.0,
+        "y": 1280.0,
+        "w": 280.0,
+        "h": 430.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4280425495,
+        "endColor": 4281214496,
+        "angleDegrees": 0.0
+      },
+      "cornerRadius": 36.0
+    },
+    {
+      "type": "shape",
+      "id": "product-hairline",
+      "transform": {
+        "x": 400.0,
+        "y": 1280.0,
+        "w": 280.0,
+        "h": 430.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293238852,
+      "strokeWidth": 2.0,
+      "fillOpacity": 0.0,
+      "strokeColor": 4293238852,
+      "cornerRadius": 36.0
+    },
+    {
+      "type": "text",
+      "id": "footer",
+      "transform": {
+        "x": 350.0,
+        "y": 1790.0,
+        "w": 380.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "content": "\u0641\u0631\u062f\u0627 \u0633\u0627\u0639\u062a \u06f2\u06f1",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4279833874,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center",
+        "backgroundColor": 4293238852,
+        "backgroundRadius": 0.5,
+        "backgroundPaddingX": 30.0,
+        "backgroundPaddingY": 14.0
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

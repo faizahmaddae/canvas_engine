@@ -1,0 +1,165 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4292667632,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "halo",
+      "transform": {
+        "x": 300.0,
+        "y": 70.0,
+        "w": 480.0,
+        "h": 480.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294702828,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "moon-body",
+      "transform": {
+        "x": 420.0,
+        "y": 190.0,
+        "w": 240.0,
+        "h": 240.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4293112380,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "moon-cutout",
+      "transform": {
+        "x": 490.0,
+        "y": 145.0,
+        "w": 240.0,
+        "h": 240.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294702828,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "star-1",
+      "transform": {
+        "x": 200.0,
+        "y": 180.0,
+        "w": 22.0,
+        "h": 22.0,
+        "r": 0.3
+      },
+      "kind": "diamond",
+      "fillColor": 4293112380,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "star-2",
+      "transform": {
+        "x": 850.0,
+        "y": 150.0,
+        "w": 26.0,
+        "h": 26.0,
+        "r": -0.2
+      },
+      "kind": "diamond",
+      "fillColor": 4293112380,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "star-3",
+      "transform": {
+        "x": 880.0,
+        "y": 420.0,
+        "w": 18.0,
+        "h": 18.0,
+        "r": 0.4
+      },
+      "kind": "diamond",
+      "fillColor": 4282009428,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "star-4",
+      "transform": {
+        "x": 160.0,
+        "y": 430.0,
+        "w": 20.0,
+        "h": 20.0,
+        "r": -0.35
+      },
+      "kind": "diamond",
+      "fillColor": 4293112380,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "star-5",
+      "transform": {
+        "x": 640.0,
+        "y": 620.0,
+        "w": 16.0,
+        "h": 16.0,
+        "r": 0.25
+      },
+      "kind": "diamond",
+      "fillColor": 4282009428,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 140.0,
+        "y": 610.0,
+        "w": 800.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "content": "\u0642\u062f\u0645\u0634 \u0645\u0628\u0627\u0631\u06a9",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 100.0,
+        "color": 4282009428,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "wish",
+      "transform": {
+        "x": 190.0,
+        "y": 800.0,
+        "w": 700.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0647 \u062f\u0646\u06cc\u0627 \u062e\u0648\u0634 \u0627\u0648\u0645\u062f\u06cc\u060c \u0646\u0641\u0633",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4282009428,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText",
+      "opacity": 0.8
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_biz_studio_intro",
+  "title": {
+    "en": "Design Studio Wordmark Intro",
+    "fa": "معرفی استودیو طراحی"
+  },
+  "category": "business",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_biz_studio_intro/thumbnail.png",
+  "document": "assets/templates/fa_biz_studio_intro/document.json",
+  "tags": [
+    "persian",
+    "business",
+    "studio",
+    "wordmark",
+    "minimal",
+    "brand"
+  ]
+}

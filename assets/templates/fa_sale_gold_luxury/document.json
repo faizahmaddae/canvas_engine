@@ -1,0 +1,150 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1350.0,
+  "background": 4279110666,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "frame-outer",
+      "transform": {
+        "x": 60.0,
+        "y": 60.0,
+        "w": 960.0,
+        "h": 1230.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292393082,
+      "strokeWidth": 2.0,
+      "fillOpacity": 0.0,
+      "strokeColor": 4292393082
+    },
+    {
+      "type": "shape",
+      "id": "frame-inner",
+      "transform": {
+        "x": 84.0,
+        "y": 84.0,
+        "w": 912.0,
+        "h": 1182.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4292393082,
+      "strokeWidth": 1.0,
+      "fillOpacity": 0.0,
+      "strokeColor": 2161686650
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 190.0,
+        "y": 214.0,
+        "w": 700.0,
+        "h": 108.0,
+        "r": 0.0
+      },
+      "content": "\u0645\u062c\u0645\u0648\u0639\u0647\u200c\u06cc \u0645\u062d\u062f\u0648\u062f",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 84.0,
+        "color": 4294373860,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-headline",
+      "transform": {
+        "x": 480.0,
+        "y": 372.0,
+        "w": 120.0,
+        "h": 2.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3436755066,
+      "strokeWidth": 2.0
+    },
+    {
+      "type": "shape",
+      "id": "lozenge",
+      "transform": {
+        "x": 340.0,
+        "y": 470.0,
+        "w": 400.0,
+        "h": 400.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292393082,
+      "strokeWidth": 2.5,
+      "fillOpacity": 0.0,
+      "strokeColor": 4292393082
+    },
+    {
+      "type": "text",
+      "id": "discount",
+      "transform": {
+        "x": 430.0,
+        "y": 612.0,
+        "w": 220.0,
+        "h": 116.0,
+        "r": 0.0
+      },
+      "content": "\u06f3\u06f0\u066a",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 96.0,
+        "color": 4292393082,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "urgency",
+      "transform": {
+        "x": 390.0,
+        "y": 964.0,
+        "w": 300.0,
+        "h": 54.0,
+        "r": 0.0
+      },
+      "content": "\u0641\u0642\u0637 \u06f4\u06f8 \u0633\u0627\u0639\u062a",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4294373860,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "finial",
+      "transform": {
+        "x": 528.0,
+        "y": 1096.0,
+        "w": 24.0,
+        "h": 24.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292393082,
+      "strokeWidth": 0.0
+    }
+  ]
+}

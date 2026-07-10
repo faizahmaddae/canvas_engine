@@ -1,0 +1,190 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4279244061,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "dot-grid-a",
+      "transform": {
+        "x": 920.0,
+        "y": 92.0,
+        "w": 14.0,
+        "h": 14.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4281713353,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot-grid-b",
+      "transform": {
+        "x": 956.0,
+        "y": 92.0,
+        "w": 14.0,
+        "h": 14.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4281713353,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot-grid-c",
+      "transform": {
+        "x": 920.0,
+        "y": 128.0,
+        "w": 14.0,
+        "h": 14.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4281713353,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot-grid-d",
+      "transform": {
+        "x": 956.0,
+        "y": 128.0,
+        "w": 14.0,
+        "h": 14.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4281713353,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-left-up",
+      "transform": {
+        "x": 112.0,
+        "y": 507.0,
+        "w": 130.0,
+        "h": 6.0,
+        "r": -0.5
+      },
+      "kind": "line",
+      "fillColor": 4281713353,
+      "strokeWidth": 6.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-left-down",
+      "transform": {
+        "x": 112.0,
+        "y": 567.0,
+        "w": 130.0,
+        "h": 6.0,
+        "r": 0.5
+      },
+      "kind": "line",
+      "fillColor": 4281713353,
+      "strokeWidth": 6.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-right-up",
+      "transform": {
+        "x": 838.0,
+        "y": 507.0,
+        "w": 130.0,
+        "h": 6.0,
+        "r": 0.5
+      },
+      "kind": "line",
+      "fillColor": 4281713353,
+      "strokeWidth": 6.0
+    },
+    {
+      "type": "shape",
+      "id": "bracket-right-down",
+      "transform": {
+        "x": 838.0,
+        "y": 567.0,
+        "w": 130.0,
+        "h": 6.0,
+        "r": -0.5
+      },
+      "kind": "line",
+      "fillColor": 4281713353,
+      "strokeWidth": 6.0
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "transform": {
+        "x": 220.0,
+        "y": 400.0,
+        "w": 640.0,
+        "h": 280.0,
+        "r": 0.0
+      },
+      "content": "\u0645\u06cc\u062a\u200c\u0622\u067e\n\u0647\u0648\u0634 \u0645\u0635\u0646\u0648\u0639\u06cc",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 100.0,
+        "color": 4294242274,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.3,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "date-chip",
+      "transform": {
+        "x": 340.0,
+        "y": 796.0,
+        "w": 400.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "\u0686\u0647\u0627\u0631\u0634\u0646\u0628\u0647 \u00b7 \u06f1\u06f9:\u06f0\u06f0",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 42.0,
+        "color": 4279244061,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center",
+        "backgroundColor": 4281713353,
+        "backgroundRadius": 0.5,
+        "backgroundPaddingX": 30.0,
+        "backgroundPaddingY": 14.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "venue",
+      "transform": {
+        "x": 290.0,
+        "y": 916.0,
+        "w": 500.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "content": "\u06a9\u0627\u0631\u062e\u0627\u0646\u0647 \u0646\u0648\u0622\u0648\u0631\u06cc",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 36.0,
+        "color": 3656708066,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -71,8 +71,9 @@ ProviderContainer _sampleEditor({
   String? openSheet,
 }) {
   final container = ProviderContainer();
-  container.read(editorSessionProvider.notifier).state =
-      const EditorSession(name: 'پوستر نوروز');
+  container.read(editorSessionProvider.notifier).state = const EditorSession(
+    name: 'پوستر نوروز',
+  );
   final ctrl = container.read(documentControllerProvider.notifier);
   ctrl.newDocument(width: 1080, height: 1080);
   ctrl.execute(
@@ -206,8 +207,11 @@ void main() {
     expect(find.byType(AppBar), findsOneWidget);
 
     final boundary =
-        boundaryKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-    final image = await tester.runAsync(() => boundary.toImage(pixelRatio: 2.0));
+        boundaryKey.currentContext!.findRenderObject()!
+            as RenderRepaintBoundary;
+    final image = await tester.runAsync(
+      () => boundary.toImage(pixelRatio: 2.0),
+    );
     final byteData = await tester.runAsync(
       () => image!.toByteData(format: ui.ImageByteFormat.png),
     );
@@ -264,9 +268,7 @@ void main() {
     );
   });
 
-  testWidgets('EditorScreen visual capture — size panel, dark', (
-    tester,
-  ) async {
+  testWidgets('EditorScreen visual capture — size panel, dark', (tester) async {
     await capture(
       tester,
       brightness: Brightness.dark,
@@ -308,9 +310,7 @@ void main() {
     );
   });
 
-  testWidgets('EditorScreen visual capture — font panel, dark', (
-    tester,
-  ) async {
+  testWidgets('EditorScreen visual capture — font panel, dark', (tester) async {
     await capture(
       tester,
       brightness: Brightness.dark,
@@ -347,6 +347,12 @@ void main() {
     });
   }
 
+  /// Effect chips render at 12.5px (LayoutPresetChip); the dock tile
+  /// labels use 11px, so font size disambiguates duplicate strings.
+  Finder effectChip(String label) => find.byWidgetPredicate(
+    (w) => w is Text && w.data == label && w.style?.fontSize == 12.5,
+  );
+
   for (final (b, name) in [
     (Brightness.light, 'light'),
     (Brightness.dark, 'dark'),
@@ -360,15 +366,106 @@ void main() {
         fileName: 'editor_effects_shadow_$name.png',
         openSheet: 'styles',
         interact: (t) async {
-          // Open the سایه effect section, then enable via the Soft
-          // preset tile (icon finder — locale-independent).
-          final chip = find.byWidgetPredicate(
-            (w) =>
-                w is Text && w.data == 'سایه' && w.style?.fontSize == 12.5,
-          );
-          await t.tap(chip);
+          // Open the سایه effect section, enable via the نرم (Soft)
+          // preset chip — the compact section then shows the 2D
+          // offset pad + blur slider + swatch row.
+          await t.tap(effectChip('سایه'));
           await t.pumpAndSettle();
-          await t.tap(find.byIcon(Icons.cloud_outlined));
+          await t.tap(effectChip('نرم'));
+          await t.pumpAndSettle();
+        },
+      );
+    });
+
+    testWidgets('EditorScreen visual capture — background effect, $name', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: b,
+        fileName: 'editor_effects_background_$name.png',
+        openSheet: 'styles',
+        interact: (t) async {
+          // Open the زمینه effect section, enable via the کپسولی
+          // (Pill) preset chip — swatch row + precision disclosure.
+          await t.tap(effectChip('زمینه'));
+          await t.pumpAndSettle();
+          await t.tap(effectChip('کپسولی'));
+          await t.pumpAndSettle();
+        },
+      );
+    });
+
+    testWidgets('EditorScreen visual capture — border effect, $name', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: b,
+        fileName: 'editor_effects_border_$name.png',
+        openSheet: 'styles',
+        interact: (t) async {
+          // Open the خط دور (frame/outline) section, enable via the
+          // یکدست (Solid) preset chip.
+          await t.tap(effectChip('خط دور'));
+          await t.pumpAndSettle();
+          await t.tap(effectChip('یکدست'));
+          await t.pumpAndSettle();
+        },
+      );
+    });
+
+    testWidgets('EditorScreen visual capture — colour custom level, $name', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: b,
+        fileName: 'editor_color_custom_$name.png',
+        openSheet: 'color',
+        interact: (t) async {
+          // Expand the shared picker's custom level in place —
+          // HSV square + hue/opacity + hex/eyedropper/copy row.
+          await t.tap(find.byKey(const ValueKey('color-picker-custom')));
+          await t.pumpAndSettle();
+        },
+      );
+    });
+
+    testWidgets('EditorScreen visual capture — shadow colour picker, $name', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: b,
+        fileName: 'editor_shadow_color_picker_$name.png',
+        openSheet: 'styles',
+        interact: (t) async {
+          // Second call site: the سایه section's entry row opens the
+          // SAME shared picker as its compact no-dim sheet, titled
+          // «رنگ سایه» — proof the surface is shared.
+          await t.tap(effectChip('سایه'));
+          await t.pumpAndSettle();
+          await t.tap(effectChip('نرم'));
+          await t.pumpAndSettle();
+          await t.tap(find.byKey(const ValueKey('effect-shadow-color')));
+          await t.pumpAndSettle();
+        },
+      );
+    });
+
+    testWidgets('EditorScreen visual capture — more sheet, $name', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: b,
+        fileName: 'editor_more_sheet_$name.png',
+        withSelection: true,
+        interact: (t) async {
+          // Open the «بیشتر» sheet from the consolidated bar — shows
+          // the single B/I/U segmented row + compact action rows.
+          await t.tap(find.text('بیشتر').first);
           await t.pumpAndSettle();
         },
       );

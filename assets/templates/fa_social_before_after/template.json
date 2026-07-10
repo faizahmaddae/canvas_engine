@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_social_before_after",
+  "title": {
+    "en": "Before and After Reveal Post",
+    "fa": "پست قبل و بعد"
+  },
+  "category": "social",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_social_before_after/thumbnail.png",
+  "document": "assets/templates/fa_social_before_after/document.json",
+  "tags": [
+    "persian",
+    "social",
+    "before-after",
+    "design",
+    "logo",
+    "amber",
+    "dark"
+  ]
+}

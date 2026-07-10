@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_greet_birthday_gold",
+  "title": {
+    "en": "Golden Birthday Greeting Card",
+    "fa": "تبریک تولد طلایی"
+  },
+  "category": "greeting",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_greet_birthday_gold/thumbnail.png",
+  "document": "assets/templates/fa_greet_birthday_gold/document.json",
+  "tags": [
+    "persian",
+    "greeting",
+    "birthday",
+    "gold",
+    "balloons",
+    "elegant"
+  ]
+}

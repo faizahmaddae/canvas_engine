@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_motiv_calm_sea",
+  "title": {
+    "en": "Calm Sea Motivational Quote",
+    "fa": "آرامش، مهارت است"
+  },
+  "category": "motivational",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_motiv_calm_sea/thumbnail.png",
+  "document": "assets/templates/fa_motiv_calm_sea/document.json",
+  "tags": [
+    "persian",
+    "motivational",
+    "calm",
+    "sea",
+    "minimal",
+    "quote"
+  ]
+}

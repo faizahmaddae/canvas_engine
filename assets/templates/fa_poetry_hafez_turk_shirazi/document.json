@@ -1,0 +1,158 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4279184939,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "rule-top-right",
+      "transform": {
+        "x": 586.0,
+        "y": 296.0,
+        "w": 250.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3873026924,
+      "strokeWidth": 2.5
+    },
+    {
+      "type": "shape",
+      "id": "rule-top-left",
+      "transform": {
+        "x": 244.0,
+        "y": 296.0,
+        "w": 250.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3873026924,
+      "strokeWidth": 2.5
+    },
+    {
+      "type": "shape",
+      "id": "orn-diamond-top",
+      "transform": {
+        "x": 522.0,
+        "y": 279.0,
+        "w": 36.0,
+        "h": 36.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292385422,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 110.0,
+        "y": 360.0,
+        "w": 860.0,
+        "h": 400.0,
+        "r": 0.0
+      },
+      "content": "\u0627\u06af\u0631 \u0622\u0646 \u062a\u0631\u06a9 \u0634\u06cc\u0631\u0627\u0632\u06cc \u0628\u0647 \u062f\u0633\u062a \u0622\u0631\u062f \u062f\u0644 \u0645\u0627 \u0631\u0627\n\u0628\u0647 \u062e\u0627\u0644 \u0647\u0646\u062f\u0648\u06cc\u0634 \u0628\u062e\u0634\u0645 \u0633\u0645\u0631\u0642\u0646\u062f \u0648 \u0628\u062e\u0627\u0631\u0627 \u0631\u0627",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 72.0,
+        "color": 4294307551,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.9,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-bottom-right",
+      "transform": {
+        "x": 586.0,
+        "y": 800.0,
+        "w": 250.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3873026924,
+      "strokeWidth": 2.5
+    },
+    {
+      "type": "shape",
+      "id": "rule-bottom-left",
+      "transform": {
+        "x": 244.0,
+        "y": 800.0,
+        "w": 250.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3873026924,
+      "strokeWidth": 2.5
+    },
+    {
+      "type": "shape",
+      "id": "orn-diamond-bottom",
+      "transform": {
+        "x": 522.0,
+        "y": 783.0,
+        "w": 36.0,
+        "h": 36.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292385422,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 523.0,
+        "y": 858.0,
+        "w": 140.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "content": "\u062d\u0627\u0641\u0638",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 44.0,
+        "color": 4292457324,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "ghazal-number",
+      "transform": {
+        "x": 417.0,
+        "y": 874.0,
+        "w": 90.0,
+        "h": 40.0,
+        "r": 0.0
+      },
+      "content": "\u063a\u0632\u0644 \u06f3",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 26.0,
+        "color": 4292385422,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

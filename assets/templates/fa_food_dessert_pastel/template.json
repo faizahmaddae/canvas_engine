@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_food_dessert_pastel",
+  "title": {
+    "en": "Pastel Fresh Pastry Post",
+    "fa": "پست شیرینی پاستلی"
+  },
+  "category": "food",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_food_dessert_pastel/thumbnail.png",
+  "document": "assets/templates/fa_food_dessert_pastel/document.json",
+  "tags": [
+    "persian",
+    "food",
+    "dessert",
+    "pastry",
+    "pastel",
+    "bakery"
+  ]
+}

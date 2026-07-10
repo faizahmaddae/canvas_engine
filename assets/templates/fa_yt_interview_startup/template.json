@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_yt_interview_startup",
+  "title": {
+    "en": "Startup Founder Interview Thumbnail",
+    "fa": "تامنیل گفت‌وگوی استارتاپی"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_yt_interview_startup/thumbnail.png",
+  "document": "assets/templates/fa_yt_interview_startup/document.json",
+  "tags": [
+    "persian",
+    "youtube",
+    "thumbnail",
+    "interview",
+    "formal",
+    "teal"
+  ]
+}

@@ -340,42 +340,21 @@ class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
     super.dispose();
   }
 
-  // Mirrors the dock's `_InlineColorBody._palette` so the inline
-  // and dock pickers feel like the same surface.
-  static const List<Color> _palette = [
-    Color(0xFF000000),
-    Color(0xFFFFFFFF),
-    Color(0xFF6B7280),
-    Color(0xFFEF4444),
-    Color(0xFFF59E0B),
-    Color(0xFFFACC15),
-    Color(0xFF22C55E),
-    Color(0xFF06B6D4),
-    Color(0xFF3B82F6),
-    Color(0xFF8B5CF6),
-    Color(0xFFEC4899),
-    Color(0xFF14B8A6),
-  ];
+  // The picker's own preset palette so the inline tray and the
+  // shared picker feel like the same surface.
+  static const List<Color> _palette = kColorPickerPalette;
 
   Future<void> _openCustomPicker() async {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final session = ref.read(textToolControllerProvider);
-    final original = session.defaultStyle.color;
-    final picked = await showColorPickerSheet(
+    // The shared picker sheet — live, undimmed, recents handled
+    // inside; nothing to restore or re-commit on close.
+    await showColorPickerSheet(
       context,
-      initial: original,
-      recents: ref.read(recentColorsControllerProvider),
+      initial: session.defaultStyle.color,
       onLiveChange: ctrl.setColor,
       title: context.l10n.textColorTitle,
     );
-    if (!mounted) return;
-    if (picked == null) {
-      ctrl.setColor(original);
-      return;
-    }
-    EditorHaptics.confirm();
-    ctrl.setColor(picked);
-    ctrl.rememberRecentColor(picked);
   }
 
   @override
@@ -471,8 +450,11 @@ class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
                         // tap doesn't wipe a previously-dialed-in
                         // opacity. Custom picker remains the
                         // authoritative entry for alpha changes.
+                        // Palette taps are deliberately NOT
+                        // remembered — presets never earn a recents
+                        // slot (they're always one tap away), same
+                        // policy as the shared picker.
                         ctrl.setColor(c.withValues(alpha: style.color.a));
-                        ctrl.rememberRecentColor(c);
                       },
                       onCustom: _openCustomPicker,
                     ),

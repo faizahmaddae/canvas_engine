@@ -492,9 +492,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentLabel => 'Recent';
 
   @override
-  String get paletteLabel => 'Palette';
-
-  @override
   String get customLabel => 'Custom';
 
   @override
@@ -1210,6 +1207,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shadowColorTitle => 'Shadow color';
 
   @override
+  String get shadowOffsetPadSemantics => 'Shadow direction and distance';
+
+  @override
+  String get textQuickActionsSemantics => 'Text quick actions';
+
+  @override
+  String get exactSizeTitle => 'Exact size';
+
+  @override
   String get blurDirectionOpacitySubtitle => 'Blur, direction, opacity';
 
   @override
@@ -1351,7 +1357,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hexLabel => 'Hex';
 
   @override
-  String get invalidLabel => 'Invalid';
+  String get eyedropperTooltip => 'Eyedropper';
+
+  @override
+  String get copyColorTooltip => 'Copy color code';
 
   @override
   String get toolLabel => 'Tool';

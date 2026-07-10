@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_biz_webinar_growth",
+  "title": {
+    "en": "Business Growth Webinar Poster",
+    "fa": "پوستر وبینار رشد کسب‌وکار"
+  },
+  "category": "business",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_biz_webinar_growth/thumbnail.png",
+  "document": "assets/templates/fa_biz_webinar_growth/document.json",
+  "tags": [
+    "persian",
+    "business",
+    "webinar",
+    "online",
+    "event",
+    "navy"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_product_countdown",
+  "title": {
+    "en": "Product Launch Countdown Story",
+    "fa": "استوری شمارش معکوس محصول"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_product_countdown/thumbnail.png",
+  "document": "assets/templates/fa_story_product_countdown/document.json",
+  "tags": [
+    "persian",
+    "story",
+    "countdown",
+    "launch",
+    "dark",
+    "saffron"
+  ]
+}

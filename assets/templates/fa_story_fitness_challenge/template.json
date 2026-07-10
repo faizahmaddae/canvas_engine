@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_fitness_challenge",
+  "title": {
+    "en": "30-Day Fitness Challenge Story",
+    "fa": "استوری چالش ۳۰ روزه"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_fitness_challenge/thumbnail.png",
+  "document": "assets/templates/fa_story_fitness_challenge/document.json",
+  "tags": [
+    "persian",
+    "story",
+    "fitness",
+    "challenge",
+    "bold",
+    "checklist"
+  ]
+}

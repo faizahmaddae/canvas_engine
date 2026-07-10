@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_poetry_babataher_faryad",
+  "title": {
+    "en": "Baba Taher Rustic Note Poetry Post",
+    "fa": "شعر باباطاهر — فریاد"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_poetry_babataher_faryad/thumbnail.png",
+  "document": "assets/templates/fa_poetry_babataher_faryad/document.json",
+  "tags": [
+    "persian",
+    "poetry",
+    "babataher",
+    "rustic",
+    "minimal",
+    "note"
+  ]
+}

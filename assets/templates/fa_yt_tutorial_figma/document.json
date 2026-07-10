@@ -1,0 +1,138 @@
+{
+  "version": 2,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": 4279705643,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "glow-card",
+      "transform": {
+        "x": -120.0,
+        "y": 100.0,
+        "w": 560.0,
+        "h": 560.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4283076825,
+      "strokeWidth": 0.0,
+      "opacity": 0.12
+    },
+    {
+      "type": "shape",
+      "id": "face-card",
+      "transform": {
+        "x": 84.0,
+        "y": 110.0,
+        "w": 380.0,
+        "h": 500.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4293587445,
+        "endColor": 4283076825,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 36.0,
+      "shadowOpacity": 0.3,
+      "shadowBlur": 40.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "avatar",
+      "transform": {
+        "x": 184.0,
+        "y": 180.0,
+        "w": 180.0,
+        "h": 180.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4279705643,
+      "strokeWidth": 0.0,
+      "fillOpacity": 0.18
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 540.0,
+        "y": 170.0,
+        "w": 640.0,
+        "h": 290.0,
+        "r": 0.0
+      },
+      "content": "\u0622\u0645\u0648\u0632\u0634 \u0641\u06cc\u06af\u0645\u0627\n\u0627\u0632 \u0635\u0641\u0631",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 100.0,
+        "color": 4293587445,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "underline",
+      "transform": {
+        "x": 900.0,
+        "y": 496.0,
+        "w": 280.0,
+        "h": 16.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4283076825,
+      "strokeWidth": 0.0,
+      "cornerRadius": 8.0
+    },
+    {
+      "type": "shape",
+      "id": "tag-chip",
+      "transform": {
+        "x": 1010.0,
+        "y": 52.0,
+        "w": 190.0,
+        "h": 72.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4283076825,
+      "strokeWidth": 0.0,
+      "cornerRadius": 36.0
+    },
+    {
+      "type": "text",
+      "id": "tag",
+      "transform": {
+        "x": 1036.0,
+        "y": 68.0,
+        "w": 138.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "content": "\u0631\u0627\u06cc\u06af\u0627\u0646",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 38.0,
+        "color": 4293587445,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294439137,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "corner-fold",
+      "transform": {
+        "x": -170.0,
+        "y": -170.0,
+        "w": 340.0,
+        "h": 340.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4281109629,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "headline-number",
+      "transform": {
+        "x": 190.0,
+        "y": 285.0,
+        "w": 700.0,
+        "h": 290.0,
+        "r": 0.0
+      },
+      "content": "\u06f5 \u0646\u06a9\u062a\u0647",
+      "style": {
+        "fontFamily": "Lalezar",
+        "fontSize": 230.0,
+        "color": 4281109629,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.0,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "headline-topic",
+      "transform": {
+        "x": 190.0,
+        "y": 625.0,
+        "w": 700.0,
+        "h": 104.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0631\u0627\u06cc \u0639\u06a9\u0627\u0633\u06cc \u0628\u0627 \u0645\u0648\u0628\u0627\u06cc\u0644",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 74.0,
+        "color": 4280360987,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "dot-active",
+      "transform": {
+        "x": 619.0,
+        "y": 806.0,
+        "w": 18.0,
+        "h": 18.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4281109629,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot-2",
+      "transform": {
+        "x": 575.0,
+        "y": 806.0,
+        "w": 18.0,
+        "h": 18.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 1193353243,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot-3",
+      "transform": {
+        "x": 531.0,
+        "y": 806.0,
+        "w": 18.0,
+        "h": 18.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 1193353243,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot-4",
+      "transform": {
+        "x": 487.0,
+        "y": 806.0,
+        "w": 18.0,
+        "h": 18.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 1193353243,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "dot-5",
+      "transform": {
+        "x": 443.0,
+        "y": 806.0,
+        "w": 18.0,
+        "h": 18.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 1193353243,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "swipe-hint",
+      "transform": {
+        "x": 520.0,
+        "y": 928.0,
+        "w": 180.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "\u0648\u0631\u0642 \u0628\u0632\u0646",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4280360987,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "swipe-arrow",
+      "transform": {
+        "x": 386.0,
+        "y": 938.0,
+        "w": 104.0,
+        "h": 34.0,
+        "r": 0.0
+      },
+      "kind": "arrowLeft",
+      "fillColor": 4281109629,
+      "strokeWidth": 9.0
+    }
+  ]
+}

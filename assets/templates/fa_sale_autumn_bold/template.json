@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_sale_autumn_bold",
+  "title": {
+    "en": "Bold Autumn Sale Post",
+    "fa": "حراج پاییزه"
+  },
+  "category": "sale",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_sale_autumn_bold/thumbnail.png",
+  "document": "assets/templates/fa_sale_autumn_bold/document.json",
+  "tags": [
+    "persian",
+    "sale",
+    "autumn",
+    "bold",
+    "seasonal",
+    "retail"
+  ]
+}

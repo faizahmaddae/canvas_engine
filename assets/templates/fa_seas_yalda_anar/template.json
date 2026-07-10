@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_seas_yalda_anar",
+  "title": {
+    "en": "Yalda Pomegranate Card",
+    "fa": "شب یلدا — انار"
+  },
+  "category": "poetryPost",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_seas_yalda_anar/thumbnail.png",
+  "document": "assets/templates/fa_seas_yalda_anar/document.json",
+  "tags": [
+    "persian",
+    "seasonal",
+    "yalda",
+    "nastaliq",
+    "night"
+  ]
+}

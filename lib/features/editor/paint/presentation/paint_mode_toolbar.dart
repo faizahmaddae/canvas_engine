@@ -12,8 +12,6 @@ import '../../../settings/application/settings_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../presentation/widgets/dock_tool_strip.dart';
 import '../../presentation/widgets/dock_tool_tile.dart';
-import '../../presentation/widgets/inline_color_body.dart';
-import '../../application/recent_colors_controller.dart';
 import '../../presentation/widgets/section_label.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 import '../../toolbar/domain/sub_tool.dart';
@@ -870,9 +868,8 @@ class _ToolPreviewPainter extends CustomPainter {
       old.tool != tool || old.color != color;
 }
 
-/// Stroke-colour body. 12-swatch palette + recents + "More" modal
-/// fallback — identical shape to the text colour body so users
-/// learn it once.
+/// Stroke-colour body — the shared two-level picker, embedded so
+/// it is the identical surface to the text colour body.
 class _PaintColorBody extends ConsumerWidget {
   const _PaintColorBody({required this.current});
 
@@ -881,33 +878,12 @@ class _PaintColorBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ctrl = ref.read(paintToolControllerProvider.notifier);
-    return InlineColorBody(
-      current: current,
-      recents: ref.watch(recentColorsControllerProvider),
-      palette: InlineColorBody.defaultPalette,
-      onPick: (c) {
-        EditorHaptics.tap();
-        // Preserve the current opacity — picking a colour chip is
-        // a hue choice, not an alpha reset. Alpha changes go
-        // through the Opacity sub-tool or the custom picker.
-        ctrl.setStrokeColor(c.withValues(alpha: current.a));
-      },
-      onCustom: () async {
-        final original = current;
-        final picked = await showColorPickerSheet(
-          context,
-          initial: original,
-          recents: ref.read(recentColorsControllerProvider),
-          onLiveChange: ctrl.setStrokeColor,
-          title: context.l10n.strokeColorTitle,
-        );
-        if (picked != null) {
-          ctrl.setStrokeColor(picked);
-          ctrl.rememberRecentColor(picked);
-        } else {
-          ctrl.setStrokeColor(original);
-        }
-      },
+    // The shared two-level picker, embedded. Alpha preservation and
+    // recents bookkeeping live inside the picker.
+    return ColorPickerBody(
+      initial: current,
+      title: context.l10n.strokeColorTitle,
+      onChanged: ctrl.setStrokeColor,
     );
   }
 }
@@ -1082,20 +1058,17 @@ class _PaintFillBody extends ConsumerWidget {
                     : const _FillPreviewSweep(),
                 onTap: () async {
                   EditorHaptics.tap();
-                  final original = fill;
-                  final picked = await showColorPickerSheet(
+                  // Custom fill goes straight to the shared picker's
+                  // custom level — the card itself is the "custom"
+                  // affordance, so landing on swatches would be a
+                  // detour.
+                  await showColorPickerSheet(
                     context,
                     initial: fill ?? stroke,
-                    recents: ref.read(recentColorsControllerProvider),
                     onLiveChange: ctrl.setFillColor,
                     title: context.l10n.fillColorTitle,
+                    startAtCustom: true,
                   );
-                  if (picked != null) {
-                    ctrl.setFillColor(picked);
-                    ctrl.rememberRecentColor(picked);
-                  } else {
-                    ctrl.setFillColor(original);
-                  }
                 },
               ),
             ),
@@ -1464,4 +1437,3 @@ class _DashPreviewPainter extends CustomPainter {
     return true;
   }
 }
-

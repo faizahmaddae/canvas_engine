@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_event_tech_meetup",
+  "title": {
+    "en": "AI Tech Meetup Announcement",
+    "fa": "اعلان میت‌آپ هوش مصنوعی"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_event_tech_meetup/thumbnail.png",
+  "document": "assets/templates/fa_event_tech_meetup/document.json",
+  "tags": [
+    "persian",
+    "event",
+    "meetup",
+    "tech",
+    "ai",
+    "dark"
+  ]
+}

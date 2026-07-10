@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_food_cafe_specials",
+  "title": {
+    "en": "Cozy Cafe Daily Specials",
+    "fa": "پیشنهاد روز کافه"
+  },
+  "category": "food",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_food_cafe_specials/thumbnail.png",
+  "document": "assets/templates/fa_food_cafe_specials/document.json",
+  "tags": [
+    "persian",
+    "food",
+    "cafe",
+    "coffee",
+    "specials",
+    "handwriting"
+  ]
+}

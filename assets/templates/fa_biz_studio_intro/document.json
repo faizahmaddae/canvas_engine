@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294308070,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "frame",
+      "transform": {
+        "x": 80.0,
+        "y": 80.0,
+        "w": 920.0,
+        "h": 920.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4290350917,
+      "strokeWidth": 2.0,
+      "fillOpacity": 0.0,
+      "strokeColor": 4290350917
+    },
+    {
+      "type": "text",
+      "id": "wordmark",
+      "transform": {
+        "x": 140.0,
+        "y": 360.0,
+        "w": 800.0,
+        "h": 210.0,
+        "r": 0.0
+      },
+      "content": "\u0627\u0633\u062a\u0648\u062f\u06cc\u0648 \u0646\u064f\u0647",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 150.0,
+        "color": 4280294423,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.25,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "orn-diamond",
+      "transform": {
+        "x": 524.0,
+        "y": 618.0,
+        "w": 32.0,
+        "h": 32.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4290350917,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "services",
+      "transform": {
+        "x": 290.0,
+        "y": 706.0,
+        "w": 500.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0631\u0646\u062f\u06cc\u0646\u06af \u00b7 \u0648\u0628 \u00b7 \u0645\u0648\u0634\u0646",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4280294423,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

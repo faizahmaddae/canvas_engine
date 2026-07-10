@@ -1016,12 +1016,6 @@ abstract class AppLocalizations {
   /// **'Recent'**
   String get recentLabel;
 
-  /// No description provided for @paletteLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Palette'**
-  String get paletteLabel;
-
   /// No description provided for @customLabel.
   ///
   /// In en, this message translates to:
@@ -2366,6 +2360,24 @@ abstract class AppLocalizations {
   /// **'Shadow color'**
   String get shadowColorTitle;
 
+  /// Accessibility label for the 2D shadow offset pad — dragging the dot sets shadow direction and distance together.
+  ///
+  /// In en, this message translates to:
+  /// **'Shadow direction and distance'**
+  String get shadowOffsetPadSemantics;
+
+  /// Accessibility label for the floating quick-capsule shown above a selected text layer.
+  ///
+  /// In en, this message translates to:
+  /// **'Text quick actions'**
+  String get textQuickActionsSemantics;
+
+  /// Title of the numeric-entry dialog opened by tapping the size panel's value chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact size'**
+  String get exactSizeTitle;
+
   /// No description provided for @blurDirectionOpacitySubtitle.
   ///
   /// In en, this message translates to:
@@ -2648,11 +2660,17 @@ abstract class AppLocalizations {
   /// **'Hex'**
   String get hexLabel;
 
-  /// No description provided for @invalidLabel.
+  /// No description provided for @eyedropperTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Invalid'**
-  String get invalidLabel;
+  /// **'Eyedropper'**
+  String get eyedropperTooltip;
+
+  /// No description provided for @copyColorTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy color code'**
+  String get copyColorTooltip;
 
   /// No description provided for @toolLabel.
   ///

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_yt_top5_apps",
+  "title": {
+    "en": "Top 5 Apps Thumbnail",
+    "fa": "تامنیل ۵ اپلیکیشن برتر"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_yt_top5_apps/thumbnail.png",
+  "document": "assets/templates/fa_yt_top5_apps/document.json",
+  "tags": [
+    "persian",
+    "youtube",
+    "thumbnail",
+    "apps",
+    "list",
+    "bold"
+  ]
+}

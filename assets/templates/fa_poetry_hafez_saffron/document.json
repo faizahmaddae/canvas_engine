@@ -1,0 +1,126 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4294439396,
+    "edgeColor": 4293780172,
+    "focalX": 0.0,
+    "focalY": 0.0,
+    "radius": 1.1
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "bloom-soft",
+      "transform": {
+        "x": 500.0,
+        "y": 60.0,
+        "w": 640.0,
+        "h": 640.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4290807594,
+      "strokeWidth": 0.0,
+      "opacity": 0.14
+    },
+    {
+      "type": "shape",
+      "id": "bloom-dot",
+      "transform": {
+        "x": 836.0,
+        "y": 152.0,
+        "w": 104.0,
+        "h": 104.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4290807594,
+      "strokeWidth": 0.0,
+      "opacity": 0.85
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 140.0,
+        "y": 230.0,
+        "w": 800.0,
+        "h": 600.0,
+        "r": 0.0
+      },
+      "content": "\u062f\u0631\u062e\u062a \u062f\u0648\u0633\u062a\u06cc \u0628\u0646\u0634\u0627\u0646\n\u06a9\u0647 \u06a9\u0627\u0645 \u062f\u0644 \u0628\u0647 \u0628\u0627\u0631 \u0622\u0631\u062f\n\u0646\u0647\u0627\u0644 \u062f\u0634\u0645\u0646\u06cc \u0628\u0631\u06a9\u0646\n\u06a9\u0647 \u0631\u0646\u062c \u0628\u06cc\u200c\u0634\u0645\u0627\u0631 \u0622\u0631\u062f",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 88.0,
+        "color": 4280688924,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.8,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "author-chip",
+      "transform": {
+        "x": 464.0,
+        "y": 878.0,
+        "w": 152.0,
+        "h": 68.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4290272312,
+      "strokeWidth": 0.0,
+      "cornerRadius": 34.0
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 484.0,
+        "y": 892.0,
+        "w": 112.0,
+        "h": 44.0,
+        "r": 0.0
+      },
+      "content": "\u062d\u0627\u0641\u0638",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4294702310,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "collection",
+      "transform": {
+        "x": 390.0,
+        "y": 972.0,
+        "w": 300.0,
+        "h": 42.0,
+        "r": 0.0
+      },
+      "content": "\u063a\u0632\u0644\u06cc\u0627\u062a",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 30.0,
+        "color": 4287265896,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

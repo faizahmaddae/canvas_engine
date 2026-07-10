@@ -1,0 +1,80 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294373604,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "verse-anchor-rule",
+      "transform": {
+        "x": 942.0,
+        "y": 150.0,
+        "w": 6.0,
+        "h": 520.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4291059002,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "verse",
+      "transform": {
+        "x": 240.0,
+        "y": 160.0,
+        "w": 660.0,
+        "h": 500.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0646\u06cc\u200c\u0622\u062f\u0645 \u0627\u0639\u0636\u0627\u06cc \u06cc\u06a9\u062f\u06cc\u06af\u0631\u0646\u062f\n\u06a9\u0647 \u062f\u0631 \u0622\u0641\u0631\u06cc\u0646\u0634 \u0632 \u06cc\u06a9 \u06af\u0648\u0647\u0631\u0646\u062f\n\u0686\u0648 \u0639\u0636\u0648\u06cc \u0628\u0647 \u062f\u0631\u062f \u0622\u0648\u0631\u062f \u0631\u0648\u0632\u06af\u0627\u0631\n\u062f\u06af\u0631 \u0639\u0636\u0648\u0647\u0627 \u0631\u0627 \u0646\u0645\u0627\u0646\u062f \u0642\u0631\u0627\u0631",
+      "style": {
+        "fontFamily": "BNazanin",
+        "fontSize": 56.0,
+        "color": 4280688665,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.8,
+        "alignment": "right"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "orn-circle",
+      "transform": {
+        "x": 120.0,
+        "y": 730.0,
+        "w": 96.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4291059002,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "author",
+      "transform": {
+        "x": 100.0,
+        "y": 930.0,
+        "w": 360.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "\u0633\u0639\u062f\u06cc \u2014 \u06af\u0644\u0633\u062a\u0627\u0646",
+      "style": {
+        "fontFamily": "Vazir_Regular",
+        "fontSize": 34.0,
+        "color": 4280688665,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "left"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

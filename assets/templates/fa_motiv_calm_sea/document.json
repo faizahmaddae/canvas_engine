@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4294176225,
+  "layers": [
+    {
+      "type": "shape",
+      "id": "band-light",
+      "transform": {
+        "x": 0.0,
+        "y": 520.0,
+        "w": 1080.0,
+        "h": 130.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4288660686,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "band-mid",
+      "transform": {
+        "x": 0.0,
+        "y": 650.0,
+        "w": 1080.0,
+        "h": 160.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4281233798,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "band-deep",
+      "transform": {
+        "x": 0.0,
+        "y": 810.0,
+        "w": 1080.0,
+        "h": 270.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4280176223,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "sun",
+      "transform": {
+        "x": 760.0,
+        "y": 430.0,
+        "w": 180.0,
+        "h": 180.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294176225,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "quote",
+      "transform": {
+        "x": 140.0,
+        "y": 890.0,
+        "w": 800.0,
+        "h": 100.0,
+        "r": 0.0
+      },
+      "content": "\u0622\u0631\u0627\u0645\u0634\u060c \u0645\u0647\u0627\u0631\u062a \u0627\u0633\u062a.",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 56.0,
+        "color": 4294176225,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

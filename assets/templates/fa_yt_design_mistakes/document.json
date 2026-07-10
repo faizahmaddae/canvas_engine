@@ -1,0 +1,209 @@
+{
+  "version": 2,
+  "width": 1280.0,
+  "height": 720.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4279638825,
+    "endColor": 4280494916,
+    "angleDegrees": 135.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "glow",
+      "transform": {
+        "x": -150.0,
+        "y": 320.0,
+        "w": 520.0,
+        "h": 520.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4280465568,
+      "strokeWidth": 0.0,
+      "opacity": 0.16
+    },
+    {
+      "type": "shape",
+      "id": "face-card",
+      "transform": {
+        "x": 84.0,
+        "y": 120.0,
+        "w": 380.0,
+        "h": 480.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 0.0,
+      "fill": {
+        "type": "linear",
+        "startColor": 4280989088,
+        "endColor": 4279529567,
+        "angleDegrees": 160.0
+      },
+      "cornerRadius": 36.0,
+      "shadowOpacity": 0.3,
+      "shadowBlur": 40.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 18.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "avatar",
+      "transform": {
+        "x": 184.0,
+        "y": 186.0,
+        "w": 180.0,
+        "h": 180.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294439912,
+      "strokeWidth": 0.0,
+      "fillOpacity": 0.25
+    },
+    {
+      "type": "shape",
+      "id": "name-chip",
+      "transform": {
+        "x": 154.0,
+        "y": 470.0,
+        "w": 240.0,
+        "h": 62.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294439912,
+      "strokeWidth": 0.0,
+      "cornerRadius": 31.0
+    },
+    {
+      "type": "text",
+      "id": "name",
+      "transform": {
+        "x": 174.0,
+        "y": 484.0,
+        "w": 200.0,
+        "h": 40.0,
+        "r": 0.0
+      },
+      "content": "\u0645\u062f\u0631\u0633 \u06af\u0631\u0627\u0641\u06cc\u06a9",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 34.0,
+        "color": 4279529567,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title-main",
+      "transform": {
+        "x": 520.0,
+        "y": 150.0,
+        "w": 680.0,
+        "h": 170.0,
+        "r": 0.0
+      },
+      "content": "\u06f5 \u0627\u0634\u062a\u0628\u0627\u0647 \u0631\u0627\u06cc\u062c",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 110.0,
+        "color": 4294439912,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.15,
+        "alignment": "right",
+        "shadowColor": 2348810240,
+        "shadowBlur": 18.0,
+        "shadowDx": 0.0,
+        "shadowDy": 8.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "title-highlight",
+      "transform": {
+        "x": 540.0,
+        "y": 350.0,
+        "w": 660.0,
+        "h": 150.0,
+        "r": 0.0
+      },
+      "content": "\u062f\u0631 \u0637\u0631\u0627\u062d\u06cc \u0644\u0648\u06af\u0648",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 96.0,
+        "color": 4279638825,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.15,
+        "alignment": "right",
+        "backgroundColor": 4294951229,
+        "backgroundRadius": 0.18,
+        "backgroundPaddingX": 28.0,
+        "backgroundPaddingY": 14.0
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "arrow",
+      "transform": {
+        "x": 500.0,
+        "y": 560.0,
+        "w": 170.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "kind": "arrowLeft",
+      "fillColor": 4294924869,
+      "strokeWidth": 14.0
+    },
+    {
+      "type": "shape",
+      "id": "badge-chip",
+      "transform": {
+        "x": 1000.0,
+        "y": 556.0,
+        "w": 200.0,
+        "h": 80.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4294924869,
+      "strokeWidth": 0.0,
+      "cornerRadius": 40.0
+    },
+    {
+      "type": "text",
+      "id": "badge",
+      "transform": {
+        "x": 1024.0,
+        "y": 574.0,
+        "w": 152.0,
+        "h": 46.0,
+        "r": 0.0
+      },
+      "content": "\u0642\u0633\u0645\u062a \u06f7",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4294439912,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

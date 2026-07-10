@@ -8,8 +8,6 @@ import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
 import '../../engine/core/editor_document.dart';
 import '../../presentation/widgets/editor_tool_panel_shell.dart';
-import '../../presentation/widgets/inline_color_body.dart';
-import '../../application/recent_colors_controller.dart';
 import '../application/canvas_commands.dart';
 import '../application/canvas_tool_controller.dart';
 
@@ -54,7 +52,6 @@ class CanvasPanelBody extends ConsumerWidget {
     final mode = doc.backgroundMode;
     final isPhotoProject = doc.projectKind == ProjectKind.photo;
     final isTransparent = mode == CanvasBackgroundMode.transparent;
-    final recents = ref.watch(recentColorsControllerProvider);
 
     return EditorToolPanelShell(
       title: context.l10n.backgroundTool,
@@ -85,33 +82,14 @@ class CanvasPanelBody extends ConsumerWidget {
             opacity: isTransparent ? 0.4 : 1.0,
             child: IgnorePointer(
               ignoring: isTransparent,
-              child: InlineColorBody(
-                current: current,
-                recents: recents,
-                palette: InlineColorBody.defaultPalette,
-                onPick: (picked) {
-                  EditorHaptics.toggle();
-                  _commit(ref, picked);
-                },
-                onCustom: () async {
-                  final original = current;
-                  final picked = await showColorPickerSheet(
-                    context,
-                    initial: original,
-                    recents: recents,
-                    onLiveChange: (c) => _commit(ref, c, live: true),
-                    title: context.l10n.canvasBackgroundTitle,
-                  );
-                  if (picked == null) {
-                    // Cancelled — restore the original colour so
-                    // the live-drag stream doesn't stick.
-                    _commit(ref, original);
-                    return;
-                  }
-                  ref
-                      .read(recentColorsControllerProvider.notifier)
-                      .remember(picked);
-                },
+              // The shared two-level picker, embedded. Drags stream
+              // live (transient) commits; settled changes commit
+              // for real. Recents and alpha policy live inside it.
+              child: ColorPickerBody(
+                initial: current,
+                title: context.l10n.canvasBackgroundTitle,
+                onChanged: (c) => _commit(ref, c, live: true),
+                onCommitted: (c) => _commit(ref, c),
               ),
             ),
           ),

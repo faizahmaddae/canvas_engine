@@ -1,0 +1,162 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": 4280494128,
+  "layers": [
+    {
+      "type": "text",
+      "id": "title",
+      "transform": {
+        "x": 240.0,
+        "y": 112.0,
+        "w": 600.0,
+        "h": 96.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0627\u0632\u0637\u0631\u0627\u062d\u06cc \u0644\u0648\u06af\u0648",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 70.0,
+        "color": 4294373603,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-title",
+      "transform": {
+        "x": 470.0,
+        "y": 254.0,
+        "w": 140.0,
+        "h": 4.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 4293436220,
+      "strokeWidth": 4.0
+    },
+    {
+      "type": "shape",
+      "id": "panel-before",
+      "transform": {
+        "x": 590.0,
+        "y": 350.0,
+        "w": 370.0,
+        "h": 480.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4282008144,
+      "strokeWidth": 0.0,
+      "cornerRadius": 36.0
+    },
+    {
+      "type": "shape",
+      "id": "panel-after",
+      "transform": {
+        "x": 120.0,
+        "y": 350.0,
+        "w": 370.0,
+        "h": 480.0,
+        "r": 0.0
+      },
+      "kind": "roundedRectangle",
+      "fillColor": 4293436220,
+      "strokeWidth": 0.0,
+      "cornerRadius": 36.0
+    },
+    {
+      "type": "shape",
+      "id": "mark-before",
+      "transform": {
+        "x": 705.0,
+        "y": 430.0,
+        "w": 140.0,
+        "h": 140.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4294373603,
+      "strokeWidth": 3.0,
+      "fillOpacity": 0.0,
+      "strokeColor": 2364993763
+    },
+    {
+      "type": "shape",
+      "id": "mark-after",
+      "transform": {
+        "x": 235.0,
+        "y": 430.0,
+        "w": 140.0,
+        "h": 140.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4280494128,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "label-before",
+      "transform": {
+        "x": 665.0,
+        "y": 648.0,
+        "w": 220.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "content": "\u0642\u0628\u0644",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 64.0,
+        "color": 4294373603,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "label-after",
+      "transform": {
+        "x": 195.0,
+        "y": 648.0,
+        "w": 220.0,
+        "h": 92.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0639\u062f",
+      "style": {
+        "fontFamily": "BTitrBd",
+        "fontSize": 64.0,
+        "color": 4280494128,
+        "fontWeight": 700,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "arrow-reveal",
+      "transform": {
+        "x": 492.0,
+        "y": 566.0,
+        "w": 96.0,
+        "h": 48.0,
+        "r": 0.0
+      },
+      "kind": "arrowLeft",
+      "fillColor": 4293436220,
+      "strokeWidth": 10.0
+    }
+  ]
+}

@@ -1,0 +1,211 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1920.0,
+  "background": {
+    "type": "linear",
+    "startColor": 4280494930,
+    "endColor": 4279506992,
+    "angleDegrees": 180.0
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "frame-outer",
+      "transform": {
+        "x": 70.0,
+        "y": 70.0,
+        "w": 940.0,
+        "h": 1780.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 2.5,
+      "fillOpacity": 0.0,
+      "strokeColor": 4292457324
+    },
+    {
+      "type": "shape",
+      "id": "frame-inner",
+      "transform": {
+        "x": 92.0,
+        "y": 92.0,
+        "w": 896.0,
+        "h": 1736.0,
+        "r": 0.0
+      },
+      "kind": "rectangle",
+      "fillColor": 4294967295,
+      "strokeWidth": 1.2,
+      "fillOpacity": 0.0,
+      "strokeColor": 2363077484
+    },
+    {
+      "type": "shape",
+      "id": "orn-diamond",
+      "transform": {
+        "x": 522.0,
+        "y": 218.0,
+        "w": 36.0,
+        "h": 36.0,
+        "r": 0.0
+      },
+      "kind": "diamond",
+      "fillColor": 4292457324,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "rule-right",
+      "transform": {
+        "x": 596.0,
+        "y": 234.0,
+        "w": 110.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3000611692,
+      "strokeWidth": 3.0
+    },
+    {
+      "type": "shape",
+      "id": "rule-left",
+      "transform": {
+        "x": 374.0,
+        "y": 234.0,
+        "w": 110.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3000611692,
+      "strokeWidth": 3.0
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "transform": {
+        "x": 390.0,
+        "y": 312.0,
+        "w": 300.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "\u062c\u0634\u0646 \u067e\u06cc\u0648\u0646\u062f",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4292457324,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "names",
+      "transform": {
+        "x": 140.0,
+        "y": 640.0,
+        "w": 800.0,
+        "h": 380.0,
+        "r": 0.0
+      },
+      "content": "\u0633\u0627\u0631\u0627 \u0648 \u0622\u0631\u0645\u06cc\u0646",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 120.0,
+        "color": 4294439395,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.9,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule-names",
+      "transform": {
+        "x": 420.0,
+        "y": 1092.0,
+        "w": 240.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3000611692,
+      "strokeWidth": 3.0
+    },
+    {
+      "type": "text",
+      "id": "date",
+      "transform": {
+        "x": 240.0,
+        "y": 1200.0,
+        "w": 600.0,
+        "h": 70.0,
+        "r": 0.0
+      },
+      "content": "\u067e\u0646\u062c\u200c\u0634\u0646\u0628\u0647 \u06f2\u06f5 \u062a\u06cc\u0631 \u06f1\u06f4\u06f0\u06f5",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 44.0,
+        "color": 4292457324,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "venue",
+      "transform": {
+        "x": 240.0,
+        "y": 1296.0,
+        "w": 600.0,
+        "h": 58.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0627\u063a \u0646\u0627\u0631\u0646\u062c\u0633\u062a\u0627\u0646\u060c \u0634\u06cc\u0631\u0627\u0632",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 38.0,
+        "color": 4294439395,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "closing",
+      "transform": {
+        "x": 240.0,
+        "y": 1600.0,
+        "w": 600.0,
+        "h": 52.0,
+        "r": 0.0
+      },
+      "content": "\u0645\u0646\u062a\u0638\u0631 \u062d\u0636\u0648\u0631 \u06af\u0631\u0645 \u0634\u0645\u0627 \u0647\u0633\u062a\u06cc\u0645",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 34.0,
+        "color": 4289310662,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    }
+  ]
+}

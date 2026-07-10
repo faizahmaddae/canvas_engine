@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "width": 1080.0,
+  "height": 1080.0,
+  "background": {
+    "type": "radial",
+    "centerColor": 4280556073,
+    "edgeColor": 4280030240,
+    "focalX": 0.0,
+    "focalY": -0.2,
+    "radius": 1.15
+  },
+  "layers": [
+    {
+      "type": "shape",
+      "id": "anar",
+      "transform": {
+        "x": 400.0,
+        "y": 170.0,
+        "w": 280.0,
+        "h": 280.0,
+        "r": 0.0
+      },
+      "kind": "circle",
+      "fillColor": 4288882232,
+      "strokeWidth": 0.0,
+      "shadowOpacity": 0.3,
+      "shadowBlur": 40.0,
+      "shadowOffsetX": 0.0,
+      "shadowOffsetY": 14.0,
+      "shadowColor": 4278190080
+    },
+    {
+      "type": "shape",
+      "id": "crown-mid",
+      "transform": {
+        "x": 515.0,
+        "y": 128.0,
+        "w": 50.0,
+        "h": 56.0,
+        "r": 0.0
+      },
+      "kind": "triangle",
+      "fillColor": 4292453441,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "crown-left",
+      "transform": {
+        "x": 468.0,
+        "y": 142.0,
+        "w": 40.0,
+        "h": 46.0,
+        "r": -0.35
+      },
+      "kind": "triangle",
+      "fillColor": 4292453441,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "shape",
+      "id": "crown-right",
+      "transform": {
+        "x": 572.0,
+        "y": 142.0,
+        "w": 40.0,
+        "h": 46.0,
+        "r": 0.35
+      },
+      "kind": "triangle",
+      "fillColor": 4292453441,
+      "strokeWidth": 0.0
+    },
+    {
+      "type": "text",
+      "id": "hero",
+      "transform": {
+        "x": 190.0,
+        "y": 520.0,
+        "w": 700.0,
+        "h": 220.0,
+        "r": 0.0
+      },
+      "content": "\u0634\u0628 \u06cc\u0644\u062f\u0627 \u0645\u0628\u0627\u0631\u06a9",
+      "style": {
+        "fontFamily": "IranNastaliq",
+        "fontSize": 96.0,
+        "color": 4292453441,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.8,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "text",
+      "id": "subline",
+      "transform": {
+        "x": 240.0,
+        "y": 800.0,
+        "w": 600.0,
+        "h": 60.0,
+        "r": 0.0
+      },
+      "content": "\u0628\u0644\u0646\u062f\u062a\u0631\u06cc\u0646 \u0634\u0628\u0650 \u0633\u0627\u0644\u060c \u06a9\u0646\u0627\u0631 \u0647\u0645",
+      "style": {
+        "fontFamily": "Shabnam",
+        "fontSize": 40.0,
+        "color": 4294372575,
+        "fontWeight": 400,
+        "letterSpacing": 0.0,
+        "lineHeight": 1.2,
+        "alignment": "center"
+      },
+      "resizeMode": "scaleText"
+    },
+    {
+      "type": "shape",
+      "id": "rule",
+      "transform": {
+        "x": 420.0,
+        "y": 920.0,
+        "w": 240.0,
+        "h": 3.0,
+        "r": 0.0
+      },
+      "kind": "line",
+      "fillColor": 3000607809,
+      "strokeWidth": 3.0
+    }
+  ]
+}

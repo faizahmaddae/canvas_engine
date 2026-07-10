@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_motiv_grind_gym",
+  "title": {
+    "en": "Gym Grind Motivational Story",
+    "fa": "استوری انگیزشی باشگاه"
+  },
+  "category": "motivational",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_motiv_grind_gym/thumbnail.png",
+  "document": "assets/templates/fa_motiv_grind_gym/document.json",
+  "tags": [
+    "persian",
+    "motivational",
+    "gym",
+    "fitness",
+    "bold",
+    "story"
+  ]
+}

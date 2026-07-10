@@ -4,6 +4,7 @@ import 'package:canvas_engine/features/editor/engine/commands/transform_commands
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
+import 'package:canvas_engine/features/editor/presentation/widgets/dock_tool_tile.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/multi_select_mode_toolbar.dart';
 import 'package:canvas_engine/features/editor/text/presentation/text_mode_toolbar.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
@@ -114,6 +115,27 @@ void main() {
       expect(find.text('بیشتر'), findsOneWidget);
       expect(find.text('چیدمان'), findsNothing);
       expect(find.text('More actions'), findsNothing);
+      // Bar consolidation (2026-07): decoration tiles are gone from
+      // the bar — سایه/زمینه route through استایل's effect chips,
+      // کادر is the خط دور chip, تغییر اندازه lives under بیشتر.
+      // The strip is exactly these six tiles and never scrolls.
+      expect(find.text('سایه'), findsNothing);
+      expect(find.text('زمینه'), findsNothing);
+      expect(find.text('پس‌زمینه'), findsNothing);
+      expect(find.text('کادر'), findsNothing);
+      expect(find.text('تغییر اندازه'), findsNothing);
+      expect(find.byType(DockToolTile), findsNWidgets(6));
+      final strip = tester.state<ScrollableState>(
+        find.descendant(
+          of: find.byType(TextModeToolbar),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      expect(
+        strip.position.maxScrollExtent,
+        0,
+        reason: 'the consolidated 6-tile bar must not scroll',
+      );
       expect(tester.takeException(), isNull);
     },
   );

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_motiv_bold_start",
+  "title": {
+    "en": "Bold Start Motivational Post",
+    "fa": "شروع کن، حتی کوچک"
+  },
+  "category": "motivational",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_motiv_bold_start/thumbnail.png",
+  "document": "assets/templates/fa_motiv_bold_start/document.json",
+  "tags": [
+    "persian",
+    "motivational",
+    "bold",
+    "typographic",
+    "saffron",
+    "minimal"
+  ]
+}

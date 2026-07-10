@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_yt_design_mistakes",
+  "title": {
+    "en": "Persian YouTube Thumbnail - Common Mistakes",
+    "fa": "تامنیل یوتیوب اشتباهات رایج"
+  },
+  "category": "youtubeThumbnail",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_yt_design_mistakes/thumbnail.png",
+  "document": "assets/templates/fa_yt_design_mistakes/document.json",
+  "tags": [
+    "persian",
+    "youtube",
+    "thumbnail",
+    "bold",
+    "education"
+  ]
+}

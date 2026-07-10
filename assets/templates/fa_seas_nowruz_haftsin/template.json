@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_seas_nowruz_haftsin",
+  "title": {
+    "en": "Nowruz Haft-Sin Greeting",
+    "fa": "تبریک نوروز — هفت‌سین"
+  },
+  "category": "greeting",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_seas_nowruz_haftsin/thumbnail.png",
+  "document": "assets/templates/fa_seas_nowruz_haftsin/document.json",
+  "tags": [
+    "persian",
+    "seasonal",
+    "nowruz",
+    "nastaliq",
+    "spring"
+  ]
+}

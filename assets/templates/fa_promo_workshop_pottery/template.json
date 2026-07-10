@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_promo_workshop_pottery",
+  "title": {
+    "en": "Pottery Workshop Poster",
+    "fa": "پوستر کارگاه سفالگری"
+  },
+  "category": "promotionalPoster",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_promo_workshop_pottery/thumbnail.png",
+  "document": "assets/templates/fa_promo_workshop_pottery/document.json",
+  "tags": [
+    "persian",
+    "workshop",
+    "pottery",
+    "craft",
+    "warm",
+    "class"
+  ]
+}

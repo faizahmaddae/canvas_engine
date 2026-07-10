@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_seas_ramadan_iftar",
+  "title": {
+    "en": "Ramadan Iftar Invitation",
+    "fa": "دعوت افطار"
+  },
+  "category": "event",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_seas_ramadan_iftar/thumbnail.png",
+  "document": "assets/templates/fa_seas_ramadan_iftar/document.json",
+  "tags": [
+    "persian",
+    "seasonal",
+    "ramadan",
+    "iftar",
+    "nastaliq"
+  ]
+}
