@@ -26,6 +26,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo to add or replace an image in your design.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save your designs to the Photos library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
