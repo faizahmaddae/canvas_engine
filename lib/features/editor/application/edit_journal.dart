@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../engine/core/editor_document.dart';
 import '../engine/serialization/document_codec.dart';
+import 'imported_image_path_codec.dart';
 
 /// Crash-recovery journal — a write-ahead log for the active edit.
 ///
@@ -66,6 +67,14 @@ class EditJournal {
 
   File get _file => File('${directory.path}/$projectId.json');
 
+  /// Sibling imported-images directory (`<docs>/imported_images`),
+  /// derived from this journal's `<docs>/journal` directory. The journal
+  /// stores the SAME canonical representation as the persisted project so
+  /// the recovery byte-compare (`encode(recover()) == persistedJson`)
+  /// stays exact.
+  String get _importedImagesDir =>
+      '${directory.parent.path}/$importedImagesDirName';
+
   Timer? _writeTimer;
 
   /// Debounce window for journal writes. Long enough that a slider
@@ -97,7 +106,10 @@ class EditJournal {
 
   Future<void> _writeNow(EditorDocument doc) async {
     try {
-      final json = DocumentCodec.encode(doc);
+      final json = ImportedImagePathCodec.encodeForStorage(
+        doc,
+        importedImagesDir: _importedImagesDir,
+      );
       // Write-and-rename so a crash mid-write never leaves a
       // truncated journal — the rename is atomic on POSIX, the only
       // platforms we ship to.
@@ -135,6 +147,8 @@ class EditJournal {
       if (await _file.exists()) {
         await _file.delete();
       }
-    } catch (_) {/* swallow */}
+    } catch (_) {
+      /* swallow */
+    }
   }
 }

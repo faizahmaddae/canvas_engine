@@ -6,6 +6,7 @@ import '../../home/application/project_store.dart';
 import 'document_controller.dart';
 import 'edit_journal.dart';
 import 'editor_session.dart';
+import 'imported_image_path_codec.dart';
 
 /// Listens to [documentCommitVersionProvider] and persists the
 /// current document into the [projectStoreProvider] on a debounced
@@ -182,7 +183,6 @@ class AutosaveController extends Notifier<void> {
     final projectId = session?.projectId;
     if (projectId == null) return; // Rule 1.
 
-    final docCtrl = ref.read(documentControllerProvider.notifier);
     final doc = ref.read(documentControllerProvider);
     final projectsAsync = ref.read(projectStoreProvider);
     final projects = projectsAsync.value;
@@ -192,8 +192,17 @@ class AutosaveController extends Notifier<void> {
     if (idx < 0) return; // Project was deleted from another surface.
     final existing = projects[idx];
 
+    // Persist app-owned imported images as portable
+    // `imported_images/<file>` references (same seam as manual save).
+    final importedImagesDir = await ref.read(
+      importedImagesDirectoryProvider.future,
+    );
+    final documentJson = ImportedImagePathCodec.encodeForStorage(
+      doc,
+      importedImagesDir: importedImagesDir.path,
+    );
     final updated = existing.copyWith(
-      documentJson: docCtrl.exportJson(),
+      documentJson: documentJson,
       width: doc.width,
       height: doc.height,
       lastModified: DateTime.now(),

@@ -1,4 +1,9 @@
+import 'dart:io';
+
+import 'package:canvas_engine/features/editor/application/imported_image_path_codec.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
+import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
+import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/rendering/document_thumbnail.dart';
 import 'package:canvas_engine/features/editor/engine/serialization/document_codec.dart';
 import 'package:canvas_engine/features/home/application/project_store.dart';
@@ -116,6 +121,78 @@ void main() {
     );
     expect(box.color, teal);
   });
+
+  testWidgets(
+    'grid live-render resolves a canonical image path once the imported-'
+    'images dir provider lands',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final projectsDir = tempProjectsDir();
+      final imgDir = tempProjectsDir(); // isolated temp dir for images
+      // Existence is all `_fileImage` gates on before building `Image.file`.
+      File('${imgDir.path}/pic.png').writeAsBytesSync(const [1, 2, 3, 4]);
+
+      // Canonical documentJson: image referenced as imported_images/pic.png.
+      final canonicalDoc = EditorDocument(
+        width: 300,
+        height: 300,
+        layers: [
+          ImageLayer(
+            id: 'i',
+            transform: LayerTransform(
+              position: Offset.zero,
+              size: const Size(100, 100),
+            ),
+            source: ImageSource.file('imported_images/pic.png'),
+          ),
+        ],
+      );
+      final p = _projectWithDoc(
+        id: 'canonical-img',
+        doc: canonicalDoc,
+        thumbnailPath: '/nonexistent/old.png', // stale -> live-render
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          projectsDirectoryProvider.overrideWith((ref) async => projectsDir),
+          importedImagesDirectoryProvider.overrideWith((ref) async => imgDir),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.runAsync(() async {
+        await container.read(projectStoreProvider.future);
+        await container.read(projectStoreProvider.notifier).upsert(p);
+      });
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: RecentProjectsGrid(onCreate: () {}, onOpen: (_) {}),
+              ),
+            ),
+          ),
+        ),
+      );
+      // Let the imported-images dir future resolve (loading -> data) and the
+      // card rebuild off `ref.watch`.
+      await tester.pumpAndSettle();
+
+      // The canonical path resolved to <imgDir>/pic.png, which exists, so
+      // `_fileImage` built an `Image`. An unresolved 'imported_images/pic.png'
+      // would miss on disk and fall back to the placeholder (no `Image`).
+      expect(
+        find.descendant(
+          of: find.byType(DocumentThumbnail),
+          matching: find.byType(Image),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 
   test('Project.toJson/fromJson round-trips thumbnailVersion', () {
     final p = Project(

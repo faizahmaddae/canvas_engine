@@ -63,7 +63,9 @@ class DocumentController extends Notifier<EditorDocument> {
   /// gestures, so non-canvas widgets (layers panel, undo rail,
   /// autosave) stop rebuilding at 60 fps. See
   /// `live_overlay_controller.dart` for migration patterns.
-  @Deprecated('Use liveOverlayProvider instead — see live_overlay_controller.dart')
+  @Deprecated(
+    'Use liveOverlayProvider instead — see live_overlay_controller.dart',
+  )
   void liveReplace(EditorDocument document) {
     state = document;
   }
@@ -117,12 +119,23 @@ class DocumentController extends Notifier<EditorDocument> {
     _history.clear();
     state = next;
   }
+
+  /// Install an already-decoded [document] as the current editing origin
+  /// and discard undo/redo history. Used by load paths that decode a
+  /// persisted document through the application-layer path codec (which
+  /// resolves imported-image references to absolute runtime paths) before
+  /// handing the finished document here — the engine never sees the
+  /// persistence transform, and history resets exactly like [importJson].
+  void loadDocument(EditorDocument document) {
+    _history.clear();
+    state = document;
+  }
 }
 
 final documentControllerProvider =
     NotifierProvider<DocumentController, EditorDocument>(
-  DocumentController.new,
-);
+      DocumentController.new,
+    );
 
 /// Monotonically-increasing counter bumped by [DocumentController]
 /// after every undoable commit (`execute` / `undo` / `redo`).
@@ -140,5 +153,5 @@ class DocumentCommitVersionController extends Notifier<int> {
 
 final documentCommitVersionProvider =
     NotifierProvider<DocumentCommitVersionController, int>(
-  DocumentCommitVersionController.new,
-);
+      DocumentCommitVersionController.new,
+    );

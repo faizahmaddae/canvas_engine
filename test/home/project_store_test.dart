@@ -336,6 +336,36 @@ void main() {
     );
   });
 
+  test(
+    '#13 duplication shares the canonical image reference without copying',
+    () async {
+      final c = await container();
+      // documentJson carries a portable `imported_images/<file>`
+      // reference. ProjectStore.duplicate copies the string verbatim, so
+      // both projects point at the same physical file — no image copy,
+      // and the reference stays portable.
+      const canonical =
+          '{"version":1,"width":100,"height":100,'
+          '"layers":[{"type":"image","id":"i",'
+          '"source":{"file":"imported_images/pic.png"}}]}';
+      await c.notifier.upsert(
+        Project(
+          id: 'src',
+          name: 'Photo',
+          width: 100,
+          height: 100,
+          createdAt: DateTime.utc(2025, 1, 1),
+          lastModified: DateTime.utc(2025, 1, 1),
+          documentJson: canonical,
+        ),
+      );
+      await c.notifier.duplicate('src', 'dup');
+      final dup = c.list.firstWhere((p) => p.id == 'dup');
+      expect(dup.documentJson, canonical);
+      expect(dup.documentJson, contains('imported_images/pic.png'));
+    },
+  );
+
   // ─── duplicate thumbnail ownership + reference-aware cleanup ──────
   //
   // Invariant: every duplicate owns a unique thumbnail file, and a

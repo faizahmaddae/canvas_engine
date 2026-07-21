@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../engine/core/editor_document.dart';
 import '../engine/serialization/document_codec.dart';
 import 'autosave_controller.dart';
 import 'edit_journal.dart';
+import 'imported_image_path_codec.dart';
 
 /// Read side of the crash-recovery journal ([EditJournal] is the
 /// write side). Two recovery shapes:
@@ -29,17 +31,38 @@ class ProjectRecoveryService {
   Future<String?> pendingJsonForProject({
     required String projectId,
     required String persistedJson,
+    required String importedImagesDir,
+    required bool Function(String path) fileExists,
   }) async {
     try {
       final journal = await EditJournal.open(projectId);
       final doc = await journal.recover();
       if (doc == null) return null;
-      final json = DocumentCodec.encode(doc);
-      if (json == persistedJson) {
+      // Compare the journal and the persisted save by what they RESOLVE
+      // TO on the current install, not by their stored representation.
+      // Each document is first run through the runtime rebasing contract
+      // (canonical -> current absolute; a missing legacy absolute whose
+      // file now lives under the current imported_images dir -> that
+      // current file), then re-encoded to canonical form. Two references
+      // that point at the same current file therefore compare equal —
+      // including after a container relocation — while unresolved or
+      // genuinely different documents do not. Read-only: neither the
+      // stored project nor the journal is mutated by the comparison.
+      final journalCanonical = _resolvedCanonical(
+        doc,
+        importedImagesDir,
+        fileExists,
+      );
+      final persistedCanonical = _resolvedCanonicalJson(
+        persistedJson,
+        importedImagesDir,
+        fileExists,
+      );
+      if (journalCanonical == persistedCanonical) {
         await journal.clear();
         return null;
       }
-      return json;
+      return journalCanonical;
     } catch (_) {
       // Recovery is strictly best-effort: any failure means "no
       // offer", never a blocked open.
@@ -47,11 +70,49 @@ class ProjectRecoveryService {
     }
   }
 
+  /// Resolve [doc]'s image references against the current install (the
+  /// runtime rebasing contract), then encode to canonical storage form so
+  /// two documents that resolve to the same current files compare equal.
+  /// Pure — no disk mutation.
+  String _resolvedCanonical(
+    EditorDocument doc,
+    String importedImagesDir,
+    bool Function(String path) fileExists,
+  ) {
+    final resolved = ImportedImagePathCodec.runtimeDocument(
+      doc,
+      importedImagesDir: importedImagesDir,
+      fileExists: fileExists,
+    );
+    return ImportedImagePathCodec.encodeForStorage(
+      resolved,
+      importedImagesDir: importedImagesDir,
+    );
+  }
+
+  /// As [_resolvedCanonical] but from a JSON string. Returns the raw
+  /// string when it cannot be decoded, so a malformed payload compares
+  /// UNEQUAL (fail toward offering — never a silent "nothing to recover").
+  String _resolvedCanonicalJson(
+    String json,
+    String importedImagesDir,
+    bool Function(String path) fileExists,
+  ) {
+    try {
+      return _resolvedCanonical(
+        DocumentCodec.decode(json),
+        importedImagesDir,
+        fileExists,
+      );
+    } catch (_) {
+      return json;
+    }
+  }
+
   /// Journal JSON for a crashed never-saved session, or null.
   Future<String?> pendingDraftJson() async {
     try {
-      final journal =
-          await EditJournal.open(AutosaveController.draftJournalId);
+      final journal = await EditJournal.open(AutosaveController.draftJournalId);
       final doc = await journal.recover();
       if (doc == null) return null;
       return DocumentCodec.encode(doc);
@@ -66,16 +127,19 @@ class ProjectRecoveryService {
     try {
       final journal = await EditJournal.open(projectId);
       await journal.clear();
-    } catch (_) {/* best-effort */}
+    } catch (_) {
+      /* best-effort */
+    }
   }
 
   /// Discard the draft journal (user dismissed the resume offer).
   Future<void> clearDraft() async {
     try {
-      final journal =
-          await EditJournal.open(AutosaveController.draftJournalId);
+      final journal = await EditJournal.open(AutosaveController.draftJournalId);
       await journal.clear();
-    } catch (_) {/* best-effort */}
+    } catch (_) {
+      /* best-effort */
+    }
   }
 }
 

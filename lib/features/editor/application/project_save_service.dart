@@ -13,6 +13,7 @@ import 'autosave_controller.dart';
 import 'document_controller.dart';
 import 'edit_journal.dart';
 import 'editor_session.dart';
+import 'imported_image_path_codec.dart';
 
 const _uuid = Uuid();
 
@@ -37,7 +38,6 @@ class ProjectSaveService {
   /// to the new id.
   Future<Project> save(BuildContext context) async {
     final session = _ref.read(editorSessionProvider);
-    final docCtrl = _ref.read(documentControllerProvider.notifier);
     final doc = _ref.read(documentControllerProvider);
 
     // Render the thumbnail BEFORE awaits that might unmount widgets:
@@ -77,6 +77,17 @@ class ProjectSaveService {
         .cast<Project?>()
         .firstWhere((_) => true, orElse: () => null);
     final priorThumb = existing?.thumbnailPath;
+    // Encode with app-owned imported images stored as portable
+    // `imported_images/<file>` references. Computed before the upsert so
+    // a conversion/serialization failure aborts the save rather than
+    // publishing corrupted project metadata.
+    final importedImagesDir = await _ref.read(
+      importedImagesDirectoryProvider.future,
+    );
+    final documentJson = ImportedImagePathCodec.encodeForStorage(
+      doc,
+      importedImagesDir: importedImagesDir.path,
+    );
     final now = DateTime.now();
     final project = Project(
       id: id,
@@ -85,7 +96,7 @@ class ProjectSaveService {
       height: doc.height,
       createdAt: existing?.createdAt ?? now,
       lastModified: now,
-      documentJson: docCtrl.exportJson(),
+      documentJson: documentJson,
       thumbnailPath: thumbPath ?? existing?.thumbnailPath,
       // Stamp the renderer version we used so the Recent grid
       // knows it can trust the cached PNG. If the PNG capture

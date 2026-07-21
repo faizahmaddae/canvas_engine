@@ -12,8 +12,10 @@
 import 'package:canvas_engine/features/editor/application/autosave_controller.dart';
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/editor_session.dart';
+import 'package:canvas_engine/features/editor/application/imported_image_path_codec.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
+import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/home/application/project_store.dart';
 import 'package:canvas_engine/features/home/domain/project.dart';
@@ -22,14 +24,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../support/fake_path_provider.dart';
 import '../../support/temp_projects_dir.dart';
 
 Future<ProviderContainer> _container() async {
   SharedPreferences.setMockInitialValues(const {});
+  // Autosave now resolves the imported-images directory (to persist
+  // app-owned image paths portably) — give it a fake docs dir.
+  installFakeDocumentsDir();
   final dir = tempProjectsDir();
-  final c = ProviderContainer(overrides: [
-    projectsDirectoryProvider.overrideWith((ref) async => dir),
-  ]);
+  final c = ProviderContainer(
+    overrides: [projectsDirectoryProvider.overrideWith((ref) async => dir)],
+  );
   // Resolve async stores up front.
   await c.read(projectStoreProvider.future);
   // Mount the autosave controller so its listener is wired.
@@ -128,6 +134,65 @@ void main() {
       reason: 'autosave marks cached thumbnail bytes as stale',
     );
   });
+
+  test(
+    '#11 autosave persists app-owned image paths in canonical relative form',
+    () async {
+      final c = await _container();
+      addTearDown(c.dispose);
+
+      // Where the app stores imported images this run.
+      final imgDir = await c.read(importedImagesDirectoryProvider.future);
+      final absolute = '${imgDir.path}/pic.png';
+
+      final original = Project(
+        id: 'proj-img',
+        name: 'Photo',
+        width: 1000,
+        height: 1000,
+        createdAt: DateTime.utc(2026, 1, 1),
+        lastModified: DateTime.utc(2026, 1, 1),
+        documentJson: c.read(documentControllerProvider.notifier).exportJson(),
+      );
+      await c.read(projectStoreProvider.notifier).upsert(original);
+      c.read(editorSessionProvider.notifier).state = const EditorSession(
+        name: 'Photo',
+        projectId: 'proj-img',
+      );
+
+      // Drop an app-owned image layer (absolute runtime path) and flush.
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            AddLayerCommand(
+              ImageLayer(
+                id: 'photo',
+                transform: LayerTransform(
+                  position: Offset.zero,
+                  size: const Size(100, 100),
+                ),
+                source: ImageSource.file(absolute),
+              ),
+            ),
+          );
+      await c.read(autosaveControllerProvider.notifier).flushNow();
+
+      final saved = c
+          .read(projectStoreProvider)
+          .value!
+          .firstWhere((p) => p.id == 'proj-img');
+      expect(
+        saved.documentJson,
+        contains('"file": "imported_images/pic.png"'),
+        reason: 'app-owned image persists as a portable relative reference',
+      );
+      expect(
+        saved.documentJson,
+        isNot(contains(imgDir.path)),
+        reason: 'the container prefix must never be persisted',
+      );
+    },
+  );
 
   test('skips writing when the document is unchanged', () async {
     final c = await _container();

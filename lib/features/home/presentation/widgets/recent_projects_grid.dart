@@ -9,6 +9,7 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
+import '../../../editor/application/imported_image_path_codec.dart';
 import '../../../editor/engine/core/editor_document.dart';
 import '../../../editor/engine/rendering/document_thumbnail.dart';
 import '../../../editor/engine/serialization/document_codec.dart';
@@ -221,6 +222,13 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
         thumb != null &&
         p.thumbnailVersion >= Project.currentThumbnailVersion &&
         File(thumb).existsSync();
+    // Resolved lazily; null on the first frame before the dir future
+    // lands, in which case the live-render falls back to a raw decode
+    // (unchanged behaviour) until it resolves.
+    final importedImagesDir = ref
+        .watch(importedImagesDirectoryProvider)
+        .value
+        ?.path;
 
     return AnimatedScale(
       scale: _pressed ? 0.97 : 1,
@@ -251,7 +259,11 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      _Thumb(project: p, usePng: pngIsFresh),
+                      _Thumb(
+                        project: p,
+                        usePng: pngIsFresh,
+                        importedImagesDir: importedImagesDir,
+                      ),
                       if (widget.isLastOpened)
                         const PositionedDirectional(
                           start: 8,
@@ -461,9 +473,20 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
 enum _CardAction { open, rename, duplicate, delete }
 
 class _Thumb extends StatelessWidget {
-  const _Thumb({required this.project, required this.usePng});
+  const _Thumb({
+    required this.project,
+    required this.usePng,
+    required this.importedImagesDir,
+  });
 
   final Project project;
+
+  /// Current `<docs>/imported_images` path, or null before it resolves.
+  /// When present the live-render decodes through the path codec so a
+  /// canonical `imported_images/<file>` reference (or a rebasable legacy
+  /// absolute path) resolves to a usable absolute path for the preview;
+  /// when null it falls back to a raw decode (existing behaviour).
+  final String? importedImagesDir;
 
   /// True when the cached PNG at `project.thumbnailPath` was
   /// produced by the current renderer and exists on disk. False
@@ -516,7 +539,7 @@ class _Thumb extends StatelessWidget {
     // widget the templates strip uses, so canvas background and
     // transparent-mode are always honoured. Decoding happens once
     // per build; documents are small JSON.
-    final doc = _tryDecode(project.documentJson);
+    final doc = _tryDecode(project.documentJson, importedImagesDir);
     if (doc != null) {
       return ColoredBox(
         color: canvasBg,
@@ -540,9 +563,14 @@ class _Thumb extends StatelessWidget {
     );
   }
 
-  static EditorDocument? _tryDecode(String json) {
+  static EditorDocument? _tryDecode(String json, String? importedImagesDir) {
     try {
-      return DocumentCodec.decode(json);
+      if (importedImagesDir == null) return DocumentCodec.decode(json);
+      return ImportedImagePathCodec.decodeToRuntime(
+        json,
+        importedImagesDir: importedImagesDir,
+        fileExists: (path) => File(path).existsSync(),
+      );
     } catch (_) {
       return null;
     }

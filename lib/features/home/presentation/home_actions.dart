@@ -12,6 +12,7 @@ import '../../../l10n/l10n.dart';
 import '../../editor/application/document_controller.dart';
 import '../../editor/application/editor_lifecycle.dart';
 import '../../editor/application/editor_session.dart';
+import '../../editor/application/imported_image_path_codec.dart';
 import '../../editor/application/project_recovery_service.dart';
 import '../../editor/application/selection_controller.dart';
 import '../../editor/engine/commands/transform_commands.dart';
@@ -176,9 +177,14 @@ class HomeActions {
   /// before loading.
   Future<void> openProject(Project p) async {
     final recovery = ref.read(projectRecoveryServiceProvider);
+    final importedImagesDir = await ref.read(
+      importedImagesDirectoryProvider.future,
+    );
     final pendingJson = await recovery.pendingJsonForProject(
       projectId: p.id,
       persistedJson: p.documentJson,
+      importedImagesDir: importedImagesDir.path,
+      fileExists: (path) => File(path).existsSync(),
     );
     if (!context.mounted) return;
 
@@ -215,9 +221,10 @@ class HomeActions {
 
     final docCtrl = ref.read(documentControllerProvider.notifier);
     try {
-      docCtrl.importJson(documentJson);
+      docCtrl.loadDocument(await _hydrate(documentJson));
     } catch (e, st) {
-      debugLogError('openProject/importJson', e, st);
+      debugLogError('openProject/hydrate', e, st);
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -227,6 +234,7 @@ class HomeActions {
       );
       return;
     }
+    if (!context.mounted) return;
     ref.read(selectionControllerProvider.notifier).clear();
     ref.read(editorSessionProvider.notifier).state = EditorSession(
       name: p.name,
@@ -236,16 +244,32 @@ class HomeActions {
     _push();
   }
 
+  /// Decode a persisted/journal [documentJson] into a runtime document,
+  /// resolving portable `imported_images/<file>` references (and rebasing
+  /// recoverable legacy absolute paths) against the current documents
+  /// directory so the editor receives usable absolute image paths.
+  Future<EditorDocument> _hydrate(String documentJson) async {
+    final importedImagesDir = await ref.read(
+      importedImagesDirectoryProvider.future,
+    );
+    return ImportedImagePathCodec.decodeToRuntime(
+      documentJson,
+      importedImagesDir: importedImagesDir.path,
+      fileExists: (path) => File(path).existsSync(),
+    );
+  }
+
   /// Resume a crashed never-saved session from the draft journal
   /// (Home banner action). The session stays unsaved — same state as
   /// before the crash — so autosave rule 1 still applies until the
   /// user explicitly saves.
-  void resumeDraft(String draftJson) {
+  Future<void> resumeDraft(String draftJson) async {
     final docCtrl = ref.read(documentControllerProvider.notifier);
     try {
-      docCtrl.importJson(draftJson);
+      docCtrl.loadDocument(await _hydrate(draftJson));
     } catch (e, st) {
-      debugLogError('resumeDraft/importJson', e, st);
+      debugLogError('resumeDraft/hydrate', e, st);
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -255,6 +279,7 @@ class HomeActions {
       );
       return;
     }
+    if (!context.mounted) return;
     ref.read(selectionControllerProvider.notifier).clear();
     ref.read(editorSessionProvider.notifier).state = EditorSession(
       name: context.l10n.newDesignName,
