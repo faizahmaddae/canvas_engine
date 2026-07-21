@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../home/application/project_store.dart';
+import '../../home/application/project_thumbnail_store.dart';
 import '../../home/domain/project.dart';
 import '../engine/export/document_png_exporter.dart';
 import '../engine/rendering/document_thumbnail.dart';
@@ -59,7 +57,7 @@ class ProjectSaveService {
         background: DocumentThumbnail.backgroundFor(doc),
         backgroundFill: doc.background,
       );
-      thumbPath = await _writeThumbnail(bytes);
+      thumbPath = await const ProjectThumbnailStore().writeBytes(bytes);
     } catch (_) {
       // Thumbnail failure shouldn't block saving the document itself
       // — the home grid will fall back to a generated card.
@@ -78,15 +76,7 @@ class ProjectSaveService {
         ?.where((p) => p.id == id)
         .cast<Project?>()
         .firstWhere((_) => true, orElse: () => null);
-    // Best-effort cleanup of the previous thumbnail PNG. Each save
-    // writes under a fresh UUID; without this the
-    // app-documents/project_thumbs/ directory accumulates one
-    // orphaned file per save. Cleanup is fire-and-forget; a failure
-    // here costs at most a few KB on disk.
     final priorThumb = existing?.thumbnailPath;
-    if (thumbPath != null && priorThumb != null && priorThumb != thumbPath) {
-      unawaited(File(priorThumb).delete().catchError(_swallowFile));
-    }
     final now = DateTime.now();
     final project = Project(
       id: id,
@@ -108,6 +98,21 @@ class ProjectSaveService {
     );
     await _ref.read(projectStoreProvider.notifier).upsert(project);
 
+    // Copy-on-write thumbnail cleanup. The new PNG was written under a fresh
+    // path and is now durably published, so the previous one can be released
+    // — but only once no other stored project still references it (legacy
+    // installs may share a path across projects). Runs AFTER a successful
+    // upsert (so a failed save never touches the old file) and reads the
+    // post-upsert list, where this project already points at the new path.
+    // Fire-and-forget: a leaked thumbnail is harmless.
+    if (thumbPath != null && priorThumb != null && priorThumb != thumbPath) {
+      unawaited(
+        _ref
+            .read(projectStoreProvider.notifier)
+            .releaseThumbnailIfUnreferenced(priorThumb),
+      );
+    }
+
     // Bind the new id back to the session so subsequent saves update.
     if (session?.projectId == null) {
       _ref.read(editorSessionProvider.notifier).state = EditorSession(
@@ -119,9 +124,9 @@ class ProjectSaveService {
       // "resume unsaved design?" on a later launch. Best-effort,
       // like every journal write.
       unawaited(
-        EditJournal.open(AutosaveController.draftJournalId)
-            .then((j) => j.clear())
-            .catchError((_) {}),
+        EditJournal.open(
+          AutosaveController.draftJournalId,
+        ).then((j) => j.clear()).catchError((_) {}),
       );
     }
     return project;
@@ -132,22 +137,8 @@ class ProjectSaveService {
     if (longest <= 0) return 1;
     return (_thumbMaxEdge / longest).clamp(0.05, 1.0);
   }
-
-  Future<String> _writeThumbnail(Uint8List bytes) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final folder = Directory('${dir.path}/project_thumbs');
-    if (!await folder.exists()) await folder.create(recursive: true);
-    final path = '${folder.path}/${_uuid.v4()}.png';
-    await File(path).writeAsBytes(bytes, flush: true);
-    return path;
-  }
 }
 
 final projectSaveServiceProvider = Provider<ProjectSaveService>(
   ProjectSaveService.new,
 );
-
-/// Catches and discards errors from a fire-and-forget [File] op.
-/// Returns the file unchanged so the static-typed
-/// `Future<File>.catchError` signature is satisfied.
-File _swallowFile(Object _, StackTrace _) => File('');

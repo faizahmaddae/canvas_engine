@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/user_error.dart';
@@ -37,15 +35,14 @@ class ProjectDeleteService {
 
     await _ref.read(projectStoreProvider.notifier).delete(projectId);
 
-    final thumb = record?.thumbnailPath;
-    if (thumb != null) {
-      try {
-        final file = File(thumb);
-        if (await file.exists()) await file.delete();
-      } catch (e, st) {
-        debugLogError('ProjectDeleteService: thumbnail cleanup', e, st);
-      }
-    }
+    // Reference-aware thumbnail cleanup: unlink the PNG only when no remaining
+    // project still points at it. Legacy installs may share one thumbnail path
+    // across projects (pre-fix duplicates), so an unconditional delete here
+    // would blank a sibling's preview. The store runs the delete against its
+    // post-delete list, which no longer contains this project.
+    await _ref
+        .read(projectStoreProvider.notifier)
+        .releaseThumbnailIfUnreferenced(record?.thumbnailPath);
     try {
       await ProjectViewportStore().clear(projectId);
     } catch (e, st) {

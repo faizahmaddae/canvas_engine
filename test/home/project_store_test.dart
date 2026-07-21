@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:canvas_engine/features/home/application/project_store.dart';
 import 'package:canvas_engine/features/home/domain/project.dart';
 
+import '../support/fake_path_provider.dart';
 import '../support/temp_projects_dir.dart';
 
 Project _make(String id, String name, {DateTime? when, DateTime? created}) =>
@@ -218,7 +219,6 @@ void main() {
         createdAt: DateTime.utc(2025, 1, 1),
         lastModified: DateTime.utc(2025, 1, 1),
         documentJson: '{"layers":[]}',
-        thumbnailPath: '/tmp/x.png',
       ),
     );
     final newId = await c.notifier.duplicate('src', 'dup');
@@ -226,8 +226,8 @@ void main() {
     final dup = c.list.firstWhere((p) => p.id == 'dup');
     expect(dup.name, 'Original (copy)');
     expect(dup.documentJson, '{"layers":[]}');
-    expect(dup.thumbnailPath, '/tmp/x.png');
     expect(c.list.length, 2);
+    // Thumbnail ownership is covered by the dedicated group below.
   });
 
   test('duplicate of missing id returns null and does nothing', () async {
@@ -334,6 +334,209 @@ void main() {
       isTrue,
       reason: 'duplicate is a brand-new project, not a clone of history',
     );
+  });
+
+  // ─── duplicate thumbnail ownership + reference-aware cleanup ──────
+  //
+  // Invariant: every duplicate owns a unique thumbnail file, and a
+  // thumbnail is unlinked only when no remaining project references it.
+  // Save cleanup is exercised through `releaseThumbnailIfUnreferenced`,
+  // the exact seam `ProjectSaveService.save` delegates to after upsert
+  // (the full save() path needs an editor Overlay to render, so its
+  // reference-aware cleanup contract is verified here instead).
+  group('thumbnail ownership', () {
+    Directory thumbsDir(Directory docs) =>
+        Directory('${docs.path}/project_thumbs');
+
+    // Seed a real thumbnail PNG under the (faked) app-documents dir at the
+    // same project_thumbs/ location the app uses, so copies land beside it
+    // and file counts are meaningful.
+    File seedThumb(Directory docs, String name, List<int> bytes) {
+      final dir = thumbsDir(docs)..createSync(recursive: true);
+      return File('${dir.path}/$name')..writeAsBytesSync(bytes);
+    }
+
+    Project src(String id, String? thumbPath, {int version = 1}) => Project(
+      id: id,
+      name: 'Original',
+      width: 100,
+      height: 100,
+      createdAt: DateTime.utc(2025, 1, 1),
+      lastModified: DateTime.utc(2025, 1, 1),
+      documentJson: '{"layers":[]}',
+      thumbnailPath: thumbPath,
+      thumbnailVersion: version,
+    );
+
+    test(
+      'duplicate gets its own path with equal, valid bytes (#1, #2)',
+      () async {
+        final docs = installFakeDocumentsDir();
+        final thumb = seedThumb(docs, 'src.png', const [1, 2, 3, 4, 5]);
+        final c = await container();
+        await c.notifier.upsert(src('src', thumb.path));
+
+        await c.notifier.duplicate('src', 'dup');
+        final dup = c.list.firstWhere((p) => p.id == 'dup');
+
+        expect(dup.thumbnailPath, isNotNull);
+        expect(dup.thumbnailPath, isNot(thumb.path));
+        expect(
+          File(dup.thumbnailPath!).readAsBytesSync(),
+          thumb.readAsBytesSync(),
+          reason: 'copied bytes are byte-identical to the source thumbnail',
+        );
+        expect(
+          dup.thumbnailVersion,
+          1,
+          reason: 'identical bytes carry the source renderer version',
+        );
+        expect(thumb.existsSync(), isTrue, reason: 'source file untouched');
+      },
+    );
+
+    test('null source thumbnail degrades to none (#9)', () async {
+      final c = await container();
+      await c.notifier.upsert(src('src', null, version: 1));
+      await c.notifier.duplicate('src', 'dup');
+      final dup = c.list.firstWhere((p) => p.id == 'dup');
+      expect(dup.thumbnailPath, isNull);
+      expect(
+        dup.thumbnailVersion,
+        0,
+        reason: 'no cached PNG => stale version so the grid live-renders',
+      );
+    });
+
+    test(
+      'missing source thumbnail file degrades to none, never shared (#9)',
+      () async {
+        final docs = installFakeDocumentsDir();
+        final ghost = '${thumbsDir(docs).path}/ghost.png'; // never written
+        final c = await container();
+        await c.notifier.upsert(src('src', ghost));
+        await c.notifier.duplicate('src', 'dup');
+        final dup = c.list.firstWhere((p) => p.id == 'dup');
+        expect(dup.thumbnailPath, isNull);
+        expect(dup.thumbnailPath, isNot(ghost));
+      },
+    );
+
+    test('saving the duplicate keeps the source thumbnail (#5)', () async {
+      // Mirrors ProjectSaveService: publish a new thumb for the duplicate,
+      // then release the old one. The source thumb is a different file.
+      final docs = installFakeDocumentsDir();
+      final srcThumb = seedThumb(docs, 'src.png', const [1]);
+      final c = await container();
+      await c.notifier.upsert(src('src', srcThumb.path));
+      await c.notifier.duplicate('src', 'dup');
+      final dupOld = File(
+        c.list.firstWhere((p) => p.id == 'dup').thumbnailPath!,
+      );
+
+      final dupNew = seedThumb(docs, 'dup_new.png', const [2]);
+      final dup = c.list.firstWhere((p) => p.id == 'dup');
+      await c.notifier.upsert(dup.copyWith(thumbnailPath: dupNew.path));
+      await c.notifier.releaseThumbnailIfUnreferenced(dupOld.path);
+
+      expect(dupOld.existsSync(), isFalse, reason: 'old dup thumb reclaimed');
+      expect(dupNew.existsSync(), isTrue);
+      expect(srcThumb.existsSync(), isTrue, reason: 'source untouched by save');
+    });
+
+    test(
+      'legacy shared path survives until its final reference (#6, #8)',
+      () async {
+        final docs = installFakeDocumentsDir();
+        final shared = seedThumb(docs, 'shared.png', const [5, 5]);
+        final c = await container();
+        // Two pre-fix projects that share ONE thumbnail path.
+        await c.notifier.upsert(src('a', shared.path));
+        await c.notifier.upsert(src('b', shared.path));
+
+        // Save 'a' with its own new thumbnail (copy-on-write); 'b' still
+        // references `shared`, so releasing it must be a no-op.
+        final aNew = seedThumb(docs, 'a_new.png', const [1]);
+        final a = c.list.firstWhere((p) => p.id == 'a');
+        await c.notifier.upsert(a.copyWith(thumbnailPath: aNew.path));
+        await c.notifier.releaseThumbnailIfUnreferenced(shared.path);
+        expect(
+          shared.existsSync(),
+          isTrue,
+          reason: 'b still references the shared legacy file',
+        );
+
+        // Remove 'b'; nothing references `shared` now => reclaimed.
+        await c.notifier.delete('b');
+        await c.notifier.releaseThumbnailIfUnreferenced(shared.path);
+        expect(
+          shared.existsSync(),
+          isFalse,
+          reason: 'final reference removed -> file reclaimed',
+        );
+      },
+    );
+
+    test(
+      'persistence failure rolls back copied thumbnail + record (#10)',
+      () async {
+        final docs = installFakeDocumentsDir();
+        final srcThumb = seedThumb(docs, 'src.png', const [3, 3, 3]);
+        final projectsDir = tempProjectsDir();
+        final c = await container(dir: projectsDir);
+        await c.notifier.upsert(src('src', srcThumb.path));
+
+        // Force _writeProjectFile to fail: a directory occupies dup.json's
+        // atomic rename target.
+        Directory('${projectsDir.path}/dup.json').createSync();
+
+        await expectLater(
+          c.notifier.duplicate('src', 'dup'),
+          throwsA(anything),
+        );
+
+        expect(
+          c.list.where((p) => p.id == 'dup'),
+          isEmpty,
+          reason: 'no duplicate metadata after a failed persist',
+        );
+        final pngs = thumbsDir(docs)
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.png'))
+            .map((f) => f.path)
+            .toList();
+        expect(
+          pngs,
+          [srcThumb.path],
+          reason: 'the copied thumbnail must be rolled back (no partial file)',
+        );
+        expect(
+          File('${projectsDir.path}/dup.json.tmp').existsSync(),
+          isFalse,
+          reason: 'record temp must be rolled back too',
+        );
+      },
+    );
+
+    test('thumbnail copy failure aborts the duplicate cleanly (#10)', () async {
+      final docs = installFakeDocumentsDir();
+      // Source lives outside project_thumbs so that directory can be blocked.
+      final srcThumb = File('${docs.path}/src_ext.png')
+        ..writeAsBytesSync(const [4, 4]);
+      // A FILE where the project_thumbs directory must be created makes the
+      // copy fail inside ProjectThumbnailStore.
+      File('${docs.path}/project_thumbs').writeAsBytesSync(const [0]);
+      final c = await container();
+      await c.notifier.upsert(src('src', srcThumb.path));
+
+      await expectLater(c.notifier.duplicate('src', 'dup'), throwsA(anything));
+      expect(
+        c.list.where((p) => p.id == 'dup'),
+        isEmpty,
+        reason: 'a copy failure must leave no duplicate metadata',
+      );
+    });
   });
 }
 

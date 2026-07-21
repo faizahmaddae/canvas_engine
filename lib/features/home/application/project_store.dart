@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/utils/user_error.dart';
 import '../domain/project.dart';
+import 'project_thumbnail_store.dart';
 
 /// Directory holding one JSON file per saved project
 /// (`<appDocs>/projects/<id>.json`). A provider so tests can override
@@ -37,6 +38,12 @@ class ProjectStore extends AsyncNotifier<List<Project>> {
   static const String _legacyPrefsKey = 'home.projects.v1';
 
   late Directory _dir;
+
+  /// File-level thumbnail operations (allocate / copy / delete). Kept in a
+  /// dedicated store so this notifier owns only the reference-aware *policy*
+  /// (which thumbnail may be unlinked) while the path convention and IO live
+  /// in one place shared with `ProjectSaveService`.
+  final ProjectThumbnailStore _thumbs = const ProjectThumbnailStore();
 
   @override
   Future<List<Project>> build() async {
@@ -186,34 +193,112 @@ class ProjectStore extends AsyncNotifier<List<Project>> {
   }
 
   /// Insert a copy of an existing project with a new id and a
-  /// "(copy)" suffix on the name. Reuses the same thumbnail path so
-  /// the duplicate gets a preview immediately. Returns the new id, or
-  /// null if [projectId] no longer exists.
+  /// "(copy)" suffix on the name. Returns the new id, or null if
+  /// [projectId] no longer exists.
+  ///
+  /// Thumbnail ownership: the duplicate gets its OWN thumbnail file, so a
+  /// later save or delete of either project can never invalidate the other's
+  /// preview. When the source has a readable thumbnail its bytes are copied to
+  /// a fresh path; when the source thumbnail is absent the duplicate starts
+  /// with none (it live-renders until its first save) rather than pointing at
+  /// a shared or already-invalid file. The record is written only after the
+  /// thumbnail is prepared, and a failure rolls back any copied file (and the
+  /// record temp) so it leaves no metadata or partial artifact behind.
   Future<String?> duplicate(String projectId, String newId) async {
     final current = await _current();
     final idx = current.indexWhere((p) => p.id == projectId);
     if (idx < 0) return null;
     final src = current[idx];
+
+    // Prepare the duplicate's own thumbnail before writing any record. A null
+    // source path or a missing file degrades to "no thumbnail" (graceful); a
+    // copy failure of an existing file propagates so we never persist a
+    // half-made duplicate.
+    final String? newThumb = src.thumbnailPath == null
+        ? null
+        : await _thumbs.copyToNew(src.thumbnailPath!);
+    // When the source thumbnail was absent the copy could not run, so the
+    // version drops to legacy/stale (0) to make the Recent grid live-render
+    // instead of trusting a path we did not create. When it was copied, the
+    // bytes are identical, so the source's renderer version carries over.
+    final int thumbVersion = newThumb != null ? src.thumbnailVersion : 0;
+
+    // A duplicate is a brand-new project record from the user's point of
+    // view — its createdAt and lastModified both start at "now", independent
+    // of the source's history.
     final now = DateTime.now();
     final copy = Project(
       id: newId,
       name: '${src.name} (copy)',
       width: src.width,
       height: src.height,
-      // A duplicate is a brand-new project record from the user's
-      // point of view — its createdAt and lastModified both start
-      // at "now", independent of the source's history.
       createdAt: now,
       lastModified: now,
       documentJson: src.documentJson,
-      thumbnailPath: src.thumbnailPath,
-      // Inherit the source's renderer version so a duplicate of a
-      // legacy/stale-PNG project also live-renders until it's saved.
-      thumbnailVersion: src.thumbnailVersion,
+      thumbnailPath: newThumb,
+      thumbnailVersion: thumbVersion,
     );
-    await _writeProjectFile(copy);
+    try {
+      await _writeProjectFile(copy);
+    } catch (_) {
+      // Roll back so a failed persist leaves no duplicate metadata and no
+      // orphaned thumbnail or record temp behind.
+      if (newThumb != null) {
+        try {
+          await _thumbs.delete(newThumb);
+        } catch (_) {
+          // Best-effort rollback; surface the original persist failure.
+        }
+      }
+      final tmp = File('${_fileFor(newId).path}.tmp');
+      if (await tmp.exists()) {
+        try {
+          await tmp.delete();
+        } catch (_) {
+          // Best-effort rollback.
+        }
+      }
+      rethrow;
+    }
     state = AsyncData(_sorted([...current, copy]));
     return newId;
+  }
+
+  /// True when any stored project references [thumbnailPath] (optionally
+  /// ignoring [excludingId]).
+  ///
+  /// The save/delete cleanup paths consult this so a thumbnail file is only
+  /// unlinked once no remaining project points at it — which keeps legacy
+  /// installs safe, where a pre-fix duplicate still shares its source's
+  /// thumbnail path. Conservative when the store has not resolved yet
+  /// (returns true) so cleanup never deletes blindly.
+  bool isThumbnailReferenced(String thumbnailPath, {String? excludingId}) {
+    final list = state.value;
+    if (list == null) return true;
+    return list.any(
+      (p) => p.id != excludingId && p.thumbnailPath == thumbnailPath,
+    );
+  }
+
+  /// Delete the thumbnail file at [path] iff no stored project still
+  /// references it. No-op for null.
+  ///
+  /// This is the single reference-aware cleanup seam for both save
+  /// (copy-on-write replacement of a previous thumbnail) and delete. Callers
+  /// invoke it AFTER the project list has been updated so the reference check
+  /// sees the final state. Best-effort: a filesystem failure is swallowed — a
+  /// leaked thumbnail costs a few KB and must never fail the user's action.
+  Future<void> releaseThumbnailIfUnreferenced(
+    String? path, {
+    String? excludingId,
+  }) async {
+    if (path == null) return;
+    if (isThumbnailReferenced(path, excludingId: excludingId)) return;
+    try {
+      await _thumbs.delete(path);
+    } catch (_) {
+      // Leaked thumbnail is harmless; never fail the caller over cleanup.
+    }
   }
 }
 
