@@ -73,7 +73,10 @@ void main() {
         'distance from the anchor and doubles every size', () {
       final initials = twoLayers();
       final anchor = const Offset(0, 0);
-      final out = engine.scale(initials, anchor: anchor, scale: 2.0);
+      final res = engine.scale(initials, anchor: anchor, scale: 2.0);
+      final out = res.transforms;
+      // No constraint hit: applied scale equals the requested scale.
+      expect(res.appliedScale, 2.0);
       // a was at center (50,50); becomes (100,100) → top-left (0,0)
       expect(out['a']!.position, closeToOffset(const Offset(0, 0)));
       expect(out['a']!.size, const Size(200, 200));
@@ -85,7 +88,7 @@ void main() {
     test('scale by 1.0 is identity', () {
       final initials = twoLayers();
       final out = engine.scale(initials,
-          anchor: const Offset(150, 50), scale: 1.0);
+          anchor: const Offset(150, 50), scale: 1.0).transforms;
       for (final id in initials.keys) {
         expect(out[id]!.position, closeToOffset(initials[id]!.position));
         expect(out[id]!.size, initials[id]!.size);
@@ -93,8 +96,11 @@ void main() {
     });
 
     test('clamps scale to [minScale, maxScale]', () {
-      final out =
+      final res =
           engine.scale(twoLayers(), anchor: Offset.zero, scale: 1000.0);
+      final out = res.transforms;
+      // Requested 1000 clamps to the default maxScale 64.
+      expect(res.appliedScale, 64.0);
       // Max default is 64 — every size should be ≤ initial * 64.
       expect(out['a']!.size.width, 100 * 64);
     });
@@ -103,7 +109,7 @@ void main() {
       final initials = twoLayers();
       // Anchor strictly outside any layer centre to avoid div-by-zero.
       final anchor = const Offset(-100, -100);
-      final out = engine.scale(initials, anchor: anchor, scale: 1.5);
+      final out = engine.scale(initials, anchor: anchor, scale: 1.5).transforms;
       final initialRatio =
           (initials['b']!.center - anchor).distance /
               (initials['a']!.center - anchor).distance;
@@ -149,9 +155,9 @@ void main() {
       final initials = twoLayers();
       final anchor = const Offset(150, 50);
       final viaScale =
-          engine.scale(initials, anchor: anchor, scale: 1.7);
+          engine.scale(initials, anchor: anchor, scale: 1.7).transforms;
       final viaPinch = engine.pinch(initials,
-          anchor: anchor, scale: 1.7, rotation: 0.0);
+          anchor: anchor, scale: 1.7, rotation: 0.0).transforms;
       for (final id in initials.keys) {
         expect(viaPinch[id]!.position,
             closeToOffset(viaScale[id]!.position, tol: 1e-9));
@@ -165,7 +171,7 @@ void main() {
       final viaRotate =
           engine.rotate(initials, center: anchor, delta: 0.5);
       final viaPinch = engine.pinch(initials,
-          anchor: anchor, scale: 1.0, rotation: 0.5);
+          anchor: anchor, scale: 1.0, rotation: 0.5).transforms;
       for (final id in initials.keys) {
         expect(viaPinch[id]!.position,
             closeToOffset(viaRotate[id]!.position, tol: 1e-9));
@@ -182,7 +188,7 @@ void main() {
           anchor: anchor,
           scale: 1.0,
           rotation: 0.0,
-          translation: shift);
+          translation: shift).transforms;
       for (final id in initials.keys) {
         expect(out[id]!.center - initials[id]!.center,
             closeToOffset(shift, tol: 1e-9));
@@ -212,12 +218,15 @@ void main() {
         'small': t(pos: Offset.zero, size: const Size(50, 50)),
         'big': t(pos: const Offset(200, 0), size: const Size(200, 200)),
       };
-      final out = engine.scale(
+      final res = engine.scale(
         initials,
         anchor: Offset.zero,
         scale: 0.05,
         minLayerSide: 24,
       );
+      final out = res.transforms;
+      // Applied scale tightened to the small layer's floor: 24/50 = 0.48.
+      expect(res.appliedScale, closeTo(24 / 50, 1e-9));
       expect(out['small']!.size.width, closeTo(24, 1e-9));
       // Big layer scaled by the same effective factor, preserving rigidity.
       expect(out['big']!.size.width, closeTo(200 * (24 / 50), 1e-6));
@@ -228,13 +237,15 @@ void main() {
         'small': t(pos: Offset.zero, size: const Size(50, 50)),
         'big': t(pos: const Offset(200, 0), size: const Size(2000, 2000)),
       };
-      final out = engine.scale(
+      final res = engine.scale(
         initials,
         anchor: Offset.zero,
         scale: 10,
         maxLayerSide: 8000,
       );
+      final out = res.transforms;
       // 2000 * 4 = 8000 is the ceiling. Effective scale must be <= 4.
+      expect(res.appliedScale, closeTo(8000 / 2000, 1e-9));
       expect(out['big']!.size.width, closeTo(8000, 1e-6));
       expect(out['small']!.size.width, closeTo(50 * 4, 1e-6));
     });
@@ -243,20 +254,26 @@ void main() {
       final initials = <String, LayerTransform>{
         'a': t(pos: Offset.zero, size: const Size(50, 50)),
       };
-      final out = engine.pinch(
+      final res = engine.pinch(
         initials,
         anchor: Offset.zero,
         scale: 0.01,
         rotation: 0,
         minLayerSide: 24,
       );
+      final out = res.transforms;
+      // 50px layer floored at 24 => applied scale 24/50 = 0.48.
+      expect(res.appliedScale, closeTo(24 / 50, 1e-9));
       expect(out['a']!.size.width, closeTo(24, 1e-9));
     });
 
     test('empty initials short-circuit on scale / pinch / rotate', () {
       final empty = <String, LayerTransform>{};
-      expect(engine.scale(empty, anchor: Offset.zero, scale: 2), isEmpty);
-      expect(engine.pinch(empty, anchor: Offset.zero, scale: 2, rotation: 0),
+      expect(engine.scale(empty, anchor: Offset.zero, scale: 2).transforms,
+          isEmpty);
+      expect(
+          engine.pinch(empty, anchor: Offset.zero, scale: 2, rotation: 0)
+              .transforms,
           isEmpty);
       expect(engine.rotate(empty, center: Offset.zero, delta: 1), isEmpty);
     });

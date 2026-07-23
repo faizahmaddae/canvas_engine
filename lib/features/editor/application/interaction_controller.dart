@@ -936,7 +936,7 @@ class InteractionController extends Notifier<InteractionUiState> {
         // (mirrored) layer set. Single-layer resize prevents this with
         // its rect-side clamp; group resize gets the same guard.
         if (factor < 0.01) factor = 0.01;
-        next = _groupEngine.scale(
+        final resize = _groupEngine.scale(
           g.initials,
           anchor: g.anchor,
           scale: factor,
@@ -949,7 +949,12 @@ class InteractionController extends Notifier<InteractionUiState> {
           minLayerSide: EngineConstants.minLayerSize,
           maxLayerSide: EngineConstants.maxLayerSize,
         );
-        frameScale = factor;
+        next = resize.transforms;
+        // Frame tracks the *applied* (clamped) scale from the same
+        // result, not the requested `factor`. Otherwise a per-layer
+        // min/max constraint that tightens the shared factor leaves the
+        // selection chrome detached from the layers it encloses.
+        frameScale = resize.appliedScale;
       case InteractionHandle.rotate:
         if (!_groupCanRotate(g)) {
           next = g.initials;
@@ -1127,7 +1132,7 @@ class InteractionController extends Notifier<InteractionUiState> {
     // `InteractionEngine.updateGesture` for the full rationale. The
     // translation term is still the focal's delta so dragging fingers
     // drags the group 1:1.
-    final next = _groupEngine.pinch(
+    final pinchResult = _groupEngine.pinch(
       g.initials,
       anchor: g.anchor,
       scale: effScale,
@@ -1137,14 +1142,17 @@ class InteractionController extends Notifier<InteractionUiState> {
       maxLayerSide: EngineConstants.maxLayerSize,
     );
     state = state.copyWith(
-      groupLive: next,
+      groupLive: pinchResult.transforms,
       snapGuides: const <SnapGuide>[],
       spacingGuides: const <SpacingGuide>[],
+      // Frame uses the *applied* scale from the same result so the
+      // oriented chrome tracks the clamped layers; the rotation and
+      // translation terms are unchanged.
       groupLiveQuad: _frameCorners(
         g.initialBounds,
         g.anchor,
         effRotation,
-        effScale,
+        pinchResult.appliedScale,
         focalPoint - g.pointerStart,
       ),
     );

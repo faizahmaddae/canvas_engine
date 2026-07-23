@@ -583,6 +583,201 @@ void main() {
     });
   });
 
+  group('group selection frame clamp tracking', () {
+    // Regression: when a per-layer minimum-size constraint tightens the
+    // shared group scale, the selection frame + handles must track the
+    // *applied* (clamped) scale, not the *requested* drag scale. Before
+    // the GroupScaleResult fix, groupLiveQuad was built from the
+    // requested factor while the layers used the clamped factor, so the
+    // chrome visibly detached from the content.
+
+    // 'small' (30x30) hits the 24px minimum-side floor at scale 0.8;
+    // 'big' (300x300) has far more headroom. AABB = (0,0,400,300); the
+    // bottom-right resize anchors on the top-left = (0,0). Requesting
+    // 0.4 must clamp to an applied 0.8.
+    void seedSmallAndBig(ProviderContainer c) {
+      addRect(c,
+          id: 'small', position: const Offset(0, 0), size: const Size(30, 30));
+      addRect(c,
+          id: 'big',
+          position: const Offset(100, 0),
+          size: const Size(300, 300));
+    }
+
+    test(
+        'clamped single-handle resize: frame uses applied 0.8, not '
+        'requested 0.4', () {
+      final c = makeContainer();
+      seedSmallAndBig(c);
+      final doc = c.read(documentControllerProvider);
+      final ctl = c.read(interactionControllerProvider.notifier);
+
+      ctl.startGroupResize(
+        layers: [doc.layerById('small')!, doc.layerById('big')!],
+        handle: InteractionHandle.bottomRight,
+        pointer: const Offset(400, 300), // the dragged corner
+      );
+      // pointer = anchor + 0.4 * diag, diag = (400,300) => requested 0.4.
+      ctl.updateGroup(const Offset(160, 120));
+
+      final s = c.read(interactionControllerProvider);
+
+      // Layers use the clamped 0.8: 'small' floored to 24px.
+      expect(s.groupLive['small']!.size.width, closeTo(24, 1e-6));
+      expect(s.groupLive['small']!.size.height, closeTo(24, 1e-6));
+      expect(s.groupLive['big']!.size.width, closeTo(240, 1e-6));
+
+      // Authoritative clamped bounds: initial AABB scaled 0.8 about
+      // (0,0).
+      final b = s.groupLiveBounds!;
+      expect(b, const Rect.fromLTRB(0, 0, 320, 240));
+
+      // Frame quad must match the applied-0.8 frame == the clamped
+      // bounds (rotation 0 => axis-aligned). Before the fix q[2] (BR)
+      // was (160,120) — the requested-0.4 frame — and q[0] stayed (0,0).
+      final q = s.groupLiveQuad!;
+      expect(q, hasLength(4));
+      expect(q[0].dx, closeTo(0, 1e-6)); // TL == bounds.topLeft
+      expect(q[0].dy, closeTo(0, 1e-6));
+      expect(q[2].dx, closeTo(320, 1e-6)); // BR == bounds.bottomRight
+      expect(q[2].dy, closeTo(240, 1e-6));
+    });
+
+    test(
+        'continued drag beyond the clamp keeps frame synced to layers on '
+        'every update', () {
+      final c = makeContainer();
+      seedSmallAndBig(c);
+      final doc = c.read(documentControllerProvider);
+      final ctl = c.read(interactionControllerProvider.notifier);
+
+      ctl.startGroupResize(
+        layers: [doc.layerById('small')!, doc.layerById('big')!],
+        handle: InteractionHandle.bottomRight,
+        pointer: const Offset(400, 300),
+      );
+
+      // Every requested factor below the 0.8 floor must clamp to 0.8, so
+      // the frame stays pinned to the clamped bounds instead of shrinking
+      // with the pointer. Pointers computed as factor * diag,
+      // diag = (400,300).
+      for (final p in const <Offset>[
+        Offset(160, 120), // 0.40
+        Offset(120, 90), //  0.30
+        Offset(100, 75), //  0.25
+        Offset(40, 30), //   0.10 -> clamps up to minGestureScale then floor
+      ]) {
+        ctl.updateGroup(p);
+        final s = c.read(interactionControllerProvider);
+        expect(s.groupLive['small']!.size.width, closeTo(24, 1e-6),
+            reason: 'small stays floored at 24 for pointer $p');
+        expect(s.groupLiveBounds, const Rect.fromLTRB(0, 0, 320, 240),
+            reason: 'clamped bounds stay put for pointer $p');
+        final q = s.groupLiveQuad!;
+        expect(q[2].dx, closeTo(320, 1e-6),
+            reason: 'frame BR tracks clamped bounds, not pointer $p');
+        expect(q[2].dy, closeTo(240, 1e-6),
+            reason: 'frame BR tracks clamped bounds, not pointer $p');
+      }
+    });
+
+    test(
+        'clamped pinch with rotation: oriented quad uses applied 0.8 and '
+        'stays oriented (not an AABB)', () {
+      final c = makeContainer();
+      seedSmallAndBig(c);
+      final doc = c.read(documentControllerProvider);
+      final ctl = c.read(interactionControllerProvider.notifier);
+
+      ctl.startGroupGesture(
+        layers: [doc.layerById('small')!, doc.layerById('big')!],
+        focalPoint: const Offset(200, 150), // AABB centre
+      );
+      // Enter two-finger (rebase): initialBounds := live AABB
+      // (0,0,400,300), anchor := centre (200,150), pointerStart := focal.
+      ctl.updateGroupGesture(
+        focalPoint: const Offset(200, 150),
+        scale: 1.0,
+        rotation: 0,
+        pointerCount: 2,
+      );
+      // Pinch: request 0.4 (clamps to 0.8 via small's 24px floor) with a
+      // +45 degree rotation, focal held so translation stays zero.
+      ctl.updateGroupGesture(
+        focalPoint: const Offset(200, 150),
+        scale: 0.4,
+        rotation: math.pi / 4,
+        pointerCount: 2,
+      );
+
+      final s = c.read(interactionControllerProvider);
+
+      // Applied scale is 0.8 — proven on the layers.
+      expect(s.groupLive['small']!.size.width, closeTo(24, 1e-6));
+      expect(s.groupLive['big']!.size.width, closeTo(240, 1e-6));
+
+      final q = s.groupLiveQuad!;
+      expect(q, hasLength(4));
+      // Top edge length == initial AABB width (400) * applied 0.8 = 320.
+      // Before the fix it was 400 * requested 0.4 = 160.
+      expect((q[1] - q[0]).distance, closeTo(320, 1e-4));
+      // Left edge length == initial AABB height (300) * 0.8 = 240.
+      expect((q[3] - q[0]).distance, closeTo(240, 1e-4));
+      // Oriented, not axis-aligned: the top edge is slanted ~45 degrees,
+      // so its vertical component is large. Collapsing the frame to an
+      // AABB would make the top edge horizontal (dy component ~0).
+      expect((q[1].dy - q[0].dy).abs(), greaterThan(100),
+          reason: 'quad must remain the oriented pinch frame, not an AABB');
+      // Centroid preserved at the anchor (200,150).
+      final cx = (q[0].dx + q[1].dx + q[2].dx + q[3].dx) / 4;
+      final cy = (q[0].dy + q[1].dy + q[2].dy + q[3].dy) / 4;
+      expect(cx, closeTo(200, 1e-4));
+      expect(cy, closeTo(150, 1e-4));
+    });
+
+    test(
+        'pointer-up commits geometry that matches the final live frame '
+        '(clamped resize)', () {
+      final c = makeContainer();
+      seedSmallAndBig(c);
+      final doc0 = c.read(documentControllerProvider);
+      final ctl = c.read(interactionControllerProvider.notifier);
+
+      ctl.startGroupResize(
+        layers: [doc0.layerById('small')!, doc0.layerById('big')!],
+        handle: InteractionHandle.bottomRight,
+        pointer: const Offset(400, 300),
+      );
+      ctl.updateGroup(const Offset(160, 120)); // requested 0.4 -> applied 0.8
+
+      // Snapshot the final live frame + layers BEFORE release.
+      final live = c.read(interactionControllerProvider);
+      final liveSmall = live.groupLive['small']!;
+      final liveBig = live.groupLive['big']!;
+      final frame = live.groupLiveQuad!;
+      // Frame corners equal the clamped layer bounds at release.
+      expect(frame[0].dx, closeTo(0, 1e-6));
+      expect(frame[0].dy, closeTo(0, 1e-6));
+      expect(frame[2].dx, closeTo(320, 1e-6));
+      expect(frame[2].dy, closeTo(240, 1e-6));
+
+      ctl.end();
+
+      // Committed document must equal the clamped live geometry, so the
+      // frame the user released on matches what was persisted.
+      final doc = c.read(documentControllerProvider);
+      final small = doc.layerById('small')!.transform;
+      final big = doc.layerById('big')!.transform;
+      expect(small.position, liveSmall.position);
+      expect(small.size, liveSmall.size);
+      expect(big.position, liveBig.position);
+      expect(big.size, liveBig.size);
+      // And concretely the applied-0.8 values.
+      expect(small.size.width, closeTo(24, 1e-6));
+      expect(big.size.width, closeTo(240, 1e-6));
+    });
+  });
+
   group('commit hardening', () {
     test(
         'pinch session with 1\u21922\u21921\u21922 pointer oscillation '

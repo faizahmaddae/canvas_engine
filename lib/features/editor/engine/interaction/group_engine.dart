@@ -3,6 +3,35 @@ import 'dart:ui';
 
 import '../core/layer_transform.dart';
 
+/// Immutable result of a group [GroupEngine.scale] / [GroupEngine.pinch]
+/// operation.
+///
+/// Bundles the final clamped layer [transforms] with the single
+/// [appliedScale] that produced them, so a caller drawing selection
+/// chrome can build the group frame from the *same* scale the engine
+/// actually applied — never the requested scale. Without this, a
+/// per-layer min/max constraint that tightens the shared factor would
+/// leave the frame tracking the requested scale while the layers use the
+/// clamped one, and the chrome would visibly detach from the content.
+class GroupScaleResult {
+  GroupScaleResult({
+    required Map<String, LayerTransform> transforms,
+    required this.appliedScale,
+  }) : transforms = Map.unmodifiable(transforms);
+
+  /// Final transforms for every participant, keyed by layer id. Wrapped
+  /// with [Map.unmodifiable] at construction — the engine hands back a
+  /// read-only snapshot the caller must not mutate.
+  final Map<String, LayerTransform> transforms;
+
+  /// The exact shared uniform scale applied to *every* transform in
+  /// [transforms] after all group constraints — the absolute
+  /// `[minScale, maxScale]` clamp and the per-layer `minLayerSide` /
+  /// `maxLayerSide` floors/ceilings — were resolved. Equals the accepted
+  /// requested scale when nothing clamps.
+  final double appliedScale;
+}
+
 /// Pure, stateless math for group transforms.
 ///
 /// A "group" is a set of [LayerTransform]s identified by stable string
@@ -76,7 +105,7 @@ class GroupEngine {
   /// boundary. The trade-off is that the group cannot be scaled past
   /// the smallest member's headroom; this matches Figma / Sketch and
   /// is the only correct interpretation for a rigid-body operation.
-  Map<String, LayerTransform> scale(
+  GroupScaleResult scale(
     Map<String, LayerTransform> initials, {
     required Offset anchor,
     required double scale,
@@ -87,13 +116,46 @@ class GroupEngine {
   }) {
     assert(scale.isFinite, 'GroupEngine.scale: scale must be finite');
     assert(minScale > 0, 'GroupEngine.scale: minScale must be positive');
-    if (initials.isEmpty) return const <String, LayerTransform>{};
+    // Resolve the single shared factor ONCE, then reuse it for every
+    // transform AND hand it back so the caller's selection frame is
+    // built from the same scale the layers used.
+    final s = _effectiveScale(
+      initials.values,
+      scale,
+      minScale: minScale,
+      maxScale: maxScale,
+      minLayerSide: minLayerSide,
+      maxLayerSide: maxLayerSide,
+    );
+    return GroupScaleResult(
+      transforms: <String, LayerTransform>{
+        for (final entry in initials.entries)
+          entry.key: _scaleOne(entry.value, anchor: anchor, scale: s),
+      },
+      appliedScale: s,
+    );
+  }
+
+  /// Effective uniform scale after all group constraints: the requested
+  /// [scale] clamped to `[minScale, maxScale]`, then tightened so no
+  /// participant in [layers] crosses [minLayerSide] (smallest-dimension
+  /// floor) or [maxLayerSide] (largest-dimension ceiling), then
+  /// re-clamped. Pure; the single source of truth shared by [scale] and
+  /// [pinch] so the two constraint paths never drift.
+  double _effectiveScale(
+    Iterable<LayerTransform> layers,
+    double scale, {
+    required double minScale,
+    required double maxScale,
+    required double minLayerSide,
+    required double maxLayerSide,
+  }) {
     var s = scale.clamp(minScale, maxScale).toDouble();
     // Tighten s against per-layer floor / ceiling. We compute the
     // tightest bound across all participants and apply it once so the
     // group remains rigid.
     if (minLayerSide > 0 || maxLayerSide.isFinite) {
-      for (final t in initials.values) {
+      for (final t in layers) {
         final smallestSide = math.min(t.size.width, t.size.height);
         final largestSide = math.max(t.size.width, t.size.height);
         if (minLayerSide > 0 && smallestSide > 0) {
@@ -109,10 +171,7 @@ class GroupEngine {
       // pushed s outside [minScale, maxScale].
       s = s.clamp(minScale, maxScale).toDouble();
     }
-    return <String, LayerTransform>{
-      for (final entry in initials.entries)
-        entry.key: _scaleOne(entry.value, anchor: anchor, scale: s),
-    };
+    return s;
   }
 
   LayerTransform _scaleOne(
@@ -180,7 +239,7 @@ class GroupEngine {
   /// scale is reduced uniformly so no participant violates
   /// [minLayerSide] / [maxLayerSide] before the rotation + translation
   /// are applied.
-  Map<String, LayerTransform> pinch(
+  GroupScaleResult pinch(
     Map<String, LayerTransform> initials, {
     required Offset anchor,
     required double scale,
@@ -193,37 +252,34 @@ class GroupEngine {
   }) {
     assert(scale.isFinite, 'GroupEngine.pinch: scale must be finite');
     assert(rotation.isFinite, 'GroupEngine.pinch: rotation must be finite');
-    if (initials.isEmpty) return const <String, LayerTransform>{};
-    var s = scale.clamp(minScale, maxScale).toDouble();
-    if (minLayerSide > 0 || maxLayerSide.isFinite) {
-      for (final t in initials.values) {
-        final smallestSide = math.min(t.size.width, t.size.height);
-        final largestSide = math.max(t.size.width, t.size.height);
-        if (minLayerSide > 0 && smallestSide > 0) {
-          final floor = minLayerSide / smallestSide;
-          if (s < floor) s = floor;
-        }
-        if (maxLayerSide.isFinite && largestSide > 0) {
-          final ceil = maxLayerSide / largestSide;
-          if (s > ceil) s = ceil;
-        }
-      }
-      s = s.clamp(minScale, maxScale).toDouble();
-    }
+    // Same single-pass constraint resolution as [scale]; the applied
+    // scale is returned so the pinch frame is built from it, not the
+    // requested scale, before the rotation + translation are layered on.
+    final s = _effectiveScale(
+      initials.values,
+      scale,
+      minScale: minScale,
+      maxScale: maxScale,
+      minLayerSide: minLayerSide,
+      maxLayerSide: maxLayerSide,
+    );
     final c = math.cos(rotation);
     final sn = math.sin(rotation);
-    return <String, LayerTransform>{
-      for (final entry in initials.entries)
-        entry.key: _pinchOne(
-          entry.value,
-          anchor: anchor,
-          scale: s,
-          c: c,
-          sn: sn,
-          rotation: rotation,
-          translation: translation,
-        ),
-    };
+    return GroupScaleResult(
+      transforms: <String, LayerTransform>{
+        for (final entry in initials.entries)
+          entry.key: _pinchOne(
+            entry.value,
+            anchor: anchor,
+            scale: s,
+            c: c,
+            sn: sn,
+            rotation: rotation,
+            translation: translation,
+          ),
+      },
+      appliedScale: s,
+    );
   }
 
   LayerTransform _pinchOne(
