@@ -79,62 +79,70 @@ class _PaintSizeSheet extends ConsumerWidget {
           ],
         ),
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: tokens.border.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            // Reuse the inline panel verbatim. One source of truth
-            // for hero preview, presets, precision disclosure,
-            // haptics, and pointer-cancel handling — the modal and
-            // dock cannot drift apart.
-            PaintSizeBody(
-              value: strokeWidth,
-              color: strokeColor,
-              dashPattern: dashPattern,
-              onChange: controller.setStrokeWidth,
-            ),
-            const SizedBox(height: 8),
-            const Divider(height: 1),
-            const SizedBox(height: 12),
-            // Fill stays a simple row in the modal so quick toggles
-            // from the floating toolbar don't require diving into
-            // the dedicated Fill panel. Only the on/off affordance
-            // is here — colour / preset choices live in `_PaintFillBody`.
-            Row(
-              children: [
-                Icon(
-                  Icons.format_color_fill_rounded,
-                  size: 22,
-                  color: tokens.textSecondary,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Fill shapes',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
+        // Scroll guard: the modal's height is bounded (short landscape
+        // phones, large text scale), but this Column is min-sized and
+        // its children are fixed-height. Without a scroll view the
+        // content overflows at short heights — mirrors the
+        // SingleChildScrollView DockSheetChrome wraps around the inline
+        // rendering of the same PaintSizeBody.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: tokens.border.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                Switch(
-                  value: fillEnabled,
-                  onChanged: controller.setFillEnabled,
-                ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 6),
+              // Reuse the inline panel verbatim. One source of truth
+              // for hero preview, presets, precision disclosure,
+              // haptics, and pointer-cancel handling — the modal and
+              // dock cannot drift apart.
+              PaintSizeBody(
+                value: strokeWidth,
+                color: strokeColor,
+                dashPattern: dashPattern,
+                onChange: controller.setStrokeWidth,
+              ),
+              const SizedBox(height: 8),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
+              // Fill stays a simple row in the modal so quick toggles
+              // from the floating toolbar don't require diving into
+              // the dedicated Fill panel. Only the on/off affordance
+              // is here — colour / preset choices live in `_PaintFillBody`.
+              Row(
+                children: [
+                  Icon(
+                    Icons.format_color_fill_rounded,
+                    size: 22,
+                    color: tokens.textSecondary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Fill shapes',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Switch(
+                    value: fillEnabled,
+                    onChanged: controller.setFillEnabled,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

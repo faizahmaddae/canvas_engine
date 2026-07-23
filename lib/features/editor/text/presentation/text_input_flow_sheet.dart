@@ -140,161 +140,168 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(18, 10, 18, 14),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: tokens.border,
-                    borderRadius: BorderRadius.circular(999),
+          // Scroll guard: the keyboard is always up (the field
+          // autofocuses), so on short/landscape phones the available
+          // height above it can be smaller than this min-sized Column
+          // (handle + header + field + quick-style bar, plus the
+          // expandable colour tray). Let it scroll instead of overflow.
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: tokens.border,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              // Header row — title left, subtle Cancel + prominent
-              // Add right. Cancel is intentionally text-only with
-              // muted onSurfaceVariant so it doesn't compete with
-              // Add (the primary action). Add is FilledButton and
-              // disables until trimmed input is non-empty so users
-              // never end up with an empty layer from a stray tap.
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                const SizedBox(height: 10),
+                // Header row — title left, subtle Cancel + prominent
+                // Add right. Cancel is intentionally text-only with
+                // muted onSurfaceVariant so it doesn't compete with
+                // Add (the primary action). Add is FilledButton and
+                // disables until trimmed input is non-empty so users
+                // never end up with an empty layer from a stray tap.
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: tokens.textSecondary,
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: tokens.textSecondary,
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                       ),
+                      child: Text(context.l10n.cancelAction),
                     ),
-                    child: Text(context.l10n.cancelAction),
-                  ),
-                  const SizedBox(width: 6),
-                  FilledButton(
-                    key: const ValueKey('add-text-confirm'),
-                    onPressed: _canSubmit ? _submit : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: tokens.brand,
-                      foregroundColor: tokens.onBrand,
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 10,
+                    const SizedBox(width: 6),
+                    FilledButton(
+                      key: const ValueKey('add-text-confirm'),
+                      onPressed: _canSubmit ? _submit : null,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: tokens.brand,
+                        foregroundColor: tokens.onBrand,
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 10,
+                        ),
                       ),
+                      child: Text(widget.confirmLabel),
                     ),
-                    child: Text(widget.confirmLabel),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              // Hero input. Multiline (1–3 lines, then scrolls).
-              // Decision: the keyboard's Return key inserts a newline
-              // (`textInputAction: newline`) and committing is *only*
-              // via the Add button — picking one clear submit path
-              // per the composer spec ("multiline input with explicit
-              // Add button"). Cursor / selection / focus border all
-              // tinted to the theme accent so the input reads as the
-              // single hero element on the sheet.
-              TextField(
-                key: const ValueKey('add-text-input'),
-                controller: _controller,
-                focusNode: _focusNode,
-                autofocus: true,
-                minLines: 1,
-                maxLines: 3,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                textCapitalization: TextCapitalization.sentences,
-                // Suppress the keyboard's prediction strip and
-                // learned-phrase autocorrect so previously-typed
-                // unrelated content (notes, pasted text) can't be
-                // surfaced as suggestions inside the composer.
-                enableSuggestions: false,
-                autocorrect: false,
-                cursorColor: tokens.accent,
-                cursorWidth: 2,
-                scrollPadding: const EdgeInsets.all(20),
-                // Direction + alignment follow the dominant script of
-                // the current content so the editor mirrors what the
-                // canvas will render: Persian/Arabic → RTL,
-                // right-aligned; Latin → LTR, left-aligned. The font
-                // is the app's Persian default (Vazir) for every
-                // script — it carries Latin glyphs too.
-                textDirection: direction,
-                textAlign: direction == TextDirection.rtl
-                    ? TextAlign.right
-                    : TextAlign.left,
-                style: TextStyle(
-                  fontFamily: defaultFontFamilyForContent(_controller.text),
-                  fontSize: 18,
+                  ],
                 ),
-                onChanged: (value) {
-                  // Keep the staged canvas layer in lockstep with
-                  // every keystroke. Note: the layer's committed
-                  // font is governed by the controller and a
-                  // user-picked font from the Font tool is never
-                  // overwritten.
-                  widget.onLiveChange?.call(value);
-                },
-                decoration: InputDecoration(
-                  hintText: context.l10n.typeSomethingHint,
-                  // Hint follows the same direction + font as the
-                  // input itself so the empty-state visual matches
-                  // what the user will see once they start typing.
-                  hintTextDirection: direction,
-                  hintStyle: TextStyle(
+                const SizedBox(height: 14),
+                // Hero input. Multiline (1–3 lines, then scrolls).
+                // Decision: the keyboard's Return key inserts a newline
+                // (`textInputAction: newline`) and committing is *only*
+                // via the Add button — picking one clear submit path
+                // per the composer spec ("multiline input with explicit
+                // Add button"). Cursor / selection / focus border all
+                // tinted to the theme accent so the input reads as the
+                // single hero element on the sheet.
+                TextField(
+                  key: const ValueKey('add-text-input'),
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  autofocus: true,
+                  minLines: 1,
+                  maxLines: 3,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  textCapitalization: TextCapitalization.sentences,
+                  // Suppress the keyboard's prediction strip and
+                  // learned-phrase autocorrect so previously-typed
+                  // unrelated content (notes, pasted text) can't be
+                  // surfaced as suggestions inside the composer.
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  cursorColor: tokens.accent,
+                  cursorWidth: 2,
+                  scrollPadding: const EdgeInsets.all(20),
+                  // Direction + alignment follow the dominant script of
+                  // the current content so the editor mirrors what the
+                  // canvas will render: Persian/Arabic → RTL,
+                  // right-aligned; Latin → LTR, left-aligned. The font
+                  // is the app's Persian default (Vazir) for every
+                  // script — it carries Latin glyphs too.
+                  textDirection: direction,
+                  textAlign: direction == TextDirection.rtl
+                      ? TextAlign.right
+                      : TextAlign.left,
+                  style: TextStyle(
                     fontFamily: defaultFontFamilyForContent(_controller.text),
-                    color: tokens.textSecondary.withValues(alpha: 0.7),
+                    fontSize: 18,
                   ),
-                  isDense: true,
-                  filled: true,
-                  fillColor: tokens.surfaceMuted.withValues(alpha: 0.45),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(
-                      color: tokens.border.withValues(alpha: 0.4),
+                  onChanged: (value) {
+                    // Keep the staged canvas layer in lockstep with
+                    // every keystroke. Note: the layer's committed
+                    // font is governed by the controller and a
+                    // user-picked font from the Font tool is never
+                    // overwritten.
+                    widget.onLiveChange?.call(value);
+                  },
+                  decoration: InputDecoration(
+                    hintText: context.l10n.typeSomethingHint,
+                    // Hint follows the same direction + font as the
+                    // input itself so the empty-state visual matches
+                    // what the user will see once they start typing.
+                    hintTextDirection: direction,
+                    hintStyle: TextStyle(
+                      fontFamily: defaultFontFamilyForContent(_controller.text),
+                      color: tokens.textSecondary.withValues(alpha: 0.7),
                     ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(
-                      color: tokens.border.withValues(alpha: 0.4),
+                    isDense: true,
+                    filled: true,
+                    fillColor: tokens.surfaceMuted.withValues(alpha: 0.45),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: tokens.border.withValues(alpha: 0.4),
+                      ),
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: tokens.accent, width: 1.6),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 16,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: tokens.border.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: tokens.accent, width: 1.6),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 16,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              // Quick-style strip — intentionally minimal for the
-              // Add flow. Bold + Color cover the two most common
-              // pre-commit decisions; full styling (italic / under-
-              // line / size / font / shadow / alignment …) lives
-              // in the post-create text panel. Keeping the strip
-              // tight here preserves the composer's "type → Add"
-              // single-purpose feel.
-              const _AddTextQuickStyleBar(),
-            ],
+                const SizedBox(height: 12),
+                // Quick-style strip — intentionally minimal for the
+                // Add flow. Bold + Color cover the two most common
+                // pre-commit decisions; full styling (italic / under-
+                // line / size / font / shadow / alignment …) lives
+                // in the post-create text panel. Keeping the strip
+                // tight here preserves the composer's "type → Add"
+                // single-purpose feel.
+                const _AddTextQuickStyleBar(),
+              ],
+            ),
           ),
         ),
       ),

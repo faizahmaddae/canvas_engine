@@ -393,13 +393,27 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
           ],
         ),
         const SizedBox(height: 8),
-        _SaturationValueField(
-          key: const ValueKey('color-picker-sv'),
-          hue: _hsv.hue,
-          saturation: _hsv.saturation,
-          value: _hsv.value,
-          onChanged: (s, v) => _emit(_hsv.withSaturation(s).withValue(v)),
-          onChangeEnd: () => widget.onCommitted?.call(_current),
+        // Adaptive height: keep the natural square on a normal sheet,
+        // but let the SV field shrink (to a usable floor) when the
+        // sheet is short or the keyboard is up. The field + tracks are
+        // all drag surfaces, so we adapt height here rather than
+        // wrapping the wheel in a scroll view (which would hijack the
+        // drag — see this sheet's no-scroll rationale).
+        Flexible(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: _SaturationValueField.minHeight,
+              maxHeight: _SaturationValueField.naturalHeight,
+            ),
+            child: _SaturationValueField(
+              key: const ValueKey('color-picker-sv'),
+              hue: _hsv.hue,
+              saturation: _hsv.saturation,
+              value: _hsv.value,
+              onChanged: (s, v) => _emit(_hsv.withSaturation(s).withValue(v)),
+              onChangeEnd: () => widget.onCommitted?.call(_current),
+            ),
+          ),
         ),
         const SizedBox(height: 10),
         _GradientTrack(
@@ -988,17 +1002,24 @@ class _SaturationValueField extends StatelessWidget {
   final void Function(double saturation, double value) onChanged;
   final VoidCallback onChangeEnd;
 
-  /// Fixed height — an aspect-driven square is too tall at 400+dp
+  /// Natural height — an aspect-driven square is too tall at 400+dp
   /// content widths. The wheel only ever renders inside the
   /// content-sized sheet (never under the dock cap), so this is
   /// sized for usability while still letting the whole custom level
-  /// fit a 667dp phone with the canvas peeking above.
-  static const double _height = 160;
+  /// fit a 667dp phone with the canvas peeking above. The caller caps
+  /// the field at this height and lets it shrink to [minHeight] when
+  /// the sheet is height-constrained (short screen / keyboard up).
+  static const double naturalHeight = 160;
+
+  /// Smallest still-usable height the field may shrink to before the
+  /// custom level would otherwise overflow a short sheet.
+  static const double minHeight = 96;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: _height,
+    // Fills the (already bounded + capped) height handed down by the
+    // Flexible/ConstrainedBox in _buildCustomLevel.
+    return SizedBox.expand(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: LayoutBuilder(
@@ -1388,15 +1409,28 @@ class _ColorPickerSheet extends StatelessWidget {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 14),
-                  child: ColorPickerBody(
-                    initial: initial,
-                    title: title,
-                    startAtCustom: startAtCustom,
-                    onChanged: onChanged,
-                    onCommitted: onCommitted,
-                    onClose: () => Navigator.of(context).pop(),
+                // Flexible bounds the body to the sheet's available
+                // height (full-screen minus the keyboard inset), so the
+                // custom level's adaptive SV field can shrink instead of
+                // overflowing when the keyboard is up on a short phone.
+                // Loose fit → on a normal sheet the body still takes its
+                // natural, content-sized height.
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                      20,
+                      4,
+                      20,
+                      14,
+                    ),
+                    child: ColorPickerBody(
+                      initial: initial,
+                      title: title,
+                      startAtCustom: startAtCustom,
+                      onChanged: onChanged,
+                      onCommitted: onCommitted,
+                      onClose: () => Navigator.of(context).pop(),
+                    ),
                   ),
                 ),
               ],

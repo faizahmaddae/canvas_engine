@@ -82,128 +82,135 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header — title + canvas dimensions so the user always
-            // sees what "Original" means in concrete numbers.
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 4, top: 4),
-              child: Row(
+        // Scroll guard: opened with isScrollControlled (which only
+        // lifts the height cap, it adds no scrolling), this Column of
+        // size/quality/format controls overflows on short or small
+        // screens (320-wide devices, landscape) — especially with the
+        // three Original-size quality cards plus the JPG slider.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header — title + canvas dimensions so the user always
+              // sees what "Original" means in concrete numbers.
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 4, top: 4),
+                child: Row(
+                  children: [
+                    Text(
+                      l10n.exportDesignTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: tokens.surfaceMuted.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        l10n.canvasDimensions(canvasW, canvasH),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: tokens.textSecondary,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              SectionLabel(l10n.sizeTool),
+              const SizedBox(height: 8),
+              _SizePickerRow(
+                value: _size,
+                enabled: !_busy,
+                onChanged: _onSizeChanged,
+              ),
+              const SizedBox(height: 14),
+              if (_size == ExportSize.original) ...[
+                for (final q in ExportQuality.values) ...[
+                  _QualityCard(
+                    quality: q,
+                    canvasWidth: canvasW,
+                    canvasHeight: canvasH,
+                    selected: _quality == q,
+                    enabled: !_busy,
+                    onTap: () => setState(() => _quality = q),
+                  ),
+                  if (q != ExportQuality.values.last) const SizedBox(height: 8),
+                ],
+              ] else
+                _PresetOutputSummary(
+                  size: _size,
+                  canvasWidth: canvasW,
+                  canvasHeight: canvasH,
+                ),
+              const SizedBox(height: 18),
+              // Format section. Compact segmented row keeps both the
+              // current selection and the alternative visible at a
+              // glance — no hidden state.
+              SectionLabel(l10n.formatLabel),
+              const SizedBox(height: 8),
+              _FormatSegmented(
+                value: _format,
+                enabled: !_busy,
+                onChanged: (f) => setState(() => _format = f),
+              ),
+              // Quality slider only appears when JPG is selected (PNG is
+              // lossless, so a quality knob would be misleading).
+              if (_format.supportsQuality) ...[
+                const SizedBox(height: 14),
+                _JpgQualitySlider(
+                  value: _jpgQuality,
+                  enabled: !_busy,
+                  onChanged: (v) => setState(() => _jpgQuality = v),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Row(
                 children: [
-                  Text(
-                    l10n.exportDesignTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _busy ? null : () => _openPreview(),
+                      icon: const Icon(Icons.visibility_outlined),
+                      label: Text(l10n.previewShareAction),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                   ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: tokens.surfaceMuted.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      l10n.canvasDimensions(canvasW, canvasH),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: tokens.textSecondary,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: _busy ? null : () => _openPreview(),
+                      icon: const Icon(Icons.image_search_rounded),
+                      label: Text(l10n.previewSaveAction),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 12),
-            SectionLabel(l10n.sizeTool),
-            const SizedBox(height: 8),
-            _SizePickerRow(
-              value: _size,
-              enabled: !_busy,
-              onChanged: _onSizeChanged,
-            ),
-            const SizedBox(height: 14),
-            if (_size == ExportSize.original) ...[
-              for (final q in ExportQuality.values) ...[
-                _QualityCard(
-                  quality: q,
-                  canvasWidth: canvasW,
-                  canvasHeight: canvasH,
-                  selected: _quality == q,
-                  enabled: !_busy,
-                  onTap: () => setState(() => _quality = q),
-                ),
-                if (q != ExportQuality.values.last) const SizedBox(height: 8),
+              if (_busy) ...[
+                const SizedBox(height: 12),
+                const LinearProgressIndicator(minHeight: 2),
               ],
-            ] else
-              _PresetOutputSummary(
-                size: _size,
-                canvasWidth: canvasW,
-                canvasHeight: canvasH,
-              ),
-            const SizedBox(height: 18),
-            // Format section. Compact segmented row keeps both the
-            // current selection and the alternative visible at a
-            // glance — no hidden state.
-            SectionLabel(l10n.formatLabel),
-            const SizedBox(height: 8),
-            _FormatSegmented(
-              value: _format,
-              enabled: !_busy,
-              onChanged: (f) => setState(() => _format = f),
-            ),
-            // Quality slider only appears when JPG is selected (PNG is
-            // lossless, so a quality knob would be misleading).
-            if (_format.supportsQuality) ...[
-              const SizedBox(height: 14),
-              _JpgQualitySlider(
-                value: _jpgQuality,
-                enabled: !_busy,
-                onChanged: (v) => setState(() => _jpgQuality = v),
-              ),
             ],
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _busy ? null : () => _openPreview(),
-                    icon: const Icon(Icons.visibility_outlined),
-                    label: Text(l10n.previewShareAction),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _busy ? null : () => _openPreview(),
-                    icon: const Icon(Icons.image_search_rounded),
-                    label: Text(l10n.previewSaveAction),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (_busy) ...[
-              const SizedBox(height: 12),
-              const LinearProgressIndicator(minHeight: 2),
-            ],
-          ],
+          ),
         ),
       ),
     );

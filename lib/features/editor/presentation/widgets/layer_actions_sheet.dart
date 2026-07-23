@@ -68,103 +68,110 @@ class _LayerActionsSheet extends StatelessWidget {
         : null;
 
     return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.copy_all_outlined),
-            title: Text(l10n.duplicateAction),
-            onTap: () {
-              Navigator.of(context).pop();
-              LayerActions.duplicate(parentRef, layer);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.drive_file_rename_outline_rounded),
-            title: Text(l10n.renameAction),
-            onTap: () async {
-              await LayerActions.rename(context, parentRef, layer);
-              if (context.mounted) Navigator.of(context).pop();
-            },
-          ),
-          ListTile(
-            enabled: canForward,
-            leading: const Icon(Icons.flip_to_front_rounded),
-            title: Text(l10n.bringForwardAction),
-            onTap: !canForward
-                ? null
-                : () {
-                    Navigator.of(context).pop();
-                    LayerActions.bringForward(parentRef, layer);
-                  },
-          ),
-          ListTile(
-            enabled: canBackward,
-            leading: const Icon(Icons.flip_to_back_rounded),
-            title: Text(l10n.sendBackwardAction),
-            onTap: !canBackward
-                ? null
-                : () {
-                    Navigator.of(context).pop();
-                    LayerActions.sendBackward(parentRef, layer);
-                  },
-          ),
-          ListTile(
-            leading: Icon(
-              layer.locked
-                  ? Icons.lock_open_rounded
-                  : Icons.lock_outline_rounded,
-            ),
-            title: Text(
-              layer.locked ? l10n.unlockLayerAction : l10n.lockLayerAction,
-            ),
-            onTap: () {
-              Navigator.of(context).pop();
-              LayerActions.toggleLock(parentRef, layer);
-            },
-          ),
-          // Text-only: resize behavior is a secondary, advanced option.
-          // It belongs here in the overflow rather than on the always-on
-          // floating toolbar — most users never change it from the
-          // default.
-          if (textLayer != null)
+      // Scroll guard: this sheet opens without isScrollControlled, so
+      // it is clamped to 9/16 of the screen height — which a 6-tile
+      // action list exceeds in landscape (and borderline on small
+      // phones). Mirror selected_layer_actions_sheet.dart so the list
+      // scrolls instead of overflowing.
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             ListTile(
-              leading: Icon(textResizeModeIcon(textLayer.resizeMode)),
-              title: Text(l10n.resizeBehaviorTitle),
-              subtitle: Text(textResizeModeLabel(textLayer.resizeMode)),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () async {
+              leading: const Icon(Icons.copy_all_outlined),
+              title: Text(l10n.duplicateAction),
+              onTap: () {
                 Navigator.of(context).pop();
-                final current = textLayer.resizeMode;
-                final picked = await pickTextResizeMode(context, current);
-                if (picked != null && picked != current) {
-                  parentRef
-                      .read(textToolControllerProvider.notifier)
-                      .setResizeMode(picked);
-                }
+                LayerActions.duplicate(parentRef, layer);
               },
             ),
-          const Divider(height: 1),
-          ListTile(
-            leading: Icon(
-              Icons.delete_outline_rounded,
-              color: Theme.of(context).colorScheme.error,
+            ListTile(
+              leading: const Icon(Icons.drive_file_rename_outline_rounded),
+              title: Text(l10n.renameAction),
+              onTap: () async {
+                await LayerActions.rename(context, parentRef, layer);
+                if (context.mounted) Navigator.of(context).pop();
+              },
             ),
-            title: Text(
-              l10n.deleteAction,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ListTile(
+              enabled: canForward,
+              leading: const Icon(Icons.flip_to_front_rounded),
+              title: Text(l10n.bringForwardAction),
+              onTap: !canForward
+                  ? null
+                  : () {
+                      Navigator.of(context).pop();
+                      LayerActions.bringForward(parentRef, layer);
+                    },
             ),
-            onTap: () async {
-              // Show the protected-base-photo confirm (if applicable)
-              // BEFORE popping this sheet, so the dialog has a valid
-              // mounted context. Pop the sheet only after the user
-              // has decided.
-              await LayerActions.delete(context, parentRef, layer);
-              if (context.mounted) Navigator.of(context).pop();
-            },
-          ),
-          const SizedBox(height: 8),
-        ],
+            ListTile(
+              enabled: canBackward,
+              leading: const Icon(Icons.flip_to_back_rounded),
+              title: Text(l10n.sendBackwardAction),
+              onTap: !canBackward
+                  ? null
+                  : () {
+                      Navigator.of(context).pop();
+                      LayerActions.sendBackward(parentRef, layer);
+                    },
+            ),
+            ListTile(
+              leading: Icon(
+                layer.locked
+                    ? Icons.lock_open_rounded
+                    : Icons.lock_outline_rounded,
+              ),
+              title: Text(
+                layer.locked ? l10n.unlockLayerAction : l10n.lockLayerAction,
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                LayerActions.toggleLock(parentRef, layer);
+              },
+            ),
+            // Text-only: resize behavior is a secondary, advanced option.
+            // It belongs here in the overflow rather than on the always-on
+            // floating toolbar — most users never change it from the
+            // default.
+            if (textLayer != null)
+              ListTile(
+                leading: Icon(textResizeModeIcon(textLayer.resizeMode)),
+                title: Text(l10n.resizeBehaviorTitle),
+                subtitle: Text(textResizeModeLabel(textLayer.resizeMode)),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final current = textLayer.resizeMode;
+                  final picked = await pickTextResizeMode(context, current);
+                  if (picked != null && picked != current) {
+                    parentRef
+                        .read(textToolControllerProvider.notifier)
+                        .setResizeMode(picked);
+                  }
+                },
+              ),
+            const Divider(height: 1),
+            ListTile(
+              leading: Icon(
+                Icons.delete_outline_rounded,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                l10n.deleteAction,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              onTap: () async {
+                // Show the protected-base-photo confirm (if applicable)
+                // BEFORE popping this sheet, so the dialog has a valid
+                // mounted context. Pop the sheet only after the user
+                // has decided.
+                await LayerActions.delete(context, parentRef, layer);
+                if (context.mounted) Navigator.of(context).pop();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

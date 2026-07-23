@@ -289,6 +289,9 @@ class _ThemePickerDialogState extends State<_ThemePickerDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AlertDialog(
+      // Scroll instead of overflowing when the tile/radio list is
+      // taller than the dialog's max height (landscape / short screens).
+      scrollable: true,
       title: Text(l10n.themeTitle),
       contentPadding: const EdgeInsets.symmetric(vertical: 12),
       content: RadioGroup<ThemeMode>(
@@ -336,6 +339,9 @@ class _LanguagePickerDialogState extends State<_LanguagePickerDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AlertDialog(
+      // Scroll instead of overflowing when the tile/radio list is
+      // taller than the dialog's max height (landscape / short screens).
+      scrollable: true,
       title: Text(l10n.languageTitle),
       contentPadding: const EdgeInsets.symmetric(vertical: 12),
       content: RadioGroup<LocalePreference>(
@@ -384,6 +390,9 @@ class _ContentLanguagesDialogState extends State<_ContentLanguagesDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AlertDialog(
+      // Scroll instead of overflowing when the tile/radio list is
+      // taller than the dialog's max height (landscape / short screens).
+      scrollable: true,
       title: Text(l10n.settingsContentLanguagesTitle),
       contentPadding: const EdgeInsets.symmetric(vertical: 12),
       content: Column(
@@ -435,6 +444,9 @@ class _EnabledCategoriesDialogState extends State<_EnabledCategoriesDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AlertDialog(
+      // Scroll instead of overflowing when the tile/radio list is
+      // taller than the dialog's max height (landscape / short screens).
+      scrollable: true,
       title: Text(l10n.settingsEnabledCategoriesTitle),
       contentPadding: const EdgeInsets.symmetric(vertical: 12),
       content: Column(
@@ -556,6 +568,9 @@ class _QualityPickerDialogState extends State<_QualityPickerDialog> {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     return AlertDialog(
+      // Scroll instead of overflowing when the tile/radio list is
+      // taller than the dialog's max height (landscape / short screens).
+      scrollable: true,
       title: Text(l10n.defaultExportQualityTitle),
       contentPadding: const EdgeInsets.symmetric(vertical: 12),
       content: Column(
