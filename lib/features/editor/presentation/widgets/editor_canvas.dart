@@ -197,10 +197,18 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
       final session = ref.read(editorSessionProvider);
       final projectId = session?.projectId;
       if (projectId == null) return;
+      // Persist the adjustment INTENT alongside the transform. Both ride on
+      // the same immutable `next` snapshot (`next.userAdjusted`), so the
+      // stored pair is always self-consistent — no late read of a mutable
+      // flag that could belong to a different transition. Because intent is
+      // part of the observed value, an intent-only change (e.g. an explicit
+      // Fit that recomputes the same transform, flipping adjusted→false)
+      // still passes the `prev == next` guard above and is persisted, so
+      // reopening after Fit re-fits.
       _viewportSaveTimer?.cancel();
       _viewportSaveTimer = Timer(_kViewportSaveDebounce, () {
         if (!mounted) return;
-        _viewportStore.save(projectId, next);
+        _viewportStore.save(projectId, next, userAdjusted: next.userAdjusted);
       });
     });
   }
@@ -396,11 +404,19 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
         if (projectId != null) {
           final saved = await _viewportStore.load(projectId);
           if (!mounted) return;
-          if (saved != null && saved.scale > 0 && saved.scale.isFinite) {
-            // We still need lastFitContext seeded so the user-facing
-            // "Fit to screen" action has geometry to replay against.
+          // Restore (and later preserve across panel reflows) ONLY a
+          // genuine user adjustment. An automatic-fit or legacy entry
+          // (userAdjusted false) falls through to a fresh auto-fit below,
+          // so an untouched reopened project behaves exactly like a fresh
+          // one — the panel-reflow gate re-fits it. We still seed
+          // lastFitContext via fit() first so "Fit to screen" has geometry
+          // to replay against.
+          if (saved != null &&
+              saved.userAdjusted &&
+              saved.viewport.scale > 0 &&
+              saved.viewport.scale.isFinite) {
             controller.fit(screenSize: screen, canvasSize: docSize);
-            controller.restore(saved);
+            controller.restore(saved.viewport, userAdjusted: true);
             setState(() => _fittedOnce = true);
             return;
           }
@@ -410,6 +426,28 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
       if (!_fittedOnce) {
         setState(() => _fittedOnce = true);
       }
+    });
+  }
+
+  /// Schedule a viewport-preserving reflow for the next frame — the
+  /// counterpart to [_scheduleFit] taken when the canvas pane changes size
+  /// (a tool panel opened/closed/switched) while the user has a manually
+  /// adjusted zoom/pan. Keeps the user's scale, re-centres on the same
+  /// canvas detail, and re-clamps translation to the new pane instead of
+  /// re-fitting. Deferred to the post-frame callback for the same reason
+  /// [_scheduleFit] is: the viewport provider must not be mutated during
+  /// build. Only reached after [_fittedOnce], so no visibility gate is
+  /// involved.
+  void _schedulePreserveViewport(Size oldScreen, Size newScreen, Size docSize) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(viewportControllerProvider.notifier)
+          .reflowPreservingZoom(
+            oldScreen: oldScreen,
+            newScreen: newScreen,
+            canvasSize: docSize,
+          );
     });
   }
 
@@ -459,9 +497,28 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             docSize.height > 0;
         if (hasValidSize &&
             (_lastFitScreen != screen || _lastFitDoc != docSize)) {
+          final prevScreen = _lastFitScreen;
+          final docChanged = _lastFitDoc != docSize;
           _lastFitScreen = screen;
           _lastFitDoc = docSize;
-          _scheduleFit(screen, docSize);
+          // A pane-only size change — which is what a tool panel opening,
+          // closing, or switching produces as it reflows the canvas — on a
+          // viewport the user has manually zoomed/panned must PRESERVE that
+          // zoom instead of snapping back to fit. Every other case keeps the
+          // existing auto-fit behaviour: the first fit, a viewport the user
+          // has never adjusted, or a genuine document size/identity change
+          // (which should refit and clear the user-adjusted state).
+          final userAdjusted = ref
+              .read(viewportControllerProvider.notifier)
+              .userAdjusted;
+          if (_fittedOnce &&
+              userAdjusted &&
+              !docChanged &&
+              prevScreen != null) {
+            _schedulePreserveViewport(prevScreen, screen, docSize);
+          } else {
+            _scheduleFit(screen, docSize);
+          }
         }
 
         return Listener(

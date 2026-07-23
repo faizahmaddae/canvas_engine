@@ -12,6 +12,7 @@ class ViewportState {
   const ViewportState({
     required this.scale,
     required this.translation,
+    this.userAdjusted = false,
   });
 
   /// Uniform zoom factor. 1.0 = render canvas pixel-for-pixel.
@@ -20,13 +21,31 @@ class ViewportState {
   /// Translation applied AFTER scale, in screen pixels.
   final Offset translation;
 
-  static const ViewportState identity =
-      ViewportState(scale: 1.0, translation: Offset.zero);
+  /// Whether this viewport is a genuine user zoom/pan ([userAdjusted]
+  /// true) versus one the editor produced by automatic fit (false).
+  ///
+  /// It rides on the value — not a side field on the controller — so a
+  /// change in intent is an OBSERVABLE state transition even when
+  /// `scale`/`translation` are unchanged. That lets an explicit Fit that
+  /// happens to recompute the same transform still notify listeners (and
+  /// so persist `adjusted=false`). It does NOT affect the rendered
+  /// transform: [toMatrix] and [screenToCanvas] ignore it.
+  final bool userAdjusted;
 
-  ViewportState copyWith({double? scale, Offset? translation}) {
+  static const ViewportState identity = ViewportState(
+    scale: 1.0,
+    translation: Offset.zero,
+  );
+
+  ViewportState copyWith({
+    double? scale,
+    Offset? translation,
+    bool? userAdjusted,
+  }) {
     return ViewportState(
       scale: scale ?? this.scale,
       translation: translation ?? this.translation,
+      userAdjusted: userAdjusted ?? this.userAdjusted,
     );
   }
 
@@ -51,8 +70,9 @@ class ViewportState {
       identical(this, other) ||
       other is ViewportState &&
           other.scale == scale &&
-          other.translation == translation;
+          other.translation == translation &&
+          other.userAdjusted == userAdjusted;
 
   @override
-  int get hashCode => Object.hash(scale, translation);
+  int get hashCode => Object.hash(scale, translation, userAdjusted);
 }
