@@ -74,12 +74,16 @@ This review builds on — and does not replace — the prior audits:
 
 **Verified defects and ceilings:**
 
-* **[HIGH, confirmed] Undo-of-delete restores at the wrong z-index.**
-  `RemoveLayerCommand.invert` returns `AddLayerCommand(prev)` and `addLayer`
-  appends to the top (`transform_commands.dart:36`,
-  `editor_document.dart:201`). Undoing a middle-layer delete brings it back
-  on top; multi-delete via `CompositeCommand` also flips restored order. This
-  violates the invert contract; the existing test only asserts existence.
+* **[DONE] Undo-of-delete restores at the wrong z-index.** Fixed:
+  `RemoveLayerCommand.invert` now returns
+  `AddLayerCommand(prev, index: before.indexOf(layerId))`
+  (`transform_commands.dart:63`), so undo re-inserts at the original depth.
+  `test/engine/layer_management_test.dart` (group "RemoveLayerCommand undo
+  restores z-order") covers middle-layer restore, bottom-layer restore +
+  redo through `HistoryStack`, and multi-delete `CompositeCommand` ordering.
+  *Original defect (record): invert returned `AddLayerCommand(prev)` and
+  `addLayer` appended to the top, so undoing a middle-layer delete brought it
+  back on top and multi-delete flipped restored order.*
 * **[HIGH, confirmed] stackMask is invisible to `_writerVersion`.** A
   stackMask-only layer is stamped schema v1 while writing a v3-only
   `stackMask` key (probe verified: `version=1 hasStackMask=true`). An older
@@ -306,8 +310,10 @@ Ordering = impact × effort × dependency. Effort: **S** = days, **M** = 1–2 w
     fixture byte-identity suite explicitly. Repo hygiene in the same pass:
     delete `.github.zip` + `lib*.zip` backups, remove empty
     `lib/features/shell/presentation/`.
-0.3 **[S] Fix undo-of-delete z-index** (`RemoveLayerCommand.invert` must
-    restore at the original index; cover multi-delete ordering too).
+0.3 **[DONE] Fix undo-of-delete z-index** — `RemoveLayerCommand.invert` now
+    captures `index: before.indexOf(layerId)` and restores at the original
+    depth; middle-, bottom-, and multi-delete ordering are covered by
+    `test/engine/layer_management_test.dart`.
 0.4 **[S] Fix `SetImageAdjustmentsCommand` destroying disabled effects** and
     discarding derived-effect reorder.
 0.5 **[S] Doc truth pass**: AGENTS.md effects section + subfolder table;
