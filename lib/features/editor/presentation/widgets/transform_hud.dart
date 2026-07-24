@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
+
 import '../../engine/core/layer_transform.dart';
 import '../../engine/core/selection_state.dart';
 import '../../engine/core/viewport_state.dart';
@@ -102,16 +104,21 @@ class _HudChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The HUD floats over the user's artwork, not over app surface,
+    // so it stays ink-on-ink in both themes: a token-surface chip
+    // would vanish against a light photo. Only the shadow moves to a
+    // token, so it matches the elevation language everywhere else.
+    final tokens = AppTokens.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(6),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x33000000),
+            color: tokens.textPrimary.withValues(alpha: 0.2),
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),

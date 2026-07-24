@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../engine/interaction/snap_engine.dart';
 
 /// Paints the currently-active alignment guides. Pure presentation —
@@ -15,13 +16,16 @@ class SnapGuidesOverlay extends StatelessWidget {
     super.key,
     required this.guides,
     required this.viewportScale,
-    this.color = const Color(0xFFFF2D95),
+    this.color,
     this.strokeWidth = 1.0,
   });
 
   final List<SnapGuide> guides;
   final double viewportScale;
-  final Color color;
+
+  /// Overrides the theme-resolved guide colour. `null` uses the
+  /// token — see [_guideColor].
+  final Color? color;
 
   /// Stroke thickness in **screen pixels** — the painter divides by
   /// [viewportScale] so the visible width stays constant at any zoom.
@@ -30,12 +34,13 @@ class SnapGuidesOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (guides.isEmpty) return const SizedBox.shrink();
+    final guideColor = color ?? _guideColor(context);
     return IgnorePointer(
       child: CustomPaint(
         size: Size.infinite,
         painter: _SnapGuidesPainter(
           guides: guides,
-          color: color,
+          color: guideColor,
           strokeWidth: strokeWidth / viewportScale,
         ),
       ),
@@ -85,3 +90,14 @@ class _SnapGuidesPainter extends CustomPainter {
       old.color != color ||
       old.strokeWidth != strokeWidth;
 }
+
+/// Guides read as the app's teal, not as a magenta left over from a
+/// retired palette.
+///
+/// Teal is one of the three category accents, which are deliberately
+/// FIXED across light and dark — so a guide keeps a constant identity
+/// while paper and ink swap around it. It is also not saffron, which
+/// matters: saffron is selection chrome, and a guide that shared its
+/// colour would read as part of the thing being dragged rather than
+/// as the alignment it snapped to.
+Color _guideColor(BuildContext context) => AppTokens.of(context).teal;

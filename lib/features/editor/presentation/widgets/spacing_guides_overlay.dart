@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
+
 import '../../engine/interaction/snap_engine.dart';
 
 /// Paints equal-spacing indicators (Figma-style measurement brackets
@@ -24,7 +26,7 @@ class SpacingGuidesOverlay extends StatelessWidget {
     super.key,
     required this.guides,
     required this.viewportScale,
-    this.color = const Color(0xFFFF2D95),
+    this.color,
     this.strokeWidth = 1.0,
     this.tickLength = 6.0,
     this.labelStyle = const TextStyle(
@@ -34,12 +36,15 @@ class SpacingGuidesOverlay extends StatelessWidget {
       height: 1.0,
       letterSpacing: 0.1,
     ),
-    this.labelBackground = const Color(0xFFFF2D95),
+    this.labelBackground,
   });
 
   final List<SpacingGuide> guides;
   final double viewportScale;
-  final Color color;
+
+  /// Overrides the theme-resolved guide colour (see the snap
+  /// overlay's `_guideColor` for why teal).
+  final Color? color;
 
   /// Screen-pixel stroke thickness; divided by [viewportScale].
   final double strokeWidth;
@@ -51,21 +56,24 @@ class SpacingGuidesOverlay extends StatelessWidget {
   /// Label glyph style. Painted at screen-pixel size by counter-scaling
   /// the canvas by `1 / viewportScale` around the anchor point.
   final TextStyle labelStyle;
-  final Color labelBackground;
+  final Color? labelBackground;
 
   @override
   Widget build(BuildContext context) {
     if (guides.isEmpty) return const SizedBox.shrink();
+    // Same teal as the alignment guides — spacing and alignment are
+    // one visual language, and both are read against the artwork.
+    final guideColor = color ?? AppTokens.of(context).teal;
     return IgnorePointer(
       child: CustomPaint(
         size: Size.infinite,
         painter: _SpacingGuidesPainter(
           guides: guides,
-          color: color,
+          color: guideColor,
           strokeWidth: strokeWidth / viewportScale,
           tickHalf: (tickLength / 2) / viewportScale,
           labelStyle: labelStyle,
-          labelBackground: labelBackground,
+          labelBackground: labelBackground ?? guideColor,
           viewportScale: viewportScale,
         ),
       ),
