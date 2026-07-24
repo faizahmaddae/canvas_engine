@@ -14,11 +14,21 @@
 
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/live_overlay_controller.dart';
+import 'package:canvas_engine/features/editor/application/selection_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
+import 'package:canvas_engine/features/editor/engine/core/background_fill.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
+import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
+import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/image/presentation/image_adjust_body.dart';
 import 'package:canvas_engine/features/editor/image/presentation/image_border_body.dart';
+import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
+import 'package:canvas_engine/features/editor/paint/domain/paint_tool_type.dart';
+import 'package:canvas_engine/features/editor/paint/presentation/bodies/paint_size_entry.dart';
+import 'package:canvas_engine/features/editor/paint/presentation/paint_gesture_surface.dart';
+import 'package:canvas_engine/features/editor/shape/presentation/shape_style_body.dart';
+import 'package:canvas_engine/features/editor/toolbar/presentation/widgets/preset_slider_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -226,4 +236,276 @@ void main() {
     container.read(documentControllerProvider.notifier).undo();
     expect(committedLayer(container).adjustments.brightness, 0);
   });
+
+  // ─── tb2 3/16 additions ───────────────────────────────────────────
+
+  testWidgets('shape fill-opacity drag on a GRADIENT fill previews and commits '
+      'without clearing the gradient', (tester) async {
+    const gradient = LinearGradientBackground(
+      startColor: Color(0xFFFF0000),
+      endColor: Color(0xFF0000FF),
+    );
+    final layer = ShapeLayer(
+      id: 'shape1',
+      transform: const LayerTransform(
+        position: Offset(40, 40),
+        size: Size(200, 200),
+      ),
+      kind: ShapeKind.rectangle,
+      fill: gradient,
+    );
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container
+        .read(documentControllerProvider.notifier)
+        .newDocument(width: 800, height: 800);
+    container
+        .read(documentControllerProvider.notifier)
+        .execute(AddLayerCommand(layer));
+    await pumpBody(tester, container, ShapeStyleBody(layer: layer));
+
+    ShapeLayer committed() =>
+        container.read(documentControllerProvider).layerById('shape1')
+            as ShapeLayer;
+
+    final versionBefore = container.read(documentCommitVersionProvider);
+    // Opacity row renders before the radius row; the embedded
+    // colour picker contains no Material Slider.
+    final slider = find.byType(Slider).first;
+    await tester.ensureVisible(slider);
+    await tester.pumpAndSettle();
+
+    final gesture = await tester.startGesture(tester.getCenter(slider));
+    await gesture.moveBy(const Offset(-40, 0));
+    await tester.pump();
+    expect(container.read(documentCommitVersionProvider), versionBefore);
+    final staged =
+        container.read(liveOverlayProvider).replacements['shape1']
+            as ShapeLayer;
+    expect(
+      staged.fill,
+      gradient,
+      reason: 'overlay preview must keep the gradient descriptor',
+    );
+    expect(staged.fillOpacity, lessThan(1));
+    expect(committed().fillOpacity, 1);
+
+    await gesture.up();
+    await tester.pump();
+    expect(container.read(documentCommitVersionProvider), versionBefore + 1);
+    expect(committed().fillOpacity, lessThan(1));
+    expect(
+      committed().fill,
+      gradient,
+      reason:
+          'an opacity-only commit must not clear the gradient '
+          '(SetShapeFillCommand._targetFill semantics)',
+    );
+  });
+
+  testWidgets('paint width drag: overlay preview + one commit when a layer is '
+      'selected; session-only when nothing is selected', (tester) async {
+    final layer = PaintLayer(
+      id: 'p1',
+      transform: const LayerTransform(
+        position: Offset(40, 40),
+        size: Size(200, 100),
+      ),
+      kind: PaintKind.line,
+      normalizedPoints: const [Offset(0, 0.5), Offset(1, 0.5)],
+    );
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container
+        .read(documentControllerProvider.notifier)
+        .newDocument(width: 800, height: 800);
+    container
+        .read(documentControllerProvider.notifier)
+        .execute(AddLayerCommand(layer));
+    container.read(selectionControllerProvider.notifier).select('p1');
+    await pumpBody(
+      tester,
+      container,
+      PaintSizeEntryBody(session: container.read(paintToolControllerProvider)),
+    );
+
+    PaintLayer committed() =>
+        container.read(documentControllerProvider).layerById('p1')
+            as PaintLayer;
+
+    await tester.tap(find.text('Adjust precisely'));
+    await tester.pumpAndSettle();
+
+    final versionBefore = container.read(documentCommitVersionProvider);
+    final slider = find.byType(Slider);
+    expect(slider, findsOneWidget);
+
+    final gesture = await tester.startGesture(tester.getCenter(slider));
+    await gesture.moveBy(const Offset(40, 0));
+    await tester.pump();
+    expect(container.read(documentCommitVersionProvider), versionBefore);
+    final staged =
+        container.read(liveOverlayProvider).replacements['p1'] as PaintLayer;
+    expect(committed().strokeWidth, 6, reason: 'committed frozen mid-drag');
+
+    await gesture.up();
+    await tester.pump();
+    expect(container.read(documentCommitVersionProvider), versionBefore + 1);
+    expect(committed().strokeWidth, staged.strokeWidth);
+    expect(container.read(liveOverlayProvider).isEmpty, isTrue);
+    expect(
+      container.read(paintToolControllerProvider).strokeWidth,
+      staged.strokeWidth,
+      reason: 'session default tracks the drag',
+    );
+
+    // No selection → session-only: zero document writes.
+    container.read(selectionControllerProvider.notifier).clear();
+    await tester.pump();
+    final versionAfterFirst = container.read(documentCommitVersionProvider);
+    final gesture2 = await tester.startGesture(tester.getCenter(slider));
+    await gesture2.moveBy(const Offset(-30, 0));
+    await tester.pump();
+    await gesture2.up();
+    await tester.pump();
+    expect(
+      container.read(documentCommitVersionProvider),
+      versionAfterFirst,
+      reason: 'unselected drags never touch the document',
+    );
+    expect(
+      container.read(paintToolControllerProvider).strokeWidth,
+      isNot(staged.strokeWidth),
+      reason: 'session default still updates',
+    );
+  });
+
+  testWidgets('PresetSliderControl commits once per drag, including on '
+      'pointer-cancel', (tester) async {
+    final commits = <double>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PresetSliderControl(
+            value: 20,
+            min: 0,
+            max: 100,
+            presets: const [10, 50],
+            formatValue: (v) => '${v.round()}',
+            onCommit: commits.add,
+          ),
+        ),
+      ),
+    );
+
+    final slider = find.byType(Slider);
+    final gesture = await tester.startGesture(tester.getCenter(slider));
+    await gesture.moveBy(const Offset(40, 0));
+    await tester.pump();
+    await gesture.moveBy(const Offset(20, 0));
+    await tester.pump();
+    expect(commits, isEmpty, reason: 'drag is preview-only until release');
+    await gesture.up();
+    await tester.pump();
+    expect(commits.length, 1, reason: 'exactly one commit per drag');
+
+    final gesture2 = await tester.startGesture(tester.getCenter(slider));
+    await gesture2.moveBy(const Offset(-30, 0));
+    await tester.pump();
+    await gesture2.cancel();
+    await tester.pump();
+    expect(
+      commits.length,
+      2,
+      reason: 'pointer-cancel still commits the in-flight value (§7)',
+    );
+  });
+
+  testWidgets(
+    'eraser sweep over 3 strokes stages removals live and commits ONE '
+    'undo entry restoring all three',
+    (tester) async {
+      PaintLayer stroke(String id, double x) => PaintLayer(
+        id: id,
+        transform: LayerTransform(
+          position: Offset(x, 100),
+          size: const Size(100, 100),
+        ),
+        kind: PaintKind.line,
+        normalizedPoints: const [Offset(0, 0.5), Offset(1, 0.5)],
+      );
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final docCtrl = container.read(documentControllerProvider.notifier);
+      docCtrl.newDocument(width: 800, height: 800);
+      docCtrl.execute(AddLayerCommand(stroke('a', 100)));
+      docCtrl.execute(AddLayerCommand(stroke('b', 250)));
+      docCtrl.execute(AddLayerCommand(stroke('c', 450)));
+      container
+          .read(paintToolControllerProvider.notifier)
+          .selectTool(PaintToolType.eraser);
+
+      tester.view.physicalSize = const Size(800, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 800,
+                child: Stack(
+                  children: [PaintGestureSurface(docSize: Size(800, 800))],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      int paintLayerCount() => container
+          .read(documentControllerProvider)
+          .layers
+          .whereType<PaintLayer>()
+          .length;
+
+      final versionBefore = container.read(documentCommitVersionProvider);
+      final gesture = await tester.startGesture(const Offset(150, 150));
+      for (var i = 0; i < 8; i++) {
+        await gesture.moveBy(const Offset(50, 0));
+        await tester.pump();
+      }
+      // Mid-sweep: all three hits staged on the overlay, committed
+      // document untouched.
+      expect(container.read(documentCommitVersionProvider), versionBefore);
+      expect(paintLayerCount(), 3, reason: 'committed doc frozen mid-sweep');
+      expect(
+        container.read(liveOverlayProvider).removals,
+        {'a', 'b', 'c'},
+        reason: 'sweep hits stage on the overlay removals channel',
+      );
+
+      await gesture.up();
+      await tester.pump();
+      expect(
+        container.read(documentCommitVersionProvider),
+        versionBefore + 1,
+        reason: 'whole sweep commits as ONE history entry (§3)',
+      );
+      expect(paintLayerCount(), 0);
+      expect(container.read(liveOverlayProvider).isEmpty, isTrue);
+
+      container.read(documentControllerProvider.notifier).undo();
+      expect(
+        paintLayerCount(),
+        3,
+        reason: 'a single undo restores every stroke the sweep took',
+      );
+    },
+  );
 }

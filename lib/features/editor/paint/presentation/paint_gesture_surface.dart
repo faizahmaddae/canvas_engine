@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../application/document_controller.dart';
 import '../../application/editor_lifecycle.dart';
+import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/transform_commands.dart';
 import '../../engine/core/canvas_sizing.dart';
@@ -46,6 +47,13 @@ class PaintGestureSurface extends ConsumerStatefulWidget {
 class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
   PaintDraft? _draft;
 
+  /// Eraser-sweep accumulator (contract §3: one gesture = one
+  /// history entry). Hits stage on the overlay's removals channel
+  /// for instant visual feedback and commit as ONE command on
+  /// gesture end. Insertion-ordered so the composite removes in
+  /// sweep order.
+  final List<String> _sweepErasedIds = <String>[];
+
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(paintToolControllerProvider);
@@ -78,7 +86,8 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
 
   void _onPanStart(PaintToolType tool, PaintSession session, Offset local) {
     if (tool == PaintToolType.eraser) {
-      _eraseAt(local);
+      _sweepErasedIds.clear();
+      _sweepEraseAt(local);
       return;
     }
     setState(() {
@@ -106,7 +115,7 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
 
   void _onPanUpdate(Offset local, bool isEraser) {
     if (isEraser) {
-      _eraseAt(local);
+      _sweepEraseAt(local);
       return;
     }
     final draft = _draft;
@@ -126,6 +135,10 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
   }
 
   void _onPanEnd() {
+    if (_sweepErasedIds.isNotEmpty) {
+      _commitEraserSweep();
+      return;
+    }
     final draft = _draft;
     if (draft == null) return;
     final layer = draft.toLayer(id: _uuid.v4(), docSize: widget.docSize);
@@ -137,6 +150,12 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
   }
 
   void _onPanCancel() {
+    // Overlay previews commit on interruption, never discard (§7):
+    // the layers the user watched disappear must stay gone.
+    if (_sweepErasedIds.isNotEmpty) {
+      _commitEraserSweep();
+      return;
+    }
     if (_draft == null) return;
     setState(() => _draft = null);
   }
@@ -162,24 +181,29 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
 
   // ---------------------------------------------------------------- eraser
 
-  /// Phase-1 eraser: find the topmost paint layer whose oriented
-  /// bounding box contains [local] and remove it via
-  /// [RemoveLayerCommand]. Other layer kinds (text/shape/image) are
-  /// deliberately skipped — the eraser is "paint only" by spec to keep
-  /// behaviour predictable. Returns whether a layer was actually
-  /// erased.
-  bool _eraseAt(Offset local) {
+  /// Phase-1 eraser hit test: the topmost paint layer whose oriented
+  /// bounding box contains [local], skipping [exclude] (layers
+  /// already staged for removal by the in-flight sweep — the
+  /// committed doc still contains them mid-gesture). Other layer
+  /// kinds (text/shape/image) are deliberately skipped — the eraser
+  /// is "paint only" by spec to keep behaviour predictable.
+  EditorLayer? _hitPaintLayer(Offset local, {Set<String> exclude = const {}}) {
     final doc = ref.read(documentControllerProvider);
-    EditorLayer? hit;
     for (var i = doc.layers.length - 1; i >= 0; i--) {
       final layer = doc.layers[i];
       if (!layer.visible || layer.locked) continue;
       if (layer is! PaintLayer) continue;
-      if (_containsLocal(layer.transform, local)) {
-        hit = layer;
-        break;
-      }
+      if (exclude.contains(layer.id)) continue;
+      if (_containsLocal(layer.transform, local)) return layer;
     }
+    return null;
+  }
+
+  /// Discrete eraser TAP: one hit = one [RemoveLayerCommand] — a
+  /// tap is its own history entry (§3), unchanged from before the
+  /// sweep batching. Returns whether a layer was actually erased.
+  bool _eraseAt(Offset local) {
+    final hit = _hitPaintLayer(local);
     if (hit == null) return false;
     ref
         .read(documentControllerProvider.notifier)
@@ -191,6 +215,45 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
       ref.read(selectionControllerProvider.notifier).clear();
     }
     return true;
+  }
+
+  /// Sweep tick: stage a hit on the overlay's removals channel so
+  /// the layer disappears instantly WITHOUT touching the committed
+  /// document — the whole sweep commits once in
+  /// [_commitEraserSweep] (§2/§3).
+  void _sweepEraseAt(Offset local) {
+    final hit = _hitPaintLayer(local, exclude: _sweepErasedIds.toSet());
+    if (hit == null) return;
+    _sweepErasedIds.add(hit.id);
+    ref.read(liveOverlayProvider.notifier).removeLayer(hit.id);
+  }
+
+  /// Seal the sweep: clear the overlay and execute ONE command for
+  /// every accumulated hit (clear-then-execute in one synchronous
+  /// run, so the erased layers never flash back). A single-hit
+  /// sweep stays a bare [RemoveLayerCommand]; multi-hit sweeps
+  /// composite under the same 'Remove layer' label so undo reads
+  /// identically either way — and one undo restores every layer
+  /// the sweep took.
+  void _commitEraserSweep() {
+    final ids = List<String>.of(_sweepErasedIds);
+    _sweepErasedIds.clear();
+    if (ids.isEmpty) return;
+    ref.read(liveOverlayProvider.notifier).clear();
+    final commands = <RemoveLayerCommand>[
+      for (final id in ids) RemoveLayerCommand(id),
+    ];
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
+          commands.length == 1
+              ? commands.single
+              : CompositeCommand(commands, labelOverride: 'Remove layer'),
+        );
+    final selection = ref.read(selectionControllerProvider);
+    if (ids.any(selection.contains)) {
+      ref.read(selectionControllerProvider.notifier).clear();
+    }
   }
 
   /// Oriented bounding-box hit test — transforms [local] into the

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/document_controller.dart';
+import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/paint_commands.dart';
 import '../../engine/modules/paint/paint_layer.dart';
@@ -29,7 +30,6 @@ class PaintSession {
     this.strokeColor = const Color(0xFFFF3B30),
     this.strokeWidth = 6.0,
     this.fillColor,
-    this.dashPattern,
     this.blurRadius = 16.0,
     this.polygonSides = 6,
   });
@@ -53,7 +53,6 @@ class PaintSession {
   final Color strokeColor;
   final double strokeWidth;
   final Color? fillColor;
-  final List<double>? dashPattern;
   final double blurRadius;
   final int polygonSides;
 
@@ -65,7 +64,6 @@ class PaintSession {
     Color? strokeColor,
     double? strokeWidth,
     Object? fillColor = _sentinel,
-    Object? dashPattern = _sentinel,
     double? blurRadius,
     int? polygonSides,
   }) {
@@ -80,9 +78,6 @@ class PaintSession {
       fillColor: identical(fillColor, _sentinel)
           ? this.fillColor
           : fillColor as Color?,
-      dashPattern: identical(dashPattern, _sentinel)
-          ? this.dashPattern
-          : dashPattern as List<double>?,
       blurRadius: blurRadius ?? this.blurRadius,
       polygonSides: polygonSides ?? this.polygonSides,
     );
@@ -223,6 +218,47 @@ class PaintToolController extends Notifier<PaintSession> {
             UpdatePaintStyleCommand(layerId: layer.id, strokeWidth: width),
           );
     }
+  }
+
+  // ─── Contract §2 preview channel: stroke width (tb2 3/16) ──────
+  //
+  // Slider drags call [previewStrokeWidth] per tick and
+  // [commitStrokeWidth] once on release / pointer-cancel / preset
+  // tap. The session default updates per tick (it drives readouts
+  // and the next stroke and is NOT a document write); when a paint
+  // layer is selected, the layer edit stages on the live overlay
+  // and commits as ONE undoable command. When nothing is selected
+  // the drag is session-only — exactly the historical split.
+  UpdatePaintStyleCommand? _pendingWidthCommit;
+
+  void previewStrokeWidth(double width) {
+    if (state.strokeWidth != width) {
+      state = state.copyWith(strokeWidth: width);
+    }
+    final layer = selectedPaintLayer();
+    if (layer == null) return;
+    final cmd = UpdatePaintStyleCommand(layerId: layer.id, strokeWidth: width);
+    // The pending command is the exact command commit executes;
+    // each tick APPLIES it to the committed doc and stages the
+    // result, so preview == commit by construction.
+    _pendingWidthCommit = cmd;
+    final doc = ref.read(documentControllerProvider);
+    final preview = cmd.apply(doc).layerById(layer.id);
+    if (preview != null) {
+      ref.read(liveOverlayProvider.notifier).replaceLayer(preview);
+    }
+  }
+
+  void commitStrokeWidth() {
+    final cmd = _pendingWidthCommit;
+    _pendingWidthCommit = null;
+    if (cmd == null) return;
+    // Clear-then-execute in one synchronous run — no flash-back
+    // frame. A drag that ends where it started no-ops inside
+    // execute() (apply returns the identical doc), so no net-zero
+    // history entry is pushed (§3).
+    ref.read(liveOverlayProvider.notifier).clear();
+    ref.read(documentControllerProvider.notifier).execute(cmd);
   }
 
   void setFillColor(Color? color) {

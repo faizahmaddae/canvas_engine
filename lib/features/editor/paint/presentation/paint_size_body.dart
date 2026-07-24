@@ -12,26 +12,29 @@ import '../../toolbar/presentation/widgets/preset_chip.dart';
 /// future tweak lands once.
 ///
 /// The widget is intentionally source-agnostic: it takes the
-/// current [value], [color], and [dashPattern] explicitly and
-/// pushes commits through [onChange]. The caller decides whether
-/// those values come from the session defaults or from a selected
-/// `PaintLayer`. Undo, selected-layer mirroring, and coalescing
-/// (`UpdatePaintStyleCommand.mergeWith`) all live behind
-/// `setStrokeWidth` in the controller, so this widget can stay
-/// purely visual.
+/// current [value] and [color] explicitly and streams ticks through
+/// [onChange] with [onChangeEnd] marking the end of a gesture. The
+/// caller decides whether those values come from the session
+/// defaults or from a selected `PaintLayer`, and what "preview" vs
+/// "commit" means (contract §2: the paint hosts stage previews on
+/// the live overlay and commit ONE command per drag). Preset chips
+/// fire `onChange(value)` immediately followed by `onChangeEnd()`,
+/// so a tap is a single discrete commit (§3); the precision
+/// slider's [onChangeEnd] also fires on pointer-cancel so an
+/// interrupted drag still commits what the user saw (§7).
 class PaintSizeBody extends StatelessWidget {
   const PaintSizeBody({
     super.key,
     required this.value,
     required this.color,
-    required this.dashPattern,
     required this.onChange,
+    this.onChangeEnd,
   });
 
   final double value;
   final Color color;
-  final List<double>? dashPattern;
   final ValueChanged<double> onChange;
+  final VoidCallback? onChangeEnd;
 
   // Same four plain-language stroke weights the inline and modal
   // surfaces both surface. Numeric chip-grids are gone — the
@@ -61,7 +64,7 @@ class PaintSizeBody extends StatelessWidget {
           uppercase: true,
           letterSpacing: 0.8,
         ),
-        StrokeHero(width: value, color: color, dashPattern: dashPattern),
+        StrokeHero(width: value, color: color),
         const SizedBox(height: 12),
         SectionLabel(
           context.l10n.strokeWidthLabel,
@@ -82,9 +85,13 @@ class PaintSizeBody extends StatelessWidget {
             itemBuilder: (_, i) => PresetChip(
               label: _presetLabel(context, i),
               selected: (value - _presets[i]).abs() < _epsilon,
-              // Chip tap = instant commit. PresetChip emits the
-              // selection haptic itself.
-              onTap: () => onChange(_presets[i]),
+              // Chip tap = one discrete commit: preview the value
+              // and seal it in the same tap (§3). PresetChip emits
+              // the selection haptic itself.
+              onTap: () {
+                onChange(_presets[i]);
+                onChangeEnd?.call();
+              },
             ),
           ),
         ),
@@ -94,28 +101,27 @@ class PaintSizeBody extends StatelessWidget {
           min: 1,
           max: 80,
           onChange: onChange,
+          onChangeEnd: onChangeEnd,
         ),
       ],
     );
   }
 }
 
-
 /// Single horizontal brush stroke painted live in the user's
-/// current colour, dash, and stroke width. Bigger and more honest
-/// than a tiny "leading dot" — instant proof of what the next
-/// stroke will look like before any commit.
+/// current colour and stroke width. Bigger and more honest than a
+/// tiny "leading dot" — instant proof of what the next stroke will
+/// look like before any commit.
+///
+/// The dash-pattern preview died with `PaintSession.dashPattern`
+/// (tb2 3/16): nothing had written that field since its setter was
+/// retired in tb1 6b, so the hero always rendered solid anyway —
+/// actual dashing comes from the stroke's `PaintKind`.
 class StrokeHero extends StatelessWidget {
-  const StrokeHero({
-    super.key,
-    required this.width,
-    required this.color,
-    required this.dashPattern,
-  });
+  const StrokeHero({super.key, required this.width, required this.color});
 
   final double width;
   final Color color;
-  final List<double>? dashPattern;
 
   @override
   Widget build(BuildContext context) {
@@ -133,26 +139,17 @@ class StrokeHero extends StatelessWidget {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
       child: CustomPaint(
-        painter: _StrokeHeroPainter(
-          width: width,
-          color: color,
-          dashPattern: dashPattern,
-        ),
+        painter: _StrokeHeroPainter(width: width, color: color),
       ),
     );
   }
 }
 
 class _StrokeHeroPainter extends CustomPainter {
-  _StrokeHeroPainter({
-    required this.width,
-    required this.color,
-    required this.dashPattern,
-  });
+  _StrokeHeroPainter({required this.width, required this.color});
 
   final double width;
   final Color color;
-  final List<double>? dashPattern;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -162,62 +159,35 @@ class _StrokeHeroPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
     final y = size.height / 2;
-    if (dashPattern == null) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-      return;
-    }
-    var x = 0.0;
-    var i = 0;
-    var draw = true;
-    while (x < size.width) {
-      final seg = dashPattern![i % dashPattern!.length];
-      final end = (x + seg).clamp(0.0, size.width).toDouble();
-      if (draw) {
-        canvas.drawLine(Offset(x, y), Offset(end, y), paint);
-      }
-      x = end;
-      draw = !draw;
-      i++;
-    }
+    canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
   }
 
   @override
   bool shouldRepaint(covariant _StrokeHeroPainter old) =>
-      old.width != width ||
-      old.color != color ||
-      !_listEq(old.dashPattern, dashPattern);
-
-  static bool _listEq(List<double>? a, List<double>? b) {
-    if (a == null && b == null) return true;
-    if (a == null || b == null) return false;
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return false;
-    }
-    return true;
-  }
+      old.width != width || old.color != color;
 }
 
 /// Flat single-level disclosure that hides the precision slider by
 /// default. Mirrors the Text Size panel's `_SizePrecisionAdvanced`
-/// in shape and feel. Live mutation streams through `onChange` on
-/// every tick — the per-call `UpdatePaintStyleCommand.mergeWith`
-/// coalesces a whole drag to one undo entry, so the user gets live
-/// canvas feedback AND a single undo step. `Listener.onPointerCancel`
-/// guarantees a final commit even if the gesture is canceled by the
-/// system or the sheet is dismissed mid-drag.
+/// in shape and feel. Ticks stream through `onChange` (the host
+/// stages them as overlay previews per contract §2) and the drag
+/// seals through `onChangeEnd` — fired on release AND on
+/// pointer-cancel (`Listener.onPointerCancel`), so an interrupted
+/// drag still commits the last previewed value (§7).
 class _PaintSizePrecisionAdvanced extends StatefulWidget {
   const _PaintSizePrecisionAdvanced({
     required this.value,
     required this.min,
     required this.max,
     required this.onChange,
+    this.onChangeEnd,
   });
 
   final double value;
   final double min;
   final double max;
   final ValueChanged<double> onChange;
+  final VoidCallback? onChangeEnd;
 
   @override
   State<_PaintSizePrecisionAdvanced> createState() =>
@@ -247,6 +217,7 @@ class _PaintSizePrecisionAdvancedState
     if (!_dragInFlight) return;
     _dragInFlight = false;
     _lastTickValue = null;
+    widget.onChangeEnd?.call();
   }
 
   @override

@@ -6,6 +6,8 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
+import '../../application/live_overlay_controller.dart';
+import '../../engine/commands/editor_command.dart';
 import '../../engine/commands/shape_commands.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/section_label.dart';
@@ -31,6 +33,44 @@ class ShapeStyleBody extends ConsumerStatefulWidget {
 }
 
 class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
+  // ─── Contract §2 slider preview channel (tb2 3/16) ──────────────
+  //
+  // The pending command is the exact command release will execute;
+  // each tick APPLIES it to the committed doc and stages the result
+  // on the overlay, so preview == commit by construction — which
+  // also means an opacity-only drag inherits SetShapeFillCommand's
+  // `_targetFill` semantics and can never clear a gradient fill.
+  // `EditorSliderRow.onDragEnd` also fires on pointer-cancel, so an
+  // interrupted drag still commits the last previewed value (§7).
+  EditorCommand? _pendingSliderCommand;
+
+  void _previewSlider(EditorCommand cmd) {
+    _pendingSliderCommand = cmd;
+    final doc = ref.read(documentControllerProvider);
+    final preview = cmd.apply(doc).layerById(widget.layer.id);
+    if (preview != null) {
+      ref.read(liveOverlayProvider.notifier).replaceLayer(preview);
+    }
+  }
+
+  void _commitSlider() {
+    final cmd = _pendingSliderCommand;
+    _pendingSliderCommand = null;
+    if (cmd == null) return;
+    // Clear-then-execute in one synchronous run — no flash-back
+    // frame (same pattern as text's commitLiveEdit).
+    ref.read(liveOverlayProvider.notifier).clear();
+    ref.read(documentControllerProvider.notifier).execute(cmd);
+  }
+
+  @override
+  void dispose() {
+    if (_pendingSliderCommand != null) {
+      ref.read(liveOverlayProvider.notifier).clear();
+    }
+    super.dispose();
+  }
+
   void _commitFill({Color? c, double? opacity, bool live = false}) {
     ref
         .read(documentControllerProvider.notifier)
@@ -44,16 +84,10 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
         );
   }
 
-  void _commitRadius(double r, {bool live = false}) {
+  void _commitRadius(double r) {
     ref
         .read(documentControllerProvider.notifier)
-        .execute(
-          SetShapeRadiusCommand(
-            layerId: widget.layer.id,
-            radius: r,
-            live: live,
-          ),
-        );
+        .execute(SetShapeRadiusCommand(layerId: widget.layer.id, radius: r));
   }
 
   @override
@@ -99,7 +133,10 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
             value: layer.fillOpacity,
             max: 1,
             format: (v) => '${(v * 100).round()}%',
-            onChanged: (v) => _commitFill(opacity: v, live: true),
+            onChanged: (v) => _previewSlider(
+              SetShapeFillCommand(layerId: layer.id, opacity: v),
+            ),
+            onDragEnd: _commitSlider,
             semanticLabel: context.l10n.opacityLabel,
           ),
           if (supportsRadius) ...[
@@ -118,7 +155,10 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
               value: layer.cornerRadius.clamp(0.0, maxRadius),
               max: maxRadius == 0 ? 1 : maxRadius,
               format: (v) => '${v.round()}',
-              onChanged: (v) => _commitRadius(v, live: true),
+              onChanged: (v) => _previewSlider(
+                SetShapeRadiusCommand(layerId: layer.id, radius: v),
+              ),
+              onDragEnd: _commitSlider,
               semanticLabel: context.l10n.cornerRadiusLabel,
             ),
           ],

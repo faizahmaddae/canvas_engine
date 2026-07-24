@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_tokens.dart';
-import '../../application/document_controller.dart';
+import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/modules/paint/paint_layer.dart';
 import '../application/paint_tool_controller.dart';
@@ -12,12 +12,12 @@ import 'paint_size_body.dart';
 /// "Size" entry in the paint mode toolbar and from the paint floating
 /// toolbar's stroke pill.
 ///
-/// Live mutation: changing the slider or toggling fill mutates state
-/// immediately so the canvas reflects the new value while the sheet is
-/// open. When a paint layer is selected the edits target THAT layer
-/// (single coalesced undo entry per drag, courtesy of
-/// [UpdatePaintStyleCommand.mergeWith]); otherwise they update the
-/// session defaults used for the next drawn stroke.
+/// Live preview: slider ticks stage on the live overlay (contract
+/// §2, tb2 3/16) so the canvas reflects the new value while the
+/// sheet is open, and the gesture end commits ONE undoable command.
+/// When a paint layer is selected the edits target THAT layer;
+/// otherwise they update the session defaults used for the next
+/// drawn stroke (session-only — no document writes).
 Future<void> showPaintSizeSheet(BuildContext context, WidgetRef ref) {
   return showModalBottomSheet<void>(
     context: context,
@@ -44,11 +44,12 @@ class _PaintSizeSheet extends ConsumerWidget {
     // session-default. Falling back to the session when nothing is
     // selected keeps the in-tool drawing flow working.
     //
-    // We watch the document + selection so the body tracks the
-    // layer mutation `setStrokeWidth` pushes every frame during a
-    // drag.
+    // We watch the MERGED view + selection so the body tracks the
+    // overlay preview `previewStrokeWidth` stages every frame
+    // during a drag (the committed doc stays frozen mid-drag by
+    // design — contract §2).
     final selection = ref.watch(selectionControllerProvider);
-    final doc = ref.watch(documentControllerProvider);
+    final doc = ref.watch(renderedDocumentProvider);
     final selectedLayer = selection.hasSelection
         ? doc.layerById(selection.selectedId!)
         : null;
@@ -56,10 +57,6 @@ class _PaintSizeSheet extends ConsumerWidget {
 
     final strokeWidth = paintLayer?.strokeWidth ?? session.strokeWidth;
     final strokeColor = paintLayer?.strokeColor ?? session.strokeColor;
-    // PaintLayer geometry doesn't (yet) carry its own dash pattern;
-    // use the session pattern so the hero preview still reflects the
-    // user's current dash style.
-    final dashPattern = session.dashPattern;
     final fillEnabled = paintLayer != null
         ? paintLayer.fillColor != null
         : session.fillColor != null;
@@ -108,8 +105,8 @@ class _PaintSizeSheet extends ConsumerWidget {
               PaintSizeBody(
                 value: strokeWidth,
                 color: strokeColor,
-                dashPattern: dashPattern,
-                onChange: controller.setStrokeWidth,
+                onChange: controller.previewStrokeWidth,
+                onChangeEnd: controller.commitStrokeWidth,
               ),
               const SizedBox(height: 8),
               const Divider(height: 1),
