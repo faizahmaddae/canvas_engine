@@ -46,7 +46,7 @@ import '../../shape/presentation/shape_floating_toolbar.dart';
 import '../../text/application/text_tool_controller.dart';
 import '../../text/presentation/text_edit_flow.dart';
 import '../../text/presentation/text_quick_capsule.dart';
-import '../../text/presentation/add_text_composer_state.dart';
+import '../../text/application/add_text_composer_state.dart';
 import 'animated_guides_layer.dart';
 import 'canvas_framing.dart';
 import 'mask_edit_overlay.dart';

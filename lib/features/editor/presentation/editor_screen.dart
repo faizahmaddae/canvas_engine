@@ -61,7 +61,7 @@ import 'shape_picker_sheet.dart';
 import '../sticker/application/sticker_tool_controller.dart';
 import '../sticker/presentation/sticker_mode_toolbar.dart';
 import '../text/application/text_tool_controller.dart';
-import '../text/presentation/add_text_composer_state.dart';
+import '../text/application/add_text_composer_state.dart';
 import '../text/presentation/text_input_flow_sheet.dart';
 import '../text/presentation/text_mode_toolbar.dart';
 import '../toolbar/presentation/mode_done_button.dart';
