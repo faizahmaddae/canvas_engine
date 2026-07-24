@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/context_toolbar_controller.dart';
+import '../../application/mask_edit_controller.dart';
 import '../../crop/application/crop_controller.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../../presentation/widgets/layer_overflow_sheet.dart';
@@ -166,6 +167,29 @@ class ImageModeToolbar extends ConsumerWidget {
         onTap: () {
           contextCtrl.closePanel();
           imageCtrl.toggleSlot(ImageToolSlot.shape);
+        },
+      ),
+      // Selective masking used to be a tonal button at the bottom of
+      // the Effects panel — three taps deep, and invisible unless you
+      // already knew the panel existed. It is the layer's second
+      // spatial edit (crop being the first), so it earns a strip tile.
+      // Capability guard: a mask with nothing to mask is a lying
+      // control, so the tile disables until the stack has an effect.
+      ImageToolSlot.selective => ToolbarSlot(
+        id: ImageToolSlot.selective.name,
+        icon: Icons.center_focus_strong_rounded,
+        label: l10n.selectiveMaskLabel,
+        tier: SlotTier.tier2,
+        enabledBuilder: () => layer.effects.effects.isNotEmpty,
+        onTap: () {
+          EditorHaptics.tap();
+          contextCtrl.closePanel();
+          // The mode's chrome replaces the dock; leaving openSlot set
+          // would re-mount a stale panel on exit.
+          imageCtrl.closePanel();
+          ref
+              .read(maskEditControllerProvider.notifier)
+              .open(layer.id, priorSelectionId: layer.id);
         },
       ),
       ImageToolSlot.effects => ToolbarSlot(

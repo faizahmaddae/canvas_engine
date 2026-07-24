@@ -588,10 +588,12 @@ class EditorScreen extends ConsumerWidget {
           expanded = ImageEffectsBody(layer: selectedImageLayer);
           expandedKey = 'image-effects:${selectedImageLayer.id}';
         case ImageToolSlot.crop:
+        case ImageToolSlot.selective:
         case ImageToolSlot.replace:
         case null:
-          // 'crop' opens the full-screen CropModeOverlay; 'replace'
-          // is a one-shot picker. Neither owns an inline dock body.
+          // 'crop' opens the full-screen CropModeOverlay,
+          // 'selective' the on-canvas mask-edit mode, and 'replace'
+          // is a one-shot picker. None owns an inline dock body.
           break;
       }
     } else if (shapeSelected) {
