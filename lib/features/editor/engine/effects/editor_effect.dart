@@ -33,6 +33,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui show Gradient, Offset;
 
 import 'package:flutter/foundation.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/painting.dart';
 
 import '../core/layer_mask.dart';
@@ -196,6 +197,23 @@ final class UnknownEffect extends EditorEffect {
 
   @override
   Map<String, dynamic> toJson() => Map<String, dynamic>.from(_raw);
+
+  /// Value equality over the carried payload.
+  ///
+  /// Without this an effect the reader does not understand fell back
+  /// to identity, so a document holding one was never equal to a
+  /// re-decoded copy of itself: the wire bytes matched but every
+  /// command's no-op guard churned instead of short-circuiting
+  /// (tb5 4/9 harness). Compared through the encoded form because
+  /// the payload is arbitrary nested JSON.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UnknownEffect &&
+          const DeepCollectionEquality().equals(_raw, other._raw));
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(_raw);
 }
 
 /// Which rendering pipeline an [EditorEffect] feeds into. Stored

@@ -51,16 +51,20 @@ class RemoveLayerCommand extends EditorCommand {
     // composes correctly on its own: each child's inverse captures
     // the index in the document just before that child applied, and
     // the reversed replay re-inserts into exactly those states.
-    //
-    // Deliberately NOT restored here: EditorDocument.removeLayer
-    // clears basePhotoLayerId as a side effect, and this inverse
-    // does not re-point it. The one production base-photo delete
-    // flow (LayerActions) compensates by bundling an explicit
-    // SetBasePhotoCommand(null) first in its composite, whose
-    // inverse re-points on undo. Folding the pointer in here too is
-    // a semantics change for that call site — revisit with the
-    // command-invert harness sweep (roadmap Phase 5.1).
-    return AddLayerCommand(prev, index: before.indexOf(layerId));
+    final add = AddLayerCommand(prev, index: before.indexOf(layerId));
+    // `removeLayer` clears basePhotoLayerId as a side effect, so an
+    // inverse that only re-adds the layer leaves the document
+    // pointing at nothing — the bare command did not round-trip
+    // (tb5 4/9 harness). The production delete flow already
+    // compensates by bundling SetBasePhotoCommand(null) into its
+    // composite; re-pointing here as well is idempotent with that
+    // (the composite's own inverse sets the same value), and it
+    // makes the command correct on its own.
+    if (before.basePhotoLayerId != layerId) return add;
+    return CompositeCommand([
+      add,
+      SetBasePhotoCommand(layerId),
+    ], labelOverride: 'Delete layer');
   }
 }
 

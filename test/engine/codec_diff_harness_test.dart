@@ -690,25 +690,17 @@ void main() {
     for (final entry in rawSeeded.entries) {
       test('${entry.key} (seeded from raw JSON)', () {
         final seeded = DocumentCodec.decode(entry.value);
-        // KNOWN GAP: `UnknownEffect` does not override `operator ==`
-        // (it holds a raw JSON map), so it falls back to identity and
-        // any document carrying one is never equal to a re-decoded
-        // copy of itself. The WIRE contract — the property this
-        // harness exists for — still holds exactly. Reported with the
-        // roadmap 5.4 sweep; asserted, not skipped, so the day
-        // `UnknownEffect` gains a `mapEquals`-based `==` this line is
-        // the reminder to flip the flag back.
-        expectCodecFixedPoint(
-          seeded,
-          label: entry.key,
-          expectValueEqualDecode: false,
-        );
+        // `UnknownEffect` carries a raw JSON map, so it used to fall
+        // back to identity equality: a document holding a
+        // forward-compat effect was never equal to a re-decoded copy
+        // of itself, and every command's no-op guard churned. The
+        // wire contract always held; the model-level one does now too
+        // (tb5 8/9), so this is a plain fixed-point assertion.
+        expectCodecFixedPoint(seeded, label: entry.key);
         expect(
-          DocumentCodec.decode(entry.value) == seeded,
-          isFalse,
-          reason:
-              'UnknownEffect gained value equality — drop the '
-              'expectValueEqualDecode escape hatch above',
+          DocumentCodec.decode(entry.value),
+          seeded,
+          reason: 'an unreadable effect must still compare by value',
         );
       });
     }

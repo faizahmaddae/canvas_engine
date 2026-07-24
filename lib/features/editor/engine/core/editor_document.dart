@@ -214,6 +214,11 @@ class EditorDocument {
   }
 
   EditorDocument removeLayer(String id) {
+    // Identity for a missing id: HistoryStack's no-op guard is an
+    // `identical` check, so allocating a new document here pushed an
+    // undo entry that undid nothing (found by the tb5 4/9 invert
+    // harness).
+    if (!_layerIndex.containsKey(id)) return this;
     final nextLayers = layers.where((l) => l.id != id).toList(growable: false);
     // Clear the base-photo pointer if its target was just removed —
     // otherwise the resolver would dereference a ghost id and the

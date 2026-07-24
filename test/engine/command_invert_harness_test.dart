@@ -1077,34 +1077,26 @@ void main() {
       });
     }
 
-    test(
-      'RemoveLayerCommand on a missing layer (value no-op, new instance)',
-      () {
-        // `EditorDocument.removeLayer` runs `layers.where(...)` and then
-        // `copyWith`, so removing an id that isn't there still allocates
-        // a fresh (equal) document rather than returning `this`. The
-        // inverse is correctly a `_NoopCommand`, so undo/redo stay
-        // correct — but `HistoryStack.execute`'s `identical` guard does
-        // not fire, so a ghost delete pushes an undo entry that undoes
-        // nothing. Pinned here rather than fixed in lib/ (roadmap 5.4 is
-        // a test-only stage); see the accompanying report.
-        expectNoopInverse(
-          doc,
-          const RemoveLayerCommand('ghost'),
-          label: 'RemoveLayerCommand on a missing layer',
-          returnsSameInstance: false,
-        );
-        final stack = HistoryStack();
-        stack.execute(doc, const RemoveLayerCommand('ghost'));
-        expect(
-          stack.undoDepth,
-          1,
-          reason:
-              'documents the phantom entry: change this to 0 in the same '
-              'commit that makes removeLayer return `this` for a missing id',
-        );
-      },
-    );
+    test('RemoveLayerCommand on a missing layer pushes no history', () {
+      // `removeLayer` used to run `where(...)` + `copyWith` even when
+      // the id was absent, so it returned a fresh (equal) document.
+      // `HistoryStack.execute`'s no-op guard is an `identical` check,
+      // so a ghost delete pushed an undo entry that undid nothing.
+      // This harness found it; `removeLayer` returns `this` now
+      // (tb5 8/9).
+      expectNoopInverse(
+        doc,
+        const RemoveLayerCommand('ghost'),
+        label: 'RemoveLayerCommand on a missing layer',
+      );
+      final stack = HistoryStack();
+      stack.execute(doc, const RemoveLayerCommand('ghost'));
+      expect(
+        stack.undoDepth,
+        0,
+        reason: 'a delete that removed nothing is not an undoable action',
+      );
+    });
 
     test('type-mismatched target is also a no-op (image command on text)', () {
       expectNoopInverse(
@@ -1172,31 +1164,25 @@ void main() {
   // -------------------------------------------------------------------
   // Known divergence — see the report accompanying roadmap 5.4.
   // -------------------------------------------------------------------
-  group('known invert gap', () {
-    test('RemoveLayerCommand does not restore basePhotoLayerId on undo', () {
+  group('base-photo delete', () {
+    test('the bare command restores the pointer too (tb5 8/9)', () {
       // `EditorDocument.removeLayer` clears `basePhotoLayerId` as a
-      // side effect, and `RemoveLayerCommand.invert` deliberately
-      // does not re-point it (see the comment in
-      // transform_commands.dart). Production compensates by bundling
-      // an explicit SetBasePhotoCommand into the delete composite,
-      // so the gap is unreachable through the one real base-photo
-      // delete flow — but the command's own inverse does NOT satisfy
-      // `invert(before).apply(after) == before`.
-      //
-      // Asserted as an exact allow-list so the day someone folds the
-      // pointer into the inverse (or the gap widens), this fails.
+      // side effect. The inverse used to re-add the layer without
+      // re-pointing, so `RemoveLayerCommand` did not satisfy
+      // `invert(before).apply(after) == before` on its own — this
+      // harness found it, and the inverse now composes the pointer
+      // restore. No allow-list: a plain round-trip.
       expectInvertRoundTrip(
         photoDocument(),
         const RemoveLayerCommand('img-1'),
         label: 'RemoveLayerCommand on the base photo',
-        allowedDivergence: const <String>['basePhotoLayerId'],
       );
     });
 
-    test('the composite production actually uses does round-trip', () {
-      // The compensating shape: clear the pointer first, then remove.
-      // Proof that the gap is a command-level one, not a user-visible
-      // undo bug on the shipped path.
+    test('the composite production uses still round-trips', () {
+      // Clear the pointer first, then remove. The command-level fix
+      // is idempotent with this — the composite's own inverse sets
+      // the same value — so the shipped path is unchanged.
       expectInvertRoundTrip(
         photoDocument(),
         CompositeCommand(const <EditorCommand>[
