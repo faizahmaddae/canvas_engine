@@ -72,7 +72,13 @@ class FloatingGlassBar extends StatelessWidget {
               ),
             ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          // Horizontal only (tb2 a11y pass): the 4dp vertical
+          // breathing room moved INSIDE [FloatingPillButton] so the
+          // pills' tap area spans the full 40dp bar height while
+          // the painted pill row stays exactly where it was. The
+          // glass shell's own box is unchanged (callers size it via
+          // SizedBox(height: kFloatingBarHeight)).
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           child: child,
         ),
       ),
@@ -109,31 +115,41 @@ class FloatingPillButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
+    // Hit area = the full 40dp bar height (tb2 a11y pass): the
+    // InkWell wraps a transparent 4dp vertical halo around the
+    // painted 32dp pill (the halo used to be the glass shell's own
+    // padding, so the painted pixels are identical). 40dp is the
+    // structural ceiling here — the pills live inside the bar's
+    // 40dp ClipRRect, which clips hit-testing; reaching the full
+    // 44dp kMinHitTarget needs the bar chrome itself to change and
+    // is deferred with the Stage-2 modal host work.
     return Semantics(
       button: true,
       label: semanticLabel,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          color: active
-              ? tokens.accent.withValues(alpha: 0.16)
-              : Colors.transparent,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(14),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: onTap,
-            splashColor: tokens.accent.withValues(alpha: 0.10),
-            highlightColor: tokens.accent.withValues(alpha: 0.05),
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 32),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              alignment: Alignment.center,
-              child: child,
+          onTap: onTap,
+          splashColor: tokens.accent.withValues(alpha: 0.10),
+          highlightColor: tokens.accent.withValues(alpha: 0.05),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 140),
+              curve: Curves.easeOut,
+              decoration: BoxDecoration(
+                color: active
+                    ? tokens.accent.withValues(alpha: 0.16)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 40, minHeight: 32),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                alignment: Alignment.center,
+                child: child,
+              ),
             ),
           ),
         ),

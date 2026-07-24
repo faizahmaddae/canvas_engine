@@ -173,6 +173,7 @@ class _CropTopBar extends ConsumerWidget {
         child: Row(
           children: [
             TextButton(
+              key: const ValueKey('crop-top-cancel'),
               onPressed: () {
                 EditorHaptics.tap();
                 ctrl.cancelCrop();
@@ -200,6 +201,7 @@ class _CropTopBar extends ConsumerWidget {
             ),
             const Spacer(),
             FilledButton(
+              key: const ValueKey('crop-top-done'),
               onPressed: () {
                 EditorHaptics.confirm();
                 ctrl.commitCrop();
@@ -207,7 +209,12 @@ class _CropTopBar extends ConsumerWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
+                // Painted pill stays 38dp; the tap target grows to
+                // the 44dp floor via Material's padded density
+                // (kMinHitTarget a11y pass — the 56dp bar has room,
+                // so no layout shift).
                 minimumSize: const Size(76, 38),
+                tapTargetSize: MaterialTapTargetSize.padded,
                 padding: const EdgeInsets.symmetric(horizontal: 18),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(19),

@@ -311,9 +311,13 @@ class EditorScreen extends ConsumerWidget {
               // invisible canvas-tap-to-deselect gesture for new
               // users while keeping that gesture as the pro shortcut.
               // Hidden in Crop Mode.
+              // top 4 (not 8): the pill's hit box is 44dp with the
+              // painted 36dp pill centred (tb2 a11y pass), so the
+              // 4dp transparent halo puts the VISIBLE pill exactly
+              // where it has always been (8dp from the top edge).
               if (!cropActive && !maskEditActive)
                 const PositionedDirectional(
-                  top: 8,
+                  top: 4,
                   end: 8,
                   child: SafeArea(child: _ModeExitPill()),
                 ),
