@@ -7,6 +7,7 @@ import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/transform_commands.dart';
 import '../../engine/modules/text/text_layer.dart';
+import '../../ui/canvas_preset_scale.dart';
 import 'sticker_panel_shell.dart';
 
 /// Body for the Sticker "Size" tab. Four square presets that resize
@@ -22,6 +23,10 @@ class StickerSizeBody extends ConsumerWidget {
   // Square presets — emoji glyphs occupy a square box, so width ==
   // height keeps the sticker visually balanced and matches the
   // 240 px insertion default sitting between M and L.
+  //
+  // Sides are authored against the reference canvas and scaled to
+  // the open document (tb4 6/14): "XL" has to mean XL on a print
+  // canvas too, not a tenth of one.
   static const _presets = <_SizePreset>[
     _SizePreset(label: 'S', side: 120),
     _SizePreset(label: 'M', side: 200),
@@ -32,6 +37,7 @@ class StickerSizeBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = AppTokens.of(context);
+    final doc = ref.watch(documentControllerProvider);
     final currentSide = layer.transform.size.shortestSide;
     return StickerPanelShell(
       title: context.l10n.sizeTool,
@@ -49,8 +55,9 @@ class StickerSizeBody extends ConsumerWidget {
               for (final p in _presets)
                 _SizeChip(
                   label: p.label,
-                  selected: (currentSide - p.side).abs() < 1,
-                  onTap: () => _apply(ref, p.side),
+                  selected:
+                      (currentSide - canvasScaledPreset(p.side, doc)).abs() < 1,
+                  onTap: () => _apply(ref, canvasScaledPreset(p.side, doc)),
                   tokens: tokens,
                 ),
             ],

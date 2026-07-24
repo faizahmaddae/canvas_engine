@@ -13,6 +13,7 @@ import '../../engine/core/background_fill.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/section_label.dart';
 import '../../ui/editor_slider_row.dart';
+import '../../ui/canvas_preset_scale.dart';
 import '../../ui/fill_mode_section.dart';
 import 'shape_panel_shell.dart';
 import '../../../../core/utils/editor_value_format.dart';
@@ -167,6 +168,10 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
             _RadiusPresets(
               current: layer.cornerRadius,
               max: maxRadius,
+              rounded: canvasScaledPreset(
+                _kRoundedRadius,
+                ref.watch(documentControllerProvider),
+              ),
               onPick: (r) {
                 EditorHaptics.toggle();
                 _commitRadius(r);
@@ -196,21 +201,28 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
   }
 }
 
-/// Three quick-set chips: Sharp (0), Rounded (~16), Pill (= maxRadius).
+/// The "Rounded" radius on the reference canvas; scaled to the open
+/// document at the call site (tb4 6/14) so the word keeps meaning the
+/// same corner at any canvas scale. Sharp (0) and Pill (half the
+/// shorter side) are ratios already and need no scaling.
+const double _kRoundedRadius = 16;
+
+/// Three quick-set chips: Sharp (0), Rounded, Pill (= maxRadius).
 class _RadiusPresets extends StatelessWidget {
   const _RadiusPresets({
     required this.current,
     required this.max,
+    required this.rounded,
     required this.onPick,
   });
 
   final double current;
   final double max;
+  final double rounded;
   final ValueChanged<double> onPick;
 
   @override
   Widget build(BuildContext context) {
-    const rounded = 16.0;
     final pill = max;
     _Key activeKey;
     if (current <= 0.5) {

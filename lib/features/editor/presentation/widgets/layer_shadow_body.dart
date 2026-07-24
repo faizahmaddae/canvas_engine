@@ -8,7 +8,9 @@ import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../engine/commands/editor_command.dart';
+import '../../engine/core/editor_document.dart';
 import '../../engine/core/editor_layer.dart';
+import '../../ui/canvas_preset_scale.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/panel_direction_pad.dart';
 import '../../ui/precision_disclosure.dart';
@@ -151,13 +153,21 @@ class _LayerShadowBodyState<L extends EditorLayer>
     final adapter = widget.adapter;
     final fields = adapter.read(widget.layer);
     final hasShadow = fields.opacity > 0;
-    final activePreset = _matchShadowPreset(fields);
+    // Blur and offset are absolute pixels, so a preset authored on
+    // the reference canvas has to be scaled to the open document or
+    // "Soft" reads as "none" at print sizes (tb4 6/14). Opacity is a
+    // ratio and stays put.
+    final doc = ref.watch(documentControllerProvider);
+    final activePreset = _matchShadowPreset(fields, doc);
 
     void applyPreset(_ShadowPreset preset) {
       EditorHaptics.toggle();
       _commit(
-        blur: preset.blur,
-        offset: preset.offset,
+        blur: canvasScaledPreset(preset.blur, doc),
+        offset: Offset(
+          canvasScaledPreset(preset.offset.dx, doc),
+          canvasScaledPreset(preset.offset.dy, doc),
+        ),
         opacity: preset.opacity,
       );
     }
@@ -306,12 +316,20 @@ class _ShadowPreset {
 
 _ShadowPreset? _matchShadowPreset(
   ({Color color, double blur, Offset offset, double opacity}) fields,
+  EditorDocument doc,
 ) {
   if (fields.opacity <= 0) return _ShadowPreset.none;
   for (final p in _ShadowPreset.all) {
     if (p.id == 'none') continue;
-    if ((p.blur - fields.blur).abs() < 0.5 &&
-        (p.offset - fields.offset).distance < 0.5 &&
+    // Compare against the SCALED preset — the same numbers the row
+    // would commit on this document (tb4 6/14).
+    final blur = canvasScaledPreset(p.blur, doc);
+    final offset = Offset(
+      canvasScaledPreset(p.offset.dx, doc),
+      canvasScaledPreset(p.offset.dy, doc),
+    );
+    if ((blur - fields.blur).abs() < 0.5 &&
+        (offset - fields.offset).distance < 0.5 &&
         (p.opacity - fields.opacity).abs() < 0.02) {
       return p;
     }
