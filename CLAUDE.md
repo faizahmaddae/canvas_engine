@@ -94,7 +94,10 @@ Violet is dead; if you see it, it's a bug.
   Simulator before committing visual changes
   (`xcrun simctl ui <udid> appearance dark|light`). RTL is the default —
   use `EdgeInsetsDirectional`/`PositionedDirectional`/`AlignmentDirectional`,
-  and remember chevrons don't auto-mirror.
+  and note that Material's `*_rounded` directional icons (chevrons,
+  arrow_back, undo/redo) DO auto-mirror — they carry
+  `matchTextDirection: true`. Only custom-painted arrows need manual
+  mirroring.
 - Widget tests pin token contracts (fills, borders, dark-mode flips) via
   `ValueKey`s — follow the existing key naming (`home-template-<id>`,
   `browse-template-tile-<id>`, `onboarding-goal-<category>`, …) since
@@ -116,3 +119,12 @@ surfaces look the way they do. Most relevant for current work:
 `effects.md` + `effects-a3-scoped-plan-2026-07.md` (effect system,
 required reading before touching effects), and
 `mask-edit-mode-design-2026-07.md`.
+
+The editor's toolbar and tool-interaction system was rebuilt in July
+2026: `editor-interaction-contract-2026-07.md` is **binding** for any
+control that changes a document value (surface classes, preview
+channels, gesture→undo mapping, exit levels, the pointer claim table,
+barrier policy), `toolbar-redesign-roadmap-2026-07.md` records what
+shipped and why, and `toolbar-redesign-audit-2026-07.md` is the
+evidence base behind both. `docs/architecture.md` §"The editor's
+toolbar system" is the short version.

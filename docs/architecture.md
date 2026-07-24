@@ -103,6 +103,55 @@ InteractionEngine (pure math)
 LayerTransform (live)  ── on end ──► SetLayerTransformCommand ──► HistoryStack
 ```
 
+## The editor's toolbar system
+
+Rebuilt July 2026 (`docs/toolbar-redesign-roadmap-2026-07.md`, series
+tags `tb0`–`tb5`). Four pieces, and the reason each exists:
+
+**One mode derivation.** `editorToolModeProvider`
+(`application/editor_mode_controller.dart`) is the single answer to
+"which family of dock chrome owns the screen right now". The priority
+ladder — explicit sessions, then group selection, then the selected
+layer's type, then idle — used to be hand-rolled in three places
+inside `editor_screen.dart` with per-flag negation chains, which is
+where three separate bug families lived. Adding a mode means editing
+that one switch.
+
+**One dock controller.** `DockToolController<T>`
+(`toolbar/application/dock_tool_controller.dart`) is generic over each
+mode's slot enum and owns open/close/sibling-swipe for every mode.
+Image, shape, sticker and multi had four identical copies before.
+
+**One strip renderer.** Every mode describes its tiles as
+`ToolbarSlot`s (`toolbar/domain/toolbar_slot.dart`) — id, icon, label,
+tap, tier, plus optional resolvers for a value label, a colour swatch,
+a font-family preview and a runtime enabled state — and `SlotStrip`
+renders them. Rendered ORDER lives in one const list per mode
+(`kImageStripOrder` and friends) from which the sibling-swipe walk is
+derived, so the strip a user sees and the order swipe follows cannot
+drift.
+
+**One interaction contract.**
+`docs/editor-interaction-contract-2026-07.md` is binding, not
+advisory. It fixes: which surface class each control belongs to
+(live panel / draft session / modal picker), which preview channel a
+value edit uses (transforms go through `InteractionController`;
+property edits stage on `LiveOverlay` and commit ONE command on
+release; the canvas background is the documented exemption), how a
+gesture maps to undo entries, the three exit levels, the pointer
+claim-decision table, and the modal barrier policy. Read it before
+adding a control that changes a document value.
+
+Two supporting rules that are easy to miss:
+
+* **Preview == commit by construction.** A slider stages the exact
+  command release will execute, applied to the committed document.
+  There is no second "preview" code path that can disagree with what
+  gets saved.
+* **Presets that name a size scale with the document.**
+  `canvasScaledPreset` (`ui/canvas_preset_scale.dart`) — "XL" has to
+  mean XL on a print canvas too.
+
 ## Testing
 
 * `test/engine/` holds engine tests. They never import `flutter/material.dart`.
