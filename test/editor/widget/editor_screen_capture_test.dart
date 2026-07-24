@@ -15,6 +15,7 @@ import 'package:canvas_engine/app/theme/app_theme.dart';
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/editor_session.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
+import 'package:canvas_engine/features/editor/canvas/application/canvas_tool_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
@@ -74,6 +75,7 @@ ProviderContainer _sampleEditor({
   bool withLookPanel = false,
   bool withGradientFill = false,
   bool withPaintSelected = false,
+  bool withCanvasPanel = false,
   String? openSheet,
 }) {
   final container = ProviderContainer();
@@ -175,6 +177,12 @@ ProviderContainer _sampleEditor({
         .read(shapeToolControllerProvider.notifier)
         .toggleSlot(ShapeToolSlot.style);
   }
+  if (withCanvasPanel) {
+    // Canvas panel open with nothing selected — the tier-3 entry
+    // clears selection first, so this mirrors the real path (tb4
+    // 4/14: Size section above Background).
+    container.read(canvasToolControllerProvider.notifier).togglePanel();
+  }
   if (withSelection || openSheet != null) {
     container.read(selectionControllerProvider.notifier).select('text-1');
   }
@@ -203,6 +211,7 @@ void main() {
     bool withLookPanel = false,
     bool withGradientFill = false,
     bool withPaintSelected = false,
+    bool withCanvasPanel = false,
     String? openSheet,
     Future<void> Function(WidgetTester tester)? interact,
   }) async {
@@ -218,6 +227,7 @@ void main() {
       withLookPanel: withLookPanel,
       withGradientFill: withGradientFill,
       withPaintSelected: withPaintSelected,
+      withCanvasPanel: withCanvasPanel,
       openSheet: openSheet,
     );
     addTearDown(container.dispose);
@@ -367,6 +377,28 @@ void main() {
       brightness: Brightness.dark,
       fileName: 'editor_gradient_dark.png',
       withGradientFill: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — canvas panel, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_canvas_panel_light.png',
+      withCanvasPanel: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — canvas panel, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_canvas_panel_dark.png',
+      withCanvasPanel: true,
     );
   });
 

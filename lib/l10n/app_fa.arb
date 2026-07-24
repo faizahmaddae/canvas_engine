@@ -182,6 +182,7 @@
   "sampleName": "نمونه",
   "sampleCommand": "نمونه",
   "pickCanvasSizeBody": "برای شروع، اندازه بوم را انتخاب کنید.",
+  "resizeCanvasBody": "لایه‌ها در جای خود می‌مانند. بوم از گوشهٔ بالا-چپ تغییر اندازه می‌دهد.",
   "squareGroup": "مربع",
   "portraitGroup": "عمودی",
   "landscapeGroup": "افقی",

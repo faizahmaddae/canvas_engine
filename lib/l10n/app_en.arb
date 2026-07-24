@@ -191,6 +191,7 @@
   "sampleName": "Sample",
   "sampleCommand": "Sample",
   "pickCanvasSizeBody": "Pick a canvas size to start with.",
+  "resizeCanvasBody": "Layers keep their position. The canvas resizes from the top-left corner.",
   "squareGroup": "Square",
   "portraitGroup": "Portrait",
   "landscapeGroup": "Landscape",

@@ -9,7 +9,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:canvas_engine/app/theme/app_theme.dart';
-import 'package:canvas_engine/features/home/presentation/widgets/size_picker_dialog.dart';
+import 'package:canvas_engine/app/ui/size_picker_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' show FontLoader, rootBundle;

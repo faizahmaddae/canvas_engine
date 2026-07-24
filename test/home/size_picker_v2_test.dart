@@ -1,7 +1,7 @@
 import 'package:canvas_engine/app/theme/app_theme.dart';
 import 'package:canvas_engine/app/theme/app_tokens.dart';
 import 'package:canvas_engine/app/ui/app_primary_button.dart';
-import 'package:canvas_engine/features/home/presentation/widgets/size_picker_dialog.dart';
+import 'package:canvas_engine/app/ui/size_picker_dialog.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

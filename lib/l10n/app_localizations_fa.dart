@@ -592,6 +592,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pickCanvasSizeBody => 'برای شروع، اندازه بوم را انتخاب کنید.';
 
   @override
+  String get resizeCanvasBody =>
+      'لایه‌ها در جای خود می‌مانند. بوم از گوشهٔ بالا-چپ تغییر اندازه می‌دهد.';
+
+  @override
   String get squareGroup => 'مربع';
 
   @override

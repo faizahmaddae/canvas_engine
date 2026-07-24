@@ -593,6 +593,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickCanvasSizeBody => 'Pick a canvas size to start with.';
 
   @override
+  String get resizeCanvasBody =>
+      'Layers keep their position. The canvas resizes from the top-left corner.';
+
+  @override
   String get squareGroup => 'Square';
 
   @override

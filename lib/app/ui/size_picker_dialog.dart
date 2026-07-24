@@ -65,16 +65,61 @@ const List<_PresetGroup> _presetGroups = [
   ]),
 ];
 
+/// Seed for the custom width/height fields when the caller has no
+/// existing size to offer — the same square the preset list leads
+/// with, so the form starts on the most-reached-for value.
+const double _kDefaultCustomSide = 1080;
+
 /// Modal dialog: pick a preset canvas size or enter a custom one.
 ///
 /// Returns a [CanvasSize] via `Navigator.pop`, or `null` on cancel.
+///
+/// The copy is overridable because the same form serves two intents:
+/// Home creates a NEW design ("New design" / "Create custom"), the
+/// editor's Canvas panel RESIZES an existing one ("Custom size" /
+/// "Use size", pre-filled with the document's current dimensions).
+/// Only the words and the seed differ — the presets, validation and
+/// return type are identical, so forking the widget would be two
+/// copies of the same 16..16384 rules. Every override defaults to
+/// the Home wording, which is why `show(context)` still renders the
+/// original dialog byte-for-byte.
 class SizePickerDialog extends StatefulWidget {
-  const SizePickerDialog({super.key});
+  const SizePickerDialog({
+    super.key,
+    this.title,
+    this.body,
+    this.confirmLabel,
+    this.initial,
+  });
 
-  static Future<CanvasSize?> show(BuildContext context) {
+  /// Headline. Defaults to `l10n.newDesignTitle`.
+  final String? title;
+
+  /// Sub-headline under [title]. Defaults to `l10n.pickCanvasSizeBody`.
+  final String? body;
+
+  /// Primary-button label. Defaults to `l10n.createCustomAction`.
+  final String? confirmLabel;
+
+  /// Pre-fills the custom width/height fields. `null` seeds both
+  /// with [_kDefaultCustomSide].
+  final CanvasSize? initial;
+
+  static Future<CanvasSize?> show(
+    BuildContext context, {
+    String? title,
+    String? body,
+    String? confirmLabel,
+    CanvasSize? initial,
+  }) {
     return showDialog<CanvasSize>(
       context: context,
-      builder: (_) => const SizePickerDialog(),
+      builder: (_) => SizePickerDialog(
+        title: title,
+        body: body,
+        confirmLabel: confirmLabel,
+        initial: initial,
+      ),
     );
   }
 
@@ -83,9 +128,25 @@ class SizePickerDialog extends StatefulWidget {
 }
 
 class _SizePickerDialogState extends State<SizePickerDialog> {
-  final _widthCtrl = TextEditingController(text: '1080');
-  final _heightCtrl = TextEditingController(text: '1080');
+  late final TextEditingController _widthCtrl;
+  late final TextEditingController _heightCtrl;
   String? _customError;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initial;
+    _widthCtrl = TextEditingController(
+      text: _seedText(initial?.width ?? _kDefaultCustomSide),
+    );
+    _heightCtrl = TextEditingController(
+      text: _seedText(initial?.height ?? _kDefaultCustomSide),
+    );
+  }
+
+  // The field is digits-only, so a fractional document size (a crop
+  // can leave one) seeds as its rounded whole pixel.
+  static String _seedText(double value) => value.round().toString();
 
   @override
   void dispose() {
@@ -127,7 +188,7 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  l10n.newDesignTitle,
+                  widget.title ?? l10n.newDesignTitle,
                   style: AppTypeScale.title.copyWith(
                     color: tokens.textPrimary,
                     fontWeight: FontWeight.w700,
@@ -135,7 +196,7 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  l10n.pickCanvasSizeBody,
+                  widget.body ?? l10n.pickCanvasSizeBody,
                   style: AppTypeScale.caption.copyWith(
                     color: tokens.textSecondary,
                   ),
@@ -220,7 +281,7 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
                 const SizedBox(height: 16),
                 AppPrimaryButton(
                   key: const ValueKey('size-picker-create'),
-                  label: l10n.createCustomAction,
+                  label: widget.confirmLabel ?? l10n.createCustomAction,
                   onPressed: _confirmCustom,
                 ),
                 const SizedBox(height: 4),

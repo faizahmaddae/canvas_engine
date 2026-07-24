@@ -30,7 +30,7 @@ import '../../templates/presentation/templates_browse_screen.dart';
 import '../application/project_store.dart';
 import '../domain/project.dart';
 import 'recent_projects_screen.dart';
-import 'widgets/size_picker_dialog.dart';
+import '../../../app/ui/size_picker_dialog.dart';
 
 const _uuid = Uuid();
 

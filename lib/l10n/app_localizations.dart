@@ -1190,6 +1190,12 @@ abstract class AppLocalizations {
   /// **'Pick a canvas size to start with.'**
   String get pickCanvasSizeBody;
 
+  /// No description provided for @resizeCanvasBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Layers keep their position. The canvas resizes from the top-left corner.'**
+  String get resizeCanvasBody;
+
   /// No description provided for @squareGroup.
   ///
   /// In en, this message translates to:
