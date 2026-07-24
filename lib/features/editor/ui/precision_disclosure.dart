@@ -99,78 +99,94 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          child: InkWell(
+        // A screen reader has to hear the STATE, not just the label:
+        // without `expanded` the header announces identically open and
+        // closed, so a VoiceOver user cannot tell whether tapping will
+        // reveal the sliders or hide them (tb5 2/9).
+        Semantics(
+          container: true,
+          button: true,
+          expanded: _open,
+          label: title,
+          child: Material(
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(10),
-            onTap: () {
-              EditorHaptics.tap();
-              setState(() => _open = !_open);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-              child: Row(
-                children: [
-                  if (widget.icon != null) ...[
-                    Icon(widget.icon, size: 16, color: tokens.accent),
-                    const SizedBox(width: 8),
-                  ],
-                  Expanded(
-                    child: widget.subtitle != null
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                title,
-                                style: TextStyle(
-                                  fontSize: widget.titleSize,
-                                  fontWeight: FontWeight.w600,
-                                  color: tokens.textPrimary,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () {
+                EditorHaptics.tap();
+                setState(() => _open = !_open);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 4,
+                ),
+                child: Row(
+                  children: [
+                    if (widget.icon != null) ...[
+                      Icon(widget.icon, size: 16, color: tokens.accent),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: widget.subtitle != null
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  title,
+                                  style: TextStyle(
+                                    fontSize: widget.titleSize,
+                                    fontWeight: FontWeight.w600,
+                                    color: tokens.textPrimary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                widget.subtitle!,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: tokens.textSecondary,
+                                const SizedBox(height: 1),
+                                Text(
+                                  widget.subtitle!,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: tokens.textSecondary,
+                                  ),
                                 ),
+                              ],
+                            )
+                          : Text(
+                              title,
+                              style: TextStyle(
+                                fontSize: widget.titleSize,
+                                fontWeight: FontWeight.w600,
+                                color: tokens.textPrimary,
                               ),
-                            ],
-                          )
-                        : Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: widget.titleSize,
-                              fontWeight: FontWeight.w600,
-                              color: tokens.textPrimary,
                             ),
-                          ),
-                  ),
-                  if (widget.headerValue != null) ...[
-                    Text(
-                      widget.headerValue!,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    ),
+                    if (widget.headerValue != null) ...[
+                      Text(
+                        widget.headerValue!,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: chevronColor,
+                              fontWeight: FontWeight.w600,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                      ),
+                      const SizedBox(width: 2),
+                    ],
+                    AnimatedRotation(
+                      turns: _open ? 0.25 : 0,
+                      duration: widget.animationDuration,
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        size: widget.chevronSize,
                         color: chevronColor,
-                        fontWeight: FontWeight.w600,
-                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
-                    const SizedBox(width: 2),
                   ],
-                  AnimatedRotation(
-                    turns: _open ? 0.25 : 0,
-                    duration: widget.animationDuration,
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: widget.chevronSize,
-                      color: chevronColor,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

@@ -866,6 +866,18 @@ abstract class AppLocalizations {
   /// **'Base photo'**
   String get basePhotoLabel;
 
+  /// No description provided for @lockedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get lockedLabel;
+
+  /// No description provided for @hiddenLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get hiddenLabel;
+
   /// No description provided for @multiSelectCount.
   ///
   /// In en, this message translates to:

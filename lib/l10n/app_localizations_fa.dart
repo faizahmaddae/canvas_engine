@@ -403,6 +403,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get basePhotoLabel => 'عکس پایه';
 
   @override
+  String get lockedLabel => 'قفل';
+
+  @override
+  String get hiddenLabel => 'پنهان';
+
+  @override
   String multiSelectCount(int count) {
     return 'چندانتخاب · $count';
   }

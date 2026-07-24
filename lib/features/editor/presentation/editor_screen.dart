@@ -199,167 +199,179 @@ class EditorScreen extends ConsumerWidget {
     // the bottomNavigationBar builder below.
     final dock = _resolveDock(ref, selection);
 
-    return _AutosaveLifecycleScope(
-      child: PopScope(
-        canPop: !cropActive && !maskEditActive,
-        onPopInvokedWithResult: (didPop, _) {
-          if (!didPop && maskEditActive) {
-            // Back = Cancel, restoring the pre-mode toolbar context.
-            ref
-                .read(maskEditControllerProvider.notifier)
-                .cancel(restoreSelection: true);
-            return;
-          }
-          if (!didPop && cropActive) {
-            ref.read(cropControllerProvider.notifier).cancelCrop();
-            return;
-          }
-          if (didPop) {
-            // User is leaving the editor — flush any pending
-            // debounced autosave so the last <=1.5 s of edits
-            // survive the navigation pop. Fire-and-forget; the
-            // widget tree is already on its way out.
-            // The dispose() in [_AutosaveLifecycleScopeState] also
-            // flushes as a final safety net, but doing it here is
-            // earlier and lets the write race with route teardown
-            // rather than after it.
-            unawaited(
+    // D-e (tb5 2/9): the editor's own chrome clamps text scaling to
+    // 1.0–1.3. Below 1.0 the dock's 11sp value labels stop being
+    // legible at all; above ~1.3 the strip tiles, the sub-tool
+    // sheets and the crop control card each overflow, and a user who
+    // needs larger text ends up with an editor they cannot operate.
+    // The clamp deliberately covers CHROME only — the canvas renders
+    // document pixels, where the user's own font sizes are content
+    // and must never be rescaled by an accessibility setting.
+    return MediaQuery.withClampedTextScaling(
+      minScaleFactor: 1.0,
+      maxScaleFactor: 1.3,
+      child: _AutosaveLifecycleScope(
+        child: PopScope(
+          canPop: !cropActive && !maskEditActive,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && maskEditActive) {
+              // Back = Cancel, restoring the pre-mode toolbar context.
               ref
-                  .read(autosaveControllerProvider.notifier)
-                  .flushNow(sessionEnding: true),
-            );
-          }
-        },
-        child: Scaffold(
-          // v2 top bar: slim, surface-on-tokens, ink icons, hairline
-          // bottom. Primary actions stay visible (back, title
-          // tap-to-rename, export); secondary ones (layers, save,
-          // fit, new document) live in the «⋮» overflow.
-          appBar: cropActive || maskEditActive
-              ? null
-              : AppBar(
-                  toolbarHeight: 52,
-                  backgroundColor: tokens.surface,
-                  foregroundColor: tokens.textPrimary,
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(1),
-                    child: Container(height: 1, color: tokens.border),
-                  ),
-                  title: const _DocumentTitle(),
-                  // Three actions, no overflow menu (tb4 5/14). The
-                  // «⋮» held Layers, Save, Fit and New document —
-                  // four unrelated things behind one anonymous glyph.
-                  // Layers is frequent enough to earn its own icon;
-                  // Save and Fit belong to the DOCUMENT, so they live
-                  // in the title's menu next to Rename; New document
-                  // leaves the editor entirely (Home creates).
-                  actions: [
-                    const _UndoRedoActions(),
-                    Builder(
-                      builder: (ctx) => IconButton(
-                        tooltip: l10n.layersTooltip,
-                        onPressed: () => Scaffold.of(ctx).openEndDrawer(),
-                        icon: const Icon(Icons.layers_outlined),
-                      ),
-                    ),
-                    Builder(
-                      builder: (ctx) => IconButton(
-                        tooltip: l10n.editorExport,
-                        onPressed: () => ExportActionSheet.open(ctx),
-                        icon: const Icon(Icons.ios_share_outlined),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                  ],
-                ),
-          endDrawer: const LayersPanel(),
-          // Contract §6: the Layers drawer's edge-swipe is disabled
-          // while any draft session is open (crop/mask own the
-          // screen; compose/edit/export sit behind modal barriers —
-          // this closes the edge-gesture hole those barriers leave
-          // at the screen edge). The ⋮ → Layers menu path and the
-          // toolbars' explicit openEndDrawer() calls are unaffected.
-          endDrawerEnableOpenDragGesture: !ref.watch(
-            anyDraftSessionOpenProvider,
-          ),
-          body: Stack(
-            children: [
-              // NO scrim over the canvas while control panels are
-              // open — this is an editor: the user must see the live
-              // effect of colour/size/font changes. The panel's own
-              // elevation (rounded top + upward shadow + hairline)
-              // is what separates it from the canvas.
-              const EditorCanvas(),
-              // Always-visible exit pill anchored at the top TRAILING
-              // edge of the canvas (physical left under RTL — the
-              // hard `right: 8` was an LTR-ism; tb1 17/17, pinned by
-              // rtl_strip_pins_test). Shows whenever a tool mode
-              // (paint / text) is active so the user has a permanent,
-              // discoverable way out — replaces reliance on the
-              // invisible canvas-tap-to-deselect gesture for new
-              // users while keeping that gesture as the pro shortcut.
-              // Hidden in Crop Mode.
-              // top 4 (not 8): the pill's hit box is 44dp with the
-              // painted 36dp pill centred (tb2 a11y pass), so the
-              // 4dp transparent halo puts the VISIBLE pill exactly
-              // where it has always been (8dp from the top edge).
-              if (!cropActive && !maskEditActive)
-                const PositionedDirectional(
-                  top: 4,
-                  end: 8,
-                  child: SafeArea(child: _ModeExitPill()),
-                ),
-              // Centralised Crop Mode overlay — full-screen, owns the
-              // entire scaffold body when active. Mounted **last** so
-              // it paints above any residual floating rails / chrome.
-              const Positioned.fill(child: CropModeOverlay()),
-            ],
-          ),
-          bottomNavigationBar: Builder(
-            builder: (dockContext) {
-              // Crop Mode owns the screen — hide the regular dock so
-              // the Crop bottom bar is the only chrome the user sees.
-              // Mask-edit: its bottom strip replaces the dock.
-              if (cropActive || maskEditActive) {
-                return const SizedBox.shrink();
-              }
-              return EditorToolDock(
-                modeKey: dock.modeKey,
-                expanded: dock.expanded,
-                expandedKey: dock.expandedKey,
-                child: dock.paintOpen
-                    ? const PaintModeToolbar()
-                    : dock.textMode
-                    ? const TextModeToolbar()
-                    : dock.multiSelected
-                    ? MultiSelectModeToolbar(
-                        layers: dock.selectedLayersForActions,
-                        onOpenLayers: () =>
-                            Scaffold.of(dockContext).openEndDrawer(),
-                      )
-                    : dock.selectedStickerLayer != null
-                    ? StickerModeToolbar(layer: dock.selectedStickerLayer!)
-                    : dock.selectedImageLayer != null
-                    ? ImageModeToolbar(layer: dock.selectedImageLayer!)
-                    : dock.selectedShapeLayer != null
-                    ? ShapeModeToolbar(
-                        layer: dock.selectedShapeLayer!,
-                        onReplaceTap: () => _openReplaceShapePicker(
-                          context,
-                          ref,
-                          dock.selectedShapeLayer!,
-                        ),
-                      )
-                    : EditorToolbar(
-                        // The idle strip renders only when no mode
-                        // owns the dock, so no tile is ever active —
-                        // the old _activeToolId re-derivation was
-                        // provably dead on every branch.
-                        activeId: null,
-                        items: _buildToolbarItems(context, ref),
-                      ),
+                  .read(maskEditControllerProvider.notifier)
+                  .cancel(restoreSelection: true);
+              return;
+            }
+            if (!didPop && cropActive) {
+              ref.read(cropControllerProvider.notifier).cancelCrop();
+              return;
+            }
+            if (didPop) {
+              // User is leaving the editor — flush any pending
+              // debounced autosave so the last <=1.5 s of edits
+              // survive the navigation pop. Fire-and-forget; the
+              // widget tree is already on its way out.
+              // The dispose() in [_AutosaveLifecycleScopeState] also
+              // flushes as a final safety net, but doing it here is
+              // earlier and lets the write race with route teardown
+              // rather than after it.
+              unawaited(
+                ref
+                    .read(autosaveControllerProvider.notifier)
+                    .flushNow(sessionEnding: true),
               );
-            },
+            }
+          },
+          child: Scaffold(
+            // v2 top bar: slim, surface-on-tokens, ink icons, hairline
+            // bottom. Primary actions stay visible (back, title
+            // tap-to-rename, export); secondary ones (layers, save,
+            // fit, new document) live in the «⋮» overflow.
+            appBar: cropActive || maskEditActive
+                ? null
+                : AppBar(
+                    toolbarHeight: 52,
+                    backgroundColor: tokens.surface,
+                    foregroundColor: tokens.textPrimary,
+                    bottom: PreferredSize(
+                      preferredSize: const Size.fromHeight(1),
+                      child: Container(height: 1, color: tokens.border),
+                    ),
+                    title: const _DocumentTitle(),
+                    // Three actions, no overflow menu (tb4 5/14). The
+                    // «⋮» held Layers, Save, Fit and New document —
+                    // four unrelated things behind one anonymous glyph.
+                    // Layers is frequent enough to earn its own icon;
+                    // Save and Fit belong to the DOCUMENT, so they live
+                    // in the title's menu next to Rename; New document
+                    // leaves the editor entirely (Home creates).
+                    actions: [
+                      const _UndoRedoActions(),
+                      Builder(
+                        builder: (ctx) => IconButton(
+                          tooltip: l10n.layersTooltip,
+                          onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+                          icon: const Icon(Icons.layers_outlined),
+                        ),
+                      ),
+                      Builder(
+                        builder: (ctx) => IconButton(
+                          tooltip: l10n.editorExport,
+                          onPressed: () => ExportActionSheet.open(ctx),
+                          icon: const Icon(Icons.ios_share_outlined),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                  ),
+            endDrawer: const LayersPanel(),
+            // Contract §6: the Layers drawer's edge-swipe is disabled
+            // while any draft session is open (crop/mask own the
+            // screen; compose/edit/export sit behind modal barriers —
+            // this closes the edge-gesture hole those barriers leave
+            // at the screen edge). The ⋮ → Layers menu path and the
+            // toolbars' explicit openEndDrawer() calls are unaffected.
+            endDrawerEnableOpenDragGesture: !ref.watch(
+              anyDraftSessionOpenProvider,
+            ),
+            body: Stack(
+              children: [
+                // NO scrim over the canvas while control panels are
+                // open — this is an editor: the user must see the live
+                // effect of colour/size/font changes. The panel's own
+                // elevation (rounded top + upward shadow + hairline)
+                // is what separates it from the canvas.
+                const EditorCanvas(),
+                // Always-visible exit pill anchored at the top TRAILING
+                // edge of the canvas (physical left under RTL — the
+                // hard `right: 8` was an LTR-ism; tb1 17/17, pinned by
+                // rtl_strip_pins_test). Shows whenever a tool mode
+                // (paint / text) is active so the user has a permanent,
+                // discoverable way out — replaces reliance on the
+                // invisible canvas-tap-to-deselect gesture for new
+                // users while keeping that gesture as the pro shortcut.
+                // Hidden in Crop Mode.
+                // top 4 (not 8): the pill's hit box is 44dp with the
+                // painted 36dp pill centred (tb2 a11y pass), so the
+                // 4dp transparent halo puts the VISIBLE pill exactly
+                // where it has always been (8dp from the top edge).
+                if (!cropActive && !maskEditActive)
+                  const PositionedDirectional(
+                    top: 4,
+                    end: 8,
+                    child: SafeArea(child: _ModeExitPill()),
+                  ),
+                // Centralised Crop Mode overlay — full-screen, owns the
+                // entire scaffold body when active. Mounted **last** so
+                // it paints above any residual floating rails / chrome.
+                const Positioned.fill(child: CropModeOverlay()),
+              ],
+            ),
+            bottomNavigationBar: Builder(
+              builder: (dockContext) {
+                // Crop Mode owns the screen — hide the regular dock so
+                // the Crop bottom bar is the only chrome the user sees.
+                // Mask-edit: its bottom strip replaces the dock.
+                if (cropActive || maskEditActive) {
+                  return const SizedBox.shrink();
+                }
+                return EditorToolDock(
+                  modeKey: dock.modeKey,
+                  expanded: dock.expanded,
+                  expandedKey: dock.expandedKey,
+                  child: dock.paintOpen
+                      ? const PaintModeToolbar()
+                      : dock.textMode
+                      ? const TextModeToolbar()
+                      : dock.multiSelected
+                      ? MultiSelectModeToolbar(
+                          layers: dock.selectedLayersForActions,
+                          onOpenLayers: () =>
+                              Scaffold.of(dockContext).openEndDrawer(),
+                        )
+                      : dock.selectedStickerLayer != null
+                      ? StickerModeToolbar(layer: dock.selectedStickerLayer!)
+                      : dock.selectedImageLayer != null
+                      ? ImageModeToolbar(layer: dock.selectedImageLayer!)
+                      : dock.selectedShapeLayer != null
+                      ? ShapeModeToolbar(
+                          layer: dock.selectedShapeLayer!,
+                          onReplaceTap: () => _openReplaceShapePicker(
+                            context,
+                            ref,
+                            dock.selectedShapeLayer!,
+                          ),
+                        )
+                      : EditorToolbar(
+                          // The idle strip renders only when no mode
+                          // owns the dock, so no tile is ever active —
+                          // the old _activeToolId re-derivation was
+                          // provably dead on every branch.
+                          activeId: null,
+                          items: _buildToolbarItems(context, ref),
+                        ),
+                );
+              },
+            ),
           ),
         ),
       ),

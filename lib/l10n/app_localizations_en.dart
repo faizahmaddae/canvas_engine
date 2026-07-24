@@ -404,6 +404,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get basePhotoLabel => 'Base photo';
 
   @override
+  String get lockedLabel => 'Locked';
+
+  @override
+  String get hiddenLabel => 'Hidden';
+
+  @override
   String multiSelectCount(int count) {
     return 'Multi-select · $count';
   }

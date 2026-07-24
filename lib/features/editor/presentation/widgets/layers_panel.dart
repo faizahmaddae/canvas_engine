@@ -234,194 +234,233 @@ class _LayerTile extends ConsumerWidget {
         ? AppTokens.of(context).accent.withValues(alpha: 0.12)
         : Colors.transparent;
 
-    return Material(
-      color: bg,
-      child: InkWell(
-        onTap: () {
-          if (multiMode) {
-            // Multi mode: the row TOGGLES membership (tb3 5/7)
-            // instead of replacing the selection. Locked layers are
-            // no-ops — the canvas hit-test never admits them into a
-            // group either, and a group transform must not move a
-            // locked layer (that includes the protected base photo).
-            if (layer.locked) return;
-            final selectionCtl = ref.read(selectionControllerProvider.notifier);
-            selectionCtl.toggle(layer.id);
-            // Existing rule: the mode ends when membership can no
-            // longer form a group (mirrors the editor's commit-tick
-            // prune listener at < 2).
-            if (ref.read(selectionControllerProvider).selectedIds.length < 2) {
-              ref.read(selectionModeProvider.notifier).exitMulti();
+    // A drawer row is the ONLY place a screen-reader user can reach a
+    // layer — the canvas is pixels to them. So the row has to
+    // announce what the sighted user sees at a glance: which layer,
+    // whether it is the current selection (or a member of the group),
+    // and whether it is locked (tb5 2/9). Without this it announced
+    // as an unlabelled button with a thumbnail.
+    return Semantics(
+      container: true,
+      selected: isSelected,
+      label: _rowSemanticLabel(
+        context,
+        layer,
+        modelIndex: modelIndex,
+        protected: protected,
+      ),
+      child: Material(
+        color: bg,
+        child: InkWell(
+          onTap: () {
+            if (multiMode) {
+              // Multi mode: the row TOGGLES membership (tb3 5/7)
+              // instead of replacing the selection. Locked layers are
+              // no-ops — the canvas hit-test never admits them into a
+              // group either, and a group transform must not move a
+              // locked layer (that includes the protected base photo).
+              if (layer.locked) return;
+              final selectionCtl = ref.read(
+                selectionControllerProvider.notifier,
+              );
+              selectionCtl.toggle(layer.id);
+              // Existing rule: the mode ends when membership can no
+              // longer form a group (mirrors the editor's commit-tick
+              // prune listener at < 2).
+              if (ref.read(selectionControllerProvider).selectedIds.length <
+                  2) {
+                ref.read(selectionModeProvider.notifier).exitMulti();
+              }
+              return;
             }
-            return;
-          }
-          ref.read(selectionControllerProvider.notifier).select(layer.id);
-          // Protected base photo: tapping the row is the user's
-          // way to open the canvas-level photo tools (Style /
-          // Crop / Filters / Adjust). Auto-close the drawer so the
-          // selection frame + bottom Image tools become visible
-          // without an extra tap. Other layers keep the panel
-          // open so users can curate the stack rapidly.
-          if (protected) {
-            Navigator.of(context).maybePop();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  // Locked layers are not drag-reorderable: the lock
-                  // contract (EditorLayer.locked) protects a layer from
-                  // being moved, and z-order is a move. This also pins the
-                  // base photo — imported locked — to the bottom, so a
-                  // drag can't bury content under it (the engine
-                  // `reorderLayer` clamp is the backstop; this removes the
-                  // affordance so the tile doesn't visually jump and snap
-                  // back). The handle shows dimmed rather than vanishing so
-                  // the row layout stays stable.
-                  if (layer.locked)
-                    Opacity(
-                      opacity: 0.35,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Icon(
-                          Icons.drag_indicator,
-                          size: 18,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    )
-                  else
-                    ReorderableDragStartListener(
-                      index: displayIndex,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Icon(
-                          Icons.drag_indicator,
-                          size: 18,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                  // Membership check indicator — multi mode only, so
-                  // single-mode rows stay pixel-identical. Locked
-                  // layers show the dimmed off state permanently
-                  // (they cannot join a group; the row tap is a
-                  // no-op for them too).
-                  if (multiMode)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 4),
-                      child: Icon(
-                        isSelected
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked,
-                        key: ValueKey('layers-multi-check-${layer.id}'),
-                        size: 18,
-                        color: isSelected
-                            ? AppTokens.of(context).accent
-                            : Theme.of(context).hintColor,
-                      ),
-                    ),
-                  LayerThumbnail(layer: layer),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _displayName(layer, modelIndex),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: isSelected ? FontWeight.w600 : null,
-                            color: layer.visible ? null : theme.disabledColor,
+            ref.read(selectionControllerProvider.notifier).select(layer.id);
+            // Protected base photo: tapping the row is the user's
+            // way to open the canvas-level photo tools (Style /
+            // Crop / Filters / Adjust). Auto-close the drawer so the
+            // selection frame + bottom Image tools become visible
+            // without an extra tap. Other layers keep the panel
+            // open so users can curate the stack rapidly.
+            if (protected) {
+              Navigator.of(context).maybePop();
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    // Locked layers are not drag-reorderable: the lock
+                    // contract (EditorLayer.locked) protects a layer from
+                    // being moved, and z-order is a move. This also pins the
+                    // base photo — imported locked — to the bottom, so a
+                    // drag can't bury content under it (the engine
+                    // `reorderLayer` clamp is the backstop; this removes the
+                    // affordance so the tile doesn't visually jump and snap
+                    // back). The handle shows dimmed rather than vanishing so
+                    // the row layout stays stable.
+                    if (layer.locked)
+                      Opacity(
+                        opacity: 0.35,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            Icons.drag_indicator,
+                            size: 18,
+                            color: Colors.grey,
                           ),
                         ),
-                        Text(
-                          layer.type,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.hintColor,
+                      )
+                    else
+                      ReorderableDragStartListener(
+                        index: displayIndex,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            Icons.drag_indicator,
+                            size: 18,
+                            color: Colors.grey,
                           ),
                         ),
-                      ],
+                      ),
+                    // Membership check indicator — multi mode only, so
+                    // single-mode rows stay pixel-identical. Locked
+                    // layers show the dimmed off state permanently
+                    // (they cannot join a group; the row tap is a
+                    // no-op for them too).
+                    if (multiMode)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 4),
+                        child: Icon(
+                          isSelected
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked,
+                          key: ValueKey('layers-multi-check-${layer.id}'),
+                          size: 18,
+                          color: isSelected
+                              ? AppTokens.of(context).accent
+                              : Theme.of(context).hintColor,
+                        ),
+                      ),
+                    LayerThumbnail(layer: layer),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _displayName(layer, modelIndex),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: isSelected ? FontWeight.w600 : null,
+                              color: layer.visible ? null : theme.disabledColor,
+                            ),
+                          ),
+                          Text(
+                            layer.type,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.hintColor,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  if (isPrimary)
+                    if (isPrimary)
+                      _IconAction(
+                        icon: Icons.drive_file_rename_outline_rounded,
+                        tooltip: context.l10n.renameAction,
+                        onTap: () => LayerActions.rename(context, ref, layer),
+                      ),
                     _IconAction(
-                      icon: Icons.drive_file_rename_outline_rounded,
-                      tooltip: context.l10n.renameAction,
-                      onTap: () => LayerActions.rename(context, ref, layer),
+                      icon: layer.locked ? Icons.lock : Icons.lock_open,
+                      tooltip: layer.locked
+                          ? context.l10n.unlockAction
+                          : context.l10n.lockAction,
+                      highlighted: layer.locked,
+                      onTap: () {
+                        ref
+                            .read(documentControllerProvider.notifier)
+                            .execute(
+                              SetLayerLockCommand(
+                                layerId: layer.id,
+                                locked: !layer.locked,
+                              ),
+                            );
+                      },
                     ),
-                  _IconAction(
-                    icon: layer.locked ? Icons.lock : Icons.lock_open,
-                    tooltip: layer.locked
-                        ? context.l10n.unlockAction
-                        : context.l10n.lockAction,
-                    highlighted: layer.locked,
-                    onTap: () {
-                      ref
-                          .read(documentControllerProvider.notifier)
-                          .execute(
-                            SetLayerLockCommand(
-                              layerId: layer.id,
-                              locked: !layer.locked,
-                            ),
-                          );
-                    },
-                  ),
-                  _IconAction(
-                    icon: layer.visible
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    tooltip: layer.visible
-                        ? context.l10n.hideAction
-                        : context.l10n.showAction,
-                    highlighted: !layer.visible,
-                    onTap: () {
-                      ref
-                          .read(documentControllerProvider.notifier)
-                          .execute(
-                            SetLayerVisibilityCommand(
-                              layerId: layer.id,
-                              visible: !layer.visible,
-                            ),
-                          );
-                    },
-                  ),
-                  _IconAction(
-                    icon: Icons.delete_outline,
-                    tooltip: protected
-                        ? context.l10n.protectedBasePhotoTooltip
-                        : context.l10n.deleteAction,
-                    enabled: canDelete,
-                    onTap: () {
-                      // Route through the shared facade so confirm /
-                      // selection-promotion / project-kind flip stay
-                      // in one place. Direct `RemoveLayerCommand`
-                      // dispatch from here would bypass the
-                      // base-photo protection in `LayerActions.delete`
-                      // (the previous bug).
-                      LayerActions.delete(context, ref, layer);
-                    },
-                  ),
-                ],
-              ),
-              // Opacity slider — only shown for the selected layer to
-              // keep the unselected rows compact. Drag previews route
-              // through `liveReplace` (no commit-version bump, no
-              // autosave thrash, no undo entries); the final value is
-              // committed via `execute(SetLayerOpacityCommand)` on
-              // change-end so undo/redo and autosave see exactly one
-              // entry per drag gesture.
-              if (isPrimary) LayerOpacityControl(layer: layer),
-            ],
+                    _IconAction(
+                      icon: layer.visible
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      tooltip: layer.visible
+                          ? context.l10n.hideAction
+                          : context.l10n.showAction,
+                      highlighted: !layer.visible,
+                      onTap: () {
+                        ref
+                            .read(documentControllerProvider.notifier)
+                            .execute(
+                              SetLayerVisibilityCommand(
+                                layerId: layer.id,
+                                visible: !layer.visible,
+                              ),
+                            );
+                      },
+                    ),
+                    _IconAction(
+                      icon: Icons.delete_outline,
+                      tooltip: protected
+                          ? context.l10n.protectedBasePhotoTooltip
+                          : context.l10n.deleteAction,
+                      enabled: canDelete,
+                      onTap: () {
+                        // Route through the shared facade so confirm /
+                        // selection-promotion / project-kind flip stay
+                        // in one place. Direct `RemoveLayerCommand`
+                        // dispatch from here would bypass the
+                        // base-photo protection in `LayerActions.delete`
+                        // (the previous bug).
+                        LayerActions.delete(context, ref, layer);
+                      },
+                    ),
+                  ],
+                ),
+                // Opacity slider — only shown for the selected layer to
+                // keep the unselected rows compact. Drag previews route
+                // through `liveReplace` (no commit-version bump, no
+                // autosave thrash, no undo entries); the final value is
+                // committed via `execute(SetLayerOpacityCommand)` on
+                // change-end so undo/redo and autosave see exactly one
+                // entry per drag gesture.
+                if (isPrimary) LayerOpacityControl(layer: layer),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  /// What VoiceOver reads for a row: the layer's name, then only the
+  /// states that are actually true. Ordinary rows stay a bare name —
+  /// appending "unlocked, visible" to every one of 200 layers would
+  /// bury the signal it exists to carry.
+  String _rowSemanticLabel(
+    BuildContext context,
+    EditorLayer layer, {
+    required int modelIndex,
+    required bool protected,
+  }) {
+    final l10n = context.l10n;
+    // Same name the row shows — an unnamed layer's "#3" has to match
+    // between what is read and what is seen.
+    final parts = <String>[_displayName(layer, modelIndex)];
+    if (protected) parts.add(l10n.basePhotoLabel);
+    if (layer.locked) parts.add(l10n.lockedLabel);
+    if (!layer.visible) parts.add(l10n.hiddenLabel);
+    return parts.join(' · ');
   }
 
   String _displayName(EditorLayer layer, int modelIndex) {
