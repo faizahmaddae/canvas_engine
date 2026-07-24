@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
 import '../../application/selection_controller.dart';
-import '../../presentation/widgets/dock_tool_strip.dart';
-import '../../presentation/widgets/dock_tool_tile.dart';
-import '../../ui/editor_tier_gap.dart';
+import '../../toolbar/domain/toolbar_slot.dart';
+import '../../toolbar/presentation/slot_strip.dart';
 import '../application/paint_tool_controller.dart';
 import '../domain/paint_tool_type.dart';
 import 'bodies/paint_tool_body.dart';
-import 'paint_mode_expansion.dart';
 import 'paint_tool_specs.dart';
 
 /// Bottom dock for paint mode.
@@ -49,13 +46,12 @@ class PaintModeToolbar extends ConsumerStatefulWidget {
         .where(allowed.contains)
         .toList(growable: false);
   }
-
-  static const double _tileExtent = 68;
 }
 
 class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
+  // External controller kept (instead of SlotStrip's own) so the
+  // one-time discovery peek below can animate the strip.
   final _scroll = ScrollController();
-  String? _lastOpen;
 
   // Session-scoped guard so the discovery peek fires at most once
   // per app run.
@@ -114,22 +110,6 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
     super.dispose();
   }
 
-  void _ensureVisible(int index) {
-    if (!_scroll.hasClients) return;
-    final viewport = _scroll.position.viewportDimension;
-    final tile = PaintModeToolbar._tileExtent;
-    final target = (index * tile) - (viewport / 2) + (tile / 2);
-    final clamped = target.clamp(
-      _scroll.position.minScrollExtent,
-      _scroll.position.maxScrollExtent,
-    );
-    _scroll.animateTo(
-      clamped,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(paintToolControllerProvider);
@@ -160,68 +140,71 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
       allowed = allowed.difference(const {'blur', 'polygon', 'dash'});
     }
 
-    final open = session.openSlot;
-    if (open != _lastOpen) {
-      _lastOpen = open;
-      if (open != null) {
-        final idx = paintToolSpecs.indexWhere((s) => s.id == open);
-        if (idx >= 0) {
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) => _ensureVisible(idx),
-          );
-        }
-      }
-    }
+    // Tier boundary sits before spec index 4 ('opacity') — but ONLY
+    // when the opacity slot is actually visible, exactly like the
+    // old EditorTierGap insertion (blur mode renders tool+blur with
+    // NO divider). SlotStrip draws its divider on tier changes, so
+    // tier2 membership is gated on opacity's visibility.
+    final showTier2 = allowed.contains('opacity');
+    final slots = <ToolbarSlot>[
+      for (var i = 0; i < paintToolSpecs.length; i++)
+        if (allowed.contains(paintToolSpecs[i].id))
+          ToolbarSlot(
+            id: paintToolSpecs[i].id,
+            // The Tool tile mirrors the ACTIVE tool's icon so the
+            // strip reads as state.
+            icon: paintToolSpecs[i].id == 'tool'
+                ? tool.icon
+                : paintToolSpecs[i].icon,
+            label: paintToolSpecs[i].id == 'tool'
+                ? paintToolLabel(context.l10n, session.activeTool) ??
+                      context.l10n.toolLabel
+                : paintSpecLabel(context.l10n, paintToolSpecs[i]),
+            valueLabel: paintToolSpecs[i].id == 'tool'
+                ? null
+                : () => _paintValueText(
+                    context.l10n,
+                    paintToolSpecs[i],
+                    session,
+                    tool,
+                  ),
+            swatchColor: paintToolSpecs[i].id == 'color'
+                ? () => session.strokeColor
+                : paintToolSpecs[i].id == 'fill' && fillEnabled
+                ? () => session.fillColor
+                : null,
+            tier: showTier2 && i >= 4 ? SlotTier.tier2 : SlotTier.tier1,
+            onTap: () {
+              // Toggling: re-tap of active tile dismisses the
+              // sheet; tapping a different tile switches.
+              ctrl.toggleSlot(paintToolSpecs[i].id);
+            },
+            // Long-press peek removed — too easy to undo by
+            // accident. Peek lives on the Undo chip in the sheet
+            // header.
+          ),
+    ];
 
     return SizedBox(
       height: _stripHeight(context),
-      child: DockToolStrip(
+      child: SlotStrip(
+        slots: slots,
+        // SlotStrip auto-scrolls the active tile into view on
+        // openSlot changes — replaces the _ensureVisible plumbing
+        // this widget used to carry.
+        activeId: session.openSlot,
         controller: _scroll,
+        // Bare-tile geometry: no per-tile gap and the historical
+        // 10dp strip padding, so the migrated bar renders exactly
+        // like the old DockToolStrip did (Gate A).
+        tileGap: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         centerWhenFits: true,
         // Handedness affects alignment only — never tile order.
         fitAlignment:
             ref.watch(appSettingsProvider.select((s) => s.rightHandedToolbar))
             ? MainAxisAlignment.end
             : MainAxisAlignment.center,
-        children: [
-          for (final i in _toolOrder(context, ref))
-            if (allowed.contains(paintToolSpecs[i].id)) ...[
-              if (_isTierBoundary(ref, i)) const EditorTierGap(),
-              DockToolTile(
-                icon: paintToolSpecs[i].id == 'tool'
-                    ? tool.icon
-                    : paintToolSpecs[i].icon,
-                label: paintToolSpecs[i].id == 'tool'
-                    ? paintToolLabel(context.l10n, session.activeTool) ??
-                          context.l10n.toolLabel
-                    : paintSpecLabel(context.l10n, paintToolSpecs[i]),
-                valueText: paintToolSpecs[i].id == 'tool'
-                    ? null
-                    : _paintValueText(
-                        context.l10n,
-                        paintToolSpecs[i],
-                        session,
-                        tool,
-                      ),
-                swatchColor: paintToolSpecs[i].id == 'color'
-                    ? session.strokeColor
-                    : paintToolSpecs[i].id == 'fill' && fillEnabled
-                    ? session.fillColor
-                    : null,
-                active: session.openSlot == paintToolSpecs[i].id,
-                compact: _isCompact(context),
-                onTap: () {
-                  EditorHaptics.tap();
-                  // Toggling: re-tap of active tile dismisses the
-                  // sheet; tapping a different tile switches.
-                  ctrl.toggleSlot(paintToolSpecs[i].id);
-                },
-                // Long-press peek removed — too easy to undo by
-                // accident. Peek lives on the Undo chip in the sheet
-                // header.
-              ),
-            ],
-        ],
       ),
     );
   }
@@ -233,21 +216,6 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
   }
 
   double _stripHeight(BuildContext ctx) => _isCompact(ctx) ? 64 : 80;
-
-  /// Tile indices in display order. **Order is stable** regardless
-  /// of left/right handed mode. Right-handed mode only shifts the
-  /// row's alignment via [DockToolStrip.fitAlignment]; it never
-  /// reverses tools.
-  List<int> _toolOrder(BuildContext ctx, WidgetRef ref) {
-    return List<int>.generate(paintToolSpecs.length, (i) => i);
-  }
-
-  bool _isTierBoundary(WidgetRef ref, int rawIndex) {
-    // Boundary always sits before tool index 4 (after Tool / Color
-    // / Size / Opacity ▸ Layout / Background / …). Stable across
-    // left/right handed mode.
-    return rawIndex == 4;
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────

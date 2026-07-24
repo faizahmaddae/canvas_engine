@@ -83,6 +83,24 @@ class PaintSpec {
   final String label;
 }
 
+/// Localised tile/sheet-header label for [spec]. Lives next to the
+/// spec registry so the strip and the sheet chrome resolve display
+/// copy from one place (moved here from paint_mode_expansion.dart
+/// in tb1 14/17, dissolving the toolbar⇄expansion import cycle).
+String paintSpecLabel(AppLocalizations l10n, PaintSpec spec) {
+  return switch (spec.id) {
+    'tool' => l10n.toolLabel,
+    'color' => l10n.colorLabel,
+    'size' => l10n.sizeTool,
+    'fill' => l10n.fillLabel,
+    'opacity' => l10n.opacityLabel,
+    'blur' => l10n.blurLabel,
+    'polygon' => l10n.sidesTool,
+    'dash' => l10n.styleLabel,
+    _ => spec.label,
+  };
+}
+
 // ─── Tool registry ─────────────────────────────────────────────
 //
 // Flat single-tier strip — Tool · Color · Size · Fill · Opacity ·

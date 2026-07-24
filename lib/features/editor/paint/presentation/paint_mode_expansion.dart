@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_tokens.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 import '../../toolbar/domain/sub_tool.dart';
@@ -107,20 +106,6 @@ class PaintModeInlineExpansion extends ConsumerWidget {
         return const SizedBox.shrink();
     }
   }
-}
-
-String paintSpecLabel(AppLocalizations l10n, PaintSpec spec) {
-  return switch (spec.id) {
-    'tool' => l10n.toolLabel,
-    'color' => l10n.colorLabel,
-    'size' => l10n.sizeTool,
-    'fill' => l10n.fillLabel,
-    'opacity' => l10n.opacityLabel,
-    'blur' => l10n.blurLabel,
-    'polygon' => l10n.sidesTool,
-    'dash' => l10n.styleLabel,
-    _ => spec.label,
-  };
 }
 
 /// Stroke-width body. Preset chips above a "Fine tune" slider with
