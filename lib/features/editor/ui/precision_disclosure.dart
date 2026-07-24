@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 
@@ -34,7 +35,7 @@ class PrecisionDisclosure extends StatefulWidget {
     this.headerValue,
     required this.children,
     this.initiallyOpen = false,
-    this.animationDuration = const Duration(milliseconds: 180),
+    this.animationDuration = AppMotion.reveal,
     this.chevronColorClosed,
     this.chevronColorOpen,
     this.titleSize = 13,
@@ -193,7 +194,7 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
         ),
         AnimatedSize(
           duration: widget.animationDuration,
-          curve: Curves.easeOutCubic,
+          curve: AppMotion.curve,
           alignment: Alignment.topCenter,
           child: _open
               ? Column(

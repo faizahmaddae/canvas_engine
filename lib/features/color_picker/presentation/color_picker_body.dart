@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/l10n.dart';
@@ -299,13 +300,13 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
   @override
   Widget build(BuildContext context) {
     return AnimatedSize(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOutCubic,
+      duration: AppMotion.reveal,
+      curve: AppMotion.curve,
       alignment: AlignmentDirectional.topStart,
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 150),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeOutCubic,
+        switchInCurve: AppMotion.curve,
+        switchOutCurve: AppMotion.curve,
         transitionBuilder: (child, anim) =>
             FadeTransition(opacity: anim, child: child),
         child: _custom
@@ -1013,8 +1014,8 @@ class _SwatchState extends State<_Swatch> {
             customBorder: const CircleBorder(),
             onTap: widget.onTap,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
-              curve: Curves.easeOutCubic,
+              duration: AppMotion.state,
+              curve: AppMotion.curve,
               width: widget.size,
               height: widget.size,
               decoration: BoxDecoration(

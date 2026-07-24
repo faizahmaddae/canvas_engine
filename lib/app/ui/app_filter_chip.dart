@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_tokens.dart';
 import '../theme/app_typography.dart';
 
@@ -37,8 +38,8 @@ class AppFilterChip extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadii.pill),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          curve: Curves.easeOutCubic,
+          duration: AppMotion.of(context, AppMotion.standard),
+          curve: AppMotion.curve,
           height: compact ? 26 : 34,
           padding: EdgeInsetsDirectional.symmetric(
             horizontal: compact ? AppSpacing.md : AppSpacing.lg,

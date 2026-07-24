@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/editor_value_format.dart';
 import '../../../core/utils/haptics.dart';
@@ -231,8 +232,8 @@ class _GradientSwatch extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOutCubic,
+        duration: AppMotion.standard,
+        curve: AppMotion.curve,
         width: 56,
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(

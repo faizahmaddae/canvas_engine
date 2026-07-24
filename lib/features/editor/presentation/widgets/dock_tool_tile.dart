@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 
@@ -193,8 +194,8 @@ class _DockToolTileState extends State<DockToolTile> {
             highlightColor: Colors.transparent,
             focusColor: Colors.transparent,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
+              duration: AppMotion.of(context, AppMotion.reveal),
+              curve: AppMotion.curve,
               width: tileWidth,
               decoration: BoxDecoration(
                 color: bg,
@@ -239,7 +240,7 @@ class _DockToolTileState extends State<DockToolTile> {
     tile = AnimatedScale(
       scale: _down ? 0.97 : 1.0,
       duration: const Duration(milliseconds: 120),
-      curve: Curves.easeOutCubic,
+      curve: AppMotion.curve,
       child: tile,
     );
 

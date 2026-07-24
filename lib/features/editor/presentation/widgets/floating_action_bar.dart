@@ -22,6 +22,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
 
 /// Standard height of a single-row floating glass bar. Kept in sync
@@ -135,7 +136,7 @@ class FloatingPillButton extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
+              duration: AppMotion.of(context, AppMotion.state),
               curve: Curves.easeOut,
               decoration: BoxDecoration(
                 color: active

@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/app_motion.dart';
 import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/utils/haptics.dart';
 
@@ -35,8 +36,8 @@ class ToggleSegment extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOutCubic,
+      duration: AppMotion.of(context, AppMotion.reveal),
+      curve: AppMotion.curve,
       decoration: BoxDecoration(
         color: selected
             ? tokens.accent.withValues(alpha: 0.14)

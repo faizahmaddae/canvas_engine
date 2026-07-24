@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_tokens.dart';
 
 /// One tab of an [EditorSegmentedControl].
@@ -79,7 +80,7 @@ class _SegmentTile extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
+          duration: AppMotion.of(context, AppMotion.state),
           curve: Curves.easeOut,
           decoration: BoxDecoration(
             color: selected

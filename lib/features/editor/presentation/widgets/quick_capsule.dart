@@ -29,6 +29,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/constants/engine_constants.dart';
 import '../../../../core/utils/haptics.dart';
@@ -148,8 +149,8 @@ class QuickCapsule extends ConsumerWidget {
     return AnimatedPositioned(
       left: anchor.left,
       top: anchor.top,
-      duration: const Duration(milliseconds: 140),
-      curve: Curves.easeOutCubic,
+      duration: AppMotion.of(context, AppMotion.state),
+      curve: AppMotion.curve,
       child: SizedBox(height: kFloatingBarHeight, child: bar),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/app_motion.dart';
 import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/utils/haptics.dart';
 
@@ -148,8 +149,8 @@ class _PresetChipState extends State<PresetChip> {
           );
 
     Widget body = AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
-      curve: Curves.easeOutCubic,
+      duration: AppMotion.of(context, AppMotion.standard),
+      curve: AppMotion.curve,
       constraints: BoxConstraints(
         minWidth: widget.minWidth,
         // Both modes meet the kMinHitTarget floor; the pill is

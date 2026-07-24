@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/editor_value_format.dart';
 import '../../../../core/utils/haptics.dart';
@@ -408,8 +409,8 @@ class _FilterChipState extends State<_FilterChip> {
             highlightColor: Colors.transparent,
             focusColor: Colors.transparent,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              curve: Curves.easeOutCubic,
+              duration: AppMotion.standard,
+              curve: AppMotion.curve,
               width: 72,
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(

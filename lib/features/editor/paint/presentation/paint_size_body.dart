@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
@@ -265,7 +266,7 @@ class _PaintSizePrecisionAdvancedState
                   const SizedBox(width: 2),
                   AnimatedRotation(
                     turns: _open ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 180),
+                    duration: AppMotion.reveal,
                     child: Icon(
                       Icons.chevron_right_rounded,
                       size: 18,
@@ -278,7 +279,7 @@ class _PaintSizePrecisionAdvancedState
           ),
         ),
         AnimatedSize(
-          duration: const Duration(milliseconds: 180),
+          duration: AppMotion.reveal,
           curve: Curves.easeOut,
           alignment: Alignment.topCenter,
           child: _open

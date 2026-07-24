@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_tokens.dart';
 
 /// App-wide primary CTA (design doc §4) — full-width, `brand` fill,
@@ -34,7 +35,7 @@ class _AppPrimaryButtonState extends State<AppPrimaryButton> {
     return AnimatedScale(
       scale: _pressed ? 0.985 : 1,
       duration: const Duration(milliseconds: 120),
-      curve: Curves.easeOutCubic,
+      curve: AppMotion.curve,
       child: Material(
         color: Colors.transparent,
         child: InkWell(

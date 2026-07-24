@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../presentation/widgets/dock_tool_strip.dart';
@@ -132,8 +133,8 @@ class _SlotStripState extends State<SlotStrip> {
     );
     _controller.animateTo(
       target,
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOutCubic,
+      duration: AppMotion.reveal,
+      curve: AppMotion.curve,
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
 import 'editor_breakpoints.dart';
 
@@ -109,13 +110,13 @@ class EditorToolDock extends StatelessWidget {
                 // intentional motion rather than mechanical resize.
                 ClipRect(
                   child: AnimatedSize(
-                    duration: const Duration(milliseconds: 240),
-                    curve: Curves.easeOutCubic,
+                    duration: AppMotion.surface,
+                    curve: AppMotion.curve,
                     alignment: Alignment.bottomCenter,
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 240),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
+                      duration: AppMotion.surface,
+                      switchInCurve: AppMotion.curve,
+                      switchOutCurve: AppMotion.curveOut,
                       transitionBuilder: (child, animation) {
                         // Subtle upward slide (4% of height) +
                         // fade — the panel "rises" into place
@@ -158,8 +159,8 @@ class EditorToolDock extends StatelessWidget {
                   height: stripHeight,
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 220),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
+                    switchInCurve: AppMotion.curve,
+                    switchOutCurve: AppMotion.curveOut,
                     transitionBuilder: (child, animation) {
                       final slide = Tween<Offset>(
                         begin: const Offset(0.06, 0),
