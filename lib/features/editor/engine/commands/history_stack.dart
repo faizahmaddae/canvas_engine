@@ -54,9 +54,12 @@ class HistoryStack {
   /// command (see [EditorCommand.mergeWith]), the existing entry's
   /// forward is replaced with the merged command instead of pushing a
   /// new entry. The original inverse is preserved so undo still jumps
-  /// back to the state from before the merge stream began. This makes
-  /// slider drags and other rapid streams of micro-edits collapse to
-  /// a single undo step without callers having to coordinate.
+  /// back to the state from before the merge stream began. Since the
+  /// tb2 6/16 merge-gate flip every mergeable command opts in per
+  /// instance via a `live` flag, so this window coalesces ONLY the
+  /// sanctioned burst streams (steppers/nudges, the canvas-background
+  /// exemption) — slider drags commit once structurally through the
+  /// overlay preview channels and never rely on it.
   EditorDocument execute(EditorDocument document, EditorCommand command) {
     final inverse = command.invert(document);
     final next = command.apply(document);
@@ -71,8 +74,8 @@ class HistoryStack {
       // would be swallowed by the no-op guard above anyway.
       // Strictly-less-than so an entry backdated by exactly one
       // window (see [redo]) can never be absorbed.
-      final withinWindow = now.difference(top.touchedAt) <
-          EngineConstants.kLiveMergeWindow;
+      final withinWindow =
+          now.difference(top.touchedAt) < EngineConstants.kLiveMergeWindow;
       final merged = withinWindow ? command.mergeWith(top.forward) : null;
       if (merged != null) {
         // Merge replaces the forward command in place; the inverse
@@ -92,8 +95,11 @@ class HistoryStack {
         return next;
       }
     }
-    final entry =
-        _HistoryEntry(inverse: inverse, forward: command, touchedAt: now);
+    final entry = _HistoryEntry(
+      inverse: inverse,
+      forward: command,
+      touchedAt: now,
+    );
     _undo.add(entry);
     _undoBytes += _entryBytes(entry);
     _clearRedoInternal();

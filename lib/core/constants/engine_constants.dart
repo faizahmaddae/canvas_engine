@@ -97,20 +97,22 @@ class EngineConstants {
 
   /// Maximum idle gap within one mergeable command stream. A command
   /// only merges into the top history entry if that entry was pushed
-  /// or last merged within this window — so a slider drag (frames
-  /// arrive every ~16 ms) collapses into one undo entry, while a
-  /// second drag of the same knob a few seconds later starts a fresh
-  /// entry instead of silently extending the first.
+  /// or last merged within this window — so a repeat-fire burst
+  /// (stepper nudges every ~100 ms, canvas-background live streams)
+  /// collapses into one undo entry, while re-engaging the same
+  /// control a few seconds later starts a fresh entry instead of
+  /// silently extending the first.
   ///
-  /// Why a time gate and not a drag-end "settle" command: the settle
-  /// would have to be threaded through every slider's onChangeEnd
-  /// (ten near-duplicate private slider widgets today), and a
-  /// same-value settle is swallowed by the no-op guard before it can
-  /// break the chain anyway. One second is a compromise: holding
-  /// still >1 s mid-drag splits that drag into two entries (rare,
-  /// costs one extra undo press), and two deliberate re-drags within
-  /// 1 s merge (equally rare, costs one missing undo stop). Both
-  /// failure modes are one granularity step, never lost work.
+  /// Since the tb2 6/16 merge-gate flip, this window is the
+  /// COALESCER for the two sanctioned `live: true` streams only —
+  /// steppers/nudges and the canvas-background §2 exemption. Slider
+  /// drags no longer pass through it at all: they preview on the
+  /// live overlay and commit exactly one non-live command on
+  /// release, and non-live commands never merge regardless of
+  /// timing (contract §3). One second is a compromise for the
+  /// burst case: pausing >1 s mid-burst splits it into two entries
+  /// (rare, costs one extra undo press); both failure modes are one
+  /// granularity step, never lost work.
   static const Duration kLiveMergeWindow = Duration(seconds: 1);
 
   // ---------------------------------------------------------------------

@@ -199,7 +199,12 @@ class TextToolController extends Notifier<TextSession> {
 
   void setColor(Color color) => _applyStyle((s) => s.copyWith(color: color));
 
-  void setFontSize(double size) {
+  /// [live] marks the write as part of a stepper/nudge burst (the
+  /// −/＋ pair repeat-firing) — the sanctioned use of history-window
+  /// coalescing after the tb2 6/16 merge-gate flip. Slider ticks
+  /// arrive inside a style-drag session (overlay-only) and exact-px
+  /// entries are discrete, so both leave it `false`.
+  void setFontSize(double size, {bool live = false}) {
     // Manual size mutation (A+/A−/slider/exact px) clears any
     // sticky preset highlight so the chip row no longer pretends
     // the user is still on M/L/XL/etc.
@@ -207,7 +212,7 @@ class TextToolController extends Notifier<TextSession> {
       state = state.copyWith(clearSelectedSizePreset: true);
     }
     final translated = _translateFontSizeForVisualScale(size);
-    _applyStyle((s) => s.copyWith(fontSize: translated));
+    _applyStyle((s) => s.copyWith(fontSize: translated), live: live);
   }
 
   /// Apply a font size that came from tapping a named preset chip
@@ -554,9 +559,8 @@ class TextToolController extends Notifier<TextSession> {
         .execute(
           UpdateTextCommand(
             layerId: layer.id,
-            // style-only edit: leave content null so the command's
-            // touched-field shape stays {style} and merges cleanly
-            // with neighbouring style frames (slider drag).
+            // style-only edit; a preset tap is discrete (live stays
+            // false), so it is always its own undo entry (§3).
             style: next,
             // No transform → bounding box, position, rotation,
             // resizeMode are all preserved exactly.
@@ -713,8 +717,8 @@ class TextToolController extends Notifier<TextSession> {
             layerId: layer.id,
             // End-of-drag commit covers the whole live session — content,
             // style and transform may all have changed, so all three are
-            // captured. The shape will only merge with another full-shape
-            // command, which is what we want.
+            // captured. Session seals are discrete (live stays false):
+            // one drag, one entry, never merged with a neighbour (§3).
             content: layer.content,
             style: finalStyle,
             transform: finalTransform,
@@ -1043,9 +1047,8 @@ class TextToolController extends Notifier<TextSession> {
         UpdateTextCommand(
           layerId: s.layerId,
           // Live-edit commit: a full session can mutate any of the
-          // three fields, so all are captured. Pre-fix this used the
-          // required-field API; the shape is identical to the
-          // drag-commit path above and merges only with itself.
+          // three fields, so all are captured. Session seals are
+          // discrete (live stays false) — one session, one entry (§3).
           content: trimmed,
           style: finalStyle,
           transform: (newTransform == s.layerBefore.transform && !styleChanged)
@@ -1515,7 +1518,10 @@ class TextToolController extends Notifier<TextSession> {
   /// Centralizing the logic here means every UI surface (toolbar,
   /// shortcut, future context menu) gets the same selection-sync
   /// behaviour for free.
-  void _applyStyle(TextStyleSpec Function(TextStyleSpec) mutate) {
+  void _applyStyle(
+    TextStyleSpec Function(TextStyleSpec) mutate, {
+    bool live = false,
+  }) {
     final layer = selectedTextLayer();
     final base = layer?.style ?? state.defaultStyle;
     final next = mutate(base);
@@ -1540,8 +1546,10 @@ class TextToolController extends Notifier<TextSession> {
     // overlay and, because the new-add layer is centred + wrap-
     // capped, also re-flow the bounding box and re-centre it so the
     // live preview stays inside the canvas at the new style.
-    final live = _live;
-    if (live != null && live.isNew && live.layerId == layer.id) {
+    final liveSession = _live;
+    if (liveSession != null &&
+        liveSession.isNew &&
+        liveSession.layerId == layer.id) {
       final doc = ref.read(documentControllerProvider);
       final newSize = _measureForNewLayer(
         layer.content,
@@ -1566,7 +1574,9 @@ class TextToolController extends Notifier<TextSession> {
     // final style into its single UpdateTextCommand. Metrics-affecting
     // changes re-measure with the corner-drag scale preserved, exactly
     // like the content-preview path.
-    if (live != null && !live.isNew && live.layerId == layer.id) {
+    if (liveSession != null &&
+        !liveSession.isNew &&
+        liveSession.layerId == layer.id) {
       Size? liveSize;
       if (_affectsMetrics(base, next)) {
         liveSize = _scalePreservedEditSize(
@@ -1578,7 +1588,7 @@ class TextToolController extends Notifier<TextSession> {
             textDirectionMode: layer.textDirectionMode,
           ),
           layer.resizeMode,
-          live.scaleAtBegin,
+          liveSession.scaleAtBegin,
         );
       }
       var updated = layer.copyWith(style: next);
@@ -1626,10 +1636,14 @@ class TextToolController extends Notifier<TextSession> {
           UpdateTextCommand(
             layerId: layer.id,
             // style edit (optionally with a re-measure transform).
-            // content stays null so this merges with neighbouring
-            // style frames but NOT with content edits.
+            // content stays null so a live nudge burst coalesces
+            // with its style-shaped neighbours but NEVER with
+            // content edits. Discrete writes (live: false) are one
+            // entry each — the merge gate (tb2 6/16) ignores the
+            // history window for them.
             style: next,
             transform: newTransform,
+            live: live,
           ),
         );
   }

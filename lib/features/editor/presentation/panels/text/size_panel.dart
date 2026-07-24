@@ -78,6 +78,11 @@ double _sliderMax(List<({String label, double value})> presets) {
 
 /// Perceptual nudge shared with the old stepper: ±10% of the current
 /// value (rounded), floored at 1px, clamped to the absolute range.
+///
+/// `live: true` — repeat-firing the −/＋ pair is the sanctioned use
+/// of history-window coalescing (contract §3, tb2 6/16): a burst of
+/// nudges collapses to one undo entry, and the merge chain breaks
+/// as soon as a different (non-live) control writes.
 void _bump(TextToolController ctrl, double value, int dir) {
   final s = (value * 0.1).roundToDouble();
   final step = s < 1 ? 1 : s;
@@ -86,7 +91,7 @@ void _bump(TextToolController ctrl, double value, int dir) {
       .toDouble();
   if ((next - value).abs() < 0.01) return;
   EditorHaptics.tap();
-  ctrl.setFontSize(next);
+  ctrl.setFontSize(next, live: true);
 }
 
 /// Body for the Text Size sub-tool. Owns no local state — the

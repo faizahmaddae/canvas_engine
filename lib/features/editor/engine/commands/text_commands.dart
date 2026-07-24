@@ -24,12 +24,22 @@ class UpdateTextCommand extends EditorCommand {
     this.content,
     this.style,
     this.transform,
+    this.live = false,
   });
 
   final String layerId;
   final String? content;
   final TextStyleSpec? style;
   final LayerTransform? transform;
+
+  /// When true, marks this command as part of a sanctioned burst
+  /// stream — stepper/nudge repeat-fire (A+/A−, ±10%), the only
+  /// text surface still allowed to coalesce via the history window
+  /// (contract §3; slider drags ride the style-drag session and
+  /// commit exactly once). Discrete edits — swatch taps, toggles,
+  /// preset applies, session-seal commits — leave this `false`, so
+  /// two taps are two undo entries no matter how close in time.
+  final bool live;
 
   @override
   String get label => 'Edit text';
@@ -63,23 +73,29 @@ class UpdateTextCommand extends EditorCommand {
     );
   }
 
-  /// Coalesce a stream of edits on the same layer (e.g. the font-size
-  /// slider firing every frame, or the user typing into the content
-  /// box) into a single undo entry. Conservative — only merges when:
+  /// Coalesce a sanctioned `live` burst (stepper/nudge repeat-fire)
+  /// on the same layer into a single undo entry. Conservative —
+  /// only merges when:
   ///
+  ///   * BOTH commands are `live: true` (contract §3: everything
+  ///     else is gesture-fenced structurally — one commit per
+  ///     interaction — so the history window must never glue two
+  ///     discrete edits together),
   ///   * both commands target the same layer,
   ///   * both commands have the SAME touched-field shape across
   ///     `{content, style, transform}` — i.e. each field is non-null
   ///     in both or null in both.
   ///
-  /// Mirrors [UpdatePaintStyleCommand.mergeWith]: a content-edit
+  /// Mirrors the shape/image convention exactly. A content-edit
   /// command (style=null) and a style-edit command (content=null)
   /// have different shapes and therefore stay as separate undo
   /// entries, so the user can step each back independently. See
   /// rule 4 in `commands.instructions.md`.
   @override
   EditorCommand? mergeWith(EditorCommand previous) {
+    if (!live) return null;
     if (previous is! UpdateTextCommand) return null;
+    if (!previous.live) return null;
     if (previous.layerId != layerId) return null;
     if ((previous.content != null) != (content != null)) return null;
     if ((previous.style != null) != (style != null)) return null;

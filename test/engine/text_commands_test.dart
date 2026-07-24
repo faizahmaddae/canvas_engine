@@ -16,9 +16,37 @@ TextLayer _layer() => const TextLayer(
 
 void main() {
   group('UpdateTextCommand.mergeWith', () {
-    test('merges a style-only stream into one undo entry', () {
-      // Two consecutive font-size slider frames: same touched-field
-      // shape {style}. Conservative merge MUST collapse them.
+    test('merges a LIVE style-only burst into one undo entry', () {
+      // Two consecutive stepper nudges: same touched-field shape
+      // {style}, both live — the sanctioned burst stream (contract
+      // §3, tb2 6/16). Sliders no longer stream commands at all
+      // (they ride the style-drag session), so `live: true` here
+      // models the A+/A− repeat-fire path.
+      final history = HistoryStack();
+      var doc = EditorDocument.empty.addLayer(_layer());
+
+      doc = history.execute(
+        doc,
+        const UpdateTextCommand(
+          layerId: 't1',
+          style: TextStyleSpec(fontSize: 20),
+          live: true,
+        ),
+      );
+      doc = history.execute(
+        doc,
+        const UpdateTextCommand(
+          layerId: 't1',
+          style: TextStyleSpec(fontSize: 22),
+          live: true,
+        ),
+      );
+
+      expect(history.undoDepth, 1, reason: 'live burst should coalesce');
+    });
+
+    test('does NOT merge non-live style edits — two discrete taps are '
+        'two undo entries regardless of timing (tb2 6/16)', () {
       final history = HistoryStack();
       var doc = EditorDocument.empty.addLayer(_layer());
 
@@ -37,28 +65,30 @@ void main() {
         ),
       );
 
-      expect(history.undoDepth, 1, reason: 'style-only stream should coalesce');
+      expect(
+        history.undoDepth,
+        2,
+        reason: 'the merge gate requires BOTH commands to be live',
+      );
     });
 
-    test('merges a content-only stream into one undo entry', () {
-      // Typing keystrokes: shape {content}.
+    test('merges a LIVE content-only burst into one undo entry', () {
+      // Shape {content}, both live. (Production typing rides the
+      // composer's live session and commits once; the merge path
+      // stays pinned for API completeness.)
       final history = HistoryStack();
       var doc = EditorDocument.empty.addLayer(_layer());
 
       doc = history.execute(
         doc,
-        const UpdateTextCommand(layerId: 't1', content: 'h'),
+        const UpdateTextCommand(layerId: 't1', content: 'h', live: true),
       );
       doc = history.execute(
         doc,
-        const UpdateTextCommand(layerId: 't1', content: 'he'),
+        const UpdateTextCommand(layerId: 't1', content: 'he', live: true),
       );
 
-      expect(
-        history.undoDepth,
-        1,
-        reason: 'content-only stream should coalesce',
-      );
+      expect(history.undoDepth, 1, reason: 'live burst should coalesce');
     });
 
     test('does NOT merge a content edit and a style edit', () {

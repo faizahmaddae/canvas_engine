@@ -22,6 +22,7 @@ class UpdatePaintStyleCommand extends EditorCommand {
     this.setFillColor = false,
     this.fillColor,
     this.resizeMode,
+    this.live = false,
   });
 
   final String layerId;
@@ -30,6 +31,16 @@ class UpdatePaintStyleCommand extends EditorCommand {
   final bool setFillColor;
   final Color? fillColor;
   final PaintResizeMode? resizeMode;
+
+  /// When true, marks this command as part of a sanctioned burst
+  /// stream (repeat-fire steppers — none exist in Paint today; the
+  /// flag matches the shape/image convention so a future stepper
+  /// coalesces without another engine change). All current paint
+  /// commits — the preview channels' settle commands, discrete
+  /// setter mirrors, toggles — leave this `false`: gesture fencing
+  /// is structural (contract §3), so the history window must never
+  /// glue two separate interactions together.
+  final bool live;
 
   @override
   String get label => 'Paint style';
@@ -71,15 +82,19 @@ class UpdatePaintStyleCommand extends EditorCommand {
     );
   }
 
-  /// Coalesce with the immediately-previous entry when it touches the
-  /// EXACT same set of fields on the EXACT same layer. Lets the size
-  /// sheet's slider stream collapse to one undo step per drag without
-  /// the caller having to manage begin/commit boundaries. Different
-  /// fields (e.g. width then color) intentionally stay as separate
-  /// undo entries so users can step them back independently.
+  /// Coalesce a sanctioned `live` burst with the immediately-previous
+  /// entry when BOTH are `live: true` and touch the EXACT same set of
+  /// fields on the EXACT same layer (contract §3 — slider drags now
+  /// commit once structurally via the overlay preview channels, so
+  /// non-live commands never merge: two discrete edits stay two undo
+  /// entries no matter how close in time). Different fields (e.g.
+  /// width then color) intentionally stay as separate undo entries so
+  /// users can step them back independently.
   @override
   EditorCommand? mergeWith(EditorCommand previous) {
+    if (!live) return null;
     if (previous is! UpdatePaintStyleCommand) return null;
+    if (!previous.live) return null;
     if (previous.layerId != layerId) return null;
     if ((previous.strokeColor != null) != (strokeColor != null)) return null;
     if ((previous.strokeWidth != null) != (strokeWidth != null)) return null;
@@ -93,10 +108,7 @@ class UpdatePaintStyleCommand extends EditorCommand {
 /// No transform re-measure is needed (paint geometry stretches with
 /// its bounding box; aspect mode change only affects future drags).
 class SetPaintResizeModeCommand extends EditorCommand {
-  const SetPaintResizeModeCommand({
-    required this.layerId,
-    required this.mode,
-  });
+  const SetPaintResizeModeCommand({required this.layerId, required this.mode});
 
   final String layerId;
   final PaintResizeMode mode;
@@ -116,10 +128,7 @@ class SetPaintResizeModeCommand extends EditorCommand {
   EditorCommand invert(EditorDocument before) {
     final layer = before.layerById(layerId);
     if (layer is! PaintLayer) return _noop;
-    return SetPaintResizeModeCommand(
-      layerId: layerId,
-      mode: layer.resizeMode,
-    );
+    return SetPaintResizeModeCommand(layerId: layerId, mode: layer.resizeMode);
   }
 }
 
