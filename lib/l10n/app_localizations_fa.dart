@@ -247,6 +247,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get resizeCanvasAction => 'تغییر اندازه بوم';
 
   @override
+  String get photoSlotTapToReplace => 'برای افزودن عکس ضربه بزنید';
+
+  @override
   String get duplicateAction => 'تکثیر';
 
   @override

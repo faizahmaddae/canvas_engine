@@ -554,6 +554,12 @@ abstract class AppLocalizations {
   /// **'Resize canvas'**
   String get resizeCanvasAction;
 
+  /// No description provided for @photoSlotTapToReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to add your photo'**
+  String get photoSlotTapToReplace;
+
   /// No description provided for @duplicateAction.
   ///
   /// In en, this message translates to:

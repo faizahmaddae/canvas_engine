@@ -246,6 +246,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resizeCanvasAction => 'Resize canvas';
 
   @override
+  String get photoSlotTapToReplace => 'Tap to add your photo';
+
+  @override
   String get duplicateAction => 'Duplicate';
 
   @override

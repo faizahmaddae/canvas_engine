@@ -35,6 +35,7 @@ import '../../engine/rendering/background_fill_box.dart';
 import '../../engine/rendering/layer_renderer.dart';
 import '../../crop/application/crop_controller.dart';
 import '../../canvas/presentation/widgets/canvas_checkerboard.dart';
+import '../../image/presentation/photo_slot_badge.dart';
 import '../../paint/application/paint_tool_controller.dart';
 import '../../paint/presentation/paint_gesture_surface.dart';
 import '../../text/presentation/text_edit_flow.dart';
@@ -994,6 +995,17 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                           !addTextComposerOpen &&
                           !maskEditActive)
                         _buildHud(doc.layers, selection, viewport),
+                      // Template photo slots (roadmap 4.11): a pill
+                      // over every image layer still showing bundled
+                      // placeholder pixels. Selection-independent, and
+                      // ABOVE the selection overlay on purpose — the
+                      // overlay's body-drag surface claims the arena
+                      // on pointer-down, so a badge underneath it
+                      // would never receive its own tap. Being a small
+                      // Positioned child, it only outranks the overlay
+                      // inside the pill.
+                      if (!addTextComposerOpen && !maskEditActive)
+                        PhotoSlotBadges(layers: doc.layers, viewport: viewport),
                       // Floating text quick-capsule (re-added,
                       // redesigned): a lean edit/font/size/color/more
                       // pill over the selection. THE one floating

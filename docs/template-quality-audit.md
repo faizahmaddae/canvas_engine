@@ -419,6 +419,7 @@ especially `fa_story_health_clinic_tip`, `fa_promo_clinic_checkup`,
 | `en_yt_reaction_hot_take` | youtubeThumbnail / english | New Batch 3 English reaction/hot-take thumbnail with strong headline, subject card, and clear commentary label; production-ready. |
 | `en_yt_podcast_interview` | youtubeThumbnail / english | New Batch 3 English podcast interview thumbnail with host/guest focal shapes, episode badge, and readable headline; production-ready. |
 | `en_social_business_announcement` | business / english | New Batch 3 English premium business announcement post with professional card layout, clear offer headline, and CTA; production-ready. |
+| `fa_story_photo_frame` | instagramStory / persian | First placeholder-photo template: full-bleed photo slot with a gradient scrim, Persian kicker/headline over the image, and a caption + CTA block below; the slot carries bundled placeholder pixels and swaps through the on-canvas replace badge; production-ready. |
 
 ## Needs Minor Polish
 

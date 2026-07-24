@@ -8,11 +8,11 @@ Run `flutter test test/editor/templates/template_system_audit_test.dart` after t
 | Metric | Count |
 |---|---:|
 | Legacy TemplateCatalog templates | 51 |
-| Asset JSON templates | 116 |
-| Combined templates | 116 |
+| Asset JSON templates | 117 |
+| Combined templates | 117 |
 | Asset replacements of legacy IDs | 51 |
 | Legacy-only templates remaining | 0 |
-| Asset-only templates | 65 |
+| Asset-only templates | 66 |
 
 ## Migrated JSON Templates
 
@@ -135,6 +135,7 @@ Run `flutter test test/editor/templates/template_system_audit_test.dart` after t
 - `en_yt_reaction_hot_take` — youtubeThumbnail, english
 - `en_yt_podcast_interview` — youtubeThumbnail, english
 - `en_social_business_announcement` — business, english
+- `fa_story_photo_frame` — instagramStory, persian
 
 ## Remaining Legacy Templates
 

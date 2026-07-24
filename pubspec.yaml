@@ -158,6 +158,10 @@ flutter:
     - assets/templates/en_yt_reaction_hot_take/
     - assets/templates/en_yt_podcast_interview/
     - assets/templates/en_social_business_announcement/
+    - assets/templates/fa_story_photo_frame/
+    # Shared placeholder artwork for template photo slots. Not a
+    # template directory — no template.json / document.json here.
+    - assets/templates/_placeholder/
   fonts:
     - family: Barriecito
       fonts:

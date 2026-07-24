@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "fa_story_photo_frame",
+  "title": {
+    "en": "Persian Photo Frame Story",
+    "fa": "استوری قاب عکس"
+  },
+  "category": "instagramStory",
+  "contentLanguage": "persian",
+  "thumbnail": "assets/templates/fa_story_photo_frame/thumbnail.png",
+  "document": "assets/templates/fa_story_photo_frame/document.json",
+  "tags": [
+    "placeholder-photo",
+    "persian",
+    "story",
+    "photo"
+  ],
+  "home": {
+    "sortOrder": 450
+  }
+}

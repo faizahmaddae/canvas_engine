@@ -116,6 +116,7 @@
     "assets/templates/en_yt_tutorial_blueprint/template.json",
     "assets/templates/en_yt_reaction_hot_take/template.json",
     "assets/templates/en_yt_podcast_interview/template.json",
-    "assets/templates/en_social_business_announcement/template.json"
+    "assets/templates/en_social_business_announcement/template.json",
+    "assets/templates/fa_story_photo_frame/template.json"
   ]
 }

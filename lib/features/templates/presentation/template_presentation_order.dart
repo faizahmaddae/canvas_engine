@@ -36,6 +36,9 @@ const List<String> kHomeRecommendedTemplateIds = [
 ];
 
 const List<String> kHomeStoryTemplateIds = [
+  // Leads the story rail: the only template with a photo slot, so it is
+  // the one entry point where "bring your own photo" is discoverable.
+  'fa_story_photo_frame',
   'fa_story_fashion_drop',
   'fa_story_beauty_booking',
   'fa_story_health_clinic_tip',

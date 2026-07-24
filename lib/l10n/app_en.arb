@@ -76,6 +76,7 @@
   "documentMenuTooltip": "Document options",
   "unsavedBadge": "Unsaved",
   "resizeCanvasAction": "Resize canvas",
+  "photoSlotTapToReplace": "Tap to add your photo",
   "duplicateAction": "Duplicate",
   "addAction": "Add",
   "applyAction": "Apply",
