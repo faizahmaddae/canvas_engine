@@ -14,8 +14,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// they immediately reset back to where they were."
 ///
 /// Drives the real widget tree (EditorCanvas + GroupSelectionOverlay)
-/// with a two-finger pinch starting outside the group, then releases
-/// and asserts the document transform is committed (NOT reverted).
+/// with a two-finger pinch starting on the group's chrome quad, then
+/// releases and asserts the document transform is committed (NOT
+/// reverted).
 
 ProviderContainer _setup(WidgetTester tester) {
   tester.view.physicalSize = const Size(800, 800);
@@ -93,9 +94,12 @@ void main() {
 
     final vp = container.read(viewportControllerProvider);
     Offset toScreen(Offset c) => c * vp.scale + vp.translation;
-    final centre = toScreen(const Offset(435, 400));
-    final p1 = centre + const Offset(-220, 0);
-    final p2 = centre + const Offset(220, 0);
+    // Both fingers start ON the group's chrome quad (AABB spans
+    // canvas (380,380)→(490,420)): since tb3 1/7 an off-quad first
+    // finger routes the whole sequence to the viewport pinch, so a
+    // group pinch must begin on the selection.
+    final p1 = toScreen(const Offset(390, 400));
+    final p2 = toScreen(const Offset(480, 400));
 
     final f1 = await tester.startGesture(p1, pointer: 51);
     await tester.pump();

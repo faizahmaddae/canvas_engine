@@ -73,9 +73,13 @@ void main() {
 
     final vp = container.read(viewportControllerProvider);
     Offset toScreen(Offset c) => c * vp.scale + vp.translation;
+    // Both fingers start ON the selected layer's chrome quad (the
+    // layer spans canvas 380..420): since tb3 1/7 an off-quad first
+    // finger routes the whole sequence to the viewport pinch, so a
+    // layer pinch must begin on the selection.
     final centre = toScreen(const Offset(400, 400));
-    final p1 = centre + const Offset(-60, 0);
-    final p2 = centre + const Offset(60, 0);
+    final p1 = centre + const Offset(-15, 0);
+    final p2 = centre + const Offset(15, 0);
 
     final f1 = await tester.startGesture(p1, pointer: 51);
     await tester.pump();

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/constants/engine_constants.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
 import '../../application/canvas_capture.dart';
@@ -98,6 +99,19 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   /// no code path that flips it back, which guarantees no further
   /// flashes during normal interaction.
   bool _fittedOnce = false;
+
+  /// Hardware pointers currently down anywhere on the canvas subtree,
+  /// tracked at the outer [Listener]. Because pointer events dispatch
+  /// leaf-first, a body recogniser's claim predicate runs BEFORE the
+  /// pointer it is deciding on is added here — so a non-empty set
+  /// means "another finger is already down in this physical sequence".
+  ///
+  /// Drives contract §5 row 6 (sequence continuation): when the body
+  /// surface declined the first finger of a sequence (it landed off
+  /// the selection's chrome quad), every later finger of that same
+  /// sequence must also fall through, even if it lands ON the quad —
+  /// the pair belongs to the viewport pinch, not the layer.
+  final Set<int> _rawPointersDown = <int>{};
 
   /// Per-project zoom/pan persistence. Owned by the canvas widget so
   /// load + save share a single [SharedPreferences] handle (cached on
@@ -537,10 +551,22 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           // session and the user could see a "ghost" live transform on
           // resume. `cancel()` is idempotent so off-session events cost
           // nothing.
-          onPointerDown: _onMultiTapPointerDown,
+          onPointerDown: (e) {
+            // Raw sequence bookkeeping FIRST (see [_rawPointersDown]).
+            // This runs after every deeper recogniser has already seen
+            // the down event, so claim predicates observed the set
+            // WITHOUT the current pointer — exactly the "is another
+            // finger already down?" question they need answered.
+            _rawPointersDown.add(e.pointer);
+            _onMultiTapPointerDown(e);
+          },
           onPointerMove: _onMultiTapPointerMove,
-          onPointerUp: _onMultiTapPointerUp,
+          onPointerUp: (e) {
+            _rawPointersDown.remove(e.pointer);
+            _onMultiTapPointerUp(e);
+          },
           onPointerCancel: (e) {
+            _rawPointersDown.remove(e.pointer);
             _onMultiTapPointerCancel(e);
             ref.read(interactionControllerProvider.notifier).cancel();
             // Belt-and-braces: `onScaleEnd` is not guaranteed to fire
@@ -603,19 +629,24 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
               ref.read(editingControllerProvider.notifier).start(hit.id);
             },
             onDoubleTap: () {},
-            // Background pan + pinch-to-zoom for the viewport. Layer scale
+            // Background pan + pinch-to-zoom for the viewport. Layer body
             // recognisers sit deeper in the tree and win the gesture arena
-            // when a finger lands on a selected layer; touches on empty
-            // canvas / margin fall through to this handler.
+            // only when the first finger lands on the selection's chrome
+            // quad (contract §5 row 4); touches off the quad — including
+            // whole sequences while a selection exists — fall through to
+            // this handler, which is what makes rows 6 (two-finger always
+            // navigates) and 7 (off-layer drag pans) work.
             //
-            // Defensive guard: even with the body's claim-on-down
-            // recogniser, an out-of-order pointer (e.g. one finger on the
-            // selected layer, a second finger lands on empty canvas) can
-            // briefly satisfy this recogniser. Skipping start/update while
-            // an interaction session is active prevents the viewport from
-            // panning/zooming "alongside" an object transform — the
-            // selected object owns the gesture, exclusively, until it
-            // ends.
+            // Exclusivity backstop (kept deliberately after the tb3 1/7
+            // re-routing): skipping start/update while an interaction
+            // session is active prevents the viewport from panning or
+            // zooming "alongside" an object transform in split-ownership
+            // races — e.g. finger A rests off-quad (unclaimed, sub-slop)
+            // while finger B starts a body session on the quad; when A
+            // finally moves, this recogniser wins A's arena and would
+            // otherwise pan under the live transform. During a normal
+            // off-quad pinch no session exists (`isActive` is false), so
+            // this guard never blocks legitimate viewport navigation.
             onScaleStart: (d) {
               if (ref.read(interactionControllerProvider).isActive) return;
               // Paint mode suppresses viewport pan/zoom — the gesture
@@ -1016,32 +1047,33 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           // grab-and-resize, which would silently no-op against the
           // locked layer and feel broken.
           showHandles: !selectedLayer.locked,
-          // Active-transform-surface model: while a layer is selected,
-          // the entire canvas behaves as a transform surface for that
-          // selection. The body recogniser claims any first pointer
-          // (regardless of whether it lands on the layer's rotated
-          // bbox), so:
+          // Contract §5 rows 4/6/7 (chrome-quad claim model): the
+          // body recogniser claims a FIRST finger only when it lands
+          // on the selection's chrome quad — the rotated bbox plus
+          // the drawn handle outset — or when a transform session is
+          // already running. Everything else falls through to the
+          // viewport, so:
           //
-          //   * 1 finger anywhere → translates the selected layer
-          //   * 2 fingers anywhere → pinch + rotate the selected layer
-          //     (the gesture's focal becomes the pivot, exactly like
-          //     Procreate / Photoshop's "free transform" mode)
-          //   * a true tap (no movement past slop) is forwarded via
-          //     [onBodyTap] → `_handleTap`, which routes to selection
-          //     switching: tap on a different (eligible, higher)
-          //     layer selects it; tap on empty canvas clears selection.
+          //   * 1 finger ON the quad  → translates the selected layer
+          //     (eager claim-and-start; off-canvas recovery depends
+          //     on the layer responding from the very first frame)
+          //   * 2 fingers, first ON the quad → pinch + rotate the
+          //     layer (the second finger may land anywhere — pinching
+          //     a small object never requires both fingers inside it)
+          //   * 1 finger OFF the quad → viewport pan; the selection
+          //     stays (row 7 — 3.2 adds select-and-move)
+          //   * 2 fingers, first OFF the quad → viewport pinch, even
+          //     with a selection (row 6 — two-finger gestures ALWAYS
+          //     navigate)
+          //   * a true tap ON the quad is forwarded via [onBodyTap]
+          //     → `_handleTap` (overlapping-layer cycling); taps and
+          //     long-presses OFF the quad reach the canvas-level
+          //     recognisers natively now that nothing claims them.
           //
-          // Side-effect: the viewport's pan/pinch is suppressed while
-          // any layer is selected — to pan/zoom the canvas, the user
-          // taps empty space first to deselect. This matches the
-          // mental model of pro mobile editors and is what makes the
-          // single-finger-anywhere drag feel "right".
-          //
-          // First-finger-wins backstop: if a viewport pan/pinch was
-          // already in flight when the selection appeared (rare race),
-          // refuse new pointers so a half-finished viewport gesture
-          // can complete cleanly.
-          shouldClaimBody: (_) {
+          // First-finger-wins backstop: if a viewport pan/pinch is
+          // already in flight, refuse new pointers so a half-finished
+          // viewport gesture can complete cleanly.
+          shouldClaimBody: (globalPosition) {
             if (_gestureStartViewport != null) return false;
             // Crop Mode owns the entire viewport via the
             // full-screen [CropModeOverlay]; the selection body
@@ -1053,19 +1085,34 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             // yielding lets outside-region pointers fall through to
             // viewport pan/zoom.
             if (ref.read(maskEditControllerProvider).active) return false;
-            return true;
+            // Mid-session claim: a live transform keeps the surface
+            // (off-canvas recovery — the finger may wander anywhere).
+            if (ref.read(interactionControllerProvider).isActive) {
+              return true;
+            }
+            // Sequence continuation (row 6): another finger is
+            // already down and was NOT claimed by this recogniser
+            // (else isActive would be true / _pointers non-empty and
+            // this first-pointer gate would not run). The sequence
+            // belongs to the viewport — later fingers must join the
+            // pinch even if they land on the quad.
+            if (_rawPointersDown.isNotEmpty) return false;
+            return _pointInChromeQuad(selectedLayer, _toCanvas(globalPosition));
           },
-          // Defer-start gate: when the first pointer lands OUTSIDE
-          // the selected layer's rotated bbox (i.e. on empty canvas
-          // or on a different, deeper layer) we claim the arena but
-          // hold off on emitting [DragPhase.start] until movement
-          // past slop or a second finger. This preserves the three
-          // sub-slop intents the user can express on empty canvas
-          // while a layer is selected:
+          // Defer-start gate: a claimed first pointer that lands in
+          // the outset RING (inside the chrome quad, outside the raw
+          // bbox) claims the arena but holds off on emitting
+          // [DragPhase.start] until movement past slop or a second
+          // finger, preserving the sub-slop intents on the frame
+          // edge:
           //
-          //   * pure tap        → unselect / cycle selection
+          //   * pure tap        → cycle selection through overlapping
+          //                       layers under the frame edge
           //   * pure long-press → enter multi-select with that layer
-          //   * pause-then-drag → translate the selected layer
+          //
+          // (A pointer claimed mid-session via the isActive branch
+          // may sit outside the bbox too — deferring is harmless
+          // there, the session is already running.)
           //
           // When the first pointer lands ON the selected layer's
           // bbox we keep the eager claim-and-start behaviour — drag
@@ -1200,14 +1247,17 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           // the canvas-level long-press recogniser otherwise.
           onBodyLongPress: (globalPosition) =>
               _handleLongPress(globalPosition, layers),
-          // Active-transform-surface model for multi-select. See the
-          // single-layer overlay above for the full rationale. Any
-          // first pointer anywhere on the canvas drives the group's
-          // rigid-body translate; a second finger anywhere drives
-          // pinch + rotate around the gesture focal. A true tap with
-          // no movement is forwarded via [onBodyTap] for selection
+          // Chrome-quad claim model for multi-select (contract §5
+          // rows 4/6/7 — see the single-layer overlay above for the
+          // full rationale). The group's chrome quad is its
+          // axis-aligned bounds inflated by the drawn handle outset:
+          // a first pointer ON that quad drives the group's
+          // rigid-body translate (a second finger anywhere then
+          // drives pinch + rotate around the gesture focal); a first
+          // pointer OFF it falls through to the viewport. A true tap
+          // ON the quad is forwarded via [onBodyTap] for selection
           // routing (toggle-in / toggle-out / mode exit).
-          shouldClaimBody: (_) {
+          shouldClaimBody: (globalPosition) {
             if (_gestureStartViewport != null) return false;
             final cropActive = ref.read(cropControllerProvider).active;
             if (cropActive) return false;
@@ -1215,14 +1265,23 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             // yielding lets outside-region pointers fall through to
             // viewport pan/zoom.
             if (ref.read(maskEditControllerProvider).active) return false;
-            return true;
+            // Mid-session claim (off-canvas recovery), then the
+            // row-6 sequence-continuation refusal — same order and
+            // rationale as the single-layer overlay.
+            if (ref.read(interactionControllerProvider).isActive) {
+              return true;
+            }
+            if (_rawPointersDown.isNotEmpty) return false;
+            return bounds
+                .inflate(_chromeOutsetCanvas())
+                .contains(_toCanvas(globalPosition));
           },
-          // Defer-start gate: pointers landing OUTSIDE the group's
-          // axis-aligned bbox claim the arena but defer the session
-          // start until movement past slop or a second finger. Same
-          // rationale as the single-layer overlay — preserves tap
-          // (mode exit), long-press (extend / re-enter multi mode)
-          // and pause-then-drag intents on empty canvas.
+          // Defer-start gate: claimed pointers landing in the outset
+          // ring (inside the chrome quad, outside the group's
+          // axis-aligned bbox) defer the session start until movement
+          // past slop or a second finger. Same rationale as the
+          // single-layer overlay — preserves tap (toggle / mode exit)
+          // and long-press (extend) intents on the frame edge.
           shouldDeferStartBody: (globalPosition) {
             final local = _toCanvas(globalPosition);
             return !bounds.contains(local);
@@ -1407,6 +1466,40 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
         local.dy >= 0 &&
         local.dx <= t.size.width &&
         local.dy <= t.size.height;
+  }
+
+  /// The selection chrome's screen-space outset converted into canvas
+  /// units at the current zoom. The overlay outsets its frame quad by
+  /// [EngineConstants.selectionOutset] SCREEN pixels along the rotated
+  /// axes ([outsetSelectionQuad] in `selection_overlay.dart`); since
+  /// the viewport map is conformal (uniform scale + translation, no
+  /// rotation), the same quad expressed in canvas space is the layer
+  /// rect inflated by `outset / viewport.scale`.
+  double _chromeOutsetCanvas() {
+    final scale = ref.read(viewportControllerProvider).scale;
+    if (!scale.isFinite || scale <= 0) return EngineConstants.selectionOutset;
+    return EngineConstants.selectionOutset / scale;
+  }
+
+  /// True iff [point] (canvas-space) lands on [layer]'s selection
+  /// CHROME QUAD — the rotated bbox inflated by the handle outset the
+  /// overlay actually draws. This is the contract §5 row 4 claim test:
+  /// deliberately the drawn geometry, not the raw bbox, so grabbing
+  /// the frame edge between two handles still counts as "on the
+  /// selection". Pure canvas-space math (no widget bounds), so it
+  /// extrapolates correctly for layers dragged partly or fully off
+  /// the canvas — the off-canvas recovery grab keeps working.
+  bool _pointInChromeQuad(EditorLayer layer, Offset point) {
+    final t = layer.transform;
+    final local = LayerSpaceMapper(
+      transform: t,
+      viewport: ViewportState.identity,
+    ).canvasToLayer(point);
+    final o = _chromeOutsetCanvas();
+    return local.dx >= -o &&
+        local.dy >= -o &&
+        local.dx <= t.size.width + o &&
+        local.dy <= t.size.height + o;
   }
 
   /// Selection-routing for a plain tap on the canvas.
