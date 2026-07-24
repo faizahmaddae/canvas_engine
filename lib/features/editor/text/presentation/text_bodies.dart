@@ -70,10 +70,21 @@ class TextBodies {
     TextLayer layer,
   ) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
+    // Contract §2 (tb2 4/16): every change previews through the
+    // style-drag session (lazy-opened on the first change, so a
+    // wheel drag stages N overlay frames) and onCommitted seals it
+    // as ONE UpdateTextCommand. A discrete swatch tap flows
+    // begin→set→end within the tap — still exactly one command.
+    // endStyleDrag no-ops when the style ends unchanged (cancelled
+    // eyedrop), so no net-zero entries (§3).
     return ColorPickerBody(
       initial: layer.style.color,
       title: context.l10n.textColorTitle,
-      onChanged: ctrl.setColor,
+      onChanged: (c) {
+        ctrl.beginStyleDrag();
+        ctrl.setColor(c);
+      },
+      onCommitted: (_) => ctrl.endStyleDrag(),
     );
   }
 

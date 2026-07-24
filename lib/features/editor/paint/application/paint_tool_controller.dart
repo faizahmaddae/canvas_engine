@@ -220,6 +220,74 @@ class PaintToolController extends Notifier<PaintSession> {
     }
   }
 
+  // ─── Contract §2 preview channel: stroke colour (tb2 4/16) ─────
+  //
+  // Mirrors the width channel below: the session default tracks
+  // every preview tick (readouts + next stroke), and when a paint
+  // layer is selected the mirrored edit stages on the live overlay
+  // and commits as ONE UpdatePaintStyleCommand on settle. The
+  // colour picker's onCommitted also fires for a cancelled eyedrop
+  // at the original colour — the pending command then applies to
+  // an identical doc and execute() drops it (§3 no net-zero).
+  UpdatePaintStyleCommand? _pendingStrokeColorCommit;
+
+  void previewStrokeColor(Color color) {
+    if (state.strokeColor != color) {
+      state = state.copyWith(strokeColor: color);
+    }
+    final layer = selectedPaintLayer();
+    if (layer == null) return;
+    final cmd = UpdatePaintStyleCommand(layerId: layer.id, strokeColor: color);
+    _pendingStrokeColorCommit = cmd;
+    final doc = ref.read(documentControllerProvider);
+    final preview = cmd.apply(doc).layerById(layer.id);
+    if (preview != null) {
+      ref.read(liveOverlayProvider.notifier).replaceLayer(preview);
+    }
+  }
+
+  void commitStrokeColor() {
+    final cmd = _pendingStrokeColorCommit;
+    _pendingStrokeColorCommit = null;
+    if (cmd == null) return;
+    ref.read(liveOverlayProvider.notifier).clear();
+    ref.read(documentControllerProvider.notifier).execute(cmd);
+  }
+
+  // ─── Contract §2 preview channel: fill colour (tb2 4/16) ───────
+  //
+  // Same channel for the Fill panel's custom-picker drags. The
+  // discrete fill cards (No fill / Same color) stay on the direct
+  // [setFillColor] path — a tap is its own history entry (§3).
+  UpdatePaintStyleCommand? _pendingFillColorCommit;
+
+  void previewFillColor(Color? color) {
+    if (state.fillColor != color) {
+      state = state.copyWith(fillColor: color);
+    }
+    final layer = selectedPaintLayer();
+    if (layer == null) return;
+    final cmd = UpdatePaintStyleCommand(
+      layerId: layer.id,
+      setFillColor: true,
+      fillColor: color,
+    );
+    _pendingFillColorCommit = cmd;
+    final doc = ref.read(documentControllerProvider);
+    final preview = cmd.apply(doc).layerById(layer.id);
+    if (preview != null) {
+      ref.read(liveOverlayProvider.notifier).replaceLayer(preview);
+    }
+  }
+
+  void commitFillColor() {
+    final cmd = _pendingFillColorCommit;
+    _pendingFillColorCommit = null;
+    if (cmd == null) return;
+    ref.read(liveOverlayProvider.notifier).clear();
+    ref.read(documentControllerProvider.notifier).execute(cmd);
+  }
+
   // ─── Contract §2 preview channel: stroke width (tb2 3/16) ──────
   //
   // Slider drags call [previewStrokeWidth] per tick and

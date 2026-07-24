@@ -688,6 +688,19 @@ class TextToolController extends Notifier<TextSession> {
     }
     final finalStyle = layer.style;
     final finalTransform = layer.transform;
+    // No net-zero entries (contract §3): a session that ends where
+    // it started — cancelled eyedrop restoring the pre-drag colour,
+    // a wheel scrubbed back to its origin — must not push history.
+    // UpdateTextCommand.apply has no own equality guard, so without
+    // this check the commit below would record a do-nothing entry.
+    final before = session.docBefore.layerById(layer.id);
+    if (before is TextLayer &&
+        before.content == layer.content &&
+        before.style == finalStyle &&
+        before.transform == finalTransform) {
+      overlay.clear();
+      return;
+    }
     // Drop the overlay BEFORE pushing the command. Together they
     // produce a single Riverpod tick where the merged view goes from
     // "committed + in-flight override" to "committed (with the new

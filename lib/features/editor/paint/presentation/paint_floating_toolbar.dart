@@ -82,11 +82,14 @@ class PaintFloatingToolbar extends ConsumerWidget {
           FloatingPillButton(
             semanticLabel: context.l10n.strokeColorTitle,
             // The shared picker sheet — live, undimmed, recents
-            // handled inside; nothing to restore or re-commit.
+            // handled inside. Contract §2 (tb2 4/16): live changes
+            // preview through the stroke-colour channel; committed
+            // picks seal ONE undoable command.
             onTap: () => showColorPickerSheet(
               context,
               initial: layer.strokeColor,
-              onLiveChange: ctrl.setStrokeColor,
+              onLiveChange: ctrl.previewStrokeColor,
+              onCommitted: (_) => ctrl.commitStrokeColor(),
               title: context.l10n.strokeColorTitle,
             ),
             child: FloatingColorDot(color: layer.strokeColor),

@@ -85,10 +85,14 @@ class PaintFillBody extends ConsumerWidget {
                   // custom level — the card itself is the "custom"
                   // affordance, so landing on swatches would be a
                   // detour.
+                  // Contract §2 (tb2 4/16): live changes preview
+                  // through the fill-colour channel; committed
+                  // picks seal ONE undoable command.
                   await showColorPickerSheet(
                     context,
                     initial: fill ?? stroke,
-                    onLiveChange: ctrl.setFillColor,
+                    onLiveChange: ctrl.previewFillColor,
+                    onCommitted: (_) => ctrl.commitFillColor(),
                     title: context.l10n.fillColorTitle,
                     startAtCustom: true,
                   );

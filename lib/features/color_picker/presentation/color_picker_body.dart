@@ -66,7 +66,10 @@ const List<Color> kColorPickerPalette = <Color>[
 ///     they are hue choices; opacity is owned by the level-2 slider
 ///     (and an explicit 8-char #AARRGGBB hex).
 ///   * The final colour is recorded into the app-wide recents store
-///     on dispose (panel close / sheet dismiss) when it changed.
+///     on dispose (panel close / sheet dismiss) when it changed AND
+///     the session was recents-worthy: custom wheel drags, hex
+///     entries, and eyedropper picks qualify; preset-palette and
+///     recents-row taps do not (tb2 5/16).
 class ColorPickerBody extends ConsumerStatefulWidget {
   const ColorPickerBody({
     super.key,
@@ -112,7 +115,13 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
   late final TextEditingController _hexCtrl;
   late final FocusNode _hexFocus;
   bool _hexInvalid = false;
-  bool _touched = false;
+
+  /// Whether this session earned a recents-MRU write: only custom
+  /// wheel drags, eyedropper picks, and explicit hex entries do.
+  /// Preset-palette and recents-row taps deliberately do NOT — the
+  /// palette is already one tap away, so echoing it into recents
+  /// only evicts genuinely custom colours (tb2 5/16).
+  bool _recentsWorthy = false;
 
   /// The colour at mount time — NOT `widget.initial`, which hosts
   /// rebuild to the latest emitted value, making it useless for the
@@ -160,7 +169,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
   @override
   void dispose() {
     final current = _current;
-    if (_touched && current.toARGB32() != _initialArgb) {
+    if (_recentsWorthy && current.toARGB32() != _initialArgb) {
       // Deferred: mutating the store synchronously here notifies
       // this very widget's recents-row watcher mid-unmount.
       final store = _recentsStore;
@@ -184,14 +193,19 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
     }
   }
 
-  void _emit(HSVColor next, {bool syncHex = true, bool committed = false}) {
+  void _emit(
+    HSVColor next, {
+    bool syncHex = true,
+    bool committed = false,
+    bool recentsWorthy = false,
+  }) {
     setState(() {
       _hsv = next;
       _hexInvalid = false;
     });
     if (syncHex) _syncHex();
     final color = _current;
-    _touched = true;
+    if (recentsWorthy) _recentsWorthy = true;
     _lastEmittedArgb = color.toARGB32();
     widget.onChanged(color);
     if (committed) widget.onCommitted?.call(color);
@@ -210,13 +224,38 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
       setState(() => _hexInvalid = raw.replaceAll('#', '').isNotEmpty);
       return;
     }
+    final cleanLen = raw.trim().replaceAll('#', '').replaceAll(' ', '').length;
+    // Commit only on COMPLETE input while typing: a 6- or 8-digit
+    // code is unambiguous, but a 3-char shorthand is also the prefix
+    // of a longer code — mid-entry "F00" must not fire a commit the
+    // user never meant (tb2 5/16). Shorthand commits on submit.
+    if (cleanLen != 6 && cleanLen != 8) {
+      setState(() => _hexInvalid = false);
+      return;
+    }
+    _applyHex(parsed, cleanLen);
+  }
+
+  /// Keyboard submit — the explicit "I'm done" for 3-char shorthand
+  /// (complete 6/8-digit entries already committed while typing).
+  void _onHexSubmitted(String raw) {
+    final parsed = parseColorHex(raw);
+    if (parsed == null) {
+      setState(() => _hexInvalid = raw.replaceAll('#', '').isNotEmpty);
+      return;
+    }
+    final cleanLen = raw.trim().replaceAll('#', '').replaceAll(' ', '').length;
+    _applyHex(parsed, cleanLen);
+  }
+
+  void _applyHex(Color parsed, int cleanLen) {
     // 3- and 6-char hex edits the RGB channels only and must keep
     // the current alpha; an explicit 8-char #AARRGGBB is an opt-in
     // alpha edit and is honoured verbatim.
-    final cleanLen = raw.trim().replaceAll('#', '').replaceAll(' ', '').length;
     final next = HSVColor.fromColor(parsed);
     final adjusted = cleanLen == 8 ? next : next.withAlpha(_hsv.alpha);
-    _emit(adjusted, syncHex: false, committed: true);
+    // An exact typed code is a custom pick — recents-worthy.
+    _emit(adjusted, syncHex: false, committed: true, recentsWorthy: true);
   }
 
   Future<void> _eyedrop() async {
@@ -228,16 +267,24 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
       context,
       boundaryKey: boundaryKey,
       // Live sampling — the colour lands on the design while the
-      // finger is still down.
+      // finger is still down (preview channel; hosts stage it).
       onSample: (c) => _emit(HSVColor.fromColor(c).withAlpha(before.alpha)),
     );
     if (!mounted) return;
     if (picked == null) {
-      _emit(before); // cancelled — restore the pre-eyedrop colour
+      // Cancelled — restore the pre-eyedrop colour AND seal it so
+      // the host closes its preview session with a commit at the
+      // original value, which no-ops into ZERO history entries
+      // (§3 no net-zero entries; tb2 5/16). Not recents-worthy.
+      _emit(before, committed: true);
       return;
     }
     EditorHaptics.confirm();
-    _emit(HSVColor.fromColor(picked).withAlpha(before.alpha), committed: true);
+    _emit(
+      HSVColor.fromColor(picked).withAlpha(before.alpha),
+      committed: true,
+      recentsWorthy: true,
+    );
   }
 
   Future<void> _copyHex() async {
@@ -298,6 +345,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
                 invalid: _hexInvalid,
                 swatch: _current,
                 onChanged: _onHexChanged,
+                onSubmitted: _onHexSubmitted,
               ),
             ),
             const SizedBox(width: 8),
@@ -410,7 +458,10 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
               hue: _hsv.hue,
               saturation: _hsv.saturation,
               value: _hsv.value,
-              onChanged: (s, v) => _emit(_hsv.withSaturation(s).withValue(v)),
+              onChanged: (s, v) => _emit(
+                _hsv.withSaturation(s).withValue(v),
+                recentsWorthy: true,
+              ),
               onChangeEnd: () => widget.onCommitted?.call(_current),
             ),
           ),
@@ -431,7 +482,10 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
           ),
           value: _hsv.hue / 360,
           thumbColor: HSVColor.fromAHSV(1, _hsv.hue, 1, 1).toColor(),
-          onChanged: (v) => _emit(_hsv.withHue((v * 360).clamp(0, 359.999))),
+          onChanged: (v) => _emit(
+            _hsv.withHue((v * 360).clamp(0, 359.999)),
+            recentsWorthy: true,
+          ),
           onChangeEnd: () => widget.onCommitted?.call(_current),
         ),
         const SizedBox(height: 8),
@@ -446,7 +500,8 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
           checker: true,
           value: _hsv.alpha,
           thumbColor: _current,
-          onChanged: (v) => _emit(_hsv.withAlpha(v.clamp(0, 1))),
+          onChanged: (v) =>
+              _emit(_hsv.withAlpha(v.clamp(0, 1)), recentsWorthy: true),
           onChangeEnd: () => widget.onCommitted?.call(_current),
         ),
         const SizedBox(height: 10),
@@ -468,6 +523,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
                 invalid: _hexInvalid,
                 swatch: _current,
                 onChanged: _onHexChanged,
+                onSubmitted: _onHexSubmitted,
               ),
             ),
             const SizedBox(width: 8),
@@ -720,6 +776,7 @@ class _HexField extends StatelessWidget {
     required this.invalid,
     required this.swatch,
     required this.onChanged,
+    required this.onSubmitted,
   });
 
   final TextEditingController controller;
@@ -727,6 +784,7 @@ class _HexField extends StatelessWidget {
   final bool invalid;
   final Color swatch;
   final ValueChanged<String> onChanged;
+  final ValueChanged<String> onSubmitted;
 
   @override
   Widget build(BuildContext context) {
@@ -778,6 +836,7 @@ class _HexField extends StatelessWidget {
                 ),
               ),
               onChanged: onChanged,
+              onSubmitted: onSubmitted,
             ),
           ),
         ],

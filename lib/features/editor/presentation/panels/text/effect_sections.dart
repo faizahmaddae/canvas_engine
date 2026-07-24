@@ -51,18 +51,27 @@ class _PresetChipsRow extends StatelessWidget {
 /// Opens the shared two-level picker as its compact no-dim sheet.
 /// The styles panel is too dense to embed the picker body without
 /// blowing the dock height cap, so effect sections show a slim
-/// [ColorEntryButton] and hand off here. Every change applies live
-/// through [setColor]; alpha and recents are the picker's concern.
+/// [ColorEntryButton] and hand off here.
+///
+/// Contract §2 (tb2 4/16): every change previews through the
+/// text controller's style-drag session — [setColor] is invoked
+/// with the session lazily opened, so wheel ticks stage overlay
+/// frames instead of executing per tick — and the picker's
+/// onCommitted fires [onSettled] (endStyleDrag) to seal EXACTLY
+/// one undoable command per interaction. Alpha and recents stay
+/// the picker's concern.
 Future<void> _pickColor(
   BuildContext context, {
   required Color current,
   required ValueChanged<Color> setColor,
+  required VoidCallback onSettled,
   required String title,
 }) {
   return showColorPickerSheet(
     context,
     initial: current,
     onLiveChange: setColor,
+    onCommitted: (_) => onSettled(),
     title: title,
   );
 }
@@ -163,7 +172,11 @@ class ShadowEffectSection extends ConsumerWidget {
                           onTap: () => _pickColor(
                             context,
                             current: style.shadowColor!,
-                            setColor: ctrl.setShadowColor,
+                            setColor: (c) {
+                              ctrl.beginStyleDrag();
+                              ctrl.setShadowColor(c);
+                            },
+                            onSettled: ctrl.endStyleDrag,
                             title: l10n.shadowColorTitle,
                           ),
                         ),
@@ -239,7 +252,11 @@ class BackgroundEffectSection extends ConsumerWidget {
                 onTap: () => _pickColor(
                   context,
                   current: style.backgroundColor!,
-                  setColor: ctrl.setBackgroundColor,
+                  setColor: (c) {
+                    ctrl.beginStyleDrag();
+                    ctrl.setBackgroundColor(c);
+                  },
+                  onSettled: ctrl.endStyleDrag,
                   title: l10n.backgroundColorTitle,
                 ),
               ),
@@ -316,7 +333,11 @@ class BorderEffectSection extends ConsumerWidget {
                 onTap: () => _pickColor(
                   context,
                   current: style.outlineColor!,
-                  setColor: ctrl.setOutlineColor,
+                  setColor: (c) {
+                    ctrl.beginStyleDrag();
+                    ctrl.setOutlineColor(c);
+                  },
+                  onSettled: ctrl.endStyleDrag,
                   title: l10n.borderColorTitle,
                 ),
               ),

@@ -65,12 +65,11 @@ class ShadowPanelAdapter<L extends EditorLayer> {
 /// — sliding blur won't reset the offset, picking a colour won't
 /// reset opacity, etc.
 ///
-/// The blur/opacity sliders follow the interaction contract's §2
-/// preview channel: ticks stage an overlay preview, release/cancel
-/// commits ONE non-live command (structurally one undo entry per
-/// drag). Presets and the direction pad stay discrete non-live
-/// commands; the colour picker still streams `live: true` commits
-/// until tb2 5/16.
+/// The blur/opacity sliders AND the colour picker follow the
+/// interaction contract's §2 preview channel: ticks stage an
+/// overlay preview, release/settle commits ONE non-live command
+/// (structurally one undo entry per interaction). Presets and the
+/// direction pad stay discrete non-live commands (§3).
 class LayerShadowBody<L extends EditorLayer> extends ConsumerStatefulWidget {
   const LayerShadowBody({
     super.key,
@@ -131,13 +130,7 @@ class _LayerShadowBodyState<L extends EditorLayer>
     super.dispose();
   }
 
-  void _commit({
-    Color? c,
-    double? blur,
-    Offset? offset,
-    double? opacity,
-    bool live = false,
-  }) {
+  void _commit({Color? c, double? blur, Offset? offset, double? opacity}) {
     ref
         .read(documentControllerProvider.notifier)
         .execute(
@@ -147,7 +140,6 @@ class _LayerShadowBodyState<L extends EditorLayer>
             blur: blur,
             offset: offset,
             opacity: opacity,
-            live: live,
           ),
         );
   }
@@ -182,15 +174,18 @@ class _LayerShadowBodyState<L extends EditorLayer>
           if (hasShadow) ...[
             const SizedBox(height: 12),
             SectionLabel(context.l10n.colorLabel),
-            // The shared two-level picker, embedded. Drags stream
-            // live (transient) commits; settled changes commit for
-            // real so each pick is one undo step. Recents and alpha
+            // The shared two-level picker, embedded. Contract §2
+            // (tb2 5/16): drags stage overlay previews via the same
+            // channel as the sliders below; the settled change
+            // commits ONE undoable command. Recents and alpha
             // policy live inside the picker.
             ColorPickerBody(
               initial: fields.color,
               title: context.l10n.shadowColorTitle,
-              onChanged: (c) => _commit(c: c, live: true),
-              onCommitted: (c) => _commit(c: c),
+              onChanged: (c) => _previewSlider(
+                adapter.command(layerId: widget.layer.id, color: c),
+              ),
+              onCommitted: (_) => _commitSlider(),
             ),
             const SizedBox(height: 2),
             PrecisionDisclosure(

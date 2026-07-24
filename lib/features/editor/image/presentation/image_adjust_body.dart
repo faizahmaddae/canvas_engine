@@ -34,8 +34,8 @@ import 'image_panel_shell.dart';
 /// (zero committed writes mid-drag) and release/cancel commits ONE
 /// non-live command — each drag is structurally one undo entry.
 /// Preset taps stay discrete non-live commands so each tap is its
-/// own undoable action (§3). The vignette colour picker still
-/// streams `live: true` commits until its host migrates (tb2 5/16).
+/// own undoable action (§3). The vignette colour picker rides the
+/// same overlay channel as the sliders (tb2 5/16).
 ///
 /// Every change goes through [SetImageAdjustmentsCommand] so undo
 /// / redo always works, and Replace-image (and every other Image
@@ -110,25 +110,6 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
             saturation: saturation,
             exposure: exposure,
             warmth: warmth,
-          ),
-        );
-  }
-
-  void _commitVignette({
-    double? intensity,
-    double? feather,
-    Color? color,
-    bool live = false,
-  }) {
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(
-          SetImageVignetteCommand(
-            layerId: widget.layer.id,
-            intensity: intensity,
-            feather: feather,
-            color: color,
-            live: live,
           ),
         );
   }
@@ -293,14 +274,18 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 onDragEnd: _commitSlider,
               ),
               const SizedBox(height: 8),
-              // The shared two-level picker, embedded. Drags stream
-              // live (transient) commits; settled changes commit
-              // for real. Recents and alpha policy live inside it.
+              // The shared two-level picker, embedded. Contract §2
+              // (tb2 5/16): drags stage overlay previews via the
+              // same channel as the sliders above; the settled
+              // change commits ONE undoable command. Recents and
+              // alpha policy live inside the picker.
               ColorPickerBody(
                 initial: vignette.color,
                 title: context.l10n.vignetteColorTitle,
-                onChanged: (c) => _commitVignette(color: c, live: true),
-                onCommitted: (c) => _commitVignette(color: c),
+                onChanged: (c) => _previewSlider(
+                  SetImageVignetteCommand(layerId: widget.layer.id, color: c),
+                ),
+                onCommitted: (_) => _commitSlider(),
               ),
             ],
           ),

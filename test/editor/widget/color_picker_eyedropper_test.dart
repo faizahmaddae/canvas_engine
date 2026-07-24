@@ -7,6 +7,7 @@
 import 'package:canvas_engine/features/color_picker/presentation/eyedropper_overlay.dart';
 import 'package:canvas_engine/features/editor/application/canvas_capture.dart';
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
+import 'package:canvas_engine/features/editor/application/live_overlay_controller.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
@@ -87,6 +88,14 @@ void main() {
           .style
           .color;
 
+  /// Merged-view colour — live sampling stages on the overlay
+  /// (contract §2, tb2 4/16); the committed doc stays frozen until
+  /// the eyedrop settles.
+  Color liveTextColorOf(ProviderContainer c) =>
+      (c.read(renderedDocumentProvider).layerById('text-1')! as TextLayer)
+          .style
+          .color;
+
   /// Screen position of a logical canvas point, walked through the
   /// live viewport transform via the shared boundary key.
   Offset canvasToScreen(ProviderContainer c, Offset canvasPoint) {
@@ -153,14 +162,22 @@ void main() {
     );
     await tester.pump();
 
-    // Press on the design (live colour applies)…
+    final versionBefore = container.read(documentCommitVersionProvider);
+
+    // Press on the design (live colour applies — on the MERGED view;
+    // the committed doc stays frozen mid-sample per contract §2)…
     final onCanvas = canvasToScreen(container, const Offset(400, 400));
     final gesture = await tester.startGesture(onCanvas);
     await tester.pump();
     expect(
-      textColorOf(container).toARGB32() & 0x00FFFFFF,
+      liveTextColorOf(container).toARGB32() & 0x00FFFFFF,
       0xDD2244,
       reason: 'sampling is live while the finger is down',
+    );
+    expect(
+      textColorOf(container),
+      before,
+      reason: 'committed colour untouched while sampling',
     );
     // …then slide off the board and release: cancel.
     await gesture.moveTo(const Offset(5, 5));
@@ -172,6 +189,11 @@ void main() {
       textColorOf(container),
       before,
       reason: 'a cancelled eyedrop restores the pre-drag colour',
+    );
+    expect(
+      container.read(documentCommitVersionProvider),
+      versionBefore,
+      reason: 'a cancelled eyedrop produces ZERO history entries (tb2 5/16)',
     );
   });
 

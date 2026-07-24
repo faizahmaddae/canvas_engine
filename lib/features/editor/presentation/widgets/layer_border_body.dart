@@ -88,11 +88,11 @@ class BorderPanelAdapter<L extends EditorLayer> {
 /// straight merge, since the two panels have real behavioural
 /// divergences (see [BorderPanelAdapter]'s doc).
 ///
-/// The precision width slider follows the interaction contract's §2
-/// preview channel: ticks stage an overlay preview, release/cancel
-/// commits ONE non-live command (structurally one undo entry per
-/// drag). Chips stay discrete non-live commands; the colour picker
-/// still streams `live: true` commits until tb2 5/16.
+/// The precision width slider AND the colour picker follow the
+/// interaction contract's §2 preview channel: ticks stage an
+/// overlay preview, release/settle commits ONE non-live command
+/// (structurally one undo entry per interaction). Chips stay
+/// discrete non-live commands (§3).
 class LayerBorderBody<L extends EditorLayer> extends ConsumerStatefulWidget {
   const LayerBorderBody({
     super.key,
@@ -148,12 +148,7 @@ class _LayerBorderBodyState<L extends EditorLayer>
     super.dispose();
   }
 
-  void _commit({
-    Color? c,
-    bool clearColor = false,
-    double? w,
-    bool live = false,
-  }) {
+  void _commit({Color? c, bool clearColor = false, double? w}) {
     ref
         .read(documentControllerProvider.notifier)
         .execute(
@@ -162,9 +157,24 @@ class _LayerBorderBodyState<L extends EditorLayer>
             color: c,
             clearColor: clearColor,
             width: w,
-            live: live,
           ),
         );
+  }
+
+  /// Width to bundle with a colour preview/commit: promote to
+  /// [medium] when the COMMITTED layer has no visible border yet
+  /// (width 0 or no colour), so the pick is immediately visible.
+  /// Read from the committed doc, not the merged payload — the
+  /// payload flips to "has border" after the first preview frame,
+  /// but every preview command re-applies against the still-
+  /// unchanged committed doc, so the promotion must persist for
+  /// the whole drag.
+  double? _colorCommitWidth(double medium) {
+    final l = ref.read(documentControllerProvider).layerById(widget.layer.id);
+    if (l is! L) return null;
+    final f = widget.adapter.read(l);
+    final has = f.width > 0 && widget.adapter.hasColor(l);
+    return has ? null : medium;
   }
 
   @override
@@ -176,7 +186,6 @@ class _LayerBorderBodyState<L extends EditorLayer>
     final width = fields.width;
     final displayColor = fields.color ?? const Color(0xFF000000);
     final hasColor = adapter.hasColor(layer);
-    final hasBorder = width > 0 && hasColor;
     final stroked = _isStroked(layer);
 
     // Canvas-aware preset widths via the central helper. Same
@@ -239,15 +248,21 @@ class _LayerBorderBodyState<L extends EditorLayer>
             SectionLabel(context.l10n.colorLabel),
             // The shared two-level picker, embedded. Picking a
             // colour with no border yet promotes the width to
-            // `medium` so the pick is immediately visible. Drags
-            // stream live commits; settled changes seal the undo
-            // step. Recents and alpha policy live in the picker.
+            // `medium` so the pick is immediately visible.
+            // Contract §2 (tb2 5/16): drags stage overlay previews
+            // and the settled change commits ONE undoable command.
+            // Recents and alpha policy live in the picker.
             ColorPickerBody(
               initial: displayColor,
               title: context.l10n.borderColorTitle,
-              onChanged: (c) =>
-                  _commit(c: c, w: hasBorder ? null : medium, live: true),
-              onCommitted: (c) => _commit(c: c, w: hasBorder ? null : medium),
+              onChanged: (c) => _previewSlider(
+                adapter.command(
+                  layerId: layer.id,
+                  color: c,
+                  width: _colorCommitWidth(medium),
+                ),
+              ),
+              onCommitted: (_) => _commitSlider(),
             ),
             if (adapter.showPrecisionSlider) ...[
               const SizedBox(height: 6),

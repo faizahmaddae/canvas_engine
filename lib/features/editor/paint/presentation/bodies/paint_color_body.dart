@@ -18,11 +18,14 @@ class PaintColorBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ctrl = ref.read(paintToolControllerProvider.notifier);
     // The shared two-level picker, embedded. Alpha preservation and
-    // recents bookkeeping live inside the picker.
+    // recents bookkeeping live inside the picker. Contract §2
+    // (tb2 4/16): changes preview through the controller's stroke-
+    // colour channel and onCommitted seals ONE undoable command.
     return ColorPickerBody(
       initial: current,
       title: context.l10n.strokeColorTitle,
-      onChanged: ctrl.setStrokeColor,
+      onChanged: ctrl.previewStrokeColor,
+      onCommitted: (_) => ctrl.commitStrokeColor(),
     );
   }
 }
