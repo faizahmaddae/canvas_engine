@@ -14,17 +14,16 @@ export '../../presentation/panels/text/font_picker/inline_browser.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/modules/text/text_layer.dart';
-import '../../presentation/widgets/dock_tool_strip.dart';
-import '../../presentation/widgets/dock_tool_tile.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 import '../../toolbar/domain/sub_tools/widget_sub_tool.dart';
+import '../../toolbar/domain/toolbar_slot.dart';
+import '../../toolbar/presentation/slot_strip.dart';
 import '../../toolbar/presentation/sub_tool_sheet.dart';
 import '../application/text_tool_controller.dart';
 import '../domain/font_catalog.dart';
@@ -52,15 +51,8 @@ import '../../presentation/panels/text/more_sheet.dart' show showTextMoreSheet;
 /// Bold / Italic / Underline live in the More sheet and inside the
 /// Style body that the input-flow sheet renders, not on the bottom
 /// dock — they're toggle actions, not category sheets.
-class TextModeToolbar extends ConsumerStatefulWidget {
+class TextModeToolbar extends ConsumerWidget {
   const TextModeToolbar({super.key});
-
-  // Width of a DockToolTile + its horizontal margin. Kept in sync
-  // with dock_tool_tile.dart (66 + 2*2).
-  static const double _tileExtent = 70;
-
-  @override
-  ConsumerState<TextModeToolbar> createState() => _TextModeToolbarState();
 
   // ─── Tool registry ─────────────────────────────────────────────
   //
@@ -142,40 +134,10 @@ class TextModeToolbar extends ConsumerStatefulWidget {
     if (layer is TextLayer && !layer.isSticker) return layer;
     return null;
   }
-}
-
-class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
-  final _scroll = ScrollController();
-  String? _lastOpen;
-
-  // The tier-2 discovery peek is gone with tier-2 itself — six
-  // tiles fit the viewport, nothing is hidden behind a swipe.
 
   @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
-  }
-
-  void _ensureVisible(int index) {
-    if (!_scroll.hasClients) return;
-    final viewport = _scroll.position.viewportDimension;
-    final tile = TextModeToolbar._tileExtent;
-    final target = (index * tile) - (viewport / 2) + (tile / 2);
-    final clamped = target.clamp(
-      _scroll.position.minScrollExtent,
-      _scroll.position.maxScrollExtent,
-    );
-    _scroll.animateTo(
-      clamped,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final selected = TextModeToolbar._selectedTextLayer(ref);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = _selectedTextLayer(ref);
     final hasSelectedText = selected != null;
     final session = ref.watch(textToolControllerProvider);
 
@@ -187,101 +149,78 @@ class _TextModeToolbarState extends ConsumerState<TextModeToolbar> {
               .cast<FontEntry?>()
               .firstWhere((_) => true, orElse: () => null);
 
-    // When the open sheet changes (from anywhere — tile tap or
-    // sibling swipe inside the sheet) scroll the matching tile
-    // into view so the user always sees which tool is active.
-    final open = session.openSheet;
-    if (open != _lastOpen) {
-      _lastOpen = open;
-      if (open != null) {
-        final idx = TextModeToolbar._tools.indexWhere((s) => s.id == open);
-        if (idx >= 0) {
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) => _ensureVisible(idx),
-          );
-        }
-      }
-    }
-
     final rightHanded = ref.watch(
       appSettingsProvider.select((s) => s.rightHandedToolbar),
     );
 
+    // Registry → shared slot model. The [_tools] order is the single
+    // source for both the rendered strip and the sheet sibling-swipe
+    // walk ([toolIds]), so the two cannot drift.
+    final slots = <ToolbarSlot>[
+      for (final spec in _tools)
+        ToolbarSlot(
+          id: spec.id,
+          icon: spec.icon,
+          label: _localizedToolLabel(context.l10n, spec),
+          valueLabel: spec.id == 'font'
+              ? () => fontEntry?.labelFor(
+                  Localizations.localeOf(context).languageCode,
+                )
+              : null,
+          fontFamily: spec.id == 'font' ? () => fontEntry?.family : null,
+          swatchColor: spec.id == 'color' ? () => style.color : null,
+          enabledBuilder: () => hasSelectedText,
+          onTap: () {
+            if (spec.id == 'more') {
+              ref.read(textToolControllerProvider.notifier).closeSheet();
+              if (selected != null) {
+                showTextMoreSheet(context, ref, selected);
+              }
+              return;
+            }
+            // Toggling: re-tapping the active tile dismisses
+            // the sheet (in addition to drag-handle / swipe-
+            // down / Done pill). Tapping a different tile
+            // switches sheets.
+            ref.read(textToolControllerProvider.notifier).toggleSheet(spec.id);
+          },
+          // Long-press peek removed from tiles — too easy to
+          // trigger an undo by resting a thumb on the strip.
+          // Peek is now opt-in via the Undo chip in the sheet
+          // header (DockSheetChrome.onUndo).
+        ),
+    ];
+
     return SizedBox(
       height: _stripHeight(context),
-      child: DockToolStrip(
-        controller: _scroll,
+      child: SlotStrip(
+        slots: slots,
+        // SlotStrip auto-scrolls the active tile into view on
+        // activeId changes (tile tap or sheet sibling-swipe) —
+        // replaces the strip-owned controller + _ensureVisible
+        // plumbing this widget used to carry.
+        activeId: session.openSheet,
+        // Bare-tile geometry: no per-tile gap and the historical
+        // 10dp strip padding, so the migrated bar is byte-identical
+        // to the old DockToolStrip rendering (Gate A).
+        tileGap: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         centerWhenFits: true,
         // Handedness affects alignment only — never tile order.
         fitAlignment: rightHanded
             ? MainAxisAlignment.end
             : MainAxisAlignment.center,
-        children: [
-          for (final i in _toolOrder(context, ref)) ...[
-            DockToolTile(
-              icon: TextModeToolbar._tools[i].icon,
-              label: _localizedToolLabel(
-                context.l10n,
-                TextModeToolbar._tools[i],
-              ),
-              valueText: TextModeToolbar._tools[i].id == 'font'
-                  ? fontEntry?.labelFor(
-                      Localizations.localeOf(context).languageCode,
-                    )
-                  : null,
-              fontFamily: TextModeToolbar._tools[i].id == 'font'
-                  ? fontEntry?.family
-                  : null,
-              swatchColor: TextModeToolbar._tools[i].id == 'color'
-                  ? style.color
-                  : null,
-              enabled: hasSelectedText,
-              active: session.openSheet == TextModeToolbar._tools[i].id,
-              compact: _isCompact(context),
-              onTap: () {
-                EditorHaptics.tap();
-                final spec = TextModeToolbar._tools[i];
-                if (spec.id == 'more') {
-                  ref.read(textToolControllerProvider.notifier).closeSheet();
-                  if (selected != null) {
-                    showTextMoreSheet(context, ref, selected);
-                  }
-                  return;
-                }
-                // Toggling: re-tapping the active tile dismisses
-                // the sheet (in addition to drag-handle / swipe-
-                // down / Done pill). Tapping a different tile
-                // switches sheets.
-                ref
-                    .read(textToolControllerProvider.notifier)
-                    .toggleSheet(spec.id);
-              },
-              // Long-press peek removed from tiles — too easy to
-              // trigger an undo by resting a thumb on the strip.
-              // Peek is now opt-in via the Undo chip in the sheet
-              // header (DockSheetChrome.onUndo).
-            ),
-          ],
-        ],
       ),
     );
   }
 
   // ── Layout helpers ──────────────────────────────────────────────
-  bool _isCompact(BuildContext ctx) {
+  static bool _isCompact(BuildContext ctx) {
     final m = MediaQuery.of(ctx);
     return m.size.shortestSide < 380 || m.orientation == Orientation.landscape;
   }
 
-  double _stripHeight(BuildContext ctx) => _isCompact(ctx) ? 64 : 80;
-
-  /// Tile indices in display order. **Order is stable** regardless
-  /// of left/right handed mode — Font is always first. Right-handed
-  /// mode only shifts the row's alignment (handled by the parent
-  /// [DockToolStrip] via `fitAlignment`); it never reverses tools.
-  List<int> _toolOrder(BuildContext ctx, WidgetRef ref) {
-    return List<int>.generate(TextModeToolbar._tools.length, (i) => i);
-  }
+  static double _stripHeight(BuildContext ctx) => _isCompact(ctx) ? 64 : 80;
 }
 
 /// In-dock sheet panel: routes the active sheet id → its body and

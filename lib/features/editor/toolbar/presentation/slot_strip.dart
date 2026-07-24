@@ -26,7 +26,16 @@ class SlotStrip extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 12),
     this.centerWhenFits = true,
     this.fitAlignment = MainAxisAlignment.center,
+    this.tileGap = 1,
   });
+
+  /// Horizontal padding wrapped around EACH tile, per side. The
+  /// tile itself already carries 1px of internal chrome, so the
+  /// default (1) yields a 70dp per-tile footprint — the geometry
+  /// the main/image/shape/sticker strips shipped with. Text and
+  /// paint pass 0 to reproduce their historical bare-tile 68dp
+  /// extent exactly (Gate A is a pixel byte-compare per mode).
+  final double tileGap;
 
   /// When true, if the slots fit in the viewport they are aligned
   /// per [fitAlignment]. Useful for short toolbars (e.g. Sticker's
@@ -86,8 +95,14 @@ class _SlotStripState extends State<SlotStrip> {
     final compact =
         media.size.shortestSide < 380 ||
         media.orientation == Orientation.landscape;
+    // Tile card + its 1px-per-side internal chrome + this strip's
+    // per-tile gap. Using the real footprint keeps the centering
+    // math honest for every tileGap (the old hardcoded `+ 2`
+    // undershot the default strips by 2dp per tile).
     final tileExtent =
-        (compact ? kDockToolTileWidthCompact : kDockToolTileWidth) + 2;
+        (compact ? kDockToolTileWidthCompact : kDockToolTileWidth) +
+        2 +
+        2 * widget.tileGap;
     // Tier dividers occupy their own extent before the target tile.
     var dividersBefore = 0;
     for (var i = 1; i <= index; i++) {
@@ -133,7 +148,7 @@ class _SlotStripState extends State<SlotStrip> {
       }
       children.add(
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 1),
+          padding: EdgeInsets.symmetric(horizontal: widget.tileGap),
           child: DockToolTile(
             icon: slot.icon,
             label: slot.label,
@@ -163,11 +178,14 @@ class _SlotStripState extends State<SlotStrip> {
   }
 }
 
-/// Thin vertical hairline that separates two tiers in [SlotStrip].
-/// Mirrors `EditorTierGap` (20dp gutter, 1×30 hairline at the border
-/// token α 0.7 — keep the two in sync) so the divider reads as an
-/// INTENTIONAL group boundary (add-tools vs edit-tools), not an
-/// accidental gap between tiles.
+/// Thin vertical hairline that separates two tiers in [SlotStrip]:
+/// 20dp gutter, 1×30 hairline at the border token α 0.7, so the
+/// divider reads as an INTENTIONAL group boundary (add-tools vs
+/// edit-tools), not an accidental gap between tiles. This is the
+/// single tier divider now — the standalone `EditorTierGap` copy
+/// retired with the paint strip migration (tb1 14/17); its only
+/// delta was a sub-pixel 0.5 corner radius on the hairline, dropped
+/// here so the byte-gated main-toolbar captures stay untouched.
 class _TierDivider extends StatelessWidget {
   const _TierDivider();
 
