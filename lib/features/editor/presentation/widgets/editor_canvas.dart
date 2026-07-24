@@ -113,6 +113,15 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   /// the pair belongs to the viewport pinch, not the layer.
   final Set<int> _rawPointersDown = <int>{};
 
+  /// Key on the ClipRect the viewport [Transform] is laid out in.
+  /// Hands the paint surface the render box whose local space
+  /// `viewport.translation` is defined in, so its two-finger rescue
+  /// can feed [ViewportController.gestureUpdate] focals in the same
+  /// space the background scale handler uses (`localFocalPoint`) —
+  /// global focals would drift the zoom anchor by the AppBar /
+  /// status-bar offset.
+  final GlobalKey _viewportBodyKey = GlobalKey();
+
   /// Row-5 candidate: the eligible, movable, un-selected layer the
   /// current select-and-move pointer went down on. Stashed by the
   /// [SelectAndMoveSurface] claim predicate at pointer-down and
@@ -771,6 +780,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             child: ColoredBox(
               color: AppTokens.of(context).workspace,
               child: ClipRect(
+                // Keyed so the paint surface can map global pointer
+                // positions into this box's local space — the space
+                // `viewport.translation` lives in (see
+                // [_viewportBodyKey]).
+                key: _viewportBodyKey,
                 // Outer Stack: viewport-transformed canvas board (bottom)
                 // + screen-space chrome (top). Selection handles + HUD live
                 // in the screen-space layer so they stay constant size in
@@ -882,7 +896,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                                   // + tap-to-erase. Coordinates arrive in
                                   // canvas-local space because we're inside
                                   // the viewport transform.
-                                  PaintGestureSurface(docSize: docSize),
+                                  PaintGestureSurface(
+                                    docSize: docSize,
+                                    viewportBodyKey: _viewportBodyKey,
+                                  ),
                                 ],
                               ),
                             ),

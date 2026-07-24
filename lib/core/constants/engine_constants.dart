@@ -50,6 +50,22 @@ class EngineConstants {
   /// on the underlying [LayerTransform] via pointer deltas.
   static const double selectionOutset = 6.0;
 
+  /// How long the paint surface buffers a first finger's down-point
+  /// before flushing it into a visible stroke draft (contract §5
+  /// rows 2/3, tb3 4/7).
+  ///
+  /// A pinch's two fingers rarely land on the exact same frame; if
+  /// the draft started on pointer-down, every two-finger navigation
+  /// that begins over the canvas would flash a stroke dot before the
+  /// second finger arrives. Buffering the first point until movement
+  /// past `kTouchSlop`, this latency elapsing, or a second finger
+  /// landing (whichever comes first) means fingers that land within
+  /// this window start a clean viewport pinch with no draft flash —
+  /// while a deliberate press-and-hold still shows its dot preview
+  /// after only ~4 frames, and a sub-slop release commits the
+  /// freestyle dot regardless (the buffered point is the dot).
+  static const Duration paintDraftBufferLatency = Duration(milliseconds: 64);
+
   // ---------------------------------------------------------------------
   // Rotation snapping
   // ---------------------------------------------------------------------
