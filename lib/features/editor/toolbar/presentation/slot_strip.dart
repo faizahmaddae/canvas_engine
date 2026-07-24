@@ -27,16 +27,14 @@ class SlotStrip extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 12),
     this.centerWhenFits = true,
     this.fitAlignment = MainAxisAlignment.center,
-    this.tileGap = 1,
   });
 
-  /// Horizontal padding wrapped around EACH tile, per side. The
-  /// tile itself already carries 1px of internal chrome, so the
-  /// default (1) yields a 70dp per-tile footprint — the geometry
-  /// the main/image/shape/sticker strips shipped with. Text and
-  /// paint pass 0 to reproduce their historical bare-tile 68dp
-  /// extent exactly (Gate A is a pixel byte-compare per mode).
-  final double tileGap;
+  /// Horizontal padding wrapped around EACH tile, per side. With the
+  /// tile's own 1px internal chrome this yields the unified 70dp
+  /// per-tile footprint every strip shares (tb2 16/16 — the Stage-1
+  /// `tileGap` escape hatch that let text/paint keep their historical
+  /// 68dp extents is retired).
+  static const double _tileGap = 1;
 
   /// When true, if the slots fit in the viewport they are aligned
   /// per [fitAlignment]. Useful for short toolbars (e.g. Sticker's
@@ -112,13 +110,12 @@ class _SlotStripState extends State<SlotStrip> {
     if (position.maxScrollExtent <= 0) return;
     final compact = EditorBreakpoints.isCompact(context);
     // Tile card + its 1px-per-side internal chrome + this strip's
-    // per-tile gap. Using the real footprint keeps the centering
-    // math honest for every tileGap (the old hardcoded `+ 2`
-    // undershot the default strips by 2dp per tile).
+    // per-tile gap — the real 70dp footprint (the old hardcoded
+    // `+ 2` undershot it by 2dp per tile).
     final tileExtent =
         (compact ? kDockToolTileWidthCompact : kDockToolTileWidth) +
         2 +
-        2 * widget.tileGap;
+        2 * SlotStrip._tileGap;
     // Tier dividers occupy their own extent before the target tile.
     var dividersBefore = 0;
     for (var i = 1; i <= index; i++) {
@@ -161,7 +158,7 @@ class _SlotStripState extends State<SlotStrip> {
       }
       children.add(
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: widget.tileGap),
+          padding: const EdgeInsets.symmetric(horizontal: SlotStrip._tileGap),
           child: DockToolTile(
             icon: slot.icon,
             label: slot.label,

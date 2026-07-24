@@ -209,11 +209,10 @@ class TextModeToolbar extends ConsumerWidget {
         // replaces the strip-owned controller + _ensureVisible
         // plumbing this widget used to carry.
         activeId: session.openSheet,
-        // Bare-tile geometry: no per-tile gap and the historical
-        // 10dp strip padding, so the migrated bar is byte-identical
-        // to the old DockToolStrip rendering (Gate A).
-        tileGap: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        // Unified strip grammar (tb2 16/16): the default 70dp tile
+        // extent + 12dp strip padding every other mode uses — the
+        // Stage-1 bare-tile geometry override is retired, so all
+        // five strips read identically.
         centerWhenFits: true,
         // Handedness affects alignment only — never tile order.
         // Resolved PHYSICALLY (right thumb = physical right, in
