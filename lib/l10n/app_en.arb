@@ -184,6 +184,7 @@
   "newDocumentReplaceTitle": "Start a new document?",
   "newDocumentReplaceUnsavedBody": "Your current unsaved work will be discarded.",
   "recoveredDraftName": "Recovered draft",
+  "basePhotoPinnedToBack": "The base photo always stays at the back.",
   "importedImageName": "Imported image",
   "importPhotoCommand": "Import photo",
   "sampleName": "Sample",

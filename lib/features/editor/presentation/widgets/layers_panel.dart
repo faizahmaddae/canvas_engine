@@ -6,6 +6,7 @@ import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/layer_state_commands.dart';
+import '../../engine/core/editor_document.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../engine/modules/text/text_layer.dart';
 import 'layer_actions.dart';
@@ -62,6 +63,29 @@ class LayersPanel extends ConsumerWidget {
                         final from = total - 1 - oldDisplay;
                         final to = total - 1 - adjusted;
                         if (from == to) return;
+                        // Mirror the engine's base-photo pin
+                        // (EditorDocument.reorderLayer): the command
+                        // silently refuses moves into/below the base,
+                        // which read as a broken drag. Say why instead.
+                        final baseId = doc.basePhotoLayerId;
+                        if (doc.projectKind == ProjectKind.photo &&
+                            baseId != null) {
+                          final baseIndex = doc.layers.indexWhere(
+                            (l) => l.id == baseId,
+                          );
+                          if (baseIndex >= 0 &&
+                              (from == baseIndex || to <= baseIndex)) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  context.l10n.basePhotoPinnedToBack,
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                            return;
+                          }
+                        }
                         ref
                             .read(documentControllerProvider.notifier)
                             .execute(ReorderLayerCommand(from: from, to: to));

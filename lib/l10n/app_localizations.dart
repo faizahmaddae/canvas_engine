@@ -1148,6 +1148,12 @@ abstract class AppLocalizations {
   /// **'Recovered draft'**
   String get recoveredDraftName;
 
+  /// No description provided for @basePhotoPinnedToBack.
+  ///
+  /// In en, this message translates to:
+  /// **'The base photo always stays at the back.'**
+  String get basePhotoPinnedToBack;
+
   /// No description provided for @importedImageName.
   ///
   /// In en, this message translates to:

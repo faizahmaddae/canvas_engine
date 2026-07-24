@@ -54,6 +54,11 @@ class LayerActions {
     final json = Map<String, dynamic>.from(layer.toJson());
     final newId = _uuid.v4();
     json['id'] = newId;
+    // A clone of a locked layer (incl. the protected base photo via
+    // Image → More) must start UNLOCKED: the user duplicates to get
+    // a copy they can move, and a locked clone is immovable +
+    // invisible-to-hit-testing — it reads as "duplicate did nothing".
+    json.remove('locked');
     final t = layer.transform;
     json['transform'] = LayerTransform(
       position: t.position + _duplicateOffset,

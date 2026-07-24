@@ -571,6 +571,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recoveredDraftName => 'Recovered draft';
 
   @override
+  String get basePhotoPinnedToBack =>
+      'The base photo always stays at the back.';
+
+  @override
   String get importedImageName => 'Imported image';
 
   @override

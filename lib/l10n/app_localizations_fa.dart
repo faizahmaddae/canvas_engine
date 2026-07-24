@@ -570,6 +570,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get recoveredDraftName => 'پیش‌نویس بازیابی‌شده';
 
   @override
+  String get basePhotoPinnedToBack =>
+      'عکس پایه همیشه زیر همهٔ لایه‌ها می‌ماند.';
+
+  @override
   String get importedImageName => 'تصویر واردشده';
 
   @override
