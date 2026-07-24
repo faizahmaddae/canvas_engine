@@ -84,13 +84,34 @@ void main() {
     expect(pill('Size'), findsOneWidget);
     expect(pill('Color'), findsOneWidget);
     expect(pill('More actions'), findsOneWidget);
-    // The size pill carries the LIVE px value.
+    // The size pill carries the LIVE px value — in VISUAL px
+    // (tb2 12/16): this harness layer's 240px box up-scales the
+    // 96px natural metrics via FittedBox, so the pill reports the
+    // magnified value the user actually sees.
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(TextQuickCapsule)),
+    );
+    final layer =
+        container.read(documentControllerProvider).layerById('text-1')!
+            as TextLayer;
+    final visual = container
+        .read(textToolControllerProvider.notifier)
+        .visualFontSizeOf(layer);
+    expect(visual, greaterThan(96), reason: 'harness layer is up-scaled');
+    expect(
+      find.descendant(
+        of: find.byType(TextQuickCapsule),
+        matching: find.text('${visual.round()}px'),
+      ),
+      findsOneWidget,
+    );
     expect(
       find.descendant(
         of: find.byType(TextQuickCapsule),
         matching: find.text('96px'),
       ),
-      findsOneWidget,
+      findsNothing,
+      reason: 'raw px was the audit lie (size-readout-visual-scale-lie)',
     );
   });
 

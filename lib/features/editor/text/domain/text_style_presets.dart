@@ -105,18 +105,13 @@ const List<TextStylePreset> kTextStylePresets = <TextStylePreset>[
     name: 'Classic',
     recommended: true,
     category: TextStylePresetCategory.minimal,
-    spec: TextStyleSpec(
-      color: Color(0xFF111111),
-    ),
+    spec: TextStyleSpec(color: Color(0xFF111111)),
   ),
   TextStylePreset(
     id: 'quote',
     name: 'Quote',
     category: TextStylePresetCategory.minimal,
-    spec: TextStyleSpec(
-      color: Color(0xFF1F2937),
-      italic: true,
-    ),
+    spec: TextStyleSpec(color: Color(0xFF1F2937), italic: true),
   ),
 
   // ── Emphasis ──────────────────────────────────────────────────
@@ -426,12 +421,9 @@ TextStyleSpec mergePresetVisual({
 /// same formula as [_StylePreviewTile] in the toolbar — kept local
 /// so this file has no UI dependency.
 double _presetLuminance(Color c) {
-  double channel(double v) => v <= 0.03928
-      ? v / 12.92
-      : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
-  return 0.2126 * channel(c.r) +
-      0.7152 * channel(c.g) +
-      0.0722 * channel(c.b);
+  double channel(double v) =>
+      v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
+  return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
 }
 
 /// True when [style] looks like a brand-new layer — default text

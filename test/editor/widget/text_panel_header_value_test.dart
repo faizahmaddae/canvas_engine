@@ -65,13 +65,28 @@ void main() {
     return container;
   }
 
-  testWidgets('Size sheet shows exactly one px readout (body chip)', (
-    tester,
-  ) async {
-    await pumpWithSheet(tester, 'size');
+  testWidgets('Size sheet shows exactly one px readout (body chip), '
+      'reporting VISUAL px', (tester) async {
+    final container = await pumpWithSheet(tester, 'size');
     // The tappable body chip is the ONLY px readout — the header
     // no longer duplicates it.
-    expect(find.text('48px'), findsOneWidget);
+    final pxText = find.byWidgetPredicate(
+      (w) => w is Text && RegExp(r'^\d+px$').hasMatch(w.data ?? ''),
+    );
+    expect(pxText, findsOneWidget);
+    // tb2 12/16: the readout reports VISUAL px. This layer's 120px
+    // box up-scales the 48px natural metrics via FittedBox, so the
+    // chip must show the magnified value the user actually sees,
+    // not the raw fontSize (audit: size-readout-visual-scale-lie).
+    final layer =
+        container.read(documentControllerProvider).layerById('text-1')!
+            as TextLayer;
+    final visual = container
+        .read(textToolControllerProvider.notifier)
+        .visualFontSizeOf(layer);
+    expect(visual, greaterThan(48), reason: 'harness layer is up-scaled');
+    expect(find.text('${visual.round()}px'), findsOneWidget);
+    expect(find.text('48px'), findsNothing, reason: 'raw px was the lie');
   });
 
   testWidgets('removed decoration sheet ids render no panel', (tester) async {

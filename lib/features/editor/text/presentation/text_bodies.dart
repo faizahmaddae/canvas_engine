@@ -44,15 +44,35 @@ class TextBodies {
       // The All-fonts sheet opens scoped to whichever tab the user
       // is currently browsing. They can still switch script inside
       // the sheet — we just don't drop them into a mixed list.
+      //
+      // Live preview (tb2 12/16, contract §2): a style-drag session
+      // opens with the sheet; highlights stage the REAL layer's
+      // fontFamily on the overlay (full re-measure, uncapped
+      // content); picking seals ONE UpdateTextCommand; dismissing
+      // un-picked cancels the session — overlay dropped, zero
+      // history entries.
       onBrowseAll: (script) async {
+        ctrl.beginStyleDrag();
         final picked = await showFontPickerSheet(
           context,
           current: current,
           initialScript: script,
+          specimenText: layer.content,
+          onHighlight: (family) {
+            // The debounce can outlive the sheet (fires during the
+            // route's exit animation) — after the session closed a
+            // late highlight must be inert, not a committed write.
+            if (!ctrl.isStyleDragOpen) return;
+            ctrl.setFontFamily(family);
+          },
         );
-        if (picked == FontPickResult.unchanged) return;
+        if (picked == FontPickResult.unchanged) {
+          ctrl.cancelStyleDrag();
+          return;
+        }
         EditorHaptics.confirm();
         ctrl.setFontFamily(picked.family);
+        ctrl.endStyleDrag();
       },
     );
   }

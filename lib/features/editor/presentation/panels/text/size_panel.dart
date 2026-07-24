@@ -137,8 +137,17 @@ class SizeBody extends ConsumerWidget {
         Row(
           children: [
             _SizeValueChip(
-              value: style.fontSize,
-              onTap: () => _promptExactSize(context, ctrl, style.fontSize),
+              // VISUAL px (tb2 12/16): after a corner drag the
+              // FittedBox magnifies the raw fontSize — the readout
+              // must show what the user sees, or a +10% nudge jumps
+              // the number 2× when the write path normalizes.
+              // Writes stay raw; the keypad prefills the same
+              // visual number the chip shows so typing it back is
+              // a no-op (setFontSize's translation reads input in
+              // the identical space).
+              value: ctrl.visualFontSizeOf(layer),
+              onTap: () =>
+                  _promptExactSize(context, ctrl, ctrl.visualFontSizeOf(layer)),
             ),
             const SizedBox(width: 4),
             Expanded(

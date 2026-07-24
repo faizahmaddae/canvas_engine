@@ -6,6 +6,7 @@ import '../../application/document_controller.dart';
 import '../../application/editing_controller.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
+import '../../engine/commands/editor_command.dart';
 import '../../engine/commands/layer_state_commands.dart';
 import '../../engine/commands/text_commands.dart';
 import '../../engine/commands/transform_commands.dart';
@@ -196,6 +197,37 @@ class TextToolController extends Notifier<TextSession> {
   }
 
   // ─── style writes ────────────────────────────────────────────────
+  //
+  // THE WRITE SEAM (tb2 12/16, contract §1/§2). Session resolution
+  // for text writes lives in exactly two places:
+  //   * [_applyStyle] — resolves default-style vs live-session
+  //     overlay vs style-drag overlay vs committed write, including
+  //     each branch's measure policy;
+  //   * [applyStylePreset] — same resolution minus the auto-resize
+  //     (presets must never move the user's box).
+  // Every path that finally REACHES history does so through
+  // [_executeTextWrite] below, which asserts no session is open —
+  // a future setter that bypasses the resolvers and calls execute
+  // directly while a session is live trips the assert in debug
+  // instead of silently corrupting the session's docBefore
+  // invariant (the audit's three-write-paths problem, reduced to
+  // one guarded gateway). The only sanctioned direct executes are
+  // the session terminators themselves ([endStyleDrag],
+  // [commitLiveEdit]) — they run while their own session is being
+  // closed — and structural layer ops (add/duplicate/lock/reorder)
+  // that are not style writes.
+
+  /// Single committed-write gateway for text style/content/resize
+  /// writes. See the seam note above.
+  void _executeTextWrite(EditorCommand command) {
+    assert(
+      _live == null && _styleDrag == null,
+      'text write dispatched to history while a live/style-drag session '
+      'is open — route through _applyStyle/applyStylePreset so it stages '
+      'on the overlay instead',
+    );
+    ref.read(documentControllerProvider.notifier).execute(command);
+  }
 
   void setColor(Color color) => _applyStyle((s) => s.copyWith(color: color));
 
@@ -272,7 +304,7 @@ class TextToolController extends Notifier<TextSession> {
     // shrinking glyphs to fit), letting the raw write through keeps
     // the historical "auto-fit on style change" behaviour for
     // layers the user never enlarged.
-    if (scale <= 1.02) return requested;
+    if (scale <= _kVisualScaleCompensationThreshold) return requested;
     final ratio = requested / layer.style.fontSize;
     return layer.style.fontSize * scale * ratio;
   }
@@ -554,34 +586,30 @@ class TextToolController extends Notifier<TextSession> {
       }
       return;
     }
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(
-          UpdateTextCommand(
-            layerId: layer.id,
-            // style-only edit; a preset tap is discrete (live stays
-            // false), so it is always its own undo entry (§3).
-            style: next,
-            // No transform → bounding box, position, rotation,
-            // resizeMode are all preserved exactly.
-          ),
-        );
+    _executeTextWrite(
+      UpdateTextCommand(
+        layerId: layer.id,
+        // style-only edit; a preset tap is discrete (live stays
+        // false), so it is always its own undo entry (§3).
+        style: next,
+        // No transform → bounding box, position, rotation,
+        // resizeMode are all preserved exactly.
+      ),
+    );
   }
 
   /// Edit content of currently-selected text layer in one undoable step.
   void setContent(String content) {
     final layer = selectedTextLayer();
     if (layer == null || content == layer.content) return;
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(
-          UpdateTextCommand(
-            layerId: layer.id,
-            // content-only edit: leave style null so this never merges
-            // with a preceding style edit.
-            content: content,
-          ),
-        );
+    _executeTextWrite(
+      UpdateTextCommand(
+        layerId: layer.id,
+        // content-only edit: leave style null so this never merges
+        // with a preceding style edit.
+        content: content,
+      ),
+    );
   }
 
   // ─── live edit (add + edit unified) ──────────────────────────────
@@ -650,6 +678,24 @@ class TextToolController extends Notifier<TextSession> {
       docBefore: docBefore,
       commitVersionAtBegin: ref.read(documentCommitVersionProvider),
     );
+  }
+
+  /// True while a style-drag session is open. Exposed so preview
+  /// hosts (the All-fonts sheet's debounced highlight path) can
+  /// make late callbacks inert after the session ended — a timer
+  /// firing post-dismiss must not fall through to a real execute.
+  bool get isStyleDragOpen => _styleDrag != null;
+
+  /// Abandon the style-drag session WITHOUT committing: the staged
+  /// overlay preview is dropped and zero history entries are
+  /// pushed. Used by preview surfaces whose dismissal means "keep
+  /// what I had" — the All-fonts sheet closing un-picked (tb2
+  /// 12/16). Safe no-op if no session is active.
+  void cancelStyleDrag() {
+    final session = _styleDrag;
+    _styleDrag = null;
+    if (session == null) return;
+    ref.read(liveOverlayProvider.notifier).clear();
   }
 
   /// Commit the live drag as one undo entry. Restores [docBefore]
@@ -742,6 +788,30 @@ class TextToolController extends Notifier<TextSession> {
       scaleAtBegin: _visualScaleOf(layer),
     );
   }
+
+  /// Visual (rendered) px of [layer]'s glyphs — what the size chip
+  /// and quick-capsule readouts must display (tb2 12/16, audit:
+  /// size-readout-visual-scale-lie). Mirrors the WRITE space of
+  /// [_translateFontSizeForVisualScale] exactly, including its
+  /// deliberate asymmetry: an up-scaled `scaleText` layer reports
+  /// raw × scale (the FittedBox is magnifying; a +10% nudge then
+  /// moves the number +10% instead of snapping it 2×), while a
+  /// down-scaled box keeps reporting raw px — the space its writes
+  /// land in. Writes stay raw; only readouts consume this.
+  double visualFontSizeOf(TextLayer layer) {
+    final scale = _visualScaleOf(layer);
+    return layer.style.fontSize *
+        (scale > _kVisualScaleCompensationThreshold ? scale : 1.0);
+  }
+
+  /// Up-scale threshold above which the size pipeline treats the
+  /// FittedBox magnification as user intent: writes compensate
+  /// ([_translateFontSizeForVisualScale]) and readouts report the
+  /// magnified px ([visualFontSizeOf]). The 2% headroom absorbs
+  /// float noise from re-measures so a nominally-unscaled layer
+  /// never flips between the two spaces. One constant, both
+  /// directions — they must never disagree.
+  static const double _kVisualScaleCompensationThreshold = 1.02;
 
   /// Visual scale ratio of [layer] for `scaleText` mode — the
   /// multiplier applied by the on-canvas [FittedBox] to the natural
@@ -1630,22 +1700,20 @@ class TextToolController extends Notifier<TextSession> {
       ref.read(liveOverlayProvider.notifier).replaceLayer(updated);
       return;
     }
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(
-          UpdateTextCommand(
-            layerId: layer.id,
-            // style edit (optionally with a re-measure transform).
-            // content stays null so a live nudge burst coalesces
-            // with its style-shaped neighbours but NEVER with
-            // content edits. Discrete writes (live: false) are one
-            // entry each — the merge gate (tb2 6/16) ignores the
-            // history window for them.
-            style: next,
-            transform: newTransform,
-            live: live,
-          ),
-        );
+    _executeTextWrite(
+      UpdateTextCommand(
+        layerId: layer.id,
+        // style edit (optionally with a re-measure transform).
+        // content stays null so a live nudge burst coalesces
+        // with its style-shaped neighbours but NEVER with
+        // content edits. Discrete writes (live: false) are one
+        // entry each — the merge gate (tb2 6/16) ignores the
+        // history window for them.
+        style: next,
+        transform: newTransform,
+        live: live,
+      ),
+    );
   }
 
   /// True when [next] differs from [base] in any field that changes
@@ -1681,15 +1749,13 @@ class TextToolController extends Notifier<TextSession> {
     final newTransform = measured == layer.transform.size
         ? null
         : layer.transform.copyWith(size: measured);
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(
-          SetTextResizeModeCommand(
-            layerId: layer.id,
-            mode: mode,
-            transform: newTransform,
-          ),
-        );
+    _executeTextWrite(
+      SetTextResizeModeCommand(
+        layerId: layer.id,
+        mode: mode,
+        transform: newTransform,
+      ),
+    );
   }
 
   /// Switch the paragraph direction mode of the selected text layer.
@@ -1709,15 +1775,13 @@ class TextToolController extends Notifier<TextSession> {
     final newTransform = measured == layer.transform.size
         ? null
         : layer.transform.copyWith(size: measured);
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(
-          SetTextDirectionModeCommand(
-            layerId: layer.id,
-            mode: mode,
-            transform: newTransform,
-          ),
-        );
+    _executeTextWrite(
+      SetTextDirectionModeCommand(
+        layerId: layer.id,
+        mode: mode,
+        transform: newTransform,
+      ),
+    );
   }
 }
 

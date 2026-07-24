@@ -1,6 +1,16 @@
 // Font picker panel (Phase 2A commit 2): extracted verbatim from the
 // text_mode_toolbar part-file library. Rename-only promotions for the
 // symbols that cross files; everything else stays private.
+//
+// tb2 12/16: apply-on-highlight live preview. The first tap on a row
+// HIGHLIGHTS it (stages the family on the caller's preview channel —
+// a style-drag session on the live overlay — so the canvas behind
+// the whisper barrier shows the real layer in the candidate font);
+// tapping the highlighted row again PICKS it. Dismissing without
+// picking reverts (the caller cancels the session; zero history
+// entries).
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 
@@ -9,6 +19,19 @@ import '../../../../../../core/utils/haptics.dart';
 import '../../../../../../l10n/l10n.dart';
 import '../../../../text/domain/font_catalog.dart';
 import 'tabs.dart';
+
+/// Debounce for the highlight→canvas preview. Each highlight costs
+/// one full re-layout of the real layer (contract §8 keeps the
+/// canvas preview uncapped), so rapid taps down the list coalesce
+/// to the last one instead of measuring every intermediate family.
+const Duration kFontPreviewDebounce = Duration(milliseconds: 120);
+
+/// Cap for the IN-SHEET specimen line only (contract §8): the
+/// specimen re-renders per highlight in the candidate face, and an
+/// essay-length layer would relayout thousands of glyphs per tap
+/// for a one-line strip. The canvas overlay preview deliberately
+/// uses the layer's full, uncapped content.
+const int kFontSpecimenExcerptCap = 200;
 
 /// Result of the font picker. We need a tri-state because the user
 /// can either:
@@ -37,15 +60,18 @@ Future<FontPickResult> showFontPickerSheet(
   BuildContext context, {
   required String? current,
   required FontScript initialScript,
+  ValueChanged<String?>? onHighlight,
+  String? specimenText,
 }) async {
   final result = await showModalBottomSheet<FontPickResult>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    // Near-transparent barrier ON PURPOSE: this is a control panel —
-    // the user must keep seeing the live font change on the canvas
-    // behind the sheet. The sheet's own elevation separates it.
+    // Whisper barrier (contract §9, 6%) ON PURPOSE: highlighting a
+    // family previews it live on the canvas behind the sheet, so
+    // the canvas must stay visible. The sheet's own elevation
+    // separates it.
     barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.06),
     builder: (sheetCtx) {
       final tokens = AppTokens.of(sheetCtx);
@@ -72,6 +98,8 @@ Future<FontPickResult> showFontPickerSheet(
             child: _FontPickerSheet(
               current: current,
               initialScript: initialScript,
+              onHighlight: onHighlight,
+              specimenText: specimenText,
             ),
           ),
         ),
@@ -83,12 +111,28 @@ Future<FontPickResult> showFontPickerSheet(
 
 /// Stateful body of the All-fonts sheet. Owns the in-sheet script
 /// tab so the user can browse one language at a time without
-/// dismissing — initialised to the tab the inline panel was on.
+/// dismissing — initialised to the tab the inline panel was on —
+/// plus the highlight state driving the live preview.
 class _FontPickerSheet extends StatefulWidget {
-  const _FontPickerSheet({required this.current, required this.initialScript});
+  const _FontPickerSheet({
+    required this.current,
+    required this.initialScript,
+    this.onHighlight,
+    this.specimenText,
+  });
 
   final String? current;
   final FontScript initialScript;
+
+  /// Fires (debounced by [kFontPreviewDebounce]) when the user
+  /// highlights a family — `null` means the system default. The
+  /// caller stages it as a live preview; nothing commits here.
+  final ValueChanged<String?>? onHighlight;
+
+  /// The selected layer's content, rendered as a one-line specimen
+  /// in the highlighted face (capped to [kFontSpecimenExcerptCap]
+  /// chars, §8). Null/empty hides the strip.
+  final String? specimenText;
 
   @override
   State<_FontPickerSheet> createState() => _FontPickerSheetState();
@@ -97,6 +141,12 @@ class _FontPickerSheet extends StatefulWidget {
 class _FontPickerSheetState extends State<_FontPickerSheet> {
   late FontScript _script;
 
+  /// Family currently highlighted for preview. Sentinel-wrapped so
+  /// "nothing highlighted yet" and "system default highlighted"
+  /// (family == null) stay distinguishable.
+  (String?,)? _highlighted;
+  Timer? _previewDebounce;
+
   @override
   void initState() {
     super.initState();
@@ -104,8 +154,47 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
   }
 
   @override
+  void dispose() {
+    _previewDebounce?.cancel();
+    super.dispose();
+  }
+
+  /// First tap highlights (stages the debounced preview); a second
+  /// tap on the highlighted row picks. The row that matches the
+  /// layer's CURRENT family picks on first tap — it is already
+  /// previewed by definition, so requiring a highlight step there
+  /// would read as a dead tap.
+  void _onRowTap(BuildContext ctx, String? family, FontPickResult result) {
+    final alreadyHighlighted =
+        _highlighted != null && _highlighted!.$1 == family;
+    final isCurrent = _highlighted == null && family == widget.current;
+    if (alreadyHighlighted || isCurrent) {
+      _previewDebounce?.cancel();
+      Navigator.of(ctx).pop(result);
+      return;
+    }
+    EditorHaptics.tap();
+    setState(() => _highlighted = (family,));
+    if (widget.onHighlight != null) {
+      _previewDebounce?.cancel();
+      _previewDebounce = Timer(
+        kFontPreviewDebounce,
+        () => widget.onHighlight!(family),
+      );
+    }
+  }
+
+  String? get _specimenExcerpt {
+    final text = widget.specimenText?.trim();
+    if (text == null || text.isEmpty) return null;
+    if (text.length <= kFontSpecimenExcerptCap) return text;
+    return text.substring(0, kFontSpecimenExcerptCap);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
+    final specimen = _specimenExcerpt;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -168,9 +257,39 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
             },
           ),
         ),
+        if (specimen != null) ...[
+          const SizedBox(height: 8),
+          // Specimen strip: the user's own words in the highlighted
+          // face (excerpt-capped, §8). One line — the canvas behind
+          // the whisper barrier is the full-fidelity preview.
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: tokens.surfaceMuted.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              specimen,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: _highlighted != null
+                    ? _highlighted!.$1
+                    : widget.current,
+                fontSize: 16,
+                color: tokens.textPrimary,
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
         Flexible(
-          child: _FontPickerList(current: widget.current, script: _script),
+          child: _FontPickerList(
+            current: widget.current,
+            highlighted: _highlighted,
+            script: _script,
+            onRowTap: _onRowTap,
+          ),
         ),
       ],
     );
@@ -178,8 +297,21 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
 }
 
 class _FontPickerList extends StatelessWidget {
-  const _FontPickerList({required this.current, required this.script});
+  const _FontPickerList({
+    required this.current,
+    required this.highlighted,
+    required this.script,
+    required this.onRowTap,
+  });
+
   final String? current;
+
+  /// Sentinel-wrapped highlighted family (see [_FontPickerSheetState]).
+  final (String?,)? highlighted;
+
+  /// Row tap handler owned by the sheet state (highlight vs pick).
+  final void Function(BuildContext ctx, String? family, FontPickResult result)
+  onRowTap;
 
   /// Restrict the list to families of this script. The sheet's
   /// header tab decides which one — the list itself never mixes.
@@ -239,7 +371,11 @@ class _FontPickerList extends StatelessWidget {
         final label =
             item.entry?.labelFor(Localizations.localeOf(ctx).languageCode) ??
             ctx.l10n.systemDefaultFont;
-        final selected = family == current;
+        // Highlight (in-flight preview) wins the selected treatment;
+        // before any highlight, the layer's current family shows it.
+        final selected = highlighted != null
+            ? highlighted!.$1 == family
+            : family == current;
         return Material(
           color: selected
               ? tokens.accent.withValues(alpha: 0.10)
@@ -247,7 +383,9 @@ class _FontPickerList extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           child: InkWell(
             borderRadius: BorderRadius.circular(10),
-            onTap: () => Navigator.of(ctx).pop(
+            onTap: () => onRowTap(
+              ctx,
+              family,
               item.entry == null
                   ? FontPickResult.systemDefault
                   : FontPickResult._(family, false),

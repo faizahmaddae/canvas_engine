@@ -108,7 +108,10 @@ class TextQuickCapsule extends ConsumerWidget {
               semanticLabel: l10n.sizeTool,
               onTap: () => openSheet('size'),
               child: Text(
-                '${style.fontSize.round()}px',
+                // VISUAL px, matching the size panel's chip
+                // (tb2 12/16) — raw fontSize lies after corner
+                // drags on scaleText layers.
+                '${ref.read(textToolControllerProvider.notifier).visualFontSizeOf(layer).round()}px',
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
