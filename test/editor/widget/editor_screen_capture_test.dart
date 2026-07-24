@@ -67,7 +67,7 @@ Future<void> _loadMaterialIcons() async {
 
 ProviderContainer _sampleEditor({
   bool withSelection = false,
-  bool withFilterPanel = false,
+  bool withLookPanel = false,
   String? openSheet,
 }) {
   final container = ProviderContainer();
@@ -110,9 +110,9 @@ ProviderContainer _sampleEditor({
       ),
     ),
   );
-  if (withFilterPanel) {
+  if (withLookPanel) {
     // Image layer (missing file → placeholder render, fine for a
-    // layout capture) + the Filters slot open.
+    // layout capture) + the Look slot open.
     ctrl.execute(
       AddLayerCommand(
         ImageLayer(
@@ -128,7 +128,7 @@ ProviderContainer _sampleEditor({
     container.read(selectionControllerProvider.notifier).select('img-1');
     container
         .read(imageToolControllerProvider.notifier)
-        .toggleSlot(ImageToolSlot.filters);
+        .toggleSlot(ImageToolSlot.look);
   }
   if (withSelection || openSheet != null) {
     container.read(selectionControllerProvider.notifier).select('text-1');
@@ -155,7 +155,7 @@ void main() {
     required Brightness brightness,
     required String fileName,
     bool withSelection = false,
-    bool withFilterPanel = false,
+    bool withLookPanel = false,
     String? openSheet,
     Future<void> Function(WidgetTester tester)? interact,
   }) async {
@@ -168,7 +168,7 @@ void main() {
 
     final container = _sampleEditor(
       withSelection: withSelection,
-      withFilterPanel: withFilterPanel,
+      withLookPanel: withLookPanel,
       openSheet: openSheet,
     );
     addTearDown(container.dispose);
@@ -277,25 +277,23 @@ void main() {
     );
   });
 
-  testWidgets('EditorScreen visual capture — filters panel, light', (
+  testWidgets('EditorScreen visual capture — look panel, light', (
     tester,
   ) async {
     await capture(
       tester,
       brightness: Brightness.light,
-      fileName: 'editor_filters_light.png',
-      withFilterPanel: true,
+      fileName: 'editor_look_light.png',
+      withLookPanel: true,
     );
   });
 
-  testWidgets('EditorScreen visual capture — filters panel, dark', (
-    tester,
-  ) async {
+  testWidgets('EditorScreen visual capture — look panel, dark', (tester) async {
     await capture(
       tester,
       brightness: Brightness.dark,
-      fileName: 'editor_filters_dark.png',
-      withFilterPanel: true,
+      fileName: 'editor_look_dark.png',
+      withLookPanel: true,
     );
   });
 

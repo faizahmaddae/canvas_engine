@@ -137,10 +137,10 @@ void main() {
       );
     });
 
-    testWidgets('image: style · crop · More', (tester) async {
+    testWidgets('image: look · crop · More', (tester) async {
       await pumpWithLayer(tester, image());
       expect(find.byType(QuickCapsule), findsOneWidget);
-      expect(pill('Style'), findsOneWidget);
+      expect(pill('Look'), findsOneWidget);
       expect(pill('Crop image'), findsOneWidget);
       expect(pill('More actions'), findsOneWidget);
     });
@@ -199,13 +199,14 @@ void main() {
       );
     });
 
-    testWidgets('image style pill opens the style dock slot', (tester) async {
+    testWidgets('image look pill opens the look dock slot', (tester) async {
       final c = await pumpWithLayer(tester, image());
-      await tapPill(tester, 'Style');
-      // The style body decodes the layer's (stub) asset — swallow the
-      // missing-asset load error, same as the sibling chrome test.
+      await tapPill(tester, 'Look');
+      // The Look body decodes the layer's (stub) asset for its filter
+      // previews — swallow the missing-asset load error, same as the
+      // sibling chrome test.
       tester.takeException();
-      expect(c.read(imageToolControllerProvider).openSlot, ImageToolSlot.style);
+      expect(c.read(imageToolControllerProvider).openSlot, ImageToolSlot.look);
       expect(find.byType(QuickCapsule), findsNothing);
     });
 

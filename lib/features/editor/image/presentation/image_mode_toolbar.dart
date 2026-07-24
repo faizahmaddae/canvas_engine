@@ -93,13 +93,13 @@ class ImageModeToolbar extends ConsumerWidget {
       };
     }
     return switch (slot) {
-      ImageToolSlot.style => ToolbarSlot(
-        id: ImageToolSlot.style.name,
+      ImageToolSlot.look => ToolbarSlot(
+        id: ImageToolSlot.look.name,
         icon: Icons.auto_awesome_outlined,
-        label: l10n.styleTool,
+        label: l10n.lookTool,
         onTap: () {
           contextCtrl.closePanel();
-          imageCtrl.toggleSlot(ImageToolSlot.style);
+          imageCtrl.toggleSlot(ImageToolSlot.look);
         },
       ),
       ImageToolSlot.border => ToolbarSlot(
@@ -168,16 +168,6 @@ class ImageModeToolbar extends ConsumerWidget {
           imageCtrl.toggleSlot(ImageToolSlot.shape);
         },
       ),
-      ImageToolSlot.adjust => ToolbarSlot(
-        id: ImageToolSlot.adjust.name,
-        icon: Icons.tune_rounded,
-        label: l10n.adjustTool,
-        tier: SlotTier.tier2,
-        onTap: () {
-          contextCtrl.closePanel();
-          imageCtrl.toggleSlot(ImageToolSlot.adjust);
-        },
-      ),
       ImageToolSlot.effects => ToolbarSlot(
         id: ImageToolSlot.effects.name,
         icon: Icons.layers_rounded,
@@ -186,16 +176,6 @@ class ImageModeToolbar extends ConsumerWidget {
         onTap: () {
           contextCtrl.closePanel();
           imageCtrl.toggleSlot(ImageToolSlot.effects);
-        },
-      ),
-      ImageToolSlot.filters => ToolbarSlot(
-        id: ImageToolSlot.filters.name,
-        icon: Icons.auto_fix_high_outlined,
-        label: l10n.filtersTool,
-        tier: SlotTier.tier2,
-        onTap: () {
-          contextCtrl.closePanel();
-          imageCtrl.toggleSlot(ImageToolSlot.filters);
         },
       ),
     };

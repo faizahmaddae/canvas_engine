@@ -868,12 +868,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cropTool => 'Crop';
 
   @override
-  String get adjustTool => 'Adjust';
-
-  @override
-  String get filtersTool => 'Filters';
-
-  @override
   String get canvasTool => 'Canvas';
 
   @override
@@ -975,12 +969,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cropActionVerb => 'crop';
 
   @override
-  String get applyFilterActionVerb => 'apply a filter';
-
-  @override
-  String get adjustActionVerb => 'adjust';
-
-  @override
   String savedProject(String name) {
     return 'Saved “$name”';
   }
@@ -1029,6 +1017,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get styleTool => 'Style';
+
+  @override
+  String get lookTool => 'Look';
+
+  @override
+  String get lookActionVerb => 'restyle';
 
   @override
   String get sizeTool => 'Size';
@@ -1533,16 +1527,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coolOption => 'Cool';
 
   @override
-  String get vividOption => 'Vivid';
-
-  @override
   String get monoOption => 'Mono';
 
   @override
   String get fadeOption => 'Fade';
-
-  @override
-  String get dramaticOption => 'Dramatic';
 
   @override
   String get vintageOption => 'Vintage';
@@ -1564,7 +1552,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEffectsApplied => 'No effects applied.';
 
   @override
-  String get openAdjustOrVignetteHint => 'Open Adjust or Vignette to add one.';
+  String get openLookToAddEffectHint => 'Open Look to add one.';
 
   @override
   String get selectiveMaskLabel => 'Selective';

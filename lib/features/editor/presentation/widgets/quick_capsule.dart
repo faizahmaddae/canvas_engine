@@ -250,7 +250,7 @@ class QuickCapsule extends ConsumerWidget {
       final contextCtrl = ref.read(contextToolbarControllerProvider.notifier);
       return [
         _CapsuleItem(
-          semanticLabel: l10n.styleTool,
+          semanticLabel: l10n.lookTool,
           child: Icon(
             Icons.auto_awesome_outlined,
             size: 18,
@@ -259,7 +259,7 @@ class QuickCapsule extends ConsumerWidget {
           onTap: () {
             EditorHaptics.tap();
             contextCtrl.closePanel();
-            imageCtrl.toggleSlot(ImageToolSlot.style);
+            imageCtrl.toggleSlot(ImageToolSlot.look);
           },
         ),
         _CapsuleItem(

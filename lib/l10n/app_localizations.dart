@@ -1712,18 +1712,6 @@ abstract class AppLocalizations {
   /// **'Crop'**
   String get cropTool;
 
-  /// No description provided for @adjustTool.
-  ///
-  /// In en, this message translates to:
-  /// **'Adjust'**
-  String get adjustTool;
-
-  /// No description provided for @filtersTool.
-  ///
-  /// In en, this message translates to:
-  /// **'Filters'**
-  String get filtersTool;
-
   /// No description provided for @canvasTool.
   ///
   /// In en, this message translates to:
@@ -1916,18 +1904,6 @@ abstract class AppLocalizations {
   /// **'crop'**
   String get cropActionVerb;
 
-  /// No description provided for @applyFilterActionVerb.
-  ///
-  /// In en, this message translates to:
-  /// **'apply a filter'**
-  String get applyFilterActionVerb;
-
-  /// No description provided for @adjustActionVerb.
-  ///
-  /// In en, this message translates to:
-  /// **'adjust'**
-  String get adjustActionVerb;
-
   /// No description provided for @savedProject.
   ///
   /// In en, this message translates to:
@@ -2011,6 +1987,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Style'**
   String get styleTool;
+
+  /// No description provided for @lookTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Look'**
+  String get lookTool;
+
+  /// No description provided for @lookActionVerb.
+  ///
+  /// In en, this message translates to:
+  /// **'restyle'**
+  String get lookActionVerb;
 
   /// No description provided for @sizeTool.
   ///
@@ -3002,12 +2990,6 @@ abstract class AppLocalizations {
   /// **'Cool'**
   String get coolOption;
 
-  /// No description provided for @vividOption.
-  ///
-  /// In en, this message translates to:
-  /// **'Vivid'**
-  String get vividOption;
-
   /// No description provided for @monoOption.
   ///
   /// In en, this message translates to:
@@ -3019,12 +3001,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fade'**
   String get fadeOption;
-
-  /// No description provided for @dramaticOption.
-  ///
-  /// In en, this message translates to:
-  /// **'Dramatic'**
-  String get dramaticOption;
 
   /// No description provided for @vintageOption.
   ///
@@ -3062,11 +3038,11 @@ abstract class AppLocalizations {
   /// **'No effects applied.'**
   String get noEffectsApplied;
 
-  /// No description provided for @openAdjustOrVignetteHint.
+  /// No description provided for @openLookToAddEffectHint.
   ///
   /// In en, this message translates to:
-  /// **'Open Adjust or Vignette to add one.'**
-  String get openAdjustOrVignetteHint;
+  /// **'Open Look to add one.'**
+  String get openLookToAddEffectHint;
 
   /// No description provided for @selectiveMaskLabel.
   ///

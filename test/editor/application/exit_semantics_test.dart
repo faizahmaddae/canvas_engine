@@ -3,7 +3,7 @@
 // the canvas panel and every mode panel before clearing the
 // selection), the canvas panel never resurrects across an
 // intervening selection (audit shell:canvas-panel-resurrects), and
-// main-strip Adjust/Filters entries mirror Crop's priorSelectionId
+// the main-strip Look entry mirrors Crop's priorSelectionId
 // round-trip (audit crop-filters-adjust-exit-asymmetry): the
 // auto-selected image is deselected again when the panel closes,
 // while deliberate image-strip entries and mid-flow ownership
@@ -154,53 +154,50 @@ void main() {
     );
   });
 
-  testWidgets(
-    'main-strip Adjust auto-selects the image and restores the (empty) '
-    'prior selection when the panel closes',
-    (tester) async {
-      final container = await pumpEditor(tester, layers: [_image('img-1')]);
-      expect(container.read(selectionControllerProvider).hasSelection, isFalse);
+  testWidgets('main-strip Look auto-selects the image and restores the (empty) '
+      'prior selection when the panel closes', (tester) async {
+    final container = await pumpEditor(tester, layers: [_image('img-1')]);
+    expect(container.read(selectionControllerProvider).hasSelection, isFalse);
 
-      // Reach the tier-2 Adjust tile on the main strip.
-      final strip = find.descendant(
-        of: find.byType(EditorScreen),
-        matching: find.byType(Scrollable),
-      );
-      final adjustTile = find.byIcon(Icons.tune_rounded);
-      await tester.scrollUntilVisible(adjustTile, 80, scrollable: strip.first);
-      await tester.tap(adjustTile);
-      await settle(tester);
+    // Reach the tier-2 Look tile on the main strip.
+    final strip = find.descendant(
+      of: find.byType(EditorScreen),
+      matching: find.byType(Scrollable),
+    );
+    final lookTile = find.byIcon(Icons.auto_awesome_outlined);
+    await tester.scrollUntilVisible(lookTile, 80, scrollable: strip.first);
+    await tester.tap(lookTile);
+    await settle(tester);
 
-      // Entry: image auto-selected, adjust panel open.
-      expect(
-        container.read(selectionControllerProvider).selectedId,
-        'img-1',
-        reason: 'main-strip Adjust must auto-select its resolved target',
-      );
-      expect(
-        container.read(imageToolControllerProvider).openSlot,
-        ImageToolSlot.adjust,
-      );
+    // Entry: image auto-selected, Look panel open.
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      'img-1',
+      reason: 'main-strip Look must auto-select its resolved target',
+    );
+    expect(
+      container.read(imageToolControllerProvider).openSlot,
+      ImageToolSlot.look,
+    );
 
-      // E1 close via the canonical drag-handle tap.
-      final chrome = tester.getRect(find.byType(DockSheetChrome));
-      await tester.tapAt(Offset(chrome.center.dx, chrome.top + 7));
-      await settle(tester);
+    // E1 close via the canonical drag-handle tap.
+    final chrome = tester.getRect(find.byType(DockSheetChrome));
+    await tester.tapAt(Offset(chrome.center.dx, chrome.top + 7));
+    await settle(tester);
 
-      expect(container.read(imageToolControllerProvider).openSlot, isNull);
-      expect(
-        container.read(selectionControllerProvider).hasSelection,
-        isFalse,
-        reason:
-            'audit crop-filters-adjust-exit-asymmetry: closing the '
-            'main-strip-entered panel must restore the prior (empty) '
-            'selection instead of stranding the user in image mode',
-      );
-    },
-  );
+    expect(container.read(imageToolControllerProvider).openSlot, isNull);
+    expect(
+      container.read(selectionControllerProvider).hasSelection,
+      isFalse,
+      reason:
+          'audit crop-filters-adjust-exit-asymmetry: closing the '
+          'main-strip-entered panel must restore the prior (empty) '
+          'selection instead of stranding the user in image mode',
+    );
+  });
 
   testWidgets(
-    'deliberate image-strip Adjust entry keeps the selection on close',
+    'deliberate image-strip Look entry keeps the selection on close',
     (tester) async {
       final container = await pumpEditor(tester, layers: [_image('img-1')]);
       // The user selected the image themselves: entry happens through
@@ -210,7 +207,7 @@ void main() {
 
       container
           .read(imageToolControllerProvider.notifier)
-          .toggleSlot(ImageToolSlot.adjust);
+          .toggleSlot(ImageToolSlot.look);
       await settle(tester);
       container.read(imageToolControllerProvider.notifier).closePanel();
       await settle(tester);
@@ -233,19 +230,19 @@ void main() {
         of: find.byType(EditorScreen),
         matching: find.byType(Scrollable),
       );
-      final adjustTile = find.byIcon(Icons.tune_rounded);
-      await tester.scrollUntilVisible(adjustTile, 80, scrollable: strip.first);
-      await tester.tap(adjustTile);
+      final lookTile = find.byIcon(Icons.auto_awesome_outlined);
+      await tester.scrollUntilVisible(lookTile, 80, scrollable: strip.first);
+      await tester.tap(lookTile);
       await settle(tester);
       expect(
         container.read(imageToolControllerProvider).openSlot,
-        ImageToolSlot.adjust,
+        ImageToolSlot.look,
       );
 
       // The user moves to a sibling panel — they now own image mode.
       container
           .read(imageToolControllerProvider.notifier)
-          .toggleSlot(ImageToolSlot.filters);
+          .toggleSlot(ImageToolSlot.border);
       await settle(tester);
       container.read(imageToolControllerProvider.notifier).closePanel();
       await settle(tester);

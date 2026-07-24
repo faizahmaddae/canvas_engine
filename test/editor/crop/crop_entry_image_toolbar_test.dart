@@ -135,7 +135,7 @@ void main() {
       ),
     );
 
-    expect(find.text('استایل'), findsOneWidget);
+    expect(find.text('لوک'), findsOneWidget);
     expect(find.text('کادر'), findsOneWidget);
     expect(find.text('سایه'), findsOneWidget);
     expect(find.text('شفافیت'), findsOneWidget);

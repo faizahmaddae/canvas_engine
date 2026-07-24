@@ -868,12 +868,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get cropTool => 'برش';
 
   @override
-  String get adjustTool => 'تنظیم';
-
-  @override
-  String get filtersTool => 'فیلترها';
-
-  @override
   String get canvasTool => 'بوم';
 
   @override
@@ -976,12 +970,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get cropActionVerb => 'برش';
 
   @override
-  String get applyFilterActionVerb => 'اعمال فیلتر';
-
-  @override
-  String get adjustActionVerb => 'تنظیم';
-
-  @override
   String savedProject(String name) {
     return '«$name» ذخیره شد';
   }
@@ -1030,6 +1018,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get styleTool => 'استایل';
+
+  @override
+  String get lookTool => 'لوک';
+
+  @override
+  String get lookActionVerb => 'تغییر لوک';
 
   @override
   String get sizeTool => 'اندازه';
@@ -1535,16 +1529,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get coolOption => 'سرد';
 
   @override
-  String get vividOption => 'زنده';
-
-  @override
   String get monoOption => 'تک‌رنگ';
 
   @override
   String get fadeOption => 'محو';
-
-  @override
-  String get dramaticOption => 'دراماتیک';
 
   @override
   String get vintageOption => 'قدیمی';
@@ -1566,8 +1554,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get noEffectsApplied => 'هیچ افکتی اعمال نشده است.';
 
   @override
-  String get openAdjustOrVignetteHint =>
-      'برای اضافه کردن، Adjust یا Vignette را باز کنید.';
+  String get openLookToAddEffectHint => 'برای اضافه کردن، «لوک» را باز کنید.';
 
   @override
   String get selectiveMaskLabel => 'انتخابی';

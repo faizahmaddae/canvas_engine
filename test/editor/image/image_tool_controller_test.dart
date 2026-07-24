@@ -18,14 +18,14 @@ void main() {
       // Deliberate behavior change in 1.11: the walk used to follow
       // enum declaration order (style→shape→border→shadow→…); it now
       // derives from kImageStripOrder, i.e. what the user sees.
+      // tb4 1/14 collapsed style/adjust/filters into one `look`
+      // panel, so the walk is five slots long now.
       expect(kImagePanelSlotOrder, const [
-        ImageToolSlot.style,
+        ImageToolSlot.look,
         ImageToolSlot.border,
         ImageToolSlot.shadow,
         ImageToolSlot.shape,
-        ImageToolSlot.adjust,
         ImageToolSlot.effects,
-        ImageToolSlot.filters,
       ]);
     });
 
@@ -91,7 +91,7 @@ void main() {
 
   group('ImageToolSlot.tryByName', () {
     test('returns the matching slot for a known name', () {
-      expect(ImageToolSlot.tryByName('style'), ImageToolSlot.style);
+      expect(ImageToolSlot.tryByName('look'), ImageToolSlot.look);
       expect(ImageToolSlot.tryByName('crop'), ImageToolSlot.crop);
     });
 

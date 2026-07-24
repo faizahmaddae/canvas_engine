@@ -220,20 +220,16 @@ void main() {
     'text-sheet:more': () =>
         editorContainer(select: 'text-1', textSheet: 'more'),
     'image-selected': () => editorContainer(select: 'img-1'),
-    'image-slot:style': () =>
-        editorContainer(select: 'img-1', imageSlot: ImageToolSlot.style),
+    'image-slot:look': () =>
+        editorContainer(select: 'img-1', imageSlot: ImageToolSlot.look),
     'image-slot:shape': () =>
         editorContainer(select: 'img-1', imageSlot: ImageToolSlot.shape),
     'image-slot:border': () =>
         editorContainer(select: 'img-1', imageSlot: ImageToolSlot.border),
     'image-slot:shadow': () =>
         editorContainer(select: 'img-1', imageSlot: ImageToolSlot.shadow),
-    'image-slot:adjust': () =>
-        editorContainer(select: 'img-1', imageSlot: ImageToolSlot.adjust),
     'image-slot:effects': () =>
         editorContainer(select: 'img-1', imageSlot: ImageToolSlot.effects),
-    'image-slot:filters': () =>
-        editorContainer(select: 'img-1', imageSlot: ImageToolSlot.filters),
     'shape-selected': () => editorContainer(select: 'shape-1'),
     'shape-slot:style': () =>
         editorContainer(select: 'shape-1', shapeSlot: ShapeToolSlot.style),

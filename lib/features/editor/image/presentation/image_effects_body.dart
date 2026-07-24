@@ -218,7 +218,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            context.l10n.openAdjustOrVignetteHint,
+            context.l10n.openLookToAddEffectHint,
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
@@ -323,11 +323,11 @@ class _EffectRow extends ConsumerWidget {
             EditorHaptics.tap();
             // Tap-to-edit: jump to the panel that owns this effect
             // type. Today both colour-matrix and vignette live in
-            // Adjust; per-effect edit sheets land here later with
+            // Look; per-effect edit sheets land here later with
             // no engine change required.
             ref
                 .read(imageToolControllerProvider.notifier)
-                .toggleSlot(ImageToolSlot.adjust);
+                .toggleSlot(ImageToolSlot.look);
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),

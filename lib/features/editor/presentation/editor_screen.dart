@@ -44,11 +44,9 @@ import '../image/application/image_target_resolver.dart';
 import '../image/application/image_tool_controller.dart';
 import '../image/application/main_strip_image_entry.dart';
 import '../image/presentation/image_border_body.dart';
-import '../image/presentation/image_filters_body.dart';
+import '../image/presentation/image_look_body.dart';
 import '../image/presentation/image_mode_toolbar.dart';
-import '../image/presentation/image_adjust_body.dart';
 import '../image/presentation/image_effects_body.dart';
-import '../image/presentation/image_style_body.dart';
 import 'sticker_picker_sheet.dart';
 import '../image/presentation/image_shadow_body.dart';
 import '../image/presentation/image_shape_body.dart';
@@ -466,18 +464,11 @@ class EditorScreen extends ConsumerWidget {
         onTap: () => _openCrop(context, ref),
       ),
       ToolbarSlot(
-        id: 'adjust',
-        icon: Icons.tune_rounded,
-        label: l10n.adjustTool,
+        id: 'look',
+        icon: Icons.auto_awesome_outlined,
+        label: l10n.lookTool,
         tier: SlotTier.tier2,
-        onTap: () => _openAdjust(context, ref),
-      ),
-      ToolbarSlot(
-        id: 'filters',
-        icon: Icons.auto_fix_high_outlined,
-        label: l10n.filtersTool,
-        tier: SlotTier.tier2,
-        onTap: () => _openFilters(context, ref),
+        onTap: () => _openLook(context, ref),
       ),
       // ── tier 3 — Document ───────────────────────────────────────
       ToolbarSlot(
@@ -584,24 +575,18 @@ class EditorScreen extends ConsumerWidget {
         case ImageToolSlot.shape:
           expanded = ImageShapeBody(layer: selectedImageLayer);
           expandedKey = 'image-shape:${selectedImageLayer.id}';
-        case ImageToolSlot.style:
-          expanded = ImageStyleBody(layer: selectedImageLayer);
-          expandedKey = 'image-style:${selectedImageLayer.id}';
+        case ImageToolSlot.look:
+          expanded = ImageLookBody(layer: selectedImageLayer);
+          expandedKey = 'image-look:${selectedImageLayer.id}';
         case ImageToolSlot.border:
           expanded = ImageBorderBody(layer: selectedImageLayer);
           expandedKey = 'image-border:${selectedImageLayer.id}';
         case ImageToolSlot.shadow:
           expanded = ImageShadowBody(layer: selectedImageLayer);
           expandedKey = 'image-shadow:${selectedImageLayer.id}';
-        case ImageToolSlot.adjust:
-          expanded = ImageAdjustBody(layer: selectedImageLayer);
-          expandedKey = 'image-adjust:${selectedImageLayer.id}';
         case ImageToolSlot.effects:
           expanded = ImageEffectsBody(layer: selectedImageLayer);
           expandedKey = 'image-effects:${selectedImageLayer.id}';
-        case ImageToolSlot.filters:
-          expanded = ImageFiltersBody(layer: selectedImageLayer);
-          expandedKey = 'image-filters:${selectedImageLayer.id}';
         case ImageToolSlot.crop:
         case ImageToolSlot.replace:
         case null:
@@ -1176,11 +1161,14 @@ class EditorScreen extends ConsumerWidget {
         .openCrop(layer.id, priorSelectionId: priorSelectionId);
   }
 
-  /// Opens the Filters dock panel for the resolved [ImageLayer].
+  /// Opens the Look dock panel for the resolved [ImageLayer].
   /// Routing through [imageToolControllerProvider]'s
-  /// [ImageToolSlot.filters] slot lets the existing image-mode dock
-  /// branch render [ImageFiltersBody] without a parallel code path.
-  Future<void> _openFilters(BuildContext context, WidgetRef ref) async {
+  /// [ImageToolSlot.look] slot lets the existing image-mode dock
+  /// branch render [ImageLookBody] without a parallel code path.
+  ///
+  /// One entry for what used to be two main-strip tiles (Adjust and
+  /// Filters): both channels now live in the same panel (tb4 1/14).
+  Future<void> _openLook(BuildContext context, WidgetRef ref) async {
     // Snapshot BEFORE resolution (which may auto-select) — same
     // prior-selection semantics as [_openCrop], restored when the
     // panel closes (contract §4, tb2 10/16).
@@ -1188,47 +1176,20 @@ class EditorScreen extends ConsumerWidget {
     final layer = await _resolveImageTarget(
       context,
       ref,
-      actionVerb: context.l10n.applyFilterActionVerb,
+      actionVerb: context.l10n.lookActionVerb,
     );
     if (layer == null) return;
     EditorHaptics.tap();
     ref
         .read(mainStripImageEntryProvider.notifier)
         .record(
-          slot: ImageToolSlot.filters,
+          slot: ImageToolSlot.look,
           targetLayerId: layer.id,
           priorSelectionId: priorSelectionId,
         );
     final ctrl = ref.read(imageToolControllerProvider.notifier);
-    if (ref.read(imageToolControllerProvider).openSlot !=
-        ImageToolSlot.filters) {
-      ctrl.toggleSlot(ImageToolSlot.filters);
-    }
-  }
-
-  /// Opens the Adjust dock panel for the resolved [ImageLayer].
-  Future<void> _openAdjust(BuildContext context, WidgetRef ref) async {
-    // Same prior-selection snapshot/restore contract as
-    // [_openFilters] / [_openCrop].
-    final priorSelectionId = ref.read(selectionControllerProvider).selectedId;
-    final layer = await _resolveImageTarget(
-      context,
-      ref,
-      actionVerb: context.l10n.adjustActionVerb,
-    );
-    if (layer == null) return;
-    EditorHaptics.tap();
-    ref
-        .read(mainStripImageEntryProvider.notifier)
-        .record(
-          slot: ImageToolSlot.adjust,
-          targetLayerId: layer.id,
-          priorSelectionId: priorSelectionId,
-        );
-    final ctrl = ref.read(imageToolControllerProvider.notifier);
-    if (ref.read(imageToolControllerProvider).openSlot !=
-        ImageToolSlot.adjust) {
-      ctrl.toggleSlot(ImageToolSlot.adjust);
+    if (ref.read(imageToolControllerProvider).openSlot != ImageToolSlot.look) {
+      ctrl.toggleSlot(ImageToolSlot.look);
     }
   }
 

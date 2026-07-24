@@ -21,7 +21,7 @@ import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
-import 'package:canvas_engine/features/editor/image/presentation/image_adjust_body.dart';
+import 'package:canvas_engine/features/editor/image/presentation/image_look_body.dart';
 import 'package:canvas_engine/features/editor/image/presentation/image_border_body.dart';
 import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
 import 'package:canvas_engine/features/editor/paint/domain/paint_tool_type.dart';
@@ -85,7 +85,7 @@ void main() {
     (tester) async {
       final layer = makeImageLayer();
       final container = makeContainer(layer);
-      await pumpBody(tester, container, ImageAdjustBody(layer: layer));
+      await pumpBody(tester, container, ImageLookBody(layer: layer));
 
       await tester.tap(find.text('Adjust precisely'));
       await tester.pumpAndSettle();
@@ -212,17 +212,22 @@ void main() {
     expect(committedLayer(container).borderWidth, 0);
   });
 
-  testWidgets('adjust preset chips stay discrete non-live entries', (
+  // tb4 1/14: the Adjust preset chips died with the Look merge. The
+  // preset row is the FILTER row now — same §3 obligation, so the
+  // pin moves rather than disappearing.
+  testWidgets('look preset taps stay discrete non-live entries', (
     tester,
   ) async {
     final layer = makeImageLayer();
     final container = makeContainer(layer);
-    await pumpBody(tester, container, ImageAdjustBody(layer: layer));
+    await pumpBody(tester, container, ImageLookBody(layer: layer));
+    // The chips decode the layer's (missing) file for their previews.
+    tester.takeException();
 
     final versionBefore = container.read(documentCommitVersionProvider);
-    await tester.tap(find.text('Pop'));
+    await tester.tap(find.text('Warm'));
     await tester.pump();
-    await tester.tap(find.text('Soft'));
+    await tester.tap(find.text('Mono'));
     await tester.pump();
 
     expect(
@@ -230,11 +235,39 @@ void main() {
       versionBefore + 2,
       reason: 'two discrete taps are two history entries (§3)',
     );
-    expect(committedLayer(container).adjustments.brightness, 8);
+    expect(committedLayer(container).filterPreset, ImageFilterPreset.mono);
     container.read(documentControllerProvider.notifier).undo();
-    expect(committedLayer(container).adjustments.brightness, 5);
+    expect(committedLayer(container).filterPreset, ImageFilterPreset.warm);
     container.read(documentControllerProvider.notifier).undo();
-    expect(committedLayer(container).adjustments.brightness, 0);
+    expect(committedLayer(container).filterPreset, ImageFilterPreset.none);
+  });
+
+  testWidgets('the fine-tune sliders never reset the preset row', (
+    tester,
+  ) async {
+    final layer = makeImageLayer();
+    final container = makeContainer(layer);
+    await pumpBody(tester, container, ImageLookBody(layer: layer));
+    tester.takeException();
+
+    await tester.tap(find.text('Mono'));
+    await tester.pump();
+    await tester.tap(find.text('Adjust precisely'));
+    await tester.pumpAndSettle();
+
+    final slider = find.byType(Slider).first; // brightness
+    await tester.drag(slider, const Offset(60, 0));
+    await tester.pump();
+
+    final after = committedLayer(container);
+    expect(
+      after.filterPreset,
+      ImageFilterPreset.mono,
+      reason:
+          'the two channels compose; fine-tuning never clears the '
+          'chosen preset',
+    );
+    expect(after.adjustments.brightness, isNot(0));
   });
 
   // ─── tb2 3/16 additions ───────────────────────────────────────────

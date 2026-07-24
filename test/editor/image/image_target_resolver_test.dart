@@ -136,7 +136,9 @@ void main() {
       expect(c.read(cropControllerProvider).layerId, 'only');
     });
 
-    test('Filters: auto-selects + opens filters slot', () {
+    // tb4 1/14: the separate Filters and Adjust entries are one Look
+    // entry now, so the two identical auto-select tests are one.
+    test('Look: auto-selects + opens the look slot', () {
       final c = makeContainer();
       add(c, makeImage('only'));
       final outcome = resolveImageTarget(
@@ -146,35 +148,10 @@ void main() {
       final layer = (outcome as ImageTargetAutoSelect).layer;
       c.read(selectionControllerProvider.notifier).select(layer.id);
       final ctrl = c.read(imageToolControllerProvider.notifier);
-      if (c.read(imageToolControllerProvider).openSlot !=
-          ImageToolSlot.filters) {
-        ctrl.toggleSlot(ImageToolSlot.filters);
+      if (c.read(imageToolControllerProvider).openSlot != ImageToolSlot.look) {
+        ctrl.toggleSlot(ImageToolSlot.look);
       }
-      expect(
-        c.read(imageToolControllerProvider).openSlot,
-        ImageToolSlot.filters,
-      );
-      expect(c.read(selectionControllerProvider).selectedId, 'only');
-    });
-
-    test('Adjust: auto-selects + opens adjust slot', () {
-      final c = makeContainer();
-      add(c, makeImage('only'));
-      final outcome = resolveImageTarget(
-        c.read(documentControllerProvider),
-        selectedId: c.read(selectionControllerProvider).selectedId,
-      );
-      final layer = (outcome as ImageTargetAutoSelect).layer;
-      c.read(selectionControllerProvider.notifier).select(layer.id);
-      final ctrl = c.read(imageToolControllerProvider.notifier);
-      if (c.read(imageToolControllerProvider).openSlot !=
-          ImageToolSlot.adjust) {
-        ctrl.toggleSlot(ImageToolSlot.adjust);
-      }
-      expect(
-        c.read(imageToolControllerProvider).openSlot,
-        ImageToolSlot.adjust,
-      );
+      expect(c.read(imageToolControllerProvider).openSlot, ImageToolSlot.look);
       expect(c.read(selectionControllerProvider).selectedId, 'only');
     });
   });

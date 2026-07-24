@@ -15,14 +15,12 @@ import '../../toolbar/domain/sibling_swipe_strategy.dart';
 /// walks [kImagePanelSlotOrder], which is derived from that same
 /// list, so swipe always follows what the user sees.
 enum ImageToolSlot {
-  style,
+  look,
   crop(isPanel: false),
   shape,
   border,
   shadow,
-  adjust,
   effects,
-  filters,
   replace(isPanel: false);
 
   const ImageToolSlot({this.isPanel = true});
@@ -57,7 +55,7 @@ enum ImageToolSlot {
 ///   * `'more'` opens the selected-layer actions sheet.
 const List<DockStripEntry<ImageToolSlot>> kImageStripOrder =
     <DockStripEntry<ImageToolSlot>>[
-      DockStripEntry.slot(ImageToolSlot.style),
+      DockStripEntry.slot(ImageToolSlot.look),
       DockStripEntry.slot(ImageToolSlot.border),
       DockStripEntry.slot(ImageToolSlot.shadow),
       DockStripEntry.action('opacity'),
@@ -65,9 +63,7 @@ const List<DockStripEntry<ImageToolSlot>> kImageStripOrder =
       DockStripEntry.action('more'),
       DockStripEntry.slot(ImageToolSlot.crop),
       DockStripEntry.slot(ImageToolSlot.shape),
-      DockStripEntry.slot(ImageToolSlot.adjust),
       DockStripEntry.slot(ImageToolSlot.effects),
-      DockStripEntry.slot(ImageToolSlot.filters),
     ];
 
 /// Display order of every Image dock slot (action chips excluded)
@@ -78,8 +74,8 @@ final List<ImageToolSlot> kImageStripSlotOrder = List.unmodifiable(
 
 /// Panel-bearing slots in RENDERED order — drives sibling-swipe.
 /// Derived from [kImageStripOrder] so the walk follows the strip
-/// the user sees: style → border → shadow → shape → adjust →
-/// effects → filters (wrap). Pinned against the pumped toolbar by
+/// the user sees: look → border → shadow → shape → effects (wrap).
+/// Pinned against the pumped toolbar by
 /// `test/editor/widget/slot_order_consistency_test.dart`.
 final List<ImageToolSlot> kImagePanelSlotOrder = List.unmodifiable(
   kImageStripOrder
