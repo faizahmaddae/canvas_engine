@@ -28,12 +28,18 @@ class SetShapeFillCommand extends EditorCommand {
     required this.layerId,
     this.color,
     this.opacity,
+    this.fill,
     this.live = false,
   });
 
   final String layerId;
   final Color? color;
   final double? opacity;
+
+  /// Full fill descriptor (gradient or solid) to install. Wins over
+  /// [color] when both are present; primarily produced by [invert]
+  /// so undo can restore a gradient a colour pick replaced.
+  final BackgroundFill? fill;
 
   /// When true, marks this command as part of a live drag stream
   /// (e.g. the opacity slider). Successive `live` commands of the
@@ -46,17 +52,35 @@ class SetShapeFillCommand extends EditorCommand {
   @override
   String get label => 'Shape fill';
 
+  /// The fill this command drives the layer toward, given [layer]'s
+  /// current state. An explicit [fill] wins (used by invert to
+  /// restore gradients, and by future gradient pickers). Otherwise an
+  /// explicit colour pick CLEARS a gradient descriptor: the sealed
+  /// `fill` takes render precedence over `fillColor`, so without the
+  /// clear a swatch tap on a gradient-filled template shape wrote an
+  /// invisible fillColor — zero visual change, plus a junk undo entry.
+  BackgroundFill? _targetFill(ShapeLayer layer) =>
+      fill ?? (color != null ? null : layer.fill);
+
   @override
   EditorDocument apply(EditorDocument doc) {
     final layer = doc.layerById(layerId);
     if (layer is! ShapeLayer) return doc;
     final newColor = color ?? layer.fillColor;
     final newOpacity = (opacity ?? layer.fillOpacity).clamp(0.0, 1.0);
-    if (newColor == layer.fillColor && newOpacity == layer.fillOpacity) {
+    final newFill = _targetFill(layer);
+    if (newColor == layer.fillColor &&
+        newOpacity == layer.fillOpacity &&
+        newFill == layer.fill) {
       return doc;
     }
     return doc.replaceLayer(
-      layer.copyWith(fillColor: newColor, fillOpacity: newOpacity),
+      layer.copyWith(
+        fillColor: newColor,
+        fillOpacity: newOpacity,
+        fill: newFill,
+        clearFill: newFill == null,
+      ),
     );
   }
 
@@ -68,6 +92,10 @@ class SetShapeFillCommand extends EditorCommand {
       layerId: layerId,
       color: layer.fillColor,
       opacity: layer.fillOpacity,
+      // Restore the full descriptor too — otherwise undoing a solid
+      // pick over a template gradient rebuilt only the (invisible)
+      // legacy colour and the gradient was gone for good.
+      fill: layer.fill,
     );
   }
 
@@ -81,6 +109,7 @@ class SetShapeFillCommand extends EditorCommand {
     // an opacity drag (or vice versa).
     if ((color == null) != (previous.color == null)) return null;
     if ((opacity == null) != (previous.opacity == null)) return null;
+    if ((fill == null) != (previous.fill == null)) return null;
     return this;
   }
 }
