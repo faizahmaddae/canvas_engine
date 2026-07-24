@@ -542,6 +542,58 @@ class _RotateGlyph extends StatelessWidget {
   }
 }
 
+/// Chrome-less, full-screen claim surface for contract §5 row 5
+/// (select-and-move): a 1-finger drag STARTING on an eligible,
+/// un-selected layer's bbox selects that layer and translates it in
+/// the same gesture.
+///
+/// This is the same multi-touch recogniser the selection overlay's
+/// body surface uses, but in LAZY arena mode
+/// ([_BodyMultiTouchRecognizer.claimOnDown] == false): the first
+/// pointer is tracked without resolving the arena, and the claim
+/// happens only at the [kTouchSlop] crossing. Sub-slop intents (tap,
+/// double-tap, long-press) therefore resolve through the canvas-level
+/// recognisers with their native timing, and a second finger landing
+/// before the claim abandons the sequence to the viewport pinch
+/// (row 6). After the slop claim the host selects the candidate layer
+/// and drives a normal body session, so later fingers join the
+/// transform exactly like on the selection overlay.
+///
+/// The host mounts this permanently (below the selection overlays in
+/// the screen-space chrome Stack) so a mid-gesture selection change —
+/// which remounts the selection overlay — never disposes the
+/// recogniser that owns the in-flight pointers. All mode gating
+/// (multi-select, crop, mask, paint, inline edit) lives in
+/// [shouldClaimBody].
+class SelectAndMoveSurface extends StatelessWidget {
+  const SelectAndMoveSurface({
+    super.key,
+    required this.onBody,
+    this.shouldClaimBody,
+  });
+
+  /// Session callback, identical contract to
+  /// [LayerSelectionOverlay.onBody]. [DragPhase.start] fires at the
+  /// slop claim — that is the moment the host selects the candidate
+  /// and starts the translate session.
+  final BodyGestureCallback onBody;
+
+  /// Consulted on the first pointer-down; returning `false` leaves
+  /// the pointer entirely alone (not even tracked). The host returns
+  /// `true` only for pointers landing on an eligible, movable,
+  /// un-selected layer's bbox while no other finger is down.
+  final bool Function(Offset globalPosition)? shouldClaimBody;
+
+  @override
+  Widget build(BuildContext context) {
+    return _BodyDragSurface(
+      onDrag: onBody,
+      shouldClaim: shouldClaimBody,
+      claimOnDown: false,
+    );
+  }
+}
+
 /// Screen-space drag surface that mirrors the layer's rotated rectangle.
 ///
 /// This is what gives the selected layer absolute priority over the
@@ -550,7 +602,7 @@ class _RotateGlyph extends StatelessWidget {
 /// recogniser claims the gesture arena on pointer-down (zero slop).
 /// Once the user touches anywhere inside the layer's selection rect,
 /// the parent `GestureDetector`'s tap / scale recognisers are rejected
-/// before they can fire \u2014 the touch belongs to the layer.
+/// before they can fire — the touch belongs to the layer.
 ///
 /// Critically, this surface is rendered in *screen* space, not canvas
 /// space, so it remains reachable when the layer is partially or fully
@@ -563,9 +615,14 @@ class _BodyDragSurface extends StatelessWidget {
     this.onLongPress,
     this.shouldClaim,
     this.shouldDeferStart,
+    this.claimOnDown = true,
   });
 
   final BodyGestureCallback onDrag;
+
+  /// See [_BodyMultiTouchRecognizer.claimOnDown]. `false` selects the
+  /// lazy arena mode used by [SelectAndMoveSurface].
+  final bool claimOnDown;
 
   /// Invoked when the gesture sequence ends without ever moving past
   /// [kTouchSlop] — i.e. a true tap rather than a drag. See
@@ -608,7 +665,8 @@ class _BodyDragSurface extends StatelessWidget {
                   ..onTap = onTap
                   ..onLongPress = onLongPress
                   ..shouldClaim = shouldClaim
-                  ..shouldDeferStart = shouldDeferStart,
+                  ..shouldDeferStart = shouldDeferStart
+                  ..claimOnDown = claimOnDown,
               ),
         },
         child: const SizedBox.expand(),
@@ -707,6 +765,37 @@ class _BodyMultiTouchRecognizer extends OneSequenceGestureRecognizer {
   /// depends on the layer responding to the very first frame.
   bool Function(Offset globalPosition)? shouldDeferStart;
 
+  /// Arena-claim policy. `true` (default) is the selection-overlay
+  /// behaviour: resolve the arena in our favour the moment a pointer
+  /// lands, so nothing below us can steal the gesture.
+  ///
+  /// `false` is the LAZY mode used by the select-and-move surface
+  /// (contract §5 row 5): the first pointer is *tracked* but the
+  /// arena is left open, and we claim it only when the pointer moves
+  /// past [kTouchSlop]. Until then every competing recogniser below
+  /// stays live, which is the whole point:
+  ///
+  ///   * a sub-slop release stays a plain tap — the canvas-level
+  ///     tap / double-tap recognisers resolve NATURALLY (tap-select,
+  ///     tap-cycling and double-tap-to-edit keep their exact timing,
+  ///     including the double-tap window);
+  ///   * a still hold stays a long-press — the canvas-level
+  ///     long-press recogniser wins at timeout and we get rejected;
+  ///   * a second finger arriving BEFORE the slop claim abandons the
+  ///     sequence entirely (we resolve rejected) so the pair falls
+  ///     through to the viewport pinch — row 6 stays strict even
+  ///     when the first finger happened to land on a layer.
+  ///
+  /// The slop claim wins the race against the viewport's
+  /// [ScaleGestureRecognizer] because scale resolves at pan-slop
+  /// (2 × [kTouchSlop]) while we resolve at [kTouchSlop].
+  bool claimOnDown = true;
+
+  /// True once this sequence has resolved the arena in our favour.
+  /// Always true immediately after the first pointer in eager mode;
+  /// in lazy mode it flips at the slop claim. Reset per sequence.
+  bool _arenaClaimed = false;
+
   /// Live pointer map: pointer id → latest global position.
   final Map<int, Offset> _pointers = <int, Offset>{};
 
@@ -767,20 +856,40 @@ class _BodyMultiTouchRecognizer extends OneSequenceGestureRecognizer {
         !shouldClaim!(event.position)) {
       return;
     }
+    // Lazy mode only: a second finger arriving BEFORE the slop claim
+    // means the user is pinching, and contract §5 row 6 says a pinch
+    // whose first finger never claimed belongs to the viewport.
+    // Abandon the whole sequence — rejecting our (single) arena entry
+    // hands the first pointer back to the recognisers below, and we
+    // never track the new one.
+    if (!isFirstPointer && !_arenaClaimed) {
+      resolve(GestureDisposition.rejected);
+      return;
+    }
     _pointers[event.pointer] = event.position;
     if (_pointers.length > _maxConcurrentPointers) {
       _maxConcurrentPointers = _pointers.length;
     }
     _initialDownPosition ??= event.position;
     startTrackingPointer(event.pointer, event.transform);
-    // Eagerly claim the arena. This is the linchpin that prevents the
-    // viewport's ScaleGestureRecognizer (and the framework's
-    // long-press / tap recognisers) from ever seeing pointers we
-    // accepted. Note: claiming does NOT start a session — see
-    // [_sessionStarted] for the deferred-promotion model.
-    resolve(GestureDisposition.accepted);
+    if (claimOnDown || !isFirstPointer) {
+      // Eagerly claim the arena. This is the linchpin that prevents
+      // the viewport's ScaleGestureRecognizer (and the framework's
+      // long-press / tap recognisers) from ever seeing pointers we
+      // accepted. Note: claiming does NOT start a session — see
+      // [_sessionStarted] for the deferred-promotion model.
+      resolve(GestureDisposition.accepted);
+      _arenaClaimed = true;
+    }
     _rebase();
     if (isFirstPointer) {
+      if (!claimOnDown) {
+        // Lazy arena mode: no long-press timer (the canvas-level
+        // long-press recogniser below must win at timeout) and no
+        // eager session — promotion AND the arena claim both happen
+        // at the slop crossing in [handleEvent].
+        return;
+      }
       // Arm the long-press timer on the FIRST pointer only. Any
       // additional pointer cancels it (long-press is one-finger).
       _armLongPressTimer(event.position);
@@ -837,6 +946,16 @@ class _BodyMultiTouchRecognizer extends OneSequenceGestureRecognizer {
           // Movement disqualifies long-press — user is dragging,
           // not holding.
           _cancelLongPressTimer();
+          if (!_arenaClaimed) {
+            // Lazy mode: THIS is the arena-resolution moment for
+            // select-and-move — the drag intent is now unambiguous.
+            // We resolve at kTouchSlop, beating the viewport's scale
+            // recogniser (which waits for pan-slop, 2×), so the tap /
+            // double-tap / long-press recognisers below get rejected
+            // only once a real drag has begun.
+            resolve(GestureDisposition.accepted);
+            _arenaClaimed = true;
+          }
           // Promote the deferred claim into a real session on the
           // first slop crossing.
           if (!_sessionStarted) {
@@ -856,6 +975,14 @@ class _BodyMultiTouchRecognizer extends OneSequenceGestureRecognizer {
       stopTrackingPointer(event.pointer);
       if (_pointers.isEmpty) {
         _cancelLongPressTimer();
+        if (!_arenaClaimed) {
+          // Lazy sequence ended without ever claiming (sub-slop
+          // release): bow out explicitly so the arena sweep hands
+          // the pointer to the recognisers below — the canvas tap /
+          // double-tap recognisers must win this arena, not us
+          // (sweep favours the first-added member, which is us).
+          resolve(GestureDisposition.rejected);
+        }
         if (_sessionStarted) {
           _emit(DragPhase.end);
           _sessionStarted = false;
@@ -924,6 +1051,7 @@ class _BodyMultiTouchRecognizer extends OneSequenceGestureRecognizer {
     _movedPastSlop = false;
     _maxConcurrentPointers = 0;
     _longPressFired = false;
+    _arenaClaimed = false;
   }
 
   Offset _focal() {
@@ -980,9 +1108,13 @@ class _BodyMultiTouchRecognizer extends OneSequenceGestureRecognizer {
 
   @override
   void rejectGesture(int pointer) {
-    // We always claim accepted on pointer-down so the framework should
-    // never reject us. Defensive: if it does (e.g. widget unmounted
-    // mid-gesture), end the session cleanly.
+    // Eager mode claims on pointer-down so the framework should never
+    // reject us there (defensive: widget unmounted mid-gesture). In
+    // LAZY mode ([claimOnDown] == false) rejection is a NORMAL exit:
+    // the canvas-level long-press recogniser winning at timeout, a
+    // handle claiming on down, or our own explicit abandon all route
+    // through here. No session can have started while unclaimed, so
+    // the cleanup below emits nothing in those paths.
     if (_pointers.remove(pointer) != null) {
       stopTrackingPointer(pointer);
       if (_pointers.isEmpty) {

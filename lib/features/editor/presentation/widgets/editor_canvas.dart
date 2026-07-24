@@ -113,6 +113,25 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   /// the pair belongs to the viewport pinch, not the layer.
   final Set<int> _rawPointersDown = <int>{};
 
+  /// Row-5 candidate: the eligible, movable, un-selected layer the
+  /// current select-and-move pointer went down on. Stashed by the
+  /// [SelectAndMoveSurface] claim predicate at pointer-down and
+  /// consumed exactly once at [DragPhase.start] (the slop claim),
+  /// which is the moment the layer becomes selected and its translate
+  /// session begins. A sub-slop release never consumes it — the
+  /// pointer is handed back to the canvas tap recognisers and the
+  /// stale value is simply overwritten by the next claim.
+  EditorLayer? _selectAndMoveCandidate;
+
+  /// True while the live interaction session was started by the
+  /// select-and-move surface. Disambiguates the `isActive` claim
+  /// branches: a new finger landing during a row-5 session must fall
+  /// THROUGH the selection overlay's body surface (which now belongs
+  /// to the same, freshly selected layer) so it joins the recogniser
+  /// that actually owns the in-flight pointers, one Stack level
+  /// below. Reset on session end and on OS pointer-cancel.
+  bool _selectAndMoveOwnsSession = false;
+
   /// Per-project zoom/pan persistence. Owned by the canvas widget so
   /// load + save share a single [SharedPreferences] handle (cached on
   /// the store after first call) and survive across rebuilds.
@@ -569,6 +588,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             _rawPointersDown.remove(e.pointer);
             _onMultiTapPointerCancel(e);
             ref.read(interactionControllerProvider.notifier).cancel();
+            // The cancelled session may have been the select-and-move
+            // surface's; clear the ownership flag so the selection
+            // overlay's isActive claim branch is not permanently
+            // fenced off.
+            _selectAndMoveOwnsSession = false;
             // Belt-and-braces: `onScaleEnd` is not guaranteed to fire
             // when the framework cancels the viewport's scale gesture
             // (e.g. a parent route grabs the pointer, system gesture
@@ -880,6 +904,14 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                       // `_buildSelectionOverlay` (it passes
                       // `showHandles: !locked` and `onBody: null` for
                       // locked layers).
+                      // Select-and-move claim surface (contract §5
+                      // row 5) — BELOW the selection overlays so the
+                      // selected layer's chrome quad, handles and
+                      // group quad always outrank it, and mounted
+                      // unconditionally so the mid-gesture selection
+                      // switch never disposes its recogniser. Mode
+                      // gating lives in its claim predicate.
+                      _buildSelectAndMoveSurface(doc.layers),
                       if (selection.count == 1 &&
                           !addTextComposerOpen &&
                           !maskEditActive)
@@ -996,6 +1028,106 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
     );
   }
 
+  /// Build the always-mounted select-and-move surface (contract §5
+  /// row 5). Mounted UNCONDITIONALLY below the selection overlays so
+  /// the mid-gesture selection switch (which remounts the overlay)
+  /// never disposes the recogniser owning the in-flight pointers;
+  /// every mode gate lives in the claim predicate instead.
+  Widget _buildSelectAndMoveSurface(List<EditorLayer> layers) {
+    return SelectAndMoveSurface(
+      shouldClaimBody: (globalPosition) =>
+          _shouldClaimSelectAndMove(layers, globalPosition),
+      onBody: (update) {
+        final controller = ref.read(interactionControllerProvider.notifier);
+        final focalCanvas = _toCanvas(update.focalGlobal);
+        switch (update.phase) {
+          case DragPhase.start:
+            // The slop claim: select the candidate and begin its
+            // translate session in the same gesture. Selection is a
+            // provider write, not a document command, so the whole
+            // select-and-move lands as ONE undo entry (the transform
+            // commit).
+            final candidate = _selectAndMoveCandidate;
+            _selectAndMoveCandidate = null;
+            if (candidate == null) return;
+            _selectAndMoveOwnsSession = true;
+            ref.read(selectionControllerProvider.notifier).select(candidate.id);
+            controller.startGesture(layer: candidate, focalPoint: focalCanvas);
+          case DragPhase.update:
+            controller.updateGesture(
+              focalPoint: focalCanvas,
+              scale: update.scale,
+              rotation: update.rotation,
+              pointerCount: update.pointerCount,
+            );
+          case DragPhase.end:
+            controller.end();
+            _selectAndMoveOwnsSession = false;
+        }
+      },
+    );
+  }
+
+  /// Claim predicate for the select-and-move surface. `true` only for
+  /// a first finger landing on an eligible, movable, un-selected
+  /// layer's RAW bbox (no outset — the outset ring is selection
+  /// chrome and belongs to the selected layer's overlay) while the
+  /// editor is in plain single-select interaction state.
+  bool _shouldClaimSelectAndMove(
+    List<EditorLayer> layers,
+    Offset globalPosition,
+  ) {
+    // First-finger-wins backstop + row 6: never join a sequence the
+    // viewport (or anyone else) already owns a finger of.
+    if (_gestureStartViewport != null) return false;
+    if (_rawPointersDown.isNotEmpty) return false;
+    // A live session is never ours to re-claim here: mid-session
+    // fingers join through the recogniser's own unconditional-accept
+    // path, and off-canvas recovery belongs to the selection overlay.
+    if (ref.read(interactionControllerProvider).isActive) return false;
+    // Row 5 is a single-select gesture by definition. Multi mode
+    // keeps today's behaviour exactly (group quad or viewport).
+    if (ref.read(selectionModeProvider) == SelectionMode.multi) return false;
+    // Surface-ownership gates, mirroring the selection overlay's
+    // claim predicate plus the modes that only matter because this
+    // surface is mounted permanently (paint / inline edit / add-text
+    // composer own the canvas while the overlays are unmounted).
+    if (ref.read(cropControllerProvider).active) return false;
+    if (ref.read(maskEditControllerProvider).active) return false;
+    if (ref.read(paintToolControllerProvider).activeTool != null) return false;
+    if (ref.read(editingControllerProvider) != null) return false;
+    if (ref.read(addTextComposerOpenProvider)) return false;
+
+    final local = _toCanvas(globalPosition);
+    final selection = ref.read(selectionControllerProvider);
+    EditorLayer? selectedLayer;
+    if (selection.selectedId != null) {
+      for (final l in layers) {
+        if (l.id == selection.selectedId) {
+          selectedLayer = l;
+          break;
+        }
+      }
+    }
+    // The selected layer's chrome quad (bbox + outset ring) belongs
+    // to the selection overlay above — including where another layer
+    // overlaps it. Declining here keeps the two surfaces' claims
+    // mutually exclusive.
+    if (selectedLayer != null && _pointInChromeQuad(selectedLayer, local)) {
+      return false;
+    }
+    final hits = _hitTestAll(layers, local);
+    if (hits.isEmpty) return false;
+    // Topmost eligible layer only — the same layer a tap here would
+    // select. Deliberately NOT drilling further down: dragging must
+    // never move a layer the equivalent tap would not have picked.
+    final top = hits.first;
+    if (top.id == selection.selectedId) return false;
+    if (!top.capabilities.movable) return false;
+    _selectAndMoveCandidate = top;
+    return true;
+  }
+
   Widget _buildSelectionOverlay(
     List<EditorLayer> layers,
     SelectionState selection,
@@ -1087,8 +1219,12 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             if (ref.read(maskEditControllerProvider).active) return false;
             // Mid-session claim: a live transform keeps the surface
             // (off-canvas recovery — the finger may wander anywhere).
+            // EXCEPT when the session belongs to the select-and-move
+            // surface one Stack level below: new fingers must fall
+            // through to the recogniser that owns the in-flight
+            // pointers, or they would restart the session up here.
             if (ref.read(interactionControllerProvider).isActive) {
-              return true;
+              return !_selectAndMoveOwnsSession;
             }
             // Sequence continuation (row 6): another finger is
             // already down and was NOT claimed by this recogniser
@@ -1176,6 +1312,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             final controller = ref.read(interactionControllerProvider.notifier);
             switch (phase) {
               case DragPhase.start:
+                // Handles claim on pointer-down, so a handle session
+                // can supersede any prior owner; make sure the
+                // select-and-move ownership flag never lingers.
+                _selectAndMoveOwnsSession = false;
                 final pointer = _toCanvas(globalPointer);
                 if (handle == InteractionHandle.rotate) {
                   controller.startRotate(
@@ -1267,9 +1407,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             if (ref.read(maskEditControllerProvider).active) return false;
             // Mid-session claim (off-canvas recovery), then the
             // row-6 sequence-continuation refusal — same order and
-            // rationale as the single-layer overlay.
+            // rationale as the single-layer overlay (including the
+            // select-and-move ownership carve-out).
             if (ref.read(interactionControllerProvider).isActive) {
-              return true;
+              return !_selectAndMoveOwnsSession;
             }
             if (_rawPointersDown.isNotEmpty) return false;
             return bounds
@@ -1311,6 +1452,9 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             final pointer = _toCanvas(globalPointer);
             switch (phase) {
               case DragPhase.start:
+                // See the single-layer overlay's onHandle: handles
+                // claim on down and supersede any prior session owner.
+                _selectAndMoveOwnsSession = false;
                 if (handle == InteractionHandle.rotate) {
                   controller.startGroupRotate(
                     layers: selectedLayers,
