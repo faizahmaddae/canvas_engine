@@ -46,6 +46,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (draftJson == null || !mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     final recovery = ref.read(projectRecoveryServiceProvider);
+    // Re-offers can race a still-visible banner — never stack two.
+    messenger.hideCurrentMaterialBanner();
     messenger.showMaterialBanner(
       MaterialBanner(
         content: Text(context.l10n.resumeDraftBanner),
@@ -76,6 +78,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Editor round-trips bump the tick (Home itself never remounts
+    // inside the shell's IndexedStack) — re-arm the once-per-mount
+    // guard and re-check the draft slot, so a back-out of an unsaved
+    // session gets its resume offer immediately, not on next launch.
+    ref.listen<int>(draftOfferTickProvider, (prev, next) {
+      if (prev == next) return;
+      _draftOfferShown = false;
+      _offerDraftResume();
+    });
     final actions = HomeActions(context, ref);
     final templates = ref.watch(
       effectiveTemplatesProvider(Localizations.localeOf(context).languageCode),

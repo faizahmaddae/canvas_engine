@@ -32,6 +32,24 @@ import 'widgets/size_picker_dialog.dart';
 
 const _uuid = Uuid();
 
+/// Bumped every time an editor route pushed from Home pops.
+///
+/// Home never remounts (it lives in the shell's IndexedStack), so
+/// its once-per-mount draft-resume check goes permanently stale
+/// after the first editor round-trip — exactly when a surviving
+/// draft journal (back-out of an unsaved session) needs an offer.
+/// HomeScreen listens and re-checks the slot on each bump.
+class DraftOfferTick extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+final draftOfferTickProvider = NotifierProvider<DraftOfferTick, int>(
+  DraftOfferTick.new,
+);
+
 /// Single owner of every editor-launching navigation flow on Home.
 ///
 /// Extracted out of `HomeScreen` so the screen + tab shell stay
@@ -113,6 +131,7 @@ class HomeActions {
 
     final stable = await _persistPickedImage(picked.path);
     if (!context.mounted) return;
+    unawaited(preserveOrphanDraft());
 
     final docCtrl = ref.read(documentControllerProvider.notifier);
     docCtrl.newDocument(
@@ -144,7 +163,44 @@ class HomeActions {
 
   /// Open a built-in [Template]. Round-trips the seed document
   /// through the codec so the editor's load path stays uniform.
+  /// Rescue a pending unsaved draft before a NEW unsaved session
+  /// overwrites the single 'draft' journal slot.
+  ///
+  /// Collision policy (roadmap tb0 0.4b): newest wins the slot; the
+  /// prior draft is promoted to a regular project record first (the
+  /// Recents grid live-renders its preview from documentJson), then
+  /// the slot is cleared. No-op when the slot is empty. Best-effort:
+  /// a decode/store failure leaves the slot untouched so the resume
+  /// banner still gets a chance at it.
+  Future<void> preserveOrphanDraft() async {
+    final draftName = context.l10n.recoveredDraftName;
+    final recovery = ref.read(projectRecoveryServiceProvider);
+    try {
+      final draftJson = await recovery.pendingDraftJson();
+      if (draftJson == null) return;
+      final doc = DocumentCodec.decode(draftJson);
+      final now = DateTime.now();
+      await ref
+          .read(projectStoreProvider.notifier)
+          .upsert(
+            Project(
+              id: _uuid.v4(),
+              name: draftName,
+              width: doc.width,
+              height: doc.height,
+              createdAt: now,
+              lastModified: now,
+              documentJson: draftJson,
+            ),
+          );
+      await recovery.clearDraft();
+    } catch (e, st) {
+      debugLogError('home/preserveOrphanDraft', e, st);
+    }
+  }
+
   void openTemplate(Template template) {
+    unawaited(preserveOrphanDraft());
     final docCtrl = ref.read(documentControllerProvider.notifier);
     final doc = template.build();
     docCtrl.importJson(DocumentCodec.encode(doc));
@@ -316,6 +372,7 @@ class HomeActions {
   /// user genuinely wants to keep it they can hit Save explicitly
   /// — the same rule [importPhoto] uses for picked photos.
   void openSample() {
+    unawaited(preserveOrphanDraft());
     final l10n = context.l10n;
     const canvas = Size(1080, 1080);
 
@@ -374,6 +431,7 @@ class HomeActions {
     required double height,
     required String name,
   }) {
+    unawaited(preserveOrphanDraft());
     ref
         .read(documentControllerProvider.notifier)
         .newDocument(width: width, height: height);
@@ -390,9 +448,19 @@ class HomeActions {
   /// on the document, not on the providers reset here.
   void _push() {
     resetEditorEphemeralState(ref);
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const EditorScreen()));
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => const EditorScreen()))
+        .then((_) {
+          // Editor popped. Home never remounts (it lives in the
+          // shell's IndexedStack), so its once-per-mount draft offer
+          // would otherwise never re-run — yet this is exactly the
+          // moment a surviving draft journal (back-out of an unsaved
+          // session) needs a resume offer. Bump the tick; HomeScreen
+          // listens and re-checks the slot.
+          if (context.mounted) {
+            ref.read(draftOfferTickProvider.notifier).bump();
+          }
+        });
   }
 
   Future<Size> _resolveImageSize(File file) async {

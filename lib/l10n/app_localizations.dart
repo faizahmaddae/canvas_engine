@@ -1142,6 +1142,12 @@ abstract class AppLocalizations {
   /// **'Your current unsaved work will be discarded.'**
   String get newDocumentReplaceUnsavedBody;
 
+  /// No description provided for @recoveredDraftName.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovered draft'**
+  String get recoveredDraftName;
+
   /// No description provided for @importedImageName.
   ///
   /// In en, this message translates to:

@@ -568,6 +568,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your current unsaved work will be discarded.';
 
   @override
+  String get recoveredDraftName => 'Recovered draft';
+
+  @override
   String get importedImageName => 'Imported image';
 
   @override

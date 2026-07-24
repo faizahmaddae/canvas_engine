@@ -567,6 +567,9 @@ class AppLocalizationsFa extends AppLocalizations {
       'کار ذخیره‌نشدهٔ فعلی از بین می‌رود.';
 
   @override
+  String get recoveredDraftName => 'پیش‌نویس بازیابی‌شده';
+
+  @override
   String get importedImageName => 'تصویر واردشده';
 
   @override
