@@ -40,6 +40,7 @@ import '../engine/modules/shape/shape_layer.dart';
 import '../engine/modules/text/text_layer.dart';
 import '../image/application/image_target_resolver.dart';
 import '../image/application/image_tool_controller.dart';
+import '../image/application/main_strip_image_entry.dart';
 import '../image/presentation/image_border_body.dart';
 import '../image/presentation/image_filters_body.dart';
 import '../image/presentation/image_mode_toolbar.dart';
@@ -126,6 +127,33 @@ class EditorScreen extends ConsumerWidget {
     ref.listen<SelectionState>(selectionControllerProvider, (prev, next) {
       if (prev?.selectedId == next.selectedId) return;
       closeObjectSubPanels(ref);
+      // Canvas panel: selecting a layer hides the no-selection dock
+      // branch that hosts it, but its `panelOpen` used to survive —
+      // and the panel silently RE-MOUNTED on the next deselect
+      // (contract §4: E3 must not resurrect chrome; audit
+      // shell:canvas-panel-resurrects). Closing the moment a
+      // selection APPEARS kills every resurrect path at the root
+      // (Done pill, delete, undo-prune…). Deselect transitions
+      // deliberately do not touch it — the no-selection branch is
+      // exactly where the panel is allowed to live, and the E3
+      // seams (`dismissActiveEditing`, the Done pill) already close
+      // it explicitly.
+      if (next.selectedId != null) {
+        ref.read(canvasToolControllerProvider.notifier).closePanel();
+      }
+    });
+    // Main-strip Adjust/Filters exit seam (contract §4, tb2 10/16):
+    // when the panel that a main-strip entry opened closes, restore
+    // the selection captured at entry — mirrors Crop's
+    // priorSelectionId round-trip so the user lands back where they
+    // started instead of stranded in image mode. All the "who wins"
+    // rules live in the controller; this listener only forwards the
+    // slot transition.
+    ref.listen<ImageToolSession>(imageToolControllerProvider, (prev, next) {
+      if (prev?.openSlot == next.openSlot) return;
+      ref
+          .read(mainStripImageEntryProvider.notifier)
+          .handleSlotChange(prev?.openSlot, next.openSlot);
     });
     // Keep the autosave controller alive for the lifetime of the
     // editor screen. It listens to `documentCommitVersionProvider`
@@ -1124,6 +1152,10 @@ class EditorScreen extends ConsumerWidget {
   /// [ImageToolSlot.filters] slot lets the existing image-mode dock
   /// branch render [ImageFiltersBody] without a parallel code path.
   Future<void> _openFilters(BuildContext context, WidgetRef ref) async {
+    // Snapshot BEFORE resolution (which may auto-select) — same
+    // prior-selection semantics as [_openCrop], restored when the
+    // panel closes (contract §4, tb2 10/16).
+    final priorSelectionId = ref.read(selectionControllerProvider).selectedId;
     final layer = await _resolveImageTarget(
       context,
       ref,
@@ -1131,6 +1163,13 @@ class EditorScreen extends ConsumerWidget {
     );
     if (layer == null) return;
     EditorHaptics.tap();
+    ref
+        .read(mainStripImageEntryProvider.notifier)
+        .record(
+          slot: ImageToolSlot.filters,
+          targetLayerId: layer.id,
+          priorSelectionId: priorSelectionId,
+        );
     final ctrl = ref.read(imageToolControllerProvider.notifier);
     if (ref.read(imageToolControllerProvider).openSlot !=
         ImageToolSlot.filters) {
@@ -1140,6 +1179,9 @@ class EditorScreen extends ConsumerWidget {
 
   /// Opens the Adjust dock panel for the resolved [ImageLayer].
   Future<void> _openAdjust(BuildContext context, WidgetRef ref) async {
+    // Same prior-selection snapshot/restore contract as
+    // [_openFilters] / [_openCrop].
+    final priorSelectionId = ref.read(selectionControllerProvider).selectedId;
     final layer = await _resolveImageTarget(
       context,
       ref,
@@ -1147,6 +1189,13 @@ class EditorScreen extends ConsumerWidget {
     );
     if (layer == null) return;
     EditorHaptics.tap();
+    ref
+        .read(mainStripImageEntryProvider.notifier)
+        .record(
+          slot: ImageToolSlot.adjust,
+          targetLayerId: layer.id,
+          priorSelectionId: priorSelectionId,
+        );
     final ctrl = ref.read(imageToolControllerProvider.notifier);
     if (ref.read(imageToolControllerProvider).openSlot !=
         ImageToolSlot.adjust) {
@@ -1565,8 +1614,6 @@ class _ModeExitPill extends ConsumerWidget {
         (d) => selectionId != null && d.isProtectedBasePhoto(selectionId),
       ),
     );
-    final hasTextSelection =
-        selectedLayer is TextLayer && !selectedLayer.isSticker;
     // Protected base photo (photo project) is the canvas itself --
     // it is intentionally selectable for tool targeting but never
     // shows object-selection chrome (frame, quick actions). Done
@@ -1578,18 +1625,16 @@ class _ModeExitPill extends ConsumerWidget {
     // Single canonical verb: every commit / dismiss path on the
     // canvas is "Done". Avoids Hick's-law confusion from flipping
     // between "Done" and "Deselect" for the same affordance.
-    return ModeDoneButton(
-      onPressed: () {
-        if (paintOpen) {
-          ref.read(paintToolControllerProvider.notifier).closePanel();
-        }
-        if (textOpen || hasTextSelection) {
-          ref.read(textToolControllerProvider.notifier).closePanel();
-        }
-        // Always clear selection — covers shape / image / text and
-        // closes any open mode panel above.
-        ref.read(selectionControllerProvider.notifier).clear();
-      },
-    );
+    //
+    // ONE lifecycle call (contract §4, tb2 10/16): the pill is E2
+    // and E2 implies E1, so it must close EVERY open panel — the
+    // hand-rolled paint/text closes it used to carry missed the
+    // canvas panel and the object openSlot panels, which is what
+    // let the canvas panel resurrect after a Done-tap deselect.
+    // `dismissActiveEditing` is exactly the E3 scope (E1+E2+clear
+    // selection). Crop/mask are safe: the pill never renders in
+    // those modes (guarded at the mount site) and the seam's
+    // mask-cancel is an idempotent no-op when no session is open.
+    return ModeDoneButton(onPressed: () => dismissActiveEditing(ref));
   }
 }
