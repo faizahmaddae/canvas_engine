@@ -29,7 +29,10 @@ enum _PresetKind {
   portrait45,
   youtubeThumbnail,
   linkedInPost,
+  hd1080p,
   story,
+  a4Portrait300,
+  a4Landscape300,
 }
 
 /// Preset groups, ordered by how often a casual user reaches for
@@ -41,7 +44,7 @@ class _PresetGroup {
   final List<_Preset> presets;
 }
 
-enum _PresetGroupKind { square, portrait, landscape, story }
+enum _PresetGroupKind { square, portrait, landscape, story, print }
 
 const List<_PresetGroup> _presetGroups = [
   _PresetGroup(_PresetGroupKind.square, [
@@ -59,9 +62,18 @@ const List<_PresetGroup> _presetGroups = [
       Icons.smart_display_outlined,
     ),
     _Preset(_PresetKind.linkedInPost, 1200, 628, Icons.work_outline_rounded),
+    _Preset(_PresetKind.hd1080p, 1920, 1080, Icons.hd_outlined),
   ]),
   _PresetGroup(_PresetGroupKind.story, [
     _Preset(_PresetKind.story, 1080, 1920, Icons.smartphone_outlined),
+  ]),
+  // Print sizes came from the editor's own New-document dialog, which
+  // tb4 5/14 retired. They land here rather than dying with it — 300
+  // dpi A4 is a real thing people make, and Custom is a poor
+  // substitute for a labelled preset when the numbers are 2480×3508.
+  _PresetGroup(_PresetGroupKind.print, [
+    _Preset(_PresetKind.a4Portrait300, 2480, 3508, Icons.description_outlined),
+    _Preset(_PresetKind.a4Landscape300, 3508, 2480, Icons.article_outlined),
   ]),
 ];
 
@@ -182,120 +194,139 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
         constraints: const BoxConstraints(maxWidth: 420),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  widget.title ?? l10n.newDesignTitle,
-                  style: AppTypeScale.title.copyWith(
-                    color: tokens.textPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
+          // Header and CTA sit OUTSIDE the scroll view: with the whole
+          // dialog in one scroller the confirm button slid below the
+          // fold as the preset list grew, and on a small phone it was
+          // already only reachable by scrolling past every preset.
+          // Only the presets and the custom form scroll now, so the
+          // primary action is always on screen (tb5 9/9).
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                widget.title ?? l10n.newDesignTitle,
+                style: AppTypeScale.title.copyWith(
+                  color: tokens.textPrimary,
+                  fontWeight: FontWeight.w700,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.body ?? l10n.pickCanvasSizeBody,
-                  style: AppTypeScale.caption.copyWith(
-                    color: tokens.textSecondary,
-                  ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.body ?? l10n.pickCanvasSizeBody,
+                style: AppTypeScale.caption.copyWith(
+                  color: tokens.textSecondary,
                 ),
-                const SizedBox(height: 16),
-                for (var i = 0; i < _presetGroups.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(
-                      start: 4,
-                      bottom: 8,
-                    ),
-                    child: Text(
-                      _presetGroupLabel(
-                        l10n,
-                        _presetGroups[i].kind,
-                      ).toUpperCase(),
-                      style: AppTypeScale.caption.copyWith(
-                        fontSize: 11,
-                        color: tokens.textMuted,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var i = 0; i < _presetGroups.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(
+                            start: 4,
+                            bottom: 8,
+                          ),
+                          child: Text(
+                            _presetGroupLabel(
+                              l10n,
+                              _presetGroups[i].kind,
+                            ).toUpperCase(),
+                            style: AppTypeScale.caption.copyWith(
+                              fontSize: 11,
+                              color: tokens.textMuted,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ),
+                        for (
+                          var j = 0;
+                          j < _presetGroups[i].presets.length;
+                          j++
+                        ) ...[
+                          if (j > 0) const SizedBox(height: 8),
+                          _PresetTile(
+                            preset: _presetGroups[i].presets[j],
+                            onTap: () =>
+                                _pickPreset(_presetGroups[i].presets[j]),
+                          ),
+                        ],
+                      ],
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.customGroup.toUpperCase(),
+                        style: AppTypeScale.caption.copyWith(
+                          fontSize: 11,
+                          color: tokens.textMuted,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                        ),
                       ),
-                    ),
-                  ),
-                  for (var j = 0; j < _presetGroups[i].presets.length; j++) ...[
-                    if (j > 0) const SizedBox(height: 8),
-                    _PresetTile(
-                      preset: _presetGroups[i].presets[j],
-                      onTap: () => _pickPreset(_presetGroups[i].presets[j]),
-                    ),
-                  ],
-                ],
-                const SizedBox(height: 16),
-                Text(
-                  l10n.customGroup.toUpperCase(),
-                  style: AppTypeScale.caption.copyWith(
-                    fontSize: 11,
-                    color: tokens.textMuted,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _DimensionField(
-                        label: l10n.widthLabel,
-                        controller: _widthCtrl,
-                        onSubmitted: (_) => _confirmCustom(),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _DimensionField(
+                              label: l10n.widthLabel,
+                              controller: _widthCtrl,
+                              onSubmitted: (_) => _confirmCustom(),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 14),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 16,
+                              color: tokens.textMuted,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _DimensionField(
+                              label: l10n.heightLabel,
+                              controller: _heightCtrl,
+                              onSubmitted: (_) => _confirmCustom(),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 14),
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: 16,
-                        color: tokens.textMuted,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _DimensionField(
-                        label: l10n.heightLabel,
-                        controller: _heightCtrl,
-                        onSubmitted: (_) => _confirmCustom(),
-                      ),
-                    ),
-                  ],
-                ),
-                if (_customError != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _customError!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                AppPrimaryButton(
-                  key: const ValueKey('size-picker-create'),
-                  label: widget.confirmLabel ?? l10n.createCustomAction,
-                  onPressed: _confirmCustom,
-                ),
-                const SizedBox(height: 4),
-                Center(
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: tokens.textMuted,
-                    ),
-                    child: Text(l10n.cancelAction),
+                      if (_customError != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _customError!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              AppPrimaryButton(
+                key: const ValueKey('size-picker-create'),
+                label: widget.confirmLabel ?? l10n.createCustomAction,
+                onPressed: _confirmCustom,
+              ),
+              const SizedBox(height: 4),
+              Center(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: tokens.textMuted,
+                  ),
+                  child: Text(l10n.cancelAction),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -380,6 +411,7 @@ String _presetGroupLabel(AppLocalizations l10n, _PresetGroupKind kind) =>
       _PresetGroupKind.portrait => l10n.portraitGroup,
       _PresetGroupKind.landscape => l10n.landscapeGroup,
       _PresetGroupKind.story => l10n.storyGroup,
+      _PresetGroupKind.print => l10n.printGroup,
     };
 
 String _presetLabel(AppLocalizations l10n, _PresetKind kind) => switch (kind) {
@@ -388,7 +420,10 @@ String _presetLabel(AppLocalizations l10n, _PresetKind kind) => switch (kind) {
   _PresetKind.portrait45 => l10n.portrait45Preset,
   _PresetKind.youtubeThumbnail => l10n.youtubeThumbnailPreset,
   _PresetKind.linkedInPost => l10n.linkedInPostPreset,
+  _PresetKind.hd1080p => l10n.hd1080pPreset,
   _PresetKind.story => l10n.storyPreset,
+  _PresetKind.a4Portrait300 => l10n.a4Portrait300Preset,
+  _PresetKind.a4Landscape300 => l10n.a4Landscape300Preset,
 };
 
 class _DimensionField extends StatelessWidget {
