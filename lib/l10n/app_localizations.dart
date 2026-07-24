@@ -1130,6 +1130,18 @@ abstract class AppLocalizations {
   /// **'New design'**
   String get newDesignName;
 
+  /// No description provided for @newDocumentReplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new document?'**
+  String get newDocumentReplaceTitle;
+
+  /// No description provided for @newDocumentReplaceUnsavedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current unsaved work will be discarded.'**
+  String get newDocumentReplaceUnsavedBody;
+
   /// No description provided for @importedImageName.
   ///
   /// In en, this message translates to:

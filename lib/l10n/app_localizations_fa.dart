@@ -560,6 +560,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get newDesignName => 'طرح جدید';
 
   @override
+  String get newDocumentReplaceTitle => 'شروع سند جدید؟';
+
+  @override
+  String get newDocumentReplaceUnsavedBody =>
+      'کار ذخیره‌نشدهٔ فعلی از بین می‌رود.';
+
+  @override
   String get importedImageName => 'تصویر واردشده';
 
   @override

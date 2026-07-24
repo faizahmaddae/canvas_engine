@@ -1223,28 +1223,46 @@ class EditorScreen extends ConsumerWidget {
       context: context,
       builder: (_) => const NewDocumentDialog(),
     );
-    if (choice == null) return;
+    if (choice == null || !context.mounted) return;
 
-    final docCtrl = ref.read(documentControllerProvider.notifier);
-    docCtrl.newDocument(width: choice.width, height: choice.height);
-    ref.read(selectionControllerProvider.notifier).clear();
-
-    if (choice.imageUrl != null) {
-      final id = _uuid.v4();
-      docCtrl.execute(
-        AddLayerCommand(
-          ImageLayer(
-            id: id,
-            transform: LayerTransform(
-              position: Offset.zero,
-              size: Size(choice.width, choice.height),
+    // Replacing a never-saved document with content is destructive —
+    // confirm first. Saved projects lose nothing here: their last
+    // autosaved state stays on disk under the old projectId, which
+    // the rebind below is about to detach from this editor.
+    final session = ref.read(editorSessionProvider);
+    final currentDoc = ref.read(documentControllerProvider);
+    if (session?.projectId == null && currentDoc.layers.isNotEmpty) {
+      final l10n = context.l10n;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.newDocumentReplaceTitle),
+          content: Text(l10n.newDocumentReplaceUnsavedBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.cancelAction),
             ),
-            source: ImageSource.network(choice.imageUrl!),
-          ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.createAction),
+            ),
+          ],
         ),
       );
-      ref.read(selectionControllerProvider.notifier).select(id);
+      if (confirmed != true || !context.mounted) return;
     }
+
+    // Rebind-first state transition lives in the application layer
+    // (startNewDocument) so the no-overwrite invariant is testable
+    // without driving these dialogs.
+    startNewDocument(
+      ref,
+      width: choice.width,
+      height: choice.height,
+      sessionName: context.l10n.newDesignName,
+      imageUrl: choice.imageUrl,
+    );
   }
 
   void _fitViewport(BuildContext context, WidgetRef ref) {

@@ -561,6 +561,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newDesignName => 'New design';
 
   @override
+  String get newDocumentReplaceTitle => 'Start a new document?';
+
+  @override
+  String get newDocumentReplaceUnsavedBody =>
+      'Your current unsaved work will be discarded.';
+
+  @override
   String get importedImageName => 'Imported image';
 
   @override

@@ -181,6 +181,8 @@
   "heightPxLabel": "Height (px)",
   "newDesignTitle": "New design",
   "newDesignName": "New design",
+  "newDocumentReplaceTitle": "Start a new document?",
+  "newDocumentReplaceUnsavedBody": "Your current unsaved work will be discarded.",
   "importedImageName": "Imported image",
   "importPhotoCommand": "Import photo",
   "sampleName": "Sample",
@@ -396,17 +398,11 @@
   "fillColorTitle": "Fill color",
   "shadowColorTitle": "Shadow color",
   "shadowOffsetPadSemantics": "Shadow direction and distance",
-  "@shadowOffsetPadSemantics": {
-    "description": "Accessibility label for the 2D shadow offset pad — dragging the dot sets shadow direction and distance together."
-  },
+  "@shadowOffsetPadSemantics": {"description": "Accessibility label for the 2D shadow offset pad — dragging the dot sets shadow direction and distance together."},
   "textQuickActionsSemantics": "Text quick actions",
-  "@textQuickActionsSemantics": {
-    "description": "Accessibility label for the floating quick-capsule shown above a selected text layer."
-  },
+  "@textQuickActionsSemantics": {"description": "Accessibility label for the floating quick-capsule shown above a selected text layer."},
   "exactSizeTitle": "Exact size",
-  "@exactSizeTitle": {
-    "description": "Title of the numeric-entry dialog opened by tapping the size panel's value chip."
-  },
+  "@exactSizeTitle": {"description": "Title of the numeric-entry dialog opened by tapping the size panel's value chip."},
   "blurDirectionOpacitySubtitle": "Blur, direction, opacity",
   "backgroundColorTitle": "Background color",
   "borderColorTitle": "Border color",
