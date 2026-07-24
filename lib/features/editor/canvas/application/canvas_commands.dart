@@ -3,34 +3,54 @@ import 'package:flutter/painting.dart';
 import '../../engine/commands/editor_command.dart';
 import '../../engine/core/editor_document.dart';
 
-/// Swap the document's [EditorDocument.backgroundColor] in a single
+/// Swap the document's [EditorDocument.background] in a single
 /// undoable step.
+///
+/// Carries a full [BackgroundFill], not just a colour: templates
+/// ship gradient backgrounds, and a command that only remembered the
+/// derived start colour could not invert correctly — undoing a solid
+/// pick over a gradient restored a SOLID of the gradient's start
+/// colour, silently destroying the authored background. Colour-only
+/// callers (swatch taps) use the [color] convenience parameter,
+/// which wraps into a [SolidBackground].
 ///
 /// Set [live] to `true` for streaming updates from a continuous
 /// picker (e.g. a hue slider drag) so successive commands collapse
 /// into one history entry. Tapping a swatch should leave [live] at
 /// its default `false` so each tap is its own undoable click.
 class SetCanvasBackgroundCommand extends EditorCommand {
-  const SetCanvasBackgroundCommand({
-    required this.color,
-    this.live = false,
-  });
+  const SetCanvasBackgroundCommand({this.color, this.fill, this.live = false})
+    : assert(
+        (color == null) != (fill == null),
+        'provide exactly one of color / fill',
+      );
 
-  final Color color;
+  /// Solid-colour convenience — mutually exclusive with [fill].
+  final Color? color;
+
+  /// Full target fill (solid or gradient).
+  final BackgroundFill? fill;
+
   final bool live;
+
+  BackgroundFill get _target => fill ?? SolidBackground(color: color!);
 
   @override
   String get label => 'Canvas background';
 
   @override
   EditorDocument apply(EditorDocument doc) {
-    if (doc.backgroundColor == color) return doc;
-    return doc.copyWith(backgroundColor: color);
+    final target = _target;
+    // Full-fill comparison: picking a solid that happens to equal a
+    // gradient's start colour is a REAL change (gradient → solid),
+    // not a no-op — the old derived-colour guard swallowed it.
+    if (doc.background == target) return doc;
+    return doc.copyWith(background: target);
   }
 
   @override
   EditorCommand invert(EditorDocument before) =>
-      SetCanvasBackgroundCommand(color: before.backgroundColor);
+      SetCanvasBackgroundCommand(fill: before.background);
 
   @override
   EditorCommand? mergeWith(EditorCommand previous) {

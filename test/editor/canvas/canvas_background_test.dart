@@ -43,9 +43,9 @@ void main() {
   group('SetCanvasBackgroundCommand', () {
     test('execute swaps the document background colour', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundCommand(color: Color(0xFF202020)),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetCanvasBackgroundCommand(color: Color(0xFF202020)));
       expect(
         c.read(documentControllerProvider).backgroundColor,
         const Color(0xFF202020),
@@ -54,12 +54,12 @@ void main() {
 
     test('undo restores the previous colour', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundCommand(color: Color(0xFFFF8800)),
-          );
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundCommand(color: Color(0xFF003366)),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetCanvasBackgroundCommand(color: Color(0xFFFF8800)));
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetCanvasBackgroundCommand(color: Color(0xFF003366)));
       c.read(documentControllerProvider.notifier).undo();
       expect(
         c.read(documentControllerProvider).backgroundColor,
@@ -74,13 +74,13 @@ void main() {
 
     test('no-op when colour matches current (preserves stack)', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundCommand(color: Color(0xFFAABBCC)),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetCanvasBackgroundCommand(color: Color(0xFFAABBCC)));
       // Re-applying same colour should not push a fresh entry.
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundCommand(color: Color(0xFFAABBCC)),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetCanvasBackgroundCommand(color: Color(0xFFAABBCC)));
       // Single undo restores white.
       c.read(documentControllerProvider.notifier).undo();
       expect(
@@ -91,15 +91,10 @@ void main() {
 
     test('live commands collapse into one undo entry', () {
       final c = makeContainer();
-      for (final hex in <int>[
-        0xFF111111,
-        0xFF222222,
-        0xFF333333,
-        0xFF444444,
-      ]) {
-        c.read(documentControllerProvider.notifier).execute(
-              SetCanvasBackgroundCommand(color: Color(hex), live: true),
-            );
+      for (final hex in <int>[0xFF111111, 0xFF222222, 0xFF333333, 0xFF444444]) {
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(SetCanvasBackgroundCommand(color: Color(hex), live: true));
       }
       expect(
         c.read(documentControllerProvider).backgroundColor,
@@ -114,14 +109,68 @@ void main() {
       );
     });
 
+    test('undo of a solid pick over a GRADIENT restores the gradient', () {
+      // Regression (roadmap tb0 0.5): invert used to capture only the
+      // derived backgroundColor (the gradient's start colour), so
+      // undo restored a SOLID of that colour — the template's
+      // authored gradient was unrecoverable in-session.
+      final c = makeContainer();
+      const gradient = LinearGradientBackground(
+        startColor: Color(0xFFBE8A2E),
+        endColor: Color(0xFF7A4E1E),
+        angleDegrees: 160,
+      );
+      final docCtrl = c.read(documentControllerProvider.notifier);
+      docCtrl.execute(const SetCanvasBackgroundCommand(fill: gradient));
+      expect(c.read(documentControllerProvider).background, gradient);
+
+      docCtrl.execute(
+        const SetCanvasBackgroundCommand(color: Color(0xFF112233)),
+      );
+      expect(
+        c.read(documentControllerProvider).background,
+        const SolidBackground(color: Color(0xFF112233)),
+      );
+
+      docCtrl.undo();
+      expect(
+        c.read(documentControllerProvider).background,
+        gradient,
+        reason: 'undo must restore the full gradient, not a solid',
+      );
+    });
+
+    test('picking a solid equal to the gradient START colour is a real '
+        'change, not a no-op', () {
+      final c = makeContainer();
+      const gradient = LinearGradientBackground(
+        startColor: Color(0xFFBE8A2E),
+        endColor: Color(0xFF7A4E1E),
+      );
+      final docCtrl = c.read(documentControllerProvider.notifier);
+      docCtrl.execute(const SetCanvasBackgroundCommand(fill: gradient));
+
+      // Old guard compared against the DERIVED colour (gradient
+      // start) and swallowed this as a no-op.
+      docCtrl.execute(
+        const SetCanvasBackgroundCommand(color: Color(0xFFBE8A2E)),
+      );
+      expect(
+        c.read(documentControllerProvider).background,
+        const SolidBackground(color: Color(0xFFBE8A2E)),
+      );
+      docCtrl.undo();
+      expect(c.read(documentControllerProvider).background, gradient);
+    });
+
     test('non-live commands do NOT merge', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundCommand(color: Color(0xFFAA0000)),
-          );
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundCommand(color: Color(0xFF00AA00)),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetCanvasBackgroundCommand(color: Color(0xFFAA0000)));
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetCanvasBackgroundCommand(color: Color(0xFF00AA00)));
       // Undo once -> previous entry still visible.
       c.read(documentControllerProvider.notifier).undo();
       expect(
@@ -140,18 +189,18 @@ void main() {
 
     test('serialises non-default background as ARGB int', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundCommand(color: Color(0xFF334455)),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetCanvasBackgroundCommand(color: Color(0xFF334455)));
       final json = DocumentCodec.toJson(c.read(documentControllerProvider));
       expect(json['background'], 0xFF334455);
     });
 
     test('round-trip preserves the background colour', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundCommand(color: Color(0xFF445566)),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetCanvasBackgroundCommand(color: Color(0xFF445566)));
       final encoded = DocumentCodec.encode(c.read(documentControllerProvider));
       final restored = DocumentCodec.fromJson(
         Map<String, dynamic>.from(jsonDecode(encoded) as Map),
