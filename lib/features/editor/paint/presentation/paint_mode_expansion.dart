@@ -19,6 +19,7 @@ import 'bodies/paint_size_entry.dart';
 import 'bodies/paint_tool_body.dart';
 import 'paint_mode_toolbar.dart';
 import 'paint_tool_specs.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// In-dock sheet panel for paint mode. Routes [PaintSession.openSlot]
 /// → its body and renders it inside the dock's `expanded` slot with
@@ -131,7 +132,7 @@ Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
         readValue: (ref) => ref.watch(paintToolControllerProvider).blurRadius,
         writeValue: (ref, v) =>
             ref.read(paintToolControllerProvider.notifier).setBlurRadius(v),
-        format: (v) => '${v.round()}',
+        format: (v) => EditorValueFormat.of(context).digits(v.round()),
       ),
       // Opacity drives the alpha channel of the active stroke colour.
       // Re-uses the colour-picker pathway ([setStrokeColor]) so undo,
@@ -160,7 +161,7 @@ Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
           );
           ref.read(paintToolControllerProvider.notifier).setStrokeColor(next);
         },
-        format: (v) => '${v.round()}%',
+        format: (v) => EditorValueFormat.of(context).percent(v.round()),
         leadingBuilder: (context, value) {
           // Mini swatch preview at the live opacity — instant proof
           // of what the stroke will look like before release.

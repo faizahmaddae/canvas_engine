@@ -15,6 +15,7 @@ import '../../toolbar/presentation/widgets/preset_chip.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/precision_disclosure.dart';
 import 'image_panel_shell.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// Expanded panel body for the Image sub-tool's "Adjust" tab.
 ///
@@ -157,7 +158,7 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 value: adj.brightness,
                 min: -100,
                 max: 100,
-                format: (v) => v.round().toString(),
+                format: (v) => EditorValueFormat.of(context).digits(v.round()),
                 onChanged: (v) => _previewSlider(
                   SetImageAdjustmentsCommand(
                     layerId: widget.layer.id,
@@ -173,7 +174,8 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 value: adj.contrast,
                 min: 0,
                 max: 2,
-                format: (v) => '${(v * 100).round()}%',
+                format: (v) =>
+                    EditorValueFormat.of(context).percent((v * 100).round()),
                 onChanged: (v) => _previewSlider(
                   SetImageAdjustmentsCommand(
                     layerId: widget.layer.id,
@@ -189,7 +191,8 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 value: adj.saturation,
                 min: 0,
                 max: 2,
-                format: (v) => '${(v * 100).round()}%',
+                format: (v) =>
+                    EditorValueFormat.of(context).percent((v * 100).round()),
                 onChanged: (v) => _previewSlider(
                   SetImageAdjustmentsCommand(
                     layerId: widget.layer.id,
@@ -205,7 +208,7 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 value: adj.exposure,
                 min: -100,
                 max: 100,
-                format: (v) => v.round().toString(),
+                format: (v) => EditorValueFormat.of(context).digits(v.round()),
                 onChanged: (v) => _previewSlider(
                   SetImageAdjustmentsCommand(
                     layerId: widget.layer.id,
@@ -221,7 +224,7 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 value: adj.warmth,
                 min: -100,
                 max: 100,
-                format: (v) => v.round().toString(),
+                format: (v) => EditorValueFormat.of(context).digits(v.round()),
                 onChanged: (v) => _previewSlider(
                   SetImageAdjustmentsCommand(
                     layerId: widget.layer.id,
@@ -251,7 +254,8 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 value: vignette.intensity,
                 min: VignetteEffect.minIntensity,
                 max: VignetteEffect.maxIntensity,
-                format: (v) => '${(v * 100).round()}%',
+                format: (v) =>
+                    EditorValueFormat.of(context).percent((v * 100).round()),
                 onChanged: (v) => _previewSlider(
                   SetImageVignetteCommand(
                     layerId: widget.layer.id,
@@ -267,7 +271,8 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 value: vignette.feather,
                 min: VignetteEffect.minFeather,
                 max: VignetteEffect.maxFeather,
-                format: (v) => '${(v * 100).round()}%',
+                format: (v) =>
+                    EditorValueFormat.of(context).percent((v * 100).round()),
                 onChanged: (v) => _previewSlider(
                   SetImageVignetteCommand(layerId: widget.layer.id, feather: v),
                 ),

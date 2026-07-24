@@ -13,6 +13,7 @@ import '../../../../ui/editor_slider_row.dart';
 import '../../../../ui/precision_disclosure.dart';
 import '../../../widgets/controls/precision_divider.dart';
 import '../../../widgets/controls/slider_row.dart';
+import '../../../../../../core/utils/editor_value_format.dart';
 
 /// "Adjust precisely" disclosure for the Background panel. Same
 /// flat header treatment as `_SizePrecisionAdvanced` and the
@@ -41,7 +42,7 @@ class BackgroundPrecisionAdvanced extends ConsumerWidget {
           // shorter side; UI drives 0..100 directly.
           value: (style.backgroundRadius * 100).clamp(0.0, 100.0),
           max: 100,
-          format: (v) => '${v.toStringAsFixed(0)}%',
+          format: (v) => EditorValueFormat.of(context).percent(v.round()),
           onChanged: (v) => ctrl.setBackgroundRadius(v / 100),
           onDragStart: ctrl.beginStyleDrag,
           onDragEnd: ctrl.endStyleDrag,
@@ -54,7 +55,7 @@ class BackgroundPrecisionAdvanced extends ConsumerWidget {
           labelWidth: 96,
           value: style.backgroundPaddingY,
           max: 64,
-          format: (v) => '${v.toStringAsFixed(0)}px',
+          format: (v) => EditorValueFormat.of(context).px(v.round()),
           onChanged: ctrl.setBackgroundPaddingY,
           onDragStart: ctrl.beginStyleDrag,
           onDragEnd: ctrl.endStyleDrag,
@@ -67,7 +68,7 @@ class BackgroundPrecisionAdvanced extends ConsumerWidget {
           labelWidth: 96,
           value: style.backgroundPaddingX,
           max: 64,
-          format: (v) => '${v.toStringAsFixed(0)}px',
+          format: (v) => EditorValueFormat.of(context).px(v.round()),
           onChanged: ctrl.setBackgroundPaddingX,
           onDragStart: ctrl.beginStyleDrag,
           onDragEnd: ctrl.endStyleDrag,
@@ -81,7 +82,7 @@ class BackgroundPrecisionAdvanced extends ConsumerWidget {
             labelWidth: 96,
             value: bg.a * 100,
             max: 100,
-            format: (v) => '${v.toStringAsFixed(0)}%',
+            format: (v) => EditorValueFormat.of(context).percent(v.round()),
             onChanged: (v) =>
                 ctrl.setBackgroundColor(bg.withValues(alpha: v / 100)),
             onDragStart: ctrl.beginStyleDrag,

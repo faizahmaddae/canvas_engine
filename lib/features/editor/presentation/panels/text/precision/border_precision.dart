@@ -13,6 +13,7 @@ import '../../../../ui/editor_slider_row.dart';
 import '../../../../ui/precision_disclosure.dart';
 import '../../../widgets/controls/precision_divider.dart';
 import '../../../widgets/controls/slider_row.dart';
+import '../../../../../../core/utils/editor_value_format.dart';
 
 /// "Adjust precisely" disclosure for the Border panel. Same
 /// flat header treatment as `BackgroundPrecisionAdvanced`: whole
@@ -39,7 +40,7 @@ class BorderPrecisionAdvanced extends ConsumerWidget {
           labelWidth: 96,
           value: style.outlineWidth,
           max: 12,
-          format: (v) => '${v.toStringAsFixed(0)}px',
+          format: (v) => EditorValueFormat.of(context).px(v.round()),
           onChanged: ctrl.setOutlineWidth,
           onDragStart: ctrl.beginStyleDrag,
           onDragEnd: ctrl.endStyleDrag,
@@ -53,7 +54,7 @@ class BorderPrecisionAdvanced extends ConsumerWidget {
             labelWidth: 96,
             value: outline.a * 100,
             max: 100,
-            format: (v) => '${v.toStringAsFixed(0)}%',
+            format: (v) => EditorValueFormat.of(context).percent(v.round()),
             onChanged: (v) =>
                 ctrl.setOutlineColor(outline.withValues(alpha: v / 100)),
             onDragStart: ctrl.beginStyleDrag,

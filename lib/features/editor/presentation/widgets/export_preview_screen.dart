@@ -10,6 +10,7 @@ import '../../application/export_format.dart';
 import '../../application/export_session.dart';
 import '../../application/image_export_service.dart';
 import '../../canvas/presentation/widgets/canvas_checkerboard.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// Reason the [ExportPreviewScreen] popped, surfaced to the caller.
 enum ExportPreviewAction { save, share, cancel }
@@ -140,10 +141,12 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
   String get _sizeLabel {
     final w = _decodedWidth ?? widget.pixelWidth;
     final h = _decodedHeight ?? widget.pixelHeight;
-    return '$w × $h';
+    return EditorValueFormat.of(context).dimensions(w, h);
   }
 
-  String get _byteSizeLabel => _formatBytes(widget.bytes.length);
+  String get _byteSizeLabel => EditorValueFormat.of(
+    context,
+  ).mapDigits(_formatBytes(widget.bytes.length));
 
   @override
   Widget build(BuildContext context) {

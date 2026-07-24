@@ -5,6 +5,7 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../presentation/widgets/section_label.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// Shared Paint Size UI rendered in BOTH the inline dock panel and
 /// the floating-toolbar modal sheet. One source of truth so a
@@ -200,7 +201,7 @@ class _PaintSizePrecisionAdvancedState
   bool _dragInFlight = false;
   double? _lastTickValue;
 
-  String _format(double v) => '${v.round()}px';
+  String _format(double v) => EditorValueFormat.of(context).px(v.round());
 
   void _maybeTick(double v) {
     final span = widget.max - widget.min;

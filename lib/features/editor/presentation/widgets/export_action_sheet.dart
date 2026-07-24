@@ -20,6 +20,7 @@ import '../../application/image_export_service.dart';
 import '../../ui/editor_slider_row.dart';
 import 'export_preview_screen.dart';
 import 'section_label.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// Modal export sheet. The user picks an [ExportQuality] preset and
 /// then taps **Save Image** or **Share** — both actions reuse the same
@@ -425,7 +426,8 @@ class _QualityCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  quality.multiplier,
+                  // Locale digits over the model's ASCII getter.
+                  EditorValueFormat.of(context).mapDigits(quality.multiplier),
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: selected ? tokens.accentDeep : tokens.textSecondary,
                     fontWeight: FontWeight.w700,
@@ -446,7 +448,7 @@ class _QualityCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$outW × $outH px',
+                      '${EditorValueFormat.of(context).dimensions(outW, outH)} px',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: tokens.textSecondary,
                         fontFeatures: const [FontFeature.tabularFigures()],
@@ -566,7 +568,7 @@ class _JpgQualitySlider extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '$pct%',
+                EditorValueFormat.of(context).percent(pct),
                 style: theme.textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -585,7 +587,8 @@ class _JpgQualitySlider extends StatelessWidget {
           divisions: 30,
           enabled: enabled,
           showReadout: false,
-          format: (v) => '${(v * 100).round()}%',
+          format: (v) =>
+              EditorValueFormat.of(context).percent((v * 100).round()),
           onChanged: onChanged,
           semanticLabel: context.l10n.qualityLabel,
         ),

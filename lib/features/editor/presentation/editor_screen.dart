@@ -78,6 +78,7 @@ import 'widgets/export_action_sheet.dart';
 import 'widgets/layers_panel.dart';
 import 'widgets/multi_select_mode_toolbar.dart';
 import 'widgets/new_document_dialog.dart';
+import '../../../core/utils/editor_value_format.dart';
 
 const _uuid = Uuid();
 
@@ -1473,7 +1474,7 @@ class _DocumentTitle extends ConsumerWidget {
                 ),
               ),
               Text(
-                '${size.width.toInt()} × ${size.height.toInt()} • ${(scale * 100).toStringAsFixed(0)}%',
+                '${EditorValueFormat.of(context).dimensions(size.width.toInt(), size.height.toInt())} • ${EditorValueFormat.of(context).percent((scale * 100).round())}',
                 style: Theme.of(
                   context,
                 ).textTheme.labelSmall?.copyWith(color: tokens.textSecondary),

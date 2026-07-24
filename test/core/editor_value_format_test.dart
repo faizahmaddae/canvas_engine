@@ -34,4 +34,10 @@ void main() {
     expect(fa.dimensions(1080, 1350), '۱۰۸۰ × ۱۳۵۰');
     expect(en.dimensions(1080, 1350), '1080 × 1350');
   });
+
+  test('mapDigits preserves pre-formatted strings (trailing zeros)', () {
+    expect(fa.mapDigits('2.00'), '۲٫۰۰');
+    expect(en.mapDigits('2.00'), '2.00');
+    expect(fa.mapDigits('1.5 KB'), '۱٫۵ KB');
+  });
 }

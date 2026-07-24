@@ -49,6 +49,7 @@ import '../../text/presentation/text_edit_flow.dart';
 import 'floating_action_bar.dart';
 import 'floating_toolbar_positioner.dart';
 import 'layer_overflow_sheet.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// One capsule item: an accelerator pill.
 class _CapsuleItem {
@@ -203,7 +204,7 @@ class QuickCapsule extends ConsumerWidget {
           child: Text(
             // VISUAL px (tb2 12/16) — raw fontSize lies after
             // corner drags on scaleText layers.
-            '${ctrl.visualFontSizeOf(l).round()}px',
+            EditorValueFormat.of(context).px(ctrl.visualFontSizeOf(l).round()),
             style: _readoutStyle(tokens),
           ),
           onTap: () {
@@ -317,7 +318,7 @@ class QuickCapsule extends ConsumerWidget {
           semanticLabel: l10n.strokeSizeSemantics,
           estWidth: 48,
           child: Text(
-            '${l.strokeWidth.round()}px',
+            EditorValueFormat.of(context).px(l.strokeWidth.round()),
             style: _readoutStyle(tokens),
           ),
           onTap: () {

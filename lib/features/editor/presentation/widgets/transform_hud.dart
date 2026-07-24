@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../engine/core/layer_transform.dart';
 import '../../engine/core/selection_state.dart';
 import '../../engine/core/viewport_state.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// Heads-up display shown above the active layer during a resize or
 /// rotation gesture. Rendered in **screen space** (above the viewport
@@ -30,7 +31,11 @@ class TransformHud extends StatelessWidget {
     final handle = activeHandle;
     if (handle == null) return const SizedBox.shrink();
 
-    final String? label = _labelFor(handle, transform);
+    final String? label = _labelFor(
+      handle,
+      transform,
+      EditorValueFormat.of(context),
+    );
     if (label == null) return const SizedBox.shrink();
 
     // Anchor in screen space, above the layer's top-mid corner.
@@ -65,21 +70,25 @@ class TransformHud extends StatelessWidget {
     );
   }
 
-  String? _labelFor(InteractionHandle handle, LayerTransform t) {
+  String? _labelFor(
+    InteractionHandle handle,
+    LayerTransform t,
+    EditorValueFormat f,
+  ) {
     switch (handle) {
       case InteractionHandle.rotate:
         final deg = t.rotation * 180 / math.pi;
         var norm = deg % 360;
         if (norm > 180) norm -= 360;
         if (norm <= -180) norm += 360;
-        return '${norm.toStringAsFixed(0)}\u00B0';
+        return f.degrees(norm.round());
       case InteractionHandle.topLeft:
       case InteractionHandle.bottomLeft:
       case InteractionHandle.bottomRight:
       case InteractionHandle.gesture:
         final w = t.size.width.round();
         final h = t.size.height.round();
-        return '$w \u00D7 $h';
+        return f.dimensions(w, h);
       case InteractionHandle.body:
         return null;
     }

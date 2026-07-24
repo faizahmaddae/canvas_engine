@@ -18,6 +18,7 @@ import '../../widgets/controls/slider_row.dart';
 import 'precision/background_precision.dart';
 import 'precision/border_precision.dart';
 import 'precision/shadow_precision.dart';
+import '../../../../../core/utils/editor_value_format.dart';
 
 /// One horizontally-scrolling row of preset chips — the compact
 /// replacement for the 72dp icon-tile rail the old decoration
@@ -153,7 +154,8 @@ class ShadowEffectSection extends ConsumerWidget {
                       labelWidth: 44,
                       value: style.shadowBlur,
                       max: 40,
-                      format: (v) => '${v.toStringAsFixed(0)}px',
+                      format: (v) =>
+                          EditorValueFormat.of(context).px(v.round()),
                       onChanged: ctrl.setShadowBlur,
                       onDragStart: ctrl.beginStyleDrag,
                       onDragEnd: ctrl.endStyleDrag,

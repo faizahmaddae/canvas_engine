@@ -20,6 +20,7 @@ import '../../../engine/modules/text/text_layer.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../ui/editor_slider_row.dart';
 import '../../widgets/controls/panel_chip.dart';
+import '../../../../../core/utils/editor_value_format.dart';
 
 /// Broad safety clamp for direct font-size mutation (nudge + exact
 /// keypad entry). Intentionally far wider than the named-preset
@@ -155,7 +156,7 @@ class SizeBody extends ConsumerWidget {
                 value: style.fontSize.clamp(_sliderMin, _sliderMax(presets)),
                 min: _sliderMin,
                 max: _sliderMax(presets),
-                format: (v) => '${v.toStringAsFixed(0)}px',
+                format: (v) => EditorValueFormat.of(context).px(v.round()),
                 showReadout: false,
                 onChanged: ctrl.setFontSize,
                 onDragStart: ctrl.beginStyleDrag,
@@ -308,7 +309,7 @@ class _SizeValueChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             alignment: Alignment.center,
             child: Text(
-              '${value.round()}px',
+              EditorValueFormat.of(context).px(value.round()),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,

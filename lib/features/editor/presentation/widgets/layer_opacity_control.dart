@@ -7,6 +7,7 @@ import '../../application/live_overlay_controller.dart';
 import '../../engine/commands/layer_state_commands.dart';
 import '../../engine/commands/transform_commands.dart';
 import '../../engine/core/editor_layer.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// Shared layer-opacity slider for every selected-layer action surface.
 ///
@@ -69,7 +70,8 @@ class _MultiLayerOpacityControlState
     );
     final value = (_dragValue ?? _averageOpacity(layers)).clamp(0.0, 1.0);
     final theme = Theme.of(context);
-    final percent = '${(value * 100).round()}%';
+    final f = EditorValueFormat.of(context);
+    final percent = f.percent((value * 100).round());
 
     final slider = SliderTheme(
       data: SliderTheme.of(context).copyWith(
@@ -81,7 +83,7 @@ class _MultiLayerOpacityControlState
         value: value,
         min: 0,
         max: 1,
-        semanticFormatterCallback: (v) => '${(v * 100).round()}%',
+        semanticFormatterCallback: (v) => f.percent((v * 100).round()),
         onChanged: layers.isEmpty
             ? null
             : (v) {
@@ -192,7 +194,8 @@ class _LayerOpacityControlState extends ConsumerState<LayerOpacityControl> {
       ),
     );
     final value = (_dragValue ?? layer.opacity).clamp(0.0, 1.0);
-    final percent = '${(value * 100).round()}%';
+    final f = EditorValueFormat.of(context);
+    final percent = f.percent((value * 100).round());
 
     final slider = SliderTheme(
       data: SliderTheme.of(context).copyWith(
@@ -204,7 +207,7 @@ class _LayerOpacityControlState extends ConsumerState<LayerOpacityControl> {
         value: value,
         min: 0,
         max: 1,
-        semanticFormatterCallback: (v) => '${(v * 100).round()}%',
+        semanticFormatterCallback: (v) => f.percent((v * 100).round()),
         onChanged: (v) {
           setState(() => _dragValue = v);
           final doc = ref.read(documentControllerProvider);

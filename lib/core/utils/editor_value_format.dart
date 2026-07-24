@@ -47,8 +47,14 @@ class EditorValueFormat {
   /// The number itself, locale-digit mapped. Accepts anything whose
   /// toString is digits/minus/dot (callers pre-round as they always
   /// did).
-  String digits(num value) {
-    final s = value.toString();
+  String digits(num value) => mapDigits(value.toString());
+
+  /// Locale-digit map over an ALREADY-formatted numeric string —
+  /// for values whose formatting carries meaning `toString` would
+  /// lose (`toStringAsFixed(2)`'s trailing zeros in the export
+  /// file-size line). Only digits and the decimal point are mapped;
+  /// everything else passes through untouched.
+  String mapDigits(String s) {
     if (!_fa) return s;
     final b = StringBuffer();
     for (final code in s.codeUnits) {

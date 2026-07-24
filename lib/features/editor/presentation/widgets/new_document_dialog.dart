@@ -7,6 +7,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// Result of [NewDocumentDialog]: the chosen logical canvas size and an
 /// optional image source to drop onto the canvas (used by the
@@ -294,7 +295,7 @@ class _NewDocumentDialogState extends State<NewDocumentDialog> {
                             ),
                           ),
                           Text(
-                            '${p.width.toInt()} \u00d7 ${p.height.toInt()} px',
+                            '${EditorValueFormat.of(context).dimensions(p.width.toInt(), p.height.toInt())} px',
                             style: theme.textTheme.bodySmall,
                           ),
                         ],

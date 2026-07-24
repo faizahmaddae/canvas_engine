@@ -16,6 +16,7 @@ import '../../ui/editor_slider_row.dart';
 import '../../ui/precision_disclosure.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
 import 'section_label.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 // Stroke width = clamp(effectiveDim × fraction, minPx, maxPx).
 // Fractions are tuned so 1080-square (the most common design
@@ -283,7 +284,8 @@ class _LayerBorderBodyState<L extends EditorLayer>
                     // "chunkier than the last preset" without ever
                     // being smaller than the legacy 20-px ceiling.
                     max: math.max(20.0, bold * 2),
-                    format: (v) => '${v.round()}',
+                    format: (v) =>
+                        EditorValueFormat.of(context).digits(v.round()),
                     onChanged: (w) => _previewSlider(
                       adapter.command(layerId: layer.id, width: w),
                     ),

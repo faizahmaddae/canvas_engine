@@ -14,6 +14,7 @@ import '../../engine/effects/editor_effect.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../application/image_tool_controller.dart';
 import 'image_panel_shell.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// Expanded panel body for the Image sub-tool's "Effects" tab.
 ///
@@ -449,12 +450,12 @@ EffectDisplay effectDisplay(BuildContext context, EditorEffect e) =>
       ContrastEffect(:final amount) => EffectDisplay(
         icon: Icons.contrast_rounded,
         name: context.l10n.contrastLabel,
-        summary: '${(amount * 100).round()}%',
+        summary: EditorValueFormat.of(context).percent((amount * 100).round()),
       ),
       SaturationEffect(:final amount) => EffectDisplay(
         icon: Icons.color_lens_outlined,
         name: context.l10n.saturationLabel,
-        summary: '${(amount * 100).round()}%',
+        summary: EditorValueFormat.of(context).percent((amount * 100).round()),
       ),
       ExposureEffect(:final amount) => EffectDisplay(
         icon: Icons.wb_sunny_outlined,
@@ -469,7 +470,9 @@ EffectDisplay effectDisplay(BuildContext context, EditorEffect e) =>
       VignetteEffect(:final intensity) => EffectDisplay(
         icon: Icons.vignette_outlined,
         name: context.l10n.vignetteLabel,
-        summary: '${(intensity * 100).round()}%',
+        summary: EditorValueFormat.of(
+          context,
+        ).percent((intensity * 100).round()),
       ),
       UnknownEffect() => EffectDisplay(
         // Forward-compat carrier for an effect type written by a

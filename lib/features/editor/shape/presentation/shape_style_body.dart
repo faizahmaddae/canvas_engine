@@ -13,6 +13,7 @@ import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/section_label.dart';
 import '../../ui/editor_slider_row.dart';
 import 'shape_panel_shell.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// Expanded panel body for the Shape sub-tool's "Style" tab.
 ///
@@ -132,7 +133,8 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
           EditorSliderRow(
             value: layer.fillOpacity,
             max: 1,
-            format: (v) => '${(v * 100).round()}%',
+            format: (v) =>
+                EditorValueFormat.of(context).percent((v * 100).round()),
             onChanged: (v) => _previewSlider(
               SetShapeFillCommand(layerId: layer.id, opacity: v),
             ),
@@ -154,7 +156,7 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
             EditorSliderRow(
               value: layer.cornerRadius.clamp(0.0, maxRadius),
               max: maxRadius == 0 ? 1 : maxRadius,
-              format: (v) => '${v.round()}',
+              format: (v) => EditorValueFormat.of(context).digits(v.round()),
               onChanged: (v) => _previewSlider(
                 SetShapeRadiusCommand(layerId: layer.id, radius: v),
               ),

@@ -14,6 +14,7 @@ import '../../ui/panel_direction_pad.dart';
 import '../../ui/precision_disclosure.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
 import 'section_label.dart';
+import '../../../../core/utils/editor_value_format.dart';
 
 /// Adapter closing the gap between [LayerShadowBody]'s shared UI and
 /// each layer type's own command/shell wiring.
@@ -213,7 +214,8 @@ class _LayerShadowBodyState<L extends EditorLayer>
                   label: context.l10n.blurLabel,
                   value: fields.blur,
                   max: 80,
-                  format: (v) => v.round().toString(),
+                  format: (v) =>
+                      EditorValueFormat.of(context).digits(v.round()),
                   onChanged: (v) => _previewSlider(
                     adapter.command(layerId: widget.layer.id, blur: v),
                   ),
@@ -223,7 +225,8 @@ class _LayerShadowBodyState<L extends EditorLayer>
                   label: context.l10n.opacityLabel,
                   value: fields.opacity,
                   max: 1,
-                  format: (v) => '${(v * 100).round()}%',
+                  format: (v) =>
+                      EditorValueFormat.of(context).percent((v * 100).round()),
                   onChanged: (v) => _previewSlider(
                     adapter.command(layerId: widget.layer.id, opacity: v),
                   ),
