@@ -243,6 +243,10 @@ into context **before** writing code:
   and one existing module (e.g. `modules/text/text_layer.dart`)
 * Command work → `lib/features/editor/engine/commands/editor_command.dart`,
   `commands/history_stack.dart`, and one existing concrete command
+* Any editing surface (panel, sheet, session, preview, undo
+  grouping) → `docs/editor-interaction-contract-2026-07.md` — the
+  binding contract for surface classes, preview channels, gesture
+  fencing, and exit semantics
 
 ---
 
