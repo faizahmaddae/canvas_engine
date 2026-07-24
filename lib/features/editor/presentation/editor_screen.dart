@@ -17,6 +17,7 @@ import '../application/document_controller.dart';
 import '../application/image_import_service.dart';
 import '../application/live_overlay_controller.dart';
 import '../application/editor_lifecycle.dart';
+import '../application/editor_mode_controller.dart';
 import '../application/editor_session.dart';
 import '../application/mask_edit_controller.dart';
 import '../application/project_save_service.dart';
@@ -328,7 +329,11 @@ class EditorScreen extends ConsumerWidget {
                         ),
                       )
                     : EditorToolbar(
-                        activeId: _activeToolId(ref),
+                        // The idle strip renders only when no mode
+                        // owns the dock, so no tile is ever active —
+                        // the old _activeToolId re-derivation was
+                        // provably dead on every branch.
+                        activeId: null,
                         items: _buildToolbarItems(context, ref),
                       ),
               );
@@ -447,12 +452,15 @@ class EditorScreen extends ConsumerWidget {
   /// slot (Canva-style: canvas reflows above the dock instead of
   /// being overlaid); paint keeps its small inline expansion row.
   _DockResolution _resolveDock(WidgetRef ref, SelectionState selection) {
-    final paintOpen = ref.watch(
-      paintToolControllerProvider.select((s) => s.panelOpen),
-    );
-    final textOpen = ref.watch(
-      textToolControllerProvider.select((s) => s.panelOpen),
-    );
+    // ONE mode source (tb1 7/17): the priority ladder that used to
+    // be hand-negated here — and re-derived in the dock child chain
+    // and _activeToolId — now lives in editorToolModeProvider. This
+    // method only resolves per-mode PAYLOADS: which layer object a
+    // strip or panel renders against (read from the merged view so
+    // in-flight overlay previews stay live inside panels), and which
+    // expanded body is open.
+    final mode = ref.watch(editorToolModeProvider);
+    final paintOpen = mode == EditorToolMode.paint;
     final paintOpenSlot = ref.watch(
       paintToolControllerProvider.select((s) => s.openSlot),
     );
@@ -463,46 +471,30 @@ class EditorScreen extends ConsumerWidget {
     final selectedLayersForActions = selection.hasSelection
         ? _selectedLayersForActions(ref, selection)
         : const <EditorLayer>[];
-    final multiSelected = selectedLayersForActions.length > 1;
-    final selectedTextLayer = _selectedTextLayer(ref);
-    final textSelected = selectedTextLayer != null && !multiSelected;
-    final selectedStickerLayer = _selectedStickerLayer(ref);
-    final stickerSelected =
-        selectedStickerLayer != null &&
-        !paintOpen &&
-        !textOpen &&
-        !textSelected &&
-        !multiSelected;
-    final selectedImageLayer = _selectedImageLayer(ref);
-    final imageSelected =
-        selectedImageLayer != null &&
-        !paintOpen &&
-        !textOpen &&
-        !textSelected &&
-        !stickerSelected &&
-        !multiSelected;
-    final selectedShapeLayer = _selectedShapeLayer(ref);
-    final shapeSelected =
-        selectedShapeLayer != null &&
-        !paintOpen &&
-        !textOpen &&
-        !textSelected &&
-        !stickerSelected &&
-        !imageSelected &&
-        !multiSelected;
-    final modeKey = paintOpen
-        ? 'paint'
-        : (textOpen || textSelected)
-        ? 'text'
-        : multiSelected
-        ? 'multi'
-        : stickerSelected
-        ? 'sticker'
-        : imageSelected
-        ? 'image'
-        : shapeSelected
-        ? 'shape'
-        : 'main';
+    final multiSelected = mode == EditorToolMode.multi;
+    final textSelected =
+        mode == EditorToolMode.text && _selectedTextLayer(ref) != null;
+    final selectedStickerLayer = mode == EditorToolMode.sticker
+        ? _selectedStickerLayer(ref)
+        : null;
+    final stickerSelected = selectedStickerLayer != null;
+    final selectedImageLayer = mode == EditorToolMode.image
+        ? _selectedImageLayer(ref)
+        : null;
+    final imageSelected = selectedImageLayer != null;
+    final selectedShapeLayer = mode == EditorToolMode.shape
+        ? _selectedShapeLayer(ref)
+        : null;
+    final shapeSelected = selectedShapeLayer != null;
+    final modeKey = switch (mode) {
+      EditorToolMode.paint => 'paint',
+      EditorToolMode.text => 'text',
+      EditorToolMode.multi => 'multi',
+      EditorToolMode.sticker => 'sticker',
+      EditorToolMode.image => 'image',
+      EditorToolMode.shape => 'shape',
+      EditorToolMode.idle => 'main',
+    };
 
     Widget? expanded;
     Object? expandedKey;
@@ -514,9 +506,7 @@ class EditorScreen extends ConsumerWidget {
       expandedKey =
           'context:${contextPanel.name}:'
           '${selectedLayersForActions.map((l) => l.id).join(',')}';
-    } else if ((textOpen || textSelected) &&
-        textSelected &&
-        textOpenSheet != null) {
+    } else if (textSelected && textOpenSheet != null) {
       expanded = const TextModeSheetPanel();
       expandedKey = 'text-sheet:$textOpenSheet';
     } else if (paintOpen && paintOpenSlot != null) {
@@ -608,7 +598,7 @@ class EditorScreen extends ConsumerWidget {
       expandedKey: expandedKey,
       modeKey: modeKey,
       paintOpen: paintOpen,
-      textMode: textOpen || textSelected,
+      textMode: mode == EditorToolMode.text,
       multiSelected: multiSelected,
       selectedLayersForActions: selectedLayersForActions,
       selectedStickerLayer: stickerSelected ? selectedStickerLayer : null,
@@ -962,30 +952,6 @@ class EditorScreen extends ConsumerWidget {
         .read(documentControllerProvider.notifier)
         .execute(AddLayerCommand(layer));
     ref.read(selectionControllerProvider.notifier).select(id);
-  }
-
-  String? _activeToolId(WidgetRef ref) {
-    final paintOpen = ref.watch(
-      paintToolControllerProvider.select((s) => s.panelOpen),
-    );
-    if (paintOpen) return 'paint';
-    final textOpen = ref.watch(
-      textToolControllerProvider.select((s) => s.panelOpen),
-    );
-    if (textOpen) return 'text';
-
-    final selection = ref.watch(selectionControllerProvider);
-    if (!selection.hasSelection) return null;
-    final layer = ref
-        .watch(renderedDocumentProvider)
-        .layerById(selection.selectedId!);
-    // Emoji-sticker text layers route to the Sticker tab so the
-    // Text mode pill doesn't light up for what the user perceives
-    // as a sticker. Normal text continues to map to the Text tab.
-    if (layer is TextLayer) return layer.isSticker ? 'sticker' : 'text';
-    if (layer is ShapeLayer) return 'shape';
-    if (layer is ImageLayer) return 'image';
-    return null;
   }
 
   Future<void> _openShapePicker(BuildContext context, WidgetRef ref) async {
