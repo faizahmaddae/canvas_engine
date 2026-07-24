@@ -5,6 +5,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
 import '../../application/selection_controller.dart';
+import '../../presentation/widgets/editor_breakpoints.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
 import '../application/paint_tool_controller.dart';
@@ -186,7 +187,7 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
     ];
 
     return SizedBox(
-      height: _stripHeight(context),
+      height: EditorBreakpoints.stripHeight(context),
       child: SlotStrip(
         slots: slots,
         // SlotStrip auto-scrolls the active tile into view on
@@ -201,21 +202,17 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         centerWhenFits: true,
         // Handedness affects alignment only — never tile order.
-        fitAlignment:
-            ref.watch(appSettingsProvider.select((s) => s.rightHandedToolbar))
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.center,
+        // Resolved PHYSICALLY (right thumb = physical right, in
+        // both text directions) by the shared helper.
+        fitAlignment: SlotStrip.handedFitAlignment(
+          context,
+          rightHanded: ref.watch(
+            appSettingsProvider.select((s) => s.rightHandedToolbar),
+          ),
+        ),
       ),
     );
   }
-
-  // ── Layout helpers ──────────────────────────────────────────────
-  bool _isCompact(BuildContext ctx) {
-    final m = MediaQuery.of(ctx);
-    return m.size.shortestSide < 380 || m.orientation == Orientation.landscape;
-  }
-
-  double _stripHeight(BuildContext ctx) => _isCompact(ctx) ? 64 : 80;
 }
 
 // ─────────────────────────────────────────────────────────────────

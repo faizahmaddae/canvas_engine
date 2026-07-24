@@ -80,10 +80,11 @@ class DockSheetChrome extends StatefulWidget {
   final VoidCallback? onUndo;
 
   /// Optional horizontal-swipe handlers. When non-null, swiping
-  /// LEFT on the sheet header / body routes to [onNext] and
-  /// swiping RIGHT routes to [onPrev]. Lets the user move between
-  /// sibling tools (e.g. Font → Color → Size) without collapsing
-  /// the sheet first.
+  /// against the reading direction on the sheet header / body
+  /// routes to [onNext] (physical LEFT under LTR, physical RIGHT
+  /// under RTL) and the opposite swipe routes to [onPrev]. Lets
+  /// the user move between sibling tools (e.g. Font → Color →
+  /// Size) without collapsing the sheet first.
   final VoidCallback? onPrev;
   final VoidCallback? onNext;
 
@@ -148,14 +149,21 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
     final fling = v.abs() > 520;
     final travelled = _hDragAccum.abs() > 56;
     if (fling || travelled) {
-      if (_hDragAccum < 0 || v < 0) {
-        // swiped left → next
+      // "Next" follows the reading direction: under LTR the user
+      // swipes the sheet LEFT (negative delta) to advance, under
+      // RTL they swipe RIGHT — the physical mirror (tb1 17/17;
+      // LTR pinned by dock_sheet_gestures_test, RTL by
+      // rtl_strip_pins_test).
+      final isRtl = Directionality.of(context) == TextDirection.rtl;
+      final towardNext = isRtl
+          ? (_hDragAccum > 0 || v > 0)
+          : (_hDragAccum < 0 || v < 0);
+      if (towardNext) {
         if (widget.onNext != null) {
           EditorHaptics.tap();
           widget.onNext!();
         }
       } else {
-        // swiped right → prev
         if (widget.onPrev != null) {
           EditorHaptics.tap();
           widget.onPrev!();
@@ -343,11 +351,7 @@ class _UndoChip extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.undo_rounded,
-                  size: 14,
-                  color: tokens.textSecondary,
-                ),
+                Icon(Icons.undo_rounded, size: 14, color: tokens.textSecondary),
                 const SizedBox(width: 4),
                 Text(
                   context.l10n.undoTooltip,

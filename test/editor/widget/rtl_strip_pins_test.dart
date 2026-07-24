@@ -1,19 +1,14 @@
 // RTL pins for the dock strips (toolbar redesign roadmap tb1, Stage 1
-// item 1.2). The skipped group below pins the INTENDED post-fix RTL
-// behaviour — stable tile order with direction-aware placement,
-// physical right-handed alignment, fade on the clipped side, mirrored
-// sibling swipe, trailing-edge Done pill — ahead of the fixes that
-// land in tb1 17/17 (EditorDockMetrics + RTL strip fixes), which
-// unskips them. Several of these deliberately FAIL against today's
-// code (that is the point): right-handed uses logical
-// MainAxisAlignment.end (physical LEFT under RTL), the strip fades
-// are physical Positioned left/right driven by scroll pixels (wrong
-// side under RTL), sheet swipe maps physical-left→next in both
-// directions, and the Done pill is hard Positioned right:8. The final
-// non-skipped test pins that the LTR behaviour of the same surfaces
-// must survive the RTL fix unchanged. NOTE: testWidgets only accepts
-// a boolean `skip`, so the required reason string lives on the
-// wrapping group().
+// item 1.2; unskipped by 17/17). Pins the RTL contract the 17/17
+// fixes shipped — stable tile order with direction-aware placement,
+// PHYSICAL right-handed alignment (SlotStrip.handedFitAlignment),
+// fade on the clipped side (DockToolStrip resolves scroll-space
+// flags through Directionality), reading-order sibling swipe
+// (DockSheetChrome._onHDragEnd), and the trailing-edge Done pill
+// (PositionedDirectional). These were authored AHEAD of the fixes as
+// a skipped group (tb1 2/17) so the fix commit could not silently
+// land a different behaviour. The final test pins that the LTR
+// behaviour of the same surfaces survived the RTL fix unchanged.
 
 import 'dart:math' as math;
 
@@ -332,14 +327,13 @@ void main() {
           lessThan(440 / 2),
           reason:
               'the Done pill is trailing-edge chrome: physical LEFT '
-              'half of the screen under RTL (today it is hard '
-              'Positioned right:8 — the pre-fix bug)',
+              'half of the screen under RTL (the pre-17/17 bug was a '
+              'hard Positioned right:8)',
         );
       });
     },
-    skip:
-        'Pins intended RTL behavior — unskipped by tb1 17/17 '
-        '(RTL strip fixes)',
+    // Unskipped in tb1 17/17 — these pins are now the shipped
+    // behavior.
   );
 
   // LTR guard: the RTL fixes in 1.17 must not disturb the LTR layout.

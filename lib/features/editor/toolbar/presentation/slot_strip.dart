@@ -4,6 +4,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../presentation/widgets/dock_tool_strip.dart';
 import '../../presentation/widgets/dock_tool_tile.dart';
+import '../../presentation/widgets/editor_breakpoints.dart';
 import '../domain/toolbar_slot.dart';
 
 /// Renders a list of [ToolbarSlot]s as a horizontally scrollable
@@ -62,6 +63,24 @@ class SlotStrip extends StatefulWidget {
 
   final EdgeInsets padding;
 
+  /// Resolves the right-handed dock preference to a **physical**
+  /// [fitAlignment]. "Right-handed" means the user's right thumb —
+  /// a physical fact — while `MainAxisAlignment.end` resolves
+  /// logically inside the row, which under RTL put the tools on the
+  /// physical LEFT (the pre-17/17 bug pinned by
+  /// rtl_strip_pins_test). Under RTL the physical right edge is the
+  /// row's logical *start*. Single resolution point for every strip
+  /// that honors the setting; tool ORDER is never touched.
+  static MainAxisAlignment handedFitAlignment(
+    BuildContext context, {
+    required bool rightHanded,
+  }) {
+    if (!rightHanded) return MainAxisAlignment.center;
+    return Directionality.of(context) == TextDirection.rtl
+        ? MainAxisAlignment.start
+        : MainAxisAlignment.end;
+  }
+
   @override
   State<SlotStrip> createState() => _SlotStripState();
 }
@@ -91,10 +110,7 @@ class _SlotStripState extends State<SlotStrip> {
     if (index < 0 || !_controller.hasClients) return;
     final position = _controller.position;
     if (position.maxScrollExtent <= 0) return;
-    final media = MediaQuery.of(context);
-    final compact =
-        media.size.shortestSide < 380 ||
-        media.orientation == Orientation.landscape;
+    final compact = EditorBreakpoints.isCompact(context);
     // Tile card + its 1px-per-side internal chrome + this strip's
     // per-tile gap. Using the real footprint keeps the centering
     // math honest for every tileGap (the old hardcoded `+ 2`
@@ -132,10 +148,7 @@ class _SlotStripState extends State<SlotStrip> {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final compact =
-        media.size.shortestSide < 380 ||
-        media.orientation == Orientation.landscape;
+    final compact = EditorBreakpoints.isCompact(context);
 
     final children = <Widget>[];
     SlotTier? prevTier;

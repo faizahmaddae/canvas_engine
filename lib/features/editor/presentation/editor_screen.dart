@@ -274,17 +274,19 @@ class EditorScreen extends ConsumerWidget {
               // elevation (rounded top + upward shadow + hairline)
               // is what separates it from the canvas.
               const EditorCanvas(),
-              // Always-visible exit pill anchored top-right of the
-              // canvas. Shows whenever a tool mode (paint / text) is
-              // active so the user has a permanent, discoverable way
-              // out — replaces reliance on the invisible
-              // canvas-tap-to-deselect gesture for new users while
-              // keeping that gesture as the pro shortcut. Hidden in
-              // Crop Mode.
+              // Always-visible exit pill anchored at the top TRAILING
+              // edge of the canvas (physical left under RTL — the
+              // hard `right: 8` was an LTR-ism; tb1 17/17, pinned by
+              // rtl_strip_pins_test). Shows whenever a tool mode
+              // (paint / text) is active so the user has a permanent,
+              // discoverable way out — replaces reliance on the
+              // invisible canvas-tap-to-deselect gesture for new
+              // users while keeping that gesture as the pro shortcut.
+              // Hidden in Crop Mode.
               if (!cropActive && !maskEditActive)
-                const Positioned(
+                const PositionedDirectional(
                   top: 8,
-                  right: 8,
+                  end: 8,
                   child: SafeArea(child: _ModeExitPill()),
                 ),
               // Centralised Crop Mode overlay — full-screen, owns the

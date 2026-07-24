@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_tokens.dart';
+import 'editor_breakpoints.dart';
 
 /// Bottom dock that swaps between **modes** (main / paint / text …)
 /// without ever stacking surfaces on top of the canvas.
@@ -63,11 +64,7 @@ class EditorToolDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    final media = MediaQuery.of(context);
-    final compact =
-        media.size.shortestSide < 380 ||
-        media.orientation == Orientation.landscape;
-    final stripHeight = height ?? (compact ? 64.0 : 80.0);
+    final stripHeight = height ?? EditorBreakpoints.stripHeight(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Elevated chrome: the dock sits on tokens.surface (a step
     // lighter than the tokens.workspace behind the canvas), with

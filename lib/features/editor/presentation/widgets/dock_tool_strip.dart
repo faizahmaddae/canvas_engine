@@ -47,8 +47,14 @@ class DockToolStrip extends StatefulWidget {
 }
 
 class _DockToolStripState extends State<DockToolStrip> {
-  bool _showLeft = false;
-  bool _showRight = false;
+  // Scroll-space flags: "back" = toward minScrollExtent (the content
+  // START), "ahead" = toward maxScrollExtent (more content). Which
+  // PHYSICAL edge each one fades is resolved in build() from the
+  // ambient Directionality — under RTL the content starts at the
+  // physical right, so the clipped "ahead" side is the physical
+  // LEFT (tb1 17/17; pinned by rtl_strip_pins_test).
+  bool _canScrollBack = false;
+  bool _canScrollAhead = false;
 
   @override
   void initState() {
@@ -79,12 +85,12 @@ class _DockToolStripState extends State<DockToolStrip> {
     final pos = widget.controller.position;
     // 1-px tolerance so floating-point rounding never flickers the
     // fade on/off at the extreme ends.
-    final left = pos.pixels > pos.minScrollExtent + 1;
-    final right = pos.pixels < pos.maxScrollExtent - 1;
-    if (left != _showLeft || right != _showRight) {
+    final back = pos.pixels > pos.minScrollExtent + 1;
+    final ahead = pos.pixels < pos.maxScrollExtent - 1;
+    if (back != _canScrollBack || ahead != _canScrollAhead) {
       setState(() {
-        _showLeft = left;
-        _showRight = right;
+        _canScrollBack = back;
+        _canScrollAhead = ahead;
       });
     }
   }
@@ -95,6 +101,14 @@ class _DockToolStripState extends State<DockToolStrip> {
     // chrome colour), not the workspace tone, or the fade reads as a
     // dirty smudge on the lighter bar.
     final fade = AppTokens.of(context).surface;
+    // Map scroll-space flags → physical edges. The list view lays
+    // out from the directional start, so under RTL "back toward the
+    // content start" clips at the physical RIGHT and "more ahead"
+    // clips at the physical LEFT — exactly mirrored from LTR. The
+    // fade must sit on the clipped side it telegraphs.
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final showLeftFade = isRtl ? _canScrollAhead : _canScrollBack;
+    final showRightFade = isRtl ? _canScrollBack : _canScrollAhead;
     return SizedBox(
       height: widget.height,
       child: NotificationListener<ScrollMetricsNotification>(
@@ -141,7 +155,7 @@ class _DockToolStripState extends State<DockToolStrip> {
                 physics: const BouncingScrollPhysics(),
                 children: widget.children,
               ),
-            if (_showLeft)
+            if (showLeftFade)
               Positioned(
                 left: 0,
                 top: 0,
@@ -159,7 +173,7 @@ class _DockToolStripState extends State<DockToolStrip> {
                   ),
                 ),
               ),
-            if (_showRight)
+            if (showRightFade)
               Positioned(
                 right: 0,
                 top: 0,

@@ -22,6 +22,7 @@ import '../../application/selection_controller.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 import '../../toolbar/domain/sub_tools/widget_sub_tool.dart';
+import '../../presentation/widgets/editor_breakpoints.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
 import '../../toolbar/presentation/sub_tool_sheet.dart';
@@ -192,7 +193,7 @@ class TextModeToolbar extends ConsumerWidget {
     ];
 
     return SizedBox(
-      height: _stripHeight(context),
+      height: EditorBreakpoints.stripHeight(context),
       child: SlotStrip(
         slots: slots,
         // SlotStrip auto-scrolls the active tile into view on
@@ -207,20 +208,15 @@ class TextModeToolbar extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         centerWhenFits: true,
         // Handedness affects alignment only — never tile order.
-        fitAlignment: rightHanded
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.center,
+        // Resolved PHYSICALLY (right thumb = physical right, in
+        // both text directions) by the shared helper.
+        fitAlignment: SlotStrip.handedFitAlignment(
+          context,
+          rightHanded: rightHanded,
+        ),
       ),
     );
   }
-
-  // ── Layout helpers ──────────────────────────────────────────────
-  static bool _isCompact(BuildContext ctx) {
-    final m = MediaQuery.of(ctx);
-    return m.size.shortestSide < 380 || m.orientation == Orientation.landscape;
-  }
-
-  static double _stripHeight(BuildContext ctx) => _isCompact(ctx) ? 64 : 80;
 }
 
 /// In-dock sheet panel: routes the active sheet id → its body and

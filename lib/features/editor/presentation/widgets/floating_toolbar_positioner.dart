@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart' show EdgeInsets, Orientation;
 import '../../engine/core/layer_transform.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/interaction/layer_space_mapper.dart';
+import 'editor_breakpoints.dart';
 
 /// Where the floating toolbar landed relative to the selected layer.
 enum FloatingToolbarPlacement {
@@ -204,8 +205,9 @@ class FloatingToolbarPositioner {
     required Size screen,
     required Orientation orientation,
   }) {
-    final compact =
-        screen.shortestSide < 380 || orientation == Orientation.landscape;
-    return compact ? 64.0 : 80.0;
+    return EditorBreakpoints.stripHeightFor(
+      size: screen,
+      orientation: orientation,
+    );
   }
 }

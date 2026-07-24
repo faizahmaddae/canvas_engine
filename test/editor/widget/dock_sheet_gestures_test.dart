@@ -5,11 +5,14 @@
 // > 36dp of accumulated downward travel OR a > 380px/s fling on the
 // drag-handle zone; tapping the handle dismisses; a horizontal drag
 // whose travel exceeds 56dp (or a > 520px/s fling) anywhere on the
-// sheet chrome navigates to the sibling sheet in text-strip order
-// (physical drag LEFT → next, drag RIGHT → prev — deliberately pinned
-// as physical, not RTL-logical); sub-threshold drags do nothing. The
-// later toolbar refactors (1.3-1.17) must keep every one of these
-// observable behaviours byte-identical.
+// sheet chrome navigates to the sibling sheet in text-strip order;
+// sub-threshold drags do nothing. Sibling-swipe direction became
+// direction-aware in tb1 17/17 (the one sanctioned behaviour change
+// of Stage 1): this file pins the UNCHANGED LTR mapping (physical
+// drag LEFT → next) under an explicit `en` locale, while the RTL
+// mirror is pinned by rtl_strip_pins_test.dart. The vertical dismiss
+// and handle-tap pins are direction-agnostic and stay on the fa
+// default.
 
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
@@ -32,8 +35,9 @@ void main() {
   /// sheet open — same harness as editor_panel_height_cap_test.
   Future<ProviderContainer> pumpWithSheet(
     WidgetTester tester,
-    String sheetId,
-  ) async {
+    String sheetId, {
+    Locale locale = const Locale('fa'),
+  }) async {
     tester.view.physicalSize = const Size(440, 956);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -64,7 +68,7 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
-          locale: const Locale('fa'),
+          locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const EditorScreen(),
@@ -151,17 +155,20 @@ void main() {
     expect(find.byType(DockSheetChrome), findsNothing);
   });
 
-  group('horizontal sibling swipe on the sheet chrome', () {
+  group('horizontal sibling swipe on the sheet chrome (LTR)', () {
     // Text strip sibling order (ids with sheet bodies):
     // font → size → color → styles → layout, wrapping. From 'size'
-    // the physical mapping is: drag LEFT → next ('color'), drag
-    // RIGHT → prev ('font'). Pinned as PHYSICAL direction — the
-    // mapping does not flip under the fa/RTL locale this harness
-    // runs in.
+    // the LTR mapping is: drag LEFT → next ('color'), drag RIGHT →
+    // prev ('font'). Since tb1 17/17 the mapping is direction-aware
+    // (reading-order), so this group runs under an explicit `en`
+    // locale to pin the LTR half; the RTL mirror is pinned by
+    // rtl_strip_pins_test.dart.
+    const ltr = Locale('en');
+
     testWidgets('drag left beyond 56dp travel navigates to the next sheet', (
       tester,
     ) async {
-      final container = await pumpWithSheet(tester, 'size');
+      final container = await pumpWithSheet(tester, 'size', locale: ltr);
 
       // 140dp left over 400ms: ~350px/s < 520px/s fling bar, so only
       // the travel branch (post-slop ~122dp > 56dp) can fire.
@@ -179,7 +186,7 @@ void main() {
     testWidgets('drag right beyond 56dp travel navigates to the prev sheet', (
       tester,
     ) async {
-      final container = await pumpWithSheet(tester, 'size');
+      final container = await pumpWithSheet(tester, 'size', locale: ltr);
 
       await tester.timedDragFrom(
         handleCenter(tester),
@@ -193,7 +200,7 @@ void main() {
     });
 
     testWidgets('drag below 56dp travel does NOT navigate', (tester) async {
-      final container = await pumpWithSheet(tester, 'size');
+      final container = await pumpWithSheet(tester, 'size', locale: ltr);
 
       // 60dp over 600ms: post-slop travel ~42dp < 56dp AND ~100px/s
       // < 520px/s — the sheet must stay put.
