@@ -7,6 +7,7 @@ import '../../../l10n/l10n.dart';
 import '../engine/modules/shape/shape_catalogue.dart';
 import '../engine/modules/shape/shape_layer.dart';
 import '../engine/modules/shape/shape_paths.dart';
+import 'widgets/editor_modal_sheet.dart';
 
 /// Bottom sheet for picking a [ShapeKind] — shared by the editor's
 /// "Add shape" and "Replace shape" flows (Phase 4 plan §5.2, split
@@ -23,94 +24,85 @@ Future<ShapeKind?> pickShapeKind(
   ShapeKind? currentKind,
 }) {
   final l10n = context.l10n;
-  return showModalBottomSheet<ShapeKind>(
-    context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
+  // FULL barrier (contract §9: pickers). Card + handle + the 0.75
+  // height cap come from the shared modal host (tb2 8/16).
+  return showEditorSheet<ShapeKind>(
+    context,
+    maxHeightFraction: 0.75,
     builder: (ctx) {
       final tokens = AppTokens.of(ctx);
-      final mq = MediaQuery.of(ctx);
-      return ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: mq.size.height * 0.75),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 4),
-                  child: Text(
-                    title ?? l10n.addShapeTitle,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.textPrimary,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
+      return SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 4),
+              child: Text(
+                title ?? l10n.addShapeTitle,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: tokens.textPrimary,
+                  letterSpacing: -0.3,
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 12),
-                  child: Text(
-                    subtitle ?? l10n.addShapeSubtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: tokens.textSecondary,
-                    ),
-                  ),
-                ),
-                // One section per [ShapeKindCatalogueSection] with
-                // a discreet uppercase header — keeps the grid
-                // scannable now that the catalogue spans bubbles,
-                // symbols and four arrow directions on top of the
-                // basic primitives.
-                for (var s = 0; s < kShapeCatalogueSections.length; s++) ...[
-                  if (s > 0) const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4, bottom: 8),
-                    child: Text(
-                      _shapeSectionLabel(l10n, s).toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.textSecondary,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                  ),
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.95,
-                    children: [
-                      for (final entry in _pickerEntriesForSection(
-                        l10n,
-                        tokens,
-                        s,
-                      ))
-                        _ShapePickerTile(
-                          kind: entry.kind,
-                          label: entry.label,
-                          gradient: entry.gradient,
-                          selected: currentKind == entry.kind,
-                          onTap: () {
-                            EditorHaptics.tap();
-                            Navigator.pop(ctx, entry.kind);
-                          },
-                        ),
-                    ],
-                  ),
-                ],
-              ],
+              ),
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 12),
+              child: Text(
+                subtitle ?? l10n.addShapeSubtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: tokens.textSecondary,
+                ),
+              ),
+            ),
+            // One section per [ShapeKindCatalogueSection] with
+            // a discreet uppercase header — keeps the grid
+            // scannable now that the catalogue spans bubbles,
+            // symbols and four arrow directions on top of the
+            // basic primitives.
+            for (var s = 0; s < kShapeCatalogueSections.length; s++) ...[
+              if (s > 0) const SizedBox(height: 18),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 8),
+                child: Text(
+                  _shapeSectionLabel(l10n, s).toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.textSecondary,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 3,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.95,
+                children: [
+                  for (final entry in _pickerEntriesForSection(l10n, tokens, s))
+                    _ShapePickerTile(
+                      kind: entry.kind,
+                      label: entry.label,
+                      gradient: entry.gradient,
+                      selected: currentKind == entry.kind,
+                      onTap: () {
+                        EditorHaptics.tap();
+                        Navigator.pop(ctx, entry.kind);
+                      },
+                    ),
+                ],
+              ),
+            ],
+          ],
         ),
       );
     },

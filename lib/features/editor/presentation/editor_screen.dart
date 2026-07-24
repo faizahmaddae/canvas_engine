@@ -69,6 +69,7 @@ import '../text/presentation/text_input_flow_sheet.dart';
 import '../text/presentation/text_mode_toolbar.dart';
 import '../toolbar/presentation/mode_done_button.dart';
 import 'widgets/editor_canvas.dart';
+import 'widgets/editor_modal_sheet.dart';
 import 'widgets/editor_tool_dock.dart';
 import '../toolbar/domain/toolbar_slot.dart';
 import 'widgets/context_tool_panel.dart';
@@ -1093,9 +1094,10 @@ class EditorScreen extends ConsumerWidget {
     required List<ImageLayer> candidates,
     required String actionVerb,
   }) {
-    return showModalBottomSheet<ImageLayer>(
-      context: context,
-      showDragHandle: true,
+    // FULL barrier (contract §9: pickers). Card + handle come from
+    // the shared modal host (tb2 8/16).
+    return showEditorSheet<ImageLayer>(
+      context,
       builder: (ctx) {
         final theme = Theme.of(ctx);
         return SafeArea(

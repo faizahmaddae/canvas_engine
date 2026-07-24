@@ -25,6 +25,11 @@ const _uuid = Uuid();
 /// Returns `null` on dismiss/back so the caller can bail cleanly.
 Future<picker.ImageSource?> pickImageSource(BuildContext context) {
   final l10n = context.l10n;
+  // NOT on the shared modal host (tb2 8/16 deferred): this file is
+  // APPLICATION layer and the import-direction gate rightly forbids
+  // importing the presentation-layer host. The real fix is moving
+  // this UI helper to presentation/ — a relocation, not a chrome
+  // swap; until then it keeps the stock sheet.
   return showModalBottomSheet<picker.ImageSource>(
     context: context,
     showDragHandle: true,

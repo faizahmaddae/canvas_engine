@@ -9,6 +9,7 @@ import '../../../core/utils/haptics.dart';
 import '../../../l10n/l10n.dart';
 import '../../editor/application/canvas_capture.dart';
 import '../../editor/application/recent_colors_controller.dart';
+import '../../editor/presentation/widgets/editor_modal_sheet.dart';
 import 'eyedropper_overlay.dart';
 
 /// Curated preset palette — neutrals first, then warm → cool
@@ -1392,13 +1393,13 @@ Future<Color?> showColorPickerSheet(
   bool startAtCustom = false,
 }) async {
   Color? last;
-  await showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.transparent,
-    // Live colour — never dim the canvas behind the picker.
-    barrierColor: Colors.transparent,
+  // Barrier NONE (contract §9): live colour — never dim the canvas
+  // behind the picker. Card + handle come from the shared modal
+  // host; keyboard-aware so the hex field stays above the IME.
+  await showEditorSheet<void>(
+    context,
+    barrier: EditorSheetBarrier.none,
+    keyboardAware: true,
     builder: (ctx) => _ColorPickerSheet(
       initial: initial,
       title: title ?? ctx.l10n.colorLabel,
@@ -1432,70 +1433,24 @@ class _ColorPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = AppTokens.of(context);
+    // Chrome (floating card, handle, keyboard inset, safe area) comes
+    // from the shared modal host (tb2 8/16); this body keeps only the
+    // picker padding + the height-adaptive Flexible.
+    //
+    // Flexible bounds the body to the sheet's available height
+    // (full-screen minus the keyboard inset), so the custom level's
+    // adaptive SV field can shrink instead of overflowing when the
+    // keyboard is up on a short phone. Loose fit → on a normal sheet
+    // the body still takes its natural, content-sized height.
     return Padding(
-      // Keep the hex field above the keyboard while editing.
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: tokens.surface,
-            // The sheet floats over an undimmed canvas — the same
-            // inverted top shadow the dock panels use is its only
-            // elevation cue.
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 18,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    margin: const EdgeInsets.only(top: 8, bottom: 2),
-                    decoration: BoxDecoration(
-                      color: tokens.textPrimary.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                // Flexible bounds the body to the sheet's available
-                // height (full-screen minus the keyboard inset), so the
-                // custom level's adaptive SV field can shrink instead of
-                // overflowing when the keyboard is up on a short phone.
-                // Loose fit → on a normal sheet the body still takes its
-                // natural, content-sized height.
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                      20,
-                      4,
-                      20,
-                      14,
-                    ),
-                    child: ColorPickerBody(
-                      initial: initial,
-                      title: title,
-                      startAtCustom: startAtCustom,
-                      onChanged: onChanged,
-                      onCommitted: onCommitted,
-                      onClose: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 14),
+      child: ColorPickerBody(
+        initial: initial,
+        title: title,
+        startAtCustom: startAtCustom,
+        onChanged: onChanged,
+        onCommitted: onCommitted,
+        onClose: () => Navigator.of(context).pop(),
       ),
     );
   }

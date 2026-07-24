@@ -11,6 +11,7 @@ import '../../paint/application/paint_tool_controller.dart';
 import '../../shape/application/shape_tool_controller.dart';
 import '../../text/application/text_tool_controller.dart';
 import '../../text/presentation/text_direction_mode_picker.dart';
+import 'editor_modal_sheet.dart';
 import '../../text/presentation/text_edit_flow.dart';
 import '../../text/presentation/text_resize_mode_picker.dart';
 import 'controls/toggle_segment.dart';
@@ -36,8 +37,8 @@ import 'layer_actions.dart';
 /// batch Duplicate / Lock / Delete (each ONE CompositeCommand → one
 /// undo entry) + Layers.
 ///
-/// Interaction-contract class M, full barrier — hosted by the plain
-/// `showModalBottomSheet` grammar until the 2.8 modal host lands.
+/// Interaction-contract class M, full barrier — hosted by the
+/// shared editor modal host ([showEditorSheet], tb2 8/16).
 /// Delete runs the ONE canonical sequence for every entry point:
 /// confirm (protected/base cases) BEFORE the sheet pops, then
 /// dismiss, then execute.
@@ -51,10 +52,13 @@ Future<void> showLayerOverflowSheet(
   final layers = (selectedLayers == null || selectedLayers.length <= 1)
       ? <EditorLayer>[layer]
       : selectedLayers;
-  return showModalBottomSheet<void>(
-    context: context,
-    showDragHandle: true,
-    useSafeArea: true,
+  // FULL barrier (contract §9: overflow sheets). Card + handle come
+  // from the shared modal host (tb2 8/16); the 9/16 height clamp the
+  // old non-isScrollControlled route provided is preserved
+  // explicitly so short devices keep every row reachable by scroll.
+  return showEditorSheet<void>(
+    context,
+    maxHeightFraction: 9 / 16,
     builder: (ctx) => _LayerOverflowSheet(
       hostContext: context,
       layer: layer,

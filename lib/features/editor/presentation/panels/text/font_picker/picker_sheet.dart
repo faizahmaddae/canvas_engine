@@ -18,6 +18,7 @@ import '../../../../../../app/theme/app_tokens.dart';
 import '../../../../../../core/utils/haptics.dart';
 import '../../../../../../l10n/l10n.dart';
 import '../../../../text/domain/font_catalog.dart';
+import '../../../widgets/editor_modal_sheet.dart';
 import 'tabs.dart';
 
 /// Debounce for the highlight→canvas preview. Each highlight costs
@@ -63,48 +64,25 @@ Future<FontPickResult> showFontPickerSheet(
   ValueChanged<String?>? onHighlight,
   String? specimenText,
 }) async {
-  final result = await showModalBottomSheet<FontPickResult>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.transparent,
-    // Whisper barrier (contract §9, 6%) ON PURPOSE: highlighting a
-    // family previews it live on the canvas behind the sheet, so
-    // the canvas must stay visible. The sheet's own elevation
-    // separates it.
-    barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.06),
-    builder: (sheetCtx) {
-      final tokens = AppTokens.of(sheetCtx);
-      final media = MediaQuery.of(sheetCtx);
-      final maxHeight = media.size.height * 0.7;
-      return Align(
-        alignment: Alignment.bottomCenter,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: 520, maxHeight: maxHeight),
-          child: Container(
-            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            decoration: BoxDecoration(
-              color: tokens.surface,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-            child: _FontPickerSheet(
-              current: current,
-              initialScript: initialScript,
-              onHighlight: onHighlight,
-              specimenText: specimenText,
-            ),
-          ),
-        ),
-      );
-    },
+  // Whisper barrier (contract §9, 6%) ON PURPOSE: highlighting a
+  // family previews it live on the canvas behind the sheet, so the
+  // canvas must stay visible. Card + handle come from the shared
+  // modal host (tb2 8/16) — the preview semantics (tb2 12/16) are
+  // untouched.
+  final result = await showEditorSheet<FontPickResult>(
+    context,
+    barrier: EditorSheetBarrier.whisper,
+    maxHeightFraction: 0.7,
+    maxWidth: 520,
+    builder: (sheetCtx) => Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: _FontPickerSheet(
+        current: current,
+        initialScript: initialScript,
+        onHighlight: onHighlight,
+        specimenText: specimenText,
+      ),
+    ),
   );
   return result ?? FontPickResult.unchanged;
 }
@@ -199,17 +177,7 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: tokens.border.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
+        // Handle comes from the shared modal host (tb2 8/16).
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Row(

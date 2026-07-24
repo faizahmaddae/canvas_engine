@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/l10n.dart';
+import 'widgets/editor_modal_sheet.dart';
 
 /// Bottom-sheet emoji picker used by the Sticker tool.
 ///
@@ -16,15 +17,11 @@ import '../../../l10n/l10n.dart';
 /// Caller is still responsible for inserting the layer (the
 /// presentation layer never touches the editor model).
 Future<String?> showStickerPickerSheet(BuildContext context) {
-  return showModalBottomSheet<String>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    backgroundColor: AppTokens.of(context).surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (ctx) => const SafeArea(child: _StickerPickerSheet()),
+  // FULL barrier (contract §9: pickers). Card + handle come from
+  // the shared modal host (tb2 8/16).
+  return showEditorSheet<String>(
+    context,
+    builder: (ctx) => const _StickerPickerSheet(),
   );
 }
 

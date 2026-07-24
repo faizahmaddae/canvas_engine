@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart' as picker;
 
 import '../../../../core/utils/haptics.dart';
+import '../../presentation/widgets/editor_modal_sheet.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
@@ -79,45 +80,44 @@ Future<picker.ImageSource?> _pickImageSource(
 ) {
   final l10n = context.l10n;
   final title = imageReplacementActionLabel(context, layer);
-  return showModalBottomSheet<picker.ImageSource>(
-    context: context,
-    showDragHandle: true,
+  // FULL barrier (contract §9: list sheets). Card + handle come
+  // from the shared modal host (tb2 8/16).
+  return showEditorSheet<picker.ImageSource>(
+    context,
     builder: (ctx) {
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(
-                imageSourceIsKnownUnavailable(layer.source)
-                    ? Icons.link_rounded
-                    : Icons.swap_horiz_rounded,
-              ),
-              title: Text(title),
-              subtitle: imageSourceIsKnownUnavailable(layer.source)
-                  ? Text(l10n.imageUnavailableLabel)
-                  : null,
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: Icon(
+              imageSourceIsKnownUnavailable(layer.source)
+                  ? Icons.link_rounded
+                  : Icons.swap_horiz_rounded,
             ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(l10n.galleryAction),
-              onTap: () {
-                EditorHaptics.tap();
-                Navigator.pop(ctx, picker.ImageSource.gallery);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
-              title: Text(l10n.cameraAction),
-              onTap: () {
-                EditorHaptics.tap();
-                Navigator.pop(ctx, picker.ImageSource.camera);
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
+            title: Text(title),
+            subtitle: imageSourceIsKnownUnavailable(layer.source)
+                ? Text(l10n.imageUnavailableLabel)
+                : null,
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: Text(l10n.galleryAction),
+            onTap: () {
+              EditorHaptics.tap();
+              Navigator.pop(ctx, picker.ImageSource.gallery);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_camera_outlined),
+            title: Text(l10n.cameraAction),
+            onTap: () {
+              EditorHaptics.tap();
+              Navigator.pop(ctx, picker.ImageSource.camera);
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
       );
     },
   );

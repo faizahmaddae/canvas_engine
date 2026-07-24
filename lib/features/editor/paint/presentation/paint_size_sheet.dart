@@ -5,6 +5,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/modules/paint/paint_layer.dart';
+import '../../presentation/widgets/editor_modal_sheet.dart';
 import '../application/paint_tool_controller.dart';
 import 'paint_size_body.dart';
 
@@ -19,11 +20,13 @@ import 'paint_size_body.dart';
 /// otherwise they update the session defaults used for the next
 /// drawn stroke (session-only — no document writes).
 Future<void> showPaintSizeSheet(BuildContext context, WidgetRef ref) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.transparent,
+  // Barrier NONE (contract §9): this sheet advertises live preview —
+  // the stroke width lands on the canvas while dragging — so the old
+  // default scrim contradicted its whole point (audit:
+  // dimmed-live-preview). The shared host supplies card + handle.
+  return showEditorSheet<void>(
+    context,
+    barrier: EditorSheetBarrier.none,
     builder: (_) => const _PaintSizeSheet(),
   );
 }
@@ -61,85 +64,62 @@ class _PaintSizeSheet extends ConsumerWidget {
         ? paintLayer.fillColor != null
         : session.fillColor != null;
 
-    return SafeArea(
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        decoration: BoxDecoration(
-          color: tokens.surface,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
+    // Chrome (card, handle, safe area) comes from the shared modal
+    // host (tb2 8/16); this body owns padding + its scroll guard.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      // Scroll guard: the modal's height is bounded (short landscape
+      // phones, large text scale), but this Column is min-sized and
+      // its children are fixed-height. Without a scroll view the
+      // content overflows at short heights — mirrors the
+      // SingleChildScrollView DockSheetChrome wraps around the inline
+      // rendering of the same PaintSizeBody.
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Reuse the inline panel verbatim. One source of truth
+            // for hero preview, presets, precision disclosure,
+            // haptics, and pointer-cancel handling — the modal and
+            // dock cannot drift apart.
+            PaintSizeBody(
+              value: strokeWidth,
+              color: strokeColor,
+              onChange: controller.previewStrokeWidth,
+              onChangeEnd: controller.commitStrokeWidth,
             ),
-          ],
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-        // Scroll guard: the modal's height is bounded (short landscape
-        // phones, large text scale), but this Column is min-sized and
-        // its children are fixed-height. Without a scroll view the
-        // content overflows at short heights — mirrors the
-        // SingleChildScrollView DockSheetChrome wraps around the inline
-        // rendering of the same PaintSizeBody.
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: tokens.border.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+            const SizedBox(height: 8),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            // Fill stays a simple row in the modal so quick toggles
+            // from the floating toolbar don't require diving into
+            // the dedicated Fill panel. Only the on/off affordance
+            // is here — colour / preset choices live in `_PaintFillBody`.
+            Row(
+              children: [
+                Icon(
+                  Icons.format_color_fill_rounded,
+                  size: 22,
+                  color: tokens.textSecondary,
                 ),
-              ),
-              const SizedBox(height: 6),
-              // Reuse the inline panel verbatim. One source of truth
-              // for hero preview, presets, precision disclosure,
-              // haptics, and pointer-cancel handling — the modal and
-              // dock cannot drift apart.
-              PaintSizeBody(
-                value: strokeWidth,
-                color: strokeColor,
-                onChange: controller.previewStrokeWidth,
-                onChangeEnd: controller.commitStrokeWidth,
-              ),
-              const SizedBox(height: 8),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
-              // Fill stays a simple row in the modal so quick toggles
-              // from the floating toolbar don't require diving into
-              // the dedicated Fill panel. Only the on/off affordance
-              // is here — colour / preset choices live in `_PaintFillBody`.
-              Row(
-                children: [
-                  Icon(
-                    Icons.format_color_fill_rounded,
-                    size: 22,
-                    color: tokens.textSecondary,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Fill shapes',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Fill shapes',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  Switch(
-                    value: fillEnabled,
-                    onChanged: controller.setFillEnabled,
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+                Switch(
+                  value: fillEnabled,
+                  onChanged: controller.setFillEnabled,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
