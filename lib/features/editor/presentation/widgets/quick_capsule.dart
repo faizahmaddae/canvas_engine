@@ -30,6 +30,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/constants/engine_constants.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../crop/application/crop_controller.dart';
@@ -97,7 +98,17 @@ class QuickCapsule extends ConsumerWidget {
       safePadding: media.padding,
       barWidth: estWidth,
       barHeight: kFloatingBarHeight,
-      gap: kFloatingBarGap,
+      // Above-placement clearance includes the rotation knob's stem
+      // construction (tb3 6/7): outset + stem + half the knob glyph.
+      // Without it the capsule floats exactly where the knob now
+      // lives and eats its taps. Below-placement keeps the plain gap
+      // — there is no knob under the selection.
+      gap:
+          kFloatingBarGap +
+          EngineConstants.selectionOutset +
+          EngineConstants.rotateHandleOffset +
+          EngineConstants.handleVisualSize / 2,
+      gapBelow: kFloatingBarGap,
       horizontalMargin: kFloatingBarHorizontalMargin,
       bottomReserved: FloatingToolbarPositioner.dockHeight(
         screen: media.size,

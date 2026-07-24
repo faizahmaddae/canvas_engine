@@ -1686,12 +1686,16 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
 
   /// True iff [point] (canvas-space) lands on [layer]'s selection
   /// CHROME QUAD — the rotated bbox inflated by the handle outset the
-  /// overlay actually draws. This is the contract §5 row 4 claim test:
-  /// deliberately the drawn geometry, not the raw bbox, so grabbing
-  /// the frame edge between two handles still counts as "on the
-  /// selection". Pure canvas-space math (no widget bounds), so it
-  /// extrapolates correctly for layers dragged partly or fully off
-  /// the canvas — the off-canvas recovery grab keeps working.
+  /// overlay actually draws, UNION the rotation knob's stem capsule
+  /// (tb3 6/7: the knob floats above the top edge, so a near-miss on
+  /// the knob or its stem must still read as "on the selection" and
+  /// never fall through to viewport pan). This is the contract §5
+  /// row 4 claim test: deliberately the drawn geometry, not the raw
+  /// bbox, so grabbing the frame edge between two handles still
+  /// counts as "on the selection". Pure canvas-space math (no widget
+  /// bounds), so it extrapolates correctly for layers dragged partly
+  /// or fully off the canvas — the off-canvas recovery grab keeps
+  /// working.
   bool _pointInChromeQuad(EditorLayer layer, Offset point) {
     final t = layer.transform;
     final local = LayerSpaceMapper(
@@ -1699,10 +1703,35 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
       viewport: ViewportState.identity,
     ).canvasToLayer(point);
     final o = _chromeOutsetCanvas();
-    return local.dx >= -o &&
+    if (local.dx >= -o &&
         local.dy >= -o &&
         local.dx <= t.size.width + o &&
-        local.dy <= t.size.height + o;
+        local.dy <= t.size.height + o) {
+      return true;
+    }
+    // Rotation-knob stem capsule: the segment from the frame's
+    // top-edge midpoint to the knob centre, inflated by half the
+    // handle touch box. All screen-dp values scale into layer units
+    // by 1/viewport.scale, mirroring the overlay's drawn geometry.
+    final scale = ref.read(viewportControllerProvider).scale;
+    if (!scale.isFinite || scale <= 0) return false;
+    final knobOffset = EngineConstants.rotateHandleOffset / scale;
+    final radius = (EngineConstants.handleTouchSize / 2) / scale;
+    final stemBase = Offset(t.size.width / 2, -o);
+    final knobCentre = Offset(t.size.width / 2, -o - knobOffset);
+    return _distanceToSegment(local, stemBase, knobCentre) <= radius;
+  }
+
+  /// Distance from [p] to the segment [a]→[b].
+  double _distanceToSegment(Offset p, Offset a, Offset b) {
+    final ab = b - a;
+    final len2 = ab.dx * ab.dx + ab.dy * ab.dy;
+    if (len2 <= 0) return (p - a).distance;
+    final tParam = (((p - a).dx * ab.dx + (p - a).dy * ab.dy) / len2).clamp(
+      0.0,
+      1.0,
+    );
+    return (p - (a + ab * tParam)).distance;
   }
 
   /// Selection-routing for a plain tap on the canvas.

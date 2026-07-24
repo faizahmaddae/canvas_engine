@@ -50,14 +50,17 @@ void main() {
     // actually places the handle hit boxes (see `outsetSelectionQuad`
     // in selection_overlay.dart). Without compensating for the
     // outset, edge probes at +/- (touch/2 - 1) miss the 48-dp box.
-    // Top-right is the unified rotate handle (text-style rotation
-    // pattern applied universally), the other three are resize.
+    // All FOUR corners resize (tb3 6/7, D-a); rotation lives on the
+    // dedicated knob [EngineConstants.rotateHandleOffset] dp above
+    // the frame's top-edge midpoint.
     const o = EngineConstants.selectionOutset; // 6
+    const knob = EngineConstants.rotateHandleOffset; // 28
     const corners = <InteractionHandle, Offset>{
       InteractionHandle.topLeft: Offset(200 - o, 200 - o),
-      InteractionHandle.rotate: Offset(500 + o, 200 - o),
+      InteractionHandle.topRight: Offset(500 + o, 200 - o),
       InteractionHandle.bottomLeft: Offset(200 - o, 500 + o),
       InteractionHandle.bottomRight: Offset(500 + o, 500 + o),
+      InteractionHandle.rotate: Offset(350, 200 - o - knob),
     };
 
     final touch = EngineConstants.handleTouchSize; // 48

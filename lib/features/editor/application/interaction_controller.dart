@@ -433,6 +433,7 @@ class InteractionController extends Notifier<InteractionUiState> {
             s.initialTransform.rotation + (rawCurrent - s.pointerStartAngle);
         snapped = _engine.isNearSnap(rawRotation);
       case InteractionHandle.topLeft:
+      case InteractionHandle.topRight:
       case InteractionHandle.bottomLeft:
       case InteractionHandle.bottomRight:
         final layer = ref.read(documentControllerProvider).layerById(s.layerId);
@@ -750,6 +751,7 @@ class InteractionController extends Notifier<InteractionUiState> {
   }) {
     assert(
       handle == InteractionHandle.topLeft ||
+          handle == InteractionHandle.topRight ||
           handle == InteractionHandle.bottomLeft ||
           handle == InteractionHandle.bottomRight,
       'startGroupResize requires a corner handle',
@@ -898,6 +900,7 @@ class InteractionController extends Notifier<InteractionUiState> {
           frameTranslation = frameTranslation.translate(snap.dx, snap.dy);
         }
       case InteractionHandle.topLeft:
+      case InteractionHandle.topRight:
       case InteractionHandle.bottomLeft:
       case InteractionHandle.bottomRight:
         // Skip resize entirely if any participant is non-resizable.
@@ -1223,6 +1226,8 @@ class InteractionController extends Notifier<InteractionUiState> {
     switch (h) {
       case InteractionHandle.topLeft:
         return GroupHandle.topLeft;
+      case InteractionHandle.topRight:
+        return GroupHandle.topRight;
       case InteractionHandle.bottomLeft:
         return GroupHandle.bottomLeft;
       case InteractionHandle.bottomRight:
@@ -1462,8 +1467,12 @@ class InteractionController extends Notifier<InteractionUiState> {
     final movesLeft =
         handle == InteractionHandle.topLeft ||
         handle == InteractionHandle.bottomLeft;
-    final movesRight = handle == InteractionHandle.bottomRight;
-    final movesTop = handle == InteractionHandle.topLeft;
+    final movesRight =
+        handle == InteractionHandle.topRight ||
+        handle == InteractionHandle.bottomRight;
+    final movesTop =
+        handle == InteractionHandle.topLeft ||
+        handle == InteractionHandle.topRight;
     final movesBottom =
         handle == InteractionHandle.bottomLeft ||
         handle == InteractionHandle.bottomRight;

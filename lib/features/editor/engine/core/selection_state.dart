@@ -7,8 +7,16 @@ import 'package:flutter/foundation.dart';
 enum InteractionHandle {
   body,
   topLeft,
+  topRight,
   bottomLeft,
   bottomRight,
+
+  /// Dedicated rotation knob — rendered as a stemmed handle above the
+  /// selection's top-centre (tb3 6/7, decision D-a); previously it
+  /// occupied the top-right corner, which now resizes like the other
+  /// three. Rotation math is position-agnostic: the engine captures
+  /// the pointer's start angle about the layer centre and applies
+  /// pure deltas, so relocating the handle needed no math changes.
   rotate,
 
   /// Multi-touch gesture (pinch / rotate / drag with 1–2 fingers). Used for

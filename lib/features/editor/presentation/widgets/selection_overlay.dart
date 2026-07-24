@@ -229,6 +229,21 @@ class LayerSelectionOverlay extends StatelessWidget {
     final bl = outset[2];
     final br = outset[3];
 
+    // Rotation knob geometry (tb3 6/7, D-a): the knob sits
+    // [EngineConstants.rotateHandleOffset] screen-dp beyond the
+    // frame's top-edge midpoint along the rotated up-axis — same
+    // screen-space grammar as the corner outset, so stem length is
+    // constant in dp at any zoom and the whole construction rotates
+    // rigidly with the layer. RTL-indifferent: pure canvas/screen
+    // geometry, no directionality.
+    final topMid = Offset((tl.dx + tr.dx) / 2, (tl.dy + tr.dy) / 2);
+    final downVec = bl - tl;
+    final downLen = downVec.distance;
+    final up = downLen < 1e-6
+        ? const Offset(0, -1)
+        : Offset(-downVec.dx / downLen, -downVec.dy / downLen);
+    final rotateKnob = topMid + up * EngineConstants.rotateHandleOffset;
+
     return Positioned.fill(
       child: Stack(
         clipBehavior: Clip.none,
@@ -292,6 +307,20 @@ class LayerSelectionOverlay extends StatelessWidget {
           ),
 
           if (showHandles) ...[
+            // Stem connecting the frame's top edge to the rotation
+            // knob — painted below the handles so the knob glyph
+            // sits on top of it.
+            IgnorePointer(
+              child: CustomPaint(
+                size: Size.infinite,
+                painter: _RotateStemPainter(
+                  from: topMid,
+                  to: rotateKnob,
+                  color: color,
+                  strokeWidth: EngineConstants.selectionStroke,
+                ),
+              ),
+            ),
             _PositionedHandle(
               center: tl,
               debugLabel: 'topLeft',
@@ -304,12 +333,12 @@ class LayerSelectionOverlay extends StatelessWidget {
             ),
             _PositionedHandle(
               center: tr,
-              debugLabel: 'topRightRotate',
+              debugLabel: 'topRight',
               onDrag: (p, phase) =>
-                  onHandle(InteractionHandle.rotate, p, phase),
-              child: _RotateGlyph(
+                  onHandle(InteractionHandle.topRight, p, phase),
+              child: _CornerGlyph(
                 color: color,
-                active: activeHandle == InteractionHandle.rotate,
+                active: activeHandle == InteractionHandle.topRight,
               ),
             ),
             _PositionedHandle(
@@ -330,6 +359,21 @@ class LayerSelectionOverlay extends StatelessWidget {
               child: _CornerGlyph(
                 color: color,
                 active: activeHandle == InteractionHandle.bottomRight,
+              ),
+            ),
+            // Dedicated rotation knob (D-a): stemmed handle above the
+            // top-centre. Same glyph, same 48dp touch box, same
+            // constant-dp sizing as before — only the position moved
+            // (rotation math is position-agnostic: start angle is
+            // captured from the pointer, updates are pure deltas).
+            _PositionedHandle(
+              center: rotateKnob,
+              debugLabel: 'rotateKnob',
+              onDrag: (p, phase) =>
+                  onHandle(InteractionHandle.rotate, p, phase),
+              child: _RotateGlyph(
+                color: color,
+                active: activeHandle == InteractionHandle.rotate,
               ),
             ),
           ],
@@ -388,6 +432,40 @@ class _SelectionFramePainter extends CustomPainter {
 /// A Positioned 48\u00d748 hit box whose geometric centre equals [center].
 /// Centre is in **screen pixels** \u2014 this widget is hosted by a
 /// `Positioned.fill` placed above the viewport transform.
+/// Hairline stem connecting the selection frame's top edge to the
+/// dedicated rotation knob (tb3 6/7). Painted in screen space with
+/// the same stroke weight as the frame so the construction reads as
+/// one piece of chrome.
+class _RotateStemPainter extends CustomPainter {
+  const _RotateStemPainter({
+    required this.from,
+    required this.to,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  final Offset from;
+  final Offset to;
+  final Color color;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(from, to, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RotateStemPainter old) =>
+      old.from != from ||
+      old.to != to ||
+      old.color != color ||
+      old.strokeWidth != strokeWidth;
+}
+
 class _PositionedHandle extends StatelessWidget {
   const _PositionedHandle({
     required this.center,

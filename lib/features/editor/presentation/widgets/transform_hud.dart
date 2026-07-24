@@ -83,6 +83,7 @@ class TransformHud extends StatelessWidget {
         if (norm <= -180) norm += 360;
         return f.degrees(norm.round());
       case InteractionHandle.topLeft:
+      case InteractionHandle.topRight:
       case InteractionHandle.bottomLeft:
       case InteractionHandle.bottomRight:
       case InteractionHandle.gesture:

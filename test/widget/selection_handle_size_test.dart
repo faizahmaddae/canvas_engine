@@ -57,36 +57,33 @@ void main() {
   }
 
   void expectConstantHandleSize(WidgetTester tester) {
-    // Four 48-dp Positioned hit boxes — three resize corners + the
-    // top-right rotate handle. Rotation is integrated into the corner
-    // (text-style) so there is no separate rotate stem.
+    // Five 48-dp Positioned hit boxes — FOUR resize corners plus the
+    // dedicated rotate knob above the top-centre (tb3 6/7, D-a).
     final touch = EngineConstants.handleTouchSize;
     final hits = find.byWidgetPredicate(
       (w) => w is Positioned && w.width == touch && w.height == touch,
     );
     expect(
       hits,
-      findsNWidgets(4),
+      findsNWidgets(5),
       reason:
-          'Selection should expose 4 fixed-size handle hit boxes '
-          '(3 resize corners + top-right rotate) regardless of '
+          'Selection should expose 5 fixed-size handle hit boxes '
+          '(4 resize corners + the rotate knob) regardless of '
           'document size.',
     );
 
-    // Three corner glyphs (top-left, bottom-left, bottom-right) are
-    // AnimatedContainers sized to handleVisualSize. The fourth corner
-    // (top-right) renders a _RotateGlyph instead.
+    // Four corner glyphs are AnimatedContainers sized to
+    // handleVisualSize; the stemmed knob renders a _RotateGlyph.
     final visual = EngineConstants.handleVisualSize;
     final glyphs = find.byWidgetPredicate(
       (w) => w is AnimatedContainer && w.constraints?.maxWidth == visual,
     );
     expect(
       glyphs,
-      findsNWidgets(3),
+      findsNWidgets(4),
       reason:
-          'Three corner glyphs must keep their fixed visual size in dp '
-          'at any document size; the top-right corner is a rotate '
-          'glyph instead.',
+          'Four corner glyphs must keep their fixed visual size in dp '
+          'at any document size; rotation lives on the stemmed knob.',
     );
   }
 

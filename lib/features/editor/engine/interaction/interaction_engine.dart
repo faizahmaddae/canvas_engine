@@ -341,6 +341,7 @@ class InteractionEngine {
 
   bool _isCorner(InteractionHandle h) =>
       h == InteractionHandle.topLeft ||
+      h == InteractionHandle.topRight ||
       h == InteractionHandle.bottomLeft ||
       h == InteractionHandle.bottomRight;
 
@@ -350,6 +351,8 @@ class InteractionEngine {
     switch (h) {
       case InteractionHandle.topLeft:
         return (r.bottomRight, r.topLeft);
+      case InteractionHandle.topRight:
+        return (r.bottomLeft, r.topRight);
       case InteractionHandle.bottomLeft:
         return (r.topRight, r.bottomLeft);
       case InteractionHandle.bottomRight:

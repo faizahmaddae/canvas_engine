@@ -50,6 +50,16 @@ class EngineConstants {
   /// on the underlying [LayerTransform] via pointer deltas.
   static const double selectionOutset = 6.0;
 
+  /// Distance (logical px, screen-space) from the selection frame's
+  /// top-edge midpoint to the centre of the dedicated rotation knob
+  /// (tb3 6/7, decision D-a). Like [selectionOutset] it is applied
+  /// AFTER the canvas → screen mapping along the frame's rotated
+  /// up-axis, so the stem length stays constant in dp at any zoom.
+  /// 28dp clears the 48dp handle touch boxes on the top corners
+  /// (their pads end ~24dp past the corner) while keeping the knob
+  /// close enough to read as part of the selection chrome.
+  static const double rotateHandleOffset = 28.0;
+
   /// How long the paint surface buffers a first finger's down-point
   /// before flushing it into a visible stroke draft (contract §5
   /// rows 2/3, tb3 4/7).

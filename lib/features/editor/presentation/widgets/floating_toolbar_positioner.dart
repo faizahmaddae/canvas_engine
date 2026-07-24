@@ -106,6 +106,7 @@ class FloatingToolbarPositioner {
     required double barWidth,
     required double barHeight,
     double gap = 12,
+    double? gapBelow,
     double horizontalMargin = 12,
     double topReserved = 0,
     double bottomReserved = 0,
@@ -151,8 +152,13 @@ class FloatingToolbarPositioner {
     final bottomSafe =
         screenSize.height - safePadding.bottom - bottomReserved - 8;
 
+    // Asymmetric clearance (tb3 6/7): the selection chrome extends
+    // further above the layer than below it now that the rotation
+    // knob floats over the top edge, so callers may pass a larger
+    // [gap] for the preferred above placement and a plain
+    // [gapBelow] for the fallback.
     final topAbove = minY - gap - barHeight;
-    final topBelow = maxY + gap;
+    final topBelow = maxY + (gapBelow ?? gap);
 
     // 'above' must clear both the top safe area AND not extend into
     // the bottom reserved zone (relevant when the layer itself is
