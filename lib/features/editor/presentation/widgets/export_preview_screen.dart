@@ -142,6 +142,13 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
 
+    // System back is guarded while a save/share is in flight — the
+    // close button already is (disabled via _busy); an unguarded
+    // back silently dropped the outcome mid-operation.
+    return PopScope(canPop: !_busy, child: _buildScaffold(context, tokens));
+  }
+
+  Widget _buildScaffold(BuildContext context, AppTokens tokens) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -326,6 +333,15 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
     final svc = ref.read(imageExportServiceProvider);
     final result = await svc.saveToGallery(widget.bytes, format: widget.format);
     if (!mounted) return;
+    if (result.outcome != ImageExportOutcome.success) {
+      // Keep the preview (and the already-rendered bytes) alive so
+      // the user can retry in place. Tearing the whole flow down
+      // here used to cost: reopen sheet, re-pick settings,
+      // re-render, re-tap — for the guaranteed first-run iOS path
+      // of denying the Photos prompt.
+      _showFailure(result.outcome);
+      return;
+    }
     Navigator.of(context).pop(
       ExportPreviewOutcome(action: ExportPreviewAction.save, result: result),
     );
@@ -346,8 +362,29 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
       format: widget.format,
     );
     if (!mounted) return;
+    if (result.outcome != ImageExportOutcome.success) {
+      _showFailure(result.outcome);
+      return;
+    }
     Navigator.of(context).pop(
       ExportPreviewOutcome(action: ExportPreviewAction.share, result: result),
+    );
+  }
+
+  /// Inline failure surface: distinct copy for the permission path
+  /// (actionable — the fix lives in system Settings) vs a write/share
+  /// failure (retryable in place). The Save/Share buttons stay live.
+  void _showFailure(ImageExportOutcome outcome) {
+    setState(() => _busy = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          outcome == ImageExportOutcome.permissionDenied
+              ? context.l10n.allowPhotoAccessSettings
+              : context.l10n.somethingWentWrong,
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
