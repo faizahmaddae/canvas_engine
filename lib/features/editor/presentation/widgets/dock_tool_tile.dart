@@ -20,6 +20,15 @@ import '../../../../core/utils/haptics.dart';
 ///    [onPeekEnd] (redo), for instant A/B compare against the prior
 ///    state without leaving the dock.
 ///
+/// Tile card width. Exported so strip hosts derive auto-scroll math
+/// from the real chrome instead of re-hardcoding it (the paint/text
+/// strips drifted to 68 vs 70 doing exactly that).
+const double kDockToolTileWidth = 66.0;
+
+/// Tile card width under the compact breakpoint (small phones /
+/// landscape).
+const double kDockToolTileWidthCompact = 56.0;
+
 /// This widget is the single source of truth for toolbar item
 /// chrome. Per-toolbar visual hacks are not allowed — extend this
 /// widget instead.
@@ -107,7 +116,7 @@ class _DockToolTileState extends State<DockToolTile> {
         ? tokens.textSecondary.withValues(alpha: 0.35)
         : (active ? tokens.accent : tokens.textSecondary);
 
-    final tileWidth = compact ? 56.0 : 66.0;
+    final tileWidth = compact ? kDockToolTileWidthCompact : kDockToolTileWidth;
     final iconSize = compact ? 24.0 : 28.0;
     final swatchSize = compact ? 26.0 : 30.0;
     final showLabel = !compact || widget.valueText != null;

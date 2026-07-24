@@ -64,6 +64,52 @@ class _SlotStripState extends State<SlotStrip> {
       widget.controller ?? (_ownController ??= ScrollController());
 
   @override
+  void didUpdateWidget(SlotStrip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Sibling-swipe (and any programmatic activation) can move the
+    // active slot to a tile that is scrolled out of view; without
+    // this, an 11-tile strip loses its highlight off-screen after a
+    // few swipes. Mirrors the auto-scroll paint/text always had.
+    if (widget.activeId != null && widget.activeId != oldWidget.activeId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _ensureActiveVisible();
+      });
+    }
+  }
+
+  void _ensureActiveVisible() {
+    final index = widget.slots.indexWhere((s) => s.id == widget.activeId);
+    if (index < 0 || !_controller.hasClients) return;
+    final position = _controller.position;
+    if (position.maxScrollExtent <= 0) return;
+    final media = MediaQuery.of(context);
+    final compact =
+        media.size.shortestSide < 380 ||
+        media.orientation == Orientation.landscape;
+    final tileExtent =
+        (compact ? kDockToolTileWidthCompact : kDockToolTileWidth) + 2;
+    // Tier dividers occupy their own extent before the target tile.
+    var dividersBefore = 0;
+    for (var i = 1; i <= index; i++) {
+      if (widget.slots[i].tier != widget.slots[i - 1].tier) dividersBefore++;
+    }
+    final tileStart =
+        widget.padding.horizontal / 2 +
+        index * tileExtent +
+        dividersBefore * 20.0;
+    final viewport = position.viewportDimension;
+    final target = (tileStart - (viewport - tileExtent) / 2).clamp(
+      0.0,
+      position.maxScrollExtent,
+    );
+    _controller.animateTo(
+      target,
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
   void dispose() {
     _ownController?.dispose();
     super.dispose();
@@ -92,6 +138,8 @@ class _SlotStripState extends State<SlotStrip> {
             icon: slot.icon,
             label: slot.label,
             valueText: slot.valueLabel?.call(),
+            swatchColor: slot.swatchColor?.call(),
+            fontFamily: slot.fontFamily?.call(),
             enabled: slot.isEnabled,
             active: slot.id == widget.activeId,
             compact: compact,

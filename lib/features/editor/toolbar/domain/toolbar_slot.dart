@@ -41,6 +41,14 @@ typedef SlotValueLabelBuilder = String? Function();
 /// Builder for the dynamic enabled state of a slot.
 typedef SlotEnabledBuilder = bool Function();
 
+/// Resolves the colour swatch rendered in place of the icon (e.g.
+/// the current stroke/fill colour). `null` keeps the icon.
+typedef SlotSwatchBuilder = Color? Function();
+
+/// Resolves a font family the tile label previews in (the Font
+/// tile renders its value in the selected face). `null` inherits.
+typedef SlotFontFamilyBuilder = String? Function();
+
 /// Declarative description of a single tool slot in a mode's strip.
 ///
 /// This is the **shared toolbar item model** — every mode (main,
@@ -58,6 +66,8 @@ class ToolbarSlot {
     this.enabled = true,
     this.enabledBuilder,
     this.valueLabel,
+    this.swatchColor,
+    this.fontFamily,
     this.presentation = SlotPresentation.instantAction,
     this.tier = SlotTier.tier1,
   });
@@ -87,6 +97,15 @@ class ToolbarSlot {
   /// "24pt"). Phase 1 doesn't use this; the field exists so future
   /// phases don't have to edit this model.
   final SlotValueLabelBuilder? valueLabel;
+
+  /// Resolves the colour swatch shown in place of the icon. Lets
+  /// value-bearing tiles (stroke/fill/text colour) express their
+  /// current value the way DockToolTile already renders it — the
+  /// missing capability that kept paint/text on private item models.
+  final SlotSwatchBuilder? swatchColor;
+
+  /// Resolves the font family the tile's value label previews in.
+  final SlotFontFamilyBuilder? fontFamily;
 
   final SlotPresentation presentation;
 
