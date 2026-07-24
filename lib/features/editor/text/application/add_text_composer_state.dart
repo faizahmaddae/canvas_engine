@@ -27,3 +27,25 @@ final addTextComposerOpenProvider =
     NotifierProvider<AddTextComposerOpenController, bool>(
       AddTextComposerOpenController.new,
     );
+
+/// `true` while the EDIT-text flow sheet is on screen
+/// (`showEditTextLayerFlow`). Deliberately a SEPARATE flag from
+/// [addTextComposerOpenProvider]: the composer flag also drives
+/// mode resolution and canvas-chrome suppression, and the edit flow
+/// must not inherit those side effects. The session registry
+/// (contract §6) unions both, so compose AND edit count as open
+/// text sessions.
+class TextEditFlowOpenController extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setOpen(bool open) {
+    if (state == open) return;
+    state = open;
+  }
+}
+
+final textEditFlowOpenProvider =
+    NotifierProvider<TextEditFlowOpenController, bool>(
+      TextEditFlowOpenController.new,
+    );

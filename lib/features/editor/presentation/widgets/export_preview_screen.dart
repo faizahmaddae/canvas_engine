@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/export_format.dart';
+import '../../application/export_session.dart';
 import '../../application/image_export_service.dart';
 import '../../canvas/presentation/widgets/canvas_checkerboard.dart';
 
@@ -88,6 +89,11 @@ class ExportPreviewScreen extends ConsumerStatefulWidget {
 class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
   bool _busy = false;
 
+  /// Cached in [initState] because [dispose] needs it and `ref` is
+  /// unsafe there. The notifier itself is a global provider that
+  /// outlives this screen.
+  late ExportSessionController _exportSession;
+
   /// Decoded pixel dimensions of [widget.bytes]. Resolved
   /// asynchronously after the first frame so the preview can
   /// (a) drive the [AspectRatio] from the *real* image rectangle
@@ -101,6 +107,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
   @override
   void initState() {
     super.initState();
+    _exportSession = ref.read(exportSessionControllerProvider.notifier);
     _decodeForLabel();
   }
 
@@ -330,6 +337,10 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
 
   Future<void> _onSave() async {
     setState(() => _busy = true);
+    // Contract §6: the save critical section registers as a draft
+    // session (see ExportSessionController). Ended on every exit
+    // path below; [dispose] is the backstop.
+    ref.read(exportSessionControllerProvider.notifier).begin();
     final svc = ref.read(imageExportServiceProvider);
     final result = await svc.saveToGallery(widget.bytes, format: widget.format);
     if (!mounted) return;
@@ -342,6 +353,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
       _showFailure(result.outcome);
       return;
     }
+    ref.read(exportSessionControllerProvider.notifier).end();
     Navigator.of(context).pop(
       ExportPreviewOutcome(action: ExportPreviewAction.save, result: result),
     );
@@ -349,6 +361,8 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
 
   Future<void> _onShare() async {
     setState(() => _busy = true);
+    // Same §6 session registration as [_onSave].
+    ref.read(exportSessionControllerProvider.notifier).begin();
     // Anchor the share sheet to the screen for iPad popover presentation.
     final box = context.findRenderObject();
     final origin = (box is RenderBox && box.hasSize)
@@ -366,15 +380,28 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
       _showFailure(result.outcome);
       return;
     }
+    ref.read(exportSessionControllerProvider.notifier).end();
     Navigator.of(context).pop(
       ExportPreviewOutcome(action: ExportPreviewAction.share, result: result),
     );
+  }
+
+  @override
+  void dispose() {
+    // Backstop for the unreachable-in-practice teardown-while-busy
+    // path (PopScope guards normal pops while _busy): the registry
+    // must never stay latched open after the surface that armed it
+    // is gone. `end()` is idempotent. Uses the cached notifier —
+    // `ref` is unsafe in dispose.
+    _exportSession.end();
+    super.dispose();
   }
 
   /// Inline failure surface: distinct copy for the permission path
   /// (actionable — the fix lives in system Settings) vs a write/share
   /// failure (retryable in place). The Save/Share buttons stay live.
   void _showFailure(ImageExportOutcome outcome) {
+    ref.read(exportSessionControllerProvider.notifier).end();
     setState(() => _busy = false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

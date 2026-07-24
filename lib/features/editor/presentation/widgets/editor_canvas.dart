@@ -12,6 +12,7 @@ import '../../../settings/application/settings_controller.dart';
 import '../../application/canvas_capture.dart';
 import '../../application/document_controller.dart';
 import '../../application/canvas_chrome_visibility.dart';
+import '../../application/edit_session_registry.dart';
 import '../../application/editing_controller.dart';
 import '../../application/editor_lifecycle.dart';
 import '../../application/editor_session.dart';
@@ -267,6 +268,16 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   static const double _multiTapMoveSlop = kTouchSlop;
 
   void _onMultiTapPointerDown(PointerDownEvent e) {
+    // A brand-new physical sequence must not inherit an abort
+    // latched by a fully-gated previous one: the gates below abort
+    // BEFORE registering the pointer, so [_finalizeMultiTap] (the
+    // only reset point) never ran for that sequence and the flag
+    // stayed true — silently swallowing the first legitimate tap
+    // after e.g. a mask session ended (surfaced by the tb2 13/16
+    // registry-gate pin).
+    if (_multiTapPointers.isEmpty && _multiTapFirstDownAt == null) {
+      _multiTapAborted = false;
+    }
     // Feature flag: the 2-/3-finger tap shortcuts are opt-in. When
     // disabled (the default), we abort the window on every pointer-
     // down so no amount of subsequent lifts can trigger undo/redo.
@@ -276,8 +287,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
       _abortMultiTap();
       return;
     }
-    // Mode gates: paint and inline-edit own the surface entirely; we
-    // must not consume their touches with an undo shortcut.
+    // Surface-ownership gates: paint and inline-edit own the canvas
+    // entirely; we must not consume their touches with an undo
+    // shortcut. These are NOT draft sessions (paint is a live mode,
+    // inline edit is the on-canvas caret) so they stay as their own
+    // reads rather than folding into the registry below.
     if (ref.read(paintToolControllerProvider).activeTool != null) {
       _abortMultiTap();
       return;
@@ -286,10 +300,13 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
       _abortMultiTap();
       return;
     }
-    // Mask-edit mode rides on the live canvas (unlike crop's opaque
-    // overlay) — a clean 2-finger tap must not fire undo under the
-    // mode's draft.
-    if (ref.read(maskEditControllerProvider).active) {
+    // Session registry (contract §6): while ANY draft session is
+    // open the shortcut is inert. Replaces the old mask-only read —
+    // mask rides on the live canvas so it was the visible offender,
+    // but crop / text compose / edit / export must be equally
+    // protected (their modal barriers cover most of the screen, not
+    // the edge cases where a pointer still lands on the canvas).
+    if (ref.read(anyDraftSessionOpenProvider)) {
       _abortMultiTap();
       return;
     }

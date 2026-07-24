@@ -12,6 +12,7 @@ import '../../../settings/application/settings_controller.dart';
 import '../../application/document_controller.dart';
 import '../../application/export_controller.dart';
 import '../../application/export_format.dart';
+import '../../application/export_session.dart';
 import '../../application/export_quality.dart';
 import '../../application/export_size.dart';
 import '../../application/image_export_service.dart';
@@ -273,6 +274,10 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
   /// passes it through so JPG paths get the slider value.
   Future<Uint8List?> _renderBytes() async {
     setState(() => _busy = true);
+    // Contract §6: rendering bytes from the document is a draft
+    // session — register it so undo affordances go inert while the
+    // renderer walks the document. Ended in `finally` (idempotent).
+    ref.read(exportSessionControllerProvider.notifier).begin();
     try {
       // Pre-flight: warn the user when the requested resolution
       // exceeds the engine's safety cap and will be silently
@@ -319,6 +324,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
       );
       return null;
     } finally {
+      ref.read(exportSessionControllerProvider.notifier).end();
       if (mounted && _busy) setState(() => _busy = false);
     }
   }

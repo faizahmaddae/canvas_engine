@@ -9,11 +9,15 @@
 // sequence into a pan/pinch (no undo), a peak of more than three
 // fingers aborts, and a sequence slower than 250ms wall-clock is a
 // deliberate gesture, not a tap. Later toolbar/mode refactors must
-// keep this matrix intact.
+// keep this matrix intact. tb2 13/16 adds the session-registry gate
+// (contract §6): the shortcut is inert while any draft session is
+// open — pinned here through a live mask-edit session.
 
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
+import 'package:canvas_engine/features/editor/application/mask_edit_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
+import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/editor_canvas.dart';
@@ -208,6 +212,50 @@ void main() {
       hasLength(1),
       reason: 'a peak pointer count above 3 must never fire undo/redo',
     );
+  });
+
+  testWidgets('two-finger tap is inert while a mask-edit session is open', (
+    tester,
+  ) async {
+    // Contract §6 (tb2 13/16): a draft session in the registry makes
+    // the shortcut abort on pointer-down. Mask is the one session
+    // that rides on the LIVE canvas (no opaque overlay/barrier), so
+    // it is the strictest pin of the registry gate. Mask sessions
+    // only open on image layers — add one (a second history entry).
+    final container = await pumpEditor(tester, enabled: true);
+    container
+        .read(documentControllerProvider.notifier)
+        .execute(
+          AddLayerCommand(
+            ImageLayer(
+              id: 'img-1',
+              transform: const LayerTransform(
+                position: Offset(300, 60),
+                size: Size(300, 200),
+              ),
+              source: const ImageSource.asset('assets/missing-mask.png'),
+            ),
+          ),
+        );
+    container.read(maskEditControllerProvider.notifier).open('img-1');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(container.read(documentControllerProvider).layers, hasLength(2));
+
+    await multiFingerTap(tester, tapAnchor(tester), 2);
+
+    expect(
+      container.read(documentControllerProvider).layers,
+      hasLength(2),
+      reason: 'undo shortcut must stay inert during a draft session',
+    );
+
+    // Session over → the shortcut works again (undoes the image add).
+    container.read(maskEditControllerProvider.notifier).cancel();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await multiFingerTap(tester, tapAnchor(tester), 2);
+    expect(container.read(documentControllerProvider).layers, hasLength(1));
   });
 
   testWidgets('two-finger hold longer than the 250ms tap window aborts', (

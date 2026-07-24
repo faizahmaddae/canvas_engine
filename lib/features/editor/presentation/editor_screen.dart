@@ -14,6 +14,7 @@ import '../../home/application/project_store.dart';
 import '../application/autosave_controller.dart';
 import '../application/context_toolbar_controller.dart';
 import '../application/document_controller.dart';
+import '../application/edit_session_registry.dart';
 import '../application/image_import_service.dart';
 import '../application/live_overlay_controller.dart';
 import '../application/editor_lifecycle.dart';
@@ -294,6 +295,15 @@ class EditorScreen extends ConsumerWidget {
                   ],
                 ),
           endDrawer: const LayersPanel(),
+          // Contract §6: the Layers drawer's edge-swipe is disabled
+          // while any draft session is open (crop/mask own the
+          // screen; compose/edit/export sit behind modal barriers —
+          // this closes the edge-gesture hole those barriers leave
+          // at the screen edge). The ⋮ → Layers menu path and the
+          // toolbars' explicit openEndDrawer() calls are unaffected.
+          endDrawerEnableOpenDragGesture: !ref.watch(
+            anyDraftSessionOpenProvider,
+          ),
           body: Stack(
             children: [
               // NO scrim over the canvas while control panels are
@@ -1552,13 +1562,19 @@ class _UndoRedoActions extends ConsumerWidget {
     // a 60-fps slider drag doesn't repaint these buttons.
     ref.watch(documentCommitVersionProvider);
     final doc = ref.read(documentControllerProvider.notifier);
+    // Contract §6: while any draft session is open (text compose /
+    // edit, export render+save — crop and mask unmount this AppBar
+    // entirely) history must not mutate under the session, so the
+    // buttons go visibly inert instead of firing through a sheet's
+    // scrim.
+    final sessionOpen = ref.watch(anyDraftSessionOpenProvider);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
           tooltip: context.l10n.undoTooltip,
-          onPressed: doc.canUndo
+          onPressed: (!sessionOpen && doc.canUndo)
               ? () {
                   EditorHaptics.tap();
                   doc.undo();
@@ -1568,7 +1584,7 @@ class _UndoRedoActions extends ConsumerWidget {
         ),
         IconButton(
           tooltip: context.l10n.redoTooltip,
-          onPressed: doc.canRedo
+          onPressed: (!sessionOpen && doc.canRedo)
               ? () {
                   EditorHaptics.tap();
                   doc.redo();
