@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../engine/modules/text/text_layer.dart';
+import '../../toolbar/application/dock_tool_controller.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
 import '../application/sticker_tool_controller.dart';
@@ -39,32 +40,49 @@ class StickerModeToolbar extends ConsumerWidget {
     final openSlot = ref.watch(
       stickerToolControllerProvider.select((s) => s.openSlot),
     );
-    final ctrl = ref.read(stickerToolControllerProvider.notifier);
-    final l10n = context.l10n;
     final slots = <ToolbarSlot>[
-      ToolbarSlot(
-        id: StickerToolSlot.style.name,
-        icon: Icons.auto_awesome_outlined,
-        label: l10n.styleTool,
-        onTap: () => ctrl.toggleSlot(StickerToolSlot.style),
-      ),
-      ToolbarSlot(
-        id: StickerToolSlot.size.name,
-        icon: Icons.photo_size_select_large_rounded,
-        label: l10n.sizeTool,
-        onTap: () => ctrl.toggleSlot(StickerToolSlot.size),
-      ),
-      ToolbarSlot(
-        id: StickerToolSlot.replace.name,
-        icon: Icons.swap_horiz_rounded,
-        label: l10n.replaceTool,
-        onTap: () => ctrl.toggleSlot(StickerToolSlot.replace),
-      ),
+      for (final entry in kStickerStripOrder) _chipFor(context, ref, entry),
     ];
     return SlotStrip(
       slots: slots,
       activeId: openSlot?.name,
       centerWhenFits: true,
     );
+  }
+
+  /// Maps one [kStickerStripOrder] entry to its rendered chip. All
+  /// icons/labels/actions live here; the ORDER lives only in the
+  /// shared list.
+  ToolbarSlot _chipFor(
+    BuildContext context,
+    WidgetRef ref,
+    DockStripEntry<StickerToolSlot> entry,
+  ) {
+    final ctrl = ref.read(stickerToolControllerProvider.notifier);
+    final l10n = context.l10n;
+    final slot = entry.slot;
+    if (slot == null) {
+      throw StateError('Unknown sticker strip action: ${entry.actionId}');
+    }
+    return switch (slot) {
+      StickerToolSlot.style => ToolbarSlot(
+        id: StickerToolSlot.style.name,
+        icon: Icons.auto_awesome_outlined,
+        label: l10n.styleTool,
+        onTap: () => ctrl.toggleSlot(StickerToolSlot.style),
+      ),
+      StickerToolSlot.size => ToolbarSlot(
+        id: StickerToolSlot.size.name,
+        icon: Icons.photo_size_select_large_rounded,
+        label: l10n.sizeTool,
+        onTap: () => ctrl.toggleSlot(StickerToolSlot.size),
+      ),
+      StickerToolSlot.replace => ToolbarSlot(
+        id: StickerToolSlot.replace.name,
+        icon: Icons.swap_horiz_rounded,
+        label: l10n.replaceTool,
+        onTap: () => ctrl.toggleSlot(StickerToolSlot.replace),
+      ),
+    };
   }
 }

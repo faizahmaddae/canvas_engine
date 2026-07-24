@@ -5,13 +5,14 @@ import '../../../../l10n/l10n.dart';
 import '../../application/context_toolbar_controller.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/selected_layer_actions_sheet.dart';
+import '../../toolbar/application/dock_tool_controller.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
 import '../application/shape_tool_controller.dart';
 
-// Panel-vs-non-panel classification lives on [ShapeToolSlot]; this
-// widget orders the highest-frequency layer controls first while
-// [kShapePanelSlotOrder] keeps sibling-swipe stable inside panels.
+// Panel-vs-non-panel classification lives on [ShapeToolSlot]. The
+// strip renders [kShapeStripOrder] verbatim — the same list the
+// sibling-swipe walk is derived from, so the two cannot drift.
 
 /// Bottom toolbar shown when a [ShapeLayer] is the current
 /// selection. Mirrors [ImageModeToolbar]: shared `SlotStrip` →
@@ -43,11 +44,63 @@ class ShapeModeToolbar extends ConsumerWidget {
       shapeToolControllerProvider.select((s) => s.openSlot),
     );
     final contextPanel = ref.watch(contextToolbarControllerProvider);
+    final slots = <ToolbarSlot>[
+      for (final entry in kShapeStripOrder) _chipFor(context, ref, entry),
+    ];
+    return SlotStrip(
+      slots: slots,
+      activeId: contextPanel == ContextToolPanel.opacity
+          ? 'opacity'
+          : openSlot?.name,
+    );
+  }
+
+  /// Maps one [kShapeStripOrder] entry to its rendered chip. All
+  /// icons/labels/actions live here; the ORDER lives only in the
+  /// shared list.
+  ToolbarSlot _chipFor(
+    BuildContext context,
+    WidgetRef ref,
+    DockStripEntry<ShapeToolSlot> entry,
+  ) {
     final ctrl = ref.read(shapeToolControllerProvider.notifier);
     final contextCtrl = ref.read(contextToolbarControllerProvider.notifier);
     final l10n = context.l10n;
-    final slots = <ToolbarSlot>[
-      ToolbarSlot(
+    final slot = entry.slot;
+    if (slot == null) {
+      return switch (entry.actionId) {
+        'opacity' => ToolbarSlot(
+          id: 'opacity',
+          icon: Icons.opacity,
+          label: l10n.opacityLabel,
+          onTap: () {
+            ctrl.closePanel();
+            contextCtrl.toggle(ContextToolPanel.opacity);
+          },
+        ),
+        'more' => ToolbarSlot(
+          id: 'more',
+          icon: Icons.more_horiz_rounded,
+          label: l10n.moreActionsSemantics,
+          onTap: () {
+            ctrl.closePanel();
+            contextCtrl.closePanel();
+            final scaffold = Scaffold.maybeOf(context);
+            showSelectedLayerActionsSheet(
+              context,
+              ref,
+              layer,
+              onOpenLayers: scaffold == null
+                  ? null
+                  : () => scaffold.openEndDrawer(),
+            );
+          },
+        ),
+        _ => throw StateError('Unknown shape strip action: ${entry.actionId}'),
+      };
+    }
+    return switch (slot) {
+      ShapeToolSlot.style => ToolbarSlot(
         id: ShapeToolSlot.style.name,
         icon: Icons.palette_rounded,
         label: l10n.colorLabel,
@@ -56,7 +109,7 @@ class ShapeModeToolbar extends ConsumerWidget {
           ctrl.toggleSlot(ShapeToolSlot.style);
         },
       ),
-      ToolbarSlot(
+      ShapeToolSlot.border => ToolbarSlot(
         id: ShapeToolSlot.border.name,
         icon: Icons.border_outer_rounded,
         label: l10n.borderTool,
@@ -65,7 +118,7 @@ class ShapeModeToolbar extends ConsumerWidget {
           ctrl.toggleSlot(ShapeToolSlot.border);
         },
       ),
-      ToolbarSlot(
+      ShapeToolSlot.shadow => ToolbarSlot(
         id: ShapeToolSlot.shadow.name,
         icon: Icons.blur_on_rounded,
         label: l10n.shadowTool,
@@ -74,37 +127,10 @@ class ShapeModeToolbar extends ConsumerWidget {
           ctrl.toggleSlot(ShapeToolSlot.shadow);
         },
       ),
-      ToolbarSlot(
-        id: 'opacity',
-        icon: Icons.opacity,
-        label: l10n.opacityLabel,
-        onTap: () {
-          ctrl.closePanel();
-          contextCtrl.toggle(ContextToolPanel.opacity);
-        },
-      ),
-      ToolbarSlot(
-        id: 'more',
-        icon: Icons.more_horiz_rounded,
-        label: l10n.moreActionsSemantics,
-        onTap: () {
-          ctrl.closePanel();
-          contextCtrl.closePanel();
-          final scaffold = Scaffold.maybeOf(context);
-          showSelectedLayerActionsSheet(
-            context,
-            ref,
-            layer,
-            onOpenLayers: scaffold == null
-                ? null
-                : () => scaffold.openEndDrawer(),
-          );
-        },
-      ),
       // Replace is a one-shot secondary action (opens the picker)
       // rather than an inline panel. Keeping it after the divider
       // preserves access without crowding the core styling tabs.
-      ToolbarSlot(
+      ShapeToolSlot.replace => ToolbarSlot(
         id: ShapeToolSlot.replace.name,
         icon: Icons.swap_horiz_rounded,
         label: l10n.replaceTool,
@@ -114,12 +140,6 @@ class ShapeModeToolbar extends ConsumerWidget {
           onReplaceTap();
         },
       ),
-    ];
-    return SlotStrip(
-      slots: slots,
-      activeId: contextPanel == ContextToolPanel.opacity
-          ? 'opacity'
-          : openSlot?.name,
-    );
+    };
   }
 }
