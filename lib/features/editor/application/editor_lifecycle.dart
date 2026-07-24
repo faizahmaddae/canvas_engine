@@ -1,21 +1,15 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
 import '../canvas/application/canvas_tool_controller.dart';
 import '../crop/application/crop_controller.dart';
-import '../engine/commands/transform_commands.dart';
-import '../engine/core/layer_transform.dart';
-import '../engine/modules/image/image_layer.dart';
 import '../image/application/image_tool_controller.dart';
 import '../paint/application/paint_tool_controller.dart';
 import '../shape/application/shape_tool_controller.dart';
 import '../sticker/application/sticker_tool_controller.dart';
 import '../text/application/text_tool_controller.dart';
 import 'context_toolbar_controller.dart';
-import 'document_controller.dart';
 import 'editing_controller.dart';
-import 'editor_session.dart';
 import 'mask_edit_controller.dart';
 import 'selection_controller.dart';
 import 'viewport_controller.dart';
@@ -57,57 +51,6 @@ void resetEditorEphemeralState(WidgetRef ref) {
   // reason.
   ref.read(maskEditControllerProvider.notifier).cancel();
 }
-
-/// Start a brand-new document INSIDE an open editor session.
-///
-/// Order is load-bearing. The session is rebound to a fresh unsaved
-/// one BEFORE the new document exists: autosave and Save read the
-/// session at flush time, so from the rebind onward nothing can
-/// upsert the new document (or its journal) under the old
-/// projectId. Previously the old session stayed bound and the first
-/// commit's debounced autosave silently overwrote the still-open
-/// project — and its recovery journal — with the fresh blank
-/// document, unrecoverably. Ephemeral tool state is reset next
-/// (crop/mask sessions still point at layers of the outgoing
-/// document) and only then is the document swapped.
-///
-/// Confirmation UX (dialogs) stays with the caller; this helper is
-/// the pure state transition so it can be exercised by tests.
-void startNewDocument(
-  WidgetRef ref, {
-  required double width,
-  required double height,
-  required String sessionName,
-  String? imageUrl,
-}) {
-  ref.read(editorSessionProvider.notifier).state = EditorSession(
-    name: sessionName,
-  );
-  resetEditorEphemeralState(ref);
-
-  final docCtrl = ref.read(documentControllerProvider.notifier);
-  docCtrl.newDocument(width: width, height: height);
-  ref.read(selectionControllerProvider.notifier).clear();
-
-  if (imageUrl != null) {
-    final id = _uuid.v4();
-    docCtrl.execute(
-      AddLayerCommand(
-        ImageLayer(
-          id: id,
-          transform: LayerTransform(
-            position: Offset.zero,
-            size: Size(width, height),
-          ),
-          source: ImageSource.network(imageUrl),
-        ),
-      ),
-    );
-    ref.read(selectionControllerProvider.notifier).select(id);
-  }
-}
-
-const _uuid = Uuid();
 
 /// Single dismiss seam for "user tapped empty workspace / pasteboard".
 ///

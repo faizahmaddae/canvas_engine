@@ -102,22 +102,23 @@ void main() {
 
   void expectMinimalAppBar() {
     final appBar = find.byType(AppBar);
-    // v2 declutter: Export + overflow are the only visible action
-    // icons; Save and Layers moved into the «⋮» overflow menu.
+    // tb4 5/14: the «⋮» is gone. Layers and Export are the only
+    // action icons; the document's own actions (rename / resize /
+    // fit / save) live in the title menu.
     expect(
       find.descendant(of: appBar, matching: find.byTooltip('Export')),
       findsOneWidget,
     );
     expect(
-      find.descendant(of: appBar, matching: find.byTooltip('More')),
+      find.descendant(of: appBar, matching: find.byTooltip('Layers')),
       findsOneWidget,
     );
     expect(
-      find.descendant(of: appBar, matching: find.byTooltip('Save project')),
+      find.descendant(of: appBar, matching: find.byTooltip('More')),
       findsNothing,
     );
     expect(
-      find.descendant(of: appBar, matching: find.byTooltip('Layers')),
+      find.descendant(of: appBar, matching: find.byTooltip('Save project')),
       findsNothing,
     );
     expect(
@@ -137,7 +138,7 @@ void main() {
     );
   }
 
-  testWidgets('main editor app bar exposes Save and Export affordances', (
+  testWidgets('main editor app bar exposes Layers and Export affordances', (
     tester,
   ) async {
     final container = containerWith();
@@ -187,28 +188,49 @@ void main() {
     expect(find.text('Opacity'), findsOneWidget);
   });
 
-  testWidgets('Save Export and Layers remain reachable from the AppBar', (
-    tester,
-  ) async {
+  testWidgets('the Layers icon raises the drawer directly', (tester) async {
     final container = containerWith();
     addTearDown(container.dispose);
     await pumpEditor(tester, container);
 
     expectMinimalAppBar();
-    // Layers now lives in the «⋮» overflow — open it, then tap the
-    // Layers entry to raise the end drawer.
     await tester.tap(
       find.descendant(
         of: find.byType(AppBar),
-        matching: find.byTooltip('More'),
+        matching: find.byTooltip('Layers'),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Save project'), findsOneWidget);
-    await tester.tap(find.text('Layers'));
-    await tester.pumpAndSettle();
 
     expect(find.byType(LayersPanel), findsOneWidget);
+  });
+
+  testWidgets('the title menu carries the document actions', (tester) async {
+    final container = containerWith();
+    addTearDown(container.dispose);
+    await pumpEditor(tester, container);
+
+    await tester.tap(find.byKey(const ValueKey('appbar-title-menu')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rename'), findsOneWidget);
+    expect(find.text('Resize canvas'), findsOneWidget);
+    expect(find.text('Fit to screen'), findsOneWidget);
+    expect(find.text('Save project'), findsOneWidget);
+  });
+
+  testWidgets('a never-saved document says so under its name', (tester) async {
+    final container = containerWith();
+    addTearDown(container.dispose);
+    await pumpEditor(tester, container);
+
+    expect(
+      find.textContaining('Unsaved', findRichText: true),
+      findsOneWidget,
+      reason:
+          'a document that exists only in the crash journal has to '
+          'admit it',
+    );
   });
 
   testWidgets('multiple selected layers use contextual toolbar actions', (

@@ -238,6 +238,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get renameAction => 'تغییر نام';
 
   @override
+  String get documentMenuTooltip => 'گزینه‌های سند';
+
+  @override
+  String get unsavedBadge => 'ذخیره‌نشده';
+
+  @override
+  String get resizeCanvasAction => 'تغییر اندازه بوم';
+
+  @override
   String get duplicateAction => 'تکثیر';
 
   @override

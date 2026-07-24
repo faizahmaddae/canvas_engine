@@ -536,6 +536,24 @@ abstract class AppLocalizations {
   /// **'Rename'**
   String get renameAction;
 
+  /// No description provided for @documentMenuTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Document options'**
+  String get documentMenuTooltip;
+
+  /// No description provided for @unsavedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved'**
+  String get unsavedBadge;
+
+  /// No description provided for @resizeCanvasAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Resize canvas'**
+  String get resizeCanvasAction;
+
   /// No description provided for @duplicateAction.
   ///
   /// In en, this message translates to:

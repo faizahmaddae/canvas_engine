@@ -76,7 +76,6 @@ import 'widgets/editor_toolbar.dart';
 import 'widgets/export_action_sheet.dart';
 import 'widgets/layers_panel.dart';
 import 'widgets/multi_select_mode_toolbar.dart';
-import 'widgets/new_document_dialog.dart';
 import '../../../core/utils/editor_value_format.dart';
 
 const _uuid = Uuid();
@@ -231,65 +230,27 @@ class EditorScreen extends ConsumerWidget {
                     child: Container(height: 1, color: tokens.border),
                   ),
                   title: const _DocumentTitle(),
+                  // Three actions, no overflow menu (tb4 5/14). The
+                  // «⋮» held Layers, Save, Fit and New document —
+                  // four unrelated things behind one anonymous glyph.
+                  // Layers is frequent enough to earn its own icon;
+                  // Save and Fit belong to the DOCUMENT, so they live
+                  // in the title's menu next to Rename; New document
+                  // leaves the editor entirely (Home creates).
                   actions: [
                     const _UndoRedoActions(),
+                    Builder(
+                      builder: (ctx) => IconButton(
+                        tooltip: l10n.layersTooltip,
+                        onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+                        icon: const Icon(Icons.layers_outlined),
+                      ),
+                    ),
                     Builder(
                       builder: (ctx) => IconButton(
                         tooltip: l10n.editorExport,
                         onPressed: () => ExportActionSheet.open(ctx),
                         icon: const Icon(Icons.ios_share_outlined),
-                      ),
-                    ),
-                    Builder(
-                      builder: (ctx) => PopupMenuButton<_OverflowAction>(
-                        tooltip: l10n.moreTooltip,
-                        icon: const Icon(Icons.more_vert),
-                        color: tokens.surface,
-                        onSelected: (action) =>
-                            _handleOverflowAction(ctx, ref, action),
-                        itemBuilder: (_) => [
-                          PopupMenuItem(
-                            value: _OverflowAction.layers,
-                            child: ListTile(
-                              leading: const Icon(Icons.layers_outlined),
-                              iconColor: tokens.textSecondary,
-                              textColor: tokens.textPrimary,
-                              title: Text(l10n.layersTooltip),
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: _OverflowAction.save,
-                            child: ListTile(
-                              leading: const Icon(Icons.bookmark_add_outlined),
-                              iconColor: tokens.textSecondary,
-                              textColor: tokens.textPrimary,
-                              title: Text(l10n.editorSaveProject),
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                          const PopupMenuDivider(),
-                          PopupMenuItem(
-                            value: _OverflowAction.fit,
-                            child: ListTile(
-                              leading: const Icon(Icons.fit_screen_outlined),
-                              iconColor: tokens.textSecondary,
-                              textColor: tokens.textPrimary,
-                              title: Text(l10n.editorFitToScreen),
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: _OverflowAction.newDoc,
-                            child: ListTile(
-                              leading: const Icon(Icons.note_add_outlined),
-                              iconColor: tokens.textSecondary,
-                              textColor: tokens.textPrimary,
-                              title: Text(l10n.editorNewDocument),
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -1194,105 +1155,6 @@ class EditorScreen extends ConsumerWidget {
       ctrl.toggleSlot(ImageToolSlot.look);
     }
   }
-
-  /// Toggles the Canvas dock panel. Unlike Filters/Adjust, Canvas
-  /// edits the document itself so it doesn't require a selected
-  /// layer — we also clear the current selection so the dock falls
-  /// through to the no-selection branch and renders the panel.
-  void _openCanvas(WidgetRef ref) {
-    EditorHaptics.tap();
-    ref.read(selectionControllerProvider.notifier).clear();
-    ref.read(canvasToolControllerProvider.notifier).togglePanel();
-  }
-
-  void _handleOverflowAction(
-    BuildContext context,
-    WidgetRef ref,
-    _OverflowAction action,
-  ) {
-    switch (action) {
-      case _OverflowAction.layers:
-        Scaffold.of(context).openEndDrawer();
-      case _OverflowAction.save:
-        _saveProject(context, ref);
-      case _OverflowAction.fit:
-        _fitViewport(context, ref);
-      case _OverflowAction.newDoc:
-        _openNewDocumentDialog(context, ref);
-    }
-  }
-
-  Future<void> _saveProject(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = context.l10n;
-    try {
-      final project = await ref.read(projectSaveServiceProvider).save(context);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l10n.savedProject(project.name)),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (e, st) {
-      debugLogError('editor/save', e, st);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(userMessageFor(e, fallback: l10n.somethingWentWrong)),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  Future<void> _openNewDocumentDialog(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    final choice = await showDialog<NewDocumentChoice>(
-      context: context,
-      builder: (_) => const NewDocumentDialog(),
-    );
-    if (choice == null || !context.mounted) return;
-
-    // Replacing a never-saved document with content is destructive —
-    // confirm first. Saved projects lose nothing here: their last
-    // autosaved state stays on disk under the old projectId, which
-    // the rebind below is about to detach from this editor.
-    final session = ref.read(editorSessionProvider);
-    final currentDoc = ref.read(documentControllerProvider);
-    if (session?.projectId == null && currentDoc.layers.isNotEmpty) {
-      final l10n = context.l10n;
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(l10n.newDocumentReplaceTitle),
-          content: Text(l10n.newDocumentReplaceUnsavedBody),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.cancelAction),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.createAction),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true || !context.mounted) return;
-    }
-
-    // Rebind-first state transition lives in the application layer
-    // (startNewDocument) so the no-overwrite invariant is testable
-    // without driving these dialogs.
-    startNewDocument(
-      ref,
-      width: choice.width,
-      height: choice.height,
-      sessionName: context.l10n.newDesignName,
-      imageUrl: choice.imageUrl,
-    );
-  }
 }
 
 /// Fit-to-screen action, shared by the overflow menu item and the
@@ -1307,6 +1169,38 @@ class EditorScreen extends ConsumerWidget {
 /// don't know the dock height from this seam) and shift the
 /// canvas downward. The auto-fit is the source of truth; this
 /// action just re-applies it.
+Future<void> _saveProject(BuildContext context, WidgetRef ref) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final l10n = context.l10n;
+  try {
+    final project = await ref.read(projectSaveServiceProvider).save(context);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.savedProject(project.name)),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  } catch (e, st) {
+    debugLogError('editor/save', e, st);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(userMessageFor(e, fallback: l10n.somethingWentWrong)),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+}
+
+/// Toggles the Canvas dock panel. Unlike Filters/Adjust, Canvas
+/// edits the document itself so it doesn't require a selected
+/// layer — we also clear the current selection so the dock falls
+/// through to the no-selection branch and renders the panel.
+void _openCanvas(WidgetRef ref) {
+  EditorHaptics.tap();
+  ref.read(selectionControllerProvider.notifier).clear();
+  ref.read(canvasToolControllerProvider.notifier).togglePanel();
+}
+
 void _fitViewport(BuildContext context, WidgetRef ref) {
   final ok = ref.read(viewportControllerProvider.notifier).refit();
   if (ok) return;
@@ -1431,6 +1325,7 @@ class _DocumentTitle extends ConsumerWidget {
     final scale = ref.watch(viewportControllerProvider.select((v) => v.scale));
     final session = ref.watch(editorSessionProvider);
     final title = session?.name ?? context.l10n.appName;
+    final unsaved = session?.projectId == null;
 
     // Sized to the full toolbar height with the visual block centred
     // inside — pixel-identical to letting the AppBar centre the
@@ -1443,10 +1338,11 @@ class _DocumentTitle extends ConsumerWidget {
         alignment: AlignmentDirectional.centerStart,
         children: [
           Tooltip(
-            message: context.l10n.renameAction,
+            message: context.l10n.documentMenuTooltip,
             child: InkWell(
+              key: const ValueKey('appbar-title-menu'),
               borderRadius: BorderRadius.circular(8),
-              onTap: () => _renameFlow(context, ref),
+              onTap: () => _openTitleMenu(context, ref),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 child: Column(
@@ -1462,8 +1358,31 @@ class _DocumentTitle extends ConsumerWidget {
                         color: tokens.textPrimary,
                       ),
                     ),
-                    Text(
-                      '${EditorValueFormat.of(context).dimensions(size.width.toInt(), size.height.toInt())} • ${EditorValueFormat.of(context).percent((scale * 100).round())}',
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          // Dirty state, said once: a document that
+                          // has never been saved as a project lives
+                          // only in the crash journal, and nothing
+                          // in the old top bar admitted that. Once
+                          // it IS a project, autosave keeps it
+                          // current and the badge has nothing left
+                          // to warn about, so it disappears rather
+                          // than blinking on every keystroke.
+                          if (unsaved)
+                            TextSpan(
+                              text: '${context.l10n.unsavedBadge} • ',
+                              style: TextStyle(
+                                color: tokens.accentDeep,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          TextSpan(
+                            text:
+                                '${EditorValueFormat.of(context).dimensions(size.width.toInt(), size.height.toInt())} • ${EditorValueFormat.of(context).percent((scale * 100).round())}',
+                          ),
+                        ],
+                      ),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: tokens.textSecondary,
                       ),
@@ -1501,6 +1420,75 @@ class _DocumentTitle extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// The document's own menu, hung off its name in the top bar.
+  ///
+  /// Rename, Resize, Fit and Save all act on the DOCUMENT rather than
+  /// on a layer, and they were previously split between an anonymous
+  /// «⋮» and a tap on the title that only ever renamed. Putting them
+  /// together under the thing they operate on is the whole point:
+  /// the title is the document.
+  Future<void> _openTitleMenu(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final tokens = AppTokens.of(context);
+    final box = context.findRenderObject() as RenderBox?;
+    final overlay =
+        Navigator.of(context).overlay?.context.findRenderObject() as RenderBox?;
+    if (box == null || overlay == null) return;
+    final topStart = box.localToGlobal(Offset.zero, ancestor: overlay);
+    final bottomEnd = box.localToGlobal(
+      box.size.bottomRight(Offset.zero),
+      ancestor: overlay,
+    );
+    final action = await showMenu<_DocumentAction>(
+      context: context,
+      color: tokens.surface,
+      position: RelativeRect.fromLTRB(
+        topStart.dx,
+        bottomEnd.dy,
+        overlay.size.width - bottomEnd.dx,
+        0,
+      ),
+      items: [
+        _menuItem(
+          _DocumentAction.rename,
+          Icons.drive_file_rename_outline_rounded,
+          l10n.renameAction,
+          tokens,
+        ),
+        _menuItem(
+          _DocumentAction.resize,
+          Icons.aspect_ratio_rounded,
+          l10n.resizeCanvasAction,
+          tokens,
+        ),
+        _menuItem(
+          _DocumentAction.fit,
+          Icons.fit_screen_outlined,
+          l10n.editorFitToScreen,
+          tokens,
+        ),
+        const PopupMenuDivider(),
+        _menuItem(
+          _DocumentAction.save,
+          Icons.bookmark_add_outlined,
+          l10n.editorSaveProject,
+          tokens,
+        ),
+      ],
+    );
+    if (action == null || !context.mounted) return;
+    switch (action) {
+      case _DocumentAction.rename:
+        await _renameFlow(context, ref);
+      case _DocumentAction.resize:
+        _openCanvas(ref);
+      case _DocumentAction.fit:
+        _fitViewport(context, ref);
+      case _DocumentAction.save:
+        await _saveProject(context, ref);
+    }
   }
 
   /// Same dialog contract as the Projects grid rename: prefilled
@@ -1545,8 +1533,6 @@ class _DocumentTitle extends ConsumerWidget {
     }
   }
 }
-
-enum _OverflowAction { layers, save, fit, newDoc }
 
 /// Everything [_resolveDock] hands the dock + scrim. The `selected*`
 /// layer fields are pre-gated to the mode that owns the chip strip
@@ -1678,3 +1664,22 @@ class _ModeExitPill extends ConsumerWidget {
     return ModeDoneButton(onPressed: () => dismissActiveEditing(ref));
   }
 }
+
+/// The four document-level actions behind the title.
+enum _DocumentAction { rename, resize, fit, save }
+
+PopupMenuItem<_DocumentAction> _menuItem(
+  _DocumentAction value,
+  IconData icon,
+  String label,
+  AppTokens tokens,
+) => PopupMenuItem<_DocumentAction>(
+  value: value,
+  child: ListTile(
+    leading: Icon(icon),
+    iconColor: tokens.textSecondary,
+    textColor: tokens.textPrimary,
+    title: Text(label),
+    contentPadding: EdgeInsets.zero,
+  ),
+);

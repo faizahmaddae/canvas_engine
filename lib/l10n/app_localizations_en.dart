@@ -237,6 +237,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renameAction => 'Rename';
 
   @override
+  String get documentMenuTooltip => 'Document options';
+
+  @override
+  String get unsavedBadge => 'Unsaved';
+
+  @override
+  String get resizeCanvasAction => 'Resize canvas';
+
+  @override
   String get duplicateAction => 'Duplicate';
 
   @override
