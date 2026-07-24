@@ -78,6 +78,8 @@
   "resizeCanvasAction": "Resize canvas",
   "photoSlotTapToReplace": "Tap to add your photo",
   "duplicateAction": "Duplicate",
+  "flipHorizontalAction": "Flip horizontally",
+  "flipVerticalAction": "Flip vertically",
   "addAction": "Add",
   "applyAction": "Apply",
   "doneAction": "Done",

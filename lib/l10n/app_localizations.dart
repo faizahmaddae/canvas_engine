@@ -566,6 +566,18 @@ abstract class AppLocalizations {
   /// **'Duplicate'**
   String get duplicateAction;
 
+  /// No description provided for @flipHorizontalAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip horizontally'**
+  String get flipHorizontalAction;
+
+  /// No description provided for @flipVerticalAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip vertically'**
+  String get flipVerticalAction;
+
   /// No description provided for @addAction.
   ///
   /// In en, this message translates to:

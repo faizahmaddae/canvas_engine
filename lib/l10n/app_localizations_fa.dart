@@ -253,6 +253,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get duplicateAction => 'تکثیر';
 
   @override
+  String get flipHorizontalAction => 'برگرداندن افقی';
+
+  @override
+  String get flipVerticalAction => 'برگرداندن عمودی';
+
+  @override
   String get addAction => 'افزودن';
 
   @override

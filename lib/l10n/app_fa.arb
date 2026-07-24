@@ -78,6 +78,8 @@
   "resizeCanvasAction": "تغییر اندازه بوم",
   "photoSlotTapToReplace": "برای افزودن عکس ضربه بزنید",
   "duplicateAction": "تکثیر",
+  "flipHorizontalAction": "برگرداندن افقی",
+  "flipVerticalAction": "برگرداندن عمودی",
   "addAction": "افزودن",
   "applyAction": "اعمال",
   "doneAction": "انجام شد",

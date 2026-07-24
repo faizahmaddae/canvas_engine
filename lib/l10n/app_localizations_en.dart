@@ -252,6 +252,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get duplicateAction => 'Duplicate';
 
   @override
+  String get flipHorizontalAction => 'Flip horizontally';
+
+  @override
+  String get flipVerticalAction => 'Flip vertically';
+
+  @override
   String get addAction => 'Add';
 
   @override

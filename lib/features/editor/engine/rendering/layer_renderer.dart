@@ -49,14 +49,35 @@ class LayerRenderer extends StatelessWidget {
           // border + shadow + mask) so transparency reads as one
           // coherent element. Skip the wrapper at full opacity to
           // avoid an extra compositing layer in the common case.
-          child: layer.opacity < 1.0
-              ? Opacity(
-                  opacity: layer.opacity.clamp(0.0, 1.0),
-                  child: layer.buildContent(context),
-                )
-              : layer.buildContent(context),
+          // Mirroring sits INSIDE the rotation and inside the repaint
+          // boundary: it is a property of the artwork, not of the
+          // pose, so a rotated layer mirrors in place instead of
+          // jumping (docs/flip-transform-design-2026-07.md). Every
+          // layer type and the exporter render through here, so this
+          // is the only place flip has to exist.
+          child: _mirrored(transform, _content(context)),
         ),
       ),
+    );
+  }
+
+  Widget _content(BuildContext context) => layer.opacity < 1.0
+      ? Opacity(
+          opacity: layer.opacity.clamp(0.0, 1.0),
+          child: layer.buildContent(context),
+        )
+      : layer.buildContent(context);
+
+  static Widget _mirrored(LayerTransform t, Widget child) {
+    if (!t.isMirrored) return child;
+    return Transform(
+      alignment: Alignment.center,
+      transform: Matrix4.diagonal3Values(
+        t.flipH ? -1.0 : 1.0,
+        t.flipV ? -1.0 : 1.0,
+        1,
+      ),
+      child: child,
     );
   }
 }

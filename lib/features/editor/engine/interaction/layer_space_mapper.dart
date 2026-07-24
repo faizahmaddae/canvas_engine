@@ -32,7 +32,7 @@ final class LayerSpaceMapper {
   /// `c = center + R(rotation)·(l − size/2)`
   Offset layerToCanvas(Offset local) {
     final lc = Offset(transform.size.width / 2, transform.size.height / 2);
-    final v = local - lc;
+    final v = _mirror(local - lc);
     final cosR = math.cos(transform.rotation);
     final sinR = math.sin(transform.rotation);
     return transform.center +
@@ -44,8 +44,22 @@ final class LayerSpaceMapper {
     final v = canvas - transform.center;
     final cosR = math.cos(-transform.rotation);
     final sinR = math.sin(-transform.rotation);
-    return Offset(v.dx * cosR - v.dy * sinR, v.dx * sinR + v.dy * cosR) +
+    return _mirror(
+          Offset(v.dx * cosR - v.dy * sinR, v.dx * sinR + v.dy * cosR),
+        ) +
         Offset(transform.size.width / 2, transform.size.height / 2);
+  }
+
+  /// Mirror a centre-relative offset across the flipped axes. Its own
+  /// inverse, which is why both directions call it unchanged: hit
+  /// testing a mirrored layer has to land on the pixel the user sees,
+  /// not on its unmirrored twin.
+  Offset _mirror(Offset centred) {
+    if (!transform.isMirrored) return centred;
+    return Offset(
+      transform.flipH ? -centred.dx : centred.dx,
+      transform.flipV ? -centred.dy : centred.dy,
+    );
   }
 
   Offset canvasToScreen(Offset canvas) =>

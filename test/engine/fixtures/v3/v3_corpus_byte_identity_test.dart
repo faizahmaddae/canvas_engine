@@ -16,6 +16,7 @@ const _fixtureFiles = <String>[
   '01_image_with_effects.json',
   '02_image_with_stack_mask.json',
   '03_image_with_per_effect_mask.json',
+  '04_flipped_layer.json',
 ];
 
 void main() {

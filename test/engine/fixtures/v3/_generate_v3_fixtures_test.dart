@@ -123,11 +123,34 @@ EditorDocument _imageWithPerEffectMask() => EditorDocument(
   projectKind: ProjectKind.photo,
 );
 
+/// tb4 7/14: a mirrored layer. `flipH`/`flipV` are omit-default, so
+/// this fixture is the only place in the corpus where `fx`/`fy`
+/// appear at all — every other file proves their absence stays
+/// byte-identical.
+EditorDocument _flippedLayer() => EditorDocument(
+  layers: [
+    ImageLayer(
+      id: 'img-flip',
+      transform: const LayerTransform(
+        position: Offset(40, 40),
+        size: Size(480, 640),
+        rotation: 0.35,
+        flipH: true,
+      ),
+      source: const ImageSource.asset('assets/sample.jpg'),
+      effects: EffectStack(
+        ImageAdjustments(brightness: 6, contrast: 1.05).toEffectStack(),
+      ),
+    ),
+  ],
+);
+
 void main() {
   final fixtures = <String, EditorDocument>{
     '01_image_with_effects.json': _imageWithEffects(),
     '02_image_with_stack_mask.json': _imageWithStackMask(),
     '03_image_with_per_effect_mask.json': _imageWithPerEffectMask(),
+    '04_flipped_layer.json': _flippedLayer(),
   };
 
   test('write v3 fixture corpus', () {

@@ -199,6 +199,22 @@ class _LayerOverflowSheet extends StatelessWidget {
           LayerActions.duplicate(parentRef, layer);
         }),
       ),
+      // 6b — Flip. Whole-layer and decisive rather than tunable,
+      // which is why it lives here and not on a strip.
+      ListTile(
+        leading: const Icon(Icons.flip_rounded),
+        title: Text(l10n.flipHorizontalAction),
+        onTap: () => _popThen(context, () {
+          LayerActions.flip(parentRef, layer, horizontal: true);
+        }),
+      ),
+      ListTile(
+        leading: const Icon(Icons.flip_rounded),
+        title: Text(l10n.flipVerticalAction),
+        onTap: () => _popThen(context, () {
+          LayerActions.flip(parentRef, layer, horizontal: false);
+        }),
+      ),
       // 7 — Reorder
       ListTile(
         enabled: canForward,
@@ -365,6 +381,37 @@ class _LayerOverflowSheet extends StatelessWidget {
           final label = l10n.duplicateAction;
           _popThen(context, () {
             LayerActions.duplicateMany(parentRef, selectedLayers, label: label);
+          });
+        },
+      ),
+      // Batch flip — each layer about its OWN centre, one composite.
+      ListTile(
+        leading: const Icon(Icons.flip_rounded),
+        title: Text(l10n.flipHorizontalAction),
+        onTap: () {
+          final label = l10n.flipHorizontalAction;
+          _popThen(context, () {
+            LayerActions.flipMany(
+              parentRef,
+              selectedLayers,
+              horizontal: true,
+              label: label,
+            );
+          });
+        },
+      ),
+      ListTile(
+        leading: const Icon(Icons.flip_rounded),
+        title: Text(l10n.flipVerticalAction),
+        onTap: () {
+          final label = l10n.flipVerticalAction;
+          _popThen(context, () {
+            LayerActions.flipMany(
+              parentRef,
+              selectedLayers,
+              horizontal: false,
+              label: label,
+            );
           });
         },
       ),

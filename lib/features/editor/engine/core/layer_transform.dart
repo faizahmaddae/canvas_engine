@@ -16,6 +16,8 @@ class LayerTransform {
     required this.position,
     required this.size,
     this.rotation = 0,
+    this.flipH = false,
+    this.flipV = false,
   });
 
   /// Top-left position in canvas coordinates *before* rotation is applied.
@@ -25,6 +27,21 @@ class LayerTransform {
 
   /// Rotation in radians around [center].
   final double rotation;
+
+  /// Mirrored across the layer's own vertical axis (left ↔ right).
+  ///
+  /// Flips apply INSIDE rotation, in the layer's local frame: flipping
+  /// a rotated layer mirrors its artwork, not its pose. Mirroring the
+  /// pose instead would make a rotated layer jump across the canvas —
+  /// see docs/flip-transform-design-2026-07.md.
+  final bool flipH;
+
+  /// Mirrored across the layer's own horizontal axis (top ↔ bottom).
+  final bool flipV;
+
+  /// Whether either axis is mirrored — the cheap guard render and
+  /// hit-test paths use to skip the mirroring maths entirely.
+  bool get isMirrored => flipH || flipV;
 
   Offset get center =>
       Offset(position.dx + size.width / 2, position.dy + size.height / 2);
@@ -46,11 +63,19 @@ class LayerTransform {
     ];
   }
 
-  LayerTransform copyWith({Offset? position, Size? size, double? rotation}) {
+  LayerTransform copyWith({
+    Offset? position,
+    Size? size,
+    double? rotation,
+    bool? flipH,
+    bool? flipV,
+  }) {
     return LayerTransform(
       position: position ?? this.position,
       size: size ?? this.size,
       rotation: rotation ?? this.rotation,
+      flipH: flipH ?? this.flipH,
+      flipV: flipV ?? this.flipV,
     );
   }
 
@@ -60,10 +85,12 @@ class LayerTransform {
       other is LayerTransform &&
           other.position == position &&
           other.size == size &&
-          other.rotation == rotation;
+          other.rotation == rotation &&
+          other.flipH == flipH &&
+          other.flipV == flipV;
 
   @override
-  int get hashCode => Object.hash(position, size, rotation);
+  int get hashCode => Object.hash(position, size, rotation, flipH, flipV);
 
   @override
   String toString() =>
@@ -107,6 +134,10 @@ class LayerTransform {
       'w': _finite(size.width),
       'h': _finite(size.height),
       'r': _finite(rotation),
+      // Omitted when false so every pre-flip document re-encodes
+      // byte-identically — the whole fixture corpus depends on it.
+      if (flipH) 'fx': true,
+      if (flipV) 'fy': true,
     };
   }
 
@@ -130,6 +161,10 @@ class LayerTransform {
       position: Offset(n('x'), n('y')),
       size: Size(n('w'), n('h')),
       rotation: n('r'),
+      // Absent means "not flipped": that IS the legacy lift, which is
+      // why there is a fixture proving a pre-flip document decodes.
+      flipH: json['fx'] == true,
+      flipV: json['fy'] == true,
     );
   }
 }

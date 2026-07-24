@@ -208,6 +208,38 @@ class LayerActions {
   /// Duplicate every layer in [layers] as one undoable step and make
   /// the clones the new (multi) selection — so the user can drag the
   /// duplicated group away immediately, mirroring [duplicate].
+  /// Mirror one layer across an axis. One tap, one undo entry.
+  static void flip(
+    WidgetRef ref,
+    EditorLayer layer, {
+    required bool horizontal,
+  }) {
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(FlipLayerCommand(layerId: layer.id, horizontal: horizontal));
+  }
+
+  /// Mirror every selected layer about its OWN centre, as one undo
+  /// entry. Deliberately not a mirror of the group about the group
+  /// centre — that moves layers, which is a different operation
+  /// (docs/flip-transform-design-2026-07.md).
+  static void flipMany(
+    WidgetRef ref,
+    List<EditorLayer> layers, {
+    required bool horizontal,
+    required String label,
+  }) {
+    if (layers.isEmpty) return;
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
+          CompositeCommand([
+            for (final l in layers)
+              FlipLayerCommand(layerId: l.id, horizontal: horizontal),
+          ], labelOverride: label),
+        );
+  }
+
   static void duplicateMany(
     WidgetRef ref,
     List<EditorLayer> layers, {

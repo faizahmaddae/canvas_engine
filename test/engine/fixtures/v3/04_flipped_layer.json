@@ -1,0 +1,34 @@
+{
+  "version": 3,
+  "width": 1080.0,
+  "height": 1080.0,
+  "layers": [
+    {
+      "type": "image",
+      "id": "img-flip",
+      "transform": {
+        "x": 40.0,
+        "y": 40.0,
+        "w": 480.0,
+        "h": 640.0,
+        "r": 0.35,
+        "fx": true
+      },
+      "effects": [
+        {
+          "type": "contrast",
+          "amount": 1.05
+        },
+        {
+          "type": "brightness",
+          "amount": 6.0
+        }
+      ],
+      "source": {
+        "asset": "assets/sample.jpg"
+      },
+      "fit": "cover",
+      "mask": "original"
+    }
+  ]
+}

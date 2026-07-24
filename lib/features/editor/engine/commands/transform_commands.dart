@@ -100,6 +100,46 @@ class SetLayerTransformCommand extends EditorCommand {
   }
 }
 
+/// Mirror a layer across one of its own axes (tb4 7/14).
+///
+/// Its own inverse: flipping the same axis twice is the identity, so
+/// [invert] returns an identical command. That is the simplest
+/// possible inverse and the only one that cannot drift from [apply].
+///
+/// The flip lives on [LayerTransform] and is applied inside rotation,
+/// so a rotated layer mirrors its artwork in place — see
+/// docs/flip-transform-design-2026-07.md for why the pose is left
+/// alone.
+class FlipLayerCommand extends EditorCommand {
+  const FlipLayerCommand({required this.layerId, required this.horizontal});
+
+  final String layerId;
+
+  /// `true` mirrors left↔right, `false` top↔bottom.
+  final bool horizontal;
+
+  @override
+  String get label => horizontal ? 'Flip horizontally' : 'Flip vertically';
+
+  @override
+  EditorDocument apply(EditorDocument doc) {
+    final layer = doc.layerById(layerId);
+    if (layer == null) return doc;
+    final t = layer.transform;
+    return doc.replaceLayer(
+      layer.withTransform(
+        horizontal ? t.copyWith(flipH: !t.flipH) : t.copyWith(flipV: !t.flipV),
+      ),
+    );
+  }
+
+  @override
+  EditorCommand invert(EditorDocument before) =>
+      before.layerById(layerId) == null
+      ? const _NoopCommand()
+      : FlipLayerCommand(layerId: layerId, horizontal: horizontal);
+}
+
 class MoveLayerCommand extends SetLayerTransformCommand {
   const MoveLayerCommand({required super.layerId, required super.transform})
     : super(labelOverride: 'Move');
