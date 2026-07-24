@@ -391,6 +391,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get multiSelectExit => 'Exit multi-select';
+
+  @override
   String get longPressCanvasMultiSelectHint =>
       'Long-press canvas to select multiple layers.';
 

@@ -836,6 +836,12 @@ abstract class AppLocalizations {
   /// **'Multi-select · {count}'**
   String multiSelectCount(int count);
 
+  /// No description provided for @multiSelectExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit multi-select'**
+  String get multiSelectExit;
+
   /// No description provided for @longPressCanvasMultiSelectHint.
   ///
   /// In en, this message translates to:

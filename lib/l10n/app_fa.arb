@@ -123,6 +123,7 @@
   "protectedBasePhotoTooltip": "عکس پایه محافظت‌شده",
   "basePhotoLabel": "عکس پایه",
   "multiSelectCount": "چندانتخاب · {count}",
+  "multiSelectExit": "خروج از چندانتخاب",
   "longPressCanvasMultiSelectHint": "برای انتخاب چند لایه، روی بوم نگه دارید.",
   "layerControlsSingleSubtitle": "{type}. برای چندانتخاب، روی بوم نگه دارید.",
   "layerControlsMultiSubtitle": "لایه‌های انتخاب‌شده را هم‌تراز یا توزیع کنید.",

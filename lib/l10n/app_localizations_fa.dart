@@ -390,6 +390,9 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get multiSelectExit => 'خروج از چندانتخاب';
+
+  @override
   String get longPressCanvasMultiSelectHint =>
       'برای انتخاب چند لایه، روی بوم نگه دارید.';
 

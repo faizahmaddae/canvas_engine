@@ -26,6 +26,7 @@ class LayersPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final doc = ref.watch(documentControllerProvider);
     final selection = ref.watch(selectionControllerProvider);
+    final multiMode = ref.watch(selectionModeProvider) == SelectionMode.multi;
     final total = doc.layers.length;
 
     return Drawer(
@@ -51,7 +52,15 @@ class LayersPanel extends ConsumerWidget {
                           layer: layer,
                           displayIndex: displayIndex,
                           modelIndex: modelIndex,
-                          isSelected: selection.selectedId == layer.id,
+                          // Multi mode renders MEMBERSHIP, not just the
+                          // primary — every checked row is in the group
+                          // (tb3 5/7: the drawer can extend a
+                          // multi-selection, not only replace it).
+                          isSelected: multiMode
+                              ? selection.contains(layer.id)
+                              : selection.selectedId == layer.id,
+                          isPrimary: selection.selectedId == layer.id,
+                          multiMode: multiMode,
                           total: total,
                         );
                       },
@@ -167,13 +176,31 @@ class _LayerTile extends ConsumerWidget {
     required this.displayIndex,
     required this.modelIndex,
     required this.isSelected,
+    required this.isPrimary,
+    required this.multiMode,
     required this.total,
   });
 
   final EditorLayer layer;
   final int displayIndex;
   final int modelIndex;
+
+  /// Single mode: is this the primary selection. Multi mode: is this
+  /// layer a MEMBER of the group ([SelectionState.contains]). Drives
+  /// the highlight + the membership check indicator.
   final bool isSelected;
+
+  /// Is this the PRIMARY selection. The per-layer controls that only
+  /// make sense once (rename, opacity slider) stay pinned to the
+  /// primary — exactly the rows that showed them before multi-mode
+  /// membership rendering landed (tb3 5/7).
+  final bool isPrimary;
+
+  /// True while the editor is in multi-select mode — flips the row
+  /// tap from replace-selection to toggle-membership and shows the
+  /// membership check indicator.
+  final bool multiMode;
+
   final int total;
 
   @override
@@ -211,6 +238,23 @@ class _LayerTile extends ConsumerWidget {
       color: bg,
       child: InkWell(
         onTap: () {
+          if (multiMode) {
+            // Multi mode: the row TOGGLES membership (tb3 5/7)
+            // instead of replacing the selection. Locked layers are
+            // no-ops — the canvas hit-test never admits them into a
+            // group either, and a group transform must not move a
+            // locked layer (that includes the protected base photo).
+            if (layer.locked) return;
+            final selectionCtl = ref.read(selectionControllerProvider.notifier);
+            selectionCtl.toggle(layer.id);
+            // Existing rule: the mode ends when membership can no
+            // longer form a group (mirrors the editor's commit-tick
+            // prune listener at < 2).
+            if (ref.read(selectionControllerProvider).selectedIds.length < 2) {
+              ref.read(selectionModeProvider.notifier).exitMulti();
+            }
+            return;
+          }
           ref.read(selectionControllerProvider.notifier).select(layer.id);
           // Protected base photo: tapping the row is the user's
           // way to open the canvas-level photo tools (Style /
@@ -262,6 +306,25 @@ class _LayerTile extends ConsumerWidget {
                         ),
                       ),
                     ),
+                  // Membership check indicator — multi mode only, so
+                  // single-mode rows stay pixel-identical. Locked
+                  // layers show the dimmed off state permanently
+                  // (they cannot join a group; the row tap is a
+                  // no-op for them too).
+                  if (multiMode)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 4),
+                      child: Icon(
+                        isSelected
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked,
+                        key: ValueKey('layers-multi-check-${layer.id}'),
+                        size: 18,
+                        color: isSelected
+                            ? AppTokens.of(context).accent
+                            : Theme.of(context).hintColor,
+                      ),
+                    ),
                   LayerThumbnail(layer: layer),
                   const SizedBox(width: 12),
                   Expanded(
@@ -286,7 +349,7 @@ class _LayerTile extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  if (isSelected)
+                  if (isPrimary)
                     _IconAction(
                       icon: Icons.drive_file_rename_outline_rounded,
                       tooltip: context.l10n.renameAction,
@@ -353,7 +416,7 @@ class _LayerTile extends ConsumerWidget {
               // committed via `execute(SetLayerOpacityCommand)` on
               // change-end so undo/redo and autosave see exactly one
               // entry per drag gesture.
-              if (isSelected) LayerOpacityControl(layer: layer),
+              if (isPrimary) LayerOpacityControl(layer: layer),
             ],
           ),
         ),

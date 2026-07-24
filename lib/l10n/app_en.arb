@@ -124,6 +124,7 @@
   "basePhotoLabel": "Base photo",
   "multiSelectCount": "Multi-select · {count}",
   "@multiSelectCount": {"placeholders": {"count": {"type": "int"}}},
+  "multiSelectExit": "Exit multi-select",
   "longPressCanvasMultiSelectHint": "Long-press canvas to select multiple layers.",
   "layerControlsSingleSubtitle": "{type}. Long-press canvas to multi-select.",
   "@layerControlsSingleSubtitle": {"placeholders": {"type": {"type": "String"}}},

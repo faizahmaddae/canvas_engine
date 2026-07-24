@@ -41,6 +41,7 @@ import '../../text/presentation/text_edit_flow.dart';
 import '../../text/application/add_text_composer_state.dart';
 import 'animated_guides_layer.dart';
 import 'canvas_framing.dart';
+import 'editor_breakpoints.dart';
 import 'mask_edit_overlay.dart';
 import 'quick_capsule.dart';
 import 'selection_overlay.dart';
@@ -1942,14 +1943,18 @@ class _LayerGestureWrapper extends ConsumerWidget {
   }
 }
 
-/// Minimal mobile-only indicator that the canvas is in multi-select
-/// mode. Renders nothing at all in single mode so the canvas chrome
-/// stays untouched. Sits inside the screen-space chrome stack so it
-/// never scales with viewport zoom.
+/// Multi-select mode chip: count readout + the mode's visible EXIT
+/// (tb3 5/7 — the audit's "no visible way out"). Renders nothing at
+/// all in single mode so the canvas chrome stays untouched. Sits
+/// inside the screen-space chrome stack so it never scales with
+/// viewport zoom; top-START (directional) so it mirrors under RTL.
 ///
-/// Deliberately small + corner-pinned: this is an awareness affordance,
-/// not a control surface. Mode entry/exit happens via long-press and
-/// tap-on-empty respectively (see `_handleLongPress` / `_handleTap`).
+/// The whole capsule is one tap target (44dp floor via a transparent
+/// halo, ModeDoneButton's pattern) and the trailing ✕ is what makes
+/// it read as dismissible. Exit keeps the PRIMARY selection and drops
+/// to single mode — the same landing state the editor's own <2-member
+/// prune rule produces. Long-press-to-enter and tap-on-empty-to-exit
+/// keep working unchanged; this is the discoverable path.
 class _MultiSelectModeChip extends ConsumerWidget {
   const _MultiSelectModeChip();
 
@@ -1959,39 +1964,74 @@ class _MultiSelectModeChip extends ConsumerWidget {
     if (mode != SelectionMode.multi) return const SizedBox.shrink();
     final count = ref.watch(selectionControllerProvider.select((s) => s.count));
     final tokens = AppTokens.of(context);
-    return Positioned(
-      top: 12,
-      left: 12,
-      child: IgnorePointer(
-        // Pure indicator — must never absorb taps that the canvas
-        // gesture detectors are entitled to.
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: tokens.brand.withValues(alpha: 0.92),
+    return PositionedDirectional(
+      // The 44dp hit halo centres the painted ~26dp pill, so 4/8 here
+      // lands the visible capsule near the old 12/12 spot.
+      top: 4,
+      start: 8,
+      child: Semantics(
+        button: true,
+        label: context.l10n.multiSelectExit,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            key: const ValueKey('multi-select-exit-chip'),
             borderRadius: BorderRadius.circular(999),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x33000000),
-                blurRadius: 8,
-                offset: Offset(0, 2),
+            onTap: () {
+              HapticFeedback.selectionClick().catchError((_) {});
+              // Keep the primary, drop the rest, leave the mode —
+              // matching what the <2-member flows land on.
+              final primary = ref.read(selectionControllerProvider).selectedId;
+              ref.read(selectionModeProvider.notifier).exitMulti();
+              if (primary != null) {
+                ref.read(selectionControllerProvider.notifier).select(primary);
+              }
+            },
+            child: Container(
+              constraints: const BoxConstraints(
+                minWidth: kMinHitTarget,
+                minHeight: kMinHitTarget,
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.check_circle_outline, size: 14, color: tokens.onBrand),
-              const SizedBox(width: 6),
-              Text(
-                context.l10n.multiSelectCount(count),
-                style: TextStyle(
-                  color: tokens.onBrand,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              alignment: Alignment.center,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: tokens.brand.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline,
+                      size: 14,
+                      color: tokens.onBrand,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      context.l10n.multiSelectCount(count),
+                      style: TextStyle(
+                        color: tokens.onBrand,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.close_rounded, size: 14, color: tokens.onBrand),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
