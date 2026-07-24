@@ -2486,6 +2486,12 @@ abstract class AppLocalizations {
   /// **'Solid'**
   String get solidOption;
 
+  /// No description provided for @angleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Angle'**
+  String get angleLabel;
+
   /// No description provided for @softOption.
   ///
   /// In en, this message translates to:

@@ -1272,6 +1272,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get solidOption => 'Solid';
 
   @override
+  String get angleLabel => 'Angle';
+
+  @override
   String get softOption => 'Soft';
 
   @override

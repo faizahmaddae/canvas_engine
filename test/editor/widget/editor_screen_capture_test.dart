@@ -18,7 +18,10 @@ import 'package:canvas_engine/features/editor/application/selection_controller.d
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
+import 'package:canvas_engine/features/editor/engine/commands/shape_commands.dart';
+import 'package:canvas_engine/features/editor/engine/core/background_fill.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
+import 'package:canvas_engine/features/editor/shape/application/shape_tool_controller.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/image/application/image_tool_controller.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
@@ -68,6 +71,7 @@ Future<void> _loadMaterialIcons() async {
 ProviderContainer _sampleEditor({
   bool withSelection = false,
   bool withLookPanel = false,
+  bool withGradientFill = false,
   String? openSheet,
 }) {
   final container = ProviderContainer();
@@ -130,6 +134,23 @@ ProviderContainer _sampleEditor({
         .read(imageToolControllerProvider.notifier)
         .toggleSlot(ImageToolSlot.look);
   }
+  if (withGradientFill) {
+    // The sample shape, re-filled with a gradient + its Style panel
+    // open — the Solid | Gradient control in its gradient branch.
+    ctrl.execute(
+      const SetShapeFillCommand(
+        layerId: 'shape-1',
+        fill: LinearGradientBackground(
+          startColor: Color(0xFFF5B942),
+          endColor: Color(0xFFE2703A),
+        ),
+      ),
+    );
+    container.read(selectionControllerProvider.notifier).select('shape-1');
+    container
+        .read(shapeToolControllerProvider.notifier)
+        .toggleSlot(ShapeToolSlot.style);
+  }
   if (withSelection || openSheet != null) {
     container.read(selectionControllerProvider.notifier).select('text-1');
   }
@@ -156,6 +177,7 @@ void main() {
     required String fileName,
     bool withSelection = false,
     bool withLookPanel = false,
+    bool withGradientFill = false,
     String? openSheet,
     Future<void> Function(WidgetTester tester)? interact,
   }) async {
@@ -169,6 +191,7 @@ void main() {
     final container = _sampleEditor(
       withSelection: withSelection,
       withLookPanel: withLookPanel,
+      withGradientFill: withGradientFill,
       openSheet: openSheet,
     );
     addTearDown(container.dispose);
@@ -274,6 +297,28 @@ void main() {
       brightness: Brightness.dark,
       fileName: 'editor_panel_dark.png',
       openSheet: 'size',
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — gradient fill, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_gradient_light.png',
+      withGradientFill: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — gradient fill, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_gradient_dark.png',
+      withGradientFill: true,
     );
   });
 

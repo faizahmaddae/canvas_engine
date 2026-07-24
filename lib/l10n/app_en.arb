@@ -420,6 +420,7 @@
   "sharpOption": "Sharp",
   "hairlineOption": "Hairline",
   "solidOption": "Solid",
+  "angleLabel": "Angle",
   "softOption": "Soft",
   "hardOption": "Hard",
   "glowOption": "Glow",

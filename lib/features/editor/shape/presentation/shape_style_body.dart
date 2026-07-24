@@ -9,9 +9,11 @@ import '../../application/document_controller.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../engine/commands/editor_command.dart';
 import '../../engine/commands/shape_commands.dart';
+import '../../engine/core/background_fill.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/section_label.dart';
 import '../../ui/editor_slider_row.dart';
+import '../../ui/fill_mode_section.dart';
 import 'shape_panel_shell.dart';
 import '../../../../core/utils/editor_value_format.dart';
 
@@ -72,7 +74,12 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
     super.dispose();
   }
 
-  void _commitFill({Color? c, double? opacity, bool live = false}) {
+  void _commitFill({
+    Color? c,
+    double? opacity,
+    BackgroundFill? fill,
+    bool live = false,
+  }) {
     ref
         .read(documentControllerProvider.notifier)
         .execute(
@@ -80,6 +87,7 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
             layerId: widget.layer.id,
             color: c,
             opacity: opacity,
+            fill: fill,
             live: live,
           ),
         );
@@ -116,21 +124,33 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
           SectionLabel(
             isStroked ? context.l10n.colorLabel : context.l10n.fillLabel,
           ),
-          // The shared two-level picker, embedded. Drags stream
-          // live (transient) commits; settled changes commit for
-          // real so each pick is one undo step. Recents and alpha
-          // policy live inside the picker.
-          ColorPickerBody(
-            initial: layer.fillColor,
-            title: isStroked
-                ? context.l10n.colorLabel
-                : context.l10n.fillColorTitle,
-            onChanged: (c) => _commitFill(c: c, live: true),
-            onCommitted: (c) => _commitFill(c: c),
-          ),
+          // Stroked kinds paint a single line colour — a gradient
+          // has nowhere to go on them, so they keep the plain
+          // picker. Filled kinds get the Solid | Gradient switch.
+          //
+          // Either way drags stream live (transient) commits and the
+          // settled change commits for real, so each pick is one undo
+          // step. Recents and alpha policy live inside the picker.
+          if (isStroked)
+            ColorPickerBody(
+              initial: layer.fillColor,
+              title: context.l10n.colorLabel,
+              onChanged: (c) => _commitFill(c: c, live: true),
+              onCommitted: (c) => _commitFill(c: c),
+            )
+          else
+            FillModeSection(
+              fill: layer.effectiveFill,
+              solidTitle: context.l10n.fillColorTitle,
+              onSolidChanged: (c) => _commitFill(c: c, live: true),
+              onSolidCommitted: (c) => _commitFill(c: c),
+              onFillChanged: (f) => _commitFill(fill: f, live: true),
+              onFillCommitted: (f) => _commitFill(fill: f),
+            ),
           const SizedBox(height: 14),
           SectionLabel(context.l10n.opacityLabel),
           EditorSliderRow(
+            key: const ValueKey('shape-fill-opacity'),
             value: layer.fillOpacity,
             max: 1,
             format: (v) =>

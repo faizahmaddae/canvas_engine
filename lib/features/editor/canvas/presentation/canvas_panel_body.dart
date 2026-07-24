@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
 import '../../engine/core/editor_document.dart';
 import '../../presentation/widgets/editor_tool_panel_shell.dart';
+import '../../ui/editor_segmented_control.dart';
+import '../../ui/fill_mode_section.dart';
 import '../application/canvas_commands.dart';
 import '../application/canvas_tool_controller.dart';
 
@@ -15,8 +16,8 @@ import '../application/canvas_tool_controller.dart';
 ///
 ///   * Background **mode** — solid colour vs. transparent (alpha-
 ///     preserving on PNG export, checkerboard preview in the editor).
-///   * Background **colour** — only relevant in colour mode; the
-///     palette + custom picker dispatch [SetCanvasBackgroundCommand].
+///   * Background **fill** — only relevant in colour mode; Solid |
+///     Gradient, both dispatched through [SetCanvasBackgroundCommand].
 ///
 /// Mode is independent from the colour value: flipping to
 /// transparent does not erase the user's last colour pick. In photo
@@ -38,6 +39,12 @@ class CanvasPanelBody extends ConsumerWidget {
         .execute(SetCanvasBackgroundCommand(color: c, live: live));
   }
 
+  void _commitFill(WidgetRef ref, BackgroundFill fill, {bool live = false}) {
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(SetCanvasBackgroundCommand(fill: fill, live: live));
+  }
+
   void _commitMode(WidgetRef ref, CanvasBackgroundMode mode) {
     ref
         .read(documentControllerProvider.notifier)
@@ -48,7 +55,7 @@ class CanvasPanelBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = AppTokens.of(context);
     final doc = ref.watch(documentControllerProvider);
-    final current = doc.backgroundColor;
+    final currentFill = doc.background;
     final mode = doc.backgroundMode;
     final isPhotoProject = doc.projectKind == ProjectKind.photo;
     final isTransparent = mode == CanvasBackgroundMode.transparent;
@@ -68,122 +75,50 @@ class CanvasPanelBody extends ConsumerWidget {
               child: _PhotoProjectHint(tokens: tokens),
             ),
           // Header already says "Background" — no duplicate SectionLabel.
-          _BackgroundModeToggle(
+          EditorSegmentedControl<CanvasBackgroundMode>(
             value: mode,
+            segments: [
+              EditorSegment(
+                value: CanvasBackgroundMode.color,
+                label: context.l10n.colorLabel,
+                itemKey: const ValueKey('canvas-bg-mode-color'),
+              ),
+              EditorSegment(
+                value: CanvasBackgroundMode.transparent,
+                label: context.l10n.transparentOption,
+                itemKey: const ValueKey('canvas-bg-mode-transparent'),
+              ),
+            ],
             onChanged: (next) {
               if (next == mode) return;
               EditorHaptics.toggle();
               _commitMode(ref, next);
             },
-            tokens: tokens,
           ),
           const SizedBox(height: 12),
           Opacity(
             opacity: isTransparent ? 0.4 : 1.0,
             child: IgnorePointer(
               ignoring: isTransparent,
-              // The shared two-level picker, embedded. Drags stream
-              // live (transient) commits; settled changes commit
-              // for real. Recents and alpha policy live inside it.
-              child: ColorPickerBody(
-                initial: current,
-                title: context.l10n.canvasBackgroundTitle,
-                onChanged: (c) => _commit(ref, c, live: true),
-                onCommitted: (c) => _commit(ref, c),
+              // Solid | Gradient, with the shared two-level picker
+              // embedded in the solid branch. Drags stream live
+              // (transient) commits; settled changes commit for real.
+              // Recents and alpha policy live inside the picker.
+              //
+              // The canvas background is the contract's §2 exemption:
+              // it has no layer to stage on the live overlay, so it
+              // previews through merging live commands instead.
+              child: FillModeSection(
+                fill: currentFill,
+                solidTitle: context.l10n.canvasBackgroundTitle,
+                onSolidChanged: (c) => _commit(ref, c, live: true),
+                onSolidCommitted: (c) => _commit(ref, c),
+                onFillChanged: (f) => _commitFill(ref, f, live: true),
+                onFillCommitted: (f) => _commitFill(ref, f),
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Two-tile segmented selector: Color | Transparent. Mirrors the
-/// look of the dock's other segmented controls (rounded pill, tinted
-/// active state) so the canvas panel feels at home.
-class _BackgroundModeToggle extends StatelessWidget {
-  const _BackgroundModeToggle({
-    required this.value,
-    required this.onChanged,
-    required this.tokens,
-  });
-
-  final CanvasBackgroundMode value;
-  final ValueChanged<CanvasBackgroundMode> onChanged;
-  final AppTokens tokens;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 36,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: tokens.surfaceMuted.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          _ModeTile(
-            key: const ValueKey('canvas-bg-mode-color'),
-            label: context.l10n.colorLabel,
-            selected: value == CanvasBackgroundMode.color,
-            onTap: () => onChanged(CanvasBackgroundMode.color),
-            tokens: tokens,
-          ),
-          _ModeTile(
-            key: const ValueKey('canvas-bg-mode-transparent'),
-            label: context.l10n.transparentOption,
-            selected: value == CanvasBackgroundMode.transparent,
-            onTap: () => onChanged(CanvasBackgroundMode.transparent),
-            tokens: tokens,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ModeTile extends StatelessWidget {
-  const _ModeTile({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    required this.tokens,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final AppTokens tokens;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          curve: Curves.easeOut,
-          decoration: BoxDecoration(
-            color: selected
-                ? tokens.accent.withValues(alpha: 0.16)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
-              color: selected ? tokens.accentDeep : tokens.textSecondary,
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -302,9 +302,12 @@ void main() {
             as ShapeLayer;
 
     final versionBefore = container.read(documentCommitVersionProvider);
-    // Opacity row renders before the radius row; the embedded
-    // colour picker contains no Material Slider.
-    final slider = find.byType(Slider).first;
+    // Keyed, not positional: on a gradient fill the Solid|Gradient
+    // section renders its own angle slider above this row (tb4 2/14).
+    final slider = find.descendant(
+      of: find.byKey(const ValueKey('shape-fill-opacity')),
+      matching: find.byType(Slider),
+    );
     await tester.ensureVisible(slider);
     await tester.pumpAndSettle();
 

@@ -1273,6 +1273,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get solidOption => 'یکدست';
 
   @override
+  String get angleLabel => 'زاویه';
+
+  @override
   String get softOption => 'نرم';
 
   @override
