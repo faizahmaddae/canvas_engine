@@ -655,13 +655,21 @@ class TextToolController extends Notifier<TextSession> {
       ref.read(liveOverlayProvider.notifier).replaceLayer(updated);
       return;
     }
-    // During live new-add (user is still typing), mirror onto the
-    // staged addition so the whole session still collapses to one
-    // history entry on commit.
+    // During a live session (add OR edit — the composer's quick-style
+    // strip is reachable from both), mirror onto the overlay so the
+    // whole session still collapses to one history entry on commit.
+    // Executing here mid-session would trip the docBefore identity
+    // invariant in commitLiveEdit/cancelLiveEdit and, in release,
+    // either revert the tap on commit or survive a cancel.
     final live = _live;
-    if (live != null && live.isNew && live.layerId == layer.id) {
+    if (live != null && live.layerId == layer.id) {
       final updated = layer.copyWith(style: next);
-      ref.read(liveOverlayProvider.notifier).updateAddedLayer(updated);
+      final overlay = ref.read(liveOverlayProvider.notifier);
+      if (live.isNew) {
+        overlay.updateAddedLayer(updated);
+      } else {
+        overlay.replaceLayer(updated);
+      }
       return;
     }
     ref
@@ -1090,22 +1098,29 @@ class TextToolController extends Notifier<TextSession> {
       docCtrl.execute(AddLayerCommand(finalLayer));
       ref.read(selectionControllerProvider.notifier).select(s.layerId);
     } else {
-      if (trimmed == s.layerBefore.content) {
-        // No effective change — don't pollute history.
-        return;
-      }
+      // Style source mirrors the add path above: the live staged
+      // layer's current style (quick-style Bold/Color taps write
+      // through the overlay during edit sessions too), falling back
+      // to the begin snapshot.
+      var finalStyle = liveStyleAtCommit ?? s.layerBefore.style;
       // Re-pick an auto-default font when the dominant script
       // flipped during edit (e.g. user wiped Latin and typed
       // Persian, or vice-versa). Only auto-update when the
       // layer is still on one of the two auto-defaults the
       // controller assigned at creation time — a user-picked
       // font from the Font tool is never overwritten.
-      var finalStyle = s.layerBefore.style;
       if (isAutoDefaultFontFamily(finalStyle.fontFamily)) {
         final wanted = defaultFontFamilyForContent(trimmed);
         if (wanted != finalStyle.fontFamily) {
           finalStyle = finalStyle.copyWith(fontFamily: wanted);
         }
+      }
+      if (trimmed == s.layerBefore.content &&
+          finalStyle == s.layerBefore.style) {
+        // No effective change to content OR style — don't pollute
+        // history. (A style-only session change must still commit:
+        // the early-return guards on both.)
+        return;
       }
       final measured = _scalePreservedEditSize(
         _measureForMode(
@@ -1639,6 +1654,38 @@ class TextToolController extends Notifier<TextSession> {
       final updated =
           layer.copyWith(style: next).withTransform(newTransform) as TextLayer;
       ref.read(liveOverlayProvider.notifier).updateAddedLayer(updated);
+      return;
+    }
+
+    // During a live EDIT session the same rule applies: the composer's
+    // quick-style strip must never execute() mid-session (that would
+    // trip commitLiveEdit's docBefore invariant and lose the edit in
+    // release). Mirror onto the overlay; commitLiveEdit folds the
+    // final style into its single UpdateTextCommand. Metrics-affecting
+    // changes re-measure with the corner-drag scale preserved, exactly
+    // like the content-preview path.
+    if (live != null && !live.isNew && live.layerId == layer.id) {
+      Size? liveSize;
+      if (_affectsMetrics(base, next)) {
+        liveSize = _scalePreservedEditSize(
+          _measureForMode(
+            layer.content,
+            next,
+            layer.resizeMode,
+            layer.transform.size.width,
+            textDirectionMode: layer.textDirectionMode,
+          ),
+          layer.resizeMode,
+          live.scaleAtBegin,
+        );
+      }
+      var updated = layer.copyWith(style: next);
+      if (liveSize != null && liveSize != layer.transform.size) {
+        updated =
+            updated.withTransform(layer.transform.copyWith(size: liveSize))
+                as TextLayer;
+      }
+      ref.read(liveOverlayProvider.notifier).replaceLayer(updated);
       return;
     }
 

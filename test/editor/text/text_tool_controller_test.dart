@@ -769,6 +769,115 @@ void main() {
         );
       });
 
+      // Quick-style writes (the composer's Bold/Color strip) inside an
+      // EDIT session. Regression tests for the session-writer bug where
+      // these fell through to execute(), mutating the committed doc
+      // mid-session: debug assert in commit/cancel, style loss on
+      // commit, and a cancel that didn't cancel in release.
+      test('style writes during an edit session never touch the committed '
+          'doc and fold into the single commit entry', () {
+        final c = makeContainer();
+        final original = addText(c, content: 'hi');
+        c.read(selectionControllerProvider.notifier).select(original.id);
+        final ctrl = c.read(textToolControllerProvider.notifier);
+        final docBefore = c.read(documentControllerProvider);
+
+        ctrl.beginEditText();
+        ctrl.setBold(true);
+        ctrl.setColor(const Color(0xFF112233));
+        ctrl.previewContent('hi there');
+
+        // Committed document instance untouched mid-session — the
+        // invariant commitLiveEdit asserts on.
+        expect(
+          identical(docBefore, c.read(documentControllerProvider)),
+          isTrue,
+        );
+        // Overlay preview carries the style already.
+        final live =
+            c.read(renderedDocumentProvider).layerById(original.id)
+                as TextLayer;
+        expect(live.style.fontWeight, FontWeight.bold);
+        expect(live.style.color, const Color(0xFF112233));
+
+        ctrl.commitLiveEdit('hi there');
+
+        final after =
+            c.read(documentControllerProvider).layerById(original.id)
+                as TextLayer;
+        expect(after.content, 'hi there');
+        expect(after.style.fontWeight, FontWeight.bold);
+        expect(after.style.color, const Color(0xFF112233));
+
+        // ONE undo step reverts the whole session (content + style).
+        c.read(documentControllerProvider.notifier).undo();
+        final reverted =
+            c.read(documentControllerProvider).layerById(original.id)
+                as TextLayer;
+        expect(reverted.content, 'hi');
+        expect(reverted.style.fontWeight, original.style.fontWeight);
+        expect(reverted.style.color, original.style.color);
+      });
+
+      test('cancel after quick-style writes in an edit session is a true '
+          'no-op', () {
+        final c = makeContainer();
+        final original = addText(c, content: 'keep');
+        c.read(selectionControllerProvider.notifier).select(original.id);
+        final ctrl = c.read(textToolControllerProvider.notifier);
+
+        ctrl.beginEditText();
+        ctrl.setBold(true);
+        ctrl.setColor(const Color(0xFF445566));
+        ctrl.previewContent('scrap this');
+        ctrl.cancelLiveEdit();
+
+        final restored =
+            c.read(documentControllerProvider).layerById(original.id)
+                as TextLayer;
+        expect(restored.content, 'keep');
+        expect(restored.style, original.style);
+
+        // No history entry: one undo removes the AddLayerCommand.
+        c.read(documentControllerProvider.notifier).undo();
+        expect(
+          c.read(documentControllerProvider).layerById(original.id),
+          isNull,
+        );
+      });
+
+      test('style-only edit session with unchanged content still commits '
+          'one entry', () {
+        final c = makeContainer();
+        final original = addText(c, content: 'same');
+        c.read(selectionControllerProvider.notifier).select(original.id);
+        final ctrl = c.read(textToolControllerProvider.notifier);
+
+        ctrl.beginEditText();
+        ctrl.setBold(true);
+        ctrl.commitLiveEdit('same');
+
+        final after =
+            c.read(documentControllerProvider).layerById(original.id)
+                as TextLayer;
+        expect(after.content, 'same');
+        expect(after.style.fontWeight, FontWeight.bold);
+
+        // Exactly one entry: first undo reverts the style, second
+        // removes the layer.
+        final docCtrl = c.read(documentControllerProvider.notifier);
+        docCtrl.undo();
+        final reverted =
+            c.read(documentControllerProvider).layerById(original.id)
+                as TextLayer;
+        expect(reverted.style.fontWeight, original.style.fontWeight);
+        docCtrl.undo();
+        expect(
+          c.read(documentControllerProvider).layerById(original.id),
+          isNull,
+        );
+      });
+
       test('preview/commit on no selection are safe no-ops', () {
         final c = makeContainer();
         final ctrl = c.read(textToolControllerProvider.notifier);
