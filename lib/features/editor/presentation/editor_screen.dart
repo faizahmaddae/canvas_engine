@@ -621,12 +621,25 @@ class EditorScreen extends ConsumerWidget {
     return out;
   }
 
+  /// Merged-view layer for the selected id, narrowed to the ONE
+  /// layer object (tb1 16/17). The old full renderedDocumentProvider
+  /// watch re-ran the whole screen build on EVERY overlay preview
+  /// tick of ANY layer; selecting layerById keeps panel payloads
+  /// live for the layer they show while foreign previews no longer
+  /// touch the screen. (The selected layer's own preview ticks still
+  /// rebuild — that's the payload updating, by design.)
+  EditorLayer? _selectedMergedLayer(WidgetRef ref) {
+    final selectedId = ref.watch(
+      selectionControllerProvider.select((s) => s.selectedId),
+    );
+    if (selectedId == null) return null;
+    return ref.watch(
+      renderedDocumentProvider.select((d) => d.layerById(selectedId)),
+    );
+  }
+
   TextLayer? _selectedTextLayer(WidgetRef ref) {
-    final selection = ref.watch(selectionControllerProvider);
-    if (!selection.hasSelection) return null;
-    final layer = ref
-        .watch(renderedDocumentProvider)
-        .layerById(selection.selectedId!);
+    final layer = _selectedMergedLayer(ref);
     // Emoji-sticker text layers are visually text but conceptually
     // stickers — routing them to the Text toolbar would expose
     // font/color/layout controls that don't apply to a single
@@ -640,22 +653,14 @@ class EditorScreen extends ConsumerWidget {
   /// Selected layer when it's an [ImageLayer], else `null`. Used to
   /// swap in [ImageModeToolbar] for image-specific sub-tools.
   ImageLayer? _selectedImageLayer(WidgetRef ref) {
-    final selection = ref.watch(selectionControllerProvider);
-    if (!selection.hasSelection) return null;
-    final layer = ref
-        .watch(renderedDocumentProvider)
-        .layerById(selection.selectedId!);
+    final layer = _selectedMergedLayer(ref);
     return layer is ImageLayer ? layer : null;
   }
 
   /// Selected layer when it's a [ShapeLayer], else `null`. Used to
   /// swap in [ShapeModeToolbar] for shape-specific sub-tools.
   ShapeLayer? _selectedShapeLayer(WidgetRef ref) {
-    final selection = ref.watch(selectionControllerProvider);
-    if (!selection.hasSelection) return null;
-    final layer = ref
-        .watch(renderedDocumentProvider)
-        .layerById(selection.selectedId!);
+    final layer = _selectedMergedLayer(ref);
     return layer is ShapeLayer ? layer : null;
   }
 
@@ -663,11 +668,7 @@ class EditorScreen extends ConsumerWidget {
   /// `null`. Drives the Sticker mode toolbar; normal text layers are
   /// excluded so they continue to route to [TextModeToolbar].
   TextLayer? _selectedStickerLayer(WidgetRef ref) {
-    final selection = ref.watch(selectionControllerProvider);
-    if (!selection.hasSelection) return null;
-    final layer = ref
-        .watch(renderedDocumentProvider)
-        .layerById(selection.selectedId!);
+    final layer = _selectedMergedLayer(ref);
     return (layer is TextLayer && layer.isSticker) ? layer : null;
   }
 
@@ -1543,19 +1544,32 @@ class _ModeExitPill extends ConsumerWidget {
     final selectionId = ref.watch(
       selectionControllerProvider.select((s) => s.selectedId),
     );
-    final doc = ref.watch(renderedDocumentProvider);
-    final selectedLayer = selectionId == null
-        ? null
-        : doc.layerById(selectionId);
+    // COMMITTED doc, narrowly selected (tb1 16/17): the pill only
+    // needs existence/type/protection of the selected layer — facts
+    // that change on commits, never on 60fps overlay preview ticks.
+    // The old full renderedDocumentProvider watch made this pill
+    // (and with it the screen-level Positioned subtree) rebuild
+    // every preview frame. Behavior note: during the add-composer
+    // the staged layer exists only on the overlay, so the pill is
+    // now hidden behind the composer's modal barrier instead of
+    // invisible-but-present — no user-visible difference.
+    final selectedLayer = ref.watch(
+      documentControllerProvider.select(
+        (d) => selectionId == null ? null : d.layerById(selectionId),
+      ),
+    );
+    final isProtectedBase = ref.watch(
+      documentControllerProvider.select(
+        (d) => selectionId != null && d.isProtectedBasePhoto(selectionId),
+      ),
+    );
     final hasTextSelection =
         selectedLayer is TextLayer && !selectedLayer.isSticker;
     // Protected base photo (photo project) is the canvas itself --
     // it is intentionally selectable for tool targeting but never
     // shows object-selection chrome (frame, quick actions). Done
     // belongs to that chrome family, so suppress it here too.
-    final hasObjectSelection =
-        selectedLayer != null &&
-        !(selectionId != null && doc.isProtectedBasePhoto(selectionId));
+    final hasObjectSelection = selectedLayer != null && !isProtectedBase;
     final inMode = paintOpen || textOpen || hasObjectSelection;
     if (!inMode) return const SizedBox.shrink();
 

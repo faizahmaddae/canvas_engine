@@ -280,10 +280,11 @@ class SnapEngine {
     final guides = <SnapGuide>[];
     if (vMatch != null) {
       dx = vMatch.target.coord - vMatch.candidate.value;
-      final start = math.min(vMatch.candidate.ownStart + dy,
-          vMatch.target.peerStart);
-      final end = math.max(vMatch.candidate.ownEnd + dy,
-          vMatch.target.peerEnd);
+      final start = math.min(
+        vMatch.candidate.ownStart + dy,
+        vMatch.target.peerStart,
+      );
+      final end = math.max(vMatch.candidate.ownEnd + dy, vMatch.target.peerEnd);
       guides.add(
         SnapGuide(
           axis: SnapAxis.vertical,
@@ -295,10 +296,11 @@ class SnapEngine {
     }
     if (hMatch != null) {
       dy = hMatch.target.coord - hMatch.candidate.value;
-      final start = math.min(hMatch.candidate.ownStart + dx,
-          hMatch.target.peerStart);
-      final end = math.max(hMatch.candidate.ownEnd + dx,
-          hMatch.target.peerEnd);
+      final start = math.min(
+        hMatch.candidate.ownStart + dx,
+        hMatch.target.peerStart,
+      );
+      final end = math.max(hMatch.candidate.ownEnd + dx, hMatch.target.peerEnd);
       guides.add(
         SnapGuide(
           axis: SnapAxis.horizontal,
@@ -311,7 +313,12 @@ class SnapEngine {
 
     return SnapResult(
       position: Offset(left + dx, top + dy),
-      guides: guides,
+      // Const when empty: interaction state stores this list every
+      // move tick, and the canvas' Riverpod selects compare lists by
+      // IDENTITY — a fresh empty allocation per tick read as "guides
+      // changed" and re-ran the whole canvas build on every drag
+      // frame with no snap engaged.
+      guides: guides.isEmpty ? const <SnapGuide>[] : guides,
     );
   }
 
@@ -335,8 +342,8 @@ class SnapEngine {
         // first match, so a closer non-sticky inside [threshold] can
         // still overtake it. Hysteresis only *retains* an engagement,
         // never traps the user inside it.
-        final isSticky = stickyCoord != null &&
-            (t.coord - stickyCoord).abs() < 0.001;
+        final isSticky =
+            stickyCoord != null && (t.coord - stickyCoord).abs() < 0.001;
         final tol = isSticky ? releaseThreshold : threshold;
         if (d > tol) continue;
         if (best == null || d < bestDist) {
@@ -455,7 +462,9 @@ class SnapEngine {
     }
     return SpacingSnapResult(
       position: proposed.translate(dx, dy),
-      guides: guides,
+      // Same identity contract as SnapResult: const when empty so
+      // per-tick stores don't defeat the canvas' select granularity.
+      guides: guides.isEmpty ? const <SpacingGuide>[] : guides,
     );
   }
 
@@ -488,9 +497,9 @@ class SnapEngine {
       if (perpOverlap) row.add(p);
     }
     if (row.length < 2) return null;
-    row.sort((a, b) => horizontal
-        ? a.left.compareTo(b.left)
-        : a.top.compareTo(b.top));
+    row.sort(
+      (a, b) => horizontal ? a.left.compareTo(b.left) : a.top.compareTo(b.top),
+    );
 
     // Compute adjacent-pair gaps. Skip zero / negative gaps: a 0-gap
     // candidate would snap moved into edge-overlap with the leftmost
@@ -552,8 +561,7 @@ class SnapEngine {
         fromEnd = mLead + delta;
         // Echo gap: between row[-2] and rowLast (the rhythm we matched).
         final priorPeer = row[row.length - 2];
-        final priorTrail =
-            horizontal ? priorPeer.right : priorPeer.bottom;
+        final priorTrail = horizontal ? priorPeer.right : priorPeer.bottom;
         toStart = priorTrail;
         toEnd = rowLastLead;
       } else {
@@ -583,6 +591,7 @@ class SnapEngine {
     }
     return best;
   }
+
   _SpacingMatch? _spacingAxisSnap({
     required Rect moved,
     required List<Rect> peers,
@@ -612,7 +621,8 @@ class SnapEngine {
           bLead = b.left;
           mLead = moved.left;
           mTrail = moved.right;
-          perpOverlap = a.bottom > moved.top &&
+          perpOverlap =
+              a.bottom > moved.top &&
               a.top < moved.bottom &&
               b.bottom > moved.top &&
               b.top < moved.bottom;
@@ -621,7 +631,8 @@ class SnapEngine {
           bLead = b.top;
           mLead = moved.top;
           mTrail = moved.bottom;
-          perpOverlap = a.right > moved.left &&
+          perpOverlap =
+              a.right > moved.left &&
               a.left < moved.right &&
               b.right > moved.left &&
               b.left < moved.right;
@@ -645,8 +656,8 @@ class SnapEngine {
         // tolerance up to [releaseTolerance]. Closer non-sticky still
         // beats farther sticky (we sort strictly by [correction]) —
         // hysteresis only *retains* an engagement, never traps it.
-        final isSticky = stickyGap != null &&
-            (equalGap - stickyGap).abs() < 0.5;
+        final isSticky =
+            stickyGap != null && (equalGap - stickyGap).abs() < 0.5;
         final tol = isSticky ? releaseTolerance : tolerance;
         if (correction > tol) continue;
         // Closest wins among survivors. The null check lets sticky
@@ -659,8 +670,7 @@ class SnapEngine {
         // the mean. When gapLeft is wider, we move *backward* along
         // the axis (negative delta), which shrinks gapLeft and grows
         // gapRight by the same amount until they meet in the middle.
-        final delta =
-            gapLeft > gapRight ? -correction : correction;
+        final delta = gapLeft > gapRight ? -correction : correction;
         if (equalGap < 0 || !equalGap.isFinite) continue;
 
         // Build the guide. crossCoord is the midline shared by all
@@ -669,15 +679,13 @@ class SnapEngine {
         final double crossCoord;
         final double fromStart, fromEnd, toStart, toEnd;
         if (horizontal) {
-          crossCoord =
-              (a.center.dy + moved.center.dy + b.center.dy) / 3.0;
+          crossCoord = (a.center.dy + moved.center.dy + b.center.dy) / 3.0;
           fromStart = a.right;
           fromEnd = mLead + delta;
           toStart = mTrail + delta;
           toEnd = b.left;
         } else {
-          crossCoord =
-              (a.center.dx + moved.center.dx + b.center.dx) / 3.0;
+          crossCoord = (a.center.dx + moved.center.dx + b.center.dx) / 3.0;
           fromStart = a.bottom;
           fromEnd = mLead + delta;
           toStart = mTrail + delta;
@@ -743,8 +751,6 @@ class _SpacingMatch {
 /// engine stays decoupled from [EditorLayer].
 extension SnapPeerBuilder on List<LayerTransform> {
   List<Rect> asPeerRects() {
-    return <Rect>[
-      for (final t in this) t.unrotatedRect,
-    ];
+    return <Rect>[for (final t in this) t.unrotatedRect];
   }
 }
