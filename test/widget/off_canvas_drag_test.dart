@@ -82,30 +82,30 @@ void main() {
       const dragVector = Offset(60, 40);
 
       final gesture = await tester.startGesture(start, pointer: 11);
-      // After pointer-down our claim-on-down recogniser must already
-      // have started a move session for the off-canvas layer — proving
-      // the body surface (not the viewport) claimed the arena.
+      // Claim ≠ start (tb3 3/7): pointer-down CLAIMS the arena (so
+      // the viewport can never steal the pointer — that is the
+      // off-canvas recovery guarantee) but the session starts at the
+      // slop crossing, like every other drag in the editor.
       await tester.pump();
-      final sessionAtDown = container
-          .read(interactionControllerProvider)
-          .session;
-      expect(
-        sessionAtDown,
-        isNotNull,
-        reason:
-            'Touching the body of an off-canvas selected layer '
-            'must start an interaction session immediately (claim-on-'
-            'down).',
-      );
-      expect(sessionAtDown!.layerId, 'shape');
+      expect(container.read(interactionControllerProvider).session, isNull);
 
       // Drive the rest of the gesture; the exact final position depends
       // on the time-based smoother (whose Stopwatch reads wall-clock
       // time and so does not advance under tester.pump in tests). We
       // therefore only assert on the gesture-priority invariants here:
-      // session ownership above and viewport non-movement below.
+      // session ownership below and viewport non-movement at the end.
       await gesture.moveBy(dragVector);
       await tester.pump();
+      final session = container.read(interactionControllerProvider).session;
+      expect(
+        session,
+        isNotNull,
+        reason:
+            'Movement past slop must start the move session for the '
+            'off-canvas layer — proving the body surface (not the '
+            'viewport) owns the arena.',
+      );
+      expect(session!.layerId, 'shape');
       await gesture.up();
       await tester.pump();
 

@@ -201,6 +201,55 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   /// genuinely different regions reset.
   static const double _tapCycleTolerancePx = 24.0;
 
+  // ------------------------------------------------------------------
+  // Double-tap window (tb3 3/7).
+  //
+  // The canvas GestureDetector used to register `onDoubleTapDown`,
+  // which put a DoubleTapGestureRecognizer in the arena and delayed
+  // EVERY plain tap by the ~300ms double-tap timeout before the tap
+  // recogniser could win. That recogniser is gone: taps now resolve
+  // immediately, and the double-tap WINDOW lives here as plain
+  // bookkeeping inside [_handleTap] — a second tap landing within
+  // [_doubleTapWindow] of the previous tap, within [kDoubleTapSlop]
+  // of its position, on the SAME layer the previous tap selected, is
+  // a double-tap. Because both tap entry paths (the canvas detector
+  // AND the selection overlay's re-injected [onBodyTap]) route
+  // through [_handleTap], double-tap works identically on selected
+  // and un-selected layers.
+  //
+  // Expiry is a [Timer] (not a wall-clock read) so widget tests can
+  // age the window with `tester.pump(...)` exactly like they age the
+  // long-press timeout.
+  // ------------------------------------------------------------------
+
+  /// Layer selected by the most recent single tap; a follow-up tap on
+  /// it within the window is a double-tap. `null` = window disarmed.
+  String? _doubleTapArmedLayerId;
+
+  /// Global position of the arming tap, compared against the second
+  /// tap with the framework's [kDoubleTapSlop] radius.
+  Offset? _doubleTapArmedGlobal;
+
+  Timer? _doubleTapWindowTimer;
+
+  /// Matches the timing the repo's gesture tests already use to lapse
+  /// tap sequences (they pump 400–500ms between taps).
+  static const Duration _doubleTapWindow = Duration(milliseconds: 400);
+
+  void _armDoubleTapWindow(String layerId, Offset globalPosition) {
+    _doubleTapWindowTimer?.cancel();
+    _doubleTapArmedLayerId = layerId;
+    _doubleTapArmedGlobal = globalPosition;
+    _doubleTapWindowTimer = Timer(_doubleTapWindow, _disarmDoubleTapWindow);
+  }
+
+  void _disarmDoubleTapWindow() {
+    _doubleTapWindowTimer?.cancel();
+    _doubleTapWindowTimer = null;
+    _doubleTapArmedLayerId = null;
+    _doubleTapArmedGlobal = null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -248,6 +297,7 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   @override
   void dispose() {
     _viewportSaveTimer?.cancel();
+    _doubleTapWindowTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     // Note: we deliberately do NOT call `interactionController.cancel()`
     // here — Riverpod's `ref` is unsafe inside dispose because the
@@ -625,34 +675,23 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             },
             // Long-press: the dedicated mobile entry to multi-select
             // mode. Fires after the system long-press timeout on any
-            // pointer that reaches this detector — i.e. taps on empty
-            // canvas and on un-selected layers (a selected layer's body
-            // surface eagerly claims pointer-down, so long-press over an
-            // already-selected layer falls through to the body's tap
-            // path on release; that's fine for v1).
+            // pointer that reaches this detector — taps on empty
+            // canvas and on un-selected layers. Long-press over the
+            // SELECTED layer never reaches here (its body surface
+            // claims the arena on down); the body recogniser's own
+            // long-press timer re-injects that intent via
+            // [onBodyLongPress] → the same [_handleLongPress].
+            //
+            // NOTE: deliberately NO onDoubleTapDown here. Registering
+            // it would put a DoubleTapGestureRecognizer in the arena,
+            // which holds every plain tap hostage for the ~300ms
+            // double-tap timeout before onTapUp can fire — the audit's
+            // "first tap feels laggy" finding. Double-tap detection
+            // lives in [_handleTap]'s window bookkeeping instead, so
+            // single taps resolve instantly.
             onLongPressStart: (d) {
               _handleLongPress(d.globalPosition, doc.layers);
             },
-            onDoubleTapDown: (d) {
-              // Double-tap IS the on-canvas edit affordance for text
-              // (text-tool redesign step 1): the floating pill that
-              // used to own "edit" is gone, so double-tapping a text
-              // layer selects it and opens the keyboard editor.
-              // Emoji stickers stay excluded — they're TextLayers but
-              // have no editable text flow.
-              final local = _toCanvas(d.globalPosition);
-              final hit = _hitTest(doc.layers, local);
-              if (hit == null || !hit.capabilities.editable) return;
-              if (hit is TextLayer) {
-                if (hit.isSticker) return;
-                ref.read(selectionControllerProvider.notifier).select(hit.id);
-                unawaited(showEditTextLayerFlow(context, ref, hit));
-                return;
-              }
-              ref.read(selectionControllerProvider.notifier).select(hit.id);
-              ref.read(editingControllerProvider.notifier).start(hit.id);
-            },
-            onDoubleTap: () {},
             // Background pan + pinch-to-zoom for the viewport. Layer body
             // recognisers sit deeper in the tree and win the gesture arena
             // only when the first finger lands on the selection's chrome
@@ -1235,29 +1274,31 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             if (_rawPointersDown.isNotEmpty) return false;
             return _pointInChromeQuad(selectedLayer, _toCanvas(globalPosition));
           },
-          // Defer-start gate: a claimed first pointer that lands in
-          // the outset RING (inside the chrome quad, outside the raw
-          // bbox) claims the arena but holds off on emitting
-          // [DragPhase.start] until movement past slop or a second
-          // finger, preserving the sub-slop intents on the frame
-          // edge:
+          // Defer-start gate: EVERY claimed pointer defers the
+          // session start until movement past slop or a second
+          // finger (tb3 3/7 — the eager on-bbox start is gone).
+          // Claiming and starting are different promises:
           //
-          //   * pure tap        → cycle selection through overlapping
-          //                       layers under the frame edge
-          //   * pure long-press → enter multi-select with that layer
+          //   * the arena CLAIM still happens on pointer-down, so
+          //     off-canvas recovery keeps its guarantee (nothing can
+          //     steal the pointer) and a second finger still joins
+          //     the layer pinch (small-object pinch);
+          //   * the session START waits for slop — at most
+          //     kTouchSlop of dead travel, the same standard as
+          //     every other drag in the editor.
           //
-          // (A pointer claimed mid-session via the isActive branch
-          // may sit outside the bbox too — deferring is harmless
-          // there, the session is already running.)
+          // Deferring on the bbox itself is what revives the
+          // stationary intents ON the selected layer:
           //
-          // When the first pointer lands ON the selected layer's
-          // bbox we keep the eager claim-and-start behaviour — drag
-          // is the obvious intent and off-canvas recovery depends
-          // on the layer responding from the very first frame.
-          shouldDeferStartBody: (globalPosition) {
-            final local = _toCanvas(globalPosition);
-            return !_pointInLayerBbox(selectedLayer, local);
-          },
+          //   * pure tap        → [onBodyTap] → cycling / double-tap
+          //                       window (edit for text)
+          //   * pure long-press → the recogniser's timer fires (no
+          //                       session started) → [onBodyLongPress]
+          //                       → enter multi-select with the
+          //                       selected layer — previously dead
+          //                       because the eager start
+          //                       short-circuited the timer.
+          shouldDeferStartBody: (_) => true,
           // Body surface eagerly claims the gesture arena on pointer-
           // down to guarantee drag priority over the viewport, which
           // also means it eats plain taps that the canvas-level tap
@@ -1680,7 +1721,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
       // Multi-select mode tap routing — cycling is intentionally
       // disabled because it would compete with toggle semantics
       // (a 2nd tap on the same spot would both cycle AND toggle).
+      // Double-tap has no meaning here either; rapid toggle taps
+      // must never be swallowed by the window.
       _resetTapCycle();
+      _disarmDoubleTapWindow();
       if (hits.isEmpty) {
         dismissActiveEditing(ref);
         return;
@@ -1699,7 +1743,36 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
       // Saved layer data is untouched.
       dismissActiveEditing(ref);
       _resetTapCycle();
+      _disarmDoubleTapWindow();
       return;
+    }
+
+    // Double-tap check — BEFORE the cycling logic, deliberately.
+    // A second tap inside the window, near the first tap, landing on
+    // the layer that first tap selected is a double-tap: text opens
+    // its editor, everything else is simply consumed. Consuming it
+    // means tap-cycling through overlapping layers now requires the
+    // 400ms window to expire between taps — that is the accepted
+    // trade-off for making double-tap deterministic: without it the
+    // second tap of a double could cycle the selection to the layer
+    // BENEATH and the edit intent would hit the wrong layer.
+    final armedId = _doubleTapArmedLayerId;
+    final armedGlobal = _doubleTapArmedGlobal;
+    if (armedId != null &&
+        armedGlobal != null &&
+        (globalPosition - armedGlobal).distance <= kDoubleTapSlop) {
+      EditorLayer? armedLayer;
+      for (final l in hits) {
+        if (l.id == armedId) {
+          armedLayer = l;
+          break;
+        }
+      }
+      if (armedLayer != null) {
+        _disarmDoubleTapWindow();
+        _handleDoubleTap(armedLayer);
+        return;
+      }
     }
 
     final hitIds = <String>[for (final l in hits) l.id];
@@ -1722,6 +1795,30 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
     _lastTapGlobal = globalPosition;
     _lastTapHitIds = hitIds;
     _tapCycleIndex = index;
+    // Every completed single tap arms the double-tap window on the
+    // layer it just selected.
+    _armDoubleTapWindow(hits[index].id, globalPosition);
+  }
+
+  /// Second tap of a double (see the window check in [_handleTap]).
+  ///
+  /// Double-tap IS the on-canvas edit affordance for text (text-tool
+  /// redesign step 1): the floating pill that used to own "edit" is
+  /// gone, so double-tapping a text layer opens the keyboard editor.
+  /// Emoji stickers stay excluded — they're TextLayers but have no
+  /// editable text flow. Non-editable layers: the double-tap is
+  /// consumed with no effect beyond the selection the first tap
+  /// already made (in particular it must NOT cycle underneath).
+  void _handleDoubleTap(EditorLayer layer) {
+    if (!layer.capabilities.editable) return;
+    if (layer is TextLayer) {
+      if (layer.isSticker) return;
+      ref.read(selectionControllerProvider.notifier).select(layer.id);
+      unawaited(showEditTextLayerFlow(context, ref, layer));
+      return;
+    }
+    ref.read(selectionControllerProvider.notifier).select(layer.id);
+    ref.read(editingControllerProvider.notifier).start(layer.id);
   }
 
   /// Long-press: the dedicated mobile entry to multi-select mode.

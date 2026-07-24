@@ -196,16 +196,18 @@ void main() {
 
     final f1 = await tester.startGesture(p1, pointer: 45);
     await tester.pump();
-    final session = container.read(interactionControllerProvider).session;
-    expect(
-      session,
-      isNotNull,
-      reason: 'On-quad pointer-down must start a session eagerly.',
-    );
-    expect(session!.layerId, 'shape');
+    // Claim ≠ start (tb3 3/7): the arena is claimed on down, but the
+    // session waits for slop or a second finger — a stationary hold
+    // must be able to become a long-press.
+    expect(container.read(interactionControllerProvider).session, isNull);
 
     final f2 = await tester.startGesture(p2, pointer: 46);
     await tester.pump();
+    // Second finger promotes the deferred claim into a session
+    // immediately (pinch needs no slop).
+    final session = container.read(interactionControllerProvider).session;
+    expect(session, isNotNull);
+    expect(session!.layerId, 'shape');
     await f1.moveBy(const Offset(-60, 0));
     await f2.moveBy(const Offset(60, 0));
     await tester.pump();
