@@ -29,6 +29,7 @@ class CropSession {
     this.draftCrop = ImageLayer.fullCrop,
     this.aspectRatio,
     this.originalAspect,
+    this.sourceAspect,
     this.priorSelectionId,
   });
 
@@ -55,6 +56,15 @@ class CropSession {
   /// user with re-introduced pixels they thought they discarded.
   final double? originalAspect;
 
+  /// Natural aspect (width / height) of the source BITMAP, reported
+  /// by the crop overlay once the image resolves. Commit needs it to
+  /// convert the display-space draft into a source-space crop window
+  /// (a cover fit clips a centred strip whose extent depends on this
+  /// ratio). `null` until resolved — commit falls back to the legacy
+  /// aspect-preserving reshape, which is only correct for centred
+  /// full-axis crops.
+  final double? sourceAspect;
+
   /// Selection that was active **before** Crop opened, captured so
   /// the editor can restore it on commit/cancel.
   ///
@@ -75,11 +85,14 @@ class CropSession {
     Rect? draftCrop,
     Object? aspectRatio = _sentinel,
     Object? originalAspect = _sentinel,
+    Object? sourceAspect = _sentinel,
     Object? priorSelectionId = _sentinel,
   }) {
     return CropSession(
       active: active ?? this.active,
-      layerId: identical(layerId, _sentinel) ? this.layerId : layerId as String?,
+      layerId: identical(layerId, _sentinel)
+          ? this.layerId
+          : layerId as String?,
       draftCrop: draftCrop ?? this.draftCrop,
       aspectRatio: identical(aspectRatio, _sentinel)
           ? this.aspectRatio
@@ -87,6 +100,9 @@ class CropSession {
       originalAspect: identical(originalAspect, _sentinel)
           ? this.originalAspect
           : originalAspect as double?,
+      sourceAspect: identical(sourceAspect, _sentinel)
+          ? this.sourceAspect
+          : sourceAspect as double?,
       priorSelectionId: identical(priorSelectionId, _sentinel)
           ? this.priorSelectionId
           : priorSelectionId as String?,
@@ -95,6 +111,15 @@ class CropSession {
 }
 
 const Object _sentinel = Object();
+
+/// Component-wise tolerant rect equality — drafts pass through
+/// [CropController.sanitise] clamps while seeds don't, so exact `==`
+/// would spuriously report a moved frame.
+bool _rectsClose(Rect a, Rect b) =>
+    (a.left - b.left).abs() < 1e-6 &&
+    (a.top - b.top).abs() < 1e-6 &&
+    (a.right - b.right).abs() < 1e-6 &&
+    (a.bottom - b.bottom).abs() < 1e-6;
 
 bool _isFull(Rect r) =>
     (r.left).abs() < 1e-6 &&
@@ -141,6 +166,17 @@ class CropController extends Notifier<CropSession> {
     );
   }
 
+  /// Record the source bitmap's natural aspect (width / height),
+  /// reported by the overlay once the image stream resolves. Safe to
+  /// call repeatedly; ignored when no session is active or the value
+  /// is degenerate.
+  void setSourceAspect(double aspect) {
+    if (!state.active) return;
+    if (!aspect.isFinite || aspect <= 0) return;
+    if (state.sourceAspect == aspect) return;
+    state = state.copyWith(sourceAspect: aspect);
+  }
+
   /// Close crop mode without committing.
   void cancelCrop() {
     final prior = state.priorSelectionId;
@@ -165,10 +201,7 @@ class CropController extends Notifier<CropSession> {
   /// still has to tap Done (or hit Cancel to back out).
   void resetCrop() {
     if (!state.active) return;
-    state = state.copyWith(
-      draftCrop: ImageLayer.fullCrop,
-      aspectRatio: null,
-    );
+    state = state.copyWith(draftCrop: ImageLayer.fullCrop, aspectRatio: null);
   }
 
   /// Update the draft from a gesture. Rect is clamped to [0..1]
@@ -219,10 +252,7 @@ class CropController extends Notifier<CropSession> {
   void selectOriginal() {
     if (!state.active) return;
     final aspect = state.originalAspect;
-    state = state.copyWith(
-      draftCrop: ImageLayer.fullCrop,
-      aspectRatio: aspect,
-    );
+    state = state.copyWith(draftCrop: ImageLayer.fullCrop, aspectRatio: aspect);
   }
 
   /// Commit the draft.
@@ -271,72 +301,132 @@ class CropController extends Notifier<CropSession> {
       _restoreSelection(prior);
       return;
     }
+    // Re-crop of a source-windowed (fill) layer where the user
+    // pressed Done without moving the seeded frame — same no-op
+    // outcome as above.
+    if (layer.fit == BoxFit.fill && _rectsClose(draft, layer.cropRect)) {
+      final prior = s.priorSelectionId;
+      state = const CropSession();
+      _restoreSelection(prior);
+      return;
+    }
 
     final commands = <EditorCommand>[];
 
     // ----- Reshape the layer to the cropped pixel rectangle. -----
-    // The layer currently displays its `cropRect` sub-region
-    // stretched into `transform.size`. The new layer size = the
-    // physical pixel rectangle of the crop; we then write back a
-    // full crop rect so the renderer's scale becomes (1, 1).
     final oldSize = layer.transform.size;
     final oldPos = layer.transform.position;
-    // The crop draft is normalised against the LAYER's local box
-    // (which is what the user dragged the frame inside), so
-    // multiplying by oldSize gives the new size in canvas pixels
-    // directly -- no conversion through the source image's pixel
-    // grid is needed here.
-    final newSize = Size(
-      math.max(1.0, oldSize.width * draft.width),
-      math.max(1.0, oldSize.height * draft.height),
-    );
-    // Keep the cropped region anchored where it visually appeared
-    // in design-mode commits. In photo-mode we instead snap the
-    // layer to (0, 0) and resize the canvas around it -- see
-    // below.
-    final newPos = Offset(
-      oldPos.dx + oldSize.width * draft.left,
-      oldPos.dy + oldSize.height * draft.top,
-    );
+
+    // Preferred path: convert the display-space draft into a
+    // SOURCE-space crop window. The overlay previews the UNCROPPED
+    // source at the layer's fit inside a layer-aspect frame, so the
+    // draft's basis is the cover strip (cover) or the full source
+    // (fill). The committed layer keeps `fit: fill` + that source
+    // window: `_applyCrop` then reproduces exactly the chosen pixels
+    // at ANY box aspect. The old commit (reshape + reset to
+    // fullCrop) re-derived the region through a cover fit at the new
+    // aspect, which recentres off-centre crops and zooms inset crops
+    // back out — the wrong pixels for everything except centred
+    // full-axis crops.
+    //
+    // Requires the source bitmap's aspect (reported by the overlay
+    // once the image resolves). Without it — or for exotic fits —
+    // fall back to the legacy reshape, which is never worse than the
+    // old behavior.
+    final srcAspect = s.sourceAspect;
+    final canMapToSource =
+        srcAspect != null &&
+        (layer.fit == BoxFit.cover || layer.fit == BoxFit.fill);
+
+    final Size newSize;
+    final Offset newPos;
+    if (canMapToSource) {
+      final boxAspect = oldSize.height <= 0
+          ? 1.0
+          : oldSize.width / oldSize.height;
+      // Basis the user drew the draft in (overlay ignores cropRect).
+      final displayBasis = ImageLayer.visibleSourceWindow(
+        fit: layer.fit,
+        cropRect: ImageLayer.fullCrop,
+        boxAspect: boxAspect,
+        sourceAspect: srcAspect,
+      );
+      // Window the old box actually displayed (includes cropRect) —
+      // the scale reference that keeps on-canvas pixel density
+      // stable across the commit.
+      final shownBefore = ImageLayer.visibleSourceWindow(
+        fit: layer.fit,
+        cropRect: layer.cropRect,
+        boxAspect: boxAspect,
+        sourceAspect: srcAspect,
+      );
+      final newCrop = Rect.fromLTWH(
+        displayBasis.left + draft.left * displayBasis.width,
+        displayBasis.top + draft.top * displayBasis.height,
+        draft.width * displayBasis.width,
+        draft.height * displayBasis.height,
+      );
+      final refW = shownBefore.width <= 0 ? 1.0 : shownBefore.width;
+      final refH = shownBefore.height <= 0 ? 1.0 : shownBefore.height;
+      newSize = Size(
+        math.max(1.0, newCrop.width / refW * oldSize.width),
+        math.max(1.0, newCrop.height / refH * oldSize.height),
+      );
+      newPos = Offset(
+        oldPos.dx + (newCrop.left - shownBefore.left) / refW * oldSize.width,
+        oldPos.dy + (newCrop.top - shownBefore.top) / refH * oldSize.height,
+      );
+      commands.add(SetImageCropCommand(layerId: layer.id, cropRect: newCrop));
+      if (layer.fit != BoxFit.fill) {
+        commands.add(SetImageFitCommand(layerId: layer.id, fit: BoxFit.fill));
+      }
+    } else {
+      // Legacy aspect-preserving reshape. The crop draft is
+      // normalised against the LAYER's local box, so multiplying by
+      // oldSize gives the new size in canvas pixels directly.
+      newSize = Size(
+        math.max(1.0, oldSize.width * draft.width),
+        math.max(1.0, oldSize.height * draft.height),
+      );
+      newPos = Offset(
+        oldPos.dx + oldSize.width * draft.left,
+        oldPos.dy + oldSize.height * draft.top,
+      );
+      commands.add(
+        SetImageCropCommand(layerId: layer.id, cropRect: ImageLayer.fullCrop),
+      );
+    }
 
     if (doc.projectKind == ProjectKind.photo) {
       // Photo project: the photo IS the project. Snap the layer to
       // the canvas origin and reshape the canvas to match. No
       // white gaps possible.
-      commands.add(SetLayerTransformCommand(
-        layerId: layer.id,
-        transform: layer.transform.copyWith(
-          position: Offset.zero,
-          size: newSize,
+      commands.add(
+        SetLayerTransformCommand(
+          layerId: layer.id,
+          transform: layer.transform.copyWith(
+            position: Offset.zero,
+            size: newSize,
+          ),
         ),
-      ));
-      commands.add(SetCanvasSizeCommand(
-        width: newSize.width,
-        height: newSize.height,
-      ));
+      );
+      commands.add(
+        SetCanvasSizeCommand(width: newSize.width, height: newSize.height),
+      );
     } else {
       // Design project: leave the canvas alone, just shrink the
       // layer in place.
-      commands.add(SetLayerTransformCommand(
-        layerId: layer.id,
-        transform: layer.transform.copyWith(
-          position: newPos,
-          size: newSize,
+      commands.add(
+        SetLayerTransformCommand(
+          layerId: layer.id,
+          transform: layer.transform.copyWith(position: newPos, size: newSize),
         ),
-      ));
+      );
     }
 
-    // Reset cropRect to full so the renderer no longer scales the
-    // image anisotropically. Pixels are now physically the right
-    // shape because the layer box itself is.
-    commands.add(SetImageCropCommand(
-      layerId: layer.id,
-      cropRect: ImageLayer.fullCrop,
-    ));
-
-    ref.read(documentControllerProvider.notifier).execute(
-          CompositeCommand(commands, labelOverride: 'Crop'),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(CompositeCommand(commands, labelOverride: 'Crop'));
     final prior = s.priorSelectionId;
     state = const CropSession();
     _restoreSelection(prior);
@@ -402,8 +492,7 @@ class CropController extends Notifier<CropSession> {
     required Rect bounds,
     required double aspect,
     required double layerAspect,
-  }) =>
-      fitAspect(bounds: bounds, aspect: aspect, layerAspect: layerAspect);
+  }) => fitAspect(bounds: bounds, aspect: aspect, layerAspect: layerAspect);
 
   /// Translate [r] by ([dx], [dy]) in normalised units, clamping the
   /// result so the rect stays fully inside `[0..1]`.
@@ -571,5 +660,6 @@ enum CropHandle { tl, tr, bl, br, t, r, b, l }
 
 /// Single shared provider — every crop entry-point reads/writes the
 /// same [CropSession].
-final cropControllerProvider =
-    NotifierProvider<CropController, CropSession>(CropController.new);
+final cropControllerProvider = NotifierProvider<CropController, CropSession>(
+  CropController.new,
+);

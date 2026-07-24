@@ -55,6 +55,7 @@ class CropModeOverlay extends ConsumerWidget {
         bottom: false,
         child: Column(
           children: [
+            _SourceAspectProbe(layer: layer),
             const _CropTopBar(),
             const Divider(height: 1, thickness: 1, color: Color(0xFF1A1A1A)),
             Expanded(
@@ -72,6 +73,87 @@ class CropModeOverlay extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Zero-size widget that resolves the layer's image source once and
+/// reports the bitmap's natural aspect into the crop session
+/// ([CropController.setSourceAspect]). Commit needs that ratio to
+/// map the display-space draft into a persistent source window;
+/// until it resolves, commit falls back to the legacy reshape.
+class _SourceAspectProbe extends ConsumerStatefulWidget {
+  const _SourceAspectProbe({required this.layer});
+  final ImageLayer layer;
+
+  @override
+  ConsumerState<_SourceAspectProbe> createState() => _SourceAspectProbeState();
+}
+
+class _SourceAspectProbeState extends ConsumerState<_SourceAspectProbe> {
+  ImageStream? _stream;
+  ImageStreamListener? _listener;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolve();
+  }
+
+  @override
+  void didUpdateWidget(_SourceAspectProbe oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.layer.source != widget.layer.source) _resolve();
+  }
+
+  void _resolve() {
+    _detach();
+    final src = widget.layer.source;
+    ImageProvider? provider;
+    final filePath = src.filePath;
+    if (filePath != null) {
+      final file = io.File(filePath);
+      if (file.existsSync()) provider = FileImage(file);
+    } else if (src.assetName != null) {
+      provider = AssetImage(src.assetName!);
+    } else if (src.networkUrl != null) {
+      provider = NetworkImage(src.networkUrl!);
+    }
+    if (provider == null) return;
+    final stream = provider.resolve(createLocalImageConfiguration(context));
+    final listener = ImageStreamListener(
+      (ImageInfo info, bool _) {
+        final image = info.image;
+        if (image.height > 0 && mounted) {
+          ref
+              .read(cropControllerProvider.notifier)
+              .setSourceAspect(image.width / image.height);
+        }
+        info.dispose();
+      },
+      // Unresolvable source (missing file, dead URL): stay silent —
+      // commit simply keeps the legacy fallback path.
+      onError: (Object _, StackTrace? _) {},
+    );
+    _stream = stream;
+    _listener = listener;
+    stream.addListener(listener);
+  }
+
+  void _detach() {
+    final s = _stream;
+    final l = _listener;
+    if (s != null && l != null) s.removeListener(l);
+    _stream = null;
+    _listener = null;
+  }
+
+  @override
+  void dispose() {
+    _detach();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 // =============================================================

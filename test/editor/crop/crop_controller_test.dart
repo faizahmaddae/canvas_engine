@@ -359,6 +359,125 @@ void main() {
     });
   });
 
+  group('commit (source-window path)', () {
+    // With the source aspect known (reported by the overlay), commit
+    // converts the display-space draft into a persistent SOURCE
+    // window: fit flips to fill and cropRect carries the window, so
+    // the renderer reproduces exactly the chosen pixels at the new
+    // box aspect. Regression tests for the old behavior that reset
+    // cropRect to full and re-derived pixels through a cover fit —
+    // recentring off-centre crops and zooming inset crops back out.
+    //
+    // Geometry used throughout: layer box 800x400 (aspect 2), SQUARE
+    // source (aspect 1) → the cover display shows the source's
+    // centred vertical strip LTWH(0, 0.25, 1, 0.5).
+
+    CropController ctrl() => container.read(cropControllerProvider.notifier);
+
+    test('off-centre draft commits the drafted region, left-anchored', () {
+      ctrl().openCrop('img1');
+      ctrl().setSourceAspect(1.0);
+      // Left half of the display — the case cover recentres.
+      ctrl().updateDraft(const Rect.fromLTRB(0, 0, 0.5, 1));
+      ctrl().commitCrop();
+
+      final l = readLayer();
+      expect(l.fit, BoxFit.fill);
+      expect(l.cropRect.left, closeTo(0, 1e-6));
+      expect(l.cropRect.top, closeTo(0.25, 1e-6));
+      expect(l.cropRect.width, closeTo(0.5, 1e-6));
+      expect(l.cropRect.height, closeTo(0.5, 1e-6));
+      expect(l.transform.size.width, closeTo(400, 1e-6));
+      expect(l.transform.size.height, closeTo(400, 1e-6));
+      expect(l.transform.position.dx, closeTo(0, 1e-6));
+      expect(l.transform.position.dy, closeTo(0, 1e-6));
+    });
+
+    test('inset draft maps into the cover strip; box math matches the '
+        'display', () {
+      ctrl().openCrop('img1');
+      ctrl().setSourceAspect(1.0);
+      ctrl().updateDraft(const Rect.fromLTRB(0.1, 0.2, 0.9, 0.8));
+      ctrl().commitCrop();
+
+      final l = readLayer();
+      expect(l.fit, BoxFit.fill);
+      // Strip LTWH(0,0.25,1,0.5) ∘ draft LTWH(0.1,0.2,0.8,0.6).
+      expect(l.cropRect.left, closeTo(0.1, 1e-6));
+      expect(l.cropRect.top, closeTo(0.35, 1e-6));
+      expect(l.cropRect.width, closeTo(0.8, 1e-6));
+      expect(l.cropRect.height, closeTo(0.3, 1e-6));
+      // On-canvas box identical to the legacy math (display-space).
+      expect(l.transform.size.width, closeTo(640, 1e-6));
+      expect(l.transform.size.height, closeTo(240, 1e-6));
+      expect(l.transform.position.dx, closeTo(80, 1e-6));
+      expect(l.transform.position.dy, closeTo(80, 1e-6));
+    });
+
+    test('single undo restores fit, cropRect and transform', () {
+      ctrl().openCrop('img1');
+      ctrl().setSourceAspect(1.0);
+      ctrl().updateDraft(const Rect.fromLTRB(0, 0, 0.5, 1));
+      ctrl().commitCrop();
+      container.read(documentControllerProvider.notifier).undo();
+
+      final l = readLayer();
+      expect(l.fit, BoxFit.cover);
+      expect(l.cropRect, ImageLayer.fullCrop);
+      expect(l.transform.size, const Size(800, 400));
+      expect(l.transform.position, Offset.zero);
+    });
+
+    test('re-crop of a fill layer: Done without dragging is a no-op; '
+        'a narrowed draft re-windows the source directly', () {
+      // First crop → fill layer with window LTWH(0.1,0.35,0.8,0.3).
+      ctrl().openCrop('img1');
+      ctrl().setSourceAspect(1.0);
+      ctrl().updateDraft(const Rect.fromLTRB(0.1, 0.2, 0.9, 0.8));
+      ctrl().commitCrop();
+
+      // Done-with-no-drag: seeded draft == cropRect → no history entry.
+      ctrl().openCrop('img1');
+      ctrl().setSourceAspect(1.0);
+      ctrl().commitCrop();
+      final afterNoop = readLayer();
+      expect(afterNoop.transform.size.width, closeTo(640, 1e-6));
+      // One undo jumps past the (absent) no-op straight to pre-crop.
+      container.read(documentControllerProvider.notifier).undo();
+      expect(readLayer().transform.size, const Size(800, 400));
+      container.read(documentControllerProvider.notifier).redo();
+
+      // Narrow to the left half of the current window. The draft's
+      // basis for a fill layer is the FULL source.
+      ctrl().openCrop('img1');
+      ctrl().setSourceAspect(1.0);
+      ctrl().updateDraft(const Rect.fromLTRB(0.1, 0.35, 0.5, 0.65));
+      ctrl().commitCrop();
+      final l = readLayer();
+      expect(l.fit, BoxFit.fill);
+      expect(l.cropRect.left, closeTo(0.1, 1e-6));
+      expect(l.cropRect.top, closeTo(0.35, 1e-6));
+      expect(l.cropRect.width, closeTo(0.4, 1e-6));
+      expect(l.cropRect.height, closeTo(0.3, 1e-6));
+      // Scale reference is the previous window: 0.4/0.8 × 640 = 320.
+      expect(l.transform.size.width, closeTo(320, 1e-6));
+      expect(l.transform.size.height, closeTo(240, 1e-6));
+      expect(l.transform.position.dx, closeTo(80, 1e-6));
+      expect(l.transform.position.dy, closeTo(80, 1e-6));
+    });
+
+    test('without a resolved source aspect commit falls back to the '
+        'legacy reshape', () {
+      ctrl().openCrop('img1');
+      ctrl().updateDraft(const Rect.fromLTRB(0, 0, 0.5, 1));
+      ctrl().commitCrop();
+      final l = readLayer();
+      expect(l.fit, BoxFit.cover);
+      expect(l.cropRect, ImageLayer.fullCrop);
+      expect(l.transform.size.width, closeTo(400, 1e-6));
+    });
+  });
+
   group('handles', () {
     // Pure resize math. Driven directly by gesture deltas; the
     // overlay just maps its private handle enum onto these.

@@ -114,6 +114,49 @@ class ImageLayer extends EditorLayer {
   /// checks against the default never allocate.
   static const Rect fullCrop = Rect.fromLTRB(0, 0, 1, 1);
 
+  /// Source-normalised window of the pixels a layer box displays.
+  ///
+  /// Coordinate spaces: the result is normalised over the FULL
+  /// source bitmap (0..1 each axis); [cropRect] is normalised over
+  /// the post-fit image at the box (the renderer's `_applyCrop`
+  /// basis); [boxAspect]/[sourceAspect] are width/height ratios.
+  ///
+  /// Only [BoxFit.cover] and [BoxFit.fill] are meaningful here —
+  /// cover clips a centred strip of the source before [cropRect]
+  /// windows it, fill maps the full source onto the box so the two
+  /// bases coincide. Other fits fall back to the fill mapping;
+  /// callers that need exactness should gate on the fit first.
+  ///
+  /// This exists so crop commits can convert a window chosen in
+  /// display space into a persistent source window instead of
+  /// re-deriving pixels through a cover fit at the new box aspect —
+  /// which shows the wrong region for any off-centre crop.
+  static Rect visibleSourceWindow({
+    required BoxFit fit,
+    required Rect cropRect,
+    required double boxAspect,
+    required double sourceAspect,
+  }) {
+    Rect basis = fullCrop;
+    if (fit == BoxFit.cover && boxAspect > 0 && sourceAspect > 0) {
+      if (sourceAspect > boxAspect) {
+        // Source wider than box: full height, centred horizontal strip.
+        final w = boxAspect / sourceAspect;
+        basis = Rect.fromLTWH((1 - w) / 2, 0, w, 1);
+      } else if (sourceAspect < boxAspect) {
+        // Source taller than box: full width, centred vertical strip.
+        final h = sourceAspect / boxAspect;
+        basis = Rect.fromLTWH(0, (1 - h) / 2, 1, h);
+      }
+    }
+    return Rect.fromLTWH(
+      basis.left + cropRect.left * basis.width,
+      basis.top + cropRect.top * basis.height,
+      cropRect.width * basis.width,
+      cropRect.height * basis.height,
+    );
+  }
+
   /// Convenience: true when [cropRect] is the default full window.
   bool get isFullCrop =>
       cropRect.left == 0 &&
