@@ -50,6 +50,7 @@ import '../image/presentation/image_shadow_body.dart';
 import '../image/presentation/image_shape_body.dart';
 import '../paint/application/paint_tool_controller.dart';
 import '../paint/domain/paint_tool_type.dart';
+import '../paint/presentation/paint_mode_expansion.dart';
 import '../paint/presentation/paint_mode_toolbar.dart';
 import '../shape/application/shape_tool_controller.dart';
 import '../shape/presentation/shape_border_body.dart';
