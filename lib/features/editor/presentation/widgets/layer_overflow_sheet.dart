@@ -1,0 +1,531 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../l10n/l10n.dart';
+import '../../application/context_toolbar_controller.dart';
+import '../../engine/core/editor_layer.dart';
+import '../../engine/modules/paint/paint_layer.dart';
+import '../../engine/modules/shape/shape_layer.dart';
+import '../../engine/modules/text/text_layer.dart';
+import '../../paint/application/paint_tool_controller.dart';
+import '../../shape/application/shape_tool_controller.dart';
+import '../../text/application/text_tool_controller.dart';
+import '../../text/presentation/text_direction_mode_picker.dart';
+import '../../text/presentation/text_edit_flow.dart';
+import '../../text/presentation/text_resize_mode_picker.dart';
+import 'controls/toggle_segment.dart';
+import 'layer_actions.dart';
+
+/// THE layer overflow sheet — the single «⋯ / بیشتر» destination for
+/// every layer type and for multi-selection (tb2 7/16; replaces the
+/// three drifted copies `layer_actions_sheet.dart`,
+/// `selected_layer_actions_sheet.dart` and `panels/text/more_sheet.dart`).
+///
+/// Row-spec driven: [_buildRows] assembles the canonical row order
+/// once, and each row appears only when the selected layer type has
+/// the capability. Canonical order (interaction contract §1 class M):
+///
+///   1. Edit text (text)            7. Bring forward / Send backward
+///   2. Align → context panel       8. Lock/Unlock (ACTION icon)
+///   3. Opacity → context panel     9. Resize behavior (text/shape/paint)
+///   4. B/I/U inline row (text)    10. Text direction (text)
+///   5. Rename                     11. Layers → end drawer
+///   6. Duplicate                  12. Delete (danger)
+///
+/// Multi-selection renders the batch variant: count header + Align +
+/// batch Duplicate / Lock / Delete (each ONE CompositeCommand → one
+/// undo entry) + Layers.
+///
+/// Interaction-contract class M, full barrier — hosted by the plain
+/// `showModalBottomSheet` grammar until the 2.8 modal host lands.
+/// Delete runs the ONE canonical sequence for every entry point:
+/// confirm (protected/base cases) BEFORE the sheet pops, then
+/// dismiss, then execute.
+Future<void> showLayerOverflowSheet(
+  BuildContext context,
+  WidgetRef ref, {
+  required EditorLayer layer,
+  List<EditorLayer>? selectedLayers,
+  VoidCallback? onOpenLayers,
+}) {
+  final layers = (selectedLayers == null || selectedLayers.length <= 1)
+      ? <EditorLayer>[layer]
+      : selectedLayers;
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    useSafeArea: true,
+    builder: (ctx) => _LayerOverflowSheet(
+      hostContext: context,
+      layer: layer,
+      selectedLayers: layers,
+      parentRef: ref,
+      onOpenLayers: onOpenLayers,
+    ),
+  );
+}
+
+class _LayerOverflowSheet extends StatelessWidget {
+  const _LayerOverflowSheet({
+    required this.hostContext,
+    required this.layer,
+    required this.selectedLayers,
+    required this.parentRef,
+    this.onOpenLayers,
+  });
+
+  /// The editor-screen context that outlives the sheet. Follow-up
+  /// surfaces (rename dialog, pickers, the text edit flow) open on
+  /// this context AFTER the sheet pops so they never sit on a
+  /// deactivated route.
+  final BuildContext hostContext;
+
+  final EditorLayer layer;
+  final List<EditorLayer> selectedLayers;
+
+  /// The parent screen's [WidgetRef]: the modal sheet mounts under
+  /// the root navigator, which sits OUTSIDE the editor
+  /// `ProviderScope` in some embedder configurations — provider
+  /// access must go through the ref the caller was already using.
+  final WidgetRef parentRef;
+
+  final VoidCallback? onOpenLayers;
+
+  bool get isMulti => selectedLayers.length > 1;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      // The union list is tall; compact density + a scroll guard keep
+      // every row reachable on short devices (the sheet opens without
+      // isScrollControlled, clamped to 9/16 of screen height).
+      child: ListTileTheme(
+        data: const ListTileThemeData(
+          dense: true,
+          visualDensity: VisualDensity.compact,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...(isMulti ? _buildMultiRows(context) : _buildRows(context)),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Pop the sheet, then run [action] against the host context on
+  /// the next microtask-safe boundary. The shared tail of every
+  /// link-out row.
+  void _popThen(BuildContext sheetContext, VoidCallback action) {
+    Navigator.of(sheetContext).pop();
+    if (!hostContext.mounted) return;
+    action();
+  }
+
+  // ─── single-layer variant ────────────────────────────────────────
+
+  List<Widget> _buildRows(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    // Emoji stickers are stored as TextLayer but expose none of the
+    // text capabilities (edit flow, B/I/U, resize/direction modes).
+    final textLayer = (layer is TextLayer && !(layer as TextLayer).isSticker)
+        ? layer as TextLayer
+        : null;
+    final shapeLayer = layer is ShapeLayer ? layer as ShapeLayer : null;
+    final paintLayer = layer is PaintLayer ? layer as PaintLayer : null;
+    final canForward = LayerActions.canBringForward(parentRef, layer);
+    final canBackward = LayerActions.canSendBackward(parentRef, layer);
+
+    return [
+      // 1 — Edit text
+      if (textLayer != null)
+        ListTile(
+          leading: const Icon(Icons.edit_rounded),
+          title: Text(l10n.editTextAction),
+          onTap: () => _popThen(context, () {
+            showEditTextLayerFlow(hostContext, parentRef, textLayer);
+          }),
+        ),
+      // 2 — Align (context panel link)
+      ListTile(
+        leading: const Icon(Icons.align_horizontal_left_rounded),
+        title: Text(l10n.alignAction),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: () => _popThen(context, () {
+          parentRef
+              .read(contextToolbarControllerProvider.notifier)
+              .open(ContextToolPanel.align);
+        }),
+      ),
+      // 3 — Opacity (context panel link)
+      ListTile(
+        leading: const Icon(Icons.opacity),
+        title: Text(l10n.opacityLabel),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: () => _popThen(context, () {
+          parentRef
+              .read(contextToolbarControllerProvider.notifier)
+              .open(ContextToolPanel.opacity);
+        }),
+      ),
+      // 4 — B/I/U inline segmented row
+      if (textLayer != null) ...[
+        const Divider(height: 1),
+        _InlineStyleToggleRow(layer: textLayer, parentRef: parentRef),
+        const Divider(height: 1),
+      ],
+      // 5 — Rename
+      ListTile(
+        leading: const Icon(Icons.drive_file_rename_outline_rounded),
+        title: Text(l10n.renameAction),
+        onTap: () => _popThen(context, () {
+          LayerActions.rename(hostContext, parentRef, layer);
+        }),
+      ),
+      // 6 — Duplicate
+      ListTile(
+        leading: const Icon(Icons.copy_all_outlined),
+        title: Text(l10n.duplicateAction),
+        onTap: () => _popThen(context, () {
+          LayerActions.duplicate(parentRef, layer);
+        }),
+      ),
+      // 7 — Reorder
+      ListTile(
+        enabled: canForward,
+        leading: const Icon(Icons.flip_to_front_rounded),
+        title: Text(l10n.bringForwardAction),
+        onTap: !canForward
+            ? null
+            : () => _popThen(context, () {
+                LayerActions.bringForward(parentRef, layer);
+              }),
+      ),
+      ListTile(
+        enabled: canBackward,
+        leading: const Icon(Icons.flip_to_back_rounded),
+        title: Text(l10n.sendBackwardAction),
+        onTap: !canBackward
+            ? null
+            : () => _popThen(context, () {
+                LayerActions.sendBackward(parentRef, layer);
+              }),
+      ),
+      // 8 — Lock/Unlock. ACTION-icon convention: the glyph previews
+      // what the tap DOES (lock_open while locked = "tap to unlock"),
+      // matching the row's action-verb label.
+      ListTile(
+        leading: Icon(
+          layer.locked ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+        ),
+        title: Text(
+          layer.locked ? l10n.unlockLayerAction : l10n.lockLayerAction,
+        ),
+        onTap: () => _popThen(context, () {
+          LayerActions.toggleLock(parentRef, layer);
+        }),
+      ),
+      // 9 — Resize behavior
+      if (textLayer != null)
+        ListTile(
+          leading: Icon(textResizeModeIcon(textLayer.resizeMode)),
+          title: Text(l10n.resizeBehaviorTitle),
+          subtitle: Text(
+            localizedTextResizeModeLabel(context, textLayer.resizeMode),
+          ),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => _popThen(context, () async {
+            final current = textLayer.resizeMode;
+            final picked = await pickTextResizeMode(hostContext, current);
+            if (picked != null && picked != current) {
+              parentRef
+                  .read(textToolControllerProvider.notifier)
+                  .setResizeMode(picked);
+            }
+          }),
+        ),
+      if (shapeLayer != null)
+        _ResizeModeToggleRow(
+          initialIsScale:
+              shapeLayer.effectiveResizeMode == ShapeResizeMode.scale,
+          onChanged: (isScale) => parentRef
+              .read(shapeToolControllerProvider.notifier)
+              .setResizeMode(
+                isScale ? ShapeResizeMode.scale : ShapeResizeMode.free,
+              ),
+        ),
+      if (paintLayer != null)
+        _ResizeModeToggleRow(
+          initialIsScale: paintLayer.resizeMode == PaintResizeMode.scale,
+          onChanged: (isScale) => parentRef
+              .read(paintToolControllerProvider.notifier)
+              .setResizeMode(
+                isScale ? PaintResizeMode.scale : PaintResizeMode.free,
+              ),
+        ),
+      // 10 — Text direction
+      if (textLayer != null)
+        ListTile(
+          leading: Icon(textDirectionModeIcon(textLayer.textDirectionMode)),
+          title: Text(l10n.textDirectionTitle),
+          subtitle: Text(
+            localizedTextDirectionModeLabel(
+              context,
+              textLayer.textDirectionMode,
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => _popThen(context, () async {
+            final current = textLayer.textDirectionMode;
+            final picked = await pickTextDirectionMode(hostContext, current);
+            if (picked != null && picked != current) {
+              parentRef
+                  .read(textToolControllerProvider.notifier)
+                  .setTextDirectionMode(picked);
+            }
+          }),
+        ),
+      // 11 — Layers drawer link
+      if (onOpenLayers != null)
+        ListTile(
+          leading: const Icon(Icons.layers_outlined),
+          title: Text(l10n.layersTooltip),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => _popThen(context, onOpenLayers!),
+        ),
+      // 12 — Delete (danger)
+      const Divider(height: 1),
+      ListTile(
+        leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
+        title: Text(l10n.deleteAction, style: TextStyle(color: scheme.error)),
+        onTap: () => _deleteSingle(context),
+      ),
+    ];
+  }
+
+  /// The ONE canonical delete sequence (all entry points): resolve
+  /// the protected/base-photo confirm while the sheet is still up,
+  /// THEN dismiss the sheet, THEN execute.
+  Future<void> _deleteSingle(BuildContext sheetContext) async {
+    final removeBasePhotoLabel = sheetContext.l10n.removeBasePhotoCommand;
+    final confirmed = await LayerActions.confirmDelete(
+      sheetContext,
+      parentRef,
+      layer,
+    );
+    if (!sheetContext.mounted) return;
+    Navigator.of(sheetContext).pop();
+    if (!confirmed) return;
+    LayerActions.deleteWithoutConfirm(
+      parentRef,
+      layer,
+      removeBasePhotoLabel: removeBasePhotoLabel,
+    );
+  }
+
+  // ─── multi-selection variant ─────────────────────────────────────
+
+  List<Widget> _buildMultiRows(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final allLocked = selectedLayers.every((l) => l.locked);
+
+    return [
+      // Count header — identifies the batch the rows below act on.
+      ListTile(
+        leading: const Icon(Icons.checklist_rounded),
+        title: Text(l10n.multiSelectCount(selectedLayers.length)),
+      ),
+      // Align (canonical row 2)
+      ListTile(
+        leading: const Icon(Icons.align_horizontal_left_rounded),
+        title: Text(l10n.alignAction),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: () => _popThen(context, () {
+          parentRef
+              .read(contextToolbarControllerProvider.notifier)
+              .open(ContextToolPanel.align);
+        }),
+      ),
+      // Batch duplicate (canonical row 6) — one composite, clones
+      // become the new multi selection.
+      ListTile(
+        leading: const Icon(Icons.copy_all_outlined),
+        title: Text(l10n.duplicateAction),
+        onTap: () {
+          final label = l10n.duplicateAction;
+          _popThen(context, () {
+            LayerActions.duplicateMany(parentRef, selectedLayers, label: label);
+          });
+        },
+      ),
+      // Batch lock/unlock (canonical row 8, ACTION icon) — one
+      // composite; unlocks only when EVERY member is locked.
+      ListTile(
+        leading: Icon(
+          allLocked ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+        ),
+        title: Text(allLocked ? l10n.unlockLayerAction : l10n.lockLayerAction),
+        onTap: () {
+          final label = allLocked
+              ? l10n.unlockLayerAction
+              : l10n.lockLayerAction;
+          _popThen(context, () {
+            LayerActions.setLockedMany(
+              parentRef,
+              selectedLayers,
+              locked: !allLocked,
+              label: label,
+            );
+          });
+        },
+      ),
+      // Layers drawer link (canonical row 11)
+      if (onOpenLayers != null)
+        ListTile(
+          leading: const Icon(Icons.layers_outlined),
+          title: Text(l10n.layersTooltip),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => _popThen(context, onOpenLayers!),
+        ),
+      // Batch delete (canonical row 12) — one composite, one undo
+      // entry. The protected base photo is never part of a batch
+      // (see LayerActions.deleteMany), so no confirm is required.
+      const Divider(height: 1),
+      ListTile(
+        leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
+        title: Text(l10n.deleteAction, style: TextStyle(color: scheme.error)),
+        onTap: () {
+          final label = l10n.deleteAction;
+          _popThen(context, () {
+            LayerActions.deleteMany(parentRef, selectedLayers, label: label);
+          });
+        },
+      ),
+    ];
+  }
+}
+
+/// Shape/paint resize-behavior row: an inline Scale ↔ Free toggle
+/// mirroring the floating-bar pill (these types have exactly two
+/// modes, so a picker detour would be ceremony). Taps stay inline —
+/// like the B/I/U row — so the user can flip and immediately see the
+/// subtitle update. Local flag state, seeded at open time: the modal
+/// sheet can mount outside the editor `ProviderScope`, so provider
+/// watching here is not reliable; writes go through the owning
+/// controller via the parent ref.
+class _ResizeModeToggleRow extends StatefulWidget {
+  const _ResizeModeToggleRow({
+    required this.initialIsScale,
+    required this.onChanged,
+  });
+
+  final bool initialIsScale;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  State<_ResizeModeToggleRow> createState() => _ResizeModeToggleRowState();
+}
+
+class _ResizeModeToggleRowState extends State<_ResizeModeToggleRow> {
+  late bool _isScale = widget.initialIsScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      leading: Icon(
+        _isScale ? Icons.aspect_ratio_rounded : Icons.crop_free_rounded,
+      ),
+      title: Text(l10n.resizeBehaviorTitle),
+      subtitle: Text(_isScale ? l10n.scaleLabel : l10n.freeLabel),
+      onTap: () {
+        setState(() => _isScale = !_isScale);
+        widget.onChanged(_isScale);
+      },
+    );
+  }
+}
+
+/// Bold / Italic / Underline as ONE inline segmented row — replaces
+/// the three full-height list rows (~168dp → ~44dp). Toggles stay
+/// inline (no sheet dismissal) so the user can flip several flags.
+///
+/// Owns its flag state locally, seeded from the layer at open time:
+/// the modal sheet mounts under the root navigator which can sit
+/// outside the editor `ProviderScope` in some embedder
+/// configurations, so watching providers here is not reliable —
+/// writes still go through [TextToolController] via the parent ref.
+class _InlineStyleToggleRow extends StatefulWidget {
+  const _InlineStyleToggleRow({required this.layer, required this.parentRef});
+
+  final TextLayer layer;
+  final WidgetRef parentRef;
+
+  @override
+  State<_InlineStyleToggleRow> createState() => _InlineStyleToggleRowState();
+}
+
+class _InlineStyleToggleRowState extends State<_InlineStyleToggleRow> {
+  late bool _bold = widget.layer.style.isBold;
+  late bool _italic = widget.layer.style.italic;
+  late bool _underline = widget.layer.style.underline;
+
+  TextToolController get _ctrl =>
+      widget.parentRef.read(textToolControllerProvider.notifier);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Center(
+        child: ToggleSegmentGroup(
+          children: [
+            Semantics(
+              label: l10n.boldAction,
+              button: true,
+              child: ToggleSegment(
+                icon: Icons.format_bold_rounded,
+                selected: _bold,
+                onTap: () {
+                  setState(() => _bold = !_bold);
+                  _ctrl.setBold(_bold);
+                },
+              ),
+            ),
+            Semantics(
+              label: l10n.italicAction,
+              button: true,
+              child: ToggleSegment(
+                icon: Icons.format_italic_rounded,
+                selected: _italic,
+                onTap: () {
+                  setState(() => _italic = !_italic);
+                  _ctrl.setItalic(_italic);
+                },
+              ),
+            ),
+            Semantics(
+              label: l10n.underlineAction,
+              button: true,
+              child: ToggleSegment(
+                icon: Icons.format_underline_rounded,
+                selected: _underline,
+                onTap: () {
+                  setState(() => _underline = !_underline);
+                  _ctrl.setUnderline(_underline);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

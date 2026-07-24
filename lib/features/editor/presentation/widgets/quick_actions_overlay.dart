@@ -194,7 +194,14 @@ class _BarContent extends StatelessWidget {
             ),
             _Divider(color: dividerColor),
             _ActionPill(
-              icon: isLocked ? Icons.lock_rounded : Icons.lock_open_rounded,
+              // ACTION-icon convention (canonical, tb2 7/16): the
+              // glyph previews what the tap DOES — lock_open while
+              // locked means "tap to unlock". Matches the unified
+              // layer overflow sheet; the saffron tint below still
+              // carries the locked STATE at a glance.
+              icon: isLocked
+                  ? Icons.lock_open_rounded
+                  : Icons.lock_outline_rounded,
               tooltip: isLocked
                   ? context.l10n.unlockAction
                   : context.l10n.lockAction,

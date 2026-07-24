@@ -6,7 +6,7 @@ import '../../../../l10n/l10n.dart';
 import '../../application/context_toolbar_controller.dart';
 import '../../crop/application/crop_controller.dart';
 import '../../engine/modules/image/image_layer.dart';
-import '../../presentation/widgets/selected_layer_actions_sheet.dart';
+import '../../presentation/widgets/layer_overflow_sheet.dart';
 import '../../toolbar/application/dock_tool_controller.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
@@ -79,10 +79,10 @@ class ImageModeToolbar extends ConsumerWidget {
             imageCtrl.closePanel();
             contextCtrl.closePanel();
             final scaffold = Scaffold.maybeOf(context);
-            showSelectedLayerActionsSheet(
+            showLayerOverflowSheet(
               context,
               ref,
-              layer,
+              layer: layer,
               onOpenLayers: scaffold == null
                   ? null
                   : () => scaffold.openEndDrawer(),

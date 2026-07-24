@@ -29,7 +29,7 @@ import '../../toolbar/presentation/sub_tool_sheet.dart';
 import '../application/text_tool_controller.dart';
 import '../domain/font_catalog.dart';
 import 'text_bodies.dart';
-import '../../presentation/panels/text/more_sheet.dart' show showTextMoreSheet;
+import '../../presentation/widgets/layer_overflow_sheet.dart';
 
 /// Bottom dock for text mode — Canva-style.
 ///
@@ -175,7 +175,15 @@ class TextModeToolbar extends ConsumerWidget {
             if (spec.id == 'more') {
               ref.read(textToolControllerProvider.notifier).closeSheet();
               if (selected != null) {
-                showTextMoreSheet(context, ref, selected);
+                final scaffold = Scaffold.maybeOf(context);
+                showLayerOverflowSheet(
+                  context,
+                  ref,
+                  layer: selected,
+                  onOpenLayers: scaffold == null
+                      ? null
+                      : () => scaffold.openEndDrawer(),
+                );
               }
               return;
             }

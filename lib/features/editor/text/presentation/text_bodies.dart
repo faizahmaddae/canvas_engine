@@ -107,7 +107,7 @@ class TextBodies {
   // Removed in Phase 2: the Style tile is gone from the bottom dock.
   // Bold / Italic / Underline are toggle actions, not category sheets,
   // and now live in the floating bar's "More" sheet (see
-  // showTextMoreSheet in text_floating_toolbar.dart). Opacity remains
+  // the unified layer overflow sheet). Opacity remains
   // adjustable via the Color picker's alpha channel.
 
   // ─── Background / Border / Shadow / Behavior ────────────────────

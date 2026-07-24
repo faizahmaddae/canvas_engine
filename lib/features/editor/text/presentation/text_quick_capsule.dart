@@ -20,7 +20,7 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/modules/text/text_layer.dart';
-import '../../presentation/panels/text/more_sheet.dart';
+import '../../presentation/widgets/layer_overflow_sheet.dart';
 import '../../presentation/widgets/floating_action_bar.dart';
 import '../../presentation/widgets/floating_toolbar_positioner.dart';
 import '../application/text_tool_controller.dart';
@@ -131,7 +131,15 @@ class TextQuickCapsule extends ConsumerWidget {
                 // Same routing as the bar's بیشتر tile: any open
                 // sheet closes first so the modal never stacks.
                 ctrl.closeSheet();
-                showTextMoreSheet(context, ref, layer);
+                final scaffold = Scaffold.maybeOf(context);
+                showLayerOverflowSheet(
+                  context,
+                  ref,
+                  layer: layer,
+                  onOpenLayers: scaffold == null
+                      ? null
+                      : () => scaffold.openEndDrawer(),
+                );
               },
               child: Icon(
                 Icons.more_horiz_rounded,

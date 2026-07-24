@@ -6,7 +6,7 @@ import '../../application/context_toolbar_controller.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
-import 'selected_layer_actions_sheet.dart';
+import 'layer_overflow_sheet.dart';
 
 /// Bottom contextual strip for group selections.
 ///
@@ -60,10 +60,10 @@ class MultiSelectModeToolbar extends ConsumerWidget {
         label: l10n.moreActionsSemantics,
         onTap: () {
           contextCtrl.closePanel();
-          showSelectedLayerActionsSheet(
+          showLayerOverflowSheet(
             context,
             ref,
-            primary,
+            layer: primary,
             selectedLayers: layers,
             onOpenLayers: onOpenLayers,
           );

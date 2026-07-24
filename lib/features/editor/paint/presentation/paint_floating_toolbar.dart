@@ -10,7 +10,7 @@ import '../../engine/core/viewport_state.dart';
 import '../../engine/modules/paint/paint_layer.dart';
 import '../../presentation/widgets/floating_action_bar.dart';
 import '../../presentation/widgets/floating_toolbar_positioner.dart';
-import '../../presentation/widgets/layer_actions_sheet.dart';
+import '../../presentation/widgets/layer_overflow_sheet.dart';
 import '../application/paint_tool_controller.dart';
 import 'paint_size_sheet.dart';
 
@@ -123,7 +123,17 @@ class PaintFloatingToolbar extends ConsumerWidget {
           const SizedBox(width: 4),
           FloatingPillButton(
             semanticLabel: context.l10n.moreActionsSemantics,
-            onTap: () => showLayerActionsSheet(context, ref, layer),
+            onTap: () {
+              final scaffold = Scaffold.maybeOf(context);
+              showLayerOverflowSheet(
+                context,
+                ref,
+                layer: layer,
+                onOpenLayers: scaffold == null
+                    ? null
+                    : () => scaffold.openEndDrawer(),
+              );
+            },
             child: Icon(Icons.more_horiz_rounded, size: 20, color: fg),
           ),
         ],

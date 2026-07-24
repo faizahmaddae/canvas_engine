@@ -21,7 +21,7 @@ import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/paint/presentation/paint_size_sheet.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/export_action_sheet.dart';
-import 'package:canvas_engine/features/editor/presentation/widgets/layer_actions_sheet.dart';
+import 'package:canvas_engine/features/editor/presentation/widgets/layer_overflow_sheet.dart';
 import 'package:canvas_engine/features/editor/text/presentation/text_input_flow_sheet.dart';
 import 'package:canvas_engine/features/color_picker/presentation/color_picker_sheet.dart';
 import 'package:canvas_engine/features/settings/presentation/settings_screen.dart';
@@ -150,7 +150,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('layer actions sheet — no overflow @ short landscape', (
+  testWidgets('layer overflow sheet — no overflow @ short landscape', (
     tester,
   ) async {
     applyView(tester, landscape);
@@ -168,7 +168,7 @@ void main() {
     await pumpAndOpen(
       tester,
       c,
-      (ctx, ref) => showLayerActionsSheet(ctx, ref, layer),
+      (ctx, ref) => showLayerOverflowSheet(ctx, ref, layer: layer),
     );
     expect(tester.takeException(), isNull);
   });

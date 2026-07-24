@@ -90,24 +90,60 @@ class LayerActions {
   /// first. Confirming runs Remove + flip-back-to-design as one
   /// composite (single undo restores both photo and project kind).
   /// Cancelling is a silent no-op.
+  ///
+  /// Split into [confirmDelete] + [deleteWithoutConfirm] so the
+  /// overflow sheet can run the canonical sequence (confirm BEFORE
+  /// the sheet pops, execute after) while direct callers (quick
+  /// pill, layers drawer) keep this one-call form.
   static Future<void> delete(
     BuildContext context,
     WidgetRef ref,
     EditorLayer layer,
   ) async {
+    // Capture the l10n label before any await — the awaited dialog
+    // may outlive this context in edge cases.
+    final removeBasePhotoLabel = context.l10n.removeBasePhotoCommand;
+    final confirmed = await confirmDelete(context, ref, layer);
+    if (!confirmed) return;
+    deleteWithoutConfirm(
+      ref,
+      layer,
+      removeBasePhotoLabel: removeBasePhotoLabel,
+    );
+  }
+
+  /// Step 1 of the canonical delete sequence: resolve the protected-
+  /// base-photo confirm (a dialog) BEFORE any sheet dismissal.
+  /// Returns true when the delete may proceed — i.e. the layer is a
+  /// normal layer, or the user confirmed removing the base photo.
+  static Future<bool> confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    EditorLayer layer,
+  ) async {
+    final doc = ref.read(documentControllerProvider);
+    if (doc.indexOf(layer.id) == null) return false;
+    if (!doc.isProtectedBasePhoto(layer.id)) return true;
+    return await _confirmRemoveBasePhoto(context) == true;
+  }
+
+  /// Step 2 of the canonical delete sequence: execute, no dialogs.
+  /// [removeBasePhotoLabel] is the history label for the protected-
+  /// base-photo composite (captured from l10n by the caller while
+  /// its context was alive).
+  static void deleteWithoutConfirm(
+    WidgetRef ref,
+    EditorLayer layer, {
+    required String removeBasePhotoLabel,
+  }) {
+    // Re-read at execute time: if the document changed under the
+    // confirm dialog (unlikely but possible), act on fresh state
+    // rather than stale assumptions.
     final doc = ref.read(documentControllerProvider);
     if (doc.indexOf(layer.id) == null) return;
 
+    HapticFeedback.selectionClick().catchError((_) {});
     if (doc.isProtectedBasePhoto(layer.id)) {
-      final confirmed = await _confirmRemoveBasePhoto(context);
-      if (confirmed != true) return;
-      if (!context.mounted) return;
-      // Re-read post-await: if the document changed under us
-      // (unlikely but possible), bail rather than acting on stale
-      // assumptions.
-      final fresh = ref.read(documentControllerProvider);
-      if (!fresh.isProtectedBasePhoto(layer.id)) return;
-      HapticFeedback.selectionClick().catchError((_) {});
       ref
           .read(documentControllerProvider.notifier)
           .execute(
@@ -121,10 +157,9 @@ class LayerActions {
               const SetBasePhotoCommand(null),
               RemoveLayerCommand(layer.id),
               const SetProjectKindCommand(ProjectKind.design),
-            ], labelOverride: context.l10n.removeBasePhotoCommand),
+            ], labelOverride: removeBasePhotoLabel),
           );
     } else {
-      HapticFeedback.selectionClick().catchError((_) {});
       ref
           .read(documentControllerProvider.notifier)
           .execute(RemoveLayerCommand(layer.id));
@@ -134,6 +169,100 @@ class LayerActions {
     // removed the object, so promoting the "next" sibling silently is
     // dangerous (they may accidentally edit or delete it next).
     ref.read(selectionControllerProvider.notifier).clear();
+  }
+
+  // ─── batch operations (multi-select) ────────────────────────────
+  //
+  // Each batch is ONE CompositeCommand → ONE history entry, so a
+  // single undo restores the whole group. Closes the audit finding
+  // "multi-select has no batch actions".
+
+  /// Delete every layer in [layers] as one undoable step, then clear
+  /// the selection. The protected base photo is excluded — removing
+  /// it flips the project kind and demands its own confirm, which
+  /// belongs to the single-layer flow ([delete]), not to a batch.
+  static void deleteMany(
+    WidgetRef ref,
+    List<EditorLayer> layers, {
+    String? label,
+  }) {
+    final doc = ref.read(documentControllerProvider);
+    final removable = [
+      for (final layer in layers)
+        if (doc.indexOf(layer.id) != null &&
+            !doc.isProtectedBasePhoto(layer.id))
+          layer,
+    ];
+    if (removable.isEmpty) return;
+    HapticFeedback.selectionClick().catchError((_) {});
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
+          CompositeCommand([
+            for (final layer in removable) RemoveLayerCommand(layer.id),
+          ], labelOverride: label),
+        );
+    ref.read(selectionControllerProvider.notifier).clear();
+  }
+
+  /// Duplicate every layer in [layers] as one undoable step and make
+  /// the clones the new (multi) selection — so the user can drag the
+  /// duplicated group away immediately, mirroring [duplicate].
+  static void duplicateMany(
+    WidgetRef ref,
+    List<EditorLayer> layers, {
+    String? label,
+  }) {
+    final adds = <EditorCommand>[];
+    final cloneIds = <String>[];
+    for (final layer in layers) {
+      final json = Map<String, dynamic>.from(layer.toJson());
+      final newId = _uuid.v4();
+      json['id'] = newId;
+      // Same rule as [duplicate]: clones always start unlocked.
+      json.remove('locked');
+      final t = layer.transform;
+      json['transform'] = LayerTransform(
+        position: t.position + _duplicateOffset,
+        size: t.size,
+        rotation: t.rotation,
+      ).toJson();
+      final EditorLayer clone;
+      try {
+        clone = DocumentCodec.decodeLayer(json);
+      } on DocumentDecodeException {
+        continue; // skip un-cloneable layers, keep the rest
+      }
+      adds.add(AddLayerCommand(clone));
+      cloneIds.add(newId);
+    }
+    if (adds.isEmpty) return;
+    HapticFeedback.selectionClick().catchError((_) {});
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(CompositeCommand(adds, labelOverride: label));
+    ref.read(selectionControllerProvider.notifier).selectMany(cloneIds);
+  }
+
+  /// Set the lock flag on every layer in [layers] as one undoable
+  /// step. Layers already in the requested state are skipped so the
+  /// composite stays minimal and inverts cleanly.
+  static void setLockedMany(
+    WidgetRef ref,
+    List<EditorLayer> layers, {
+    required bool locked,
+    String? label,
+  }) {
+    final commands = [
+      for (final layer in layers)
+        if (layer.locked != locked)
+          SetLayerLockCommand(layerId: layer.id, locked: locked),
+    ];
+    if (commands.isEmpty) return;
+    HapticFeedback.selectionClick().catchError((_) {});
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(CompositeCommand(commands, labelOverride: label));
   }
 
   static Future<bool?> _confirmRemoveBasePhoto(BuildContext context) {
