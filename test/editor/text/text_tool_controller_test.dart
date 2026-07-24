@@ -846,6 +846,54 @@ void main() {
         );
       });
 
+      test('undo landing mid style-drag wins: the drag commit is '
+          'abandoned', () {
+        // Regression (roadmap tb0 0.7): the AppBar Undo button stays
+        // live while a dock slider is held. Pre-fix, endStyleDrag
+        // asserted in debug and, in release, committed a full-layer
+        // restore built from pre-undo state — silently reverting the
+        // user's undo.
+        final c = makeContainer();
+        final original = addText(c, content: 'first');
+        c.read(selectionControllerProvider.notifier).select(original.id);
+        final ctrl = c.read(textToolControllerProvider.notifier);
+        final docCtrl = c.read(documentControllerProvider.notifier);
+
+        // A committed edit the mid-drag undo will revert.
+        ctrl.setColor(const Color(0xFF445566));
+        expect(
+          (c.read(documentControllerProvider).layerById(original.id)!
+                  as TextLayer)
+              .style
+              .color,
+          const Color(0xFF445566),
+        );
+
+        ctrl.beginStyleDrag();
+        ctrl.setFontSize(140); // overlay preview only
+        docCtrl.undo(); // second finger hits Undo mid-drag
+        ctrl.endStyleDrag(); // release — must NOT commit the drag
+
+        final after =
+            c.read(documentControllerProvider).layerById(original.id)!
+                as TextLayer;
+        expect(
+          after.style.color,
+          original.style.color,
+          reason: 'the undo must survive the drag release',
+        );
+        expect(
+          after.style.fontSize,
+          original.style.fontSize,
+          reason: 'the abandoned drag must leave no trace',
+        );
+        // Overlay dropped: merged view equals committed view.
+        final merged =
+            c.read(renderedDocumentProvider).layerById(original.id)!
+                as TextLayer;
+        expect(merged.style.fontSize, original.style.fontSize);
+      });
+
       test('style-only edit session with unchanged content still commits '
           'one entry', () {
         final c = makeContainer();

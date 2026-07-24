@@ -765,7 +765,10 @@ class TextToolController extends Notifier<TextSession> {
   void beginStyleDrag() {
     if (_styleDrag != null) return;
     final docBefore = ref.read(documentControllerProvider);
-    _styleDrag = _StyleDragSession(docBefore: docBefore);
+    _styleDrag = _StyleDragSession(
+      docBefore: docBefore,
+      commitVersionAtBegin: ref.read(documentCommitVersionProvider),
+    );
   }
 
   /// Commit the live drag as one undo entry. Restores [docBefore]
@@ -777,10 +780,24 @@ class TextToolController extends Notifier<TextSession> {
     if (session == null) return;
     final layer = selectedTextLayer();
     final overlay = ref.read(liveOverlayProvider.notifier);
+    // The committed document can legitimately change under an open
+    // drag: the AppBar Undo button (or the multi-finger undo
+    // shortcut) stays live while a dock slider is held — a second
+    // finger can fire it. Committing the drag on top would execute a
+    // full-layer restore built from pre-undo state, silently
+    // overwriting the user's undo (and the identity assert below
+    // crashed debug builds). The undo wins: drop the in-flight
+    // overlay and end the session without committing.
+    if (ref.read(documentCommitVersionProvider) !=
+        session.commitVersionAtBegin) {
+      overlay.clear();
+      return;
+    }
     // Invariant: nobody pushed a real `execute` while the style-drag
     // session was open. Sessions are pure-overlay; if this fails,
     // someone added an `execute` mid-session and the assumption that
-    // `clear()` rewinds to docBefore no longer holds.
+    // `clear()` rewinds to docBefore no longer holds. (Undo/redo is
+    // handled above — this guards command dispatch specifically.)
     assert(
       identical(session.docBefore, ref.read(documentControllerProvider)),
       'committed document changed during style-drag session — '
@@ -1863,7 +1880,10 @@ class _LiveSession {
 /// representing the final committed value.
 @immutable
 class _StyleDragSession {
-  const _StyleDragSession({required this.docBefore});
+  const _StyleDragSession({
+    required this.docBefore,
+    required this.commitVersionAtBegin,
+  });
 
   /// Document state at the moment the drag began. Restored on
   /// release before the final style command is executed so the
@@ -1871,4 +1891,9 @@ class _StyleDragSession {
   /// final), regardless of how many in-flight liveReplace ticks
   /// the drag fired.
   final EditorDocument docBefore;
+
+  /// Commit version at the moment the drag began. If it moved by
+  /// drag end, an undo/redo landed mid-drag — the drag's commit is
+  /// abandoned so the user's undo survives.
+  final int commitVersionAtBegin;
 }
