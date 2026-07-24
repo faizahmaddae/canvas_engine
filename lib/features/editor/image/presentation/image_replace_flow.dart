@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart' as picker;
 
+import '../../../../core/constants/engine_constants.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../presentation/widgets/editor_modal_sheet.dart';
 import '../../../../core/utils/user_error.dart';
@@ -40,7 +41,15 @@ Future<void> replaceImageLayer(
   final pick = picker.ImagePicker();
   final picker.XFile? picked;
   try {
-    picked = await pick.pickImage(source: source, imageQuality: 92);
+    picked = await pick.pickImage(
+      source: source,
+      imageQuality: 92,
+      // Longest-side import ceiling — the OS downscales
+      // aspect-preserving before the bitmap enters the app. See
+      // [EngineConstants.kMaxImportDimension].
+      maxWidth: EngineConstants.kMaxImportDimension,
+      maxHeight: EngineConstants.kMaxImportDimension,
+    );
   } catch (e, st) {
     debugLogError('$debugLabel/pickImage', e, st);
     if (!context.mounted) return;

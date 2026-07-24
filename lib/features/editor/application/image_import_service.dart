@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart' as picker;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/constants/engine_constants.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/l10n.dart';
 
@@ -59,6 +61,30 @@ Future<picker.ImageSource?> pickImageSource(BuildContext context) {
         ),
       );
     },
+  );
+}
+
+/// Aspect-preserving longest-side cap for imported photos
+/// ([EngineConstants.kMaxImportDimension], tb3 7/7).
+///
+/// The heavy lifting happens in image_picker: every `pickImage` call
+/// passes `maxWidth`/`maxHeight` so oversized photos are downscaled
+/// by the OS BEFORE the bitmap enters the app. This pure helper is
+/// the belt-and-braces companion for the dimensions the app then
+/// derives (photo-project document size, image-layer natural size):
+/// if a decoder path ever slips past the picker cap (platform quirk,
+/// future import channel), the derived geometry still lands inside
+/// the ceiling. Sizes at or under the cap pass through unchanged —
+/// imports are never upscaled.
+Size capImportSize(Size natural) {
+  final longest = math.max(natural.width, natural.height);
+  if (longest <= EngineConstants.kMaxImportDimension || longest <= 0) {
+    return natural;
+  }
+  final f = EngineConstants.kMaxImportDimension / longest;
+  return Size(
+    (natural.width * f).roundToDouble().clamp(1, double.infinity),
+    (natural.height * f).roundToDouble().clamp(1, double.infinity),
   );
 }
 

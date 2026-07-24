@@ -67,6 +67,37 @@ class EngineConstants {
   static const Duration paintDraftBufferLatency = Duration(milliseconds: 64);
 
   // ---------------------------------------------------------------------
+  // Viewport guardrails (tb3 7/7)
+  // ---------------------------------------------------------------------
+
+  /// Minimum sliver of canvas (logical px, screen space) that must
+  /// remain on-screen per axis after any pan/zoom or restored
+  /// viewport. 48dp = the platform hit-target floor (44) plus margin:
+  /// whatever is left visible is always big enough to grab with one
+  /// finger and drag back, so a wild fling can never strand the
+  /// document irrecoverably off-screen.
+  static const double kViewportMinVisibleEdge = 48.0;
+
+  /// How far below the auto-fit scale a pinch may zoom out, as a
+  /// fraction of the fit scale. Applies only when the fit scale is
+  /// already below the flat 0.05 floor (huge photos): 0.5 lets the
+  /// user pull back to half the fitted size — whole canvas plus
+  /// breathing room for context — without opening a zoom range so
+  /// deep the document becomes a speck.
+  static const double kViewportMinZoomOutFactor = 0.5;
+
+  /// Longest-side ceiling (px) for imported photos; larger picks are
+  /// downscaled aspect-preserving AT IMPORT (the image_picker
+  /// maxWidth/maxHeight path, before the full bitmap ever enters the
+  /// app). 8192 is the safe GPU texture ceiling on the device classes
+  /// this app targets (Metal / GLES3), so an imported photo can
+  /// always be rendered and exported at full document resolution
+  /// without tiling, and a decoded frame stays ≤ 8192² RGBA — a
+  /// bounded worst case instead of whatever a 100-megapixel camera
+  /// produces.
+  static const double kMaxImportDimension = 8192.0;
+
+  // ---------------------------------------------------------------------
   // Rotation snapping
   // ---------------------------------------------------------------------
 

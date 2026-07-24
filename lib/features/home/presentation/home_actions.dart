@@ -7,9 +7,11 @@ import 'package:image_picker/image_picker.dart' as picker;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/constants/engine_constants.dart';
 import '../../../core/utils/user_error.dart';
 import '../../../l10n/l10n.dart';
 import '../../editor/application/document_controller.dart';
+import '../../editor/application/image_import_service.dart';
 import '../../editor/application/editor_lifecycle.dart';
 import '../../editor/application/editor_session.dart';
 import '../../editor/application/imported_image_path_codec.dart';
@@ -87,7 +89,14 @@ class HomeActions {
     final pick = picker.ImagePicker();
     final picker.XFile? picked;
     try {
-      picked = await pick.pickImage(source: picker.ImageSource.gallery);
+      picked = await pick.pickImage(
+        source: picker.ImageSource.gallery,
+        // Longest-side import ceiling — the OS downscales
+        // aspect-preserving before the bitmap enters the app. See
+        // [EngineConstants.kMaxImportDimension].
+        maxWidth: EngineConstants.kMaxImportDimension,
+        maxHeight: EngineConstants.kMaxImportDimension,
+      );
     } catch (e, st) {
       debugLogError('importPhoto/pickImage', e, st);
       if (!context.mounted) return;
@@ -110,7 +119,10 @@ class HomeActions {
 
     final Size dims;
     try {
-      dims = await _resolveImageSize(File(picked.path));
+      // Belt-and-braces cap: the picker already downscaled, but the
+      // photo-project document size derived from these dims must
+      // never exceed the ceiling even if a platform path slips past.
+      dims = capImportSize(await _resolveImageSize(File(picked.path)));
     } catch (e, st) {
       debugLogError('importPhoto/_resolveImageSize', e, st);
       messenger.showSnackBar(

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart' as picker;
 import 'package:uuid/uuid.dart';
 
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/constants/engine_constants.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../core/utils/user_error.dart';
 import '../../../l10n/l10n.dart';
@@ -773,7 +774,15 @@ class EditorScreen extends ConsumerWidget {
     final pick = picker.ImagePicker();
     final picker.XFile? picked;
     try {
-      picked = await pick.pickImage(source: source, imageQuality: 92);
+      picked = await pick.pickImage(
+        source: source,
+        imageQuality: 92,
+        // Longest-side import ceiling — the OS downscales
+        // aspect-preserving before the bitmap enters the app. See
+        // [EngineConstants.kMaxImportDimension].
+        maxWidth: EngineConstants.kMaxImportDimension,
+        maxHeight: EngineConstants.kMaxImportDimension,
+      );
     } catch (e, st) {
       debugLogError('editor/_addImage/pickImage', e, st);
       if (!context.mounted) return;
@@ -796,7 +805,10 @@ class EditorScreen extends ConsumerWidget {
 
     final Size dims;
     try {
-      dims = await resolveImageSize(File(picked.path));
+      // Belt-and-braces cap: the picker already downscaled, but the
+      // layer geometry derived here must never exceed the ceiling
+      // even if a platform path slips past it.
+      dims = capImportSize(await resolveImageSize(File(picked.path)));
     } catch (e, st) {
       debugLogError('editor/_addImage/_resolveImageSize', e, st);
       if (!context.mounted) return;
@@ -1318,34 +1330,38 @@ class EditorScreen extends ConsumerWidget {
       imageUrl: choice.imageUrl,
     );
   }
+}
 
-  void _fitViewport(BuildContext context, WidgetRef ref) {
-    // Replays the most recent fit the [EditorCanvas] auto-ran, which
-    // was sized against its real `LayoutBuilder` constraints — i.e.
-    // the actual visible canvas pane (already excludes app bar,
-    // bottom dock, FABs, safe areas). Recomputing the pane from
-    // `MediaQuery` here would silently disagree with the layout (we
-    // don't know the dock height from this seam) and shift the
-    // canvas downward. The auto-fit is the source of truth; this
-    // button just re-applies it.
-    final ok = ref.read(viewportControllerProvider.notifier).refit();
-    if (ok) return;
-    // Fallback for the (unreachable in practice) case where the
-    // canvas has never measured itself yet — e.g. test harnesses
-    // that drive the menu without mounting [EditorCanvas]. Use a
-    // best-effort screen rect so the controller still lands on a
-    // sensible state instead of a no-op.
-    final doc = ref.read(documentControllerProvider);
-    final media = MediaQuery.of(context);
-    final appBar = kToolbarHeight + media.padding.top;
-    final screen = Size(
-      media.size.width,
-      media.size.height - appBar - media.padding.bottom,
-    );
-    ref
-        .read(viewportControllerProvider.notifier)
-        .fit(screenSize: screen, canvasSize: Size(doc.width, doc.height));
-  }
+/// Fit-to-screen action, shared by the overflow menu item and the
+/// app-bar zoom-readout tap target (tb3 7/7) — top-level because both
+/// hosts are different widgets and the action owns no widget state.
+///
+/// Replays the most recent fit the [EditorCanvas] auto-ran, which
+/// was sized against its real `LayoutBuilder` constraints — i.e.
+/// the actual visible canvas pane (already excludes app bar,
+/// bottom dock, FABs, safe areas). Recomputing the pane from
+/// `MediaQuery` here would silently disagree with the layout (we
+/// don't know the dock height from this seam) and shift the
+/// canvas downward. The auto-fit is the source of truth; this
+/// action just re-applies it.
+void _fitViewport(BuildContext context, WidgetRef ref) {
+  final ok = ref.read(viewportControllerProvider.notifier).refit();
+  if (ok) return;
+  // Fallback for the (unreachable in practice) case where the
+  // canvas has never measured itself yet — e.g. test harnesses
+  // that drive the menu without mounting [EditorCanvas]. Use a
+  // best-effort screen rect so the controller still lands on a
+  // sensible state instead of a no-op.
+  final doc = ref.read(documentControllerProvider);
+  final media = MediaQuery.of(context);
+  final appBar = kToolbarHeight + media.padding.top;
+  final screen = Size(
+    media.size.width,
+    media.size.height - appBar - media.padding.bottom,
+  );
+  ref
+      .read(viewportControllerProvider.notifier)
+      .fit(screenSize: screen, canvasSize: Size(doc.width, doc.height));
 }
 
 /// Owns the [WidgetsBindingObserver] for the editor and guarantees
@@ -1453,35 +1469,73 @@ class _DocumentTitle extends ConsumerWidget {
     final session = ref.watch(editorSessionProvider);
     final title = session?.name ?? context.l10n.appName;
 
-    return Tooltip(
-      message: context.l10n.renameAction,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () => _renameFlow(context, ref),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: tokens.textPrimary,
+    // Sized to the full toolbar height with the visual block centred
+    // inside — pixel-identical to letting the AppBar centre the
+    // intrinsic block itself (same (toolbar − block)/2 math), but the
+    // extra transparent height is what lets the zoom-readout tap
+    // target below reach the 44dp floor without moving a glyph.
+    return SizedBox(
+      height: kToolbarHeight,
+      child: Stack(
+        alignment: AlignmentDirectional.centerStart,
+        children: [
+          Tooltip(
+            message: context.l10n.renameAction,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => _renameFlow(context, ref),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: tokens.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      '${EditorValueFormat.of(context).dimensions(size.width.toInt(), size.height.toInt())} • ${EditorValueFormat.of(context).percent((scale * 100).round())}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: tokens.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                '${EditorValueFormat.of(context).dimensions(size.width.toInt(), size.height.toInt())} • ${EditorValueFormat.of(context).percent((scale * 100).round())}',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: tokens.textSecondary),
-              ),
-            ],
+            ),
           ),
-        ),
+          // Invisible fit-to-screen target over the zoom% readout
+          // (tb3 7/7): the subtitle's trailing end IS the zoom value,
+          // so a 48×44 hit box pinned bottom-end covers it — meeting
+          // the 44dp floor without adding a single visible pixel. Tap
+          // = fit-to-screen, same seam as the overflow item (which
+          // stays for discoverability). Deliberately tap-only: no
+          // long-press-for-100% — one hidden gesture on a readout is
+          // discoverable, two is a lottery. Trade-off: the box also
+          // overlaps the trailing ~48px of the title line, where
+          // rename loses to fit — the title text itself (leading)
+          // keeps the rename tap.
+          PositionedDirectional(
+            end: 0,
+            bottom: 0,
+            child: Semantics(
+              button: true,
+              label: context.l10n.editorFitToScreen,
+              child: GestureDetector(
+                key: const ValueKey('appbar-zoom-fit-target'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _fitViewport(context, ref),
+                child: const SizedBox(width: 48, height: 44),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

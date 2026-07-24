@@ -1,7 +1,9 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/engine_constants.dart';
 import '../engine/core/viewport_state.dart';
 
 /// Reactive holder of the current [ViewportState].
@@ -12,7 +14,12 @@ import '../engine/core/viewport_state.dart';
 class ViewportController extends Notifier<ViewportState> {
   /// Hard limits keep the user from zooming so far in/out that interaction
   /// becomes impossible (and to avoid degenerate floating-point cases).
-  static const double _minScale = 0.05;
+  ///
+  /// The MIN bound is no longer a flat constant (tb3 7/7): a >7000px
+  /// photo on a phone pane needs a fit scale BELOW 0.05, so the
+  /// effective floor derives from the fit — see [_effectiveMinScale].
+  /// [_absoluteMinScale] remains the floor for ordinary documents.
+  static const double _absoluteMinScale = 0.05;
   static const double _maxScale = 32.0;
 
   /// The most recent ([screenSize], [canvasSize]) pair handed to [fit].
@@ -70,20 +77,20 @@ class ViewportController extends Notifier<ViewportState> {
     double? padding,
   }) {
     if (canvasSize.width <= 0 || canvasSize.height <= 0) return;
-    final pad = padding != null
-        ? (horizontal: padding, vertical: padding)
-        : adaptivePaddingFor(screenSize);
-    final available = Size(
-      (screenSize.width - pad.horizontal * 2).clamp(1, double.infinity),
-      (screenSize.height - pad.vertical * 2).clamp(1, double.infinity),
+    // Deliberately NOT floored at [_absoluteMinScale]: the fit scale
+    // for a huge photo (>7000px on a phone pane) sits below 0.05, and
+    // flooring it here was exactly the bug that made such documents
+    // unfittable — they rendered larger than the pane on open with no
+    // way to zoom out. The max clamp stays (a tiny canvas on a huge
+    // screen must not zoom past the interaction ceiling).
+    final s = math.min(
+      _fitScaleFor(
+        screenSize: screenSize,
+        canvasSize: canvasSize,
+        padding: padding,
+      ),
+      _maxScale,
     );
-    final scale = (available.width / canvasSize.width)
-        .clamp(_minScale, _maxScale)
-        .toDouble();
-    final scaleH = (available.height / canvasSize.height)
-        .clamp(_minScale, _maxScale)
-        .toDouble();
-    final s = scale < scaleH ? scale : scaleH;
     final tx = (screenSize.width - canvasSize.width * s) / 2;
     final ty = (screenSize.height - canvasSize.height * s) / 2;
     // userAdjusted:false — a programmatic fit re-enables auto-fit-on-reflow.
@@ -120,25 +127,101 @@ class ViewportController extends Notifier<ViewportState> {
     return true;
   }
 
+  /// Raw (un-clamped) fit scale for the given geometry — the largest
+  /// scale at which the whole canvas fits inside the padded pane.
+  /// Shared by [fit] and [_effectiveMinScale] so the two can never
+  /// disagree about what "fits" means.
+  double _fitScaleFor({
+    required Size screenSize,
+    required Size canvasSize,
+    double? padding,
+  }) {
+    final pad = padding != null
+        ? (horizontal: padding, vertical: padding)
+        : adaptivePaddingFor(screenSize);
+    final available = Size(
+      (screenSize.width - pad.horizontal * 2).clamp(1, double.infinity),
+      (screenSize.height - pad.vertical * 2).clamp(1, double.infinity),
+    );
+    return math.min(
+      available.width / canvasSize.width,
+      available.height / canvasSize.height,
+    );
+  }
+
+  /// Effective zoom-out floor. For ordinary documents this is the
+  /// flat [_absoluteMinScale]; for documents whose FIT scale sits
+  /// below it (huge photos) the floor derives from the fit instead —
+  /// `fitScale × kViewportMinZoomOutFactor` — so the user can always
+  /// see the whole canvas plus some context, and the pinch can't get
+  /// stuck above "fits on screen". Falls back to the flat floor when
+  /// no fit has happened yet (nothing to derive from).
+  double get _effectiveMinScale {
+    final ctx = _lastFitContext;
+    if (ctx == null) return _absoluteMinScale;
+    final fitScale = _fitScaleFor(
+      screenSize: ctx.screenSize,
+      canvasSize: ctx.canvasSize,
+      padding: ctx.padding,
+    );
+    if (!fitScale.isFinite || fitScale <= 0) return _absoluteMinScale;
+    return math.min(
+      _absoluteMinScale,
+      fitScale * EngineConstants.kViewportMinZoomOutFactor,
+    );
+  }
+
+  /// Clamp [translation] so at least
+  /// [EngineConstants.kViewportMinVisibleEdge] logical px of canvas
+  /// remain on-screen per axis (tb3 7/7 guardrail): however hard the
+  /// user flings, a grabbable sliver of the document always stays
+  /// visible, so the canvas can never be stranded off-screen. Needs
+  /// the fit-context geometry; a controller that has never fitted
+  /// (headless unit tests, pre-first-frame) passes translations
+  /// through untouched — there is no pane to clamp against.
+  Offset _clampTranslation(Offset translation, double scale) {
+    final ctx = _lastFitContext;
+    if (ctx == null) return translation;
+    final minEdge = EngineConstants.kViewportMinVisibleEdge;
+    double clampAxis(double t, double screenExtent, double canvasExtent) {
+      // Canvas occupies [t, t + canvasExtent·scale] on screen
+      // [0, screenExtent]. Lower bound keeps ≥ minEdge of canvas
+      // inside from the leading side, upper bound from the trailing
+      // side. (A canvas smaller than minEdge on screen simply ends
+      // up fully visible — the bounds tighten past its size.)
+      final lo = minEdge - canvasExtent * scale;
+      final hi = screenExtent - minEdge;
+      if (lo >= hi) return (lo + hi) / 2; // degenerate pane; centre.
+      return t.clamp(lo, hi);
+    }
+
+    return Offset(
+      clampAxis(translation.dx, ctx.screenSize.width, ctx.canvasSize.width),
+      clampAxis(translation.dy, ctx.screenSize.height, ctx.canvasSize.height),
+    );
+  }
+
   /// Pan the viewport by a screen-space delta.
   void panBy(Offset delta) {
     if (delta == Offset.zero) return;
-    state = state.copyWith(
-      translation: state.translation + delta,
-      userAdjusted: true,
-    );
+    final next = _clampTranslation(state.translation + delta, state.scale);
+    if (next == state.translation && state.userAdjusted) return;
+    state = state.copyWith(translation: next, userAdjusted: true);
   }
 
   /// Zoom around a screen-space focal point so the point under the user's
   /// finger stays put. Used by pinch-to-zoom and the +/- buttons.
   void zoomBy(double factor, Offset focal) {
     final newScale = (state.scale * factor)
-        .clamp(_minScale, _maxScale)
+        .clamp(_effectiveMinScale, _maxScale)
         .toDouble();
     final actualFactor = newScale / state.scale;
     if (actualFactor == 1.0) return;
     // Keep the focal point fixed: translate' = focal - (focal - translate) * factor
-    final newTranslation = focal - (focal - state.translation) * actualFactor;
+    final newTranslation = _clampTranslation(
+      focal - (focal - state.translation) * actualFactor,
+      newScale,
+    );
     state = ViewportState(
       scale: newScale,
       translation: newTranslation,
@@ -158,7 +241,7 @@ class ViewportController extends Notifier<ViewportState> {
     required double scale,
   }) {
     final newScale = (startState.scale * scale)
-        .clamp(_minScale, _maxScale)
+        .clamp(_effectiveMinScale, _maxScale)
         .toDouble();
     // The point on the canvas under [startFocal] at gesture start:
     //   canvasPoint = (startFocal - startState.translation) / startState.scale
@@ -166,7 +249,10 @@ class ViewportController extends Notifier<ViewportState> {
     //   currentFocal = canvasPoint * newScale + newTranslation
     final canvasPoint =
         (startFocal - startState.translation) / startState.scale;
-    final newTranslation = currentFocal - canvasPoint * newScale;
+    final newTranslation = _clampTranslation(
+      currentFocal - canvasPoint * newScale,
+      newScale,
+    );
     // A net-zero gesture frame (finger held still at unit scale) must not
     // mark the viewport as user-adjusted. Compare the TRANSFORM only — full
     // value equality now also includes `userAdjusted`, so it would treat a
@@ -194,13 +280,33 @@ class ViewportController extends Notifier<ViewportState> {
   /// wants the user-facing "Fit to screen" action to have geometry
   /// to replay against.
   void restore(ViewportState viewport, {required bool userAdjusted}) {
+    // Sanitise before applying (tb3 7/7 clamp-on-restore): a corrupt
+    // or stale store entry — non-finite numbers, a zoom outside the
+    // legal range, a translation that strands the canvas off-screen
+    // (saved on a different pane size / orientation) — must recover,
+    // not reproduce. Bailing out keeps whatever the canvas already
+    // applied (it always seeds a fresh [fit] before restoring), so
+    // "ignore the entry" IS the auto-recovery path.
+    if (!viewport.scale.isFinite || viewport.scale <= 0) return;
+    if (!viewport.translation.dx.isFinite ||
+        !viewport.translation.dy.isFinite) {
+      return;
+    }
+    final scale = viewport.scale
+        .clamp(_effectiveMinScale, _maxScale)
+        .toDouble();
+    final translation = _clampTranslation(viewport.translation, scale);
     // Fold the restored viewport's ORIGIN into the value: a genuine user
     // adjustment ([userAdjusted] true) must survive a later tool-panel
     // reflow, while a restored automatic fit (false) must keep re-fitting.
     // The canvas reads the persisted flag from [ProjectViewportStore] and
     // passes it here, so reopening an untouched project is not silently
     // promoted to "adjusted".
-    state = viewport.copyWith(userAdjusted: userAdjusted);
+    state = ViewportState(
+      scale: scale,
+      translation: translation,
+      userAdjusted: userAdjusted,
+    );
   }
 
   /// Re-map the viewport for a change in the on-screen canvas pane size
@@ -235,14 +341,18 @@ class ViewportController extends Notifier<ViewportState> {
     final canvasPoint = (oldCentre - state.translation) / state.scale;
     // … kept under the new pane centre at the unchanged scale.
     final newTranslation = newCentre - canvasPoint * state.scale;
-    // copyWith preserves the existing userAdjusted (this is only scheduled
-    // when it is already true), so a programmatic reflow keeps the intent.
-    state = state.copyWith(translation: newTranslation);
+    // Re-seed the fit context FIRST so the visible-edge clamp below
+    // runs against the pane the viewport is being re-mapped INTO.
     final ctx = _lastFitContext;
     _lastFitContext = (
       screenSize: newScreen,
       canvasSize: canvasSize,
       padding: ctx?.padding,
+    );
+    // copyWith preserves the existing userAdjusted (this is only scheduled
+    // when it is already true), so a programmatic reflow keeps the intent.
+    state = state.copyWith(
+      translation: _clampTranslation(newTranslation, state.scale),
     );
   }
 
