@@ -19,6 +19,14 @@ class DocumentController extends Notifier<EditorDocument> {
   bool get canUndo => _history.canUndo;
   bool get canRedo => _history.canRedo;
 
+  /// Read-only history timeline for the browser (oldest → newest).
+  /// Pure projection of the stack — reading it never mutates history.
+  List<HistoryEntryView> get historyTimeline => _history.timeline;
+
+  /// Index of the current position in [historyTimeline] (`-1` at the
+  /// initial state).
+  int get historyCurrentIndex => _history.currentIndex;
+
   void execute(EditorCommand command) {
     final next = _history.execute(state, command);
     if (!identical(next, state)) {

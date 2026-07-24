@@ -3511,6 +3511,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allow photo access in Settings to continue.'**
   String get allowPhotoAccessSettings;
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTitle;
+
+  /// No description provided for @documentHistoryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get documentHistoryAction;
+
+  /// No description provided for @historyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No edits yet'**
+  String get historyEmpty;
+
+  /// No description provided for @historyStartLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Document opened'**
+  String get historyStartLabel;
+
+  /// No description provided for @historyCurrentSemantic.
+  ///
+  /// In en, this message translates to:
+  /// **'current step'**
+  String get historyCurrentSemantic;
+
+  /// No description provided for @historyUndoneSemantic.
+  ///
+  /// In en, this message translates to:
+  /// **'undone'**
+  String get historyUndoneSemantic;
+
+  /// No description provided for @histAddText.
+  ///
+  /// In en, this message translates to:
+  /// **'Add text'**
+  String get histAddText;
+
+  /// No description provided for @histAddImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add image'**
+  String get histAddImage;
+
+  /// No description provided for @histAddShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Add shape'**
+  String get histAddShape;
+
+  /// No description provided for @histAddPaint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add drawing'**
+  String get histAddPaint;
+
+  /// No description provided for @histAddLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add layer'**
+  String get histAddLayer;
+
+  /// No description provided for @histRemoveLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete layer'**
+  String get histRemoveLayer;
+
+  /// No description provided for @histRenameLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename layer'**
+  String get histRenameLayer;
+
+  /// No description provided for @histReorderLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder layer'**
+  String get histReorderLayer;
+
+  /// No description provided for @histOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Opacity'**
+  String get histOpacity;
+
+  /// No description provided for @histLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock layer'**
+  String get histLock;
+
+  /// No description provided for @histUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock layer'**
+  String get histUnlock;
+
+  /// No description provided for @histShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show layer'**
+  String get histShow;
+
+  /// No description provided for @histHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide layer'**
+  String get histHide;
+
+  /// No description provided for @histMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get histMove;
+
+  /// No description provided for @histResize.
+  ///
+  /// In en, this message translates to:
+  /// **'Resize'**
+  String get histResize;
+
+  /// No description provided for @histRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get histRotate;
+
+  /// No description provided for @histTransform.
+  ///
+  /// In en, this message translates to:
+  /// **'Transform'**
+  String get histTransform;
+
+  /// No description provided for @histFlipH.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip horizontally'**
+  String get histFlipH;
+
+  /// No description provided for @histFlipV.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip vertically'**
+  String get histFlipV;
+
+  /// No description provided for @histCanvasBg.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get histCanvasBg;
+
+  /// No description provided for @histCanvasBgMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Background mode'**
+  String get histCanvasBgMode;
+
+  /// No description provided for @histResizeCanvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Resize canvas'**
+  String get histResizeCanvas;
+
+  /// No description provided for @histEditText.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit text'**
+  String get histEditText;
+
+  /// No description provided for @histTextDirection.
+  ///
+  /// In en, this message translates to:
+  /// **'Text direction'**
+  String get histTextDirection;
+
+  /// No description provided for @histTextResizeMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Text resize mode'**
+  String get histTextResizeMode;
+
+  /// No description provided for @histImageAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust image'**
+  String get histImageAdjust;
+
+  /// No description provided for @histImageBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Image border'**
+  String get histImageBorder;
+
+  /// No description provided for @histImageCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop image'**
+  String get histImageCrop;
+
+  /// No description provided for @histImageFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Image filter'**
+  String get histImageFilter;
+
+  /// No description provided for @histImageFit.
+  ///
+  /// In en, this message translates to:
+  /// **'Image fit'**
+  String get histImageFit;
+
+  /// No description provided for @histImageShadow.
+  ///
+  /// In en, this message translates to:
+  /// **'Image shadow'**
+  String get histImageShadow;
+
+  /// No description provided for @histImageShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Image shape'**
+  String get histImageShape;
+
+  /// No description provided for @histReplaceImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace image'**
+  String get histReplaceImage;
+
+  /// No description provided for @histRestoreImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore image'**
+  String get histRestoreImage;
+
+  /// No description provided for @histPaintStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing style'**
+  String get histPaintStyle;
+
+  /// No description provided for @histPaintResize.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing resize mode'**
+  String get histPaintResize;
+
+  /// No description provided for @histShapeFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Shape fill'**
+  String get histShapeFill;
+
+  /// No description provided for @histShapeStroke.
+  ///
+  /// In en, this message translates to:
+  /// **'Shape stroke'**
+  String get histShapeStroke;
+
+  /// No description provided for @histShapeRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Corner radius'**
+  String get histShapeRadius;
+
+  /// No description provided for @histShapeShadow.
+  ///
+  /// In en, this message translates to:
+  /// **'Shape shadow'**
+  String get histShapeShadow;
+
+  /// No description provided for @histShapeResizeMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Shape resize mode'**
+  String get histShapeResizeMode;
+
+  /// No description provided for @histReplaceShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace shape'**
+  String get histReplaceShape;
+
+  /// No description provided for @histVignette.
+  ///
+  /// In en, this message translates to:
+  /// **'Vignette'**
+  String get histVignette;
+
+  /// No description provided for @histEffectDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete effect'**
+  String get histEffectDelete;
+
+  /// No description provided for @histEffectReorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder effect'**
+  String get histEffectReorder;
+
+  /// No description provided for @histEffectRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore effect'**
+  String get histEffectRestore;
+
+  /// No description provided for @histEffectToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle effect'**
+  String get histEffectToggle;
+
+  /// No description provided for @histBasePhotoSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set base photo'**
+  String get histBasePhotoSet;
+
+  /// No description provided for @histBasePhotoClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear base photo'**
+  String get histBasePhotoClear;
+
+  /// No description provided for @histProjectPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo project'**
+  String get histProjectPhoto;
+
+  /// No description provided for @histProjectDesign.
+  ///
+  /// In en, this message translates to:
+  /// **'Design project'**
+  String get histProjectDesign;
+
+  /// No description provided for @histCombinedEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Combined edit'**
+  String get histCombinedEdit;
 }
 
 class _AppLocalizationsDelegate

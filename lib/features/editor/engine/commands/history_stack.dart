@@ -39,6 +39,29 @@ class HistoryStack {
   int get undoDepth => _undo.length;
   int get redoDepth => _redo.length;
 
+  /// Read-only timeline for the history browser, oldest → newest.
+  ///
+  /// The applied (undo-side) entries first, then the undone (redo-side)
+  /// entries in the order redo would re-apply them, so the list reads as
+  /// one continuous timeline the current position sits inside rather
+  /// than two stacks. Pure projection — building it neither mutates nor
+  /// depends on execute/undo/redo, so it cannot perturb the grouped-undo
+  /// merge window.
+  ///
+  /// `_redo` is a stack (its last element is the next redo), so the
+  /// forward chronological order of undone steps is `_redo.reversed`.
+  List<HistoryEntryView> get timeline => <HistoryEntryView>[
+    for (final e in _undo) HistoryEntryView(label: e.forward.label, done: true),
+    for (final e in _redo.reversed)
+      HistoryEntryView(label: e.forward.label, done: false),
+  ];
+
+  /// Index into [timeline] of the current document position — the
+  /// newest applied entry. `-1` when nothing has been applied (the
+  /// document is at its initial state), which the browser renders as an
+  /// explicit "start" row rather than an empty selection.
+  int get currentIndex => _undo.length - 1;
+
   /// Sum of `forward.estimatedByteSize + inverse.estimatedByteSize +
   /// kHistoryEntryOverheadBytes` across every entry currently on the
   /// undo stack. Exposed for diagnostics + tests; do not surface in UI.
@@ -187,6 +210,23 @@ class HistoryStack {
       e.forward.estimatedByteSize +
       e.inverse.estimatedByteSize +
       EngineConstants.kHistoryEntryOverheadBytes;
+}
+
+/// One row in the history browser's timeline (see [HistoryStack.timeline]).
+///
+/// Deliberately carries only what the browser renders — the command's
+/// human label and whether it is currently applied — never the command
+/// objects themselves, so the UI layer cannot reach in and re-apply or
+/// mutate history out of band.
+class HistoryEntryView {
+  const HistoryEntryView({required this.label, required this.done});
+
+  /// The command's [EditorCommand.label].
+  final String label;
+
+  /// `true` for an applied step (at or before the current position),
+  /// `false` for an undone step reachable by redo.
+  final bool done;
 }
 
 class _HistoryEntry {

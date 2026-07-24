@@ -45,6 +45,7 @@ import '../image/application/image_tool_controller.dart';
 import '../image/application/main_strip_image_entry.dart';
 import '../image/presentation/image_border_body.dart';
 import '../image/presentation/image_look_body.dart';
+import 'widgets/history_browser_sheet.dart';
 import '../image/presentation/image_mode_toolbar.dart';
 import '../image/presentation/image_effects_body.dart';
 import 'sticker_picker_sheet.dart';
@@ -1499,6 +1500,12 @@ class _DocumentTitle extends ConsumerWidget {
         ),
         const PopupMenuDivider(),
         _menuItem(
+          _DocumentAction.history,
+          Icons.history_rounded,
+          l10n.documentHistoryAction,
+          tokens,
+        ),
+        _menuItem(
           _DocumentAction.save,
           Icons.bookmark_add_outlined,
           l10n.editorSaveProject,
@@ -1514,6 +1521,8 @@ class _DocumentTitle extends ConsumerWidget {
         _openCanvas(ref);
       case _DocumentAction.fit:
         _fitViewport(context, ref);
+      case _DocumentAction.history:
+        await showHistoryBrowser(context, ref);
       case _DocumentAction.save:
         await _saveProject(context, ref);
     }
@@ -1694,7 +1703,7 @@ class _ModeExitPill extends ConsumerWidget {
 }
 
 /// The four document-level actions behind the title.
-enum _DocumentAction { rename, resize, fit, save }
+enum _DocumentAction { rename, resize, fit, history, save }
 
 PopupMenuItem<_DocumentAction> _menuItem(
   _DocumentAction value,

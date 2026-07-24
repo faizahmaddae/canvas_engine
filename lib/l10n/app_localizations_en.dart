@@ -1809,4 +1809,178 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get allowPhotoAccessSettings =>
       'Allow photo access in Settings to continue.';
+
+  @override
+  String get historyTitle => 'History';
+
+  @override
+  String get documentHistoryAction => 'History';
+
+  @override
+  String get historyEmpty => 'No edits yet';
+
+  @override
+  String get historyStartLabel => 'Document opened';
+
+  @override
+  String get historyCurrentSemantic => 'current step';
+
+  @override
+  String get historyUndoneSemantic => 'undone';
+
+  @override
+  String get histAddText => 'Add text';
+
+  @override
+  String get histAddImage => 'Add image';
+
+  @override
+  String get histAddShape => 'Add shape';
+
+  @override
+  String get histAddPaint => 'Add drawing';
+
+  @override
+  String get histAddLayer => 'Add layer';
+
+  @override
+  String get histRemoveLayer => 'Delete layer';
+
+  @override
+  String get histRenameLayer => 'Rename layer';
+
+  @override
+  String get histReorderLayer => 'Reorder layer';
+
+  @override
+  String get histOpacity => 'Opacity';
+
+  @override
+  String get histLock => 'Lock layer';
+
+  @override
+  String get histUnlock => 'Unlock layer';
+
+  @override
+  String get histShow => 'Show layer';
+
+  @override
+  String get histHide => 'Hide layer';
+
+  @override
+  String get histMove => 'Move';
+
+  @override
+  String get histResize => 'Resize';
+
+  @override
+  String get histRotate => 'Rotate';
+
+  @override
+  String get histTransform => 'Transform';
+
+  @override
+  String get histFlipH => 'Flip horizontally';
+
+  @override
+  String get histFlipV => 'Flip vertically';
+
+  @override
+  String get histCanvasBg => 'Background';
+
+  @override
+  String get histCanvasBgMode => 'Background mode';
+
+  @override
+  String get histResizeCanvas => 'Resize canvas';
+
+  @override
+  String get histEditText => 'Edit text';
+
+  @override
+  String get histTextDirection => 'Text direction';
+
+  @override
+  String get histTextResizeMode => 'Text resize mode';
+
+  @override
+  String get histImageAdjust => 'Adjust image';
+
+  @override
+  String get histImageBorder => 'Image border';
+
+  @override
+  String get histImageCrop => 'Crop image';
+
+  @override
+  String get histImageFilter => 'Image filter';
+
+  @override
+  String get histImageFit => 'Image fit';
+
+  @override
+  String get histImageShadow => 'Image shadow';
+
+  @override
+  String get histImageShape => 'Image shape';
+
+  @override
+  String get histReplaceImage => 'Replace image';
+
+  @override
+  String get histRestoreImage => 'Restore image';
+
+  @override
+  String get histPaintStyle => 'Drawing style';
+
+  @override
+  String get histPaintResize => 'Drawing resize mode';
+
+  @override
+  String get histShapeFill => 'Shape fill';
+
+  @override
+  String get histShapeStroke => 'Shape stroke';
+
+  @override
+  String get histShapeRadius => 'Corner radius';
+
+  @override
+  String get histShapeShadow => 'Shape shadow';
+
+  @override
+  String get histShapeResizeMode => 'Shape resize mode';
+
+  @override
+  String get histReplaceShape => 'Replace shape';
+
+  @override
+  String get histVignette => 'Vignette';
+
+  @override
+  String get histEffectDelete => 'Delete effect';
+
+  @override
+  String get histEffectReorder => 'Reorder effect';
+
+  @override
+  String get histEffectRestore => 'Restore effect';
+
+  @override
+  String get histEffectToggle => 'Toggle effect';
+
+  @override
+  String get histBasePhotoSet => 'Set base photo';
+
+  @override
+  String get histBasePhotoClear => 'Clear base photo';
+
+  @override
+  String get histProjectPhoto => 'Photo project';
+
+  @override
+  String get histProjectDesign => 'Design project';
+
+  @override
+  String get histCombinedEdit => 'Combined edit';
 }

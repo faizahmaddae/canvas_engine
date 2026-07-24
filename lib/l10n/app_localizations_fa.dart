@@ -1810,4 +1810,178 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get allowPhotoAccessSettings =>
       'برای ادامه، دسترسی عکس را در تنظیمات فعال کنید.';
+
+  @override
+  String get historyTitle => 'تاریخچه';
+
+  @override
+  String get documentHistoryAction => 'تاریخچه';
+
+  @override
+  String get historyEmpty => 'هنوز ویرایشی نیست';
+
+  @override
+  String get historyStartLabel => 'سند باز شد';
+
+  @override
+  String get historyCurrentSemantic => 'مرحلهٔ کنونی';
+
+  @override
+  String get historyUndoneSemantic => 'واگردشده';
+
+  @override
+  String get histAddText => 'افزودن متن';
+
+  @override
+  String get histAddImage => 'افزودن عکس';
+
+  @override
+  String get histAddShape => 'افزودن شکل';
+
+  @override
+  String get histAddPaint => 'افزودن طراحی';
+
+  @override
+  String get histAddLayer => 'افزودن لایه';
+
+  @override
+  String get histRemoveLayer => 'حذف لایه';
+
+  @override
+  String get histRenameLayer => 'تغییر نام لایه';
+
+  @override
+  String get histReorderLayer => 'جابه‌جایی لایه';
+
+  @override
+  String get histOpacity => 'شفافیت';
+
+  @override
+  String get histLock => 'قفل لایه';
+
+  @override
+  String get histUnlock => 'بازکردن قفل لایه';
+
+  @override
+  String get histShow => 'نمایش لایه';
+
+  @override
+  String get histHide => 'پنهان‌کردن لایه';
+
+  @override
+  String get histMove => 'جابه‌جایی';
+
+  @override
+  String get histResize => 'تغییر اندازه';
+
+  @override
+  String get histRotate => 'چرخش';
+
+  @override
+  String get histTransform => 'تبدیل';
+
+  @override
+  String get histFlipH => 'قرینهٔ افقی';
+
+  @override
+  String get histFlipV => 'قرینهٔ عمودی';
+
+  @override
+  String get histCanvasBg => 'پس‌زمینه';
+
+  @override
+  String get histCanvasBgMode => 'حالت پس‌زمینه';
+
+  @override
+  String get histResizeCanvas => 'تغییر اندازهٔ بوم';
+
+  @override
+  String get histEditText => 'ویرایش متن';
+
+  @override
+  String get histTextDirection => 'جهت متن';
+
+  @override
+  String get histTextResizeMode => 'حالت تغییر اندازهٔ متن';
+
+  @override
+  String get histImageAdjust => 'تنظیم تصویر';
+
+  @override
+  String get histImageBorder => 'کادر تصویر';
+
+  @override
+  String get histImageCrop => 'برش تصویر';
+
+  @override
+  String get histImageFilter => 'فیلتر تصویر';
+
+  @override
+  String get histImageFit => 'تناسب تصویر';
+
+  @override
+  String get histImageShadow => 'سایهٔ تصویر';
+
+  @override
+  String get histImageShape => 'شکل تصویر';
+
+  @override
+  String get histReplaceImage => 'جایگزینی تصویر';
+
+  @override
+  String get histRestoreImage => 'بازگردانی تصویر';
+
+  @override
+  String get histPaintStyle => 'استایل طراحی';
+
+  @override
+  String get histPaintResize => 'حالت تغییر اندازهٔ طراحی';
+
+  @override
+  String get histShapeFill => 'پرکردن شکل';
+
+  @override
+  String get histShapeStroke => 'خط شکل';
+
+  @override
+  String get histShapeRadius => 'گردی گوشه';
+
+  @override
+  String get histShapeShadow => 'سایهٔ شکل';
+
+  @override
+  String get histShapeResizeMode => 'حالت تغییر اندازهٔ شکل';
+
+  @override
+  String get histReplaceShape => 'جایگزینی شکل';
+
+  @override
+  String get histVignette => 'وینیت';
+
+  @override
+  String get histEffectDelete => 'حذف افکت';
+
+  @override
+  String get histEffectReorder => 'جابه‌جایی افکت';
+
+  @override
+  String get histEffectRestore => 'بازگردانی افکت';
+
+  @override
+  String get histEffectToggle => 'روشن/خاموش‌کردن افکت';
+
+  @override
+  String get histBasePhotoSet => 'تعیین عکس پایه';
+
+  @override
+  String get histBasePhotoClear => 'پاک‌کردن عکس پایه';
+
+  @override
+  String get histProjectPhoto => 'پروژهٔ عکس';
+
+  @override
+  String get histProjectDesign => 'پروژهٔ طرح';
+
+  @override
+  String get histCombinedEdit => 'ویرایش ترکیبی';
 }
