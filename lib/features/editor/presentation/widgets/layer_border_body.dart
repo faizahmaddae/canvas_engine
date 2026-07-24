@@ -8,6 +8,7 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
+import '../../application/live_overlay_controller.dart';
 import '../../engine/commands/editor_command.dart';
 import '../../engine/core/canvas_sizing.dart';
 import '../../engine/core/editor_layer.dart';
@@ -86,7 +87,13 @@ class BorderPanelAdapter<L extends EditorLayer> {
 /// (Phase 4 plan §4.2) behind explicit adapter hooks rather than a
 /// straight merge, since the two panels have real behavioural
 /// divergences (see [BorderPanelAdapter]'s doc).
-class LayerBorderBody<L extends EditorLayer> extends ConsumerWidget {
+///
+/// The precision width slider follows the interaction contract's §2
+/// preview channel: ticks stage an overlay preview, release/cancel
+/// commits ONE non-live command (structurally one undo entry per
+/// drag). Chips stay discrete non-live commands; the colour picker
+/// still streams `live: true` commits until tb2 5/16.
+class LayerBorderBody<L extends EditorLayer> extends ConsumerStatefulWidget {
   const LayerBorderBody({
     super.key,
     required this.layer,
@@ -96,10 +103,52 @@ class LayerBorderBody<L extends EditorLayer> extends ConsumerWidget {
   final L layer;
   final BorderPanelAdapter<L> adapter;
 
-  bool _isStroked(L layer) => adapter.isStrokedKind?.call(layer) ?? false;
+  @override
+  ConsumerState<LayerBorderBody<L>> createState() => _LayerBorderBodyState<L>();
+}
 
-  void _commit(
-    WidgetRef ref, {
+class _LayerBorderBodyState<L extends EditorLayer>
+    extends ConsumerState<LayerBorderBody<L>> {
+  bool _isStroked(L layer) =>
+      widget.adapter.isStrokedKind?.call(layer) ?? false;
+
+  // ─── Contract §2 slider preview channel ─────────────────────────
+  //
+  // The pending command is the exact command release will execute;
+  // each tick APPLIES it to the committed doc and stages the result
+  // on the overlay, so preview == commit by construction.
+  // `EditorSliderRow.onDragEnd` also fires on pointer-cancel, so an
+  // interrupted drag still commits the last previewed value (§7).
+  EditorCommand? _pendingSliderCommand;
+
+  void _previewSlider(EditorCommand cmd) {
+    _pendingSliderCommand = cmd;
+    final doc = ref.read(documentControllerProvider);
+    final preview = cmd.apply(doc).layerById(widget.layer.id);
+    if (preview != null) {
+      ref.read(liveOverlayProvider.notifier).replaceLayer(preview);
+    }
+  }
+
+  void _commitSlider() {
+    final cmd = _pendingSliderCommand;
+    _pendingSliderCommand = null;
+    if (cmd == null) return;
+    // Clear-then-execute in one synchronous run — no flash-back
+    // frame (same pattern as text's commitLiveEdit).
+    ref.read(liveOverlayProvider.notifier).clear();
+    ref.read(documentControllerProvider.notifier).execute(cmd);
+  }
+
+  @override
+  void dispose() {
+    if (_pendingSliderCommand != null) {
+      ref.read(liveOverlayProvider.notifier).clear();
+    }
+    super.dispose();
+  }
+
+  void _commit({
     Color? c,
     bool clearColor = false,
     double? w,
@@ -108,8 +157,8 @@ class LayerBorderBody<L extends EditorLayer> extends ConsumerWidget {
     ref
         .read(documentControllerProvider.notifier)
         .execute(
-          adapter.command(
-            layerId: layer.id,
+          widget.adapter.command(
+            layerId: widget.layer.id,
             color: c,
             clearColor: clearColor,
             width: w,
@@ -119,8 +168,10 @@ class LayerBorderBody<L extends EditorLayer> extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
+    final adapter = widget.adapter;
+    final layer = widget.layer;
     final fields = adapter.read(layer);
     final width = fields.width;
     final displayColor = fields.color ?? const Color(0xFF000000);
@@ -174,9 +225,9 @@ class LayerBorderBody<L extends EditorLayer> extends ConsumerWidget {
               if (w == 0) {
                 // None — drop the colour too so re-tapping a
                 // thickness later starts from a clean default.
-                _commit(ref, clearColor: true, w: 0);
+                _commit(clearColor: true, w: 0);
               } else {
-                _commit(ref, c: adapter.colorToPromote?.call(layer), w: w);
+                _commit(c: adapter.colorToPromote?.call(layer), w: w);
               }
             },
             thin: thin,
@@ -195,9 +246,8 @@ class LayerBorderBody<L extends EditorLayer> extends ConsumerWidget {
               initial: displayColor,
               title: context.l10n.borderColorTitle,
               onChanged: (c) =>
-                  _commit(ref, c: c, w: hasBorder ? null : medium, live: true),
-              onCommitted: (c) =>
-                  _commit(ref, c: c, w: hasBorder ? null : medium),
+                  _commit(c: c, w: hasBorder ? null : medium, live: true),
+              onCommitted: (c) => _commit(c: c, w: hasBorder ? null : medium),
             ),
             if (adapter.showPrecisionSlider) ...[
               const SizedBox(height: 6),
@@ -219,7 +269,10 @@ class LayerBorderBody<L extends EditorLayer> extends ConsumerWidget {
                     // being smaller than the legacy 20-px ceiling.
                     max: math.max(20.0, bold * 2),
                     format: (v) => '${v.round()}',
-                    onChanged: (w) => _commit(ref, w: w, live: true),
+                    onChanged: (w) => _previewSlider(
+                      adapter.command(layerId: layer.id, width: w),
+                    ),
+                    onDragEnd: _commitSlider,
                   ),
                 ],
               ),

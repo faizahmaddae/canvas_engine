@@ -6,6 +6,7 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
+import '../../application/live_overlay_controller.dart';
 import '../../engine/commands/editor_command.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../ui/editor_slider_row.dart';
@@ -63,7 +64,14 @@ class ShadowPanelAdapter<L extends EditorLayer> {
 /// preserves the other shadow fields when only one knob is touched
 /// — sliding blur won't reset the offset, picking a colour won't
 /// reset opacity, etc.
-class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
+///
+/// The blur/opacity sliders follow the interaction contract's §2
+/// preview channel: ticks stage an overlay preview, release/cancel
+/// commits ONE non-live command (structurally one undo entry per
+/// drag). Presets and the direction pad stay discrete non-live
+/// commands; the colour picker still streams `live: true` commits
+/// until tb2 5/16.
+class LayerShadowBody<L extends EditorLayer> extends ConsumerStatefulWidget {
   const LayerShadowBody({
     super.key,
     required this.layer,
@@ -73,6 +81,12 @@ class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
   final L layer;
   final ShadowPanelAdapter<L> adapter;
 
+  @override
+  ConsumerState<LayerShadowBody<L>> createState() => _LayerShadowBodyState<L>();
+}
+
+class _LayerShadowBodyState<L extends EditorLayer>
+    extends ConsumerState<LayerShadowBody<L>> {
   // Direction-pad offsets are sized in proportion to the current
   // blur (or a sensible minimum). This keeps the spatial relation
   // between blur sigma and travel distance feeling cohesive.
@@ -81,8 +95,43 @@ class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
     return mag.clamp(8, 40).toDouble();
   }
 
-  void _commit(
-    WidgetRef ref, {
+  // ─── Contract §2 slider preview channel ─────────────────────────
+  //
+  // The pending command is the exact command release will execute;
+  // each tick APPLIES it to the committed doc and stages the result
+  // on the overlay, so preview == commit by construction.
+  // `EditorSliderRow.onDragEnd` also fires on pointer-cancel, so an
+  // interrupted drag still commits the last previewed value (§7).
+  EditorCommand? _pendingSliderCommand;
+
+  void _previewSlider(EditorCommand cmd) {
+    _pendingSliderCommand = cmd;
+    final doc = ref.read(documentControllerProvider);
+    final preview = cmd.apply(doc).layerById(widget.layer.id);
+    if (preview != null) {
+      ref.read(liveOverlayProvider.notifier).replaceLayer(preview);
+    }
+  }
+
+  void _commitSlider() {
+    final cmd = _pendingSliderCommand;
+    _pendingSliderCommand = null;
+    if (cmd == null) return;
+    // Clear-then-execute in one synchronous run — no flash-back
+    // frame (same pattern as text's commitLiveEdit).
+    ref.read(liveOverlayProvider.notifier).clear();
+    ref.read(documentControllerProvider.notifier).execute(cmd);
+  }
+
+  @override
+  void dispose() {
+    if (_pendingSliderCommand != null) {
+      ref.read(liveOverlayProvider.notifier).clear();
+    }
+    super.dispose();
+  }
+
+  void _commit({
     Color? c,
     double? blur,
     Offset? offset,
@@ -92,8 +141,8 @@ class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
     ref
         .read(documentControllerProvider.notifier)
         .execute(
-          adapter.command(
-            layerId: layer.id,
+          widget.adapter.command(
+            layerId: widget.layer.id,
             color: c,
             blur: blur,
             offset: offset,
@@ -104,16 +153,16 @@ class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    final fields = adapter.read(layer);
+    final adapter = widget.adapter;
+    final fields = adapter.read(widget.layer);
     final hasShadow = fields.opacity > 0;
     final activePreset = _matchShadowPreset(fields);
 
     void applyPreset(_ShadowPreset preset) {
       EditorHaptics.toggle();
       _commit(
-        ref,
         blur: preset.blur,
         offset: preset.offset,
         opacity: preset.opacity,
@@ -140,8 +189,8 @@ class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
             ColorPickerBody(
               initial: fields.color,
               title: context.l10n.shadowColorTitle,
-              onChanged: (c) => _commit(ref, c: c, live: true),
-              onCommitted: (c) => _commit(ref, c: c),
+              onChanged: (c) => _commit(c: c, live: true),
+              onCommitted: (c) => _commit(c: c),
             ),
             const SizedBox(height: 2),
             PrecisionDisclosure(
@@ -160,7 +209,7 @@ class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
                     magnitude: _directionMagnitude(fields.blur),
                     onPick: (off) {
                       EditorHaptics.toggle();
-                      _commit(ref, offset: off);
+                      _commit(offset: off);
                     },
                   ),
                 ),
@@ -170,14 +219,20 @@ class LayerShadowBody<L extends EditorLayer> extends ConsumerWidget {
                   value: fields.blur,
                   max: 80,
                   format: (v) => v.round().toString(),
-                  onChanged: (v) => _commit(ref, blur: v, live: true),
+                  onChanged: (v) => _previewSlider(
+                    adapter.command(layerId: widget.layer.id, blur: v),
+                  ),
+                  onDragEnd: _commitSlider,
                 ),
                 EditorSliderRow(
                   label: context.l10n.opacityLabel,
                   value: fields.opacity,
                   max: 1,
                   format: (v) => '${(v * 100).round()}%',
-                  onChanged: (v) => _commit(ref, opacity: v, live: true),
+                  onChanged: (v) => _previewSlider(
+                    adapter.command(layerId: widget.layer.id, opacity: v),
+                  ),
+                  onDragEnd: _commitSlider,
                 ),
               ],
             ),

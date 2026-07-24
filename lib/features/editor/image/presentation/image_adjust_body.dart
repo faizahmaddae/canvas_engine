@@ -6,6 +6,8 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/document_controller.dart';
+import '../../application/live_overlay_controller.dart';
+import '../../engine/commands/editor_command.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/effects/editor_effect.dart';
 import '../../engine/modules/image/image_layer.dart';
@@ -27,10 +29,13 @@ import 'image_panel_shell.dart';
 ///     (0..200%), exposure (-100..100), and warmth (-100..100)
 ///     sliders for power-users.
 ///
-/// Slider drags pass `live: true` so the command stream collapses
-/// into a single undo entry per drag (see
-/// [SetImageAdjustmentsCommand.mergeWith]). Preset taps leave
-/// `live: false` so each tap is its own undoable action.
+/// Slider drags follow the interaction contract's §2 preview
+/// channel: every tick stages a preview on [liveOverlayProvider]
+/// (zero committed writes mid-drag) and release/cancel commits ONE
+/// non-live command — each drag is structurally one undo entry.
+/// Preset taps stay discrete non-live commands so each tap is its
+/// own undoable action (§3). The vignette colour picker still
+/// streams `live: true` commits until its host migrates (tb2 5/16).
 ///
 /// Every change goes through [SetImageAdjustmentsCommand] so undo
 /// / redo always works, and Replace-image (and every other Image
@@ -45,13 +50,55 @@ class ImageAdjustBody extends ConsumerStatefulWidget {
 }
 
 class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
+  // ─── Contract §2 slider preview channel ─────────────────────────
+  //
+  // The pending command is the exact command release will execute;
+  // each tick APPLIES it to the committed doc and stages the result
+  // on the overlay, so preview == commit by construction.
+  // `EditorSliderRow.onDragEnd` also fires on pointer-cancel, so an
+  // interrupted drag (system gesture, app pause cancelling touches)
+  // still commits the last previewed value (§7 pause policy).
+  EditorCommand? _pendingSliderCommand;
+
+  void _previewSlider(EditorCommand cmd) {
+    _pendingSliderCommand = cmd;
+    final doc = ref.read(documentControllerProvider);
+    final preview = cmd.apply(doc).layerById(widget.layer.id);
+    if (preview != null) {
+      ref.read(liveOverlayProvider.notifier).replaceLayer(preview);
+    }
+  }
+
+  void _commitSlider() {
+    final cmd = _pendingSliderCommand;
+    _pendingSliderCommand = null;
+    if (cmd == null) return;
+    // Clear-then-execute in one synchronous run (same pattern as
+    // text's commitLiveEdit): the next frame renders committed(new)
+    // + empty overlay, so there is no flash-back frame and the
+    // engine's overlay effect cache drops with the overlay.
+    ref.read(liveOverlayProvider.notifier).clear();
+    ref.read(documentControllerProvider.notifier).execute(cmd);
+  }
+
+  @override
+  void dispose() {
+    // Mid-drag teardown without a pointer event (panel unmounted
+    // programmatically) discards the preview, mirroring the
+    // canonical opacity template. Real interruptions arrive as
+    // pointer-cancel and commit via onDragEnd before dispose.
+    if (_pendingSliderCommand != null) {
+      ref.read(liveOverlayProvider.notifier).clear();
+    }
+    super.dispose();
+  }
+
   void _commit({
     double? brightness,
     double? contrast,
     double? saturation,
     double? exposure,
     double? warmth,
-    bool live = false,
   }) {
     ref
         .read(documentControllerProvider.notifier)
@@ -63,7 +110,6 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
             saturation: saturation,
             exposure: exposure,
             warmth: warmth,
-            live: live,
           ),
         );
   }
@@ -131,7 +177,13 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 min: -100,
                 max: 100,
                 format: (v) => v.round().toString(),
-                onChanged: (v) => _commit(brightness: v, live: true),
+                onChanged: (v) => _previewSlider(
+                  SetImageAdjustmentsCommand(
+                    layerId: widget.layer.id,
+                    brightness: v,
+                  ),
+                ),
+                onDragEnd: _commitSlider,
               ),
               EditorSliderRow(
                 label: context.l10n.contrastLabel,
@@ -141,7 +193,13 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 min: 0,
                 max: 2,
                 format: (v) => '${(v * 100).round()}%',
-                onChanged: (v) => _commit(contrast: v, live: true),
+                onChanged: (v) => _previewSlider(
+                  SetImageAdjustmentsCommand(
+                    layerId: widget.layer.id,
+                    contrast: v,
+                  ),
+                ),
+                onDragEnd: _commitSlider,
               ),
               EditorSliderRow(
                 label: context.l10n.saturationLabel,
@@ -151,7 +209,13 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 min: 0,
                 max: 2,
                 format: (v) => '${(v * 100).round()}%',
-                onChanged: (v) => _commit(saturation: v, live: true),
+                onChanged: (v) => _previewSlider(
+                  SetImageAdjustmentsCommand(
+                    layerId: widget.layer.id,
+                    saturation: v,
+                  ),
+                ),
+                onDragEnd: _commitSlider,
               ),
               EditorSliderRow(
                 label: context.l10n.exposureLabel,
@@ -161,7 +225,13 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 min: -100,
                 max: 100,
                 format: (v) => v.round().toString(),
-                onChanged: (v) => _commit(exposure: v, live: true),
+                onChanged: (v) => _previewSlider(
+                  SetImageAdjustmentsCommand(
+                    layerId: widget.layer.id,
+                    exposure: v,
+                  ),
+                ),
+                onDragEnd: _commitSlider,
               ),
               EditorSliderRow(
                 label: context.l10n.warmthLabel,
@@ -171,7 +241,13 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 min: -100,
                 max: 100,
                 format: (v) => v.round().toString(),
-                onChanged: (v) => _commit(warmth: v, live: true),
+                onChanged: (v) => _previewSlider(
+                  SetImageAdjustmentsCommand(
+                    layerId: widget.layer.id,
+                    warmth: v,
+                  ),
+                ),
+                onDragEnd: _commitSlider,
               ),
             ],
           ),
@@ -195,7 +271,13 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 min: VignetteEffect.minIntensity,
                 max: VignetteEffect.maxIntensity,
                 format: (v) => '${(v * 100).round()}%',
-                onChanged: (v) => _commitVignette(intensity: v, live: true),
+                onChanged: (v) => _previewSlider(
+                  SetImageVignetteCommand(
+                    layerId: widget.layer.id,
+                    intensity: v,
+                  ),
+                ),
+                onDragEnd: _commitSlider,
               ),
               EditorSliderRow(
                 label: context.l10n.featherLabel,
@@ -205,7 +287,10 @@ class _ImageAdjustBodyState extends ConsumerState<ImageAdjustBody> {
                 min: VignetteEffect.minFeather,
                 max: VignetteEffect.maxFeather,
                 format: (v) => '${(v * 100).round()}%',
-                onChanged: (v) => _commitVignette(feather: v, live: true),
+                onChanged: (v) => _previewSlider(
+                  SetImageVignetteCommand(layerId: widget.layer.id, feather: v),
+                ),
+                onDragEnd: _commitSlider,
               ),
               const SizedBox(height: 8),
               // The shared two-level picker, embedded. Drags stream
