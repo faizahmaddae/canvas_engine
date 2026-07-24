@@ -48,8 +48,9 @@ void main() {
       // No unavailable tools remain in the catalog — verify the guard
       // still rejects an unknown / disabled selection by forcing the
       // available flag check via direct enum probing.
-      final unavailable =
-          PaintToolType.values.where((t) => !t.available).toList();
+      final unavailable = PaintToolType.values
+          .where((t) => !t.available)
+          .toList();
       expect(unavailable, isEmpty);
     });
 
@@ -64,8 +65,7 @@ void main() {
     });
 
     test('full tool catalog is available', () {
-      final available =
-          PaintToolType.values.where((t) => t.available).toSet();
+      final available = PaintToolType.values.where((t) => t.available).toSet();
       expect(available, {
         PaintToolType.freestyle,
         PaintToolType.arrow,
@@ -120,45 +120,6 @@ void main() {
       ctrl.setFillColor(const Color(0xFFAABBCC));
       ctrl.setFillEnabled(false);
       expect(c.read(paintToolControllerProvider).fillColor, isNull);
-    });
-
-    group('rememberRecentColor (MRU)', () {
-      test('starts empty and prepends new colours', () {
-        final c = makeContainer();
-        final ctrl = c.read(paintToolControllerProvider.notifier);
-        expect(c.read(paintToolControllerProvider).recentColors, isEmpty);
-        ctrl.rememberRecentColor(const Color(0xFF112233));
-        ctrl.rememberRecentColor(const Color(0xFF445566));
-        expect(
-          c.read(paintToolControllerProvider).recentColors,
-          [const Color(0xFF445566), const Color(0xFF112233)],
-        );
-      });
-
-      test('moves an existing colour to the front instead of duplicating', () {
-        final c = makeContainer();
-        final ctrl = c.read(paintToolControllerProvider.notifier);
-        ctrl.rememberRecentColor(const Color(0xFF112233));
-        ctrl.rememberRecentColor(const Color(0xFF445566));
-        ctrl.rememberRecentColor(const Color(0xFF112233));
-        final recents = c.read(paintToolControllerProvider).recentColors;
-        expect(recents.length, 2);
-        expect(recents.first, const Color(0xFF112233));
-      });
-
-      test('caps at 8 entries', () {
-        final c = makeContainer();
-        final ctrl = c.read(paintToolControllerProvider.notifier);
-        for (var i = 0; i < 12; i++) {
-          ctrl.rememberRecentColor(Color(0xFF000000 | i));
-        }
-        expect(c.read(paintToolControllerProvider).recentColors.length, 8);
-        // Most recent is the last one we pushed.
-        expect(
-          c.read(paintToolControllerProvider).recentColors.first,
-          const Color(0xFF00000B),
-        );
-      });
     });
   });
 }

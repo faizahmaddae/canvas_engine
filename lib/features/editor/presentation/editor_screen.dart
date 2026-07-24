@@ -365,35 +365,35 @@ class EditorScreen extends ConsumerWidget {
   /// projects both see the full set so nothing is hidden, but the
   /// grouping makes the photo flow obvious to a user who imported
   /// a photo and the design flow obvious to one who started blank.
-  List<ToolbarItem> _buildToolbarItems(BuildContext context, WidgetRef ref) {
+  List<ToolbarSlot> _buildToolbarItems(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return [
       // ── tier 1 — Add ────────────────────────────────────────────
-      ToolbarItem(
+      ToolbarSlot(
         id: 'image',
         icon: Icons.add_photo_alternate_outlined,
         label: l10n.photoTool,
         onTap: () => _addImage(context, ref),
       ),
-      ToolbarItem(
+      ToolbarSlot(
         id: 'text',
         icon: Icons.text_fields_rounded,
         label: l10n.textTool,
         onTap: () => _startTextInputFlow(context, ref),
       ),
-      ToolbarItem(
+      ToolbarSlot(
         id: 'sticker',
         icon: Icons.emoji_emotions_outlined,
         label: l10n.stickerTool,
         onTap: () => _addSticker(context, ref),
       ),
-      ToolbarItem(
+      ToolbarSlot(
         id: 'shape',
         icon: Icons.category_outlined,
         label: l10n.shapeTool,
         onTap: () => _openShapePicker(context, ref),
       ),
-      ToolbarItem(
+      ToolbarSlot(
         id: 'paint',
         icon: Icons.brush_outlined,
         label: l10n.drawTool,
@@ -411,21 +411,21 @@ class EditorScreen extends ConsumerWidget {
         },
       ),
       // ── tier 2 — Edit the photo ─────────────────────────────────
-      ToolbarItem(
+      ToolbarSlot(
         id: 'crop',
         icon: Icons.crop_rotate_rounded,
         label: l10n.cropTool,
         tier: SlotTier.tier2,
         onTap: () => _openCrop(context, ref),
       ),
-      ToolbarItem(
+      ToolbarSlot(
         id: 'adjust',
         icon: Icons.tune_rounded,
         label: l10n.adjustTool,
         tier: SlotTier.tier2,
         onTap: () => _openAdjust(context, ref),
       ),
-      ToolbarItem(
+      ToolbarSlot(
         id: 'filters',
         icon: Icons.auto_fix_high_outlined,
         label: l10n.filtersTool,
@@ -433,7 +433,7 @@ class EditorScreen extends ConsumerWidget {
         onTap: () => _openFilters(context, ref),
       ),
       // ── tier 3 — Document ───────────────────────────────────────
-      ToolbarItem(
+      ToolbarSlot(
         id: 'canvas',
         icon: Icons.aspect_ratio_rounded,
         label: l10n.canvasTool,

@@ -30,15 +30,15 @@ class _Probe extends ConsumerWidget {
 
 void main() {
   Future<WidgetRef> mountProbe(WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(
-      child: MaterialApp(home: _Probe()),
-    ));
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: _Probe())),
+    );
     return _Probe._ref!;
   }
 
-  testWidgets(
-      'dismissActiveEditing closes image/shape/sticker/canvas panels',
-      (tester) async {
+  testWidgets('dismissActiveEditing closes image/shape/sticker/canvas panels', (
+    tester,
+  ) async {
     final ref = await mountProbe(tester);
 
     // Open all four panels.
@@ -59,51 +59,67 @@ void main() {
 
     dismissActiveEditing(ref);
 
-    expect(ref.read(imageToolControllerProvider).openSlot, isNull,
-        reason: 'image panel must collapse on tap-off-canvas');
-    expect(ref.read(shapeToolControllerProvider).openSlot, isNull,
-        reason: 'shape panel must collapse on tap-off-canvas');
-    expect(ref.read(stickerToolControllerProvider).openSlot, isNull,
-        reason: 'sticker panel must collapse on tap-off-canvas');
-    expect(ref.read(canvasToolControllerProvider).panelOpen, isFalse,
-        reason: 'canvas panel must collapse on tap-off-canvas');
+    expect(
+      ref.read(imageToolControllerProvider).openSlot,
+      isNull,
+      reason: 'image panel must collapse on tap-off-canvas',
+    );
+    expect(
+      ref.read(shapeToolControllerProvider).openSlot,
+      isNull,
+      reason: 'shape panel must collapse on tap-off-canvas',
+    );
+    expect(
+      ref.read(stickerToolControllerProvider).openSlot,
+      isNull,
+      reason: 'sticker panel must collapse on tap-off-canvas',
+    );
+    expect(
+      ref.read(canvasToolControllerProvider).panelOpen,
+      isFalse,
+      reason: 'canvas panel must collapse on tap-off-canvas',
+    );
   });
 
   testWidgets(
-      'closeObjectSubPanels collapses image/shape/sticker/text + stops editing but leaves canvas',
-      (tester) async {
-    final ref = await mountProbe(tester);
+    'closeObjectSubPanels collapses image/shape/sticker/text + stops editing but leaves canvas',
+    (tester) async {
+      final ref = await mountProbe(tester);
 
-    ref
-        .read(imageToolControllerProvider.notifier)
-        .toggleSlot(ImageToolSlot.border);
-    ref
-        .read(shapeToolControllerProvider.notifier)
-        .toggleSlot(ShapeToolSlot.shadow);
-    ref
-        .read(stickerToolControllerProvider.notifier)
-        .toggleSlot(StickerToolSlot.size);
-    ref.read(canvasToolControllerProvider.notifier).togglePanel();
-    ref.read(textToolControllerProvider.notifier).openSheet('font');
-    ref.read(textToolControllerProvider.notifier).toggleSlot('color');
-    ref.read(editingControllerProvider.notifier).start('layer-1');
-    expect(ref.read(textToolControllerProvider).openSheet, 'font');
-    expect(ref.read(editingControllerProvider), 'layer-1');
+      ref
+          .read(imageToolControllerProvider.notifier)
+          .toggleSlot(ImageToolSlot.border);
+      ref
+          .read(shapeToolControllerProvider.notifier)
+          .toggleSlot(ShapeToolSlot.shadow);
+      ref
+          .read(stickerToolControllerProvider.notifier)
+          .toggleSlot(StickerToolSlot.size);
+      ref.read(canvasToolControllerProvider.notifier).togglePanel();
+      ref.read(textToolControllerProvider.notifier).openSheet('font');
+      ref.read(editingControllerProvider.notifier).start('layer-1');
+      expect(ref.read(textToolControllerProvider).openSheet, 'font');
+      expect(ref.read(editingControllerProvider), 'layer-1');
 
-    closeObjectSubPanels(ref);
+      closeObjectSubPanels(ref);
 
-    expect(ref.read(imageToolControllerProvider).openSlot, isNull);
-    expect(ref.read(shapeToolControllerProvider).openSlot, isNull);
-    expect(ref.read(stickerToolControllerProvider).openSlot, isNull);
-    expect(ref.read(textToolControllerProvider).openSheet, isNull,
-        reason: 'text sheet must clear on selection change');
-    expect(ref.read(textToolControllerProvider).openSlot, isNull,
-        reason: 'text inline slot must clear on selection change');
-    expect(ref.read(editingControllerProvider), isNull,
-        reason: 'in-flight inline edit must stop on selection change');
-    // Canvas is intentionally NOT touched by the selection-change
-    // seam — it has no selection, so picking a different layer
-    // shouldn't collapse it. Only an explicit dismiss does.
-    expect(ref.read(canvasToolControllerProvider).panelOpen, isTrue);
-  });
+      expect(ref.read(imageToolControllerProvider).openSlot, isNull);
+      expect(ref.read(shapeToolControllerProvider).openSlot, isNull);
+      expect(ref.read(stickerToolControllerProvider).openSlot, isNull);
+      expect(
+        ref.read(textToolControllerProvider).openSheet,
+        isNull,
+        reason: 'text sheet must clear on selection change',
+      );
+      expect(
+        ref.read(editingControllerProvider),
+        isNull,
+        reason: 'in-flight inline edit must stop on selection change',
+      );
+      // Canvas is intentionally NOT touched by the selection-change
+      // seam — it has no selection, so picking a different layer
+      // shouldn't collapse it. Only an explicit dismiss does.
+      expect(ref.read(canvasToolControllerProvider).panelOpen, isTrue);
+    },
+  );
 }

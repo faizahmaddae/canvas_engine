@@ -5,7 +5,6 @@ import '../../application/document_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/paint_commands.dart';
 import '../../engine/modules/paint/paint_layer.dart';
-import '../../application/recent_colors_controller.dart';
 import '../domain/paint_tool_type.dart';
 
 /// Snapshot of the user's current paint configuration.
@@ -33,7 +32,6 @@ class PaintSession {
     this.dashPattern,
     this.blurRadius = 16.0,
     this.polygonSides = 6,
-    this.recentColors = const <Color>[],
   });
 
   static const PaintSession initial = PaintSession();
@@ -59,14 +57,6 @@ class PaintSession {
   final double blurRadius;
   final int polygonSides;
 
-  /// MRU list of colours the user has picked from the custom picker.
-  /// Capped at [_recentsCap] entries; the most recently used colour is
-  /// at index 0. Presets are not added here — only colours that came
-  /// from the picker, so the rail surfaces a meaningful history.
-  final List<Color> recentColors;
-
-  static const int _recentsCap = 8;
-
   PaintSession copyWith({
     bool? panelOpen,
     Object? activeTool = _sentinel,
@@ -78,7 +68,6 @@ class PaintSession {
     Object? dashPattern = _sentinel,
     double? blurRadius,
     int? polygonSides,
-    List<Color>? recentColors,
   }) {
     return PaintSession(
       panelOpen: panelOpen ?? this.panelOpen,
@@ -96,7 +85,6 @@ class PaintSession {
           : dashPattern as List<double>?,
       blurRadius: blurRadius ?? this.blurRadius,
       polygonSides: polygonSides ?? this.polygonSides,
-      recentColors: recentColors ?? this.recentColors,
     );
   }
 
@@ -135,14 +123,18 @@ class PaintToolController extends Notifier<PaintSession> {
   /// Hide the panel and exit paint mode.
   void closePanel() {
     if (!state.panelOpen && state.activeTool == null) return;
-    state = state.copyWith(panelOpen: false, activeTool: null, clearOpenSlot: true);
+    state = state.copyWith(
+      panelOpen: false,
+      activeTool: null,
+      clearOpenSlot: true,
+    );
   }
 
   /// Wipe all ephemeral paint-tool UI state back to
   /// [PaintSession.initial]. Intended for project-switch boundaries
   /// so brand-new / freshly-opened projects don't inherit the
   /// previous project's tool selection, stroke colour/width, dash
-  /// pattern, blur, polygon sides, or recent colours.
+  /// pattern, blur, or polygon sides.
   void resetSession() {
     state = PaintSession.initial;
   }
@@ -183,7 +175,11 @@ class PaintToolController extends Notifier<PaintSession> {
   void selectTool(PaintToolType tool) {
     if (!tool.available) return;
     ref.read(selectionControllerProvider.notifier).clear();
-    state = state.copyWith(panelOpen: true, activeTool: tool, clearOpenSlot: true);
+    state = state.copyWith(
+      panelOpen: true,
+      activeTool: tool,
+      clearOpenSlot: true,
+    );
   }
 
   /// Deselect the current tool while keeping the panel open. Lets the
@@ -207,7 +203,9 @@ class PaintToolController extends Notifier<PaintSession> {
     }
     final layer = selectedPaintLayer();
     if (layer != null && layer.strokeColor != color) {
-      ref.read(documentControllerProvider.notifier).execute(
+      ref
+          .read(documentControllerProvider.notifier)
+          .execute(
             UpdatePaintStyleCommand(layerId: layer.id, strokeColor: color),
           );
     }
@@ -219,7 +217,9 @@ class PaintToolController extends Notifier<PaintSession> {
     }
     final layer = selectedPaintLayer();
     if (layer != null && layer.strokeWidth != width) {
-      ref.read(documentControllerProvider.notifier).execute(
+      ref
+          .read(documentControllerProvider.notifier)
+          .execute(
             UpdatePaintStyleCommand(layerId: layer.id, strokeWidth: width),
           );
     }
@@ -231,7 +231,9 @@ class PaintToolController extends Notifier<PaintSession> {
     }
     final layer = selectedPaintLayer();
     if (layer != null && layer.fillColor != color) {
-      ref.read(documentControllerProvider.notifier).execute(
+      ref
+          .read(documentControllerProvider.notifier)
+          .execute(
             UpdatePaintStyleCommand(
               layerId: layer.id,
               setFillColor: true,
@@ -239,25 +241,6 @@ class PaintToolController extends Notifier<PaintSession> {
             ),
           );
     }
-  }
-
-  /// Record a colour the user picked from the custom picker. Moves
-  /// the colour to the front of the MRU list and trims to
-  /// [PaintSession._recentsCap]. Identical-RGBA entries are
-  /// de-duplicated so the rail never shows the same colour twice.
-  void rememberRecentColor(Color color) {
-    final argb = color.toARGB32();
-    final filtered = state.recentColors
-        .where((c) => c.toARGB32() != argb)
-        .toList(growable: true)
-      ..insert(0, color);
-    if (filtered.length > PaintSession._recentsCap) {
-      filtered.removeRange(PaintSession._recentsCap, filtered.length);
-    }
-    state = state.copyWith(recentColors: List<Color>.unmodifiable(filtered));
-    // Mirror to the editor-wide store so customs picked in Paint
-    // surface in Shape / Image / Canvas / Text panels too.
-    ref.read(recentColorsControllerProvider.notifier).remember(color);
   }
 
   /// Toggle fill on/off without losing the previously chosen colour.
@@ -282,7 +265,9 @@ class PaintToolController extends Notifier<PaintSession> {
     if (layer == null) return;
     final layerNext = enabled ? (layer.fillColor ?? layer.strokeColor) : null;
     if (layer.fillColor == layerNext) return;
-    ref.read(documentControllerProvider.notifier).execute(
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(
           UpdatePaintStyleCommand(
             layerId: layer.id,
             setFillColor: true,
@@ -290,8 +275,7 @@ class PaintToolController extends Notifier<PaintSession> {
           ),
         );
   }
-  void setDashPattern(List<double>? pattern) =>
-      state = state.copyWith(dashPattern: pattern);
+
   void setBlurRadius(double radius) =>
       state = state.copyWith(blurRadius: radius);
   void setPolygonSides(int sides) =>
@@ -304,9 +288,9 @@ class PaintToolController extends Notifier<PaintSession> {
     final layer = selectedPaintLayer();
     if (layer == null) return;
     if (layer.resizeMode == mode) return;
-    ref.read(documentControllerProvider.notifier).execute(
-          SetPaintResizeModeCommand(layerId: layer.id, mode: mode),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(SetPaintResizeModeCommand(layerId: layer.id, mode: mode));
   }
 
   /// Read the currently-selected paint layer (if any). Used by the
@@ -315,13 +299,14 @@ class PaintToolController extends Notifier<PaintSession> {
   PaintLayer? selectedPaintLayer() {
     final selection = ref.read(selectionControllerProvider);
     if (!selection.hasSelection) return null;
-    final layer =
-        ref.read(documentControllerProvider).layerById(selection.selectedId!);
+    final layer = ref
+        .read(documentControllerProvider)
+        .layerById(selection.selectedId!);
     return layer is PaintLayer ? layer : null;
   }
 }
 
 final paintToolControllerProvider =
     NotifierProvider<PaintToolController, PaintSession>(
-  PaintToolController.new,
-);
+      PaintToolController.new,
+    );

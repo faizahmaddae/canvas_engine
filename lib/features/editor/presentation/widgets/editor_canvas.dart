@@ -1378,13 +1378,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           ),
         );
         if (inSession) return const SizedBox.shrink();
-        // Mirror the paint/shape guard: hide while any text dock
-        // surface (sheet, inline slot, expanded panel) is open so
-        // the capsule never stacks on the panel it routes to.
+        // Mirror the paint/shape guard: hide while the text dock
+        // sheet is open so the capsule never stacks on the panel it
+        // routes to (openSlot/panelExpanded were retired in tb1 6b).
         final dockBusy = ref.watch(
-          textToolControllerProvider.select(
-            (s) => s.openSheet != null || s.openSlot != null || s.panelExpanded,
-          ),
+          textToolControllerProvider.select((s) => s.openSheet != null),
         );
         if (dockBusy) return const SizedBox.shrink();
         final contextPanelOpen = ref.watch(

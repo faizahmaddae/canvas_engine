@@ -15,7 +15,6 @@ import '../../engine/core/layer_transform.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../application/recent_colors_controller.dart';
 import '../domain/text_style_presets.dart';
-import '../domain/text_tool_category.dart';
 import 'text_color_resolver.dart';
 
 const _uuid = Uuid();
@@ -36,10 +35,7 @@ const _uuid = Uuid();
 class TextSession {
   const TextSession({
     this.panelOpen = false,
-    this.panelExpanded = false,
-    this.openSlot,
     this.openSheet,
-    this.activeCategory = TextToolCategory.font,
     this.defaultStyle = const TextStyleSpec(),
     this.recentColors = const <Color>[],
     this.selectedSizePreset,
@@ -50,19 +46,6 @@ class TextSession {
   /// Whether the text-mode dock is currently shown.
   final bool panelOpen;
 
-  /// Whether the in-dock expanded panel (tab body) is showing.
-  /// When `false`, only the chip strip is visible and the canvas
-  /// keeps its full height. When `true`, the body for
-  /// [activeCategory] renders above the chip strip.
-  final bool panelExpanded;
-
-  /// Identifier of the quick-action slot whose inline expansion
-  /// row is currently shown above the capsule (e.g. `'color'` or
-  /// `'size'`). `null` means no inline row is open. Mutually
-  /// exclusive with [panelExpanded] — opening one closes the
-  /// other so the dock never stacks two expansions.
-  final String? openSlot;
-
   /// Identifier of the tool sheet currently rendered inside the
   /// dock's expanded slot (e.g. `'style'`, `'background'`,
   /// `'border'`, `'size'`, …). `null` means no sheet is open and
@@ -70,9 +53,6 @@ class TextSession {
   /// rendered **inline** in the dock so the canvas reflows above
   /// it instead of being overlaid — mirrors Canva's mobile UX.
   final String? openSheet;
-
-  /// Current top-level category highlighted in the text mode toolbar.
-  final TextToolCategory activeCategory;
 
   /// Style applied to newly-added text layers. Also represents the
   /// "last known good" style when nothing is selected — the toolbar
@@ -99,12 +79,8 @@ class TextSession {
 
   TextSession copyWith({
     bool? panelOpen,
-    bool? panelExpanded,
-    String? openSlot,
-    bool clearOpenSlot = false,
     String? openSheet,
     bool clearOpenSheet = false,
-    TextToolCategory? activeCategory,
     TextStyleSpec? defaultStyle,
     List<Color>? recentColors,
     ({String label, String layerId})? selectedSizePreset,
@@ -112,10 +88,7 @@ class TextSession {
   }) {
     return TextSession(
       panelOpen: panelOpen ?? this.panelOpen,
-      panelExpanded: panelExpanded ?? this.panelExpanded,
-      openSlot: clearOpenSlot ? null : (openSlot ?? this.openSlot),
       openSheet: clearOpenSheet ? null : (openSheet ?? this.openSheet),
-      activeCategory: activeCategory ?? this.activeCategory,
       defaultStyle: defaultStyle ?? this.defaultStyle,
       recentColors: recentColors ?? this.recentColors,
       selectedSizePreset: clearSelectedSizePreset
@@ -170,12 +143,7 @@ class TextToolController extends Notifier<TextSession> {
     // text field is dismissed; selection is intentionally preserved
     // so the user can re-open and keep working with the same layer.
     ref.read(editingControllerProvider.notifier).stop();
-    state = state.copyWith(
-      panelOpen: false,
-      panelExpanded: false,
-      clearOpenSlot: true,
-      clearOpenSheet: true,
-    );
+    state = state.copyWith(panelOpen: false, clearOpenSheet: true);
   }
 
   /// Wipe all ephemeral text-tool UI state back to [TextSession.initial].
@@ -189,69 +157,6 @@ class TextToolController extends Notifier<TextSession> {
     state = TextSession.initial;
   }
 
-  void togglePanel() {
-    if (state.panelOpen) {
-      closePanel();
-    } else {
-      openPanel();
-    }
-  }
-
-  void selectCategory(TextToolCategory category) {
-    if (state.activeCategory == category) return;
-    state = state.copyWith(activeCategory: category);
-  }
-
-  void openCategory(TextToolCategory category) {
-    state = state.copyWith(panelOpen: true, activeCategory: category);
-  }
-
-  /// Tab-style toggle:
-  ///   * tapping the active category while expanded → collapses the
-  ///     panel (free up canvas space).
-  ///   * tapping a different category → switches and ensures the
-  ///     panel is expanded.
-  ///   * tapping any category while collapsed → expands.
-  void toggleCategoryPanel(TextToolCategory category) {
-    final sameTab = state.activeCategory == category;
-    if (state.panelExpanded && sameTab) {
-      state = state.copyWith(panelExpanded: false);
-    } else {
-      state = state.copyWith(activeCategory: category, panelExpanded: true);
-    }
-  }
-
-  /// Force the expanded panel closed, e.g. when the selection is
-  /// cleared or the user explicitly collapses.
-  void collapsePanel() {
-    if (!state.panelExpanded) return;
-    state = state.copyWith(panelExpanded: false);
-  }
-
-  // ─── inline slot expansions (Adaptive Dock) ──────────────────────
-  //
-  // Quick-action slots (color / size / …) can show a small inline
-  // row above the capsule without opening the full tabbed panel.
-  // Only one inline row is open at a time. Opening a slot closes
-  // any open full panel, and vice versa, so the dock never stacks
-  // two expansions.
-
-  /// Toggle the inline expansion for the given slot id.
-  /// Same id while open → close. Different id → switch. Closed → open.
-  void toggleSlot(String slotId) {
-    if (state.openSlot == slotId) {
-      state = state.copyWith(clearOpenSlot: true);
-    } else {
-      state = state.copyWith(openSlot: slotId, panelExpanded: false);
-    }
-  }
-
-  /// Force the inline slot row closed.
-  void closeSlot() {
-    if (state.openSlot == null) return;
-    state = state.copyWith(clearOpenSlot: true);
-  }
-
   // ─── in-dock tool sheets ────────────────────────────────
   //
   // The text dock's tile strip opens per-tool sheets that render
@@ -259,17 +164,12 @@ class TextToolController extends Notifier<TextSession> {
   // the dock so the user always sees the layer they're editing.
 
   /// Open a tool sheet (e.g. `'style'`, `'background'`, `'size'`).
-  /// Tapping the same id while open closes it. Closes any inline
-  /// slot or full-panel expansion to keep the dock single-purpose.
+  /// Tapping the same id while open closes it.
   void toggleSheet(String sheetId) {
     if (state.openSheet == sheetId) {
       state = state.copyWith(clearOpenSheet: true);
     } else {
-      state = state.copyWith(
-        openSheet: sheetId,
-        clearOpenSlot: true,
-        panelExpanded: false,
-      );
+      state = state.copyWith(openSheet: sheetId);
     }
   }
 
@@ -280,42 +180,19 @@ class TextToolController extends Notifier<TextSession> {
   /// handle, swipe-down, or the Done pill.
   void openSheet(String sheetId) {
     if (state.openSheet == sheetId) return;
-    state = state.copyWith(
-      openSheet: sheetId,
-      clearOpenSlot: true,
-      panelExpanded: false,
-    );
+    state = state.copyWith(openSheet: sheetId);
   }
 
-  /// Force the in-dock tool sheet closed. Also clears any inline
-  /// slot row, expanded full-panel, and sticky preset highlight
-  /// so the dismissal is visually total — used both by the Done
-  /// pill and by empty-canvas / pasteboard taps when no layer
-  /// remains selected. The user-tuned `defaultStyle`, recent
-  /// colours, and saved layer styles are preserved.
+  /// Force the in-dock tool sheet closed. Also clears any sticky
+  /// preset highlight so the dismissal is visually total — used
+  /// both by the Done pill and by empty-canvas / pasteboard taps
+  /// when no layer remains selected. The user-tuned `defaultStyle`,
+  /// recent colours, and saved layer styles are preserved.
   void closeSheet() {
-    if (state.openSheet == null &&
-        state.openSlot == null &&
-        !state.panelExpanded &&
-        state.selectedSizePreset == null) {
+    if (state.openSheet == null && state.selectedSizePreset == null) {
       return;
     }
-    state = state.copyWith(
-      panelExpanded: false,
-      clearOpenSlot: true,
-      clearOpenSheet: true,
-      clearSelectedSizePreset: true,
-    );
-  }
-
-  /// Toggle the full tabbed panel (More button). Closing the inline
-  /// row first so the dock height changes once, not twice.
-  void toggleFullPanel() {
-    if (state.panelExpanded) {
-      state = state.copyWith(panelExpanded: false);
-    } else {
-      state = state.copyWith(panelExpanded: true, clearOpenSlot: true);
-    }
+    state = state.copyWith(clearOpenSheet: true, clearSelectedSizePreset: true);
   }
 
   // ─── style writes ────────────────────────────────────────────────
@@ -894,13 +771,8 @@ class TextToolController extends Notifier<TextSession> {
     // edit. Default style stays user-controlled (it represents
     // the "next layer" defaults), but every transient piece of UI
     // state is wiped so the add flow opens clean.
-    if (state.openSheet != null ||
-        state.openSlot != null ||
-        state.panelExpanded ||
-        state.selectedSizePreset != null) {
+    if (state.openSheet != null || state.selectedSizePreset != null) {
       state = state.copyWith(
-        panelExpanded: false,
-        clearOpenSlot: true,
         clearOpenSheet: true,
         clearSelectedSizePreset: true,
       );

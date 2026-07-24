@@ -8,8 +8,6 @@ import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/text/application/text_color_resolver.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
-import 'package:canvas_engine/features/editor/text/domain/text_tool_category.dart';
-import 'package:canvas_engine/features/editor/text/domain/text_tool_action.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,15 +52,6 @@ void main() {
       expect(s.recentColors, isEmpty);
     });
 
-    test('togglePanel opens then closes', () {
-      final c = makeContainer();
-      final ctrl = c.read(textToolControllerProvider.notifier);
-      ctrl.togglePanel();
-      expect(c.read(textToolControllerProvider).panelOpen, isTrue);
-      ctrl.togglePanel();
-      expect(c.read(textToolControllerProvider).panelOpen, isFalse);
-    });
-
     test('openPanel/closePanel are idempotent', () {
       final c = makeContainer();
       final ctrl = c.read(textToolControllerProvider.notifier);
@@ -72,20 +61,6 @@ void main() {
       ctrl.closePanel();
       ctrl.closePanel();
       expect(c.read(textToolControllerProvider).panelOpen, isFalse);
-    });
-
-    test('selectCategory updates active category', () {
-      final c = makeContainer();
-      final ctrl = c.read(textToolControllerProvider.notifier);
-      expect(
-        c.read(textToolControllerProvider).activeCategory,
-        TextToolCategory.font,
-      );
-      ctrl.selectCategory(TextToolCategory.style);
-      expect(
-        c.read(textToolControllerProvider).activeCategory,
-        TextToolCategory.style,
-      );
     });
 
     test('closePanel also stops the editing controller', () {
@@ -362,22 +337,6 @@ void main() {
       expect(recents.first, const Color(0xFF000003));
       expect(recents, hasLength(8));
       expect(recents.where((c) => c == const Color(0xFF000003)).length, 1);
-    });
-
-    test('TextToolAction enum exposes the wired phase-1 controls', () {
-      // Sanity: the enum should list exactly the controls the floating
-      // toolbar wires today. Adding a new wired control here is the
-      // signal to plumb it through the toolbar UI.
-      const expected = {
-        TextToolAction.color,
-        TextToolAction.size,
-        TextToolAction.bold,
-        TextToolAction.italic,
-        TextToolAction.align,
-        TextToolAction.letterSpacing,
-        TextToolAction.lineHeight,
-      };
-      expect(TextToolAction.values.toSet(), expected);
     });
 
     test('addCenteredText rejects empty / whitespace input', () {
