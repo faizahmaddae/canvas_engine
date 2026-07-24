@@ -358,6 +358,8 @@
   "moreColorsTooltip": "رنگ‌های بیشتر",
   "hueLabel": "فام",
   "opacityLabel": "شفافیت",
+  "fillOpacityLabel": "شفافیت رنگ",
+  "strokeOpacityLabel": "شفافیت خط",
   "stylePresetClassic": "کلاسیک",
   "stylePresetQuote": "نقل‌قول",
   "stylePresetHighlight": "هایلایت",

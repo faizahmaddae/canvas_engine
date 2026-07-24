@@ -2246,6 +2246,18 @@ abstract class AppLocalizations {
   /// **'Opacity'**
   String get opacityLabel;
 
+  /// No description provided for @fillOpacityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill opacity'**
+  String get fillOpacityLabel;
+
+  /// No description provided for @strokeOpacityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stroke opacity'**
+  String get strokeOpacityLabel;
+
   /// No description provided for @stylePresetClassic.
   ///
   /// In en, this message translates to:

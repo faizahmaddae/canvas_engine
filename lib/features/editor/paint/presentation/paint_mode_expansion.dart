@@ -140,7 +140,7 @@ Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
       // recents, and layer-mirroring all keep working unchanged — the
       // slider is a faster surface for the same setter the picker calls.
       'opacity': SliderSubTool(
-        headerTitle: context.l10n.opacityLabel,
+        headerTitle: context.l10n.strokeOpacityLabel,
         headerIcon: Icons.opacity_rounded,
         min: 0,
         max: 100,

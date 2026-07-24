@@ -138,7 +138,7 @@ String paintSpecLabel(AppLocalizations l10n, PaintSpec spec) {
     'color' => l10n.colorLabel,
     'size' => l10n.sizeTool,
     'fill' => l10n.fillLabel,
-    'opacity' => l10n.opacityLabel,
+    'opacity' => l10n.strokeOpacityLabel,
     'blur' => l10n.blurLabel,
     'polygon' => l10n.sidesTool,
     'dash' => l10n.styleLabel,

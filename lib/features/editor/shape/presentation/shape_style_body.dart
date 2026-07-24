@@ -149,7 +149,7 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
               onFillCommitted: (f) => _commitFill(fill: f),
             ),
           const SizedBox(height: 14),
-          SectionLabel(context.l10n.opacityLabel),
+          SectionLabel(context.l10n.fillOpacityLabel),
           EditorSliderRow(
             key: const ValueKey('shape-fill-opacity'),
             value: layer.fillOpacity,
@@ -160,7 +160,7 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
               SetShapeFillCommand(layerId: layer.id, opacity: v),
             ),
             onDragEnd: _commitSlider,
-            semanticLabel: context.l10n.opacityLabel,
+            semanticLabel: context.l10n.fillOpacityLabel,
           ),
           if (supportsRadius) ...[
             const SizedBox(height: 14),

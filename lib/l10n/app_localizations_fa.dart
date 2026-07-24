@@ -1154,6 +1154,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get opacityLabel => 'شفافیت';
 
   @override
+  String get fillOpacityLabel => 'شفافیت رنگ';
+
+  @override
+  String get strokeOpacityLabel => 'شفافیت خط';
+
+  @override
   String get stylePresetClassic => 'کلاسیک';
 
   @override

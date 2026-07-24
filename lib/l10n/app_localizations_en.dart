@@ -1153,6 +1153,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opacityLabel => 'Opacity';
 
   @override
+  String get fillOpacityLabel => 'Fill opacity';
+
+  @override
+  String get strokeOpacityLabel => 'Stroke opacity';
+
+  @override
   String get stylePresetClassic => 'Classic';
 
   @override

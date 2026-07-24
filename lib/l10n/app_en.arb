@@ -376,6 +376,8 @@
   "moreColorsTooltip": "More colors",
   "hueLabel": "Hue",
   "opacityLabel": "Opacity",
+  "fillOpacityLabel": "Fill opacity",
+  "strokeOpacityLabel": "Stroke opacity",
   "stylePresetClassic": "Classic",
   "stylePresetQuote": "Quote",
   "stylePresetHighlight": "Highlight",
