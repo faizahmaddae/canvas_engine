@@ -34,7 +34,9 @@ Future<void> _pumpEditorWithLayer(
   container
       .read(documentControllerProvider.notifier)
       .newDocument(width: 800, height: 800);
-  container.read(documentControllerProvider.notifier).execute(
+  container
+      .read(documentControllerProvider.notifier)
+      .execute(
         AddLayerCommand(
           ShapeLayer(
             id: 'a',
@@ -59,52 +61,53 @@ Future<void> _pumpEditorWithLayer(
 }
 
 void main() {
-  testWidgets(
-    'single-layer two-finger pinch commits the scaled transform '
-    'to the document on release (no revert)',
-    (tester) async {
-      final container = _setup(tester);
-      await _pumpEditorWithLayer(tester, container);
+  testWidgets('single-layer two-finger pinch commits the scaled transform '
+      'to the document on release (no revert)', (tester) async {
+    final container = _setup(tester);
+    await _pumpEditorWithLayer(tester, container);
 
-      final before =
-          container.read(documentControllerProvider).layerById('a')!.transform;
+    final before = container
+        .read(documentControllerProvider)
+        .layerById('a')!
+        .transform;
 
-      final vp = container.read(viewportControllerProvider);
-      Offset toScreen(Offset c) => c * vp.scale + vp.translation;
-      final centre = toScreen(const Offset(400, 400));
-      final p1 = centre + const Offset(-60, 0);
-      final p2 = centre + const Offset(60, 0);
+    final vp = container.read(viewportControllerProvider);
+    Offset toScreen(Offset c) => c * vp.scale + vp.translation;
+    final centre = toScreen(const Offset(400, 400));
+    final p1 = centre + const Offset(-60, 0);
+    final p2 = centre + const Offset(60, 0);
 
-      final f1 = await tester.startGesture(p1, pointer: 51);
-      await tester.pump();
-      final f2 = await tester.startGesture(p2, pointer: 52);
-      await tester.pump();
+    final f1 = await tester.startGesture(p1, pointer: 51);
+    await tester.pump();
+    final f2 = await tester.startGesture(p2, pointer: 52);
+    await tester.pump();
 
-      await f1.moveBy(const Offset(-60, 0));
-      await f2.moveBy(const Offset(60, 0));
-      await tester.pump();
-      await f1.moveBy(const Offset(-60, 0));
-      await f2.moveBy(const Offset(60, 0));
-      await tester.pump();
+    await f1.moveBy(const Offset(-60, 0));
+    await f2.moveBy(const Offset(60, 0));
+    await tester.pump();
+    await f1.moveBy(const Offset(-60, 0));
+    await f2.moveBy(const Offset(60, 0));
+    await tester.pump();
 
-      final live =
-          container.read(interactionControllerProvider).liveTransform!;
-      expect(live.size.width, greaterThan(before.size.width));
+    final live = container.read(interactionControllerProvider).liveTransform!;
+    expect(live.size.width, greaterThan(before.size.width));
 
-      await f1.up();
-      await f2.up();
-      await tester.pump();
-      await tester.pump();
+    await f1.up();
+    await f2.up();
+    await tester.pump();
+    await tester.pump();
 
-      final after =
-          container.read(documentControllerProvider).layerById('a')!.transform;
-      expect(
-        after.size.width,
-        greaterThan(before.size.width),
-        reason: 'Single-layer pinch must retain its scaled size after '
-            'release.',
-      );
-      await tester.pump(const Duration(seconds: 1));
-    },
-  );
+    final after = container
+        .read(documentControllerProvider)
+        .layerById('a')!
+        .transform;
+    expect(
+      after.size.width,
+      greaterThan(before.size.width),
+      reason:
+          'Single-layer pinch must retain its scaled size after '
+          'release.',
+    );
+    await tester.pump(const Duration(seconds: 1));
+  });
 }

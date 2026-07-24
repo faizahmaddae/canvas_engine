@@ -8,16 +8,12 @@ import 'package:canvas_engine/features/editor/engine/core/canvas_sizing.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-EditorDocument _doc(double w, double h) => EditorDocument(
-      layers: const [],
-      width: w,
-      height: h,
-    );
+EditorDocument _doc(double w, double h) =>
+    EditorDocument(layers: const [], width: w, height: h);
 
 void main() {
   group('effectiveDim', () {
-    test('returns the geometric mean for square / near-square canvases',
-        () {
+    test('returns the geometric mean for square / near-square canvases', () {
       expect(CanvasSizing.effectiveDim(_doc(1080, 1080)), 1080);
       expect(
         CanvasSizing.effectiveDim(_doc(1920, 1080)),
@@ -77,23 +73,26 @@ void main() {
     test('grows proportionally on a 6720x4480 photo canvas', () {
       // Bug case: 220x220 default felt invisible on a 6720x4480 photo.
       final out = CanvasSizing.scaleSize(reference, _doc(6720, 4480));
-      expect(out.width, greaterThan(900),
-          reason: 'must be visibly large on huge canvas');
+      expect(
+        out.width,
+        greaterThan(900),
+        reason: 'must be visibly large on huge canvas',
+      );
       expect(out.width, lessThanOrEqualTo(6720 * 0.9 + 0.01));
       expect(out.height, lessThanOrEqualTo(4480 * 0.9 + 0.01));
     });
 
-    test(
-        'shrinks proportionally on a tiny 512x512 canvas (no overflow)',
-        () {
+    test('shrinks proportionally on a tiny 512x512 canvas (no overflow)', () {
       final out = CanvasSizing.scaleSize(reference, _doc(512, 512));
       expect(out.width, lessThan(220));
       expect(out.width, lessThanOrEqualTo(512 * 0.9 + 0.01));
     });
 
-    test('clamps to 90% of canvas when reference is bigger than canvas',
-        () {
-      final out = CanvasSizing.scaleSize(const Size(2000, 2000), _doc(400, 300));
+    test('clamps to 90% of canvas when reference is bigger than canvas', () {
+      final out = CanvasSizing.scaleSize(
+        const Size(2000, 2000),
+        _doc(400, 300),
+      );
       expect(out.width, lessThanOrEqualTo(400 * 0.9 + 0.01));
       expect(out.height, lessThanOrEqualTo(300 * 0.9 + 0.01));
     });
@@ -127,12 +126,24 @@ void main() {
     const medF = 0.004, medMin = 3.0, medMax = 48.0;
     const boldF = 0.010, boldMin = 8.0, boldMax = 120.0;
 
-    double thin(EditorDocument d) => CanvasSizing.proportionalStroke(d,
-        fraction: thinF, minPx: thinMin, maxPx: thinMax);
-    double med(EditorDocument d) => CanvasSizing.proportionalStroke(d,
-        fraction: medF, minPx: medMin, maxPx: medMax);
-    double bold(EditorDocument d) => CanvasSizing.proportionalStroke(d,
-        fraction: boldF, minPx: boldMin, maxPx: boldMax);
+    double thin(EditorDocument d) => CanvasSizing.proportionalStroke(
+      d,
+      fraction: thinF,
+      minPx: thinMin,
+      maxPx: thinMax,
+    );
+    double med(EditorDocument d) => CanvasSizing.proportionalStroke(
+      d,
+      fraction: medF,
+      minPx: medMin,
+      maxPx: medMax,
+    );
+    double bold(EditorDocument d) => CanvasSizing.proportionalStroke(
+      d,
+      fraction: boldF,
+      minPx: boldMin,
+      maxPx: boldMax,
+    );
 
     test('reference 1080 canvas yields the historical good values', () {
       // The numbers that already "felt right" — preserves visual
@@ -151,8 +162,7 @@ void main() {
       expect(bold(d), boldMin);
     });
 
-    test('huge 12000x12000 canvas hits the maxPx ceiling on every preset',
-        () {
+    test('huge 12000x12000 canvas hits the maxPx ceiling on every preset', () {
       // Without maxPx, Bold would be 120+ px and read as a bezel.
       final d = _doc(12000, 12000);
       expect(thin(d), thinMax);
@@ -160,8 +170,7 @@ void main() {
       expect(bold(d), boldMax);
     });
 
-    test('huge 6720x4480 photo canvas scales up smoothly (no clamps yet)',
-        () {
+    test('huge 6720x4480 photo canvas scales up smoothly (no clamps yet)', () {
       // Geometric mean ≈ 5486.85; raw values stay well inside clamps.
       final d = _doc(6720, 4480);
       expect(thin(d), closeTo(5.487, 0.01));
@@ -199,23 +208,37 @@ void main() {
         [4096.0, 400.0],
       ]) {
         final d = _doc(size[0], size[1]);
-        expect(bold(d), greaterThanOrEqualTo(med(d)),
-            reason: 'bold < medium at ${size[0]}x${size[1]}');
-        expect(med(d), greaterThanOrEqualTo(thin(d)),
-            reason: 'medium < thin at ${size[0]}x${size[1]}');
+        expect(
+          bold(d),
+          greaterThanOrEqualTo(med(d)),
+          reason: 'bold < medium at ${size[0]}x${size[1]}',
+        );
+        expect(
+          med(d),
+          greaterThanOrEqualTo(thin(d)),
+          reason: 'medium < thin at ${size[0]}x${size[1]}',
+        );
       }
     });
 
     test('asserts on invalid fraction / clamp arguments', () {
       final d = _doc(1080, 1080);
       expect(
-        () => CanvasSizing.proportionalStroke(d,
-            fraction: 0, minPx: 1, maxPx: 10),
+        () => CanvasSizing.proportionalStroke(
+          d,
+          fraction: 0,
+          minPx: 1,
+          maxPx: 10,
+        ),
         throwsA(isA<AssertionError>()),
       );
       expect(
-        () => CanvasSizing.proportionalStroke(d,
-            fraction: 0.01, minPx: 10, maxPx: 5),
+        () => CanvasSizing.proportionalStroke(
+          d,
+          fraction: 0.01,
+          minPx: 10,
+          maxPx: 5,
+        ),
         throwsA(isA<AssertionError>()),
       );
     });

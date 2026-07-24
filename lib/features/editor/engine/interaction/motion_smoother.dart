@@ -126,8 +126,7 @@ class MotionSmoother {
     final w = prev.width + (target.width - prev.width) * a;
     final h = prev.height + (target.height - prev.height) * a;
     final next = Size(w, h);
-    if ((target.width - w).abs() < 0.5 &&
-        (target.height - h).abs() < 0.5) {
+    if ((target.width - w).abs() < 0.5 && (target.height - h).abs() < 0.5) {
       _size = target;
       return target;
     }

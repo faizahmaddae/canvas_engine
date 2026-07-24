@@ -78,8 +78,7 @@ class DocumentJpgExporter {
     ui.Image image, {
     int quality = defaultQuality,
   }) async {
-    final byteData =
-        await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (byteData == null) {
       throw const DocumentExportException(
         'toImage returned null — render produced no pixels',

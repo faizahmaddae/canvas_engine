@@ -125,11 +125,11 @@ class TextStyleSpec {
       shadowColor: clearShadow ? null : (shadowColor ?? this.shadowColor),
       shadowBlur: shadowBlur ?? this.shadowBlur,
       shadowOffset: shadowOffset ?? this.shadowOffset,
-      outlineColor:
-          clearOutline ? null : (outlineColor ?? this.outlineColor),
+      outlineColor: clearOutline ? null : (outlineColor ?? this.outlineColor),
       outlineWidth: outlineWidth ?? this.outlineWidth,
-      backgroundColor:
-          clearBackground ? null : (backgroundColor ?? this.backgroundColor),
+      backgroundColor: clearBackground
+          ? null
+          : (backgroundColor ?? this.backgroundColor),
       backgroundRadius: backgroundRadius ?? this.backgroundRadius,
       backgroundPaddingX: backgroundPaddingX ?? this.backgroundPaddingX,
       backgroundPaddingY: backgroundPaddingY ?? this.backgroundPaddingY,
@@ -137,24 +137,24 @@ class TextStyleSpec {
   }
 
   painting.TextStyle toPaintingStyle() => painting.TextStyle(
-        fontFamily: fontFamily,
-        fontSize: fontSize,
-        color: color,
-        fontWeight: fontWeight,
-        fontStyle: italic ? FontStyle.italic : FontStyle.normal,
-        decoration: underline ? TextDecoration.underline : null,
-        letterSpacing: letterSpacing,
-        height: lineHeight,
-        shadows: shadowColor == null
-            ? null
-            : [
-                painting.Shadow(
-                  color: shadowColor!,
-                  blurRadius: shadowBlur,
-                  offset: shadowOffset,
-                ),
-              ],
-      );
+    fontFamily: fontFamily,
+    fontSize: fontSize,
+    color: color,
+    fontWeight: fontWeight,
+    fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+    decoration: underline ? TextDecoration.underline : null,
+    letterSpacing: letterSpacing,
+    height: lineHeight,
+    shadows: shadowColor == null
+        ? null
+        : [
+            painting.Shadow(
+              color: shadowColor!,
+              blurRadius: shadowBlur,
+              offset: shadowOffset,
+            ),
+          ],
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -181,25 +181,25 @@ class TextStyleSpec {
 
   @override
   int get hashCode => Object.hash(
-        fontFamily,
-        fontSize,
-        color,
-        fontWeight,
-        italic,
-        underline,
-        letterSpacing,
-        lineHeight,
-        alignment,
-        shadowColor,
-        shadowBlur,
-        shadowOffset,
-        outlineColor,
-        outlineWidth,
-        backgroundColor,
-        backgroundRadius,
-        backgroundPaddingX,
-        backgroundPaddingY,
-      );
+    fontFamily,
+    fontSize,
+    color,
+    fontWeight,
+    italic,
+    underline,
+    letterSpacing,
+    lineHeight,
+    alignment,
+    shadowColor,
+    shadowBlur,
+    shadowOffset,
+    outlineColor,
+    outlineWidth,
+    backgroundColor,
+    backgroundRadius,
+    backgroundPaddingX,
+    backgroundPaddingY,
+  );
 
   // ----- serialization -----
 
@@ -208,32 +208,32 @@ class TextStyleSpec {
   /// rather than its enum index. `color` is stored as a 32-bit ARGB int.
   /// `alignment` uses the enum name so it stays readable in stored files.
   Map<String, dynamic> toJson() => <String, dynamic>{
-        if (fontFamily != null) 'fontFamily': fontFamily,
-        'fontSize': fontSize,
-        'color': _encodeColor(color),
-        'fontWeight': fontWeight.value,
-        if (italic) 'italic': true,
-        if (underline) 'underline': true,
-        'letterSpacing': letterSpacing,
-        'lineHeight': lineHeight,
-        'alignment': alignment.name,
-        if (shadowColor != null) ...{
-          'shadowColor': _encodeColor(shadowColor!),
-          'shadowBlur': shadowBlur,
-          'shadowDx': shadowOffset.dx,
-          'shadowDy': shadowOffset.dy,
-        },
-        if (outlineColor != null) ...{
-          'outlineColor': _encodeColor(outlineColor!),
-          'outlineWidth': outlineWidth,
-        },
-        if (backgroundColor != null) ...{
-          'backgroundColor': _encodeColor(backgroundColor!),
-          'backgroundRadius': backgroundRadius,
-          'backgroundPaddingX': backgroundPaddingX,
-          'backgroundPaddingY': backgroundPaddingY,
-        },
-      };
+    if (fontFamily != null) 'fontFamily': fontFamily,
+    'fontSize': fontSize,
+    'color': _encodeColor(color),
+    'fontWeight': fontWeight.value,
+    if (italic) 'italic': true,
+    if (underline) 'underline': true,
+    'letterSpacing': letterSpacing,
+    'lineHeight': lineHeight,
+    'alignment': alignment.name,
+    if (shadowColor != null) ...{
+      'shadowColor': _encodeColor(shadowColor!),
+      'shadowBlur': shadowBlur,
+      'shadowDx': shadowOffset.dx,
+      'shadowDy': shadowOffset.dy,
+    },
+    if (outlineColor != null) ...{
+      'outlineColor': _encodeColor(outlineColor!),
+      'outlineWidth': outlineWidth,
+    },
+    if (backgroundColor != null) ...{
+      'backgroundColor': _encodeColor(backgroundColor!),
+      'backgroundRadius': backgroundRadius,
+      'backgroundPaddingX': backgroundPaddingX,
+      'backgroundPaddingY': backgroundPaddingY,
+    },
+  };
 
   factory TextStyleSpec.fromJson(Map<String, dynamic> json) {
     final fontWeightValue = json['fontWeight'];
@@ -278,10 +278,8 @@ class TextStyleSpec {
         if (raw > 1.0) return (raw / 40.0).clamp(0.0, 1.0);
         return raw.clamp(0.0, 1.0);
       }(),
-      backgroundPaddingX:
-          (json['backgroundPaddingX'] as num?)?.toDouble() ?? 8,
-      backgroundPaddingY:
-          (json['backgroundPaddingY'] as num?)?.toDouble() ?? 4,
+      backgroundPaddingX: (json['backgroundPaddingX'] as num?)?.toDouble() ?? 8,
+      backgroundPaddingY: (json['backgroundPaddingY'] as num?)?.toDouble() ?? 4,
     );
   }
 

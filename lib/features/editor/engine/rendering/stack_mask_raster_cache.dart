@@ -96,8 +96,8 @@ class StackMaskRasterCache {
     var i = 0;
     for (var y = 0; y < h; y++) {
       for (var x = 0; x < w; x++) {
-        final a =
-            (key.mask.sampleAlpha(ui.Offset(x + 0.5, y + 0.5)) * 255).round();
+        final a = (key.mask.sampleAlpha(ui.Offset(x + 0.5, y + 0.5)) * 255)
+            .round();
         bytes[i] = 255;
         bytes[i + 1] = 255;
         bytes[i + 2] = 255;

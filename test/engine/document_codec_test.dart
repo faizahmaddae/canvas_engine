@@ -100,10 +100,7 @@ void main() {
     test('round-trip preserves resizeMode', () {
       const layer = TextLayer(
         id: 't2',
-        transform: LayerTransform(
-          position: Offset(0, 0),
-          size: Size(120, 40),
-        ),
+        transform: LayerTransform(position: Offset(0, 0), size: Size(120, 40)),
         content: 'paragraph',
         style: TextStyleSpec(),
         resizeMode: TextResizeMode.resizeBox,
@@ -133,10 +130,7 @@ void main() {
     test('rectangle with stroke round-trips', () {
       const layer = ShapeLayer(
         id: 's1',
-        transform: LayerTransform(
-          position: Offset(0, 0),
-          size: Size(100, 60),
-        ),
+        transform: LayerTransform(position: Offset(0, 0), size: Size(100, 60)),
         kind: ShapeKind.rectangle,
         fillColor: Color(0xFFFF0000),
         strokeColor: Color(0xFF00FF00),
@@ -149,10 +143,7 @@ void main() {
     test('circle without stroke round-trips and omits null fields', () {
       const layer = ShapeLayer(
         id: 's2',
-        transform: LayerTransform(
-          position: Offset(0, 0),
-          size: Size(80, 80),
-        ),
+        transform: LayerTransform(position: Offset(0, 0), size: Size(80, 80)),
         kind: ShapeKind.circle,
         fillColor: Color(0xFF0000FF),
       );
@@ -203,10 +194,7 @@ void main() {
     test('default opacity is omitted from JSON', () {
       const layer = ShapeLayer(
         id: 's',
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: Size(10, 10),
-        ),
+        transform: LayerTransform(position: Offset.zero, size: Size(10, 10)),
         kind: ShapeKind.rectangle,
       );
       expect(layer.toJson().containsKey('opacity'), isFalse);
@@ -215,20 +203,14 @@ void main() {
     test('non-default opacity round-trips for every layer type', () {
       const text = TextLayer(
         id: 't',
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: Size(50, 20),
-        ),
+        transform: LayerTransform(position: Offset.zero, size: Size(50, 20)),
         content: 'hi',
         style: TextStyleSpec(),
         opacity: 0.25,
       );
       const shape = ShapeLayer(
         id: 's',
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: Size(10, 10),
-        ),
+        transform: LayerTransform(position: Offset.zero, size: Size(10, 10)),
         kind: ShapeKind.circle,
         opacity: 0.5,
       );
@@ -316,10 +298,11 @@ void main() {
     test('z-order (list order) is preserved', () {
       final doc = makeMixedDoc();
       final decoded = DocumentCodec.decode(DocumentCodec.encode(doc));
-      expect(
-        decoded.layers.map((l) => l.id).toList(),
-        ['bg', 'photo', 'title'],
-      );
+      expect(decoded.layers.map((l) => l.id).toList(), [
+        'bg',
+        'photo',
+        'title',
+      ]);
     });
 
     test('encoded JSON declares a supported schema version', () {
@@ -328,7 +311,10 @@ void main() {
       // version. A legacy-shape doc may write v1 even on a v3 build.
       final json = DocumentCodec.toJson(makeMixedDoc());
       final version = json['version'] as int;
-      expect(version, greaterThanOrEqualTo(DocumentCodec.minSupportedSchemaVersion));
+      expect(
+        version,
+        greaterThanOrEqualTo(DocumentCodec.minSupportedSchemaVersion),
+      );
       expect(version, lessThanOrEqualTo(DocumentCodec.schemaVersion));
     });
 

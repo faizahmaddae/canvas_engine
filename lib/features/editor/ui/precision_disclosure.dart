@@ -88,7 +88,9 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    final title = _open ? (widget.titleOpen ?? widget.titleClosed) : widget.titleClosed;
+    final title = _open
+        ? (widget.titleOpen ?? widget.titleClosed)
+        : widget.titleClosed;
     final chevronColor = _open
         ? (widget.chevronColorOpen ?? tokens.accent)
         : (widget.chevronColorClosed ?? tokens.textSecondary);
@@ -107,10 +109,7 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
               setState(() => _open = !_open);
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 10,
-                horizontal: 4,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
               child: Row(
                 children: [
                   if (widget.icon != null) ...[

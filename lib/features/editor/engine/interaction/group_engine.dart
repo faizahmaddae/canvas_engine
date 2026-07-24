@@ -76,13 +76,13 @@ class GroupEngine {
     Map<String, LayerTransform> initials,
     Offset delta,
   ) {
-    assert(delta.dx.isFinite && delta.dy.isFinite,
-        'GroupEngine.translate: delta must be finite');
+    assert(
+      delta.dx.isFinite && delta.dy.isFinite,
+      'GroupEngine.translate: delta must be finite',
+    );
     return <String, LayerTransform>{
       for (final entry in initials.entries)
-        entry.key: entry.value.copyWith(
-          position: entry.value.position + delta,
-        ),
+        entry.key: entry.value.copyWith(position: entry.value.position + delta),
     };
   }
 
@@ -205,8 +205,13 @@ class GroupEngine {
     final s = math.sin(delta);
     return <String, LayerTransform>{
       for (final entry in initials.entries)
-        entry.key: _rotateOne(entry.value, center: center, c: c, s: s,
-            delta: delta),
+        entry.key: _rotateOne(
+          entry.value,
+          center: center,
+          c: c,
+          s: s,
+          delta: delta,
+        ),
     };
   }
 

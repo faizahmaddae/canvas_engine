@@ -24,11 +24,11 @@ class BackgroundFillBox extends StatelessWidget {
     return switch (fill) {
       SolidBackground(:final color) => ColoredBox(color: color),
       final LinearGradientBackground g => DecoratedBox(
-          decoration: BoxDecoration(gradient: g.toFlutterGradient()),
-        ),
+        decoration: BoxDecoration(gradient: g.toFlutterGradient()),
+      ),
       final RadialGradientBackground g => DecoratedBox(
-          decoration: BoxDecoration(gradient: g.toFlutterGradient()),
-        ),
+        decoration: BoxDecoration(gradient: g.toFlutterGradient()),
+      ),
     };
   }
 }

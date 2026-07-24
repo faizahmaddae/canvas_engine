@@ -16,14 +16,14 @@ enum ExportFormat {
   final String extension;
 
   String get mimeType => switch (this) {
-        ExportFormat.png => 'image/png',
-        ExportFormat.jpg => 'image/jpeg',
-      };
+    ExportFormat.png => 'image/png',
+    ExportFormat.jpg => 'image/jpeg',
+  };
 
   /// True when the format supports a quality / compression knob. UI
   /// uses this to decide whether to reveal the quality slider.
   bool get supportsQuality => switch (this) {
-        ExportFormat.png => false,
-        ExportFormat.jpg => true,
-      };
+    ExportFormat.png => false,
+    ExportFormat.jpg => true,
+  };
 }

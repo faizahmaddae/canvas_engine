@@ -85,10 +85,7 @@ class InteractionEngine {
 
   // ---------- updates ----------
 
-  LayerTransform updateMove(
-    InteractionSession session,
-    Offset pointer,
-  ) {
+  LayerTransform updateMove(InteractionSession session, Offset pointer) {
     final dx = pointer.dx - session.pointerStart.dx;
     final dy = pointer.dy - session.pointerStart.dy;
     return session.initialTransform.copyWith(
@@ -140,14 +137,8 @@ class InteractionEngine {
     // Uniform scale the size, clamped to max(engineFloor, capability) on
     // either axis. If a side hits its minimum we reduce the effective scale
     // so aspect ratio is preserved — pinch never distorts.
-    final minW = math.max(
-      EngineConstants.minLayerSize,
-      capabilities.minWidth,
-    );
-    final minH = math.max(
-      EngineConstants.minLayerSize,
-      capabilities.minHeight,
-    );
+    final minW = math.max(EngineConstants.minLayerSize, capabilities.minWidth);
+    final minH = math.max(EngineConstants.minLayerSize, capabilities.minHeight);
     const maxSide = EngineConstants.maxLayerSize;
     // Hard-clamp the gesture scale first so a single frame with a huge
     // ratio (e.g. fingers jumping apart) cannot push the layer past the
@@ -239,7 +230,8 @@ class InteractionEngine {
     // Allow a tiny float fudge in case the modulo leaves
     // 1e-16 residue on a cardinal.
     const eps = 1e-6;
-    final isCardinal = n.abs() < eps ||
+    final isCardinal =
+        n.abs() < eps ||
         (n - math.pi / 2).abs() < eps ||
         (n + math.pi / 2).abs() < eps ||
         (n - math.pi).abs() < eps ||
@@ -287,14 +279,8 @@ class InteractionEngine {
     final signY = grabLocal.dy >= anchorLocal.dy ? 1 : -1;
 
     // Per-layer minimums trump the engine-wide floor.
-    final minW = math.max(
-      EngineConstants.minLayerSize,
-      capabilities.minWidth,
-    );
-    final minH = math.max(
-      EngineConstants.minLayerSize,
-      capabilities.minHeight,
-    );
+    final minW = math.max(EngineConstants.minLayerSize, capabilities.minWidth);
+    final minH = math.max(EngineConstants.minLayerSize, capabilities.minHeight);
 
     // Proposed grabbed corner, then clamped to stay on its side of the
     // anchor at distance ≥ min*.
@@ -338,9 +324,9 @@ class InteractionEngine {
     final oldLocalCenter = r0.center;
     final newLocalCenter = newLocalRect.center;
     final localCenterDelta = newLocalCenter - oldLocalCenter;
-    final canvasCenterDelta =
-        Offset.zero.translate(localCenterDelta.dx, localCenterDelta.dy)
-            .rotateAround(Offset.zero, rot);
+    final canvasCenterDelta = Offset.zero
+        .translate(localCenterDelta.dx, localCenterDelta.dy)
+        .rotateAround(Offset.zero, rot);
     final newCenter = center0 + canvasCenterDelta;
 
     final newPosition = Offset(
@@ -348,10 +334,7 @@ class InteractionEngine {
       newCenter.dy - height / 2,
     );
 
-    return t0.copyWith(
-      position: newPosition,
-      size: Size(width, height),
-    );
+    return t0.copyWith(position: newPosition, size: Size(width, height));
   }
 
   // ---------- helpers ----------

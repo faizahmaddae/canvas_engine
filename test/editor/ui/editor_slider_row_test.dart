@@ -8,9 +8,7 @@ Widget _host(Widget child) => MaterialApp(
 
 void main() {
   group('EditorSliderRow — layout', () {
-    testWidgets('renders label column when label is provided', (
-      tester,
-    ) async {
+    testWidgets('renders label column when label is provided', (tester) async {
       await tester.pumpWidget(
         _host(
           EditorSliderRow(
@@ -44,8 +42,9 @@ void main() {
   });
 
   group('EditorSliderRow — commit semantics stay at the call site', () {
-    testWidgets('onChanged fires per tick without any command dispatch',
-        (tester) async {
+    testWidgets('onChanged fires per tick without any command dispatch', (
+      tester,
+    ) async {
       final values = <double>[];
       await tester.pumpWidget(
         _host(
@@ -61,9 +60,13 @@ void main() {
       final center = tester.getCenter(find.byType(Slider));
       await tester.tapAt(center);
       await tester.pump();
-      expect(values, isNotEmpty,
-          reason: 'the widget only calls onChanged; it never commits '
-              'anything itself');
+      expect(
+        values,
+        isNotEmpty,
+        reason:
+            'the widget only calls onChanged; it never commits '
+            'anything itself',
+      );
     });
 
     testWidgets('onDragStart/onDragEnd fire exactly once per gesture, '
@@ -249,9 +252,7 @@ void main() {
   });
 
   group('EditorSliderRow — readout formatting', () {
-    testWidgets('value is clamped into [min, max] for display', (
-      tester,
-    ) async {
+    testWidgets('value is clamped into [min, max] for display', (tester) async {
       await tester.pumpWidget(
         _host(
           EditorSliderRow(
@@ -287,8 +288,9 @@ void main() {
   });
 
   group('EditorSliderRow — style overrides (text-panel parity)', () {
-    testWidgets('labelStyle/readoutStyle override the shape/image default',
-        (tester) async {
+    testWidgets('labelStyle/readoutStyle override the shape/image default', (
+      tester,
+    ) async {
       const label = TextStyle(fontSize: 13, color: Colors.red);
       const readout = TextStyle(fontSize: 11, color: Colors.blue);
       await tester.pumpWidget(

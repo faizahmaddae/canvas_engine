@@ -34,8 +34,7 @@ void main() {
       expect(s.next('a'), isNull);
     });
 
-    test('single-slot list: swipe is a no-op (no fake same-slot jump)',
-        () {
+    test('single-slot list: swipe is a no-op (no fake same-slot jump)', () {
       const s = SiblingSwipeStrategy<String>(order: ['only']);
       expect(s.next('only'), isNull);
       expect(s.prev('only'), isNull);

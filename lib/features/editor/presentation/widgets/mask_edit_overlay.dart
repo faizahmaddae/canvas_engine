@@ -74,16 +74,16 @@ class _MaskEditOverlayState extends ConsumerState<MaskEditOverlay> {
     final screenSize = bounds.size * scale;
 
     Offset handlePoint(MaskEditHandle h) => switch (h) {
-          MaskEditHandle.topLeft => bounds.topLeft,
-          MaskEditHandle.topRight => bounds.topRight,
-          MaskEditHandle.bottomLeft => bounds.bottomLeft,
-          MaskEditHandle.bottomRight => bounds.bottomRight,
-          MaskEditHandle.left => bounds.centerLeft,
-          MaskEditHandle.top => bounds.topCenter,
-          MaskEditHandle.right => bounds.centerRight,
-          MaskEditHandle.bottom => bounds.bottomCenter,
-          MaskEditHandle.body => bounds.center,
-        };
+      MaskEditHandle.topLeft => bounds.topLeft,
+      MaskEditHandle.topRight => bounds.topRight,
+      MaskEditHandle.bottomLeft => bounds.bottomLeft,
+      MaskEditHandle.bottomRight => bounds.bottomRight,
+      MaskEditHandle.left => bounds.centerLeft,
+      MaskEditHandle.top => bounds.topCenter,
+      MaskEditHandle.right => bounds.centerRight,
+      MaskEditHandle.bottom => bounds.bottomCenter,
+      MaskEditHandle.body => bounds.center,
+    };
 
     return Positioned.fill(
       child: Stack(
@@ -128,11 +128,7 @@ class _MaskEditOverlayState extends ConsumerState<MaskEditOverlay> {
             MaskEditHandle.right,
             MaskEditHandle.bottom,
           ])
-            _positionedHandle(
-              h,
-              mapper.layerToScreen(handlePoint(h)),
-              layer,
-            ),
+            _positionedHandle(h, mapper.layerToScreen(handlePoint(h)), layer),
           _BottomStrip(layer: layer, draft: draft),
         ],
       ),
@@ -160,10 +156,7 @@ class _MaskEditOverlayState extends ConsumerState<MaskEditOverlay> {
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: AppTokens.of(context).accent,
-                width: 2,
-              ),
+              border: Border.all(color: AppTokens.of(context).accent, width: 2),
             ),
           ),
         ),

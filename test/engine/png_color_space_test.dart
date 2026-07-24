@@ -25,8 +25,11 @@ void main() {
       // Signature (8) + IHDR length+type+data+CRC (4+4+13+4 = 25)
       // — first 33 bytes must match.
       for (var i = 0; i < 33; i++) {
-        expect(output[i], input[i],
-            reason: 'byte $i changed: ${output[i]} vs ${input[i]}');
+        expect(
+          output[i],
+          input[i],
+          reason: 'byte $i changed: ${output[i]} vs ${input[i]}',
+        );
       }
     });
 
@@ -51,8 +54,10 @@ void main() {
       // gAMA chunk starts at byte 33 + 13 = 46.
       const gamaStart = 33 + 13;
       expect(output[gamaStart + 3], 4); // length = 4
-      expect(String.fromCharCodes(output.sublist(gamaStart + 4, gamaStart + 8)),
-          'gAMA');
+      expect(
+        String.fromCharCodes(output.sublist(gamaStart + 4, gamaStart + 8)),
+        'gAMA',
+      );
       // Big-endian uint32 for 45455 = 0x0000_B18F.
       expect(output[gamaStart + 8], 0x00);
       expect(output[gamaStart + 9], 0x00);

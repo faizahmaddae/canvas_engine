@@ -79,8 +79,7 @@ class MaskEditController extends Notifier<MaskEditSession> {
 
   ImageLayer? get _layer {
     final s = state;
-    final layer =
-        ref.read(documentControllerProvider).layerById(s.layerId);
+    final layer = ref.read(documentControllerProvider).layerById(s.layerId);
     return layer is ImageLayer ? layer : null;
   }
 
@@ -88,8 +87,7 @@ class MaskEditController extends Notifier<MaskEditSession> {
   /// current stack mask, or [defaultDraft] when none is set (a new
   /// mask needs *something* to grab).
   void open(String layerId, {String? priorSelectionId}) {
-    final layer =
-        ref.read(documentControllerProvider).layerById(layerId);
+    final layer = ref.read(documentControllerProvider).layerById(layerId);
     if (layer is! ImageLayer) return;
     final entry = layer.effects.stackMask;
     final draft = entry ?? defaultDraft(layer.transform.size);
@@ -156,17 +154,13 @@ class MaskEditController extends Notifier<MaskEditSession> {
     final d = state.draft;
     if (d == null) return;
     if (ellipse && d is RectMask) {
-      endGesture(EllipseMask(
-        bounds: d.rect,
-        inverted: d.inverted,
-        feather: d.feather,
-      ));
+      endGesture(
+        EllipseMask(bounds: d.rect, inverted: d.inverted, feather: d.feather),
+      );
     } else if (!ellipse && d is EllipseMask) {
-      endGesture(RectMask(
-        rect: d.bounds,
-        inverted: d.inverted,
-        feather: d.feather,
-      ));
+      endGesture(
+        RectMask(rect: d.bounds, inverted: d.inverted, feather: d.feather),
+      );
     }
   }
 
@@ -219,7 +213,9 @@ class MaskEditController extends Notifier<MaskEditSession> {
     final draft = s.draft;
     final layer = _layer;
     if (!s.active || draft == null || layer == null) return;
-    ref.read(liveOverlayProvider.notifier).replaceLayer(
+    ref
+        .read(liveOverlayProvider.notifier)
+        .replaceLayer(
           layer.copyAll(effects: layer.effects.withStackMask(draft)),
         );
   }
@@ -230,8 +226,10 @@ class MaskEditController extends Notifier<MaskEditSession> {
   /// (matches the Effects panel's Center chip so entering the mode
   /// from a fresh layer looks identical to tapping Center).
   static LayerMask defaultDraft(Size layerSize) {
-    final feather =
-        (layerSize.shortestSide * 0.15).clamp(0.0, LayerMask.maxFeatherPx);
+    final feather = (layerSize.shortestSide * 0.15).clamp(
+      0.0,
+      LayerMask.maxFeatherPx,
+    );
     return RectMask(
       rect: Rect.fromLTWH(
         layerSize.width * 0.15,
@@ -245,17 +243,16 @@ class MaskEditController extends Notifier<MaskEditSession> {
 
   /// Geometry bounds shared by rect and ellipse drafts.
   static Rect boundsOf(LayerMask mask) => switch (mask) {
-        RectMask(:final rect) => rect,
-        EllipseMask(:final bounds) => bounds,
-        PathMask() => Rect.zero,
-      };
+    RectMask(:final rect) => rect,
+    EllipseMask(:final bounds) => bounds,
+    PathMask() => Rect.zero,
+  };
 
-  static LayerMask _withBounds(LayerMask mask, Rect bounds) =>
-      switch (mask) {
-        RectMask() => mask.copyWith(rect: bounds),
-        EllipseMask() => mask.copyWith(bounds: bounds),
-        PathMask() => mask,
-      };
+  static LayerMask _withBounds(LayerMask mask, Rect bounds) => switch (mask) {
+    RectMask() => mask.copyWith(rect: bounds),
+    EllipseMask() => mask.copyWith(bounds: bounds),
+    PathMask() => mask,
+  };
 
   /// Smallest editable mask side, layer-local px. Below this the
   /// handles overlap and the region stops being grabbable.
@@ -265,10 +262,14 @@ class MaskEditController extends Notifier<MaskEditSession> {
   /// region stays inside the layer.
   static LayerMask translate(LayerMask mask, Offset delta, Size layerSize) {
     final b = boundsOf(mask);
-    final dx = delta.dx
-        .clamp(-b.left, (layerSize.width - b.right).clamp(0.0, double.infinity));
+    final dx = delta.dx.clamp(
+      -b.left,
+      (layerSize.width - b.right).clamp(0.0, double.infinity),
+    );
     final dy = delta.dy.clamp(
-        -b.top, (layerSize.height - b.bottom).clamp(0.0, double.infinity));
+      -b.top,
+      (layerSize.height - b.bottom).clamp(0.0, double.infinity),
+    );
     return _withBounds(mask, b.shift(Offset(dx, dy)));
   }
 
@@ -283,16 +284,20 @@ class MaskEditController extends Notifier<MaskEditSession> {
   ) {
     final b = boundsOf(mask);
     var left = b.left, top = b.top, right = b.right, bottom = b.bottom;
-    final movesLeft = handle == MaskEditHandle.topLeft ||
+    final movesLeft =
+        handle == MaskEditHandle.topLeft ||
         handle == MaskEditHandle.bottomLeft ||
         handle == MaskEditHandle.left;
-    final movesRight = handle == MaskEditHandle.topRight ||
+    final movesRight =
+        handle == MaskEditHandle.topRight ||
         handle == MaskEditHandle.bottomRight ||
         handle == MaskEditHandle.right;
-    final movesTop = handle == MaskEditHandle.topLeft ||
+    final movesTop =
+        handle == MaskEditHandle.topLeft ||
         handle == MaskEditHandle.topRight ||
         handle == MaskEditHandle.top;
-    final movesBottom = handle == MaskEditHandle.bottomLeft ||
+    final movesBottom =
+        handle == MaskEditHandle.bottomLeft ||
         handle == MaskEditHandle.bottomRight ||
         handle == MaskEditHandle.bottom;
     if (movesLeft) {
@@ -305,8 +310,7 @@ class MaskEditController extends Notifier<MaskEditSession> {
       top = (top + delta.dy).clamp(0.0, bottom - minMaskSide);
     }
     if (movesBottom) {
-      bottom =
-          (bottom + delta.dy).clamp(top + minMaskSide, layerSize.height);
+      bottom = (bottom + delta.dy).clamp(top + minMaskSide, layerSize.height);
     }
     return _withBounds(mask, Rect.fromLTRB(left, top, right, bottom));
   }
@@ -314,5 +318,5 @@ class MaskEditController extends Notifier<MaskEditSession> {
 
 final maskEditControllerProvider =
     NotifierProvider<MaskEditController, MaskEditSession>(
-  MaskEditController.new,
-);
+      MaskEditController.new,
+    );

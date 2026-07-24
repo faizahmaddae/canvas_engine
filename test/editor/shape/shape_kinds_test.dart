@@ -36,9 +36,7 @@ void main() {
       cornerRadius: cornerRadius,
       strokeWidth: strokeWidth,
     );
-    c
-        .read(documentControllerProvider.notifier)
-        .execute(AddLayerCommand(layer));
+    c.read(documentControllerProvider.notifier).execute(AddLayerCommand(layer));
     return layer;
   }
 
@@ -72,8 +70,7 @@ void main() {
     });
 
     test('picker catalogue contains every ShapeKind with a label', () {
-      final kindsInCatalogue =
-          kShapeCatalogue.map((e) => e.kind).toSet();
+      final kindsInCatalogue = kShapeCatalogue.map((e) => e.kind).toSet();
       expect(kindsInCatalogue, ShapeKind.values.toSet());
       // Labels are non-empty and unique so the picker reads cleanly.
       final labels = kShapeCatalogue.map((e) => e.label).toList();
@@ -84,66 +81,65 @@ void main() {
     });
 
     test('picker catalogue order matches the spec', () {
-      expect(
-        kShapeCatalogue.map((e) => e.label).toList(),
-        const [
-          'Rectangle',
-          'Rounded',
-          'Circle',
-          'Oval',
-          'Triangle',
-          'Diamond',
-          'Hexagon',
-          'Star',
-          'Heart',
-          'Speech',
-          'Quote',
-          'Plus',
-          'Check',
-          'Cross',
-          'Line',
-          'Arrow right',
-          'Arrow left',
-          'Arrow up',
-          'Arrow down',
-        ],
-      );
+      expect(kShapeCatalogue.map((e) => e.label).toList(), const [
+        'Rectangle',
+        'Rounded',
+        'Circle',
+        'Oval',
+        'Triangle',
+        'Diamond',
+        'Hexagon',
+        'Star',
+        'Heart',
+        'Speech',
+        'Quote',
+        'Plus',
+        'Check',
+        'Cross',
+        'Line',
+        'Arrow right',
+        'Arrow left',
+        'Arrow up',
+        'Arrow down',
+      ]);
     });
 
     test('catalogue sections cover every ShapeKind exactly once', () {
       final flat = [
-        for (final s in kShapeCatalogueSections) ...s.entries.map((e) => e.kind),
+        for (final s in kShapeCatalogueSections)
+          ...s.entries.map((e) => e.kind),
       ];
       expect(flat.toSet(), ShapeKind.values.toSet());
       expect(flat.length, ShapeKind.values.length);
       // Section titles are non-empty and unique.
-      final titles =
-          kShapeCatalogueSections.map((s) => s.title).toList();
+      final titles = kShapeCatalogueSections.map((s) => s.title).toList();
       expect(titles.toSet().length, titles.length);
       for (final t in titles) {
         expect(t.trim(), isNotEmpty);
       }
     });
 
-    test('isStrokedShapeKind flags only line and arrow variants + check/cross',
-        () {
-      const stroked = {
-        ShapeKind.line,
-        ShapeKind.arrow,
-        ShapeKind.arrowLeft,
-        ShapeKind.arrowUp,
-        ShapeKind.arrowDown,
-        ShapeKind.check,
-        ShapeKind.cross,
-      };
-      for (final k in ShapeKind.values) {
-        expect(
-          isStrokedShapeKind(k),
-          stroked.contains(k),
-          reason: '$k stroked classification',
-        );
-      }
-    });
+    test(
+      'isStrokedShapeKind flags only line and arrow variants + check/cross',
+      () {
+        const stroked = {
+          ShapeKind.line,
+          ShapeKind.arrow,
+          ShapeKind.arrowLeft,
+          ShapeKind.arrowUp,
+          ShapeKind.arrowDown,
+          ShapeKind.check,
+          ShapeKind.cross,
+        };
+        for (final k in ShapeKind.values) {
+          expect(
+            isStrokedShapeKind(k),
+            stroked.contains(k),
+            reason: '$k stroked classification',
+          );
+        }
+      },
+    );
   });
 
   group('JSON round-trip', () {
@@ -161,8 +157,8 @@ void main() {
           fillOpacity: 0.7,
           strokeColor: const Color(0xFF112233),
           strokeWidth: 3,
-          cornerRadius: k == ShapeKind.rectangle ||
-                  k == ShapeKind.roundedRectangle
+          cornerRadius:
+              k == ShapeKind.rectangle || k == ShapeKind.roundedRectangle
               ? 14
               : 0,
         );
@@ -222,7 +218,9 @@ void main() {
       c
           .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(original));
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const ReplaceShapeKindCommand(layerId: id, kind: ShapeKind.star),
           );
       final s = readShape(c, id);
@@ -239,7 +237,9 @@ void main() {
     test('undo restores the previous kind', () {
       final c = makeContainer();
       addShape(c, kind: ShapeKind.circle);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const ReplaceShapeKindCommand(
               layerId: 'shape1',
               kind: ShapeKind.heart,
@@ -270,10 +270,7 @@ void main() {
       final c = makeContainer();
       final ctrl = c.read(documentControllerProvider.notifier);
       ctrl.execute(
-        const ReplaceShapeKindCommand(
-          layerId: 'ghost',
-          kind: ShapeKind.star,
-        ),
+        const ReplaceShapeKindCommand(layerId: 'ghost', kind: ShapeKind.star),
       );
       expect(ctrl.canUndo, isFalse);
     });
@@ -287,11 +284,7 @@ void main() {
       // Simulate a drag stream of 5 ticks.
       for (final v in [0.9, 0.8, 0.6, 0.4, 0.25]) {
         ctrl.execute(
-          SetShapeFillCommand(
-            layerId: 'shape1',
-            opacity: v,
-            live: true,
-          ),
+          SetShapeFillCommand(layerId: 'shape1', opacity: v, live: true),
         );
       }
       expect(readShape(c, 'shape1').fillOpacity, closeTo(0.25, 1e-6));
@@ -348,18 +341,9 @@ void main() {
       final c = makeContainer();
       addShape(c);
       final ctrl = c.read(documentControllerProvider.notifier);
+      ctrl.execute(const SetShapeFillCommand(layerId: 'shape1', opacity: 0.5));
       ctrl.execute(
-        const SetShapeFillCommand(
-          layerId: 'shape1',
-          opacity: 0.5,
-        ),
-      );
-      ctrl.execute(
-        const SetShapeFillCommand(
-          layerId: 'shape1',
-          opacity: 0.2,
-          live: true,
-        ),
+        const SetShapeFillCommand(layerId: 'shape1', opacity: 0.2, live: true),
       );
       // Two history entries — undo once, opacity = 0.5; undo again,
       // opacity = 1.
@@ -381,11 +365,7 @@ void main() {
         ),
       );
       ctrl.execute(
-        const SetShapeFillCommand(
-          layerId: 'shape1',
-          opacity: 0.4,
-          live: true,
-        ),
+        const SetShapeFillCommand(layerId: 'shape1', opacity: 0.4, live: true),
       );
       // Different field-sets must not merge.
       ctrl.undo();

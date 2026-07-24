@@ -15,18 +15,24 @@ void main() {
     test('Latin: surfaces Roboto first (workhorse default)', () {
       final recs = recommendedFontEntries(FontScript.latin);
       expect(recs, isNotEmpty);
-      expect(recs.first.family, 'Roboto',
-          reason:
-              'Roboto is the auto-default for English content — '
-              'putting it first means the active font is visible '
-              'without scrolling on a fresh layer.');
+      expect(
+        recs.first.family,
+        'Roboto',
+        reason:
+            'Roboto is the auto-default for English content — '
+            'putting it first means the active font is visible '
+            'without scrolling on a fresh layer.',
+      );
     });
 
     test('Farsi: surfaces Vazir first (Persian default)', () {
       final recs = recommendedFontEntries(FontScript.arabic);
       expect(recs, isNotEmpty);
-      expect(recs.first.family, 'Vazir_Regular',
-          reason: 'Vazir is the Persian auto-default — must lead.');
+      expect(
+        recs.first.family,
+        'Vazir_Regular',
+        reason: 'Vazir is the Persian auto-default — must lead.',
+      );
     });
 
     test('mixes personalities, not just one category', () {
@@ -36,36 +42,50 @@ void main() {
       for (final s in FontScript.values) {
         final recs = recommendedFontEntries(s);
         final categories = recs.map((e) => e.category).toSet();
-        expect(categories.length, greaterThanOrEqualTo(2),
-            reason:
-                '${s.name}: Recommended must mix categories, '
-                'found only $categories');
+        expect(
+          categories.length,
+          greaterThanOrEqualTo(2),
+          reason:
+              '${s.name}: Recommended must mix categories, '
+              'found only $categories',
+        );
       }
     });
 
     test('every recommended family exists in kFontCatalog', () {
       // Guards against typos when curating the list — a missing
       // family would silently disappear from the panel.
-      final shipped =
-          kFontCatalog.map((e) => e.family).toSet();
+      final shipped = kFontCatalog.map((e) => e.family).toSet();
       for (final s in FontScript.values) {
         for (final r in recommendedFontEntries(s)) {
-          expect(shipped, contains(r.family),
-              reason: '${r.family} is recommended but not shipped');
-          expect(r.script, s,
-              reason: '${r.family} is in the wrong script bucket');
+          expect(
+            shipped,
+            contains(r.family),
+            reason: '${r.family} is recommended but not shipped',
+          );
+          expect(
+            r.script,
+            s,
+            reason: '${r.family} is in the wrong script bucket',
+          );
         }
       }
     });
 
-    test('stays a short list (\u22647) — Recommended is curated, not exhaustive', () {
-      for (final s in FontScript.values) {
-        expect(recommendedFontEntries(s).length, lessThanOrEqualTo(7),
+    test(
+      'stays a short list (\u22647) — Recommended is curated, not exhaustive',
+      () {
+        for (final s in FontScript.values) {
+          expect(
+            recommendedFontEntries(s).length,
+            lessThanOrEqualTo(7),
             reason:
                 '${s.name}: Recommended ballooned — pick the strict '
-                '"safe trio + a couple statement faces" kit');
-      }
-    });
+                '"safe trio + a couple statement faces" kit',
+          );
+        }
+      },
+    );
   });
 
   group('fontSampleText', () {
@@ -96,15 +116,21 @@ void main() {
       // The point of a mono face is fixed-width digits — the
       // sample needs to contain at least one digit to reveal it.
       final s = fontSampleText(entryFor('Chivo_Mono'));
-      expect(s.contains(RegExp(r'\d')), isTrue,
-          reason: 'mono sample "$s" must include a digit');
+      expect(
+        s.contains(RegExp(r'\d')),
+        isTrue,
+        reason: 'mono sample "$s" must include a digit',
+      );
     });
 
     test('never returns an empty string', () {
       // An empty preview = an empty card = no signal.
       for (final e in kFontCatalog) {
-        expect(fontSampleText(e), isNotEmpty,
-            reason: '${e.family} produced an empty sample');
+        expect(
+          fontSampleText(e),
+          isNotEmpty,
+          reason: '${e.family} produced an empty sample',
+        );
       }
     });
   });

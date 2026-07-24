@@ -22,28 +22,26 @@ void main() {
   }
 
   ImageLayer makeImage(String id) => ImageLayer(
-        id: id,
-        transform: LayerTransform(
-          position: const Offset(0, 0),
-          size: const Size(200, 200),
-        ),
-        source: ImageSource.asset('assets/$id.png'),
-      );
+    id: id,
+    transform: LayerTransform(
+      position: const Offset(0, 0),
+      size: const Size(200, 200),
+    ),
+    source: ImageSource.asset('assets/$id.png'),
+  );
 
   ShapeLayer makeShape(String id) => ShapeLayer(
-        id: id,
-        transform: LayerTransform(
-          position: const Offset(0, 0),
-          size: const Size(120, 120),
-        ),
-        kind: ShapeKind.rectangle,
-        fillColor: const Color(0xFFFFFFFF),
-      );
+    id: id,
+    transform: LayerTransform(
+      position: const Offset(0, 0),
+      size: const Size(120, 120),
+    ),
+    kind: ShapeKind.rectangle,
+    fillColor: const Color(0xFFFFFFFF),
+  );
 
   void add(ProviderContainer c, dynamic layer) {
-    c
-        .read(documentControllerProvider.notifier)
-        .execute(AddLayerCommand(layer));
+    c.read(documentControllerProvider.notifier).execute(AddLayerCommand(layer));
   }
 
   group('resolveImageTarget (pure)', () {
@@ -152,8 +150,10 @@ void main() {
           ImageToolSlot.filters) {
         ctrl.toggleSlot(ImageToolSlot.filters);
       }
-      expect(c.read(imageToolControllerProvider).openSlot,
-          ImageToolSlot.filters);
+      expect(
+        c.read(imageToolControllerProvider).openSlot,
+        ImageToolSlot.filters,
+      );
       expect(c.read(selectionControllerProvider).selectedId, 'only');
     });
 
@@ -171,8 +171,10 @@ void main() {
           ImageToolSlot.adjust) {
         ctrl.toggleSlot(ImageToolSlot.adjust);
       }
-      expect(c.read(imageToolControllerProvider).openSlot,
-          ImageToolSlot.adjust);
+      expect(
+        c.read(imageToolControllerProvider).openSlot,
+        ImageToolSlot.adjust,
+      );
       expect(c.read(selectionControllerProvider).selectedId, 'only');
     });
   });
@@ -236,10 +238,7 @@ void main() {
       c
           .read(documentControllerProvider.notifier)
           .execute(const RemoveLayerCommand('photo'));
-      expect(
-        c.read(documentControllerProvider).basePhotoLayerId,
-        isNull,
-      );
+      expect(c.read(documentControllerProvider).basePhotoLayerId, isNull);
       final outcome = resolveImageTarget(
         c.read(documentControllerProvider),
         selectedId: null,

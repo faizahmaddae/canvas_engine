@@ -72,10 +72,7 @@ void main() {
     await tester.tapAt(target);
     await tester.pumpAndSettle();
 
-    expect(
-      container.read(selectionControllerProvider).selectedId,
-      'text-1',
-    );
+    expect(container.read(selectionControllerProvider).selectedId, 'text-1');
     // The keyboard editor sheet is open with the layer's content.
     expect(find.byType(TextField), findsOneWidget);
     expect(

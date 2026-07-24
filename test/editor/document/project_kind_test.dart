@@ -18,13 +18,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   ImageLayer makeImage(String id) => ImageLayer(
-        id: id,
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: const Size(400, 300),
-        ),
-        source: ImageSource.asset('assets/$id.png'),
-      );
+    id: id,
+    transform: LayerTransform(
+      position: Offset.zero,
+      size: const Size(400, 300),
+    ),
+    source: ImageSource.asset('assets/$id.png'),
+  );
 
   group('ProjectKind defaults & equality', () {
     test('EditorDocument defaults to ProjectKind.design', () {
@@ -154,8 +154,10 @@ void main() {
     });
 
     test('apply is a no-op when kind is unchanged', () {
-      final doc =
-          EditorDocument(layers: const [], projectKind: ProjectKind.photo);
+      final doc = EditorDocument(
+        layers: const [],
+        projectKind: ProjectKind.photo,
+      );
       const cmd = SetProjectKindCommand(ProjectKind.photo);
       expect(identical(cmd.apply(doc), doc), isTrue);
     });

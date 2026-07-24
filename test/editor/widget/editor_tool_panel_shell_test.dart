@@ -9,41 +9,42 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('EditorToolPanelShell', () {
     testWidgets(
-        'renders title, icon and a neutral close (✕) action that fires onClose',
-        (tester) async {
-      var closed = 0;
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Align(
-              alignment: Alignment.bottomCenter,
-              child: EditorToolPanelShell(
-                title: 'Border',
-                icon: Icons.border_outer_rounded,
-                onClose: () => closed += 1,
-                child: const Text('body'),
+      'renders title, icon and a neutral close (✕) action that fires onClose',
+      (tester) async {
+        var closed = 0;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Align(
+                alignment: Alignment.bottomCenter,
+                child: EditorToolPanelShell(
+                  title: 'Border',
+                  icon: Icons.border_outer_rounded,
+                  onClose: () => closed += 1,
+                  child: const Text('body'),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Border'), findsOneWidget);
-      expect(find.byIcon(Icons.border_outer_rounded), findsOneWidget);
-      expect(find.text('body'), findsOneWidget);
-      // Header chip is the neutral ✕ icon — the honest close
-      // affordance for panels that don't commit on exit.
-      expect(find.text('Done'), findsNothing);
-      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+        expect(find.text('Border'), findsOneWidget);
+        expect(find.byIcon(Icons.border_outer_rounded), findsOneWidget);
+        expect(find.text('body'), findsOneWidget);
+        // Header chip is the neutral ✕ icon — the honest close
+        // affordance for panels that don't commit on exit.
+        expect(find.text('Done'), findsNothing);
+        expect(find.byIcon(Icons.close_rounded), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.close_rounded));
-      await tester.pumpAndSettle();
-      expect(closed, 1);
-    });
+        await tester.tap(find.byIcon(Icons.close_rounded));
+        await tester.pumpAndSettle();
+        expect(closed, 1);
+      },
+    );
 
-    testWidgets(
-        'showCloseAction:false hides the header ✕ — host owns exit',
-        (tester) async {
+    testWidgets('showCloseAction:false hides the header ✕ — host owns exit', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -65,10 +66,8 @@ void main() {
       expect(find.text('Done'), findsNothing);
     });
 
-    testWidgets(
-        'onConfirm + confirmLabel renders a primary commit pill that '
-        'fires the confirm callback (not onClose)',
-        (tester) async {
+    testWidgets('onConfirm + confirmLabel renders a primary commit pill that '
+        'fires the confirm callback (not onClose)', (tester) async {
       var closed = 0;
       var confirmed = 0;
       await tester.pumpWidget(
@@ -99,8 +98,7 @@ void main() {
       expect(closed, 0, reason: 'Confirm must not fire onClose');
     });
 
-    testWidgets('renders an undo chip when onUndo is supplied',
-        (tester) async {
+    testWidgets('renders an undo chip when onUndo is supplied', (tester) async {
       var undid = 0;
       await tester.pumpWidget(
         MaterialApp(
@@ -126,8 +124,9 @@ void main() {
       expect(undid, 1);
     });
 
-    testWidgets('caps height at min(screen * fraction, maxHeightDp)',
-        (tester) async {
+    testWidgets('caps height at min(screen * fraction, maxHeightDp)', (
+      tester,
+    ) async {
       // Tall viewport — fraction wins (800 * 0.3 = 240 < 420 cap).
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1;
@@ -154,9 +153,9 @@ void main() {
       expect(shellSize.height, lessThanOrEqualTo(800 * 0.3 + 0.5));
     });
 
-    testWidgets(
-        'dp ceiling clamps the panel when fraction would exceed it',
-        (tester) async {
+    testWidgets('dp ceiling clamps the panel when fraction would exceed it', (
+      tester,
+    ) async {
       // 0.9 * 1200 = 1080 dp; cap is 420. Verify the ceiling bites.
       tester.view.physicalSize = const Size(400, 1200);
       tester.view.devicePixelRatio = 1;
@@ -180,67 +179,71 @@ void main() {
       );
 
       final shellSize = tester.getSize(find.byType(EditorToolPanelShell));
-      expect(shellSize.height,
-          lessThanOrEqualTo(kEditorPanelMaxHeightDp + 0.5),
-          reason: 'Panel must respect kEditorPanelMaxHeightDp');
+      expect(
+        shellSize.height,
+        lessThanOrEqualTo(kEditorPanelMaxHeightDp + 0.5),
+        reason: 'Panel must respect kEditorPanelMaxHeightDp',
+      );
     });
 
     testWidgets(
-        'body padding is owned by the shell and is not double-applied',
-        (tester) async {
-      // If the chrome were also adding its old (12,0,12,12) gutter,
-      // the body would sit 12 dp further from the edge than asked.
-      const tag = ValueKey('padding-probe');
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Align(
-              alignment: Alignment.bottomCenter,
-              child: EditorToolPanelShell(
-                title: 'Pad',
-                icon: Icons.straighten_rounded,
-                onClose: () {},
-                bodyPadding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                child: SizedBox(
-                  key: tag,
-                  width: double.infinity,
-                  height: 12,
+      'body padding is owned by the shell and is not double-applied',
+      (tester) async {
+        // If the chrome were also adding its old (12,0,12,12) gutter,
+        // the body would sit 12 dp further from the edge than asked.
+        const tag = ValueKey('padding-probe');
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Align(
+                alignment: Alignment.bottomCenter,
+                child: EditorToolPanelShell(
+                  title: 'Pad',
+                  icon: Icons.straighten_rounded,
+                  onClose: () {},
+                  bodyPadding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                  child: SizedBox(key: tag, width: double.infinity, height: 12),
                 ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      final shellRect = tester.getRect(find.byType(DockSheetChrome));
-      final bodyRect = tester.getRect(find.byKey(tag));
-      expect((bodyRect.left - shellRect.left).round(), 20,
-          reason: 'Chrome must contribute zero horizontal padding');
-    });
+        final shellRect = tester.getRect(find.byType(DockSheetChrome));
+        final bodyRect = tester.getRect(find.byKey(tag));
+        expect(
+          (bodyRect.left - shellRect.left).round(),
+          20,
+          reason: 'Chrome must contribute zero horizontal padding',
+        );
+      },
+    );
   });
 
   group('ImagePanelShell', () {
-    testWidgets(
-        'header ✕ closes the image tool panel through the controller',
-        (tester) async {
+    testWidgets('header ✕ closes the image tool panel through the controller', (
+      tester,
+    ) async {
       late ProviderContainer container;
       await tester.pumpWidget(
         ProviderScope(
-          child: Consumer(builder: (context, ref, _) {
-            container = ProviderScope.containerOf(context);
-            return MaterialApp(
-              home: Scaffold(
-                body: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ImagePanelShell(
-                    title: 'Shape',
-                    icon: Icons.crop_square_rounded,
-                    child: const Text('image-body'),
+          child: Consumer(
+            builder: (context, ref, _) {
+              container = ProviderScope.containerOf(context);
+              return MaterialApp(
+                home: Scaffold(
+                  body: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ImagePanelShell(
+                      title: 'Shape',
+                      icon: Icons.crop_square_rounded,
+                      child: const Text('image-body'),
+                    ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
         ),
       );
 
@@ -258,15 +261,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.close_rounded));
       await tester.pumpAndSettle();
 
-      expect(
-        container.read(imageToolControllerProvider).openSlot,
-        isNull,
-      );
+      expect(container.read(imageToolControllerProvider).openSlot, isNull);
     });
 
-    test(
-        'asserts onConfirm and confirmLabel are supplied together',
-        () {
+    test('asserts onConfirm and confirmLabel are supplied together', () {
       expect(
         () => EditorToolPanelShell(
           title: 'X',
@@ -292,49 +290,42 @@ void main() {
     });
 
     testWidgets(
-        'wires onPrev / onNext via horizontal swipe gestures on the body',
-        (tester) async {
-      var prev = 0;
-      var next = 0;
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Align(
-              alignment: Alignment.bottomCenter,
-              child: EditorToolPanelShell(
-                title: 'Style',
-                icon: Icons.palette_outlined,
-                onClose: () {},
-                onPrev: () => prev += 1,
-                onNext: () => next += 1,
-                child: const SizedBox(
-                  height: 60,
-                  child: Center(child: Text('swipe-me')),
+      'wires onPrev / onNext via horizontal swipe gestures on the body',
+      (tester) async {
+        var prev = 0;
+        var next = 0;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Align(
+                alignment: Alignment.bottomCenter,
+                child: EditorToolPanelShell(
+                  title: 'Style',
+                  icon: Icons.palette_outlined,
+                  onClose: () {},
+                  onPrev: () => prev += 1,
+                  onNext: () => next += 1,
+                  child: const SizedBox(
+                    height: 60,
+                    child: Center(child: Text('swipe-me')),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Swipe left → next
-      await tester.fling(
-        find.text('swipe-me'),
-        const Offset(-220, 0),
-        900,
-      );
-      await tester.pumpAndSettle();
-      expect(next, 1);
-      expect(prev, 0);
+        // Swipe left → next
+        await tester.fling(find.text('swipe-me'), const Offset(-220, 0), 900);
+        await tester.pumpAndSettle();
+        expect(next, 1);
+        expect(prev, 0);
 
-      // Swipe right → prev
-      await tester.fling(
-        find.text('swipe-me'),
-        const Offset(220, 0),
-        900,
-      );
-      await tester.pumpAndSettle();
-      expect(prev, 1);
-    });
+        // Swipe right → prev
+        await tester.fling(find.text('swipe-me'), const Offset(220, 0), 900);
+        await tester.pumpAndSettle();
+        expect(prev, 1);
+      },
+    );
   });
 }

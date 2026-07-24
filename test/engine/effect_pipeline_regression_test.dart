@@ -48,10 +48,14 @@ void main() {
         const SaturationEffect(amount: SaturationEffect.identityAmount),
         const ExposureEffect(amount: 0),
       ]);
-      expect(stack.composedColorMatrix, isNull,
-          reason: 'identity-only stacks must compose to null so the '
-              'renderer skips the ColorFiltered wrapper entirely '
-              '\u2014 byte-identity preservation across save/load.');
+      expect(
+        stack.composedColorMatrix,
+        isNull,
+        reason:
+            'identity-only stacks must compose to null so the '
+            'renderer skips the ColorFiltered wrapper entirely '
+            '\u2014 byte-identity preservation across save/load.',
+      );
     });
 
     test('order matters: brightness-then-contrast \u2260 '
@@ -66,9 +70,13 @@ void main() {
       ]).composedColorMatrix;
       expect(ab, isNotNull);
       expect(ba, isNotNull);
-      expect(_fingerprint(ab!), isNot(equals(_fingerprint(ba!))),
-          reason: 'colour-matrix composition is not commutative; the '
-              'engine must preserve user-visible stack order.');
+      expect(
+        _fingerprint(ab!),
+        isNot(equals(_fingerprint(ba!))),
+        reason:
+            'colour-matrix composition is not commutative; the '
+            'engine must preserve user-visible stack order.',
+      );
     });
 
     test('a disabled effect never contributes', () {

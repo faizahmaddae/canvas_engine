@@ -154,8 +154,8 @@ class LiveOverlayController extends Notifier<LiveOverlay> {
 
 final liveOverlayProvider =
     NotifierProvider<LiveOverlayController, LiveOverlay>(
-  LiveOverlayController.new,
-);
+      LiveOverlayController.new,
+    );
 
 /// Merged view: the committed [EditorDocument] with the in-flight
 /// [LiveOverlay] applied on top. This is what the canvas, the

@@ -55,8 +55,11 @@ void main() {
     test('remove(id) preserves remaining order; primary falls back', () {
       final s = SelectionState.empty.add('a').add('b').add('c').remove('c');
       expect(s.selectedIds, ['a', 'b']);
-      expect(s.selectedId, 'b',
-          reason: 'after removing primary, previous id becomes primary');
+      expect(
+        s.selectedId,
+        'b',
+        reason: 'after removing primary, previous id becomes primary',
+      );
     });
 
     test('remove(missing) is a no-op (returns same state)', () {
@@ -84,8 +87,11 @@ void main() {
     test('equality is order-sensitive', () {
       final ab = SelectionState.empty.add('a').add('b');
       final ba = SelectionState.empty.add('b').add('a');
-      expect(ab, isNot(equals(ba)),
-          reason: 'order encodes the primary, so [a,b] != [b,a]');
+      expect(
+        ab,
+        isNot(equals(ba)),
+        reason: 'order encodes the primary, so [a,b] != [b,a]',
+      );
       final ab2 = SelectionState.empty.add('a').add('b');
       expect(ab, equals(ab2));
       expect(ab.hashCode, ab2.hashCode);

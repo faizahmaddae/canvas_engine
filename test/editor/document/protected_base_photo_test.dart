@@ -23,9 +23,9 @@ void main() {
     final ctrl = c.read(documentControllerProvider.notifier);
     ctrl.newDocument(width: 800, height: 600, kind: ProjectKind.photo);
     ctrl.execute(
-      CompositeCommand(
-        [
-          AddLayerCommand(ImageLayer(
+      CompositeCommand([
+        AddLayerCommand(
+          ImageLayer(
             id: id,
             transform: LayerTransform(
               position: Offset.zero,
@@ -33,11 +33,10 @@ void main() {
             ),
             source: const ImageSource.asset('a.png'),
             locked: true,
-          )),
-          SetBasePhotoCommand(id),
-        ],
-        labelOverride: 'Import photo',
-      ),
+          ),
+        ),
+        SetBasePhotoCommand(id),
+      ], labelOverride: 'Import photo'),
     );
     ctrl.clearHistory();
     // Mirror the home Import flow: NO auto-select.
@@ -61,8 +60,7 @@ void main() {
       expect(c.read(documentControllerProvider).basePhotoLayerId, 'photo');
     });
 
-    test('isProtectedBasePhoto identifies the photo-project base layer',
-        () {
+    test('isProtectedBasePhoto identifies the photo-project base layer', () {
       final c = makePhotoProject();
       final doc = c.read(documentControllerProvider);
       expect(doc.isProtectedBasePhoto('photo'), isTrue);
@@ -73,14 +71,18 @@ void main() {
       final c = makeDesignProject();
       c
           .read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(ImageLayer(
-            id: 'i',
-            transform: LayerTransform(
-              position: Offset.zero,
-              size: const Size(400, 300),
+          .execute(
+            AddLayerCommand(
+              ImageLayer(
+                id: 'i',
+                transform: LayerTransform(
+                  position: Offset.zero,
+                  size: const Size(400, 300),
+                ),
+                source: const ImageSource.asset('a.png'),
+              ),
             ),
-            source: const ImageSource.asset('a.png'),
-          )));
+          );
       final doc = c.read(documentControllerProvider);
       expect(doc.projectKind, ProjectKind.design);
       expect(doc.isProtectedBasePhoto('i'), isFalse);
@@ -92,10 +94,7 @@ void main() {
       final outcome = resolveImageTarget(doc, selectedId: null);
       // Single image present -> auto-select to the base photo.
       expect(outcome, isA<ImageTargetAutoSelect>());
-      expect(
-        (outcome as ImageTargetAutoSelect).layer.id,
-        'photo',
-      );
+      expect((outcome as ImageTargetAutoSelect).layer.id, 'photo');
     });
 
     test('Crop resolves base photo even when an overlay is selected '
@@ -106,38 +105,44 @@ void main() {
       // not an ImageLayer.
       c
           .read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(ShapeLayer(
-            id: 's',
-            transform: LayerTransform(
-              position: Offset.zero,
-              size: const Size(50, 50),
+          .execute(
+            AddLayerCommand(
+              ShapeLayer(
+                id: 's',
+                transform: LayerTransform(
+                  position: Offset.zero,
+                  size: const Size(50, 50),
+                ),
+                kind: ShapeKind.rectangle,
+                fillColor: const Color(0xFFFFFFFF),
+              ),
             ),
-            kind: ShapeKind.rectangle,
-            fillColor: const Color(0xFFFFFFFF),
-          )));
+          );
       c.read(selectionControllerProvider.notifier).select('s');
       final doc = c.read(documentControllerProvider);
-      final outcome =
-          resolveImageTarget(doc, selectedId: 's');
+      final outcome = resolveImageTarget(doc, selectedId: 's');
       // Only one image (the photo) -> auto-select to it.
       expect(outcome, isA<ImageTargetAutoSelect>());
       expect((outcome as ImageTargetAutoSelect).layer.id, 'photo');
     });
 
-    test('selecting an overlay layer is NOT protected (normal chrome)',
-        () {
+    test('selecting an overlay layer is NOT protected (normal chrome)', () {
       final c = makePhotoProject();
       c
           .read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(ShapeLayer(
-            id: 's',
-            transform: LayerTransform(
-              position: Offset.zero,
-              size: const Size(50, 50),
+          .execute(
+            AddLayerCommand(
+              ShapeLayer(
+                id: 's',
+                transform: LayerTransform(
+                  position: Offset.zero,
+                  size: const Size(50, 50),
+                ),
+                kind: ShapeKind.rectangle,
+                fillColor: const Color(0xFFFFFFFF),
+              ),
             ),
-            kind: ShapeKind.rectangle,
-            fillColor: const Color(0xFFFFFFFF),
-          )));
+          );
       c.read(selectionControllerProvider.notifier).select('s');
       final doc = c.read(documentControllerProvider);
       expect(doc.isProtectedBasePhoto('s'), isFalse);

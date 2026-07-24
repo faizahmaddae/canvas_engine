@@ -15,44 +15,41 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('ShapeLayer — copyAll preserves every field across codec', () {
     ShapeLayer makeLoaded() => const ShapeLayer(
-          id: 'shp-loaded',
-          transform: LayerTransform(
-            position: Offset(50, 60),
-            size: Size(300, 200),
-            rotation: 0.25,
-          ),
-          kind: ShapeKind.rectangle,
-          fillColor: Color(0xFF4488FF),
-          fill: LinearGradientBackground(
-            startColor: Color(0xFFFF0000),
-            endColor: Color(0xFF00FF00),
-            angleDegrees: 45,
-          ),
-          fillOpacity: 0.7,
-          strokeColor: Color(0xFF112233),
-          strokeWidth: 4,
-          cornerRadius: 16,
-          shadowColor: Color(0xFF222222),
-          shadowBlur: 12,
-          shadowOffset: Offset(2, 4),
-          shadowOpacity: 0.6,
-          resizeMode: ShapeResizeMode.scale,
-          name: 'panel',
-          visible: false,
-          locked: true,
-          opacity: 0.42,
-        );
+      id: 'shp-loaded',
+      transform: LayerTransform(
+        position: Offset(50, 60),
+        size: Size(300, 200),
+        rotation: 0.25,
+      ),
+      kind: ShapeKind.rectangle,
+      fillColor: Color(0xFF4488FF),
+      fill: LinearGradientBackground(
+        startColor: Color(0xFFFF0000),
+        endColor: Color(0xFF00FF00),
+        angleDegrees: 45,
+      ),
+      fillOpacity: 0.7,
+      strokeColor: Color(0xFF112233),
+      strokeWidth: 4,
+      cornerRadius: 16,
+      shadowColor: Color(0xFF222222),
+      shadowBlur: 12,
+      shadowOffset: Offset(2, 4),
+      shadowOpacity: 0.6,
+      resizeMode: ShapeResizeMode.scale,
+      name: 'panel',
+      visible: false,
+      locked: true,
+      opacity: 0.42,
+    );
 
     String encode(ShapeLayer l) => DocumentCodec.encode(
-          EditorDocument(layers: [l], width: 1000, height: 1000),
-        );
+      EditorDocument(layers: [l], width: 1000, height: 1000),
+    );
 
     test('withTransform preserves every other field', () {
       final base = makeLoaded();
-      const next = LayerTransform(
-        position: Offset(0, 0),
-        size: Size(10, 10),
-      );
+      const next = LayerTransform(position: Offset(0, 0), size: Size(10, 10));
       final mutated = base.withTransform(next) as ShapeLayer;
       expect(mutated.kind, base.kind);
       expect(mutated.fillColor, base.fillColor);
@@ -73,8 +70,7 @@ void main() {
       expect(mutated.transform, next);
     });
 
-    test('withVisibility / withLocked / withOpacity preserve all peers',
-        () {
+    test('withVisibility / withLocked / withOpacity preserve all peers', () {
       final base = makeLoaded();
       final shown = base.withVisibility(true) as ShapeLayer;
       expect(shown.visible, true);

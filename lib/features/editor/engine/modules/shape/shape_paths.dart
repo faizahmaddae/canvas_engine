@@ -67,16 +67,15 @@ class ShapePaths {
     p.moveTo(w / 2, h);
     // Up the left side via a cubic to the top-left arc.
     p.cubicTo(
-      -w * 0.05, h * 0.65, // ctl1 (out from bottom point, left)
-      w * 0.05, h * 0.10, // ctl2 (up high on the left)
-      w * 0.50, h * 0.30, // mid-top dip
+      -w * 0.05,
+      h * 0.65, // ctl1 (out from bottom point, left)
+      w * 0.05,
+      h * 0.10, // ctl2 (up high on the left)
+      w * 0.50,
+      h * 0.30, // mid-top dip
     );
     // Up and over the right arc back to the bottom point.
-    p.cubicTo(
-      w * 0.95, h * 0.10,
-      w * 1.05, h * 0.65,
-      w / 2, h,
-    );
+    p.cubicTo(w * 0.95, h * 0.10, w * 1.05, h * 0.65, w / 2, h);
     p.close();
     return p;
   }

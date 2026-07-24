@@ -88,8 +88,9 @@ class CanvasFraming extends StatelessWidget {
             dimColor: tokens.workspace.withValues(alpha: 0.78),
             borderColor: switch (borderEmphasis) {
               CanvasBorderEmphasis.standard => tokens.border,
-              CanvasBorderEmphasis.subtle =>
-                tokens.border.withValues(alpha: 0.45),
+              CanvasBorderEmphasis.subtle => tokens.border.withValues(
+                alpha: 0.45,
+              ),
             },
             // scheme.shadow is the theme's shadow ink; dark mode needs
             // a stronger halo to read against the deep-ink workspace.
@@ -131,9 +132,9 @@ class _CanvasFramingPainter extends CustomPainter {
   final Color shadowColor;
 
   RRect get _canvasRRect => RRect.fromRectAndRadius(
-        canvasRect,
-        const Radius.circular(CanvasFraming.cornerRadius),
-      );
+    canvasRect,
+    const Radius.circular(CanvasFraming.cornerRadius),
+  );
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -154,10 +155,7 @@ class _CanvasFramingPainter extends CustomPainter {
     final paint = Paint()
       ..color = shadowColor
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
-    canvas.drawRRect(
-      _canvasRRect.shift(const Offset(0, 4)).inflate(2),
-      paint,
-    );
+    canvas.drawRRect(_canvasRRect.shift(const Offset(0, 4)).inflate(2), paint);
   }
 
   void _paintDimMask(Canvas canvas, Size size) {

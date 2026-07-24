@@ -101,10 +101,12 @@ void main() {
 
     expect(find.byType(NavShell), findsOneWidget);
 
-    final boundary = boundaryKey.currentContext!.findRenderObject()!
-        as RenderRepaintBoundary;
-    final image =
-        await tester.runAsync(() => boundary.toImage(pixelRatio: 2.0));
+    final boundary =
+        boundaryKey.currentContext!.findRenderObject()!
+            as RenderRepaintBoundary;
+    final image = await tester.runAsync(
+      () => boundary.toImage(pixelRatio: 2.0),
+    );
     final byteData = await tester.runAsync(
       () => image!.toByteData(format: ui.ImageByteFormat.png),
     );

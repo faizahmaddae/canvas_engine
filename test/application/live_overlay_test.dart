@@ -28,7 +28,8 @@ void main() {
   ProviderContainer makeContainer() {
     final c = ProviderContainer();
     addTearDown(c.dispose);
-    c.read(documentControllerProvider.notifier)
+    c
+        .read(documentControllerProvider.notifier)
         .newDocument(width: 800, height: 800);
     return c;
   }
@@ -45,7 +46,8 @@ void main() {
     test('replacements substitute layers by id', () {
       final c = makeContainer();
       final original = textLayer(id: 'a', content: 'original');
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(original));
       final doc = c.read(documentControllerProvider);
 
@@ -62,30 +64,35 @@ void main() {
       // Drag-handler fire-and-forget contract: a stale frame against
       // a just-removed layer must not resurrect a phantom.
       final c = makeContainer();
-      final overlay = LiveOverlay(replacements: {
-        'ghost': textLayer(id: 'ghost'),
-      });
+      final overlay = LiveOverlay(
+        replacements: {'ghost': textLayer(id: 'ghost')},
+      );
       final merged = overlay.applyTo(c.read(documentControllerProvider));
       expect(merged.layerById('ghost'), isNull);
     });
 
     test('additions append on top of committed layers in order', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(textLayer(id: 'committed')));
-      final overlay = LiveOverlay(additions: [
-        textLayer(id: 'add1'),
-        textLayer(id: 'add2'),
-      ]);
+      final overlay = LiveOverlay(
+        additions: [
+          textLayer(id: 'add1'),
+          textLayer(id: 'add2'),
+        ],
+      );
       final merged = overlay.applyTo(c.read(documentControllerProvider));
       expect(merged.layers.map((l) => l.id), ['committed', 'add1', 'add2']);
     });
 
     test('removals hide committed layers from the merged view', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(textLayer(id: 'a')));
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(textLayer(id: 'b')));
       final overlay = LiveOverlay(removals: {'a'});
       final merged = overlay.applyTo(c.read(documentControllerProvider));
@@ -94,7 +101,8 @@ void main() {
 
     test('removal trumps a stale replacement of the same id', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(textLayer(id: 'a')));
       final overlay = LiveOverlay(
         replacements: {'a': textLayer(id: 'a', content: 'preview')},
@@ -120,10 +128,10 @@ void main() {
       final ctrl = c.read(liveOverlayProvider.notifier);
       ctrl.addLayer(textLayer(id: 'a'));
       ctrl.addLayer(textLayer(id: 'b'));
-      expect(
-        c.read(liveOverlayProvider).additions.map((l) => l.id),
-        ['a', 'b'],
-      );
+      expect(c.read(liveOverlayProvider).additions.map((l) => l.id), [
+        'a',
+        'b',
+      ]);
     });
 
     test('updateAddedLayer mutates an existing addition by id', () {
@@ -138,7 +146,8 @@ void main() {
 
     test('updateAddedLayer is a no-op when the id is not staged', () {
       final c = makeContainer();
-      c.read(liveOverlayProvider.notifier)
+      c
+          .read(liveOverlayProvider.notifier)
           .updateAddedLayer(textLayer(id: 'unknown'));
       expect(c.read(liveOverlayProvider).additions, isEmpty);
     });
@@ -180,25 +189,25 @@ void main() {
     test('reflects an in-flight replacement WITHOUT mutating the '
         'committed doc', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(textLayer(id: 'a', content: 'committed')));
       final docBefore = c.read(documentControllerProvider);
 
-      c.read(liveOverlayProvider.notifier)
+      c
+          .read(liveOverlayProvider.notifier)
           .replaceLayer(textLayer(id: 'a', content: 'preview'));
 
       // Committed instance is byte-for-byte unchanged.
       expect(identical(c.read(documentControllerProvider), docBefore), isTrue);
       // Merged view reflects the in-flight preview.
       expect(
-        (c.read(renderedDocumentProvider).layerById('a')! as TextLayer)
-            .content,
+        (c.read(renderedDocumentProvider).layerById('a')! as TextLayer).content,
         'preview',
       );
     });
 
-    test('reflects a staged addition WITHOUT mutating the committed doc',
-        () {
+    test('reflects a staged addition WITHOUT mutating the committed doc', () {
       final c = makeContainer();
       final docBefore = c.read(documentControllerProvider);
       c.read(liveOverlayProvider.notifier).addLayer(textLayer(id: 'staged'));
@@ -206,14 +215,15 @@ void main() {
       expect(c.read(renderedDocumentProvider).layerById('staged'), isNotNull);
     });
 
-    test('clear() returns the merged view to the committed doc identity',
-        () {
+    test('clear() returns the merged view to the committed doc identity', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(textLayer(id: 'a')));
       final docCommitted = c.read(documentControllerProvider);
 
-      c.read(liveOverlayProvider.notifier)
+      c
+          .read(liveOverlayProvider.notifier)
           .replaceLayer(textLayer(id: 'a', content: 'preview'));
       expect(
         identical(c.read(renderedDocumentProvider), docCommitted),
@@ -221,10 +231,7 @@ void main() {
       );
 
       c.read(liveOverlayProvider.notifier).clear();
-      expect(
-        identical(c.read(renderedDocumentProvider), docCommitted),
-        isTrue,
-      );
+      expect(identical(c.read(renderedDocumentProvider), docCommitted), isTrue);
     });
   });
 }

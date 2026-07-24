@@ -20,9 +20,13 @@ void main() {
       final first = stack.composedColorMatrix;
       final second = stack.composedColorMatrix;
       expect(first, isNotNull);
-      expect(identical(first, second), isTrue,
-          reason: 'composedColorMatrix should hit the per-instance '
-              'Expando cache on the second call');
+      expect(
+        identical(first, second),
+        isTrue,
+        reason:
+            'composedColorMatrix should hit the per-instance '
+            'Expando cache on the second call',
+      );
     });
 
     test('returns null without throwing on a stack with no '
@@ -38,18 +42,15 @@ void main() {
     });
 
     test('two equal-by-value but distinct stack instances each '
-        'compute their own matrix (identity cache, not value cache)',
-        () {
-      final a = EffectStack(<EditorEffect>[
-        const BrightnessEffect(amount: 5),
-      ]);
-      final b = EffectStack(<EditorEffect>[
-        const BrightnessEffect(amount: 5),
-      ]);
+        'compute their own matrix (identity cache, not value cache)', () {
+      final a = EffectStack(<EditorEffect>[const BrightnessEffect(amount: 5)]);
+      final b = EffectStack(<EditorEffect>[const BrightnessEffect(amount: 5)]);
       expect(a.composedColorMatrix, equals(b.composedColorMatrix));
-      expect(identical(a.composedColorMatrix, b.composedColorMatrix),
-          isFalse,
-          reason: 'identity cache should not bridge across instances');
+      expect(
+        identical(a.composedColorMatrix, b.composedColorMatrix),
+        isFalse,
+        reason: 'identity cache should not bridge across instances',
+      );
     });
 
     test('an empty stack returns null and does not crash on cache '

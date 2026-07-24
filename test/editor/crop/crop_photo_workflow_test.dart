@@ -36,14 +36,14 @@ void main() {
       );
 
   ShapeLayer makeShape(String id) => ShapeLayer(
-        id: id,
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: const Size(100, 100),
-        ),
-        kind: ShapeKind.rectangle,
-        fillColor: const Color(0xFFFFFFFF),
-      );
+    id: id,
+    transform: LayerTransform(
+      position: Offset.zero,
+      size: const Size(100, 100),
+    ),
+    kind: ShapeKind.rectangle,
+    fillColor: const Color(0xFFFFFFFF),
+  );
 
   /// Mirror of `_addImage` import semantics: AddLayer + (when
   /// document has no base) SetBasePhoto in one composite, then
@@ -51,11 +51,13 @@ void main() {
   void importPhoto(ProviderContainer c, ImageLayer layer) {
     final doc = c.read(documentControllerProvider);
     if (doc.basePhotoLayerId == null) {
-      c.read(documentControllerProvider.notifier).execute(
-            CompositeCommand(
-              [AddLayerCommand(layer), SetBasePhotoCommand(layer.id)],
-              labelOverride: 'Import photo',
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            CompositeCommand([
+              AddLayerCommand(layer),
+              SetBasePhotoCommand(layer.id),
+            ], labelOverride: 'Import photo'),
           );
     } else {
       c
@@ -69,8 +71,7 @@ void main() {
   /// Returns true iff Crop opened.
   bool openCrop(ProviderContainer c) {
     final doc = c.read(documentControllerProvider);
-    final priorSelectionId =
-        c.read(selectionControllerProvider).selectedId;
+    final priorSelectionId = c.read(selectionControllerProvider).selectedId;
     final outcome = resolveImageTarget(doc, selectedId: priorSelectionId);
     final ImageLayer? target = switch (outcome) {
       ImageTargetSelected(:final layer) => layer,
@@ -81,10 +82,9 @@ void main() {
     if (outcome is ImageTargetAutoSelect) {
       c.read(selectionControllerProvider.notifier).select(target.id);
     }
-    c.read(cropControllerProvider.notifier).openCrop(
-          target.id,
-          priorSelectionId: priorSelectionId,
-        );
+    c
+        .read(cropControllerProvider.notifier)
+        .openCrop(target.id, priorSelectionId: priorSelectionId);
     return true;
   }
 
@@ -260,10 +260,7 @@ void main() {
           .read(cropControllerProvider.notifier)
           .updateDraft(const Rect.fromLTRB(0.2, 0.2, 0.6, 0.6));
       c.read(cropControllerProvider.notifier).resetCrop();
-      expect(
-        c.read(cropControllerProvider).draftCrop,
-        ImageLayer.fullCrop,
-      );
+      expect(c.read(cropControllerProvider).draftCrop, ImageLayer.fullCrop);
     });
   });
 
@@ -271,7 +268,9 @@ void main() {
     /// Photo-mode container: matches what the home Import flow
     /// builds — `newDocument(kind: photo)` + AddLayer + SetBasePhoto
     /// + `clearHistory()` so the imported state is the new origin.
-    ProviderContainer makePhotoContainer({Size photoSize = const Size(800, 600)}) {
+    ProviderContainer makePhotoContainer({
+      Size photoSize = const Size(800, 600),
+    }) {
       final c = ProviderContainer();
       addTearDown(c.dispose);
       final ctrl = c.read(documentControllerProvider.notifier);
@@ -287,10 +286,10 @@ void main() {
         locked: true,
       );
       ctrl.execute(
-        CompositeCommand(
-          [AddLayerCommand(layer), SetBasePhotoCommand('photo')],
-          labelOverride: 'Import photo',
-        ),
+        CompositeCommand([
+          AddLayerCommand(layer),
+          SetBasePhotoCommand('photo'),
+        ], labelOverride: 'Import photo'),
       );
       ctrl.clearHistory();
       c.read(selectionControllerProvider.notifier).select('photo');
@@ -315,8 +314,11 @@ void main() {
       // dimensions are square (because the user picked 1:1).
       final w = layer.transform.size.width;
       final h = layer.transform.size.height;
-      expect(w, closeTo(h, 1e-6),
-          reason: '1:1 crop must produce a square layer (no deform)');
+      expect(
+        w,
+        closeTo(h, 1e-6),
+        reason: '1:1 crop must produce a square layer (no deform)',
+      );
       expect(doc.width, closeTo(w, 1e-6));
       expect(doc.height, closeTo(h, 1e-6));
       // Sanity-check sizing matches the draft proportions.
@@ -347,8 +349,7 @@ void main() {
       // History was cleared post-import; canUndo is false.
       expect(c.read(documentControllerProvider.notifier).canUndo, isFalse);
       c.read(documentControllerProvider.notifier).undo(); // no-op
-      expect(c.read(documentControllerProvider).layerById('photo'),
-          isNotNull);
+      expect(c.read(documentControllerProvider).layerById('photo'), isNotNull);
       expect(c.read(documentControllerProvider).basePhotoLayerId, 'photo');
     });
 
@@ -386,92 +387,101 @@ void main() {
   // BEFORE Crop opened is restored on commit AND on cancel.
   // -----------------------------------------------------------------
   group('crop returns user to the prior toolbar context', () {
-    test('main-toolbar entry (no selection) -> commit -> selection cleared',
-        () {
-      final c = makeContainer();
-      importPhoto(c, makeImage('p1'));
-      c.read(selectionControllerProvider.notifier).clear();
+    test(
+      'main-toolbar entry (no selection) -> commit -> selection cleared',
+      () {
+        final c = makeContainer();
+        importPhoto(c, makeImage('p1'));
+        c.read(selectionControllerProvider.notifier).clear();
 
-      // Mirrors EditorScreen._openCrop: snapshot prior selection
-      // BEFORE auto-selecting the resolved target.
-      openCrop(c);
-      // Auto-select happened.
-      expect(c.read(selectionControllerProvider).selectedId, 'p1');
+        // Mirrors EditorScreen._openCrop: snapshot prior selection
+        // BEFORE auto-selecting the resolved target.
+        openCrop(c);
+        // Auto-select happened.
+        expect(c.read(selectionControllerProvider).selectedId, 'p1');
 
-      c
-          .read(cropControllerProvider.notifier)
-          .updateDraft(const Rect.fromLTRB(0.1, 0.1, 0.9, 0.9));
-      c.read(cropControllerProvider.notifier).commitCrop();
+        c
+            .read(cropControllerProvider.notifier)
+            .updateDraft(const Rect.fromLTRB(0.1, 0.1, 0.9, 0.9));
+        c.read(cropControllerProvider.notifier).commitCrop();
 
-      // Back to no selection -> main toolbar.
-      expect(c.read(cropControllerProvider).active, isFalse);
-      expect(c.read(selectionControllerProvider).selectedId, isNull);
-    });
+        // Back to no selection -> main toolbar.
+        expect(c.read(cropControllerProvider).active, isFalse);
+        expect(c.read(selectionControllerProvider).selectedId, isNull);
+      },
+    );
 
-    test('main-toolbar entry (no selection) -> cancel -> selection cleared',
-        () {
-      final c = makeContainer();
-      importPhoto(c, makeImage('p1'));
-      c.read(selectionControllerProvider.notifier).clear();
+    test(
+      'main-toolbar entry (no selection) -> cancel -> selection cleared',
+      () {
+        final c = makeContainer();
+        importPhoto(c, makeImage('p1'));
+        c.read(selectionControllerProvider.notifier).clear();
 
-      openCrop(c);
-      expect(c.read(selectionControllerProvider).selectedId, 'p1');
+        openCrop(c);
+        expect(c.read(selectionControllerProvider).selectedId, 'p1');
 
-      c.read(cropControllerProvider.notifier).cancelCrop();
-      expect(c.read(selectionControllerProvider).selectedId, isNull);
-    });
+        c.read(cropControllerProvider.notifier).cancelCrop();
+        expect(c.read(selectionControllerProvider).selectedId, isNull);
+      },
+    );
 
-    test('main-toolbar entry with unrelated selection -> commit restores it',
-        () {
-      final c = makeContainer();
-      importPhoto(c, makeImage('p1'));
-      c
-          .read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(makeShape('s1')));
-      c.read(selectionControllerProvider.notifier).select('s1');
+    test(
+      'main-toolbar entry with unrelated selection -> commit restores it',
+      () {
+        final c = makeContainer();
+        importPhoto(c, makeImage('p1'));
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(AddLayerCommand(makeShape('s1')));
+        c.read(selectionControllerProvider.notifier).select('s1');
 
-      openCrop(c);
-      // Auto-selected the photo to know what to crop.
-      expect(c.read(selectionControllerProvider).selectedId, 'p1');
+        openCrop(c);
+        // Auto-selected the photo to know what to crop.
+        expect(c.read(selectionControllerProvider).selectedId, 'p1');
 
-      c.read(cropControllerProvider.notifier).cancelCrop();
-      // Prior unrelated selection restored.
-      expect(c.read(selectionControllerProvider).selectedId, 's1');
-    });
+        c.read(cropControllerProvider.notifier).cancelCrop();
+        // Prior unrelated selection restored.
+        expect(c.read(selectionControllerProvider).selectedId, 's1');
+      },
+    );
 
-    test('image-sub-tools entry (image already selected) -> commit keeps it',
-        () {
-      // Mirrors the ImageModeToolbar Crop slot: the image is the
-      // current selection and openCrop is called with
-      // priorSelectionId = layer.id, so it stays selected after.
-      final c = makeContainer();
-      importPhoto(c, makeImage('p1'));
-      c.read(selectionControllerProvider.notifier).select('p1');
+    test(
+      'image-sub-tools entry (image already selected) -> commit keeps it',
+      () {
+        // Mirrors the ImageModeToolbar Crop slot: the image is the
+        // current selection and openCrop is called with
+        // priorSelectionId = layer.id, so it stays selected after.
+        final c = makeContainer();
+        importPhoto(c, makeImage('p1'));
+        c.read(selectionControllerProvider.notifier).select('p1');
 
-      c.read(cropControllerProvider.notifier).openCrop(
-            'p1',
-            priorSelectionId: 'p1',
-          );
-      c
-          .read(cropControllerProvider.notifier)
-          .updateDraft(const Rect.fromLTRB(0.1, 0.1, 0.9, 0.9));
-      c.read(cropControllerProvider.notifier).commitCrop();
+        c
+            .read(cropControllerProvider.notifier)
+            .openCrop('p1', priorSelectionId: 'p1');
+        c
+            .read(cropControllerProvider.notifier)
+            .updateDraft(const Rect.fromLTRB(0.1, 0.1, 0.9, 0.9));
+        c.read(cropControllerProvider.notifier).commitCrop();
 
-      expect(c.read(selectionControllerProvider).selectedId, 'p1');
-    });
+        expect(c.read(selectionControllerProvider).selectedId, 'p1');
+      },
+    );
 
-    test('no-op commit (Done without changes) still restores prior selection',
-        () {
-      // Re-opening crop on an unchanged layer hits the early-return
-      // branch in commitCrop. That branch must also restore.
-      final c = makeContainer();
-      importPhoto(c, makeImage('p1'));
-      c.read(selectionControllerProvider.notifier).clear();
+    test(
+      'no-op commit (Done without changes) still restores prior selection',
+      () {
+        // Re-opening crop on an unchanged layer hits the early-return
+        // branch in commitCrop. That branch must also restore.
+        final c = makeContainer();
+        importPhoto(c, makeImage('p1'));
+        c.read(selectionControllerProvider.notifier).clear();
 
-      openCrop(c);
-      // Don't move anything; just press Done.
-      c.read(cropControllerProvider.notifier).commitCrop();
-      expect(c.read(selectionControllerProvider).selectedId, isNull);
-    });
+        openCrop(c);
+        // Don't move anything; just press Done.
+        c.read(cropControllerProvider.notifier).commitCrop();
+        expect(c.read(selectionControllerProvider).selectedId, isNull);
+      },
+    );
   });
 }

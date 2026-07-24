@@ -43,7 +43,9 @@ void main() {
       container
           .read(documentControllerProvider.notifier)
           .newDocument(width: docSize.width, height: docSize.height);
-      container.read(documentControllerProvider.notifier).execute(
+      container
+          .read(documentControllerProvider.notifier)
+          .execute(
             AddLayerCommand(
               ShapeLayer(
                 id: 'shape',
@@ -60,9 +62,7 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(
-            home: Scaffold(body: EditorCanvas()),
-          ),
+          child: const MaterialApp(home: Scaffold(body: EditorCanvas())),
         ),
       );
       // Two pumps: one for fit-to-screen post-frame callback, one for
@@ -76,8 +76,8 @@ void main() {
       // the overlay uses: canvas * scale + translation.
       final layerCenterCanvas =
           layerStart + Offset(layerSize.width / 2, layerSize.height / 2);
-      final start = layerCenterCanvas * viewportBefore.scale +
-          viewportBefore.translation;
+      final start =
+          layerCenterCanvas * viewportBefore.scale + viewportBefore.translation;
 
       const dragVector = Offset(60, 40);
 
@@ -86,12 +86,14 @@ void main() {
       // have started a move session for the off-canvas layer — proving
       // the body surface (not the viewport) claimed the arena.
       await tester.pump();
-      final sessionAtDown =
-          container.read(interactionControllerProvider).session;
+      final sessionAtDown = container
+          .read(interactionControllerProvider)
+          .session;
       expect(
         sessionAtDown,
         isNotNull,
-        reason: 'Touching the body of an off-canvas selected layer '
+        reason:
+            'Touching the body of an off-canvas selected layer '
             'must start an interaction session immediately (claim-on-'
             'down).',
       );
@@ -114,7 +116,8 @@ void main() {
       expect(
         viewportAfter.translation,
         viewportBefore.translation,
-        reason: 'Viewport must NOT pan while a selected layer body is '
+        reason:
+            'Viewport must NOT pan while a selected layer body is '
             'being dragged.',
       );
       expect(viewportAfter.scale, viewportBefore.scale);
@@ -125,55 +128,57 @@ void main() {
     },
   );
 
-  test(
-    'recovery: SetLayerTransformCommand can re-centre an off-canvas layer '
-    'and is undoable',
-    () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+  test('recovery: SetLayerTransformCommand can re-centre an off-canvas layer '
+      'and is undoable', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
 
-      final docCtrl = container.read(documentControllerProvider.notifier);
-      docCtrl.newDocument(width: 400, height: 400);
-      docCtrl.execute(
-        AddLayerCommand(
-          ShapeLayer(
-            id: 'shape',
-            transform: const LayerTransform(
-              position: Offset(-500, -500),
-              size: Size(100, 100),
-            ),
-            kind: ShapeKind.rectangle,
+    final docCtrl = container.read(documentControllerProvider.notifier);
+    docCtrl.newDocument(width: 400, height: 400);
+    docCtrl.execute(
+      AddLayerCommand(
+        ShapeLayer(
+          id: 'shape',
+          transform: const LayerTransform(
+            position: Offset(-500, -500),
+            size: Size(100, 100),
           ),
+          kind: ShapeKind.rectangle,
         ),
-      );
+      ),
+    );
 
-      // Centre the layer (the same operation the AppBar action issues).
-      final layer = container
-          .read(documentControllerProvider)
-          .layerById('shape')!;
-      final centred = layer.transform.copyWith(
-        position: const Offset(150, 150), // 400/2 - 100/2
-      );
-      docCtrl.execute(SetLayerTransformCommand(
+    // Centre the layer (the same operation the AppBar action issues).
+    final layer = container
+        .read(documentControllerProvider)
+        .layerById('shape')!;
+    final centred = layer.transform.copyWith(
+      position: const Offset(150, 150), // 400/2 - 100/2
+    );
+    docCtrl.execute(
+      SetLayerTransformCommand(
         layerId: 'shape',
         transform: centred,
         labelOverride: 'Center layer',
-      ));
+      ),
+    );
 
-      final after = container
-          .read(documentControllerProvider)
-          .layerById('shape')!;
-      expect(after.transform.position, const Offset(150, 150));
-      expect(after.transform.center, const Offset(200, 200),
-          reason: 'Layer centre must coincide with canvas centre.');
+    final after = container
+        .read(documentControllerProvider)
+        .layerById('shape')!;
+    expect(after.transform.position, const Offset(150, 150));
+    expect(
+      after.transform.center,
+      const Offset(200, 200),
+      reason: 'Layer centre must coincide with canvas centre.',
+    );
 
-      // Undo restores the original off-canvas position — proving the
-      // recovery is a normal undoable command, not a side-effecting hack.
-      docCtrl.undo();
-      final undone = container
-          .read(documentControllerProvider)
-          .layerById('shape')!;
-      expect(undone.transform.position, const Offset(-500, -500));
-    },
-  );
+    // Undo restores the original off-canvas position — proving the
+    // recovery is a normal undoable command, not a side-effecting hack.
+    docCtrl.undo();
+    final undone = container
+        .read(documentControllerProvider)
+        .layerById('shape')!;
+    expect(undone.transform.position, const Offset(-500, -500));
+  });
 }

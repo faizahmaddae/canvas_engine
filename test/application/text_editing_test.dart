@@ -9,18 +9,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  TextLayer makeLayer({
-    String content = 'hello',
-  }) =>
-      TextLayer(
-        id: 't1',
-        transform: const LayerTransform(
-          position: Offset.zero,
-          size: Size(120, 60),
-        ),
-        content: content,
-        style: const TextStyleSpec(),
-      );
+  TextLayer makeLayer({String content = 'hello'}) => TextLayer(
+    id: 't1',
+    transform: const LayerTransform(position: Offset.zero, size: Size(120, 60)),
+    content: content,
+    style: const TextStyleSpec(),
+  );
 
   group('EditingController', () {
     test('starts null and can start / stop / be idempotent', () {

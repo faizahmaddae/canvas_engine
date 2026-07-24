@@ -26,11 +26,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('SetBasePhotoCommand', () {
-    EditorDocument blank() => EditorDocument(
-          layers: const [],
-          width: 1000,
-          height: 1000,
-        );
+    EditorDocument blank() =>
+        EditorDocument(layers: const [], width: 1000, height: 1000);
 
     test('apply sets the marker', () {
       final before = blank();
@@ -86,8 +83,9 @@ void main() {
     test('apply switches design -> photo', () {
       final before = blank();
       expect(before.projectKind, ProjectKind.design);
-      final after =
-          const SetProjectKindCommand(ProjectKind.photo).apply(before);
+      final after = const SetProjectKindCommand(
+        ProjectKind.photo,
+      ).apply(before);
       expect(after.projectKind, ProjectKind.photo);
     });
 
@@ -96,8 +94,7 @@ void main() {
       // relies on to avoid a no-op history entry when the user
       // re-imports into an already-photo project.
       final doc = blank(kind: ProjectKind.photo);
-      final result =
-          const SetProjectKindCommand(ProjectKind.photo).apply(doc);
+      final result = const SetProjectKindCommand(ProjectKind.photo).apply(doc);
       expect(identical(result, doc), isTrue);
     });
 
@@ -125,20 +122,17 @@ void main() {
 
   group('SetImageVignetteCommand', () {
     ImageLayer baseImage({EffectStack? effects}) => ImageLayer(
-          id: 'img-1',
-          transform: const LayerTransform(
-            position: Offset.zero,
-            size: Size(400, 400),
-          ),
-          source: const ImageSource.asset('p.png'),
-          effects: effects ?? EffectStack.empty,
-        );
+      id: 'img-1',
+      transform: const LayerTransform(
+        position: Offset.zero,
+        size: Size(400, 400),
+      ),
+      source: const ImageSource.asset('p.png'),
+      effects: effects ?? EffectStack.empty,
+    );
 
-    EditorDocument docWith(ImageLayer layer) => EditorDocument(
-          layers: [layer],
-          width: 1000,
-          height: 1000,
-        );
+    EditorDocument docWith(ImageLayer layer) =>
+        EditorDocument(layers: [layer], width: 1000, height: 1000);
 
     test('non-image targets are ignored (apply is identity)', () {
       // A vignette command for a missing layer must be a pure no-op,
@@ -153,16 +147,12 @@ void main() {
       expect(identical(result, before), isTrue);
     });
 
-    test('identity vignette (intensity 0) does not pollute the stack',
-        () {
+    test('identity vignette (intensity 0) does not pollute the stack', () {
       // A drag-then-release at intensity 0 must round-trip the doc
       // unchanged. This is the contract the codec relies on to keep
       // existing files byte-identical after a no-op edit.
       final before = docWith(baseImage());
-      const cmd = SetImageVignetteCommand(
-        layerId: 'img-1',
-        intensity: 0,
-      );
+      const cmd = SetImageVignetteCommand(layerId: 'img-1', intensity: 0);
       final result = cmd.apply(before);
       expect(identical(result, before), isTrue);
     });
@@ -184,10 +174,7 @@ void main() {
 
     test('invert restores prior vignette state (add -> clear)', () {
       final before = docWith(baseImage());
-      const cmd = SetImageVignetteCommand(
-        layerId: 'img-1',
-        intensity: 0.5,
-      );
+      const cmd = SetImageVignetteCommand(layerId: 'img-1', intensity: 0.5);
       final after = cmd.apply(before);
       final undo = cmd.invert(before).apply(after);
       // Undo of "add a vignette" must leave the stack empty, not
@@ -203,10 +190,7 @@ void main() {
         ]),
       );
       final before = docWith(initial);
-      const cmd = SetImageVignetteCommand(
-        layerId: 'img-1',
-        intensity: 0.8,
-      );
+      const cmd = SetImageVignetteCommand(layerId: 'img-1', intensity: 0.8);
       final after = cmd.apply(before);
       final undo = cmd.invert(before).apply(after);
       final layer = undo.layerById('img-1') as ImageLayer;
@@ -220,25 +204,14 @@ void main() {
       // touch peer effects. Otherwise undoing a vignette tweak would
       // also undo the user's brightness adjustment two minutes ago.
       const blur = VignetteEffect(intensity: 0.2, feather: 0.5);
-      final initial = baseImage(
-        effects: EffectStack(const [blur]),
-      );
+      final initial = baseImage(effects: EffectStack(const [blur]));
       final before = docWith(initial);
-      const cmd = SetImageVignetteCommand(
-        layerId: 'img-1',
-        intensity: 0.7,
-      );
+      const cmd = SetImageVignetteCommand(layerId: 'img-1', intensity: 0.7);
       final after = cmd.apply(before);
       final layer = after.layerById('img-1') as ImageLayer;
       // Old vignette replaced (not duplicated); single effect on stack.
-      expect(
-        layer.effects.effects.whereType<VignetteEffect>().length,
-        1,
-      );
-      expect(
-        (layer.effects.effects.single as VignetteEffect).intensity,
-        0.7,
-      );
+      expect(layer.effects.effects.whereType<VignetteEffect>().length, 1);
+      expect((layer.effects.effects.single as VignetteEffect).intensity, 0.7);
     });
 
     test('live drags merge into the previous live entry', () {
@@ -258,14 +231,8 @@ void main() {
     });
 
     test('non-live commands never merge', () {
-      const a = SetImageVignetteCommand(
-        layerId: 'img-1',
-        intensity: 0.3,
-      );
-      const b = SetImageVignetteCommand(
-        layerId: 'img-1',
-        intensity: 0.5,
-      );
+      const a = SetImageVignetteCommand(layerId: 'img-1', intensity: 0.3);
+      const b = SetImageVignetteCommand(layerId: 'img-1', intensity: 0.5);
       expect(b.mergeWith(a), isNull);
     });
 

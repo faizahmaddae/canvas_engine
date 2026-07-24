@@ -39,32 +39,26 @@ void main() {
       expect(layer.normalizedPoints, hasLength(1));
     });
 
-    test(
-      'rectangle drag normalizes endpoints to bounding box corners',
-      () {
-        final draft = PaintDraft(
-          kind: PaintKind.rectangle,
-          strokeColor: const Color(0xFFFF0000),
-          strokeWidth: 6,
-          points: [const Offset(20, 30), const Offset(120, 80)],
-        );
-        final layer = draft.toLayer(id: 'r', docSize: const Size(500, 500));
-        expect(layer, isNotNull);
-        // Bounding box is padded by max(strokeWidth, 2) = 6 around the
-        // raw extents, so the start point lands at (pad, pad) of the
-        // local 0..1 space.
-        final n = layer!.normalizedPoints;
-        expect(n.first.dx, closeTo(6 / layer.transform.size.width, 1e-6));
-        expect(n.first.dy, closeTo(6 / layer.transform.size.height, 1e-6));
-        expect(
-          n.last.dx,
-          closeTo(
-            (120 - 20 + 6) / layer.transform.size.width,
-            1e-6,
-          ),
-        );
-      },
-    );
+    test('rectangle drag normalizes endpoints to bounding box corners', () {
+      final draft = PaintDraft(
+        kind: PaintKind.rectangle,
+        strokeColor: const Color(0xFFFF0000),
+        strokeWidth: 6,
+        points: [const Offset(20, 30), const Offset(120, 80)],
+      );
+      final layer = draft.toLayer(id: 'r', docSize: const Size(500, 500));
+      expect(layer, isNotNull);
+      // Bounding box is padded by max(strokeWidth, 2) = 6 around the
+      // raw extents, so the start point lands at (pad, pad) of the
+      // local 0..1 space.
+      final n = layer!.normalizedPoints;
+      expect(n.first.dx, closeTo(6 / layer.transform.size.width, 1e-6));
+      expect(n.first.dy, closeTo(6 / layer.transform.size.height, 1e-6));
+      expect(
+        n.last.dx,
+        closeTo((120 - 20 + 6) / layer.transform.size.width, 1e-6),
+      );
+    });
 
     test('toLayer round-trips through JSON', () {
       final draft = PaintDraft(

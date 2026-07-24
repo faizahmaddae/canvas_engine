@@ -99,8 +99,11 @@ class _StackMaskCompositeState extends State<StackMaskComposite> {
     // Re-looked-up every build: the cache owns the image and may
     // evict it (disposing the handle), so retaining it across frames
     // would risk painting a disposed image.
-    final raster =
-        StackMaskRasterCache.instance.lookup(widget.mask, _rasterW, _rasterH);
+    final raster = StackMaskRasterCache.instance.lookup(
+      widget.mask,
+      _rasterW,
+      _rasterH,
+    );
     if (raster == null) {
       _ensureRaster();
       return widget.base;

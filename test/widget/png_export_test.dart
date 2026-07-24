@@ -44,8 +44,9 @@ void main() {
   }
 
   group('captureBoundary (low-level)', () {
-    testWidgets('produces a non-empty PNG with the expected dimensions',
-        (tester) async {
+    testWidgets('produces a non-empty PNG with the expected dimensions', (
+      tester,
+    ) async {
       final boundaryKey = GlobalKey();
       final doc = simpleDoc();
 
@@ -120,20 +121,25 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final low = await tester.runAsync(() => DocumentPngExporter.captureBoundary(
-            boundaryKey: keyA,
-            pixelRatio: 1.0,
-          ));
-      final high = await tester.runAsync(() => DocumentPngExporter.captureBoundary(
-            boundaryKey: keyB,
-            pixelRatio: 3.0,
-          ));
+      final low = await tester.runAsync(
+        () => DocumentPngExporter.captureBoundary(
+          boundaryKey: keyA,
+          pixelRatio: 1.0,
+        ),
+      );
+      final high = await tester.runAsync(
+        () => DocumentPngExporter.captureBoundary(
+          boundaryKey: keyB,
+          pixelRatio: 3.0,
+        ),
+      );
 
       expect(high!.length, greaterThan(low!.length));
     });
 
-    testWidgets('throws DocumentExportException when key is unattached',
-        (tester) async {
+    testWidgets('throws DocumentExportException when key is unattached', (
+      tester,
+    ) async {
       final orphan = GlobalKey();
       await tester.pumpWidget(const SizedBox());
       expect(
@@ -142,7 +148,9 @@ void main() {
       );
     });
 
-    testWidgets('mixed-type document with hidden layer renders', (tester) async {
+    testWidgets('mixed-type document with hidden layer renders', (
+      tester,
+    ) async {
       // Mixing a visible shape, a hidden shape, and a text layer
       // sanity-checks that the renderer follows visibility flags +
       // doesn't crash on text content.
@@ -150,7 +158,7 @@ void main() {
       final doc = EditorDocument(
         width: 300,
         height: 200,
-        layers:  [
+        layers: [
           ShapeLayer(
             id: 'bg',
             transform: LayerTransform(
@@ -177,10 +185,7 @@ void main() {
               size: Size(260, 60),
             ),
             content: 'Hello',
-            style: TextStyleSpec(
-              fontSize: 32,
-              color: Color(0xFFFFFFFF),
-            ),
+            style: TextStyleSpec(fontSize: 32, color: Color(0xFFFFFFFF)),
           ),
         ],
       );
@@ -201,9 +206,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final bytes = await tester.runAsync(() => DocumentPngExporter.captureBoundary(
-            boundaryKey: boundaryKey,
-          ));
+      final bytes = await tester.runAsync(
+        () => DocumentPngExporter.captureBoundary(boundaryKey: boundaryKey),
+      );
       expect(bytes!, isNotEmpty);
     });
   });
@@ -224,8 +229,9 @@ void main() {
       expect(find.byType(IconButton), findsNothing);
     });
 
-    testWidgets('lays out at exactly document.width × document.height',
-        (tester) async {
+    testWidgets('lays out at exactly document.width × document.height', (
+      tester,
+    ) async {
       final doc = simpleDoc(width: 640, height: 480);
       await tester.pumpWidget(
         Directionality(
@@ -242,8 +248,9 @@ void main() {
   });
 
   group('export (high-level)', () {
-    testWidgets('throws DocumentExportException when no Overlay in context',
-        (tester) async {
+    testWidgets('throws DocumentExportException when no Overlay in context', (
+      tester,
+    ) async {
       // A bare Directionality has no Overlay ancestor. The exporter
       // must surface this with a clear error rather than silently
       // failing or hanging.

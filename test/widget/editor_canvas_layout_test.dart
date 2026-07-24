@@ -24,9 +24,7 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(
-            home: Scaffold(body: EditorCanvas()),
-          ),
+          child: const MaterialApp(home: Scaffold(body: EditorCanvas())),
         ),
       );
       // Let the post-frame fit run.
@@ -38,10 +36,13 @@ void main() {
       final boards = tester
           .widgetList<SizedBox>(find.byType(SizedBox))
           .where((s) => s.width == 2000 && s.height == 3000);
-      expect(boards, isNotEmpty,
-          reason:
-              'Logical canvas SizedBox must lay out at the full document '
-              'size regardless of screen constraints.');
+      expect(
+        boards,
+        isNotEmpty,
+        reason:
+            'Logical canvas SizedBox must lay out at the full document '
+            'size regardless of screen constraints.',
+      );
 
       // And the viewport should have been auto-fitted (scale < 1 because
       // a 2000x3000 doc has to shrink to fit a 400x800 screen).

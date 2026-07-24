@@ -40,30 +40,25 @@ void main() {
       'test/engine/fixtures/v2/04_text_shape_paint.json',
       'test/engine/fixtures/v2/05_image_with_crop_and_adjustments.json',
     ],
-    2: <String>[
-      'test/engine/fixtures/v2/03_gradient_bg.json',
-    ],
-    3: <String>[
-      'test/engine/fixtures/v3/01_image_with_effects.json',
-    ],
+    2: <String>['test/engine/fixtures/v2/03_gradient_bg.json'],
+    3: <String>['test/engine/fixtures/v3/01_image_with_effects.json'],
   };
 
   test('every supported schema version has at least one fixture', () {
-    for (var v = DocumentCodec.minSupportedSchemaVersion;
-        v <= DocumentCodec.schemaVersion;
-        v++) {
+    for (
+      var v = DocumentCodec.minSupportedSchemaVersion;
+      v <= DocumentCodec.schemaVersion;
+      v++
+    ) {
       final bucket = corpus[v];
       expect(
         bucket,
         isNotNull,
-        reason: 'no fixture bucket for schema v$v — add one before '
+        reason:
+            'no fixture bucket for schema v$v — add one before '
             'shipping a new schema version',
       );
-      expect(
-        bucket!,
-        isNotEmpty,
-        reason: 'schema v$v bucket is empty',
-      );
+      expect(bucket!, isNotEmpty, reason: 'schema v$v bucket is empty');
     }
   });
 
@@ -72,8 +67,7 @@ void main() {
     for (final path in entry.value) {
       test('$path declares version $declaredVersion and decodes', () {
         final file = File(path);
-        expect(file.existsSync(), isTrue,
-            reason: 'fixture missing: $path');
+        expect(file.existsSync(), isTrue, reason: 'fixture missing: $path');
         final raw = file.readAsStringSync();
 
         // Cross-check the on-disk version stamp against the bucket.
@@ -84,7 +78,8 @@ void main() {
         expect(
           json['version'],
           declaredVersion,
-          reason: '$path is in the v$declaredVersion bucket but its '
+          reason:
+              '$path is in the v$declaredVersion bucket but its '
               'on-disk "version" field disagrees',
         );
 
@@ -95,7 +90,8 @@ void main() {
         expect(
           () => DocumentCodec.decode(raw),
           returnsNormally,
-          reason: '$path failed to decode under the current build — '
+          reason:
+              '$path failed to decode under the current build — '
               'the reader for schema v$declaredVersion has regressed',
         );
       });

@@ -24,18 +24,19 @@ class ImageBorderBody extends StatelessWidget {
     return LayerBorderBody<ImageLayer>(
       layer: layer,
       adapter: BorderPanelAdapter<ImageLayer>(
-        command: ({
-          required layerId,
-          color,
-          clearColor = false,
-          width,
-          live = false,
-        }) => SetImageBorderCommand(
-          layerId: layerId,
-          color: color,
-          width: width,
-          live: live,
-        ),
+        command:
+            ({
+              required layerId,
+              color,
+              clearColor = false,
+              width,
+              live = false,
+            }) => SetImageBorderCommand(
+              layerId: layerId,
+              color: color,
+              width: width,
+              live: live,
+            ),
         read: (l) => (color: l.borderColor, width: l.borderWidth),
         hasColor: (_) => true,
         showPrecisionSlider: true,

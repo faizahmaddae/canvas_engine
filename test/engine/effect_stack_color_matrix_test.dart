@@ -9,8 +9,11 @@ void _expectMatrixClose(List<double>? a, List<double>? b, {double eps = 1e-9}) {
   expect(b, isNotNull, reason: 'right matrix null');
   expect(a!.length, b!.length);
   for (var i = 0; i < a.length; i++) {
-    expect((a[i] - b[i]).abs() < eps, isTrue,
-        reason: 'index $i: ${a[i]} vs ${b[i]}');
+    expect(
+      (a[i] - b[i]).abs() < eps,
+      isTrue,
+      reason: 'index $i: ${a[i]} vs ${b[i]}',
+    );
   }
 }
 
@@ -60,17 +63,19 @@ void main() {
       _expectMatrixClose(stack.composedColorMatrix, adj.colorMatrix);
     });
 
-    test('order-dependent: brightness then contrast ≠ contrast then brightness',
-        () {
-      final a = EffectStack(<EditorEffect>[
-        const BrightnessEffect(amount: 30),
-        const ContrastEffect(amount: 1.5),
-      ]).composedColorMatrix!;
-      final b = EffectStack(<EditorEffect>[
-        const ContrastEffect(amount: 1.5),
-        const BrightnessEffect(amount: 30),
-      ]).composedColorMatrix!;
-      expect(listEquals(a, b), isFalse);
-    });
+    test(
+      'order-dependent: brightness then contrast ≠ contrast then brightness',
+      () {
+        final a = EffectStack(<EditorEffect>[
+          const BrightnessEffect(amount: 30),
+          const ContrastEffect(amount: 1.5),
+        ]).composedColorMatrix!;
+        final b = EffectStack(<EditorEffect>[
+          const ContrastEffect(amount: 1.5),
+          const BrightnessEffect(amount: 30),
+        ]).composedColorMatrix!;
+        expect(listEquals(a, b), isFalse);
+      },
+    );
   });
 }

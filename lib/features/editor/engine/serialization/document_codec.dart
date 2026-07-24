@@ -60,11 +60,11 @@ class DocumentCodec {
   /// each subclass's `type` getter.
   static final Map<String, LayerFromJson> _layerFactories =
       <String, LayerFromJson>{
-    'text': TextLayer.fromJson,
-    'shape': ShapeLayer.fromJson,
-    'image': ImageLayer.fromJson,
-    'paint': PaintLayer.fromJson,
-  };
+        'text': TextLayer.fromJson,
+        'shape': ShapeLayer.fromJson,
+        'image': ImageLayer.fromJson,
+        'paint': PaintLayer.fromJson,
+      };
 
   /// Encode a document to a stable JSON map. Use [encode] to get a
   /// string; this lower-level form is exposed so tests and embedders
@@ -173,9 +173,7 @@ class DocumentCodec {
       }
       final factory = _layerFactories[type];
       if (factory == null) {
-        throw DocumentDecodeException(
-          'layer[$i] has unknown type "$type"',
-        );
+        throw DocumentDecodeException('layer[$i] has unknown type "$type"');
       }
       try {
         layers.add(factory(layerJson));
@@ -189,8 +187,8 @@ class DocumentCodec {
     final rawBase = json['basePhotoLayerId'];
     final basePhotoLayerId =
         (rawBase is String && layers.any((l) => l.id == rawBase))
-            ? rawBase
-            : null;
+        ? rawBase
+        : null;
     // Project kind: tolerate missing / unknown values by falling
     // back to the default. We never throw here — forward-compat
     // beats strictness for what's effectively a behaviour hint.

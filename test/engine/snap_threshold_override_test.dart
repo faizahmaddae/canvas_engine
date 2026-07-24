@@ -26,8 +26,11 @@ void main() {
       peerRects: const <Rect>[],
       canvasSize: canvas,
     );
-    expect(defaultRun.guides, isEmpty,
-        reason: 'min vertical distance is 8 px > 6 px default.');
+    expect(
+      defaultRun.guides,
+      isEmpty,
+      reason: 'min vertical distance is 8 px > 6 px default.',
+    );
 
     final zoomedOut = engine.snapPosition(
       proposed: proposed,
@@ -36,8 +39,11 @@ void main() {
       canvasSize: canvas,
       threshold: 30,
     );
-    expect(zoomedOut.guides, isNotEmpty,
-        reason: 'A 30 px override should pull in the centre-line snap.');
+    expect(
+      zoomedOut.guides,
+      isNotEmpty,
+      reason: 'A 30 px override should pull in the centre-line snap.',
+    );
   });
 
   test('per-call threshold narrows snap reach (zoomed-in simulation)', () {

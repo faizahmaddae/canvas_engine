@@ -9,18 +9,12 @@ import 'package:canvas_engine/features/editor/engine/serialization/document_code
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-ImageLayer _makeImage({
-  EffectStack effects = EffectStack.empty,
-}) =>
-    ImageLayer(
-      id: 'img',
-      transform: const LayerTransform(
-        position: Offset.zero,
-        size: Size(100, 100),
-      ),
-      source: const ImageSource.asset('assets/test.png'),
-      effects: effects,
-    );
+ImageLayer _makeImage({EffectStack effects = EffectStack.empty}) => ImageLayer(
+  id: 'img',
+  transform: const LayerTransform(position: Offset.zero, size: Size(100, 100)),
+  source: const ImageSource.asset('assets/test.png'),
+  effects: effects,
+);
 
 EditorDocument _doc(ImageLayer layer) =>
     EditorDocument(layers: [layer], width: 200, height: 200);
@@ -43,9 +37,7 @@ void main() {
     });
 
     test('disabled flag and mask survive round-trip', () {
-      const mask = RectMask(
-        rect: Rect.fromLTWH(0.1, 0.25, 0.5, 0.5),
-      );
+      const mask = RectMask(rect: Rect.fromLTWH(0.1, 0.25, 0.5, 0.5));
       final stack = EffectStack(<EditorEffect>[
         const BrightnessEffect(amount: 50, enabled: false, mask: mask),
       ]);
@@ -58,8 +50,7 @@ void main() {
       expect(eff.mask, mask);
     });
 
-    test('identity-valued adjustments project to an empty effect list',
-        () {
+    test('identity-valued adjustments project to an empty effect list', () {
       final adj = ImageAdjustments();
       expect(adj.toEffectStack(), isEmpty);
     });
@@ -96,10 +87,10 @@ void main() {
       expect(layer.adjustments.contrast, 1.3);
       // Stack should contain exactly the two non-identity effects in
       // canonical order (contrast then brightness).
-      expect(
-        layer.effects.effects.map((e) => e.type).toList(),
-        <String>['contrast', 'brightness'],
-      );
+      expect(layer.effects.effects.map((e) => e.type).toList(), <String>[
+        'contrast',
+        'brightness',
+      ]);
     });
 
     test('preserves a masked derived effect the sliders cannot see', () {
@@ -131,38 +122,49 @@ void main() {
       // The headline bug: toggle brightness off in the Effects
       // panel, drag any Adjust slider — the old strip-and-regenerate
       // rebuild deleted the disabled effect and its amount.
-      final start = _doc(_makeImage(
-        effects: EffectStack(<EditorEffect>[
-          const BrightnessEffect(amount: 20, enabled: false),
-        ]),
-      ));
+      final start = _doc(
+        _makeImage(
+          effects: EffectStack(<EditorEffect>[
+            const BrightnessEffect(amount: 20, enabled: false),
+          ]),
+        ),
+      );
       final after = const SetImageAdjustmentsCommand(
         layerId: 'img',
         contrast: 1.2,
       ).apply(start);
       final layer = after.layers.single as ImageLayer;
       expect(layer.adjustments.contrast, 1.2);
-      expect(layer.adjustments.brightness, 0,
-          reason: 'disabled effects stay invisible to the sliders');
+      expect(
+        layer.adjustments.brightness,
+        0,
+        reason: 'disabled effects stay invisible to the sliders',
+      );
       final disabled = layer.effects.effects
           .whereType<BrightnessEffect>()
           .single;
       expect(disabled.enabled, isFalse);
-      expect(disabled.amount, 20,
-          reason: 'the disabled effect and its amount must survive '
-              'unrelated slider drags');
+      expect(
+        disabled.amount,
+        20,
+        reason:
+            'the disabled effect and its amount must survive '
+            'unrelated slider drags',
+      );
     });
 
     test('edits the live effect in place, preserving user reorder', () {
       // User reordered brightness *below* saturation in the Effects
       // panel; dragging the brightness slider must edit it where it
       // sits, not regenerate the canonical order.
-      final start = _doc(_makeImage(
-        effects: EffectStack(<EditorEffect>[
-          const BrightnessEffect(amount: 12),
-          const SaturationEffect(amount: 0.8),
-        ]),
-      ));
+      final start = _doc(
+        _makeImage(
+          effects: EffectStack(<EditorEffect>[
+            const BrightnessEffect(amount: 12),
+            const SaturationEffect(amount: 0.8),
+          ]),
+        ),
+      );
       final after = const SetImageAdjustmentsCommand(
         layerId: 'img',
         brightness: 20,
@@ -176,13 +178,15 @@ void main() {
     });
 
     test('identity drag removes only the live instance, in place', () {
-      final start = _doc(_makeImage(
-        effects: EffectStack(<EditorEffect>[
-          const SaturationEffect(amount: 0.8),
-          const ContrastEffect(amount: 1.2),
-          const BrightnessEffect(amount: 12),
-        ]),
-      ));
+      final start = _doc(
+        _makeImage(
+          effects: EffectStack(<EditorEffect>[
+            const SaturationEffect(amount: 0.8),
+            const ContrastEffect(amount: 1.2),
+            const BrightnessEffect(amount: 12),
+          ]),
+        ),
+      );
       final after = const SetImageAdjustmentsCommand(
         layerId: 'img',
         contrast: 1,
@@ -212,26 +216,30 @@ void main() {
         const SetImageAdjustmentsCommand(layerId: 'img', contrast: 1),
       );
       expect(
-        (doc.layers.single as ImageLayer)
-            .effects
-            .effects
+        (doc.layers.single as ImageLayer).effects.effects
             .map((e) => e.type)
             .toList(),
         <String>['saturation', 'brightness'],
       );
 
       doc = history.undo(doc);
-      expect((doc.layers.single as ImageLayer).effects, equals(seed),
-          reason: 'invert(before).apply(after) must reproduce the '
-              'pre-drag stack verbatim');
+      expect(
+        (doc.layers.single as ImageLayer).effects,
+        equals(seed),
+        reason:
+            'invert(before).apply(after) must reproduce the '
+            'pre-drag stack verbatim',
+      );
     });
 
     test('clearing adjustments empties the derived effect stack', () {
-      final start = _doc(_makeImage(
-        effects: EffectStack(<EditorEffect>[
-          const BrightnessEffect(amount: 30),
-        ]),
-      ));
+      final start = _doc(
+        _makeImage(
+          effects: EffectStack(<EditorEffect>[
+            const BrightnessEffect(amount: 30),
+          ]),
+        ),
+      );
       final cleared = const SetImageAdjustmentsCommand(
         layerId: 'img',
         brightness: 0,

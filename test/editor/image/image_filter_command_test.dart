@@ -26,9 +26,7 @@ void main() {
       ),
       source: const ImageSource.asset('assets/test.png'),
     );
-    c
-        .read(documentControllerProvider.notifier)
-        .execute(AddLayerCommand(layer));
+    c.read(documentControllerProvider.notifier).execute(AddLayerCommand(layer));
     return layer;
   }
 
@@ -46,7 +44,9 @@ void main() {
     test('execute swaps the filter preset on the layer', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetImageFilterCommand(
               layerId: 'img1',
               filterPreset: ImageFilterPreset.vintage,
@@ -58,13 +58,17 @@ void main() {
     test('undo restores the previous filter preset', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetImageFilterCommand(
               layerId: 'img1',
               filterPreset: ImageFilterPreset.warm,
             ),
           );
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetImageFilterCommand(
               layerId: 'img1',
               filterPreset: ImageFilterPreset.mono,
@@ -79,7 +83,9 @@ void main() {
     test('no-op when filter is unchanged (does not consume undo)', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetImageFilterCommand(
               layerId: 'img1',
               filterPreset: ImageFilterPreset.cool,
@@ -87,7 +93,9 @@ void main() {
           );
       // Re-applying same filter should be a no-op (apply returns
       // the same doc → command framework drops the entry).
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetImageFilterCommand(
               layerId: 'img1',
               filterPreset: ImageFilterPreset.cool,
@@ -101,27 +109,27 @@ void main() {
     test('filter preserved across other image commands', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetImageFilterCommand(
               layerId: 'img1',
               filterPreset: ImageFilterPreset.dramatic,
             ),
           );
       // Mutating an unrelated field must not clobber the filter.
-      c.read(documentControllerProvider.notifier).execute(
-            const SetImageMaskCommand(
-              layerId: 'img1',
-              mask: ImageMask.circle,
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetImageMaskCommand(layerId: 'img1', mask: ImageMask.circle),
           );
-      c.read(documentControllerProvider.notifier).execute(
-            const SetImageBorderCommand(layerId: 'img1', width: 4),
-          );
-      c.read(documentControllerProvider.notifier).execute(
-            const SetImageAdjustmentsCommand(
-              layerId: 'img1',
-              brightness: 12,
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetImageBorderCommand(layerId: 'img1', width: 4));
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetImageAdjustmentsCommand(layerId: 'img1', brightness: 12),
           );
       expect(readImage(c, 'img1').filterPreset, ImageFilterPreset.dramatic);
     });
@@ -156,8 +164,9 @@ void main() {
 
     test('imageFilterMatrix returns null for none, non-null otherwise', () {
       expect(imageFilterMatrix(ImageFilterPreset.none), isNull);
-      for (final p in ImageFilterPreset.values
-          .where((p) => p != ImageFilterPreset.none)) {
+      for (final p in ImageFilterPreset.values.where(
+        (p) => p != ImageFilterPreset.none,
+      )) {
         final m = imageFilterMatrix(p);
         expect(m, isNotNull, reason: 'matrix for $p');
         expect(m!.length, 20, reason: '4x5 matrix for $p');

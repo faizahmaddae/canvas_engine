@@ -30,11 +30,7 @@ part of 'editor_effect.dart';
 /// `0` is the identity. Maps to a `+brightness*2.55` channel
 /// translation in the renderer's colour matrix.
 final class BrightnessEffect extends EditorEffect {
-  const BrightnessEffect({
-    this.amount = 0,
-    super.enabled,
-    super.mask,
-  });
+  const BrightnessEffect({this.amount = 0, super.enabled, super.mask});
 
   /// `-100..100`, `0` is no change.
   final double amount;
@@ -59,17 +55,14 @@ final class BrightnessEffect extends EditorEffect {
   List<double> get colorMatrix => _brightnessMatrix(amount);
 
   @override
-  BrightnessEffect withEnabled(bool value) => BrightnessEffect(
-        amount: amount,
-        enabled: value,
-        mask: mask,
-      );
+  BrightnessEffect withEnabled(bool value) =>
+      BrightnessEffect(amount: amount, enabled: value, mask: mask);
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        ...baseJson(),
-        if (amount != 0) 'amount': amount,
-      };
+    ...baseJson(),
+    if (amount != 0) 'amount': amount,
+  };
 
   static BrightnessEffect fromJson(Map<String, dynamic> json) =>
       BrightnessEffect(
@@ -94,11 +87,7 @@ final class BrightnessEffect extends EditorEffect {
 /// `0` collapses every pixel to mid-grey, `2` doubles tonal range
 /// (with the usual highlight/shadow clipping at the extremes).
 final class ContrastEffect extends EditorEffect {
-  const ContrastEffect({
-    this.amount = 1,
-    super.enabled,
-    super.mask,
-  });
+  const ContrastEffect({this.amount = 1, super.enabled, super.mask});
 
   final double amount;
 
@@ -118,23 +107,20 @@ final class ContrastEffect extends EditorEffect {
   List<double> get colorMatrix => _contrastMatrix(amount);
 
   @override
-  ContrastEffect withEnabled(bool value) => ContrastEffect(
-        amount: amount,
-        enabled: value,
-        mask: mask,
-      );
+  ContrastEffect withEnabled(bool value) =>
+      ContrastEffect(amount: amount, enabled: value, mask: mask);
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        ...baseJson(),
-        if (amount != identityAmount) 'amount': amount,
-      };
+    ...baseJson(),
+    if (amount != identityAmount) 'amount': amount,
+  };
 
   static ContrastEffect fromJson(Map<String, dynamic> json) => ContrastEffect(
-        amount: (json['amount'] as num?)?.toDouble() ?? identityAmount,
-        enabled: json['enabled'] as bool? ?? true,
-        mask: _readMask(json),
-      );
+    amount: (json['amount'] as num?)?.toDouble() ?? identityAmount,
+    enabled: json['enabled'] as bool? ?? true,
+    mask: _readMask(json),
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -152,11 +138,7 @@ final class ContrastEffect extends EditorEffect {
 /// fully desaturated (greyscale, ITU-R BT.601 weights), `2`
 /// doubles colour intensity.
 final class SaturationEffect extends EditorEffect {
-  const SaturationEffect({
-    this.amount = 1,
-    super.enabled,
-    super.mask,
-  });
+  const SaturationEffect({this.amount = 1, super.enabled, super.mask});
 
   final double amount;
 
@@ -176,17 +158,14 @@ final class SaturationEffect extends EditorEffect {
   List<double> get colorMatrix => _saturationMatrix(amount);
 
   @override
-  SaturationEffect withEnabled(bool value) => SaturationEffect(
-        amount: amount,
-        enabled: value,
-        mask: mask,
-      );
+  SaturationEffect withEnabled(bool value) =>
+      SaturationEffect(amount: amount, enabled: value, mask: mask);
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        ...baseJson(),
-        if (amount != identityAmount) 'amount': amount,
-      };
+    ...baseJson(),
+    if (amount != identityAmount) 'amount': amount,
+  };
 
   static SaturationEffect fromJson(Map<String, dynamic> json) =>
       SaturationEffect(
@@ -211,11 +190,7 @@ final class SaturationEffect extends EditorEffect {
 /// Multiplicative gain `1 + amount/100` applied before warmth /
 /// saturation / contrast / brightness.
 final class ExposureEffect extends EditorEffect {
-  const ExposureEffect({
-    this.amount = 0,
-    super.enabled,
-    super.mask,
-  });
+  const ExposureEffect({this.amount = 0, super.enabled, super.mask});
 
   final double amount;
 
@@ -234,23 +209,20 @@ final class ExposureEffect extends EditorEffect {
   List<double> get colorMatrix => _exposureMatrix(amount);
 
   @override
-  ExposureEffect withEnabled(bool value) => ExposureEffect(
-        amount: amount,
-        enabled: value,
-        mask: mask,
-      );
+  ExposureEffect withEnabled(bool value) =>
+      ExposureEffect(amount: amount, enabled: value, mask: mask);
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        ...baseJson(),
-        if (amount != 0) 'amount': amount,
-      };
+    ...baseJson(),
+    if (amount != 0) 'amount': amount,
+  };
 
   static ExposureEffect fromJson(Map<String, dynamic> json) => ExposureEffect(
-        amount: (json['amount'] as num?)?.toDouble() ?? 0,
-        enabled: json['enabled'] as bool? ?? true,
-        mask: _readMask(json),
-      );
+    amount: (json['amount'] as num?)?.toDouble() ?? 0,
+    enabled: json['enabled'] as bool? ?? true,
+    mask: _readMask(json),
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -268,11 +240,7 @@ final class ExposureEffect extends EditorEffect {
 /// identity. Positive warms (boosts red, drops blue), negative
 /// cools.
 final class WarmthEffect extends EditorEffect {
-  const WarmthEffect({
-    this.amount = 0,
-    super.enabled,
-    super.mask,
-  });
+  const WarmthEffect({this.amount = 0, super.enabled, super.mask});
 
   final double amount;
 
@@ -291,23 +259,20 @@ final class WarmthEffect extends EditorEffect {
   List<double> get colorMatrix => _warmthMatrix(amount);
 
   @override
-  WarmthEffect withEnabled(bool value) => WarmthEffect(
-        amount: amount,
-        enabled: value,
-        mask: mask,
-      );
+  WarmthEffect withEnabled(bool value) =>
+      WarmthEffect(amount: amount, enabled: value, mask: mask);
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        ...baseJson(),
-        if (amount != 0) 'amount': amount,
-      };
+    ...baseJson(),
+    if (amount != 0) 'amount': amount,
+  };
 
   static WarmthEffect fromJson(Map<String, dynamic> json) => WarmthEffect(
-        amount: (json['amount'] as num?)?.toDouble() ?? 0,
-        enabled: json['enabled'] as bool? ?? true,
-        mask: _readMask(json),
-      );
+    amount: (json['amount'] as num?)?.toDouble() ?? 0,
+    enabled: json['enabled'] as bool? ?? true,
+    mask: _readMask(json),
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -333,21 +298,32 @@ final class WarmthEffect extends EditorEffect {
 
 List<double> _brightnessMatrix(double amount) {
   final t = amount * 2.55;
-  return <double>[
-    1, 0, 0, 0, t,
-    0, 1, 0, 0, t,
-    0, 0, 1, 0, t,
-    0, 0, 0, 1, 0,
-  ];
+  return <double>[1, 0, 0, 0, t, 0, 1, 0, 0, t, 0, 0, 1, 0, t, 0, 0, 0, 1, 0];
 }
 
 List<double> _contrastMatrix(double amount) {
   final t = 128 * (1 - amount);
   return <double>[
-    amount, 0,      0,      0, t,
-    0,      amount, 0,      0, t,
-    0,      0,      amount, 0, t,
-    0,      0,      0,      1, 0,
+    amount,
+    0,
+    0,
+    0,
+    t,
+    0,
+    amount,
+    0,
+    0,
+    t,
+    0,
+    0,
+    amount,
+    0,
+    t,
+    0,
+    0,
+    0,
+    1,
+    0,
   ];
 }
 
@@ -360,21 +336,32 @@ List<double> _saturationMatrix(double amount) {
   final sg0 = (1 - amount) * lg;
   final sb0 = (1 - amount) * lb;
   return <double>[
-    sr0 + amount, sg0,          sb0,          0, 0,
-    sr0,          sg0 + amount, sb0,          0, 0,
-    sr0,          sg0,          sb0 + amount, 0, 0,
-    0,            0,            0,            1, 0,
+    sr0 + amount,
+    sg0,
+    sb0,
+    0,
+    0,
+    sr0,
+    sg0 + amount,
+    sb0,
+    0,
+    0,
+    sr0,
+    sg0,
+    sb0 + amount,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
   ];
 }
 
 List<double> _exposureMatrix(double amount) {
   final g = 1 + amount / 100;
-  return <double>[
-    g, 0, 0, 0, 0,
-    0, g, 0, 0, 0,
-    0, 0, g, 0, 0,
-    0, 0, 0, 1, 0,
-  ];
+  return <double>[g, 0, 0, 0, 0, 0, g, 0, 0, 0, 0, 0, g, 0, 0, 0, 0, 0, 1, 0];
 }
 
 List<double> _warmthMatrix(double amount) {
@@ -382,10 +369,26 @@ List<double> _warmthMatrix(double amount) {
   // white point stays neutral. Matches `ImageAdjustments`.
   final off = amount * 0.2 * 2.55;
   return <double>[
-    1, 0, 0, 0, off,
-    0, 1, 0, 0, off * 0.4,
-    0, 0, 1, 0, -off,
-    0, 0, 0, 1, 0,
+    1,
+    0,
+    0,
+    0,
+    off,
+    0,
+    1,
+    0,
+    0,
+    off * 0.4,
+    0,
+    0,
+    1,
+    0,
+    -off,
+    0,
+    0,
+    0,
+    1,
+    0,
   ];
 }
 

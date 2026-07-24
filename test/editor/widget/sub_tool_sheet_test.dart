@@ -17,16 +17,13 @@ class _StubSubTool extends SubTool {
   @override
   double get maxHeightFraction => kEditorPanelMaxHeightFraction;
   @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      const Text('sub-body');
+  Widget build(BuildContext context, WidgetRef ref) => const Text('sub-body');
 }
 
 void main() {
   group('SubToolSheet', () {
-    testWidgets(
-        'delegates rendering to EditorToolPanelShell with the neutral '
-        'close action by default',
-        (tester) async {
+    testWidgets('delegates rendering to EditorToolPanelShell with the neutral '
+        'close action by default', (tester) async {
       var closed = 0;
       await tester.pumpWidget(
         ProviderScope(
@@ -60,32 +57,33 @@ void main() {
     });
 
     testWidgets(
-        'showCloseAction:false hides the header chip — host owns exit',
-        (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Align(
-                alignment: Alignment.bottomCenter,
-                child: SubToolSheet(
-                  subTool: const _StubSubTool(),
-                  onClose: () {},
-                  showCloseAction: false,
+      'showCloseAction:false hides the header chip — host owns exit',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              home: Scaffold(
+                body: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: SubToolSheet(
+                    subTool: const _StubSubTool(),
+                    onClose: () {},
+                    showCloseAction: false,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
-      expect(find.text('Done'), findsNothing);
-    });
+        expect(find.byIcon(Icons.close_rounded), findsNothing);
+        expect(find.text('Done'), findsNothing);
+      },
+    );
 
-    testWidgets(
-        'onConfirm + confirmLabel renders the primary commit pill',
-        (tester) async {
+    testWidgets('onConfirm + confirmLabel renders the primary commit pill', (
+      tester,
+    ) async {
       var closed = 0;
       var confirmed = 0;
       await tester.pumpWidget(
@@ -110,8 +108,11 @@ void main() {
       await tester.tap(find.text('Apply'));
       await tester.pumpAndSettle();
       expect(confirmed, 1);
-      expect(closed, 0,
-          reason: 'Confirm must not also fire onClose in SubToolSheet');
+      expect(
+        closed,
+        0,
+        reason: 'Confirm must not also fire onClose in SubToolSheet',
+      );
     });
   });
 }

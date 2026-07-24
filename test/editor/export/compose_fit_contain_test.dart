@@ -35,13 +35,11 @@ void main() {
   }
 
   Future<Uint8List> readRgba(ui.Image image) async {
-    final byteData =
-        await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     return byteData!.buffer.asUint8List();
   }
 
-  test('square preset on a wide source centres without stretching',
-      () async {
+  test('square preset on a wide source centres without stretching', () async {
     final source = await redImage(200, 100);
     final out = await composeFitContain(
       source: source,
@@ -71,8 +69,7 @@ void main() {
     out.dispose();
   });
 
-  test('matching aspect fills the target with no letterbox bands',
-      () async {
+  test('matching aspect fills the target with no letterbox bands', () async {
     final source = await redImage(108, 192);
     final out = await composeFitContain(
       source: source,
@@ -98,8 +95,7 @@ void main() {
     out.dispose();
   });
 
-  test('transparent mode leaves letterbox bands fully transparent',
-      () async {
+  test('transparent mode leaves letterbox bands fully transparent', () async {
     final source = await redImage(200, 100);
     final out = await composeFitContain(
       source: source,

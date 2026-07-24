@@ -27,31 +27,38 @@ class _Probe extends ConsumerWidget {
 }
 
 void main() {
-  testWidgets(
-      'resetEditorEphemeralState cancels any active crop session',
-      (tester) async {
-    await tester.pumpWidget(const ProviderScope(
-      child: MaterialApp(home: _Probe()),
-    ));
+  testWidgets('resetEditorEphemeralState cancels any active crop session', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: _Probe())),
+    );
     final ref = _Probe._ref!;
     // Seed a document and open a crop session, simulating leftover
     // state from a previous editor.
     final doc = ref.read(documentControllerProvider.notifier);
     doc.newDocument(width: 500, height: 500);
-    doc.execute(AddLayerCommand(ImageLayer(
-      id: 'i',
-      transform: LayerTransform(
-        position: Offset.zero,
-        size: const Size(400, 400),
+    doc.execute(
+      AddLayerCommand(
+        ImageLayer(
+          id: 'i',
+          transform: LayerTransform(
+            position: Offset.zero,
+            size: const Size(400, 400),
+          ),
+          source: const ImageSource.asset('a.png'),
+        ),
       ),
-      source: const ImageSource.asset('a.png'),
-    )));
+    );
     ref.read(cropControllerProvider.notifier).openCrop('i');
     expect(ref.read(cropControllerProvider).active, isTrue);
 
     resetEditorEphemeralState(ref);
 
-    expect(ref.read(cropControllerProvider).active, isFalse,
-        reason: 'crop must be cancelled when entering a fresh editor');
+    expect(
+      ref.read(cropControllerProvider).active,
+      isFalse,
+      reason: 'crop must be cancelled when entering a fresh editor',
+    );
   });
 }

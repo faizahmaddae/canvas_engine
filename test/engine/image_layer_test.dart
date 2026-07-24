@@ -18,25 +18,28 @@ void main() {
   const engine = InteractionEngine();
 
   ImageLayer makeImage() => ImageLayer(
-        id: 'img-1',
-        transform: const LayerTransform(
-          position: Offset(100, 100),
-          size: Size(200, 200),
-        ),
-        source: const ImageSource.asset('stub.png'),
-      );
+    id: 'img-1',
+    transform: const LayerTransform(
+      position: Offset(100, 100),
+      size: Size(200, 200),
+    ),
+    source: const ImageSource.asset('stub.png'),
+  );
 
   group('ImageLayer — capabilities', () {
-    test('keeps aspect ratio and is not editable, but is movable/resizable/rotatable/deletable', () {
-      final img = makeImage();
-      final c = img.capabilities;
-      expect(c.keepsAspectRatio, isTrue);
-      expect(c.editable, isFalse);
-      expect(c.movable, isTrue);
-      expect(c.resizable, isTrue);
-      expect(c.rotatable, isTrue);
-      expect(c.deletable, isTrue);
-    });
+    test(
+      'keeps aspect ratio and is not editable, but is movable/resizable/rotatable/deletable',
+      () {
+        final img = makeImage();
+        final c = img.capabilities;
+        expect(c.keepsAspectRatio, isTrue);
+        expect(c.editable, isFalse);
+        expect(c.movable, isTrue);
+        expect(c.resizable, isTrue);
+        expect(c.rotatable, isTrue);
+        expect(c.deletable, isTrue);
+      },
+    );
   });
 
   group('ImageLayer — generic interaction engine', () {
@@ -163,41 +166,41 @@ void main() {
     // Build a "loaded" image with every non-default knob exercised so
     // any dropped field shows up in the encoded JSON diff.
     ImageLayer makeLoaded() => ImageLayer(
-          id: 'img-loaded',
-          transform: const LayerTransform(
-            position: Offset(50, 60),
-            size: Size(300, 200),
-            rotation: 0.25,
-          ),
-          source: const ImageSource.asset('a.png'),
-          fit: BoxFit.contain,
-          mask: ImageMask.circle,
-          borderColor: const Color(0xFFAB12CD),
-          borderWidth: 4,
-          shadowColor: const Color(0xFF112233),
-          shadowBlur: 8,
-          shadowOffset: const Offset(2, 3),
-          shadowOpacity: 0.6,
-          effects: EffectStack(
-            ImageAdjustments(
-              brightness: 12,
-              contrast: 1.1,
-              saturation: 0.9,
-              exposure: -5,
-              warmth: 7,
-            ).toEffectStack(),
-          ),
-          cropRect: const Rect.fromLTRB(0.1, 0.2, 0.8, 0.9),
-          filterPreset: ImageFilterPreset.warm,
-          name: 'hero',
-          visible: false,
-          locked: true,
-          opacity: 0.42,
-        );
+      id: 'img-loaded',
+      transform: const LayerTransform(
+        position: Offset(50, 60),
+        size: Size(300, 200),
+        rotation: 0.25,
+      ),
+      source: const ImageSource.asset('a.png'),
+      fit: BoxFit.contain,
+      mask: ImageMask.circle,
+      borderColor: const Color(0xFFAB12CD),
+      borderWidth: 4,
+      shadowColor: const Color(0xFF112233),
+      shadowBlur: 8,
+      shadowOffset: const Offset(2, 3),
+      shadowOpacity: 0.6,
+      effects: EffectStack(
+        ImageAdjustments(
+          brightness: 12,
+          contrast: 1.1,
+          saturation: 0.9,
+          exposure: -5,
+          warmth: 7,
+        ).toEffectStack(),
+      ),
+      cropRect: const Rect.fromLTRB(0.1, 0.2, 0.8, 0.9),
+      filterPreset: ImageFilterPreset.warm,
+      name: 'hero',
+      visible: false,
+      locked: true,
+      opacity: 0.42,
+    );
 
     String encode(ImageLayer l) => DocumentCodec.encode(
-          EditorDocument(layers: [l], width: 1000, height: 1000),
-        );
+      EditorDocument(layers: [l], width: 1000, height: 1000),
+    );
 
     test('copyAll() with no overrides is byte-identical', () {
       final a = makeLoaded();
@@ -251,26 +254,28 @@ void main() {
       expect(encode(dim), encode(base.copyAll(opacity: 0.1)));
     });
 
-    test('copyAll(opacity:) clamps; copyAll() never re-clamps this.opacity',
-        () {
-      final base = makeLoaded(); // opacity = 0.42
-      // In debug builds, an out-of-range explicit value trips the
-      // invariant assert (programmer error is loud). The clamp on
-      // the same field is the release-mode safety net for callers
-      // that pass a value derived from a slider that briefly leaves
-      // the range due to rounding — assertions are stripped there
-      // so the clamp is what saves the document.
-      expect(
-        () => base.copyAll(opacity: 1.5),
-        throwsA(isA<AssertionError>()),
-      );
-      // In-range explicit value passes through unchanged.
-      expect(base.copyAll(opacity: 0.0).opacity, 0.0);
-      expect(base.copyAll(opacity: 1.0).opacity, 1.0);
-      // No-op copyAll preserves the current value verbatim. This is
-      // what the undo / redo equality contract relies on.
-      expect(base.copyAll().opacity, base.opacity);
-    });
+    test(
+      'copyAll(opacity:) clamps; copyAll() never re-clamps this.opacity',
+      () {
+        final base = makeLoaded(); // opacity = 0.42
+        // In debug builds, an out-of-range explicit value trips the
+        // invariant assert (programmer error is loud). The clamp on
+        // the same field is the release-mode safety net for callers
+        // that pass a value derived from a slider that briefly leaves
+        // the range due to rounding — assertions are stripped there
+        // so the clamp is what saves the document.
+        expect(
+          () => base.copyAll(opacity: 1.5),
+          throwsA(isA<AssertionError>()),
+        );
+        // In-range explicit value passes through unchanged.
+        expect(base.copyAll(opacity: 0.0).opacity, 0.0);
+        expect(base.copyAll(opacity: 1.0).opacity, 1.0);
+        // No-op copyAll preserves the current value verbatim. This is
+        // what the undo / redo equality contract relies on.
+        expect(base.copyAll().opacity, base.opacity);
+      },
+    );
 
     test('copyAll(name:) sentinel: omit preserves; explicit null clears', () {
       final base = makeLoaded(); // name = 'hero'
@@ -279,8 +284,7 @@ void main() {
       expect(base.copyAll(name: 'banner').name, 'banner');
     });
 
-    test('full document round-trip: encode → decode → re-encode is stable',
-        () {
+    test('full document round-trip: encode → decode → re-encode is stable', () {
       final base = makeLoaded();
       final doc = EditorDocument(layers: [base], width: 1000, height: 1000);
       final encoded = DocumentCodec.encode(doc);
@@ -292,12 +296,18 @@ void main() {
       final orig = doc.layers.single as ImageLayer;
       final via = decoded.layers.single as ImageLayer;
       expect(
-        encode(via.withTransform(orig.transform.copyWith(
-          position: const Offset(7, 7),
-        )) as ImageLayer),
-        encode(orig.withTransform(orig.transform.copyWith(
-          position: const Offset(7, 7),
-        )) as ImageLayer),
+        encode(
+          via.withTransform(
+                orig.transform.copyWith(position: const Offset(7, 7)),
+              )
+              as ImageLayer,
+        ),
+        encode(
+          orig.withTransform(
+                orig.transform.copyWith(position: const Offset(7, 7)),
+              )
+              as ImageLayer,
+        ),
       );
     });
   });

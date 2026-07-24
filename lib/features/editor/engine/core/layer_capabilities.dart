@@ -53,10 +53,7 @@ class LayerCapabilities {
   /// height. Minimum width is wider than [textScale] to keep the box
   /// useful as a paragraph container; minimum height stays small
   /// because the controller auto-fits height to the wrapped content.
-  static const textBox = LayerCapabilities(
-    minWidth: 40,
-    minHeight: 8,
-  );
+  static const textBox = LayerCapabilities(minWidth: 40, minHeight: 8);
 
   /// Backwards-compatible alias \u2014 some callers may still reference
   /// `LayerCapabilities.text`. Resolves to [textScale] (the default

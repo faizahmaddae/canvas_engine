@@ -8,14 +8,11 @@ import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dar
 import 'package:flutter_test/flutter_test.dart';
 
 TextLayer _layer(String id) => TextLayer(
-      id: id,
-      transform: const LayerTransform(
-        position: Offset(0, 0),
-        size: Size(100, 50),
-      ),
-      content: 'hi',
-      style: const TextStyleSpec(),
-    );
+  id: id,
+  transform: const LayerTransform(position: Offset(0, 0), size: Size(100, 50)),
+  content: 'hi',
+  style: const TextStyleSpec(),
+);
 
 void main() {
   group('EditorDocument', () {

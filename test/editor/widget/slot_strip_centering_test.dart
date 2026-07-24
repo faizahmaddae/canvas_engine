@@ -16,21 +16,16 @@ const _iconA = Icons.looks_one_rounded;
 const _iconB = Icons.looks_two_rounded;
 const _iconC = Icons.looks_3_rounded;
 
-ToolbarSlot _slot(String id, IconData icon) => ToolbarSlot(
-      id: id,
-      icon: icon,
-      label: id,
-      onTap: () {},
-    );
+ToolbarSlot _slot(String id, IconData icon) =>
+    ToolbarSlot(id: id, icon: icon, label: id, onTap: () {});
 
-Widget _wrap(Widget child) => MaterialApp(
-      home: Scaffold(body: child),
-    );
+Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
   group('SlotStrip centering: centerWhenFits is true by default', () {
-    testWidgets('renders both items with the default centering path',
-        (tester) async {
+    testWidgets('renders both items with the default centering path', (
+      tester,
+    ) async {
       // 800×600 viewport (landscape compact suppresses labels, but
       // icons are always rendered). Find by icon — stable regardless
       // of compact mode.
@@ -39,9 +34,7 @@ void main() {
           SizedBox(
             width: 800,
             height: 80,
-            child: SlotStrip(
-              slots: [_slot('a', _iconA), _slot('b', _iconB)],
-            ),
+            child: SlotStrip(slots: [_slot('a', _iconA), _slot('b', _iconB)]),
           ),
         ),
       );
@@ -52,25 +45,23 @@ void main() {
       // Icon A is to the left of icon B.
       final aX = tester.getCenter(find.byIcon(_iconA)).dx;
       final bX = tester.getCenter(find.byIcon(_iconB)).dx;
-      expect(aX, lessThan(bX),
-          reason: 'left tile must precede right tile');
+      expect(aX, lessThan(bX), reason: 'left tile must precede right tile');
 
       // Both tiles are within the 800-dp box (no overflow).
       expect(aX, greaterThan(0));
       expect(bX, lessThan(800));
     });
 
-    testWidgets('items are centered (equidistant from viewport mid-point)',
-        (tester) async {
+    testWidgets('items are centered (equidistant from viewport mid-point)', (
+      tester,
+    ) async {
       const viewportWidth = 800.0;
       await tester.pumpWidget(
         _wrap(
           SizedBox(
             width: viewportWidth,
             height: 80,
-            child: SlotStrip(
-              slots: [_slot('x', _iconA), _slot('y', _iconB)],
-            ),
+            child: SlotStrip(slots: [_slot('x', _iconA), _slot('y', _iconB)]),
           ),
         ),
       );
@@ -83,8 +74,11 @@ void main() {
 
       // The two tiles are symmetric around the viewport centre
       // (within 1-px floating-point tolerance).
-      expect(distLeft, closeTo(distRight, 1),
-          reason: 'tiles must be symmetric around viewport midpoint');
+      expect(
+        distLeft,
+        closeTo(distRight, 1),
+        reason: 'tiles must be symmetric around viewport midpoint',
+      );
     });
 
     testWidgets('three items also center correctly', (tester) async {
@@ -113,8 +107,9 @@ void main() {
       expect((pX - mid).abs(), closeTo((rX - mid).abs(), 1));
     });
 
-    testWidgets('explicit centerWhenFits: false left-aligns items',
-        (tester) async {
+    testWidgets('explicit centerWhenFits: false left-aligns items', (
+      tester,
+    ) async {
       const viewportWidth = 800.0;
       await tester.pumpWidget(
         _wrap(
@@ -136,8 +131,9 @@ void main() {
   });
 
   group('SlotStrip scrolling: many items do not crash', () {
-    testWidgets('renders all items when they overflow the viewport',
-        (tester) async {
+    testWidgets('renders all items when they overflow the viewport', (
+      tester,
+    ) async {
       // 10 slots in a 240-dp wide container — they must overflow.
       final slots = List.generate(
         10,
@@ -149,21 +145,14 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        _wrap(
-          SizedBox(
-            width: 240,
-            height: 80,
-            child: SlotStrip(slots: slots),
-          ),
-        ),
+        _wrap(SizedBox(width: 240, height: 80, child: SlotStrip(slots: slots))),
       );
 
       // At least the first icon is visible; no exception was thrown.
       expect(find.byIcon(Icons.circle), findsWidgets);
     });
 
-    testWidgets('scrolling to the last item makes it visible',
-        (tester) async {
+    testWidgets('scrolling to the last item makes it visible', (tester) async {
       final icons = List.generate(10, (i) => IconData(0xe000 + i));
       final slots = List.generate(
         10,
@@ -175,13 +164,7 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        _wrap(
-          SizedBox(
-            width: 240,
-            height: 80,
-            child: SlotStrip(slots: slots),
-          ),
-        ),
+        _wrap(SizedBox(width: 240, height: 80, child: SlotStrip(slots: slots))),
       );
 
       // Scroll right until the last item appears.
@@ -194,4 +177,3 @@ void main() {
     });
   });
 }
-

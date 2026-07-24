@@ -25,22 +25,21 @@ void main() {
     inverted: true,
   );
 
-  ImageLayer makeImage({EffectStack effects = EffectStack.empty}) =>
-      ImageLayer(
-        id: 'img-1',
-        transform: const LayerTransform(
-          position: Offset(100, 100),
-          size: Size(200, 200),
-        ),
-        source: const ImageSource.asset('stub.png'),
-        effects: effects,
-      );
+  ImageLayer makeImage({EffectStack effects = EffectStack.empty}) => ImageLayer(
+    id: 'img-1',
+    transform: const LayerTransform(
+      position: Offset(100, 100),
+      size: Size(200, 200),
+    ),
+    source: const ImageSource.asset('stub.png'),
+    effects: effects,
+  );
 
   group('EffectStack.stackMask — value semantics', () {
     test('== and hashCode include stackMask', () {
-      final effects = List<EditorEffect>.unmodifiable(
-        <EditorEffect>[BrightnessEffect(amount: 20)],
-      );
+      final effects = List<EditorEffect>.unmodifiable(<EditorEffect>[
+        BrightnessEffect(amount: 20),
+      ]);
       final without = EffectStack(effects);
       final withMask = EffectStack(effects, stackMask: mask);
       final withEqualMask = EffectStack(
@@ -60,9 +59,13 @@ void main() {
 
     test('isEmpty reflects the effects list only, never the mask', () {
       const maskOnly = EffectStack(<EditorEffect>[], stackMask: mask);
-      expect(maskOnly.isEmpty, isTrue,
-          reason: 'isEmpty gates the effects JSON key; folding the '
-              'mask in would emit "effects": [] and break legacy bytes');
+      expect(
+        maskOnly.isEmpty,
+        isTrue,
+        reason:
+            'isEmpty gates the effects JSON key; folding the '
+            'mask in would emit "effects": [] and break legacy bytes',
+      );
       expect(maskOnly.isNotEmpty, isFalse);
       expect(maskOnly.stackMask, equals(mask));
     });
@@ -72,9 +75,9 @@ void main() {
     test('effects + stackMask round-trip through layer JSON', () {
       final layer = makeImage(
         effects: EffectStack(
-          List<EditorEffect>.unmodifiable(
-            <EditorEffect>[BrightnessEffect(amount: 20)],
-          ),
+          List<EditorEffect>.unmodifiable(<EditorEffect>[
+            BrightnessEffect(amount: 20),
+          ]),
           stackMask: mask,
         ),
       );
@@ -97,9 +100,13 @@ void main() {
       );
 
       final json = layer.toJson();
-      expect(json.containsKey('effects'), isFalse,
-          reason: 'a stackMask-only stack must omit the effects key '
-              'entirely — "effects": [] changes every legacy doc\'s bytes');
+      expect(
+        json.containsKey('effects'),
+        isFalse,
+        reason:
+            'a stackMask-only stack must omit the effects key '
+            'entirely — "effects": [] changes every legacy doc\'s bytes',
+      );
       expect(json['stackMask'], isNotNull);
 
       final decoded = ImageLayer.fromJson(json);
@@ -111,9 +118,9 @@ void main() {
     test('no stackMask writes no stackMask key', () {
       final layer = makeImage(
         effects: EffectStack(
-          List<EditorEffect>.unmodifiable(
-            <EditorEffect>[BrightnessEffect(amount: 20)],
-          ),
+          List<EditorEffect>.unmodifiable(<EditorEffect>[
+            BrightnessEffect(amount: 20),
+          ]),
         ),
       );
 
@@ -151,9 +158,9 @@ void main() {
   group('EffectStack.copyWith', () {
     test('preserves stackMask; replaces effects list', () {
       final stack = EffectStack(
-        List<EditorEffect>.unmodifiable(
-          <EditorEffect>[BrightnessEffect(amount: 20)],
-        ),
+        List<EditorEffect>.unmodifiable(<EditorEffect>[
+          BrightnessEffect(amount: 20),
+        ]),
         stackMask: mask,
       );
       final next = stack.copyWith(effects: const <EditorEffect>[]);
@@ -169,32 +176,44 @@ void main() {
     // without complaint and silently drop the mask on resave — the
     // loud version-range rejection exists precisely to prevent that.
     test('stackMask-only document stamps v3', () {
-      final doc = EditorDocument.empty.addLayer(makeImage(
-        effects: const EffectStack(<EditorEffect>[], stackMask: mask),
-      ));
+      final doc = EditorDocument.empty.addLayer(
+        makeImage(
+          effects: const EffectStack(<EditorEffect>[], stackMask: mask),
+        ),
+      );
       final json = DocumentCodec.toJson(doc);
-      expect(json['version'], 3,
-          reason: 'the stackMask key is v3-only; stamping lower lets '
-              'old readers silently drop the mask on resave');
+      expect(
+        json['version'],
+        3,
+        reason:
+            'the stackMask key is v3-only; stamping lower lets '
+            'old readers silently drop the mask on resave',
+      );
     });
 
     test('effects + stackMask document stamps v3', () {
-      final doc = EditorDocument.empty.addLayer(makeImage(
-        effects: EffectStack(
-          List<EditorEffect>.unmodifiable(
-            <EditorEffect>[BrightnessEffect(amount: 20)],
+      final doc = EditorDocument.empty.addLayer(
+        makeImage(
+          effects: EffectStack(
+            List<EditorEffect>.unmodifiable(<EditorEffect>[
+              BrightnessEffect(amount: 20),
+            ]),
+            stackMask: mask,
           ),
-          stackMask: mask,
         ),
-      ));
+      );
       expect(DocumentCodec.toJson(doc)['version'], 3);
     });
 
     test('empty stack, no mask still stamps v1 (byte-identity guard)', () {
       final doc = EditorDocument.empty.addLayer(makeImage());
-      expect(DocumentCodec.toJson(doc)['version'], 1,
-          reason: 'mask promotion must not disturb the minimum-version '
-              'writer for legacy documents');
+      expect(
+        DocumentCodec.toJson(doc)['version'],
+        1,
+        reason:
+            'mask promotion must not disturb the minimum-version '
+            'writer for legacy documents',
+      );
     });
   });
 
@@ -203,35 +222,47 @@ void main() {
         doc.layerById('img-1')! as ImageLayer;
 
     test('sets the mask without touching the effects list', () {
-      final doc = EditorDocument.empty.addLayer(makeImage(
-        effects: EffectStack(
-          List<EditorEffect>.unmodifiable(
-            <EditorEffect>[BrightnessEffect(amount: 20)],
+      final doc = EditorDocument.empty.addLayer(
+        makeImage(
+          effects: EffectStack(
+            List<EditorEffect>.unmodifiable(<EditorEffect>[
+              BrightnessEffect(amount: 20),
+            ]),
           ),
         ),
-      ));
-      final next =
-          const SetStackMaskCommand(layerId: 'img-1', mask: mask).apply(doc);
+      );
+      final next = const SetStackMaskCommand(
+        layerId: 'img-1',
+        mask: mask,
+      ).apply(doc);
       final layer = applied(next);
       expect(layer.effects.stackMask, equals(mask));
       expect(layer.effects.effects.single, isA<BrightnessEffect>());
     });
 
     test('clearing the last state canonicalises to the empty singleton', () {
-      final doc = EditorDocument.empty.addLayer(makeImage(
-        effects: const EffectStack(<EditorEffect>[], stackMask: mask),
-      ));
-      final next =
-          const SetStackMaskCommand(layerId: 'img-1', mask: null).apply(doc);
+      final doc = EditorDocument.empty.addLayer(
+        makeImage(
+          effects: const EffectStack(<EditorEffect>[], stackMask: mask),
+        ),
+      );
+      final next = const SetStackMaskCommand(
+        layerId: 'img-1',
+        mask: null,
+      ).apply(doc);
       expect(identical(applied(next).effects, EffectStack.empty), isTrue);
     });
 
     test('same mask is a no-op (identical document)', () {
-      final doc = EditorDocument.empty.addLayer(makeImage(
-        effects: const EffectStack(<EditorEffect>[], stackMask: mask),
-      ));
-      final next =
-          const SetStackMaskCommand(layerId: 'img-1', mask: mask).apply(doc);
+      final doc = EditorDocument.empty.addLayer(
+        makeImage(
+          effects: const EffectStack(<EditorEffect>[], stackMask: mask),
+        ),
+      );
+      final next = const SetStackMaskCommand(
+        layerId: 'img-1',
+        mask: mask,
+      ).apply(doc);
       expect(identical(next, doc), isTrue);
     });
 
@@ -272,8 +303,11 @@ void main() {
       // One undo rewinds the whole live stream.
       doc = history.undo(doc);
       expect(applied(doc).effects.stackMask, isNull);
-      expect(history.canUndo, isFalse,
-          reason: 'both live ticks must have merged into one entry');
+      expect(
+        history.canUndo,
+        isFalse,
+        reason: 'both live ticks must have merged into one entry',
+      );
     });
 
     test('missing / non-image layer is a safe no-op', () {
@@ -289,39 +323,48 @@ void main() {
     // Every command that rebuilds an existing layer's effects list
     // must keep a set stackMask while the effects change still lands.
     ImageLayer layerWith(List<EditorEffect> effects) => makeImage(
-          effects: EffectStack(
-            List<EditorEffect>.unmodifiable(effects),
-            stackMask: mask,
-          ),
-        );
+      effects: EffectStack(
+        List<EditorEffect>.unmodifiable(effects),
+        stackMask: mask,
+      ),
+    );
 
     ImageLayer applied(EditorDocument doc) =>
         doc.layerById('img-1')! as ImageLayer;
 
     test('SetImageAdjustmentsCommand (adjust)', () {
-      var doc = EditorDocument.empty
-          .addLayer(layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]));
-      doc = const SetImageAdjustmentsCommand(layerId: 'img-1', contrast: 1.5)
-          .apply(doc);
+      var doc = EditorDocument.empty.addLayer(
+        layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]),
+      );
+      doc = const SetImageAdjustmentsCommand(
+        layerId: 'img-1',
+        contrast: 1.5,
+      ).apply(doc);
       final layer = applied(doc);
       expect(layer.adjustments.contrast, 1.5, reason: 'edit must land');
       expect(layer.effects.stackMask, equals(mask));
     });
 
     test('SetImageVignetteCommand (vignette)', () {
-      var doc = EditorDocument.empty.addLayer(layerWith(const <EditorEffect>[]));
-      doc = const SetImageVignetteCommand(layerId: 'img-1', intensity: 0.6)
-          .apply(doc);
+      var doc = EditorDocument.empty.addLayer(
+        layerWith(const <EditorEffect>[]),
+      );
+      doc = const SetImageVignetteCommand(
+        layerId: 'img-1',
+        intensity: 0.6,
+      ).apply(doc);
       final layer = applied(doc);
       expect(layer.effects.effects.single, isA<VignetteEffect>());
       expect(layer.effects.stackMask, equals(mask));
     });
 
     test('ReorderEffectCommand (reorder)', () {
-      var doc = EditorDocument.empty.addLayer(layerWith(<EditorEffect>[
-        BrightnessEffect(amount: 20),
-        ContrastEffect(amount: 1.5),
-      ]));
+      var doc = EditorDocument.empty.addLayer(
+        layerWith(<EditorEffect>[
+          BrightnessEffect(amount: 20),
+          ContrastEffect(amount: 1.5),
+        ]),
+      );
       doc = const ReorderEffectCommand(
         layerId: 'img-1',
         oldIndex: 0,
@@ -333,28 +376,36 @@ void main() {
     });
 
     test('ToggleEffectEnabledCommand (toggle)', () {
-      var doc = EditorDocument.empty
-          .addLayer(layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]));
-      doc = const ToggleEffectEnabledCommand(layerId: 'img-1', index: 0)
-          .apply(doc);
+      var doc = EditorDocument.empty.addLayer(
+        layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]),
+      );
+      doc = const ToggleEffectEnabledCommand(
+        layerId: 'img-1',
+        index: 0,
+      ).apply(doc);
       final layer = applied(doc);
       expect(layer.effects.effects.single.enabled, isFalse);
       expect(layer.effects.stackMask, equals(mask));
     });
 
     test('DeleteEffectCommand (delete) — mask outlives the last effect', () {
-      var doc = EditorDocument.empty
-          .addLayer(layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]));
+      var doc = EditorDocument.empty.addLayer(
+        layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]),
+      );
       doc = const DeleteEffectCommand(layerId: 'img-1', index: 0).apply(doc);
       final layer = applied(doc);
       expect(layer.effects.isEmpty, isTrue);
-      expect(layer.effects.stackMask, equals(mask),
-          reason: 'the mask is user state independent of list emptiness');
+      expect(
+        layer.effects.stackMask,
+        equals(mask),
+        reason: 'the mask is user state independent of list emptiness',
+      );
     });
 
     test('DeleteEffectCommand.invert (insert) restores with mask intact', () {
-      final before = EditorDocument.empty
-          .addLayer(layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]));
+      final before = EditorDocument.empty.addLayer(
+        layerWith(<EditorEffect>[BrightnessEffect(amount: 20)]),
+      );
       const delete = DeleteEffectCommand(layerId: 'img-1', index: 0);
       final after = delete.apply(before);
       final restored = delete.invert(before).apply(after);

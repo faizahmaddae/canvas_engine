@@ -9,11 +9,7 @@ import 'package:canvas_engine/features/editor/engine/export/document_jpg_exporte
 
 /// Build a tiny solid-color [ui.Image] without a widget tree so the
 /// JPEG encode path can be exercised in pure-Dart tests.
-Future<ui.Image> _solidImage(
-  int width,
-  int height,
-  Color color,
-) async {
+Future<ui.Image> _solidImage(int width, int height, Color color) async {
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder);
   canvas.drawRect(
@@ -97,8 +93,10 @@ void main() {
         const h = 16;
         const src = Color(0xFF3060A0); // R=48, G=96, B=160
         final image = await _solidImage(w, h, src);
-        final bytes =
-            await DocumentJpgExporter.encodeImageAsJpg(image, quality: 95);
+        final bytes = await DocumentJpgExporter.encodeImageAsJpg(
+          image,
+          quality: 95,
+        );
         image.dispose();
 
         final decoded = img.decodeJpg(bytes);
@@ -110,12 +108,21 @@ void main() {
         // edge pixels by a couple of LSBs even on a solid image.
         final px = decoded.getPixel(w ~/ 2, h ~/ 2);
         const tolerance = 3; // ~1.2% per channel; safe for q=95 solid.
-        expect((px.r - 0x30).abs(), lessThanOrEqualTo(tolerance),
-            reason: 'red channel drifted: got ${px.r}');
-        expect((px.g - 0x60).abs(), lessThanOrEqualTo(tolerance),
-            reason: 'green channel drifted: got ${px.g}');
-        expect((px.b - 0xA0).abs(), lessThanOrEqualTo(tolerance),
-            reason: 'blue channel drifted: got ${px.b}');
+        expect(
+          (px.r - 0x30).abs(),
+          lessThanOrEqualTo(tolerance),
+          reason: 'red channel drifted: got ${px.r}',
+        );
+        expect(
+          (px.g - 0x60).abs(),
+          lessThanOrEqualTo(tolerance),
+          reason: 'green channel drifted: got ${px.g}',
+        );
+        expect(
+          (px.b - 0xA0).abs(),
+          lessThanOrEqualTo(tolerance),
+          reason: 'blue channel drifted: got ${px.b}',
+        );
       },
     );
   });

@@ -130,8 +130,11 @@ void main() {
       var doc = EditorDocument.empty;
       doc = stack.execute(doc, _SizedCommand(tag: 1, bytes: huge));
       expect(stack.undoDepth, 1);
-      expect(stack.undoBytes, greaterThan(budget),
-          reason: 'soft cap: single oversized entry exceeds budget');
+      expect(
+        stack.undoBytes,
+        greaterThan(budget),
+        reason: 'soft cap: single oversized entry exceeds budget',
+      );
 
       // Pushing a small command after the giant: the small one
       // becomes the new most-recent and the giant gets evicted (it
@@ -160,8 +163,11 @@ void main() {
         }
         // Invariant: byte total equals depth * per-entry cost.
         const perEntry = 2 * each + overhead;
-        expect(stack.undoBytes, stack.undoDepth * perEntry,
-            reason: 'running total drifted at iteration $i');
+        expect(
+          stack.undoBytes,
+          stack.undoDepth * perEntry,
+          reason: 'running total drifted at iteration $i',
+        );
       }
     });
   });
@@ -283,10 +289,16 @@ void main() {
         doc = stack.execute(doc, _SizedCommand(tag: i, bytes: each));
       }
       final expectedDepth = budget ~/ perEntry;
-      expect(stack.undoDepth, expectedDepth,
-          reason: 'expected ~$expectedDepth entries in a 10 MB budget');
-      expect(stack.undoBytes, lessThanOrEqualTo(budget),
-          reason: 'budget drifted: $stack.undoBytes > $budget');
+      expect(
+        stack.undoDepth,
+        expectedDepth,
+        reason: 'expected ~$expectedDepth entries in a 10 MB budget',
+      );
+      expect(
+        stack.undoBytes,
+        lessThanOrEqualTo(budget),
+        reason: 'budget drifted: $stack.undoBytes > $budget',
+      );
       // Most recent entry intact.
       expect(stack.canUndo, isTrue);
       // And the running total is exact, not approximate.

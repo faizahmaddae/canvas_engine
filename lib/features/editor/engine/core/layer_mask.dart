@@ -39,8 +39,10 @@ import 'package:flutter/painting.dart' show Offset, Rect;
 /// allocate a path even when one input is a 4-double rect.
 sealed class LayerMask {
   const LayerMask({this.inverted = false, this.feather = 0.0})
-      : assert(feather >= 0.0 && feather <= maxFeatherPx,
-            'feather must be in [0, $maxFeatherPx] px (layer-local)');
+    : assert(
+        feather >= 0.0 && feather <= maxFeatherPx,
+        'feather must be in [0, $maxFeatherPx] px (layer-local)',
+      );
 
   /// Default feather value. Omitted from JSON.
   static const double defaultFeather = 0.0;
@@ -152,23 +154,18 @@ sealed class LayerMask {
 /// Axis-aligned rectangular mask. Coordinates are layer-local.
 @immutable
 final class RectMask extends LayerMask {
-  const RectMask({
-    required this.rect,
-    super.inverted,
-    super.feather,
-  });
+  const RectMask({required this.rect, super.inverted, super.feather});
 
   final Rect rect;
 
   /// Functional copy for interactive editing (mask-edit mode drags,
   /// feather slider, invert toggle). Omitted fields keep the
   /// receiver's value.
-  RectMask copyWith({Rect? rect, bool? inverted, double? feather}) =>
-      RectMask(
-        rect: rect ?? this.rect,
-        inverted: inverted ?? this.inverted,
-        feather: feather ?? this.feather,
-      );
+  RectMask copyWith({Rect? rect, bool? inverted, double? feather}) => RectMask(
+    rect: rect ?? this.rect,
+    inverted: inverted ?? this.inverted,
+    feather: feather ?? this.feather,
+  );
 
   @override
   double sampleAlpha(Offset point) {
@@ -189,11 +186,11 @@ final class RectMask extends LayerMask {
   factory RectMask._fromJson(Map<String, dynamic> json) {
     final raw = json['rect'];
     if (raw is! List || raw.length != 4) {
-      throw const FormatException(
-        'RectMask requires "rect" as [x, y, w, h]',
-      );
+      throw const FormatException('RectMask requires "rect" as [x, y, w, h]');
     }
-    final coords = raw.map((v) => (v as num).toDouble()).toList(growable: false);
+    final coords = raw
+        .map((v) => (v as num).toDouble())
+        .toList(growable: false);
     final common = LayerMask._readCommon(json);
     return RectMask(
       rect: Rect.fromLTWH(coords[0], coords[1], coords[2], coords[3]),
@@ -221,11 +218,7 @@ final class RectMask extends LayerMask {
 /// Ellipse inscribed in [`bounds`]. Coordinates are layer-local.
 @immutable
 final class EllipseMask extends LayerMask {
-  const EllipseMask({
-    required this.bounds,
-    super.inverted,
-    super.feather,
-  });
+  const EllipseMask({required this.bounds, super.inverted, super.feather});
 
   final Rect bounds;
 
@@ -247,12 +240,7 @@ final class EllipseMask extends LayerMask {
   Object toJson() {
     final out = <String, dynamic>{
       LayerMask._shapeKey: LayerMask.shapeEllipse,
-      'bounds': <double>[
-        bounds.left,
-        bounds.top,
-        bounds.width,
-        bounds.height,
-      ],
+      'bounds': <double>[bounds.left, bounds.top, bounds.width, bounds.height],
     };
     _writeCommon(out);
     return out;
@@ -265,7 +253,9 @@ final class EllipseMask extends LayerMask {
         'EllipseMask requires "bounds" as [x, y, w, h]',
       );
     }
-    final coords = raw.map((v) => (v as num).toDouble()).toList(growable: false);
+    final coords = raw
+        .map((v) => (v as num).toDouble())
+        .toList(growable: false);
     final common = LayerMask._readCommon(json);
     return EllipseMask(
       bounds: Rect.fromLTWH(coords[0], coords[1], coords[2], coords[3]),
@@ -301,17 +291,14 @@ class PathContour {
   final List<PathSegment> segments;
 
   Object toJson() => <String, dynamic>{
-        'start': <double>[start.dx, start.dy],
-        'segments':
-            segments.map((s) => s.toJson()).toList(growable: false),
-      };
+    'start': <double>[start.dx, start.dy],
+    'segments': segments.map((s) => s.toJson()).toList(growable: false),
+  };
 
   factory PathContour.fromJson(Map<String, dynamic> json) {
     final rawStart = json['start'];
     if (rawStart is! List || rawStart.length != 2) {
-      throw const FormatException(
-        'PathContour "start" must be [x, y]',
-      );
+      throw const FormatException('PathContour "start" must be [x, y]');
     }
     final rawSegs = json['segments'];
     if (rawSegs is! List) {
@@ -376,10 +363,7 @@ sealed class PathSegment {
           throw const FormatException('LineSegment requires [kind, x, y]');
         }
         return LineSegment(
-          end: Offset(
-            (json[1] as num).toDouble(),
-            (json[2] as num).toDouble(),
-          ),
+          end: Offset((json[1] as num).toDouble(), (json[2] as num).toDouble()),
         );
       case kindQuad:
         if (json.length != 5) {
@@ -392,10 +376,7 @@ sealed class PathSegment {
             (json[1] as num).toDouble(),
             (json[2] as num).toDouble(),
           ),
-          end: Offset(
-            (json[3] as num).toDouble(),
-            (json[4] as num).toDouble(),
-          ),
+          end: Offset((json[3] as num).toDouble(), (json[4] as num).toDouble()),
         );
       case kindCubic:
         if (json.length != 7) {
@@ -412,10 +393,7 @@ sealed class PathSegment {
             (json[3] as num).toDouble(),
             (json[4] as num).toDouble(),
           ),
-          end: Offset(
-            (json[5] as num).toDouble(),
-            (json[6] as num).toDouble(),
-          ),
+          end: Offset((json[5] as num).toDouble(), (json[6] as num).toDouble()),
         );
       default:
         throw FormatException('unknown PathSegment kind "$kind"');
@@ -452,12 +430,12 @@ final class QuadSegment extends PathSegment {
 
   @override
   List<Object> toJson() => <Object>[
-        PathSegment.kindQuad,
-        control.dx,
-        control.dy,
-        end.dx,
-        end.dy,
-      ];
+    PathSegment.kindQuad,
+    control.dx,
+    control.dy,
+    end.dx,
+    end.dy,
+  ];
 
   @override
   bool operator ==(Object other) =>
@@ -484,14 +462,14 @@ final class CubicSegment extends PathSegment {
 
   @override
   List<Object> toJson() => <Object>[
-        PathSegment.kindCubic,
-        control1.dx,
-        control1.dy,
-        control2.dx,
-        control2.dy,
-        end.dx,
-        end.dy,
-      ];
+    PathSegment.kindCubic,
+    control1.dx,
+    control1.dy,
+    control2.dx,
+    control2.dy,
+    end.dx,
+    end.dy,
+  ];
 
   @override
   bool operator ==(Object other) =>
@@ -632,23 +610,15 @@ final class PathMask extends LayerMask {
           other.feather == feather);
 
   @override
-  int get hashCode => Object.hash(
-        Object.hashAll(contours),
-        fillType,
-        inverted,
-        feather,
-      );
+  int get hashCode =>
+      Object.hash(Object.hashAll(contours), fillType, inverted, feather);
 
   // Base + per-contour overhead + a flat per-segment cost (a cubic
   // is 3 points; 48 bytes covers the worst case, keeping the
   // estimate monotone in real payload without walking point counts).
   @override
   int get estimatedByteSize =>
-      64 +
-      contours.fold(
-        0,
-        (n, c) => n + 32 + c.segments.length * 48,
-      );
+      64 + contours.fold(0, (n, c) => n + 32 + c.segments.length * 48);
 }
 
 // -----------------------------------------------------------------------------

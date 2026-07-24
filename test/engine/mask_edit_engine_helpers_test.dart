@@ -12,9 +12,9 @@ void main() {
   group('EffectStack.withStackMask', () {
     test('sets, replaces, and clears the mask without touching effects', () {
       final stack = EffectStack(
-        List<EditorEffect>.unmodifiable(
-          <EditorEffect>[BrightnessEffect(amount: 10)],
-        ),
+        List<EditorEffect>.unmodifiable(<EditorEffect>[
+          BrightnessEffect(amount: 10),
+        ]),
       );
       final withMask = stack.withStackMask(mask);
       expect(withMask.stackMask, mask);
@@ -33,10 +33,13 @@ void main() {
     test('fully-empty result canonicalises to the empty singleton — '
         'parity with SetStackMaskCommand', () {
       const maskOnly = EffectStack(<EditorEffect>[], stackMask: mask);
-      expect(identical(maskOnly.withStackMask(null), EffectStack.empty),
-          isTrue,
-          reason: 'the sanctioned writer must canonicalise exactly like '
-              'the command always has');
+      expect(
+        identical(maskOnly.withStackMask(null), EffectStack.empty),
+        isTrue,
+        reason:
+            'the sanctioned writer must canonicalise exactly like '
+            'the command always has',
+      );
     });
   });
 
@@ -68,24 +71,23 @@ void main() {
     test('rect/ellipse report a flat struct cost', () {
       expect(mask.estimatedByteSize, greaterThan(0));
       expect(
-        const EllipseMask(bounds: Rect.fromLTWH(0, 0, 1, 1))
-            .estimatedByteSize,
+        const EllipseMask(bounds: Rect.fromLTWH(0, 0, 1, 1)).estimatedByteSize,
         greaterThan(0),
       );
     });
 
     test('PathMask grows with segment count', () {
       PathMask path(int segments) => PathMask(
-            contours: [
-              PathContour(
-                start: Offset.zero,
-                segments: List<PathSegment>.unmodifiable([
-                  for (var i = 0; i < segments; i++)
-                    LineSegment(end: Offset(i.toDouble(), 0)),
-                ]),
-              ),
-            ],
-          );
+        contours: [
+          PathContour(
+            start: Offset.zero,
+            segments: List<PathSegment>.unmodifiable([
+              for (var i = 0; i < segments; i++)
+                LineSegment(end: Offset(i.toDouble(), 0)),
+            ]),
+          ),
+        ],
+      );
       expect(
         path(100).estimatedByteSize,
         greaterThan(path(2).estimatedByteSize),

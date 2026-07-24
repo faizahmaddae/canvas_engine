@@ -69,8 +69,9 @@ class DocumentView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final paintBackdrop = !(honorTransparentMode &&
-        document.backgroundMode == CanvasBackgroundMode.transparent);
+    final paintBackdrop =
+        !(honorTransparentMode &&
+            document.backgroundMode == CanvasBackgroundMode.transparent);
     final BackgroundFill effectiveFill =
         // ignore: deprecated_member_use_from_same_package
         backgroundFill ?? SolidBackground(color: background);

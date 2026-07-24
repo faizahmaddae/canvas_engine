@@ -18,8 +18,10 @@ void main() {
 
     test('round-trip preserves rect and omits defaults', () {
       final json = r.toJson() as Map<String, dynamic>;
-      expect(json[LayerMask.shapeRect != 'rect' ? 'shape' : 'shape'],
-          LayerMask.shapeRect);
+      expect(
+        json[LayerMask.shapeRect != 'rect' ? 'shape' : 'shape'],
+        LayerMask.shapeRect,
+      );
       expect(json['rect'], <double>[10, 10, 80, 60]);
       expect(json.containsKey('inverted'), isFalse);
       expect(json.containsKey('feather'), isFalse);
@@ -84,8 +86,7 @@ void main() {
       expect(LayerMask.fromJson(json), m);
     });
 
-    test('sampleAlpha is binary inside / outside circle without feather',
-        () {
+    test('sampleAlpha is binary inside / outside circle without feather', () {
       expect(m.sampleAlpha(const Offset(50, 50)), 1.0); // center
       expect(m.sampleAlpha(const Offset(50, 0)), 1.0); // boundary inclusive
       expect(m.sampleAlpha(const Offset(0, 0)), 0.0); // corner
@@ -100,10 +101,7 @@ void main() {
       // Inside boundary stays 1.
       expect(feathered.sampleAlpha(const Offset(50, 50)), 1.0);
       // 5 px past boundary along x → mid-ramp (~0.5).
-      expect(
-        feathered.sampleAlpha(const Offset(105, 50)),
-        closeTo(0.5, 1e-9),
-      );
+      expect(feathered.sampleAlpha(const Offset(105, 50)), closeTo(0.5, 1e-9));
       // 11 px past → 0.
       expect(feathered.sampleAlpha(const Offset(111, 50)), 0.0);
     });
@@ -141,12 +139,8 @@ void main() {
       expect(back, p);
     });
 
-    test('non-default fillType (evenOdd) round-trips and is persisted',
-        () {
-      final m = PathMask(
-        contours: p.contours,
-        fillType: PathFillType.evenOdd,
-      );
+    test('non-default fillType (evenOdd) round-trips and is persisted', () {
+      final m = PathMask(contours: p.contours, fillType: PathFillType.evenOdd);
       final json = m.toJson() as Map<String, dynamic>;
       expect(json['fillType'], 'evenOdd');
       expect(LayerMask.fromJson(json), m);
@@ -158,10 +152,16 @@ void main() {
       // the path lazily and queries `path.contains` — feather is
       // intentionally still ignored (see PathMask.sampleAlpha doc).
       // The shape spans roughly (0,0)..(150,120).
-      expect(p.sampleAlpha(const Offset(50, 50)), 1.0,
-          reason: 'point well inside the shape reads opaque');
-      expect(p.sampleAlpha(const Offset(500, 500)), 0.0,
-          reason: 'point outside the shape reads zero');
+      expect(
+        p.sampleAlpha(const Offset(50, 50)),
+        1.0,
+        reason: 'point well inside the shape reads opaque',
+      );
+      expect(
+        p.sampleAlpha(const Offset(500, 500)),
+        0.0,
+        reason: 'point outside the shape reads zero',
+      );
     });
 
     test('inverted PathMask flips inside/outside', () {
@@ -189,8 +189,7 @@ void main() {
       expect(json.length, 7);
     });
 
-    test('every PathSegment kind round-trips via PathSegment.fromJson',
-        () {
+    test('every PathSegment kind round-trips via PathSegment.fromJson', () {
       const segs = <PathSegment>[
         LineSegment(end: Offset(10, 20)),
         QuadSegment(control: Offset(5, 5), end: Offset(15, 25)),
@@ -215,28 +214,16 @@ void main() {
     });
 
     test('one null defers to the other', () {
-      expect(
-        LayerMask.composedAlpha(r, null, const Offset(50, 50)),
-        1.0,
-      );
-      expect(
-        LayerMask.composedAlpha(null, r, const Offset(-1, -1)),
-        0.0,
-      );
+      expect(LayerMask.composedAlpha(r, null, const Offset(50, 50)), 1.0);
+      expect(LayerMask.composedAlpha(null, r, const Offset(-1, -1)), 0.0);
     });
 
     test('both opaque → 1.0; one transparent → 0.0', () {
       // (75, 50) is inside both rect [0..100]² and ellipse centered
       // at (100, 50) with rx=ry=50.
-      expect(
-        LayerMask.composedAlpha(r, e, const Offset(75, 50)),
-        1.0,
-      );
+      expect(LayerMask.composedAlpha(r, e, const Offset(75, 50)), 1.0);
       // (25, 50) is inside the rect but outside the ellipse.
-      expect(
-        LayerMask.composedAlpha(r, e, const Offset(25, 50)),
-        0.0,
-      );
+      expect(LayerMask.composedAlpha(r, e, const Offset(25, 50)), 0.0);
     });
   });
 
@@ -265,7 +252,10 @@ void main() {
 
     test('malformed rect throws', () {
       expect(
-        () => LayerMask.fromJson({'shape': 'rect', 'rect': [0, 0, 10]}),
+        () => LayerMask.fromJson({
+          'shape': 'rect',
+          'rect': [0, 0, 10],
+        }),
         throwsFormatException,
       );
     });
@@ -294,32 +284,35 @@ void main() {
 
     test('EllipseMask: feather and inverted participate', () {
       const a = EllipseMask(bounds: Rect.fromLTWH(0, 0, 10, 10));
-      const b = EllipseMask(
-        bounds: Rect.fromLTWH(0, 0, 10, 10),
-        feather: 1,
-      );
+      const b = EllipseMask(bounds: Rect.fromLTWH(0, 0, 10, 10), feather: 1);
       expect(a, isNot(b));
     });
 
     test('PathMask: structural equality reaches into segments', () {
-      final a = PathMask(contours: [
-        const PathContour(
-          start: Offset(0, 0),
-          segments: [LineSegment(end: Offset(10, 10))],
-        ),
-      ]);
-      final b = PathMask(contours: [
-        const PathContour(
-          start: Offset(0, 0),
-          segments: [LineSegment(end: Offset(10, 10))],
-        ),
-      ]);
-      final c = PathMask(contours: [
-        const PathContour(
-          start: Offset(0, 0),
-          segments: [LineSegment(end: Offset(10, 11))],
-        ),
-      ]);
+      final a = PathMask(
+        contours: [
+          const PathContour(
+            start: Offset(0, 0),
+            segments: [LineSegment(end: Offset(10, 10))],
+          ),
+        ],
+      );
+      final b = PathMask(
+        contours: [
+          const PathContour(
+            start: Offset(0, 0),
+            segments: [LineSegment(end: Offset(10, 10))],
+          ),
+        ],
+      );
+      final c = PathMask(
+        contours: [
+          const PathContour(
+            start: Offset(0, 0),
+            segments: [LineSegment(end: Offset(10, 11))],
+          ),
+        ],
+      );
       expect(a, b);
       expect(a.hashCode, b.hashCode);
       expect(a, isNot(c));
@@ -339,10 +332,7 @@ void main() {
 
     test('negative feather asserts', () {
       expect(
-        () => RectMask(
-          rect: const Rect.fromLTWH(0, 0, 10, 10),
-          feather: -1,
-        ),
+        () => RectMask(rect: const Rect.fromLTWH(0, 0, 10, 10), feather: -1),
         throwsA(isA<AssertionError>()),
       );
     });

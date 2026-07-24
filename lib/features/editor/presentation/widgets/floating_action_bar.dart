@@ -175,10 +175,7 @@ class FloatingColorDot extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: AppTokens.of(context).border,
-          width: 1,
-        ),
+        border: Border.all(color: AppTokens.of(context).border, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.10),

@@ -102,17 +102,17 @@ class SetLayerTransformCommand extends EditorCommand {
 
 class MoveLayerCommand extends SetLayerTransformCommand {
   const MoveLayerCommand({required super.layerId, required super.transform})
-      : super(labelOverride: 'Move');
+    : super(labelOverride: 'Move');
 }
 
 class ResizeLayerCommand extends SetLayerTransformCommand {
   const ResizeLayerCommand({required super.layerId, required super.transform})
-      : super(labelOverride: 'Resize');
+    : super(labelOverride: 'Resize');
 }
 
 class RotateLayerCommand extends SetLayerTransformCommand {
   const RotateLayerCommand({required super.layerId, required super.transform})
-      : super(labelOverride: 'Rotate');
+    : super(labelOverride: 'Rotate');
 }
 
 /// Sets [EditorDocument.basePhotoLayerId] \u2014 the marker the
@@ -128,10 +128,9 @@ class SetBasePhotoCommand extends EditorCommand {
   String get label => layerId == null ? 'Clear base photo' : 'Set base photo';
 
   @override
-  EditorDocument apply(EditorDocument doc) =>
-      doc.basePhotoLayerId == layerId
-          ? doc
-          : doc.copyWith(basePhotoLayerId: layerId);
+  EditorDocument apply(EditorDocument doc) => doc.basePhotoLayerId == layerId
+      ? doc
+      : doc.copyWith(basePhotoLayerId: layerId);
 
   @override
   EditorCommand invert(EditorDocument before) =>

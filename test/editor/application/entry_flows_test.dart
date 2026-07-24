@@ -24,6 +24,7 @@ class _Probe extends ConsumerWidget {
     _ref = ref;
     return const SizedBox.shrink();
   }
+
   static WidgetRef? _ref;
 }
 
@@ -44,18 +45,17 @@ void main() {
       kind: ProjectKind.photo,
     );
     docCtrl.execute(
-      CompositeCommand(
-        [
-          AddLayerCommand(ImageLayer(
+      CompositeCommand([
+        AddLayerCommand(
+          ImageLayer(
             id: id,
             transform: LayerTransform(position: Offset.zero, size: dims),
             source: const ImageSource.asset('photo.jpg'),
             locked: true,
-          )),
-          SetBasePhotoCommand(id),
-        ],
-        labelOverride: 'Import photo',
-      ),
+          ),
+        ),
+        SetBasePhotoCommand(id),
+      ], labelOverride: 'Import photo'),
     );
     docCtrl.clearHistory();
     c.read(selectionControllerProvider.notifier).clear();
@@ -111,8 +111,7 @@ void main() {
       expect(doc.basePhotoLayerId, 'photo');
     });
 
-    test('Crop/Filters/Adjust resolve the base photo with NO selection',
-        () {
+    test('Crop/Filters/Adjust resolve the base photo with NO selection', () {
       final c = ProviderContainer();
       addTearDown(c.dispose);
       importPhotoFlow(c);
@@ -123,33 +122,40 @@ void main() {
     });
   });
 
-  testWidgets(
-      'photo import: editor entry leaves crop session inactive',
-      (tester) async {
-    await tester.pumpWidget(const ProviderScope(
-      child: MaterialApp(home: _Probe()),
-    ));
+  testWidgets('photo import: editor entry leaves crop session inactive', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: _Probe())),
+    );
     final ref = _Probe._ref!;
     // Pre-pollute crop state to simulate leftover from a previous
     // editor instance.
     final docCtrl = ref.read(documentControllerProvider.notifier);
     docCtrl.newDocument(width: 100, height: 100);
-    docCtrl.execute(AddLayerCommand(ImageLayer(
-      id: 'leftover',
-      transform: LayerTransform(
-        position: Offset.zero,
-        size: const Size(80, 80),
+    docCtrl.execute(
+      AddLayerCommand(
+        ImageLayer(
+          id: 'leftover',
+          transform: LayerTransform(
+            position: Offset.zero,
+            size: const Size(80, 80),
+          ),
+          source: const ImageSource.asset('a.png'),
+        ),
       ),
-      source: const ImageSource.asset('a.png'),
-    )));
+    );
     ref.read(cropControllerProvider.notifier).openCrop('leftover');
     expect(ref.read(cropControllerProvider).active, isTrue);
     // Now the home flow: import + ephemeral reset (the latter is
     // what `_push` calls right before navigating).
     importPhotoFlow(ref.container, id: 'photo');
     resetEditorEphemeralState(ref);
-    expect(ref.read(cropControllerProvider).active, isFalse,
-        reason: 'crop session must not leak across editor entries');
+    expect(
+      ref.read(cropControllerProvider).active,
+      isFalse,
+      reason: 'crop session must not leak across editor entries',
+    );
   });
 
   group('blank canvas flow', () {
@@ -157,8 +163,10 @@ void main() {
       final c = ProviderContainer();
       addTearDown(c.dispose);
       blankCanvasFlow(c);
-      expect(c.read(documentControllerProvider).projectKind,
-          ProjectKind.design);
+      expect(
+        c.read(documentControllerProvider).projectKind,
+        ProjectKind.design,
+      );
     });
 
     test('document starts with zero layers and no base photo', () {
@@ -183,14 +191,18 @@ void main() {
       blankCanvasFlow(c);
       c
           .read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(ImageLayer(
-            id: 'i',
-            transform: LayerTransform(
-              position: Offset.zero,
-              size: const Size(200, 200),
+          .execute(
+            AddLayerCommand(
+              ImageLayer(
+                id: 'i',
+                transform: LayerTransform(
+                  position: Offset.zero,
+                  size: const Size(200, 200),
+                ),
+                source: const ImageSource.asset('a.png'),
+              ),
             ),
-            source: const ImageSource.asset('a.png'),
-          )));
+          );
       final doc = c.read(documentControllerProvider);
       expect(doc.basePhotoLayerId, isNull);
       expect(doc.isProtectedBasePhoto('i'), isFalse);
@@ -198,21 +210,24 @@ void main() {
       expect(layer.locked, isFalse);
     });
 
-    test('added shape is selectable and undoable (normal design behavior)',
-        () {
+    test('added shape is selectable and undoable (normal design behavior)', () {
       final c = ProviderContainer();
       addTearDown(c.dispose);
       blankCanvasFlow(c);
       final ctrl = c.read(documentControllerProvider.notifier);
-      ctrl.execute(AddLayerCommand(ShapeLayer(
-        id: 's',
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: const Size(50, 50),
+      ctrl.execute(
+        AddLayerCommand(
+          ShapeLayer(
+            id: 's',
+            transform: LayerTransform(
+              position: Offset.zero,
+              size: const Size(50, 50),
+            ),
+            kind: ShapeKind.rectangle,
+            fillColor: const Color(0xFFFFFFFF),
+          ),
         ),
-        kind: ShapeKind.rectangle,
-        fillColor: const Color(0xFFFFFFFF),
-      )));
+      );
       c.read(selectionControllerProvider.notifier).select('s');
       expect(c.read(selectionControllerProvider).selectedId, 's');
       // Undo removes the shape (per-action history works).

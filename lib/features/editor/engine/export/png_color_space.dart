@@ -82,9 +82,16 @@ Uint8List tagPngAsSrgb(Uint8List pngBytes) {
   out.setRange(0, insertAt, pngBytes);
   out.setRange(insertAt, insertAt + srgb.length, srgb);
   out.setRange(
-      insertAt + srgb.length, insertAt + srgb.length + gama.length, gama);
+    insertAt + srgb.length,
+    insertAt + srgb.length + gama.length,
+    gama,
+  );
   out.setRange(
-      insertAt + srgb.length + gama.length, out.length, pngBytes, insertAt);
+    insertAt + srgb.length + gama.length,
+    out.length,
+    pngBytes,
+    insertAt,
+  );
   return out;
 }
 

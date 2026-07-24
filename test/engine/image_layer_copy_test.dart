@@ -20,39 +20,36 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('ImageLayer — copyAll preserves every field across codec', () {
     ImageLayer makeLoaded() => ImageLayer(
-          id: 'img-loaded',
-          transform: const LayerTransform(
-            position: Offset(50, 60),
-            size: Size(300, 200),
-            rotation: 0.25,
-          ),
-          source: const ImageSource.network('https://example.com/p.jpg'),
-          fit: BoxFit.contain,
-          mask: ImageMask.circle,
-          borderColor: const Color(0xFF112233),
-          borderWidth: 4,
-          shadowColor: const Color(0xFF445566),
-          shadowBlur: 8,
-          shadowOffset: const Offset(2, 3),
-          shadowOpacity: 0.6,
-          cropRect: const Rect.fromLTRB(0.1, 0.2, 0.8, 0.9),
-          filterPreset: ImageFilterPreset.dramatic,
-          name: 'hero photo',
-          visible: false,
-          locked: true,
-          opacity: 0.42,
-        );
+      id: 'img-loaded',
+      transform: const LayerTransform(
+        position: Offset(50, 60),
+        size: Size(300, 200),
+        rotation: 0.25,
+      ),
+      source: const ImageSource.network('https://example.com/p.jpg'),
+      fit: BoxFit.contain,
+      mask: ImageMask.circle,
+      borderColor: const Color(0xFF112233),
+      borderWidth: 4,
+      shadowColor: const Color(0xFF445566),
+      shadowBlur: 8,
+      shadowOffset: const Offset(2, 3),
+      shadowOpacity: 0.6,
+      cropRect: const Rect.fromLTRB(0.1, 0.2, 0.8, 0.9),
+      filterPreset: ImageFilterPreset.dramatic,
+      name: 'hero photo',
+      visible: false,
+      locked: true,
+      opacity: 0.42,
+    );
 
     String encode(ImageLayer l) => DocumentCodec.encode(
-          EditorDocument(layers: [l], width: 1000, height: 1000),
-        );
+      EditorDocument(layers: [l], width: 1000, height: 1000),
+    );
 
     test('withTransform preserves every other field', () {
       final base = makeLoaded();
-      const next = LayerTransform(
-        position: Offset(0, 0),
-        size: Size(10, 10),
-      );
+      const next = LayerTransform(position: Offset(0, 0), size: Size(10, 10));
       final mutated = base.withTransform(next) as ImageLayer;
       expect(mutated.source, base.source);
       expect(mutated.fit, base.fit);
@@ -72,8 +69,7 @@ void main() {
       expect(mutated.transform, next);
     });
 
-    test('withVisibility / withLocked / withOpacity preserve all peers',
-        () {
+    test('withVisibility / withLocked / withOpacity preserve all peers', () {
       final base = makeLoaded();
       final shown = base.withVisibility(true) as ImageLayer;
       expect(shown.visible, true);
@@ -135,10 +131,14 @@ void main() {
         source: const ImageSource.asset('assets/p.png'),
         effects: stack,
       );
-      final transformed = base.withTransform(const LayerTransform(
-        position: Offset(20, 20),
-        size: Size(200, 200),
-      )) as ImageLayer;
+      final transformed =
+          base.withTransform(
+                const LayerTransform(
+                  position: Offset(20, 20),
+                  size: Size(200, 200),
+                ),
+              )
+              as ImageLayer;
       expect(transformed.effects, base.effects);
 
       final raw = encode(base);

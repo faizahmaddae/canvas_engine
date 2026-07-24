@@ -9,14 +9,11 @@ import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 ImageLayer _makeImage({EffectStack effects = EffectStack.empty}) => ImageLayer(
-      id: 'img',
-      transform: const LayerTransform(
-        position: Offset.zero,
-        size: Size(100, 100),
-      ),
-      source: const ImageSource.asset('assets/test.png'),
-      effects: effects,
-    );
+  id: 'img',
+  transform: const LayerTransform(position: Offset.zero, size: Size(100, 100)),
+  source: const ImageSource.asset('assets/test.png'),
+  effects: effects,
+);
 
 EditorDocument _doc(ImageLayer layer) =>
     EditorDocument(layers: [layer], width: 200, height: 200);
@@ -67,11 +64,7 @@ void main() {
 
     test('disabled flag and mask survive round-trip', () {
       const mask = RectMask(rect: Rect.fromLTWH(0, 0, 0.5, 0.5));
-      const v = VignetteEffect(
-        intensity: 0.5,
-        enabled: false,
-        mask: mask,
-      );
+      const v = VignetteEffect(intensity: 0.5, enabled: false, mask: mask);
       final layer = _makeImage(effects: const EffectStack(<EditorEffect>[v]));
       final raw = DocumentCodec.encode(_doc(layer));
       final back = DocumentCodec.decode(raw).layers.single as ImageLayer;
@@ -97,11 +90,13 @@ void main() {
     });
 
     test('removes the vignette when intensity goes back to 0', () {
-      final start = _doc(_makeImage(
-        effects: const EffectStack(<EditorEffect>[
-          VignetteEffect(intensity: 0.6),
-        ]),
-      ));
+      final start = _doc(
+        _makeImage(
+          effects: const EffectStack(<EditorEffect>[
+            VignetteEffect(intensity: 0.6),
+          ]),
+        ),
+      );
       final after = const SetImageVignetteCommand(
         layerId: 'img',
         intensity: 0,
@@ -125,12 +120,14 @@ void main() {
     });
 
     test('preserves other effects on the stack when toggling vignette', () {
-      final start = _doc(_makeImage(
-        effects: const EffectStack(<EditorEffect>[
-          BrightnessEffect(amount: 20),
-          ContrastEffect(amount: 1.2),
-        ]),
-      ));
+      final start = _doc(
+        _makeImage(
+          effects: const EffectStack(<EditorEffect>[
+            BrightnessEffect(amount: 20),
+            ContrastEffect(amount: 1.2),
+          ]),
+        ),
+      );
       final after = const SetImageVignetteCommand(
         layerId: 'img',
         intensity: 0.3,
@@ -152,25 +149,23 @@ void main() {
     });
 
     test('invert restores all three knobs atomically', () {
-      final before = _doc(_makeImage(
-        effects: const EffectStack(<EditorEffect>[
-          VignetteEffect(
-            intensity: 0.6,
-            feather: 0.2,
-            color: Color(0xFF222244),
-          ),
-        ]),
-      ));
-      const fwd = SetImageVignetteCommand(
-        layerId: 'img',
-        intensity: 0.1,
+      final before = _doc(
+        _makeImage(
+          effects: const EffectStack(<EditorEffect>[
+            VignetteEffect(
+              intensity: 0.6,
+              feather: 0.2,
+              color: Color(0xFF222244),
+            ),
+          ]),
+        ),
       );
+      const fwd = SetImageVignetteCommand(layerId: 'img', intensity: 0.1);
       final inverse = fwd.invert(before);
       final restored = inverse.apply(fwd.apply(before));
-      final v = (restored.layers.single as ImageLayer)
-          .effects
-          .effects
-          .single as VignetteEffect;
+      final v =
+          (restored.layers.single as ImageLayer).effects.effects.single
+              as VignetteEffect;
       expect(v.intensity, 0.6);
       expect(v.feather, 0.2);
       expect(v.color, const Color(0xFF222244));
@@ -206,10 +201,7 @@ void main() {
     });
 
     test('mergeWith refuses non-live commands', () {
-      const a = SetImageVignetteCommand(
-        layerId: 'img',
-        intensity: 0.3,
-      );
+      const a = SetImageVignetteCommand(layerId: 'img', intensity: 0.3);
       const b = SetImageVignetteCommand(
         layerId: 'img',
         intensity: 0.4,
@@ -221,9 +213,7 @@ void main() {
 
   group('Renderer dual-path equivalence', () {
     test('intensity-0 vignette stack does not contribute custom-paint', () {
-      const stack = EffectStack(<EditorEffect>[
-        VignetteEffect(intensity: 0),
-      ]);
+      const stack = EffectStack(<EditorEffect>[VignetteEffect(intensity: 0)]);
       expect(stack.hasContributingCustomPaint, isFalse);
       expect(stack.customPaintEffects, isEmpty);
     });

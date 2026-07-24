@@ -216,8 +216,7 @@ void main() {
       expect(r.snapped, isTrue);
     });
 
-    test(
-        'scale-in-place: the layer scales around its own centre '
+    test('scale-in-place: the layer scales around its own centre '
         'regardless of where the focal is', () {
       // Previous engine behaviour anchored the point under the initial
       // focal to stay under the current focal ("Procreate free-transform"
@@ -314,8 +313,10 @@ void main() {
       // minGestureScale = 0.02 would give 4x2, but minHeight floor of 24
       // clamps height; aspect preservation then raises width above 4.
       expect(r.transform.size.height, greaterThanOrEqualTo(24));
-      expect(r.transform.size.width / r.transform.size.height,
-          closeTo(base.size.width / base.size.height, 1e-6));
+      expect(
+        r.transform.size.width / r.transform.size.height,
+        closeTo(base.size.width / base.size.height, 1e-6),
+      );
     });
 
     test('maxLayerSize cap applies when initial layer is already large', () {

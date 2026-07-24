@@ -183,10 +183,7 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
           ),
         ),
         const SizedBox(height: 14),
-        Container(
-          height: 1,
-          color: tokens.border.withValues(alpha: 0.4),
-        ),
+        Container(height: 1, color: tokens.border.withValues(alpha: 0.4)),
         const SizedBox(height: 10),
         if (widget.fineTuneLabel.isNotEmpty)
           Padding(
@@ -216,9 +213,7 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
                     enabledThumbRadius: 8,
                   ),
                   activeTrackColor: tokens.accent.withValues(alpha: 0.85),
-                  inactiveTrackColor: tokens.border.withValues(
-                    alpha: 0.5,
-                  ),
+                  inactiveTrackColor: tokens.border.withValues(alpha: 0.5),
                 ),
                 // [Listener] catches pointer-cancel events the
                 // [Slider] swallows (no `onChangeEnd` fires on

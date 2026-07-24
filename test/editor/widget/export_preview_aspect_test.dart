@@ -44,9 +44,7 @@ Future<Uint8List> makeTransparentPng(int w, int h) async {
 }
 
 Widget _wrap(Widget child) {
-  return ProviderScope(
-    child: MaterialApp(home: child),
-  );
+  return ProviderScope(child: MaterialApp(home: child));
 }
 
 /// Locate the [AspectRatio] that drives the preview rectangle. The
@@ -59,8 +57,9 @@ double _previewAspect(WidgetTester tester) {
 
 void main() {
   group('ExportPreviewScreen aspect ratio', () {
-    testWidgets('landscape 6720x4480 renders as 3:2, not stretched',
-        (tester) async {
+    testWidgets('landscape 6720x4480 renders as 3:2, not stretched', (
+      tester,
+    ) async {
       // Use a small bitmap to keep the test cheap; the AspectRatio
       // widget is driven by the props (pixelWidth / pixelHeight),
       // so the on-screen rectangle exactly mirrors the production
@@ -69,12 +68,16 @@ void main() {
       await tester.runAsync(() async {
         bytes = await makeSolidPng(60, 40);
       });
-      await tester.pumpWidget(_wrap(ExportPreviewScreen(
-        bytes: bytes,
-        format: ExportFormat.png,
-        pixelWidth: 6720,
-        pixelHeight: 4480,
-      )));
+      await tester.pumpWidget(
+        _wrap(
+          ExportPreviewScreen(
+            bytes: bytes,
+            format: ExportFormat.png,
+            pixelWidth: 6720,
+            pixelHeight: 4480,
+          ),
+        ),
+      );
       // Image.memory schedules an async decode; drain it.
       await tester.pump();
 
@@ -88,12 +91,16 @@ void main() {
       await tester.runAsync(() async {
         bytes = await makeSolidPng(40, 60);
       });
-      await tester.pumpWidget(_wrap(ExportPreviewScreen(
-        bytes: bytes,
-        format: ExportFormat.png,
-        pixelWidth: 1080,
-        pixelHeight: 1920,
-      )));
+      await tester.pumpWidget(
+        _wrap(
+          ExportPreviewScreen(
+            bytes: bytes,
+            format: ExportFormat.png,
+            pixelWidth: 1080,
+            pixelHeight: 1920,
+          ),
+        ),
+      );
       await tester.pump();
       expect(_previewAspect(tester), closeTo(1080 / 1920, 1e-9));
     });
@@ -103,28 +110,37 @@ void main() {
       await tester.runAsync(() async {
         bytes = await makeSolidPng(50, 50);
       });
-      await tester.pumpWidget(_wrap(ExportPreviewScreen(
-        bytes: bytes,
-        format: ExportFormat.png,
-        pixelWidth: 1024,
-        pixelHeight: 1024,
-      )));
+      await tester.pumpWidget(
+        _wrap(
+          ExportPreviewScreen(
+            bytes: bytes,
+            format: ExportFormat.png,
+            pixelWidth: 1024,
+            pixelHeight: 1024,
+          ),
+        ),
+      );
       await tester.pump();
       expect(_previewAspect(tester), closeTo(1.0, 1e-9));
     });
 
-    testWidgets('transparent PNG keeps aspect ratio AND shows checkerboard',
-        (tester) async {
+    testWidgets('transparent PNG keeps aspect ratio AND shows checkerboard', (
+      tester,
+    ) async {
       late final Uint8List bytes;
       await tester.runAsync(() async {
         bytes = await makeTransparentPng(80, 40);
       });
-      await tester.pumpWidget(_wrap(ExportPreviewScreen(
-        bytes: bytes,
-        format: ExportFormat.png,
-        pixelWidth: 1600,
-        pixelHeight: 800,
-      )));
+      await tester.pumpWidget(
+        _wrap(
+          ExportPreviewScreen(
+            bytes: bytes,
+            format: ExportFormat.png,
+            pixelWidth: 1600,
+            pixelHeight: 800,
+          ),
+        ),
+      );
       await tester.pump();
       expect(_previewAspect(tester), closeTo(2.0, 1e-9));
       // Checkerboard sits behind the image in the same aspect-ratio
@@ -134,37 +150,45 @@ void main() {
   });
 
   group('ExportPreviewScreen size label', () {
-    testWidgets('shows caller-supplied dimensions immediately',
-        (tester) async {
+    testWidgets('shows caller-supplied dimensions immediately', (tester) async {
       late final Uint8List bytes;
       await tester.runAsync(() async {
         bytes = await makeSolidPng(2, 2);
       });
-      await tester.pumpWidget(_wrap(ExportPreviewScreen(
-        bytes: bytes,
-        format: ExportFormat.png,
-        pixelWidth: 6720,
-        pixelHeight: 4480,
-      )));
+      await tester.pumpWidget(
+        _wrap(
+          ExportPreviewScreen(
+            bytes: bytes,
+            format: ExportFormat.png,
+            pixelWidth: 6720,
+            pixelHeight: 4480,
+          ),
+        ),
+      );
       await tester.pump();
       // Before the async decode resolves, the label uses the props.
       expect(find.text('6720 \u00d7 4480'), findsOneWidget);
     });
 
-    testWidgets('matches the actual decoded bitmap dimensions after decode',
-        (tester) async {
+    testWidgets('matches the actual decoded bitmap dimensions after decode', (
+      tester,
+    ) async {
       late final Uint8List bytes;
       await tester.runAsync(() async {
         bytes = await makeSolidPng(320, 200);
       });
       // Caller-supplied dimensions intentionally diverge from the
       // bytes so we can prove the label updates to ground truth.
-      await tester.pumpWidget(_wrap(ExportPreviewScreen(
-        bytes: bytes,
-        format: ExportFormat.png,
-        pixelWidth: 999,
-        pixelHeight: 999,
-      )));
+      await tester.pumpWidget(
+        _wrap(
+          ExportPreviewScreen(
+            bytes: bytes,
+            format: ExportFormat.png,
+            pixelWidth: 999,
+            pixelHeight: 999,
+          ),
+        ),
+      );
       // Let the async decode + setState complete.
       await tester.runAsync(() async {
         await Future<void>.delayed(const Duration(milliseconds: 50));

@@ -26,20 +26,25 @@ ImageLayer _image({LayerMask? stackMask}) => ImageLayer(
   ),
   source: const ImageSource.asset('stub.png'),
   effects: EffectStack(
-    List<EditorEffect>.unmodifiable(
-      <EditorEffect>[BrightnessEffect(amount: 20)],
-    ),
+    List<EditorEffect>.unmodifiable(<EditorEffect>[
+      BrightnessEffect(amount: 20),
+    ]),
     stackMask: stackMask,
   ),
 );
 
-Future<ProviderContainer> _pump(WidgetTester tester,
-    {LayerMask? stackMask, bool open = true}) async {
+Future<ProviderContainer> _pump(
+  WidgetTester tester, {
+  LayerMask? stackMask,
+  bool open = true,
+}) async {
   final c = ProviderContainer();
   addTearDown(c.dispose);
-  c.read(documentControllerProvider.notifier)
+  c
+      .read(documentControllerProvider.notifier)
       .newDocument(width: 400, height: 300);
-  c.read(documentControllerProvider.notifier)
+  c
+      .read(documentControllerProvider.notifier)
       .execute(AddLayerCommand(_image(stackMask: stackMask)));
   c.read(maskEditControllerProvider); // mount listener
   if (open) c.read(maskEditControllerProvider.notifier).open('img');
@@ -81,8 +86,9 @@ void main() {
     expect(find.text('Done'), findsNothing);
   });
 
-  testWidgets('active mode shows 8 handles + body surface + strip',
-      (tester) async {
+  testWidgets('active mode shows 8 handles + body surface + strip', (
+    tester,
+  ) async {
     await _pump(tester, stackMask: _mask);
     // 8 resize handles + 1 body-move surface.
     expect(find.byType(HandleDragDetector), findsNWidgets(9));
@@ -92,8 +98,9 @@ void main() {
     expect(find.byType(Switch), findsOneWidget);
   });
 
-  testWidgets('body drag translates the draft in layer-local units',
-      (tester) async {
+  testWidgets('body drag translates the draft in layer-local units', (
+    tester,
+  ) async {
     final c = await _pump(tester, stackMask: _mask);
     // Mask bounds centre: layer-local (50,40) → layer at (50,50),
     // no rotation, identity viewport → screen (100,90).
@@ -107,14 +114,16 @@ void main() {
     expect(_docMask(c), _mask, reason: 'drag never touches the document');
   });
 
-  testWidgets('corner drag resizes anchored on the opposite corner',
-      (tester) async {
+  testWidgets('corner drag resizes anchored on the opposite corner', (
+    tester,
+  ) async {
     final c = await _pump(tester, stackMask: _mask);
     // bottomRight handle: layer-local (90,70) → screen (140,120).
     await tester.dragFrom(const Offset(140, 120), const Offset(20, 10));
     await tester.pump();
     final b = MaskEditController.boundsOf(
-        c.read(maskEditControllerProvider).draft!);
+      c.read(maskEditControllerProvider).draft!,
+    );
     expect(b.topLeft, _mask.rect.topLeft);
     expect(b.right, closeTo(110, 0.001));
     expect(b.bottom, closeTo(80, 0.001));
@@ -144,8 +153,7 @@ void main() {
     expect(_docMask(c), _mask);
   });
 
-  testWidgets('invert toggle + feather slider edit the draft',
-      (tester) async {
+  testWidgets('invert toggle + feather slider edit the draft', (tester) async {
     final c = await _pump(tester, stackMask: _mask);
     await tester.tap(find.byType(Switch));
     await tester.pump();

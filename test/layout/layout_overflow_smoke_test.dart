@@ -263,9 +263,7 @@ void main() {
     final dir = tempProjectsDir();
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          projectsDirectoryProvider.overrideWith((ref) async => dir),
-        ],
+        overrides: [projectsDirectoryProvider.overrideWith((ref) async => dir)],
         child: _app(home: home),
       ),
     );

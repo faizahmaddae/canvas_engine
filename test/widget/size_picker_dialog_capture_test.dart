@@ -64,13 +64,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final boundary = boundaryKey.currentContext!.findRenderObject()!
-        as RenderRepaintBoundary;
+    final boundary =
+        boundaryKey.currentContext!.findRenderObject()!
+            as RenderRepaintBoundary;
     final image = await tester.runAsync(
       () => boundary.toImage(pixelRatio: 2.0),
     );
-    final byteData =
-        await tester.runAsync(() => image!.toByteData(format: ui.ImageByteFormat.png));
+    final byteData = await tester.runAsync(
+      () => image!.toByteData(format: ui.ImageByteFormat.png),
+    );
     final bytes = byteData!.buffer.asUint8List();
     final file = File('${outputDir.path}/size_picker_dialog.png');
     file.writeAsBytesSync(bytes);

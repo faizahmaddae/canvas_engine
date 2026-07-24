@@ -15,11 +15,7 @@ void main() {
     testWidgets('renders 9 cells', (tester) async {
       await tester.pumpWidget(
         _host(
-          PanelDirectionPad(
-            offset: Offset.zero,
-            magnitude: 20,
-            onPick: (_) {},
-          ),
+          PanelDirectionPad(offset: Offset.zero, magnitude: 20, onPick: (_) {}),
         ),
       );
       expect(find.byType(InkWell), findsNWidgets(9));
@@ -110,10 +106,14 @@ void main() {
 
       final ltr = await cellCenters(TextDirection.ltr);
       final rtl = await cellCenters(TextDirection.rtl);
-      expect(rtl, ltr,
-          reason: 'the pad must not mirror under an RTL ambient '
-              'Directionality — a mirrored grid with physical-offset '
-              'onPick would move the target the wrong way');
+      expect(
+        rtl,
+        ltr,
+        reason:
+            'the pad must not mirror under an RTL ambient '
+            'Directionality — a mirrored grid with physical-offset '
+            'onPick would move the target the wrong way',
+      );
     });
 
     testWidgets('a perimeter tap emits the same physical Offset under '

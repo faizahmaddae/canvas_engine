@@ -12,45 +12,42 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('PaintLayer — copyAll preserves every field across codec', () {
     PaintLayer makeLoaded() => PaintLayer(
-          id: 'pnt-loaded',
-          transform: LayerTransform(
-            position: Offset(50, 60),
-            size: Size(300, 200),
-            rotation: 0.25,
-          ),
-          kind: PaintKind.polygon,
-          normalizedPoints: [
-            Offset(0.0, 0.5),
-            Offset(0.25, 0.0),
-            Offset(0.5, 0.75),
-            Offset(0.75, 0.25),
-            Offset(1.0, 0.5),
-          ],
-          strokeColor: Color(0xFF112233),
-          strokeWidth: 8,
-          fillColor: Color(0xFF445566),
-          sides: 7,
-          // blurSigma intentionally left at the constructor default —
-          // the codec only persists it when `kind == blur` (it's a
-          // kind-scoped field). Using the default keeps the
-          // round-trip exact for a polygon layer.
-          resizeMode: PaintResizeMode.scale,
-          name: 'stroke',
-          visible: false,
-          locked: true,
-          opacity: 0.42,
-        );
+      id: 'pnt-loaded',
+      transform: LayerTransform(
+        position: Offset(50, 60),
+        size: Size(300, 200),
+        rotation: 0.25,
+      ),
+      kind: PaintKind.polygon,
+      normalizedPoints: [
+        Offset(0.0, 0.5),
+        Offset(0.25, 0.0),
+        Offset(0.5, 0.75),
+        Offset(0.75, 0.25),
+        Offset(1.0, 0.5),
+      ],
+      strokeColor: Color(0xFF112233),
+      strokeWidth: 8,
+      fillColor: Color(0xFF445566),
+      sides: 7,
+      // blurSigma intentionally left at the constructor default —
+      // the codec only persists it when `kind == blur` (it's a
+      // kind-scoped field). Using the default keeps the
+      // round-trip exact for a polygon layer.
+      resizeMode: PaintResizeMode.scale,
+      name: 'stroke',
+      visible: false,
+      locked: true,
+      opacity: 0.42,
+    );
 
     String encode(PaintLayer l) => DocumentCodec.encode(
-          EditorDocument(layers: [l], width: 1000, height: 1000),
-        );
+      EditorDocument(layers: [l], width: 1000, height: 1000),
+    );
 
     test('withTransform preserves every other field', () {
       final base = makeLoaded();
-      const next = LayerTransform(
-        position: Offset(0, 0),
-        size: Size(10, 10),
-      );
+      const next = LayerTransform(position: Offset(0, 0), size: Size(10, 10));
       final mutated = base.withTransform(next) as PaintLayer;
       expect(mutated.kind, base.kind);
       expect(mutated.normalizedPoints, base.normalizedPoints);
@@ -67,8 +64,7 @@ void main() {
       expect(mutated.transform, next);
     });
 
-    test('withVisibility / withLocked / withOpacity preserve all peers',
-        () {
+    test('withVisibility / withLocked / withOpacity preserve all peers', () {
       final base = makeLoaded();
       final shown = base.withVisibility(true) as PaintLayer;
       expect(shown.visible, true);

@@ -64,8 +64,12 @@ bool _nearPx(({int r, int g, int b}) px, ({int r, int g, int b}) e) =>
 Future<void> _prewarm(WidgetTester tester, LayerMask mask) async {
   await tester.runAsync(() async {
     final done = Completer<void>();
-    StackMaskRasterCache.instance
-        .request(mask, kDocSide, kDocSide, done.complete);
+    StackMaskRasterCache.instance.request(
+      mask,
+      kDocSide,
+      kDocSide,
+      done.complete,
+    );
     await done.future;
   });
 }
@@ -109,15 +113,17 @@ Future<GlobalKey> _mount(WidgetTester tester, EditorDocument doc) async {
 }
 
 Future<({int width, int height, ({int r, int g, int b}) Function(int, int) px})>
-    _capture(WidgetTester tester, GlobalKey key) async {
+_capture(WidgetTester tester, GlobalKey key) async {
   final bytes = (await tester.runAsync(
-    () => DocumentPngExporter.captureBoundary(boundaryKey: key, pixelRatio: 1.0),
+    () =>
+        DocumentPngExporter.captureBoundary(boundaryKey: key, pixelRatio: 1.0),
   ))!;
   final decoded = (await tester.runAsync(() async {
     final codec = await ui.instantiateImageCodec(bytes);
     final frame = await codec.getNextFrame();
-    final raw =
-        await frame.image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final raw = await frame.image.toByteData(
+      format: ui.ImageByteFormat.rawRgba,
+    );
     final data = raw!.buffer.asUint8List();
     final width = frame.image.width;
     final height = frame.image.height;
@@ -133,7 +139,7 @@ Future<({int width, int height, ({int r, int g, int b}) Function(int, int) px})>
 }
 
 Future<({int width, int height, ({int r, int g, int b}) Function(int, int) px})>
-    _captureSettled(
+_captureSettled(
   WidgetTester tester,
   GlobalKey key,
   bool Function(({int r, int g, int b}) Function(int, int) px) painted,
@@ -186,8 +192,7 @@ class _MemoryAssetBundle extends CachingAssetBundle {
 }
 
 EffectStack _stack(List<EditorEffect> effects, {LayerMask? stackMask}) =>
-    EffectStack(List<EditorEffect>.unmodifiable(effects),
-        stackMask: stackMask);
+    EffectStack(List<EditorEffect>.unmodifiable(effects), stackMask: stackMask);
 
 List<double> _matrixOfStack(List<EditorEffect> unmasked) =>
     _stack(unmasked).composedColorMatrix!;
@@ -196,20 +201,23 @@ void main() {
   tearDown(StackMaskRasterCache.instance.clearForTest);
 
   group('structure gates', () {
-    testWidgets('unmasked effect stacks never build the segmented path',
-        (tester) async {
-      await _mount(
-        tester,
-        _doc(_stack([const SaturationEffect(amount: 0.5)])),
+    testWidgets('unmasked effect stacks never build the segmented path', (
+      tester,
+    ) async {
+      await _mount(tester, _doc(_stack([const SaturationEffect(amount: 0.5)])));
+      expect(
+        find.byType(StackMaskComposite),
+        findsNothing,
+        reason:
+            'fast path must stay widget-identical for every '
+            'pre-Step-6 document',
       );
-      expect(find.byType(StackMaskComposite), findsNothing,
-          reason: 'fast path must stay widget-identical for every '
-              'pre-Step-6 document');
       expect(find.byType(ShaderMask), findsNothing);
     });
 
-    testWidgets('one masked matrix effect builds exactly one composite',
-        (tester) async {
+    testWidgets('one masked matrix effect builds exactly one composite', (
+      tester,
+    ) async {
       await _prewarm(tester, kTopMask);
       await _mount(
         tester,
@@ -221,65 +229,81 @@ void main() {
   });
 
   group('reorder honesty (Phase 3.3)', () {
-    testWidgets('canonical stack (vignette on top) keeps the fast path',
-        (tester) async {
+    testWidgets('canonical stack (vignette on top) keeps the fast path', (
+      tester,
+    ) async {
       await _mount(
         tester,
-        _doc(_stack([
-          BrightnessEffect(amount: 60),
-          const VignetteEffect(intensity: 0.9),
-        ])),
+        _doc(
+          _stack([
+            BrightnessEffect(amount: 60),
+            const VignetteEffect(intensity: 0.9),
+          ]),
+        ),
       );
-      expect(find.byType(StackMaskComposite), findsNothing,
-          reason: 'everything our writers produce must keep the '
-              'legacy widget tree');
+      expect(
+        find.byType(StackMaskComposite),
+        findsNothing,
+        reason:
+            'everything our writers produce must keep the '
+            'legacy widget tree',
+      );
     });
 
     testWidgets(
-        'brightness above vs below a vignette renders DIFFERENT pixels',
-        (tester) async {
-      // The old renderer applied the composed matrix first and painted
-      // every custom-paint effect on top unconditionally, so these two
-      // stacks rendered identically while the Effects panel offered
-      // the drag as a real change. Corner probe: the vignette darkens
-      // corners; brightness ABOVE it re-brightens the darkened
-      // corners, brightness BELOW it does not.
-      Future<({int r, int g, int b})> corner(EffectStack stack) async {
-        final key = await _mount(tester, _doc(stack));
-        final shot = await _captureSettled(
-          tester,
-          key,
-          // Painted once the centre shows non-white (image landed).
-          (px) => !_nearPx(px(100, 100), (r: 255, g: 255, b: 255)),
+      'brightness above vs below a vignette renders DIFFERENT pixels',
+      (tester) async {
+        // The old renderer applied the composed matrix first and painted
+        // every custom-paint effect on top unconditionally, so these two
+        // stacks rendered identically while the Effects panel offered
+        // the drag as a real change. Corner probe: the vignette darkens
+        // corners; brightness ABOVE it re-brightens the darkened
+        // corners, brightness BELOW it does not.
+        Future<({int r, int g, int b})> corner(EffectStack stack) async {
+          final key = await _mount(tester, _doc(stack));
+          final shot = await _captureSettled(
+            tester,
+            key,
+            // Painted once the centre shows non-white (image landed).
+            (px) => !_nearPx(px(100, 100), (r: 255, g: 255, b: 255)),
+          );
+          return shot.px(4, 4);
+        }
+
+        final vignetteOnTop = await corner(
+          _stack([
+            BrightnessEffect(amount: 60),
+            const VignetteEffect(intensity: 0.9),
+          ]),
         );
-        return shot.px(4, 4);
-      }
+        final brightnessOnTop = await corner(
+          _stack([
+            const VignetteEffect(intensity: 0.9),
+            BrightnessEffect(amount: 60),
+          ]),
+        );
 
-      final vignetteOnTop = await corner(_stack([
-        BrightnessEffect(amount: 60),
-        const VignetteEffect(intensity: 0.9),
-      ]));
-      final brightnessOnTop = await corner(_stack([
-        const VignetteEffect(intensity: 0.9),
-        BrightnessEffect(amount: 60),
-      ]));
-
-      expect(
-        (vignetteOnTop.r - brightnessOnTop.r).abs() > 8 ||
-            (vignetteOnTop.g - brightnessOnTop.g).abs() > 8,
-        isTrue,
-        reason: 'stack order must be a real render change '
-            '($vignetteOnTop vs $brightnessOnTop)',
-      );
-      expect(brightnessOnTop.r > vignetteOnTop.r, isTrue,
-          reason: 'brightness above the vignette re-brightens the '
-              'darkened corner');
-    });
+        expect(
+          (vignetteOnTop.r - brightnessOnTop.r).abs() > 8 ||
+              (vignetteOnTop.g - brightnessOnTop.g).abs() > 8,
+          isTrue,
+          reason:
+              'stack order must be a real render change '
+              '($vignetteOnTop vs $brightnessOnTop)',
+        );
+        expect(
+          brightnessOnTop.r > vignetteOnTop.r,
+          isTrue,
+          reason:
+              'brightness above the vignette re-brightens the '
+              'darkened corner',
+        );
+      },
+    );
   });
 
   group('pixel gates', () {
-    testWidgets(
-        'masked effect confined to its region; effect below it applies '
+    testWidgets('masked effect confined to its region; effect below it applies '
         'everywhere', (tester) async {
       // effects[0] = saturation (unmasked, applies everywhere),
       // effects[1] = brightness masked to the top half.
@@ -307,22 +331,30 @@ void main() {
         (px) => _nearPx(px(100, 180), bottomExpected),
       );
 
-      expect(_nearPx(shot.px(100, 30), topExpected), isTrue,
-          reason: 'inside the mask both effects apply in stack order '
-              '(${shot.px(100, 30)} vs $topExpected)');
-      expect(_nearPx(shot.px(100, 180), bottomExpected), isTrue,
-          reason: 'outside the mask only the unmasked effect applies '
-              '(${shot.px(100, 180)} vs $bottomExpected)');
+      expect(
+        _nearPx(shot.px(100, 30), topExpected),
+        isTrue,
+        reason:
+            'inside the mask both effects apply in stack order '
+            '(${shot.px(100, 30)} vs $topExpected)',
+      );
+      expect(
+        _nearPx(shot.px(100, 180), bottomExpected),
+        isTrue,
+        reason:
+            'outside the mask only the unmasked effect applies '
+            '(${shot.px(100, 180)} vs $bottomExpected)',
+      );
     });
 
-    testWidgets('per-effect mask ∧ stack mask = min(α) intersection',
-        (tester) async {
+    testWidgets('per-effect mask ∧ stack mask = min(α) intersection', (
+      tester,
+    ) async {
       // Brightness masked to the top half; the whole stack masked to
       // the left half → the effect may only survive top-left.
-      final effects = _stack(
-        [BrightnessEffect(amount: 60, mask: kTopMask)],
-        stackMask: kLeftMask,
-      );
+      final effects = _stack([
+        BrightnessEffect(amount: 60, mask: kTopMask),
+      ], stackMask: kLeftMask);
       final effected = _applyMatrix(
         _matrixOfStack([BrightnessEffect(amount: 60)]),
         kRed,
@@ -338,14 +370,26 @@ void main() {
         (px) => _nearPx(px(50, 30), effected),
       );
 
-      expect(_nearPx(shot.px(50, 30), effected), isTrue,
-          reason: 'top-left: both masks agree → effected');
-      expect(_nearPx(shot.px(150, 30), red), isTrue,
-          reason: 'top-right: stack mask vetoes (${shot.px(150, 30)})');
-      expect(_nearPx(shot.px(50, 180), red), isTrue,
-          reason: 'bottom-left: effect mask vetoes (${shot.px(50, 180)})');
-      expect(_nearPx(shot.px(150, 180), red), isTrue,
-          reason: 'bottom-right: both veto');
+      expect(
+        _nearPx(shot.px(50, 30), effected),
+        isTrue,
+        reason: 'top-left: both masks agree → effected',
+      );
+      expect(
+        _nearPx(shot.px(150, 30), red),
+        isTrue,
+        reason: 'top-right: stack mask vetoes (${shot.px(150, 30)})',
+      );
+      expect(
+        _nearPx(shot.px(50, 180), red),
+        isTrue,
+        reason: 'bottom-left: effect mask vetoes (${shot.px(50, 180)})',
+      );
+      expect(
+        _nearPx(shot.px(150, 180), red),
+        isTrue,
+        reason: 'bottom-right: both veto',
+      );
     });
   });
 }

@@ -238,6 +238,7 @@ class InteractionController extends Notifier<InteractionUiState> {
   /// end. Absent (null) when no gesture is active, so no code path ever
   /// smooths committed document state.
   MotionSmoother? _smoother;
+
   /// Monotonic clock used to compute frame [dt] for the time-based
   /// smoother. Started at session begin, stopped on end. Using a
   /// [Stopwatch] (rather than wall-clock) keeps the smoother immune to
@@ -251,6 +252,7 @@ class InteractionController extends Notifier<InteractionUiState> {
   bool _wasRotationSnapped = false;
   bool _wasVerticallySnapped = false;
   bool _wasHorizontallySnapped = false;
+
   /// Pointer count observed on the previous multi-touch update. Used to
   /// detect 1\u2194n transitions so the session can be rebased without
   /// a visible jump when a second finger lands mid-drag.
@@ -304,8 +306,7 @@ class InteractionController extends Notifier<InteractionUiState> {
             return;
           }
           final prevLayer = prev?.layerById(id);
-          if (prevLayer != null &&
-              prevLayer.transform != layer.transform) {
+          if (prevLayer != null && prevLayer.transform != layer.transform) {
             cancel();
             return;
           }
@@ -386,10 +387,7 @@ class InteractionController extends Notifier<InteractionUiState> {
   ///
   /// Group multi-touch is handled by [startGroupGesture] / [updateGroupGesture];
   /// this method is single-layer only.
-  void startGesture({
-    required EditorLayer layer,
-    required Offset focalPoint,
-  }) {
+  void startGesture({required EditorLayer layer, required Offset focalPoint}) {
     if (layer.locked) return;
     final caps = layer.capabilities;
     if (!caps.movable && !caps.resizable && !caps.rotatable) return;
@@ -431,14 +429,13 @@ class InteractionController extends Notifier<InteractionUiState> {
           pointer.dy - s.initialTransform.center.dy,
           pointer.dx - s.initialTransform.center.dx,
         );
-        final rawRotation = s.initialTransform.rotation +
-            (rawCurrent - s.pointerStartAngle);
+        final rawRotation =
+            s.initialTransform.rotation + (rawCurrent - s.pointerStartAngle);
         snapped = _engine.isNearSnap(rawRotation);
       case InteractionHandle.topLeft:
       case InteractionHandle.bottomLeft:
       case InteractionHandle.bottomRight:
-        final layer =
-            ref.read(documentControllerProvider).layerById(s.layerId);
+        final layer = ref.read(documentControllerProvider).layerById(s.layerId);
         next = _engine.updateResize(
           s,
           pointer,
@@ -449,8 +446,7 @@ class InteractionController extends Notifier<InteractionUiState> {
         // opposite (anchor) corner fixed. Only for unrotated layers —
         // matches the rest of the snap subsystem which works on
         // [LayerTransform.unrotatedRect].
-        if (next.rotation == 0 &&
-            (layer?.capabilities.resizable ?? true)) {
+        if (next.rotation == 0 && (layer?.capabilities.resizable ?? true)) {
           final snapResult = _snapResize(
             next,
             s.layerId,
@@ -533,8 +529,7 @@ class InteractionController extends Notifier<InteractionUiState> {
     }
     _lastPointerCount = pointerCount;
 
-    final layer =
-        ref.read(documentControllerProvider).layerById(s.layerId);
+    final layer = ref.read(documentControllerProvider).layerById(s.layerId);
     final caps = layer?.capabilities ?? const LayerCapabilities();
 
     if (pointerCount < 2) {
@@ -547,17 +542,12 @@ class InteractionController extends Notifier<InteractionUiState> {
       );
       final snapResult = _snapMove(moved, s.layerId);
       state = state.copyWith(
-        liveTransform: _smooth(
-          moved.copyWith(position: snapResult.position),
-        ),
+        liveTransform: _smooth(moved.copyWith(position: snapResult.position)),
         isRotationSnapped: false,
         snapGuides: snapResult.guides,
         spacingGuides: snapResult.spacingGuides,
       );
-      _maybeFireSnapHaptic(
-        rotationSnapped: false,
-        guides: snapResult.guides,
-      );
+      _maybeFireSnapHaptic(rotationSnapped: false, guides: snapResult.guides);
       return;
     }
 
@@ -620,8 +610,9 @@ class InteractionController extends Notifier<InteractionUiState> {
     // an undo or a layers-panel action). Verify before issuing a
     // command — a stale `SetLayerTransformCommand` would either no-op
     // silently or, worse, mutate a layer the user cannot see.
-    final activeLayer =
-        ref.read(documentControllerProvider).layerById(s.layerId);
+    final activeLayer = ref
+        .read(documentControllerProvider)
+        .layerById(s.layerId);
     final stillEligible =
         activeLayer != null && activeLayer.visible && !activeLayer.locked;
     // Diff against the *document* transform, not `s.initialTransform`.
@@ -644,8 +635,7 @@ class InteractionController extends Notifier<InteractionUiState> {
     // Tolerances are tight enough that any deliberate nudge still
     // commits: 0.25 canvas px is sub-pixel on a 1x viewport and
     // still under 1 screen px at 4x zoom.
-    if (stillEligible &&
-        !_transformsApproxEqual(live, activeLayer.transform)) {
+    if (stillEligible && !_transformsApproxEqual(live, activeLayer.transform)) {
       // IMPORTANT: commit the *exact* transform that was last rendered on
       // screen. Any normalisation here (e.g. rounding to whole logical
       // pixels) would cause a sub-pixel snap between the last frame of
@@ -666,7 +656,8 @@ class InteractionController extends Notifier<InteractionUiState> {
       // only as "Move" rather than "Transform": single-finger drags
       // that degraded from a gesture session should read the same
       // as body-handle drags in the history panel.
-      final effectiveHandle = (s.handle == InteractionHandle.gesture &&
+      final effectiveHandle =
+          (s.handle == InteractionHandle.gesture &&
               live.size == activeLayer.transform.size &&
               live.rotation == activeLayer.transform.rotation)
           ? InteractionHandle.body
@@ -814,8 +805,10 @@ class InteractionController extends Notifier<InteractionUiState> {
         initialBounds: bounds,
         anchor: centre,
         pointerStart: pointer,
-        pointerStartAngle:
-            math.atan2(pointer.dy - centre.dy, pointer.dx - centre.dx),
+        pointerStartAngle: math.atan2(
+          pointer.dy - centre.dy,
+          pointer.dx - centre.dx,
+        ),
       ),
       groupLive: initials,
       groupLiveBounds: bounds,
@@ -977,11 +970,7 @@ class InteractionController extends Notifier<InteractionUiState> {
         // 90° regardless of where the children started.
         snapped = _engine.isNearSnap(delta);
         delta = _engine.snapRotation(delta);
-        next = _groupEngine.rotate(
-          g.initials,
-          center: g.anchor,
-          delta: delta,
-        );
+        next = _groupEngine.rotate(g.initials, center: g.anchor, delta: delta);
         frameRotation = delta;
       case InteractionHandle.gesture:
         // Single-pointer update on a gesture session: degrade to translate.
@@ -1001,10 +990,7 @@ class InteractionController extends Notifier<InteractionUiState> {
         frameTranslation,
       ),
     );
-    _maybeFireSnapHaptic(
-      rotationSnapped: snapped,
-      guides: alignGuides,
-    );
+    _maybeFireSnapHaptic(rotationSnapped: snapped, guides: alignGuides);
   }
 
   /// True when every group participant is resizable. We require all
@@ -1049,8 +1035,9 @@ class InteractionController extends Notifier<InteractionUiState> {
     // focal to the midpoint and resets [scale] to 1, so the stored
     // [pointerStart] / [initials] become stale and the group jumps.
     final firstUpdate = _lastPointerCount == 0;
-    final shouldRebase =
-        firstUpdate ? pointerCount >= 2 : _lastPointerCount != pointerCount;
+    final shouldRebase = firstUpdate
+        ? pointerCount >= 2
+        : _lastPointerCount != pointerCount;
     if (shouldRebase) {
       final liveBounds = _groupEngine.computeBounds(state.groupLive.values);
       g = GroupGestureSession(
@@ -1077,8 +1064,10 @@ class InteractionController extends Notifier<InteractionUiState> {
       // session (the dedicated move path is currently only exercised
       // by unit tests), so without this branch a multi-select drag
       // would feel un-snappable in production.
-      var next =
-          _groupEngine.translate(g.initials, focalPoint - g.pointerStart);
+      var next = _groupEngine.translate(
+        g.initials,
+        focalPoint - g.pointerStart,
+      );
       var alignGuides = const <SnapGuide>[];
       var spacingGuides = const <SpacingGuide>[];
       var translation = focalPoint - g.pointerStart;
@@ -1106,10 +1095,7 @@ class InteractionController extends Notifier<InteractionUiState> {
           translation,
         ),
       );
-      _maybeFireSnapHaptic(
-        rotationSnapped: false,
-        guides: alignGuides,
-      );
+      _maybeFireSnapHaptic(rotationSnapped: false, guides: alignGuides);
       return;
     }
 
@@ -1190,11 +1176,13 @@ class InteractionController extends Notifier<InteractionUiState> {
       // Strict equality would commit a 50-layer composite for a
       // visibly-still group; epsilon drops each untouched layer.
       if (_transformsApproxEqual(entry.value, l.transform)) continue;
-      cmds.add(SetLayerTransformCommand(
-        layerId: entry.key,
-        transform: entry.value,
-        labelOverride: _labelFor(g.handle),
-      ));
+      cmds.add(
+        SetLayerTransformCommand(
+          layerId: entry.key,
+          transform: entry.value,
+          labelOverride: _labelFor(g.handle),
+        ),
+      );
     }
     if (cmds.isNotEmpty) {
       final docCtl = ref.read(documentControllerProvider.notifier);
@@ -1211,10 +1199,12 @@ class InteractionController extends Notifier<InteractionUiState> {
       if (cmdCount == 1) {
         docCtl.execute(cmds.first);
       } else {
-        docCtl.execute(CompositeCommand(
-          cmds,
-          labelOverride: '${_labelFor(handle)} $cmdCount layers',
-        ));
+        docCtl.execute(
+          CompositeCommand(
+            cmds,
+            labelOverride: '${_labelFor(handle)} $cmdCount layers',
+          ),
+        );
       }
       return;
     }
@@ -1379,8 +1369,9 @@ class InteractionController extends Notifier<InteractionUiState> {
         if (l.id != movingId && l.visible) l.transform.unrotatedRect,
     ];
     final scale = ref.read(viewportControllerProvider).scale;
-    final effectiveThreshold =
-        scale > 0 ? _baseSnapThreshold / scale : _baseSnapThreshold;
+    final effectiveThreshold = scale > 0
+        ? _baseSnapThreshold / scale
+        : _baseSnapThreshold;
     // Hysteresis: hand the engine last frame's guides as `previous`
     // so engaged targets retain their engagement at a wider release
     // tolerance. Eliminates the on/off flicker that appears when the
@@ -1401,10 +1392,8 @@ class InteractionController extends Notifier<InteractionUiState> {
     // engage. We feed it the *post-alignment* position so any X-snap
     // already applied keeps its strong-signal status while a Y
     // spacing snap (or vice versa) still has a chance to engage.
-    final alignedHasV =
-        align.guides.any((g) => g.axis == SnapAxis.vertical);
-    final alignedHasH =
-        align.guides.any((g) => g.axis == SnapAxis.horizontal);
+    final alignedHasV = align.guides.any((g) => g.axis == SnapAxis.vertical);
+    final alignedHasH = align.guides.any((g) => g.axis == SnapAxis.horizontal);
     final spacingGuides = <SpacingGuide>[];
     var finalPos = align.position;
     if (peers.length >= 2 && (!alignedHasV || !alignedHasH)) {
@@ -1457,8 +1446,9 @@ class InteractionController extends Notifier<InteractionUiState> {
   _ResizeSnapResult _snapResize(
     LayerTransform t,
     String layerId,
-    InteractionHandle handle,
-    {required bool keepAspect}) {
+    InteractionHandle handle, {
+    required bool keepAspect,
+  }) {
     final doc = ref.read(documentControllerProvider);
     final peers = <Rect>[
       for (final l in doc.layers)
@@ -1469,11 +1459,13 @@ class InteractionController extends Notifier<InteractionUiState> {
 
     final rect = t.unrotatedRect;
     // Identify which edges move with this handle.
-    final movesLeft = handle == InteractionHandle.topLeft ||
+    final movesLeft =
+        handle == InteractionHandle.topLeft ||
         handle == InteractionHandle.bottomLeft;
     final movesRight = handle == InteractionHandle.bottomRight;
     final movesTop = handle == InteractionHandle.topLeft;
-    final movesBottom = handle == InteractionHandle.bottomLeft ||
+    final movesBottom =
+        handle == InteractionHandle.bottomLeft ||
         handle == InteractionHandle.bottomRight;
 
     // Anchor coords (the fixed corner).
@@ -1483,11 +1475,15 @@ class InteractionController extends Notifier<InteractionUiState> {
     // Build vertical-line targets (X coords) and horizontal-line
     // targets (Y coords) — peer edges + canvas edges.
     final vTargets = <double>[
-      0, doc.width / 2, doc.width,
+      0,
+      doc.width / 2,
+      doc.width,
       for (final r in peers) ...[r.left, r.left + r.width / 2, r.right],
     ];
     final hTargets = <double>[
-      0, doc.height / 2, doc.height,
+      0,
+      doc.height / 2,
+      doc.height,
       for (final r in peers) ...[r.top, r.top + r.height / 2, r.bottom],
     ];
     final prevVCoord = _firstCoord(state.snapGuides, SnapAxis.vertical);
@@ -1534,12 +1530,14 @@ class InteractionController extends Notifier<InteractionUiState> {
       } else {
         newRight = xSnap.target;
       }
-      guides.add(SnapGuide(
-        axis: SnapAxis.vertical,
-        coord: xSnap.target,
-        start: math.min(rect.top, rect.bottom),
-        end: math.max(rect.top, rect.bottom),
-      ));
+      guides.add(
+        SnapGuide(
+          axis: SnapAxis.vertical,
+          coord: xSnap.target,
+          start: math.min(rect.top, rect.bottom),
+          end: math.max(rect.top, rect.bottom),
+        ),
+      );
     }
     if (pickY && ySnap != null) {
       if (movesTop) {
@@ -1547,12 +1545,14 @@ class InteractionController extends Notifier<InteractionUiState> {
       } else {
         newBottom = ySnap.target;
       }
-      guides.add(SnapGuide(
-        axis: SnapAxis.horizontal,
-        coord: ySnap.target,
-        start: math.min(rect.left, rect.right),
-        end: math.max(rect.left, rect.right),
-      ));
+      guides.add(
+        SnapGuide(
+          axis: SnapAxis.horizontal,
+          coord: ySnap.target,
+          start: math.min(rect.left, rect.right),
+          end: math.max(rect.left, rect.right),
+        ),
+      );
     }
 
     // Aspect-ratio recomputation: with anchor fixed, the moving edge
@@ -1590,7 +1590,10 @@ class InteractionController extends Notifier<InteractionUiState> {
     }
     return _ResizeSnapResult(
       transform: t.copyWith(
-        position: Offset(math.min(newLeft, newRight), math.min(newTop, newBottom)),
+        position: Offset(
+          math.min(newLeft, newRight),
+          math.min(newTop, newBottom),
+        ),
         size: Size(width, height),
       ),
       guides: guides,
@@ -1697,12 +1700,12 @@ class InteractionController extends Notifier<InteractionUiState> {
     final doc = ref.read(documentControllerProvider);
     final peers = <Rect>[
       for (final l in doc.layers)
-        if (!groupIds.contains(l.id) && l.visible)
-          l.transform.unrotatedRect,
+        if (!groupIds.contains(l.id) && l.visible) l.transform.unrotatedRect,
     ];
     final scale = ref.read(viewportControllerProvider).scale;
-    final effectiveThreshold =
-        scale > 0 ? _baseSnapThreshold / scale : _baseSnapThreshold;
+    final effectiveThreshold = scale > 0
+        ? _baseSnapThreshold / scale
+        : _baseSnapThreshold;
     final prevAlign = state.snapGuides.isEmpty
         ? null
         : SnapResult(position: Offset.zero, guides: state.snapGuides);
@@ -1715,10 +1718,8 @@ class InteractionController extends Notifier<InteractionUiState> {
       previous: prevAlign,
     );
 
-    final alignedHasV =
-        align.guides.any((g) => g.axis == SnapAxis.vertical);
-    final alignedHasH =
-        align.guides.any((g) => g.axis == SnapAxis.horizontal);
+    final alignedHasV = align.guides.any((g) => g.axis == SnapAxis.vertical);
+    final alignedHasH = align.guides.any((g) => g.axis == SnapAxis.horizontal);
     var dx = align.position.dx - bounds.left;
     var dy = align.position.dy - bounds.top;
     var spacingGuides = const <SpacingGuide>[];
@@ -1793,7 +1794,8 @@ class InteractionController extends Notifier<InteractionUiState> {
   }) {
     final vNow = guides.any((g) => g.axis == SnapAxis.vertical);
     final hNow = guides.any((g) => g.axis == SnapAxis.horizontal);
-    final entered = (rotationSnapped && !_wasRotationSnapped) ||
+    final entered =
+        (rotationSnapped && !_wasRotationSnapped) ||
         (vNow && !_wasVerticallySnapped) ||
         (hNow && !_wasHorizontallySnapped);
     _wasRotationSnapped = rotationSnapped;
@@ -1823,8 +1825,8 @@ class InteractionController extends Notifier<InteractionUiState> {
 
 final interactionControllerProvider =
     NotifierProvider<InteractionController, InteractionUiState>(
-  InteractionController.new,
-);
+      InteractionController.new,
+    );
 
 /// Internal carry-type for a single-call snap query result that
 /// combines alignment guides, equal-spacing guides, and the final

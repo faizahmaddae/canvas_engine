@@ -12,13 +12,12 @@ void main() {
     required Offset pos,
     Size size = const Size(100, 100),
     double rotation = 0,
-  }) =>
-      LayerTransform(position: pos, size: size, rotation: rotation);
+  }) => LayerTransform(position: pos, size: size, rotation: rotation);
 
   Map<String, LayerTransform> twoLayers() => {
-        'a': t(pos: const Offset(0, 0)),
-        'b': t(pos: const Offset(200, 0)),
-      };
+    'a': t(pos: const Offset(0, 0)),
+    'b': t(pos: const Offset(200, 0)),
+  };
 
   Matcher closeToOffset(Offset expected, {double tol = 1e-6}) =>
       predicate<Offset>(
@@ -32,17 +31,19 @@ void main() {
       expect(r, const Rect.fromLTRB(0, 0, 300, 100));
     });
 
-    test('uses rotated corners (square at 45° has bounds wider than its size)',
-        () {
-      final r = engine.computeBounds([
-        t(pos: const Offset(0, 0), rotation: math.pi / 4),
-      ]);
-      // A 100x100 square rotated 45° fits in a 100*sqrt(2) ≈ 141.42 box.
-      expect(r.width, closeTo(100 * math.sqrt2, 1e-6));
-      expect(r.height, closeTo(100 * math.sqrt2, 1e-6));
-      // Centered on the original centre (50, 50).
-      expect(r.center, closeToOffset(const Offset(50, 50)));
-    });
+    test(
+      'uses rotated corners (square at 45° has bounds wider than its size)',
+      () {
+        final r = engine.computeBounds([
+          t(pos: const Offset(0, 0), rotation: math.pi / 4),
+        ]);
+        // A 100x100 square rotated 45° fits in a 100*sqrt(2) ≈ 141.42 box.
+        expect(r.width, closeTo(100 * math.sqrt2, 1e-6));
+        expect(r.height, closeTo(100 * math.sqrt2, 1e-6));
+        // Centered on the original centre (50, 50).
+        expect(r.center, closeToOffset(const Offset(50, 50)));
+      },
+    );
 
     test('empty input returns Rect.zero', () {
       expect(engine.computeBounds(const []), Rect.zero);
@@ -50,8 +51,7 @@ void main() {
   });
 
   group('translate', () {
-    test('shifts every layer by the same delta; sizes/rotations unchanged',
-        () {
+    test('shifts every layer by the same delta; sizes/rotations unchanged', () {
       final out = engine.translate(twoLayers(), const Offset(10, 20));
       expect(out['a']!.position, const Offset(10, 20));
       expect(out['b']!.position, const Offset(210, 20));
@@ -87,8 +87,9 @@ void main() {
 
     test('scale by 1.0 is identity', () {
       final initials = twoLayers();
-      final out = engine.scale(initials,
-          anchor: const Offset(150, 50), scale: 1.0).transforms;
+      final out = engine
+          .scale(initials, anchor: const Offset(150, 50), scale: 1.0)
+          .transforms;
       for (final id in initials.keys) {
         expect(out[id]!.position, closeToOffset(initials[id]!.position));
         expect(out[id]!.size, initials[id]!.size);
@@ -96,8 +97,7 @@ void main() {
     });
 
     test('clamps scale to [minScale, maxScale]', () {
-      final res =
-          engine.scale(twoLayers(), anchor: Offset.zero, scale: 1000.0);
+      final res = engine.scale(twoLayers(), anchor: Offset.zero, scale: 1000.0);
       final out = res.transforms;
       // Requested 1000 clamps to the default maxScale 64.
       expect(res.appliedScale, 64.0);
@@ -112,8 +112,9 @@ void main() {
       final out = engine.scale(initials, anchor: anchor, scale: 1.5).transforms;
       final initialRatio =
           (initials['b']!.center - anchor).distance /
-              (initials['a']!.center - anchor).distance;
-      final outRatio = (out['b']!.center - anchor).distance /
+          (initials['a']!.center - anchor).distance;
+      final outRatio =
+          (out['b']!.center - anchor).distance /
           (out['a']!.center - anchor).distance;
       expect(outRatio, closeTo(initialRatio, 1e-9));
     });
@@ -123,14 +124,17 @@ void main() {
     test('rotating 90° around bounds centre swaps relative axes', () {
       final initials = twoLayers();
       final center = const Offset(150, 50); // bounds centre of a + b
-      final out = engine.rotate(initials,
-          center: center, delta: math.pi / 2);
+      final out = engine.rotate(initials, center: center, delta: math.pi / 2);
       // a's centre was at (50,50); rotated 90° CCW around (150,50)
       // becomes (150, -50).
-      expect(out['a']!.center, closeToOffset(const Offset(150, -50),
-          tol: 1e-9));
-      expect(out['b']!.center, closeToOffset(const Offset(150, 150),
-          tol: 1e-9));
+      expect(
+        out['a']!.center,
+        closeToOffset(const Offset(150, -50), tol: 1e-9),
+      );
+      expect(
+        out['b']!.center,
+        closeToOffset(const Offset(150, 150), tol: 1e-9),
+      );
       // Each layer's own rotation also advances by delta.
       expect(out['a']!.rotation, closeTo(math.pi / 2, 1e-9));
       expect(out['b']!.rotation, closeTo(math.pi / 2, 1e-9));
@@ -139,12 +143,13 @@ void main() {
     test('rotating then rotating back is the identity', () {
       final initials = twoLayers();
       final center = const Offset(150, 50);
-      final once =
-          engine.rotate(initials, center: center, delta: 0.7);
+      final once = engine.rotate(initials, center: center, delta: 0.7);
       final back = engine.rotate(once, center: center, delta: -0.7);
       for (final id in initials.keys) {
-        expect(back[id]!.position,
-            closeToOffset(initials[id]!.position, tol: 1e-9));
+        expect(
+          back[id]!.position,
+          closeToOffset(initials[id]!.position, tol: 1e-9),
+        );
         expect(back[id]!.rotation, closeTo(initials[id]!.rotation, 1e-9));
       }
     });
@@ -154,13 +159,17 @@ void main() {
     test('pure scale (rotation=0, translation=0) matches scale()', () {
       final initials = twoLayers();
       final anchor = const Offset(150, 50);
-      final viaScale =
-          engine.scale(initials, anchor: anchor, scale: 1.7).transforms;
-      final viaPinch = engine.pinch(initials,
-          anchor: anchor, scale: 1.7, rotation: 0.0).transforms;
+      final viaScale = engine
+          .scale(initials, anchor: anchor, scale: 1.7)
+          .transforms;
+      final viaPinch = engine
+          .pinch(initials, anchor: anchor, scale: 1.7, rotation: 0.0)
+          .transforms;
       for (final id in initials.keys) {
-        expect(viaPinch[id]!.position,
-            closeToOffset(viaScale[id]!.position, tol: 1e-9));
+        expect(
+          viaPinch[id]!.position,
+          closeToOffset(viaScale[id]!.position, tol: 1e-9),
+        );
         expect(viaPinch[id]!.size, viaScale[id]!.size);
       }
     });
@@ -168,15 +177,16 @@ void main() {
     test('pure rotation (scale=1) matches rotate()', () {
       final initials = twoLayers();
       final anchor = const Offset(150, 50);
-      final viaRotate =
-          engine.rotate(initials, center: anchor, delta: 0.5);
-      final viaPinch = engine.pinch(initials,
-          anchor: anchor, scale: 1.0, rotation: 0.5).transforms;
+      final viaRotate = engine.rotate(initials, center: anchor, delta: 0.5);
+      final viaPinch = engine
+          .pinch(initials, anchor: anchor, scale: 1.0, rotation: 0.5)
+          .transforms;
       for (final id in initials.keys) {
-        expect(viaPinch[id]!.position,
-            closeToOffset(viaRotate[id]!.position, tol: 1e-9));
-        expect(viaPinch[id]!.rotation,
-            closeTo(viaRotate[id]!.rotation, 1e-9));
+        expect(
+          viaPinch[id]!.position,
+          closeToOffset(viaRotate[id]!.position, tol: 1e-9),
+        );
+        expect(viaPinch[id]!.rotation, closeTo(viaRotate[id]!.rotation, 1e-9));
       }
     });
 
@@ -184,14 +194,20 @@ void main() {
       final initials = twoLayers();
       final anchor = const Offset(0, 0);
       final shift = const Offset(7, 13);
-      final out = engine.pinch(initials,
-          anchor: anchor,
-          scale: 1.0,
-          rotation: 0.0,
-          translation: shift).transforms;
+      final out = engine
+          .pinch(
+            initials,
+            anchor: anchor,
+            scale: 1.0,
+            rotation: 0.0,
+            translation: shift,
+          )
+          .transforms;
       for (final id in initials.keys) {
-        expect(out[id]!.center - initials[id]!.center,
-            closeToOffset(shift, tol: 1e-9));
+        expect(
+          out[id]!.center - initials[id]!.center,
+          closeToOffset(shift, tol: 1e-9),
+        );
       }
     });
   });
@@ -210,8 +226,7 @@ void main() {
   });
 
   group('hardening: per-layer min/max constraints', () {
-    test('scale tightens factor so smallest layer never crosses min side',
-        () {
+    test('scale tightens factor so smallest layer never crosses min side', () {
       // 50px and 200px layers; ask for 0.05 scale (smallest would be 2.5)
       // with minLayerSide = 24. Effective scale must be >= 24/50 = 0.48.
       final initials = <String, LayerTransform>{
@@ -269,12 +284,16 @@ void main() {
 
     test('empty initials short-circuit on scale / pinch / rotate', () {
       final empty = <String, LayerTransform>{};
-      expect(engine.scale(empty, anchor: Offset.zero, scale: 2).transforms,
-          isEmpty);
       expect(
-          engine.pinch(empty, anchor: Offset.zero, scale: 2, rotation: 0)
-              .transforms,
-          isEmpty);
+        engine.scale(empty, anchor: Offset.zero, scale: 2).transforms,
+        isEmpty,
+      );
+      expect(
+        engine
+            .pinch(empty, anchor: Offset.zero, scale: 2, rotation: 0)
+            .transforms,
+        isEmpty,
+      );
       expect(engine.rotate(empty, center: Offset.zero, delta: 1), isEmpty);
     });
 

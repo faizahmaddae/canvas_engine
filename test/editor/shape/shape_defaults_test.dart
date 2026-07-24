@@ -19,8 +19,10 @@ void main() {
     });
 
     test('roundedRectangle gets same blue fill', () {
-      final fill =
-          ShapeDefaults.fillColorForCanvas(bg, ShapeKind.roundedRectangle);
+      final fill = ShapeDefaults.fillColorForCanvas(
+        bg,
+        ShapeKind.roundedRectangle,
+      );
       expect(fill, ShapeDefaults.fillOnLight);
     });
 
@@ -164,12 +166,16 @@ void main() {
       // We pick a colour known to land near the boundary rather than
       // exactly — assert the branch logic is consistent with lightThreshold.
       // Pure white (lum ≈ 1.0) → light.
-      final fill =
-          ShapeDefaults.fillColorForCanvas(const Color(0xFFFFFFFF), ShapeKind.rectangle);
+      final fill = ShapeDefaults.fillColorForCanvas(
+        const Color(0xFFFFFFFF),
+        ShapeKind.rectangle,
+      );
       expect(fill, ShapeDefaults.fillOnLight);
       // Pure black (lum = 0.0) → dark.
-      final fill2 =
-          ShapeDefaults.fillColorForCanvas(const Color(0xFF000000), ShapeKind.rectangle);
+      final fill2 = ShapeDefaults.fillColorForCanvas(
+        const Color(0xFF000000),
+        ShapeKind.rectangle,
+      );
       expect(fill2, ShapeDefaults.fillOnDark);
     });
   });
@@ -181,13 +187,7 @@ void main() {
       final json = <String, dynamic>{
         'id': 'layer1',
         'type': 'shape',
-        'transform': {
-          'x': 0.0,
-          'y': 0.0,
-          'w': 100.0,
-          'h': 100.0,
-          'r': 0.0,
-        },
+        'transform': {'x': 0.0, 'y': 0.0, 'w': 100.0, 'h': 100.0, 'r': 0.0},
         'kind': 'rectangle',
         'fillColor': 0xFFFFFFFF,
         'strokeWidth': 0,
@@ -200,13 +200,7 @@ void main() {
       final json = <String, dynamic>{
         'id': 'layer1',
         'type': 'shape',
-        'transform': {
-          'x': 0.0,
-          'y': 0.0,
-          'w': 100.0,
-          'h': 100.0,
-          'r': 0.0,
-        },
+        'transform': {'x': 0.0, 'y': 0.0, 'w': 100.0, 'h': 100.0, 'r': 0.0},
         'kind': 'rectangle',
         'fillColor': 0xFF4C8BF5,
         'strokeWidth': 0,

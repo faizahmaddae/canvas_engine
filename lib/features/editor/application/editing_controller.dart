@@ -29,5 +29,6 @@ class EditingController extends Notifier<String?> {
   }
 }
 
-final editingControllerProvider =
-    NotifierProvider<EditingController, String?>(EditingController.new);
+final editingControllerProvider = NotifierProvider<EditingController, String?>(
+  EditingController.new,
+);

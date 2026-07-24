@@ -30,7 +30,9 @@ void main() {
     container
         .read(documentControllerProvider.notifier)
         .newDocument(width: docSize, height: docSize);
-    container.read(documentControllerProvider.notifier).execute(
+    container
+        .read(documentControllerProvider.notifier)
+        .execute(
           AddLayerCommand(
             ShapeLayer(
               id: 'shape',
@@ -47,9 +49,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(
-          home: Scaffold(body: EditorCanvas()),
-        ),
+        child: const MaterialApp(home: Scaffold(body: EditorCanvas())),
       ),
     );
     // Let auto-fit + selection overlay materialise.
@@ -67,7 +67,8 @@ void main() {
     expect(
       hits,
       findsNWidgets(4),
-      reason: 'Selection should expose 4 fixed-size handle hit boxes '
+      reason:
+          'Selection should expose 4 fixed-size handle hit boxes '
           '(3 resize corners + top-right rotate) regardless of '
           'document size.',
     );
@@ -77,8 +78,7 @@ void main() {
     // (top-right) renders a _RotateGlyph instead.
     final visual = EngineConstants.handleVisualSize;
     final glyphs = find.byWidgetPredicate(
-      (w) =>
-          w is AnimatedContainer && w.constraints?.maxWidth == visual,
+      (w) => w is AnimatedContainer && w.constraints?.maxWidth == visual,
     );
     expect(
       glyphs,
@@ -90,20 +90,21 @@ void main() {
     );
   }
 
-  testWidgets('handle size is constant on a 512x512 document',
-      (tester) async {
+  testWidgets('handle size is constant on a 512x512 document', (tester) async {
     await pumpEditorWithSelectedShape(tester, docSize: 512);
     expectConstantHandleSize(tester);
   });
 
-  testWidgets('handle size is constant on a 1080x1080 document',
-      (tester) async {
+  testWidgets('handle size is constant on a 1080x1080 document', (
+    tester,
+  ) async {
     await pumpEditorWithSelectedShape(tester, docSize: 1080);
     expectConstantHandleSize(tester);
   });
 
-  testWidgets('handle size is constant on a 2000x2000 document',
-      (tester) async {
+  testWidgets('handle size is constant on a 2000x2000 document', (
+    tester,
+  ) async {
     await pumpEditorWithSelectedShape(tester, docSize: 2000);
     expectConstantHandleSize(tester);
   });

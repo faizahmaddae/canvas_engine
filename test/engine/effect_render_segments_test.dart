@@ -17,17 +17,19 @@ void main() {
 
   group('hasEnabledMaskedEffect', () {
     test('false for unmasked, disabled-masked, and identity-masked', () {
-      expect(stack([BrightnessEffect(amount: 10)]).hasEnabledMaskedEffect,
-          isFalse);
       expect(
-        stack([BrightnessEffect(amount: 10, enabled: false, mask: mask)])
-            .hasEnabledMaskedEffect,
+        stack([BrightnessEffect(amount: 10)]).hasEnabledMaskedEffect,
+        isFalse,
+      );
+      expect(
+        stack([
+          BrightnessEffect(amount: 10, enabled: false, mask: mask),
+        ]).hasEnabledMaskedEffect,
         isFalse,
         reason: 'disabled effects render on neither path',
       );
       expect(
-        stack([BrightnessEffect(amount: 0, mask: mask)])
-            .hasEnabledMaskedEffect,
+        stack([BrightnessEffect(amount: 0, mask: mask)]).hasEnabledMaskedEffect,
         isFalse,
         reason: 'identity amounts contribute nothing to mask',
       );
@@ -36,8 +38,9 @@ void main() {
 
     test('true for an enabled, contributing, masked effect', () {
       expect(
-        stack([BrightnessEffect(amount: 10, mask: mask)])
-            .hasEnabledMaskedEffect,
+        stack([
+          BrightnessEffect(amount: 10, mask: mask),
+        ]).hasEnabledMaskedEffect,
         isTrue,
       );
     });
@@ -54,8 +57,11 @@ void main() {
       final segments = s.renderSegments;
       expect(segments, hasLength(1));
       final seg = segments.single as MatrixSegment;
-      expect(listEquals(seg.matrix, s.composedColorMatrix), isTrue,
-          reason: 'the fast path and the fold must agree exactly');
+      expect(
+        listEquals(seg.matrix, s.composedColorMatrix),
+        isTrue,
+        reason: 'the fast path and the fold must agree exactly',
+      );
     });
 
     test('empty / identity-only stacks fold to zero segments', () {
@@ -81,10 +87,12 @@ void main() {
       // brightness across the masked contrast would change pixels
       // inside the mask. Prove the outer segments are the individual
       // effects, not a merged pair.
-      final satOnly =
-          stack([const SaturationEffect(amount: 0.8)]).composedColorMatrix!;
-      final brightOnly =
-          stack([BrightnessEffect(amount: 10)]).composedColorMatrix!;
+      final satOnly = stack([
+        const SaturationEffect(amount: 0.8),
+      ]).composedColorMatrix!;
+      final brightOnly = stack([
+        BrightnessEffect(amount: 10),
+      ]).composedColorMatrix!;
       expect(
         listEquals((segments[0] as MatrixSegment).matrix, satOnly),
         isTrue,
@@ -102,9 +110,13 @@ void main() {
         BrightnessEffect(amount: 10),
       ]);
       final segments = s.renderSegments;
-      expect(segments, hasLength(1),
-          reason: 'a disabled effect is invisible to the fold, so the '
-              'run stays maximal');
+      expect(
+        segments,
+        hasLength(1),
+        reason:
+            'a disabled effect is invisible to the fold, so the '
+            'run stays maximal',
+      );
       final merged = stack([
         const SaturationEffect(amount: 0.8),
         BrightnessEffect(amount: 10),
@@ -135,9 +147,13 @@ void main() {
       final segments = s.renderSegments;
       expect(segments, hasLength(2));
       expect(segments[0], isA<CustomPaintSegment>());
-      expect(segments[1], isA<MatrixSegment>(),
-          reason: 'brightness above the vignette must recolour the '
-              'vignette pixels too');
+      expect(
+        segments[1],
+        isA<MatrixSegment>(),
+        reason:
+            'brightness above the vignette must recolour the '
+            'vignette pixels too',
+      );
     });
 
     test('consecutive custom-paint effects batch into one segment', () {
@@ -163,8 +179,7 @@ void main() {
   });
 
   group('rendersOnFastPath', () {
-    test('true for canonical stacks (matrices below, custom paint on top)',
-        () {
+    test('true for canonical stacks (matrices below, custom paint on top)', () {
       expect(EffectStack.empty.rendersOnFastPath, isTrue);
       expect(
         stack([
@@ -176,8 +191,7 @@ void main() {
       );
     });
 
-    test('false when a matrix effect sits above contributing custom paint',
-        () {
+    test('false when a matrix effect sits above contributing custom paint', () {
       expect(
         stack([
           const VignetteEffect(intensity: 0.5),
@@ -206,8 +220,10 @@ void main() {
 
   group('renderSegments — masked boundaries', () {
     test('consecutive masked effects are consecutive boundaries', () {
-      const mask2 =
-          RectMask(rect: Rect.fromLTWH(0, 50, 100, 50), inverted: true);
+      const mask2 = RectMask(
+        rect: Rect.fromLTWH(0, 50, 100, 50),
+        inverted: true,
+      );
       final s = stack([
         BrightnessEffect(amount: 10, mask: mask),
         ContrastEffect(amount: 1.5, mask: mask2),

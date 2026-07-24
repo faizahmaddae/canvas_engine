@@ -44,7 +44,9 @@ Future<void> _pumpEditorWithLayer(
   container
       .read(documentControllerProvider.notifier)
       .newDocument(width: 800, height: 800);
-  container.read(documentControllerProvider.notifier).execute(
+  container
+      .read(documentControllerProvider.notifier)
+      .execute(
         AddLayerCommand(
           ShapeLayer(
             id: 'shape',
@@ -66,200 +68,203 @@ Future<void> _pumpEditorWithLayer(
 }
 
 void main() {
-  testWidgets(
-    'two-finger pinch starting entirely outside a selected layer '
-    'transforms the layer (viewport stays put)',
-    (tester) async {
-      final container = _setup(tester);
-      const layerPos = Offset(370, 370);
-      const layerSize = Size(60, 60);
-      await _pumpEditorWithLayer(tester, container,
-          position: layerPos, size: layerSize);
+  testWidgets('two-finger pinch starting entirely outside a selected layer '
+      'transforms the layer (viewport stays put)', (tester) async {
+    final container = _setup(tester);
+    const layerPos = Offset(370, 370);
+    const layerSize = Size(60, 60);
+    await _pumpEditorWithLayer(
+      tester,
+      container,
+      position: layerPos,
+      size: layerSize,
+    );
 
-      final viewportBefore = container.read(viewportControllerProvider);
-      Offset toScreen(Offset c) =>
-          c * viewportBefore.scale + viewportBefore.translation;
-      final centreScreen = toScreen(
-          layerPos + Offset(layerSize.width / 2, layerSize.height / 2));
-      final p1 = centreScreen + const Offset(-200, 0);
-      final p2 = centreScreen + const Offset(200, 0);
+    final viewportBefore = container.read(viewportControllerProvider);
+    Offset toScreen(Offset c) =>
+        c * viewportBefore.scale + viewportBefore.translation;
+    final centreScreen = toScreen(
+      layerPos + Offset(layerSize.width / 2, layerSize.height / 2),
+    );
+    final p1 = centreScreen + const Offset(-200, 0);
+    final p2 = centreScreen + const Offset(200, 0);
 
-      final f1 = await tester.startGesture(p1, pointer: 41);
-      await tester.pump();
-      expect(
-        container.read(interactionControllerProvider).session,
-        isNull,
-        reason: 'Deferred-claim: first off-object pointer must NOT '
-            'start a session yet.',
-      );
+    final f1 = await tester.startGesture(p1, pointer: 41);
+    await tester.pump();
+    expect(
+      container.read(interactionControllerProvider).session,
+      isNull,
+      reason:
+          'Deferred-claim: first off-object pointer must NOT '
+          'start a session yet.',
+    );
 
-      final f2 = await tester.startGesture(p2, pointer: 42);
-      await tester.pump();
-      final session =
-          container.read(interactionControllerProvider).session;
-      expect(session, isNotNull);
-      expect(session!.layerId, 'shape');
+    final f2 = await tester.startGesture(p2, pointer: 42);
+    await tester.pump();
+    final session = container.read(interactionControllerProvider).session;
+    expect(session, isNotNull);
+    expect(session!.layerId, 'shape');
 
-      await f1.moveBy(const Offset(-100, 0));
-      await f2.moveBy(const Offset(100, 0));
-      await tester.pump();
+    await f1.moveBy(const Offset(-100, 0));
+    await f2.moveBy(const Offset(100, 0));
+    await tester.pump();
 
-      final live =
-          container.read(interactionControllerProvider).liveTransform;
-      expect(live, isNotNull);
-      expect(live!.size.width, greaterThan(layerSize.width * 1.1));
+    final live = container.read(interactionControllerProvider).liveTransform;
+    expect(live, isNotNull);
+    expect(live!.size.width, greaterThan(layerSize.width * 1.1));
 
-      final viewportAfter = container.read(viewportControllerProvider);
-      expect(viewportAfter.scale, viewportBefore.scale);
-      expect(viewportAfter.translation, viewportBefore.translation);
+    final viewportAfter = container.read(viewportControllerProvider);
+    expect(viewportAfter.scale, viewportBefore.scale);
+    expect(viewportAfter.translation, viewportBefore.translation);
 
-      await f1.up();
-      await f2.up();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
-    },
-  );
+    await f1.up();
+    await f2.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+  });
 
-  testWidgets(
-    'one-finger drag on empty canvas moves the selected layer '
-    '(deferred claim promotes on slop)',
-    (tester) async {
-      final container = _setup(tester);
-      const layerPos = Offset(370, 370);
-      await _pumpEditorWithLayer(tester, container, position: layerPos);
+  testWidgets('one-finger drag on empty canvas moves the selected layer '
+      '(deferred claim promotes on slop)', (tester) async {
+    final container = _setup(tester);
+    const layerPos = Offset(370, 370);
+    await _pumpEditorWithLayer(tester, container, position: layerPos);
 
-      final viewportBefore = container.read(viewportControllerProvider);
+    final viewportBefore = container.read(viewportControllerProvider);
 
-      final gesture = await tester.startGesture(const Offset(80, 80));
-      await tester.pump();
-      await gesture.moveBy(const Offset(60, 40));
-      await tester.pump();
-      await gesture.moveBy(const Offset(60, 40));
-      await tester.pump();
+    final gesture = await tester.startGesture(const Offset(80, 80));
+    await tester.pump();
+    await gesture.moveBy(const Offset(60, 40));
+    await tester.pump();
+    await gesture.moveBy(const Offset(60, 40));
+    await tester.pump();
 
-      final session =
-          container.read(interactionControllerProvider).session;
-      expect(session, isNotNull,
-          reason: 'One-finger off-object drag must promote the '
-              'deferred claim into a body session.');
-      expect(session!.layerId, 'shape');
+    final session = container.read(interactionControllerProvider).session;
+    expect(
+      session,
+      isNotNull,
+      reason:
+          'One-finger off-object drag must promote the '
+          'deferred claim into a body session.',
+    );
+    expect(session!.layerId, 'shape');
 
-      final live =
-          container.read(interactionControllerProvider).liveTransform;
-      expect(live, isNotNull);
-      expect(live!.position, isNot(layerPos));
+    final live = container.read(interactionControllerProvider).liveTransform;
+    expect(live, isNotNull);
+    expect(live!.position, isNot(layerPos));
 
-      final viewportAfter = container.read(viewportControllerProvider);
-      expect(viewportAfter.translation, viewportBefore.translation,
-          reason: 'Viewport must NOT pan when a layer is selected.');
+    final viewportAfter = container.read(viewportControllerProvider);
+    expect(
+      viewportAfter.translation,
+      viewportBefore.translation,
+      reason: 'Viewport must NOT pan when a layer is selected.',
+    );
 
-      await gesture.up();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
-    },
-  );
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+  });
 
-  testWidgets(
-    'pause-then-drag on empty canvas still moves the selected layer '
-    '(claim-on-down beats the long-press recogniser)',
-    (tester) async {
-      final container = _setup(tester);
-      const layerPos = Offset(370, 370);
-      await _pumpEditorWithLayer(tester, container, position: layerPos);
+  testWidgets('pause-then-drag on empty canvas still moves the selected layer '
+      '(claim-on-down beats the long-press recogniser)', (tester) async {
+    final container = _setup(tester);
+    const layerPos = Offset(370, 370);
+    await _pumpEditorWithLayer(tester, container, position: layerPos);
 
-      // Touch down off-object, hold for 250ms (well into the window
-      // where the viewport's tap / long-press recognisers historically
-      // would have stolen the gesture), THEN start dragging.
-      final gesture = await tester.startGesture(const Offset(80, 80));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 250));
+    // Touch down off-object, hold for 250ms (well into the window
+    // where the viewport's tap / long-press recognisers historically
+    // would have stolen the gesture), THEN start dragging.
+    final gesture = await tester.startGesture(const Offset(80, 80));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
 
-      expect(
-        container.read(interactionControllerProvider).session,
-        isNull,
-        reason: 'During the pause the recogniser owns the arena but '
-            'has not emitted DragPhase.start yet.',
-      );
+    expect(
+      container.read(interactionControllerProvider).session,
+      isNull,
+      reason:
+          'During the pause the recogniser owns the arena but '
+          'has not emitted DragPhase.start yet.',
+    );
 
-      await gesture.moveBy(const Offset(40, 30));
-      await tester.pump();
-      await gesture.moveBy(const Offset(40, 30));
-      await tester.pump();
+    await gesture.moveBy(const Offset(40, 30));
+    await tester.pump();
+    await gesture.moveBy(const Offset(40, 30));
+    await tester.pump();
 
-      final session =
-          container.read(interactionControllerProvider).session;
-      expect(session, isNotNull,
-          reason: 'Pause-then-drag must promote to a body session — '
-              "the framework's long-press / tap recognisers must NOT "
-              'steal the gesture during the pause.');
-      expect(session!.layerId, 'shape');
+    final session = container.read(interactionControllerProvider).session;
+    expect(
+      session,
+      isNotNull,
+      reason:
+          'Pause-then-drag must promote to a body session — '
+          "the framework's long-press / tap recognisers must NOT "
+          'steal the gesture during the pause.',
+    );
+    expect(session!.layerId, 'shape');
 
-      final live =
-          container.read(interactionControllerProvider).liveTransform;
-      expect(live, isNotNull);
-      expect(live!.position, isNot(layerPos));
+    final live = container.read(interactionControllerProvider).liveTransform;
+    expect(live, isNotNull);
+    expect(live!.position, isNot(layerPos));
 
-      await gesture.up();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
-    },
-  );
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+  });
 
-  testWidgets(
-    'long-press off-object with a layer selected enters multi-select '
-    'mode (deferred-claim long-press timer routes through onBodyLongPress)',
-    (tester) async {
-      final container = _setup(tester);
-      await _pumpEditorWithLayer(tester, container);
+  testWidgets('long-press off-object with a layer selected enters multi-select '
+      'mode (deferred-claim long-press timer routes through onBodyLongPress)', (
+    tester,
+  ) async {
+    final container = _setup(tester);
+    await _pumpEditorWithLayer(tester, container);
 
-      // Sanity: not in multi mode yet, layer is selected.
-      expect(container.read(selectionModeProvider), SelectionMode.single);
-      expect(container.read(selectionControllerProvider).hasSelection, isTrue);
+    // Sanity: not in multi mode yet, layer is selected.
+    expect(container.read(selectionModeProvider), SelectionMode.single);
+    expect(container.read(selectionControllerProvider).hasSelection, isTrue);
 
-      // Touch down off-object and hold past the long-press timeout
-      // without moving. With the new claim-on-down policy the body
-      // surface owns this pointer from the start, so the canvas-level
-      // `GestureDetector.onLongPressStart` never fires; the timer
-      // inside `_BodyMultiTouchRecognizer` is what re-injects the
-      // long-press intent via `onBodyLongPress` → `_handleLongPress`.
-      final gesture = await tester.startGesture(const Offset(80, 80));
-      await tester.pump();
-      // Pump well past kLongPressTimeout (500ms). Use a single big
-      // pump so the timer's microtask resolves cleanly.
-      await tester.pump(const Duration(milliseconds: 700));
+    // Touch down off-object and hold past the long-press timeout
+    // without moving. With the new claim-on-down policy the body
+    // surface owns this pointer from the start, so the canvas-level
+    // `GestureDetector.onLongPressStart` never fires; the timer
+    // inside `_BodyMultiTouchRecognizer` is what re-injects the
+    // long-press intent via `onBodyLongPress` → `_handleLongPress`.
+    final gesture = await tester.startGesture(const Offset(80, 80));
+    await tester.pump();
+    // Pump well past kLongPressTimeout (500ms). Use a single big
+    // pump so the timer's microtask resolves cleanly.
+    await tester.pump(const Duration(milliseconds: 700));
 
-      expect(
-        container.read(selectionModeProvider),
-        SelectionMode.multi,
-        reason: 'Long-press off-object with selection must reach the '
-            'canvas long-press handler via onBodyLongPress.',
-      );
+    expect(
+      container.read(selectionModeProvider),
+      SelectionMode.multi,
+      reason:
+          'Long-press off-object with selection must reach the '
+          'canvas long-press handler via onBodyLongPress.',
+    );
 
-      await gesture.up();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
-    },
-  );
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+  });
 
-  testWidgets(
-    'single tap on empty canvas still unselects '
-    '(deferred claim routes through onTap on lift-without-movement)',
-    (tester) async {
-      final container = _setup(tester);
-      await _pumpEditorWithLayer(tester, container);
+  testWidgets('single tap on empty canvas still unselects '
+      '(deferred claim routes through onTap on lift-without-movement)', (
+    tester,
+  ) async {
+    final container = _setup(tester);
+    await _pumpEditorWithLayer(tester, container);
 
-      expect(container.read(selectionControllerProvider).hasSelection, isTrue);
+    expect(container.read(selectionControllerProvider).hasSelection, isTrue);
 
-      await tester.tapAt(const Offset(80, 80));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 800));
+    await tester.tapAt(const Offset(80, 80));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
 
-      expect(
-        container.read(selectionControllerProvider).hasSelection,
-        isFalse,
-        reason: 'Empty-canvas tap must still unselect — onTap callback '
-            'fires on lift-without-movement and routes to _handleTap.',
-      );
-    },
-  );
+    expect(
+      container.read(selectionControllerProvider).hasSelection,
+      isFalse,
+      reason:
+          'Empty-canvas tap must still unselect — onTap callback '
+          'fires on lift-without-movement and routes to _handleTap.',
+    );
+  });
 }

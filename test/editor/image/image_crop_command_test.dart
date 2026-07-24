@@ -26,9 +26,7 @@ void main() {
       ),
       source: const ImageSource.asset('assets/test.png'),
     );
-    c
-        .read(documentControllerProvider.notifier)
-        .execute(AddLayerCommand(layer));
+    c.read(documentControllerProvider.notifier).execute(AddLayerCommand(layer));
     return layer;
   }
 
@@ -53,9 +51,9 @@ void main() {
       final c = makeContainer();
       addImage(c);
       final next = const Rect.fromLTRB(0.1, 0.1, 0.9, 0.9);
-      c.read(documentControllerProvider.notifier).execute(
-            SetImageCropCommand(layerId: 'img1', cropRect: next),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(SetImageCropCommand(layerId: 'img1', cropRect: next));
       expect(readImage(c, 'img1')!.cropRect, next);
       expect(readImage(c, 'img1')!.isFullCrop, isFalse);
     });
@@ -63,7 +61,9 @@ void main() {
     test('clamps out-of-range edges into [0..1]', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             SetImageCropCommand(
               layerId: 'img1',
               cropRect: const Rect.fromLTRB(-0.5, -0.2, 1.4, 1.2),
@@ -75,7 +75,9 @@ void main() {
     test('zero-area input snaps back to fullCrop', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             SetImageCropCommand(
               layerId: 'img1',
               cropRect: const Rect.fromLTRB(0.5, 0.5, 0.5, 0.5),
@@ -102,35 +104,39 @@ void main() {
       expect(readImage(c, 'img1')!.cropRect, ImageLayer.fullCrop);
     });
 
-    test('preserves transform / fit / mask / border / shadow / adjustments',
-        () {
-      final c = makeContainer();
-      addImage(c);
-      final original = readImage(c, 'img1')!;
-      c.read(documentControllerProvider.notifier).execute(
-            SetImageCropCommand(
-              layerId: 'img1',
-              cropRect: const Rect.fromLTRB(0.1, 0.2, 0.7, 0.8),
-            ),
-          );
-      final next = readImage(c, 'img1')!;
-      expect(next.transform.position, original.transform.position);
-      expect(next.transform.size, original.transform.size);
-      expect(next.fit, original.fit);
-      expect(next.mask, original.mask);
-      expect(next.borderColor, original.borderColor);
-      expect(next.borderWidth, original.borderWidth);
-      expect(next.shadowOpacity, original.shadowOpacity);
-      expect(next.adjustments, original.adjustments);
-    });
+    test(
+      'preserves transform / fit / mask / border / shadow / adjustments',
+      () {
+        final c = makeContainer();
+        addImage(c);
+        final original = readImage(c, 'img1')!;
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(
+              SetImageCropCommand(
+                layerId: 'img1',
+                cropRect: const Rect.fromLTRB(0.1, 0.2, 0.7, 0.8),
+              ),
+            );
+        final next = readImage(c, 'img1')!;
+        expect(next.transform.position, original.transform.position);
+        expect(next.transform.size, original.transform.size);
+        expect(next.fit, original.fit);
+        expect(next.mask, original.mask);
+        expect(next.borderColor, original.borderColor);
+        expect(next.borderWidth, original.borderWidth);
+        expect(next.shadowOpacity, original.shadowOpacity);
+        expect(next.adjustments, original.adjustments);
+      },
+    );
 
     test('JSON round-trip preserves non-default cropRect', () {
       final c = makeContainer();
       addImage(c);
       const next = Rect.fromLTRB(0.15, 0.25, 0.85, 0.75);
-      c.read(documentControllerProvider.notifier).execute(
-            SetImageCropCommand(layerId: 'img1', cropRect: next),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(SetImageCropCommand(layerId: 'img1', cropRect: next));
       final json = readImage(c, 'img1')!.toJson();
       final restored = ImageLayer.fromJson(json);
       expect(restored.cropRect, next);
@@ -140,14 +146,18 @@ void main() {
     test('Replace source resets cropRect to fullCrop', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             SetImageCropCommand(
               layerId: 'img1',
               cropRect: const Rect.fromLTRB(0.1, 0.1, 0.9, 0.9),
             ),
           );
       expect(readImage(c, 'img1')!.isFullCrop, isFalse);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const ReplaceImageSourceCommand(
               layerId: 'img1',
               source: ImageSource.asset('assets/other.png'),

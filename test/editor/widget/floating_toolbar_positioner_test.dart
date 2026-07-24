@@ -105,7 +105,10 @@ void main() {
     test('safePadding.left/right respected in horizontal clamp', () {
       // Wide left inset (e.g. landscape notch).
       const padding = EdgeInsets.fromLTRB(40, 44, 40, 34);
-      final a = resolveCentered(position: const Offset(0, 350), padding: padding);
+      final a = resolveCentered(
+        position: const Offset(0, 350),
+        padding: padding,
+      );
       expect(a.left, 12 + 40); // horizontalMargin + safePadding.left
     });
   });

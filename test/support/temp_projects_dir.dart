@@ -28,8 +28,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// Reuse one directory across several containers in a test to
 /// simulate persistence across app restarts.
 Directory tempProjectsDir() {
-  final dir =
-      Directory.systemTemp.createTempSync('canvas_engine_projects_test');
+  final dir = Directory.systemTemp.createTempSync(
+    'canvas_engine_projects_test',
+  );
   addTearDown(() {
     if (dir.existsSync()) dir.deleteSync(recursive: true);
   });

@@ -16,22 +16,10 @@ void main() {
     test('isBold reflects fontWeight w600+', () {
       // The default constructor uses w600, which is already bold.
       expect(const TextStyleSpec().isBold, isTrue);
-      expect(
-        const TextStyleSpec(fontWeight: FontWeight.w400).isBold,
-        isFalse,
-      );
-      expect(
-        const TextStyleSpec(fontWeight: FontWeight.w500).isBold,
-        isFalse,
-      );
-      expect(
-        const TextStyleSpec(fontWeight: FontWeight.w600).isBold,
-        isTrue,
-      );
-      expect(
-        const TextStyleSpec(fontWeight: FontWeight.w700).isBold,
-        isTrue,
-      );
+      expect(const TextStyleSpec(fontWeight: FontWeight.w400).isBold, isFalse);
+      expect(const TextStyleSpec(fontWeight: FontWeight.w500).isBold, isFalse);
+      expect(const TextStyleSpec(fontWeight: FontWeight.w600).isBold, isTrue);
+      expect(const TextStyleSpec(fontWeight: FontWeight.w700).isBold, isTrue);
     });
 
     test('copyWith preserves italic + lineHeight', () {
@@ -59,22 +47,25 @@ void main() {
         alignment: TextAlign.center,
       );
       final json = jsonEncode(original.toJson());
-      final restored =
-          TextStyleSpec.fromJson(jsonDecode(json) as Map<String, dynamic>);
+      final restored = TextStyleSpec.fromJson(
+        jsonDecode(json) as Map<String, dynamic>,
+      );
       expect(restored, original);
     });
 
-    test('fromJson defaults italic=false, underline=false, lineHeight=1.2 when missing',
-        () {
-      // Legacy JSON written before italic + underline + lineHeight existed.
-      final restored = TextStyleSpec.fromJson(<String, dynamic>{
-        'fontSize': 24.0,
-      });
-      expect(restored.italic, isFalse);
-      expect(restored.underline, isFalse);
-      expect(restored.lineHeight, 1.2);
-      expect(restored.fontSize, 24.0);
-    });
+    test(
+      'fromJson defaults italic=false, underline=false, lineHeight=1.2 when missing',
+      () {
+        // Legacy JSON written before italic + underline + lineHeight existed.
+        final restored = TextStyleSpec.fromJson(<String, dynamic>{
+          'fontSize': 24.0,
+        });
+        expect(restored.italic, isFalse);
+        expect(restored.underline, isFalse);
+        expect(restored.lineHeight, 1.2);
+        expect(restored.fontSize, 24.0);
+      },
+    );
 
     test('toJson omits italic when false (compact serialization)', () {
       const s = TextStyleSpec(italic: false);

@@ -100,9 +100,8 @@ final class VignetteEffect extends EditorEffect {
     // Half-diagonal so a circular falloff still reaches the
     // corners of a wide / tall rectangle. Using width/2 alone
     // would clip the gradient short on landscape layers.
-    final radius = math.sqrt(
-      bounds.width * bounds.width + bounds.height * bounds.height,
-    ) /
+    final radius =
+        math.sqrt(bounds.width * bounds.width + bounds.height * bounds.height) /
         2;
     if (radius <= 0) return;
     // Compose intensity onto the tint's own alpha. A user who has
@@ -124,9 +123,7 @@ final class VignetteEffect extends EditorEffect {
     for (var i = 0; i < samples; i++) {
       final t = i / (samples - 1); // 0..1
       final s = t * t * (3 - 2 * t); // smoothstep
-      colors.add(
-        color.withValues(alpha: (outerAlpha * s).clamp(0.0, 1.0)),
-      );
+      colors.add(color.withValues(alpha: (outerAlpha * s).clamp(0.0, 1.0)));
       stops.add(innerStop + (1.0 - innerStop) * t);
     }
     final shader = ui.Gradient.radial(
@@ -141,22 +138,21 @@ final class VignetteEffect extends EditorEffect {
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
-        ...baseJson(),
-        if (intensity != defaultIntensity) 'intensity': intensity,
-        if (feather != defaultFeather) 'feather': feather,
-        // Encode colour as 32-bit ARGB int — same convention every
-        // other engine module uses for `Color` round-trip.
-        if (color.toARGB32() != defaultColorValue) 'color': color.toARGB32(),
-      };
+    ...baseJson(),
+    if (intensity != defaultIntensity) 'intensity': intensity,
+    if (feather != defaultFeather) 'feather': feather,
+    // Encode colour as 32-bit ARGB int — same convention every
+    // other engine module uses for `Color` round-trip.
+    if (color.toARGB32() != defaultColorValue) 'color': color.toARGB32(),
+  };
 
   static VignetteEffect fromJson(Map<String, dynamic> json) => VignetteEffect(
-        intensity:
-            (json['intensity'] as num?)?.toDouble() ?? defaultIntensity,
-        feather: (json['feather'] as num?)?.toDouble() ?? defaultFeather,
-        color: Color((json['color'] as int?) ?? defaultColorValue),
-        enabled: json['enabled'] as bool? ?? true,
-        mask: _readMask(json),
-      );
+    intensity: (json['intensity'] as num?)?.toDouble() ?? defaultIntensity,
+    feather: (json['feather'] as num?)?.toDouble() ?? defaultFeather,
+    color: Color((json['color'] as int?) ?? defaultColorValue),
+    enabled: json['enabled'] as bool? ?? true,
+    mask: _readMask(json),
+  );
 
   /// Functional copy. Only the four content fields are
   /// copy-touchable; the renderer never builds a vignette with a
@@ -167,14 +163,13 @@ final class VignetteEffect extends EditorEffect {
     Color? color,
     bool? enabled,
     LayerMask? mask,
-  }) =>
-      VignetteEffect(
-        intensity: intensity ?? this.intensity,
-        feather: feather ?? this.feather,
-        color: color ?? this.color,
-        enabled: enabled ?? this.enabled,
-        mask: mask ?? this.mask,
-      );
+  }) => VignetteEffect(
+    intensity: intensity ?? this.intensity,
+    feather: feather ?? this.feather,
+    color: color ?? this.color,
+    enabled: enabled ?? this.enabled,
+    mask: mask ?? this.mask,
+  );
 
   @override
   VignetteEffect withEnabled(bool value) => copyWith(enabled: value);

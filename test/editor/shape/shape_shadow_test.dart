@@ -34,9 +34,7 @@ void main() {
       ),
       kind: kind,
     );
-    c
-        .read(documentControllerProvider.notifier)
-        .execute(AddLayerCommand(layer));
+    c.read(documentControllerProvider.notifier).execute(AddLayerCommand(layer));
     return layer;
   }
 
@@ -57,10 +55,7 @@ void main() {
     test('copyWith preserves shadow fields when not specified', () {
       const a = ShapeLayer(
         id: 's',
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: Size(100, 100),
-        ),
+        transform: LayerTransform(position: Offset.zero, size: Size(100, 100)),
         kind: ShapeKind.rectangle,
         shadowColor: Color(0xFFAABBCC),
         shadowBlur: 12,
@@ -77,10 +72,7 @@ void main() {
     test('== / hashCode include shadow fields', () {
       const base = ShapeLayer(
         id: 's',
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: Size(100, 100),
-        ),
+        transform: LayerTransform(position: Offset.zero, size: Size(100, 100)),
         kind: ShapeKind.rectangle,
         shadowColor: Color(0xFFAABBCC),
         shadowBlur: 12,
@@ -144,10 +136,7 @@ void main() {
     test('shadow keys are omitted from JSON when shadow is invisible', () {
       const noShadow = ShapeLayer(
         id: 'ns',
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: Size(100, 100),
-        ),
+        transform: LayerTransform(position: Offset.zero, size: Size(100, 100)),
         kind: ShapeKind.rectangle,
       );
       final json = noShadow.toJson();
@@ -163,7 +152,9 @@ void main() {
     test('apply updates only the specified fields', () {
       final c = makeContainer();
       addShape(c);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetShapeShadowCommand(
               layerId: 'shape1',
               blur: 14,
@@ -198,7 +189,9 @@ void main() {
       c
           .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(original));
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetShapeShadowCommand(
               layerId: id,
               blur: 20,
@@ -221,7 +214,9 @@ void main() {
       final c = makeContainer();
       addShape(c);
       // Set an initial shadow.
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetShapeShadowCommand(
               layerId: 'shape1',
               blur: 8,
@@ -231,11 +226,10 @@ void main() {
             ),
           );
       // Then bump opacity.
-      c.read(documentControllerProvider.notifier).execute(
-            const SetShapeShadowCommand(
-              layerId: 'shape1',
-              opacity: 0.7,
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetShapeShadowCommand(layerId: 'shape1', opacity: 0.7),
           );
       expect(read(c, 'shape1').shadowOpacity, 0.7);
       c.read(documentControllerProvider.notifier).undo();
@@ -250,9 +244,9 @@ void main() {
       final c = makeContainer();
       addShape(c);
       final before = c.read(documentControllerProvider);
-      c.read(documentControllerProvider.notifier).execute(
-            const SetShapeShadowCommand(layerId: 'shape1', blur: 0),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetShapeShadowCommand(layerId: 'shape1', blur: 0));
       final after = c.read(documentControllerProvider);
       expect(identical(after, before), isTrue);
     });
@@ -261,9 +255,9 @@ void main() {
       final c = makeContainer();
       addShape(c);
       final before = c.read(documentControllerProvider);
-      c.read(documentControllerProvider.notifier).execute(
-            const SetShapeShadowCommand(layerId: 'nope', blur: 10),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetShapeShadowCommand(layerId: 'nope', blur: 10));
       final after = c.read(documentControllerProvider);
       expect(identical(after, before), isTrue);
     });
@@ -274,17 +268,17 @@ void main() {
       final c = makeContainer();
       addShape(c);
       // Discrete: enable shadow.
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetShapeShadowCommand(layerId: 'shape1', opacity: 0.5),
           );
       // Live drag: 3 ticks of blur.
       for (final v in [4.0, 8.0, 14.0]) {
-        c.read(documentControllerProvider.notifier).execute(
-              SetShapeShadowCommand(
-                layerId: 'shape1',
-                blur: v,
-                live: true,
-              ),
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(
+              SetShapeShadowCommand(layerId: 'shape1', blur: v, live: true),
             );
       }
       expect(read(c, 'shape1').shadowBlur, 14);
@@ -298,12 +292,10 @@ void main() {
       final c = makeContainer();
       addShape(c);
       for (final v in [0.1, 0.3, 0.5]) {
-        c.read(documentControllerProvider.notifier).execute(
-              SetShapeShadowCommand(
-                layerId: 'shape1',
-                opacity: v,
-                live: true,
-              ),
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(
+              SetShapeShadowCommand(layerId: 'shape1', opacity: v, live: true),
             );
       }
       expect(read(c, 'shape1').shadowOpacity, 0.5);
@@ -314,15 +306,15 @@ void main() {
     test('live blur stream does NOT swallow a live opacity stream', () {
       final c = makeContainer();
       addShape(c);
-      c.read(documentControllerProvider.notifier).execute(
-            const SetShapeShadowCommand(
-              layerId: 'shape1',
-              blur: 4,
-              live: true,
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetShapeShadowCommand(layerId: 'shape1', blur: 4, live: true),
           );
       // Different field-set — must NOT merge.
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetShapeShadowCommand(
               layerId: 'shape1',
               opacity: 0.3,
@@ -339,10 +331,12 @@ void main() {
     test('live commands do NOT merge with non-live (mode mismatch)', () {
       final c = makeContainer();
       addShape(c);
-      c.read(documentControllerProvider.notifier).execute(
-            const SetShapeShadowCommand(layerId: 'shape1', blur: 5),
-          );
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetShapeShadowCommand(layerId: 'shape1', blur: 5));
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetShapeShadowCommand(
               layerId: 'shape1',
               blur: 12,
@@ -376,11 +370,10 @@ void main() {
       c
           .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(original));
-      c.read(documentControllerProvider.notifier).execute(
-            const ReplaceShapeKindCommand(
-              layerId: id,
-              kind: ShapeKind.heart,
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const ReplaceShapeKindCommand(layerId: id, kind: ShapeKind.heart),
           );
       final s = read(c, id);
       expect(s.kind, ShapeKind.heart);

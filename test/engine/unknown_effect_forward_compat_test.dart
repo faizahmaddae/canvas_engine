@@ -49,10 +49,7 @@ void main() {
 
     test('unknown effects round-trip inside an EffectStack via toJson / '
         'fromJson without losing their original payload', () {
-      final original = <String, dynamic>{
-        'type': 'futureGrain',
-        'amount': 0.25,
-      };
+      final original = <String, dynamic>{'type': 'futureGrain', 'amount': 0.25};
 
       final stack = EffectStack(<EditorEffect>[
         EditorEffect.fromJson(original),

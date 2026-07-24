@@ -38,9 +38,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(
-          home: Scaffold(body: EditorCanvas()),
-        ),
+        child: const MaterialApp(home: Scaffold(body: EditorCanvas())),
       ),
     );
     return container;
@@ -52,7 +50,9 @@ void main() {
     required Offset position,
     required Size size,
   }) {
-    container.read(documentControllerProvider.notifier).execute(
+    container
+        .read(documentControllerProvider.notifier)
+        .execute(
           AddLayerCommand(
             ShapeLayer(
               id: id,
@@ -83,13 +83,16 @@ void main() {
   }
 
   group('multi-select mode entry', () {
-    testWidgets('long-press on empty canvas enters multi mode and clears',
-        (tester) async {
+    testWidgets('long-press on empty canvas enters multi mode and clears', (
+      tester,
+    ) async {
       final container = await buildEditor(tester);
-      addRect(container,
-          id: 'a',
-          position: const Offset(50, 50),
-          size: const Size(80, 80));
+      addRect(
+        container,
+        id: 'a',
+        position: const Offset(50, 50),
+        size: const Size(80, 80),
+      );
       await tester.pump();
       // Pre-select something so we can verify "empty long-press clears".
       container.read(selectionControllerProvider.notifier).select('a');
@@ -100,21 +103,28 @@ void main() {
       await longPress(tester, emptySpot);
 
       expect(container.read(selectionModeProvider), SelectionMode.multi);
-      expect(container.read(selectionControllerProvider).hasSelection, isFalse,
-          reason: 'long-press on empty enters mode AND clears selection');
+      expect(
+        container.read(selectionControllerProvider).hasSelection,
+        isFalse,
+        reason: 'long-press on empty enters mode AND clears selection',
+      );
     });
 
     testWidgets('long-press on a layer enters multi mode with that layer '
         'added to the selection', (tester) async {
       final container = await buildEditor(tester);
-      addRect(container,
-          id: 'a',
-          position: const Offset(50, 50),
-          size: const Size(80, 80));
-      addRect(container,
-          id: 'b',
-          position: const Offset(200, 50),
-          size: const Size(80, 80));
+      addRect(
+        container,
+        id: 'a',
+        position: const Offset(50, 50),
+        size: const Size(80, 80),
+      );
+      addRect(
+        container,
+        id: 'b',
+        position: const Offset(200, 50),
+        size: const Size(80, 80),
+      );
       await tester.pump();
       // Pre-select 'a' to verify long-press preserves it (additive).
       container.read(selectionControllerProvider.notifier).select('a');
@@ -124,23 +134,31 @@ void main() {
 
       expect(container.read(selectionModeProvider), SelectionMode.multi);
       final sel = container.read(selectionControllerProvider);
-      expect(sel.selectedIds, ['a', 'b'],
-          reason: 'long-pressed layer is added; previous selection retained; '
-              'long-pressed becomes primary');
+      expect(
+        sel.selectedIds,
+        ['a', 'b'],
+        reason:
+            'long-pressed layer is added; previous selection retained; '
+            'long-pressed becomes primary',
+      );
     });
   });
 
   group('multi-select mode taps', () {
     testWidgets('tap on a layer toggles it in/out', (tester) async {
       final container = await buildEditor(tester);
-      addRect(container,
-          id: 'a',
-          position: const Offset(50, 50),
-          size: const Size(80, 80));
-      addRect(container,
-          id: 'b',
-          position: const Offset(200, 50),
-          size: const Size(80, 80));
+      addRect(
+        container,
+        id: 'a',
+        position: const Offset(50, 50),
+        size: const Size(80, 80),
+      );
+      addRect(
+        container,
+        id: 'b',
+        position: const Offset(200, 50),
+        size: const Size(80, 80),
+      );
       await tester.pump();
 
       // Enter multi mode via empty long-press.
@@ -151,103 +169,134 @@ void main() {
       expect(container.read(selectionControllerProvider).selectedIds, ['a']);
 
       await tap(tester, toScreen(container, const Offset(240, 90)));
-      expect(container.read(selectionControllerProvider).selectedIds,
-          ['a', 'b']);
+      expect(container.read(selectionControllerProvider).selectedIds, [
+        'a',
+        'b',
+      ]);
 
       // Toggle 'a' off.
       await tap(tester, toScreen(container, const Offset(90, 90)));
-      expect(container.read(selectionControllerProvider).selectedIds, ['b'],
-          reason: 'tap on a selected layer toggles it out');
+      expect(
+        container.read(selectionControllerProvider).selectedIds,
+        ['b'],
+        reason: 'tap on a selected layer toggles it out',
+      );
     });
 
-    testWidgets('tap on empty canvas exits mode AND clears selection',
-        (tester) async {
+    testWidgets('tap on empty canvas exits mode AND clears selection', (
+      tester,
+    ) async {
       final container = await buildEditor(tester);
-      addRect(container,
-          id: 'a',
-          position: const Offset(50, 50),
-          size: const Size(80, 80));
+      addRect(
+        container,
+        id: 'a',
+        position: const Offset(50, 50),
+        size: const Size(80, 80),
+      );
       await tester.pump();
 
       await longPress(tester, toScreen(container, const Offset(90, 90)));
       expect(container.read(selectionModeProvider), SelectionMode.multi);
-      expect(
-          container.read(selectionControllerProvider).selectedIds, ['a']);
+      expect(container.read(selectionControllerProvider).selectedIds, ['a']);
 
       await tap(tester, toScreen(container, const Offset(350, 350)));
-      expect(container.read(selectionModeProvider), SelectionMode.single,
-          reason: 'tap on empty exits multi mode');
-      expect(container.read(selectionControllerProvider).hasSelection, isFalse,
-          reason: 'tap on empty also clears selection');
+      expect(
+        container.read(selectionModeProvider),
+        SelectionMode.single,
+        reason: 'tap on empty exits multi mode',
+      );
+      expect(
+        container.read(selectionControllerProvider).hasSelection,
+        isFalse,
+        reason: 'tap on empty also clears selection',
+      );
     });
   });
 
   group('cycling suppression', () {
     testWidgets(
-        'while in multi mode, repeated taps at the same spot do NOT cycle',
-        (tester) async {
-      final container = await buildEditor(tester);
-      // Two overlapping rects so single-mode cycling would otherwise fire.
-      addRect(container,
+      'while in multi mode, repeated taps at the same spot do NOT cycle',
+      (tester) async {
+        final container = await buildEditor(tester);
+        // Two overlapping rects so single-mode cycling would otherwise fire.
+        addRect(
+          container,
           id: 'bottom',
           position: const Offset(100, 100),
-          size: const Size(200, 200));
-      addRect(container,
+          size: const Size(200, 200),
+        );
+        addRect(
+          container,
           id: 'top',
           position: const Offset(150, 150),
-          size: const Size(100, 100));
-      await tester.pump();
+          size: const Size(100, 100),
+        );
+        await tester.pump();
 
-      // Enter multi mode, then tap the overlap point twice.
-      await longPress(tester, toScreen(container, const Offset(350, 350)));
-      final spot = toScreen(container, const Offset(200, 200));
+        // Enter multi mode, then tap the overlap point twice.
+        await longPress(tester, toScreen(container, const Offset(350, 350)));
+        final spot = toScreen(container, const Offset(200, 200));
 
-      await tap(tester, spot);
-      // First tap toggles 'top' in.
-      expect(container.read(selectionControllerProvider).selectedIds,
-          ['top']);
+        await tap(tester, spot);
+        // First tap toggles 'top' in.
+        expect(container.read(selectionControllerProvider).selectedIds, [
+          'top',
+        ]);
 
-      await tap(tester, spot);
-      // Second tap on the SAME spot toggles 'top' BACK out — it does
-      // NOT cycle to 'bottom'.
-      expect(container.read(selectionControllerProvider).hasSelection, isFalse,
-          reason: 'cycling is suppressed in multi mode');
-    });
+        await tap(tester, spot);
+        // Second tap on the SAME spot toggles 'top' BACK out — it does
+        // NOT cycle to 'bottom'.
+        expect(
+          container.read(selectionControllerProvider).hasSelection,
+          isFalse,
+          reason: 'cycling is suppressed in multi mode',
+        );
+      },
+    );
   });
 
   group('lifecycle: cancel safety', () {
     testWidgets(
-        'an in-flight interaction session is cancelled when its layer is '
-        'removed from the document', (tester) async {
-      final container = await buildEditor(tester);
-      addRect(container,
+      'an in-flight interaction session is cancelled when its layer is '
+      'removed from the document',
+      (tester) async {
+        final container = await buildEditor(tester);
+        addRect(
+          container,
           id: 'a',
           position: const Offset(50, 50),
-          size: const Size(80, 80));
-      await tester.pump();
+          size: const Size(80, 80),
+        );
+        await tester.pump();
 
-      // Manually start an interaction session so we can simulate a
-      // mid-gesture removal without a full pointer choreography.
-      final layer =
-          container.read(documentControllerProvider).layerById('a')!;
-      container.read(interactionControllerProvider.notifier).startMove(
-            layer: layer,
-            pointer: const Offset(90, 90),
-          );
-      expect(container.read(interactionControllerProvider).isActive, isTrue);
+        // Manually start an interaction session so we can simulate a
+        // mid-gesture removal without a full pointer choreography.
+        final layer = container
+            .read(documentControllerProvider)
+            .layerById('a')!;
+        container
+            .read(interactionControllerProvider.notifier)
+            .startMove(layer: layer, pointer: const Offset(90, 90));
+        expect(container.read(interactionControllerProvider).isActive, isTrue);
 
-      // Remove the layer — the controller's document subscription must
-      // cancel the session.
-      container
-          .read(documentControllerProvider.notifier)
-          .execute(const RemoveLayerCommand('a'));
-      await tester.pump();
+        // Remove the layer — the controller's document subscription must
+        // cancel the session.
+        container
+            .read(documentControllerProvider.notifier)
+            .execute(const RemoveLayerCommand('a'));
+        await tester.pump();
 
-      expect(container.read(interactionControllerProvider).isActive, isFalse,
-          reason: 'session cancelled when active layer is removed');
-      expect(
-          container.read(interactionControllerProvider).liveTransform, isNull);
-    });
+        expect(
+          container.read(interactionControllerProvider).isActive,
+          isFalse,
+          reason: 'session cancelled when active layer is removed',
+        );
+        expect(
+          container.read(interactionControllerProvider).liveTransform,
+          isNull,
+        );
+      },
+    );
 
     testWidgets('cancel is idempotent', (tester) async {
       final container = await buildEditor(tester);

@@ -37,9 +37,9 @@ const RectMask kMask = RectMask(
 EffectStack _stack({LayerMask? stackMask, bool contributing = true}) =>
     EffectStack(
       contributing
-          ? List<EditorEffect>.unmodifiable(
-              <EditorEffect>[const SaturationEffect(amount: 0)],
-            )
+          ? List<EditorEffect>.unmodifiable(<EditorEffect>[
+              const SaturationEffect(amount: 0),
+            ])
           : const <EditorEffect>[],
       stackMask: stackMask,
     );
@@ -80,8 +80,12 @@ bool _near(int actual, int expected, [int tol = 4]) =>
 Future<void> _prewarmRaster(WidgetTester tester, LayerMask mask) async {
   await tester.runAsync(() async {
     final done = Completer<void>();
-    StackMaskRasterCache.instance
-        .request(mask, kDocSide, kDocSide, done.complete);
+    StackMaskRasterCache.instance.request(
+      mask,
+      kDocSide,
+      kDocSide,
+      done.complete,
+    );
     await done.future;
   });
 }
@@ -130,7 +134,7 @@ Future<GlobalKey> _mount(WidgetTester tester, EditorDocument doc) async {
 /// slices (runAsync) with pumps until [painted] reports the image
 /// pixels have landed — bounded so a genuine failure still fails.
 Future<({int width, int height, ({int r, int g, int b}) Function(int, int) px})>
-    _captureSettled(
+_captureSettled(
   WidgetTester tester,
   GlobalKey key,
   bool Function(({int r, int g, int b}) Function(int, int) px) painted,
@@ -147,15 +151,17 @@ Future<({int width, int height, ({int r, int g, int b}) Function(int, int) px})>
 }
 
 Future<({int width, int height, ({int r, int g, int b}) Function(int, int) px})>
-    _capture(WidgetTester tester, GlobalKey key) async {
+_capture(WidgetTester tester, GlobalKey key) async {
   final bytes = (await tester.runAsync(
-    () => DocumentPngExporter.captureBoundary(boundaryKey: key, pixelRatio: 1.0),
+    () =>
+        DocumentPngExporter.captureBoundary(boundaryKey: key, pixelRatio: 1.0),
   ))!;
   final decoded = (await tester.runAsync(() async {
     final codec = await ui.instantiateImageCodec(bytes);
     final frame = await codec.getNextFrame();
-    final raw =
-        await frame.image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final raw = await frame.image.toByteData(
+      format: ui.ImageByteFormat.rawRgba,
+    );
     final data = raw!.buffer.asUint8List();
     final width = frame.image.width;
     final height = frame.image.height;
@@ -210,35 +216,44 @@ void main() {
   tearDown(StackMaskRasterCache.instance.clearForTest);
 
   group('structure gates', () {
-    testWidgets('null stackMask never constructs the composite wrapper',
-        (tester) async {
+    testWidgets('null stackMask never constructs the composite wrapper', (
+      tester,
+    ) async {
       await _mount(tester, _doc(_stack(stackMask: null)));
-      expect(find.byType(StackMaskComposite), findsNothing,
-          reason: 'null mask must keep the render tree identical to a '
-              'pre-stackMask document');
-    });
-
-    testWidgets('non-contributing stack skips the composite even with a mask',
-        (tester) async {
-      await _mount(
-        tester,
-        _doc(_stack(stackMask: kMask, contributing: false)),
+      expect(
+        find.byType(StackMaskComposite),
+        findsNothing,
+        reason:
+            'null mask must keep the render tree identical to a '
+            'pre-stackMask document',
       );
-      expect(find.byType(StackMaskComposite), findsNothing,
-          reason: 'base and painted are identical when the stack '
-              'contributes nothing — the composite would be a no-op');
     });
 
-    testWidgets('contributing stack + mask mounts exactly one composite',
-        (tester) async {
+    testWidgets('non-contributing stack skips the composite even with a mask', (
+      tester,
+    ) async {
+      await _mount(tester, _doc(_stack(stackMask: kMask, contributing: false)));
+      expect(
+        find.byType(StackMaskComposite),
+        findsNothing,
+        reason:
+            'base and painted are identical when the stack '
+            'contributes nothing — the composite would be a no-op',
+      );
+    });
+
+    testWidgets('contributing stack + mask mounts exactly one composite', (
+      tester,
+    ) async {
       await _prewarmRaster(tester, kMask);
       await _mount(tester, _doc(_stack(stackMask: kMask)));
       expect(find.byType(StackMaskComposite), findsOneWidget);
       expect(find.byType(ShaderMask), findsOneWidget);
     });
 
-    testWidgets('renders base only until the mask raster resolves',
-        (tester) async {
+    testWidgets('renders base only until the mask raster resolves', (
+      tester,
+    ) async {
       // No pre-warm: the first build must fall back to the base
       // subtree (no ShaderMask) rather than flash the unmasked effect.
       await tester.pumpWidget(
@@ -254,16 +269,21 @@ void main() {
         ),
       );
       expect(find.byType(StackMaskComposite), findsOneWidget);
-      expect(find.byType(ShaderMask), findsNothing,
-          reason: 'until the raster lands, only the un-effected base '
-              'may render — a one-frame flash of the unmasked effect '
-              'is the failure mode this guards');
+      expect(
+        find.byType(ShaderMask),
+        findsNothing,
+        reason:
+            'until the raster lands, only the un-effected base '
+            'may render — a one-frame flash of the unmasked effect '
+            'is the failure mode this guards',
+      );
     });
   });
 
   group('pixel gates (spike §7.4 ported to the real layer)', () {
-    testWidgets('masked effected / unmasked original / linear feather',
-        (tester) async {
+    testWidgets('masked effected / unmasked original / linear feather', (
+      tester,
+    ) async {
       final stack = _stack(stackMask: kMask);
       final effected = _applyMatrix(stack.composedColorMatrix!, kRed);
 
@@ -287,7 +307,8 @@ void main() {
             _near(inside.g, effected.g) &&
             _near(inside.b, effected.b),
         isTrue,
-        reason: 'masked region must show the stack-effected pixels '
+        reason:
+            'masked region must show the stack-effected pixels '
             '($inside vs expected $effected)',
       );
       expect(
@@ -300,13 +321,15 @@ void main() {
       expect(
         _near(mid.r, midR, 8) && _near(mid.g, midG, 8),
         isTrue,
-        reason: 'feather midpoint must blend 50/50 ($mid, expected '
+        reason:
+            'feather midpoint must blend 50/50 ($mid, expected '
             'r≈$midR g≈$midG)',
       );
       expect(
         rampHi.r < mid.r && mid.r < rampLo.r,
         isTrue,
-        reason: 'red must recover monotonically across the feather '
+        reason:
+            'red must recover monotonically across the feather '
             'band (${rampHi.r} < ${mid.r} < ${rampLo.r})',
       );
     });
@@ -331,8 +354,11 @@ void main() {
 
       final wasInside = shot.px(100, 30); // now α = 0 → original
       final wasOutside = shot.px(100, 180); // now α = 1 → effected
-      expect(_near(wasInside.r, 255) && _near(wasInside.g, 0), isTrue,
-          reason: 'inverted: inside old rect must be original ($wasInside)');
+      expect(
+        _near(wasInside.r, 255) && _near(wasInside.g, 0),
+        isTrue,
+        reason: 'inverted: inside old rect must be original ($wasInside)',
+      );
       expect(
         _near(wasOutside.r, effected.r) && _near(wasOutside.g, effected.g),
         isTrue,
@@ -342,18 +368,19 @@ void main() {
   });
 
   group('raster cache', () {
-    testWidgets('evicts LRU past the byte budget, never the newest',
-        (tester) async {
+    testWidgets('evicts LRU past the byte budget, never the newest', (
+      tester,
+    ) async {
       final cache = StackMaskRasterCache.instance;
       // 10×10 rasters are 400 bytes each; budget for two.
       cache.byteBudget = 900;
       addTearDown(() => cache.byteBudget = 32 * 1024 * 1024);
 
       Future<void> warm(LayerMask m) => tester.runAsync(() async {
-            final done = Completer<void>();
-            cache.request(m, 10, 10, done.complete);
-            await done.future;
-          });
+        final done = Completer<void>();
+        cache.request(m, 10, 10, done.complete);
+        await done.future;
+      });
 
       const m1 = RectMask(rect: Rect.fromLTWH(0, 0, 1, 1));
       const m2 = RectMask(rect: Rect.fromLTWH(0, 0, 2, 2));
@@ -364,14 +391,21 @@ void main() {
       expect(cache.lookup(m2, 10, 10), isNotNull);
 
       await warm(m3);
-      expect(cache.lookup(m3, 10, 10), isNotNull,
-          reason: 'newest entry must survive its own insert');
-      expect(cache.lookup(m1, 10, 10), isNull,
-          reason: 'oldest entry must be evicted past the budget');
+      expect(
+        cache.lookup(m3, 10, 10),
+        isNotNull,
+        reason: 'newest entry must survive its own insert',
+      );
+      expect(
+        cache.lookup(m1, 10, 10),
+        isNull,
+        reason: 'oldest entry must be evicted past the budget',
+      );
     });
 
-    testWidgets('lookup is keyed on mask value AND raster size',
-        (tester) async {
+    testWidgets('lookup is keyed on mask value AND raster size', (
+      tester,
+    ) async {
       final cache = StackMaskRasterCache.instance;
       await tester.runAsync(() async {
         final done = Completer<void>();
@@ -379,11 +413,17 @@ void main() {
         await done.future;
       });
       expect(cache.lookup(kMask, 10, 10), isNotNull);
-      expect(cache.lookup(kMask, 20, 20), isNull,
-          reason: 'a resized layer needs a fresh raster');
+      expect(
+        cache.lookup(kMask, 20, 20),
+        isNull,
+        reason: 'a resized layer needs a fresh raster',
+      );
       const other = RectMask(rect: Rect.fromLTWH(0, 0, 200, 100), feather: 25);
-      expect(cache.lookup(other, 10, 10), isNull,
-          reason: 'any mask field change is a different key');
+      expect(
+        cache.lookup(other, 10, 10),
+        isNull,
+        reason: 'any mask field change is a different key',
+      );
     });
   });
 }

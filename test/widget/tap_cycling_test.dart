@@ -32,9 +32,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(
-          home: Scaffold(body: EditorCanvas()),
-        ),
+        child: const MaterialApp(home: Scaffold(body: EditorCanvas())),
       ),
     );
     return container;
@@ -46,7 +44,9 @@ void main() {
     required Offset position,
     required Size size,
   }) {
-    container.read(documentControllerProvider.notifier).execute(
+    container
+        .read(documentControllerProvider.notifier)
+        .execute(
           AddLayerCommand(
             ShapeLayer(
               id: id,
@@ -76,18 +76,24 @@ void main() {
     final container = await buildEditor(tester);
 
     // Three concentric rectangles, all containing canvas point (200, 200).
-    addRect(container,
-        id: 'bottom',
-        position: const Offset(100, 100),
-        size: const Size(200, 200));
-    addRect(container,
-        id: 'middle',
-        position: const Offset(125, 125),
-        size: const Size(150, 150));
-    addRect(container,
-        id: 'top',
-        position: const Offset(150, 150),
-        size: const Size(100, 100));
+    addRect(
+      container,
+      id: 'bottom',
+      position: const Offset(100, 100),
+      size: const Size(200, 200),
+    );
+    addRect(
+      container,
+      id: 'middle',
+      position: const Offset(125, 125),
+      size: const Size(150, 150),
+    );
+    addRect(
+      container,
+      id: 'top',
+      position: const Offset(150, 150),
+      size: const Size(100, 100),
+    );
 
     await tester.pump();
     await tester.pump();
@@ -95,33 +101,50 @@ void main() {
     final spot = toScreen(container, const Offset(200, 200));
 
     await tap(tester, spot);
-    expect(container.read(selectionControllerProvider).selectedId, 'top',
-        reason: 'first tap selects topmost');
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      'top',
+      reason: 'first tap selects topmost',
+    );
 
     await tap(tester, spot);
-    expect(container.read(selectionControllerProvider).selectedId, 'middle',
-        reason: 'second tap cycles down to middle');
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      'middle',
+      reason: 'second tap cycles down to middle',
+    );
 
     await tap(tester, spot);
-    expect(container.read(selectionControllerProvider).selectedId, 'bottom',
-        reason: 'third tap cycles down to bottom');
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      'bottom',
+      reason: 'third tap cycles down to bottom',
+    );
 
     await tap(tester, spot);
-    expect(container.read(selectionControllerProvider).selectedId, 'top',
-        reason: 'fourth tap wraps back to topmost');
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      'top',
+      reason: 'fourth tap wraps back to topmost',
+    );
   });
 
-  testWidgets('moving the tap to a new spot resets the cycle to topmost',
-      (tester) async {
+  testWidgets('moving the tap to a new spot resets the cycle to topmost', (
+    tester,
+  ) async {
     final container = await buildEditor(tester);
-    addRect(container,
-        id: 'bottom',
-        position: const Offset(100, 100),
-        size: const Size(200, 200));
-    addRect(container,
-        id: 'top',
-        position: const Offset(150, 150),
-        size: const Size(100, 100));
+    addRect(
+      container,
+      id: 'bottom',
+      position: const Offset(100, 100),
+      size: const Size(200, 200),
+    );
+    addRect(
+      container,
+      id: 'top',
+      position: const Offset(150, 150),
+      size: const Size(100, 100),
+    );
     await tester.pump();
     await tester.pump();
 
@@ -130,29 +153,42 @@ void main() {
     await tap(tester, spotA);
     expect(container.read(selectionControllerProvider).selectedId, 'top');
     await tap(tester, spotA);
-    expect(container.read(selectionControllerProvider).selectedId, 'bottom',
-        reason: 'cycled to bottom');
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      'bottom',
+      reason: 'cycled to bottom',
+    );
 
     // New spot inside both layers but >24 px (cycle tolerance) away.
     final spotB = toScreen(container, const Offset(170, 170));
     await tap(tester, spotB);
-    expect(container.read(selectionControllerProvider).selectedId, 'top',
-        reason: 'moving the tap resets the cycle to topmost');
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      'top',
+      reason: 'moving the tap resets the cycle to topmost',
+    );
   });
 
-  testWidgets('locked higher layer does not block cycling of unlocked layers',
-      (tester) async {
+  testWidgets('locked higher layer does not block cycling of unlocked layers', (
+    tester,
+  ) async {
     final container = await buildEditor(tester);
-    addRect(container,
-        id: 'bottom',
-        position: const Offset(100, 100),
-        size: const Size(200, 200));
-    addRect(container,
-        id: 'middle',
-        position: const Offset(125, 125),
-        size: const Size(150, 150));
+    addRect(
+      container,
+      id: 'bottom',
+      position: const Offset(100, 100),
+      size: const Size(200, 200),
+    );
+    addRect(
+      container,
+      id: 'middle',
+      position: const Offset(125, 125),
+      size: const Size(150, 150),
+    );
     // Locked top — must be skipped entirely.
-    container.read(documentControllerProvider.notifier).execute(
+    container
+        .read(documentControllerProvider.notifier)
+        .execute(
           AddLayerCommand(
             ShapeLayer(
               id: 'top_locked',
@@ -170,21 +206,29 @@ void main() {
     final spot = toScreen(container, const Offset(200, 200));
 
     await tap(tester, spot);
-    expect(container.read(selectionControllerProvider).selectedId, 'middle',
-        reason: 'locked top is skipped, middle becomes the topmost eligible');
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      'middle',
+      reason: 'locked top is skipped, middle becomes the topmost eligible',
+    );
 
     await tap(tester, spot);
-    expect(container.read(selectionControllerProvider).selectedId, 'bottom',
-        reason: 'cycle proceeds across only eligible layers');
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      'bottom',
+      reason: 'cycle proceeds across only eligible layers',
+    );
   });
 
   testWidgets('single eligible layer keeps selection on every tap '
       '(no spurious clear / cycle)', (tester) async {
     final container = await buildEditor(tester);
-    addRect(container,
-        id: 'only',
-        position: const Offset(150, 150),
-        size: const Size(100, 100));
+    addRect(
+      container,
+      id: 'only',
+      position: const Offset(150, 150),
+      size: const Size(100, 100),
+    );
     await tester.pump();
     await tester.pump();
 
@@ -192,7 +236,10 @@ void main() {
     await tap(tester, spot);
     expect(container.read(selectionControllerProvider).selectedId, 'only');
     await tap(tester, spot);
-    expect(container.read(selectionControllerProvider).selectedId, 'only',
-        reason: 'with one eligible hit there is nothing to cycle to');
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      'only',
+      reason: 'with one eligible hit there is nothing to cycle to',
+    );
   });
 }

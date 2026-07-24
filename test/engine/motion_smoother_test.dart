@@ -8,17 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 /// this; time-based EMA passes it.
 void main() {
   group('MotionSmoother — frame-rate independence', () {
-    test('60Hz, 90Hz, and 120Hz converge to the same value over 100ms',
-        () {
+    test('60Hz, 90Hz, and 120Hz converge to the same value over 100ms', () {
       const target = Offset(100, 100);
 
       Offset run({required double dtMs, required int frames}) {
         final s = MotionSmoother()
-          ..seed(
-            position: Offset.zero,
-            rotation: 0,
-            size: const Size(10, 10),
-          );
+          ..seed(position: Offset.zero, rotation: 0, size: const Size(10, 10));
         var p = Offset.zero;
         for (var i = 0; i < frames; i++) {
           p = s.smoothPosition(target, dt: dtMs / 1000);
@@ -38,11 +33,7 @@ void main() {
 
     test('huge dt collapses to target (catch-up after a long pause)', () {
       final s = MotionSmoother()
-        ..seed(
-          position: Offset.zero,
-          rotation: 0,
-          size: const Size(10, 10),
-        );
+        ..seed(position: Offset.zero, rotation: 0, size: const Size(10, 10));
       // After a 10 s pause the next frame should be effectively at
       // target — the user moved on, the smoother should not fight back.
       final p = s.smoothPosition(const Offset(200, 200), dt: 10);
@@ -50,22 +41,19 @@ void main() {
       expect(p.dy, closeTo(200, 0.001));
     });
 
-    test(
-      'dt<=0 anomaly safeguard: alpha clamps to 1 so the smoother '
-      'cannot freeze on bad input',
-      () {
-        final s = MotionSmoother()
-          ..seed(
-            position: const Offset(50, 50),
-            rotation: 0,
-            size: const Size(10, 10),
-          );
-        // Documented behaviour: dt<=0 treats the frame as "infinite time
-        // since last tick" and snaps to target. Prevents a stuck smoother
-        // if the controller ever feeds in a non-positive dt.
-        final p = s.smoothPosition(const Offset(100, 100), dt: 0);
-        expect(p, const Offset(100, 100));
-      },
-    );
+    test('dt<=0 anomaly safeguard: alpha clamps to 1 so the smoother '
+        'cannot freeze on bad input', () {
+      final s = MotionSmoother()
+        ..seed(
+          position: const Offset(50, 50),
+          rotation: 0,
+          size: const Size(10, 10),
+        );
+      // Documented behaviour: dt<=0 treats the frame as "infinite time
+      // since last tick" and snaps to target. Prevents a stuck smoother
+      // if the controller ever feeds in a non-positive dt.
+      final p = s.smoothPosition(const Offset(100, 100), dt: 0);
+      expect(p, const Offset(100, 100));
+    });
   });
 }

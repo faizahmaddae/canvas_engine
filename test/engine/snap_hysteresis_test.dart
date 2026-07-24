@@ -40,28 +40,33 @@ void main() {
       expect(r.guides, isEmpty);
     });
 
-    test('retains engagement out to release tolerance when previous holds it',
-        () {
-      // Previous frame: engaged on peer.left (coord=0, vertical guide).
-      const prev = SnapResult(
-        position: Offset.zero,
-        guides: [
-          SnapGuide(axis: SnapAxis.vertical, coord: 0, start: 0, end: 1000),
-        ],
-      );
-      // Moved.left = 8 → distance 8, OUTSIDE base 6 but INSIDE release 9.6.
-      // With hysteresis the engine should still snap.
-      final r = engine.snapPosition(
-        proposed: const Offset(8, 200),
-        size: const Size(50, 50),
-        peerRects: peers,
-        canvasSize: canvas,
-        previous: prev,
-      );
-      expect(r.position.dx, 0,
-          reason: 'sticky guide should retain engagement within 1.6× threshold');
-      expect(r.guides, isNotEmpty);
-    });
+    test(
+      'retains engagement out to release tolerance when previous holds it',
+      () {
+        // Previous frame: engaged on peer.left (coord=0, vertical guide).
+        const prev = SnapResult(
+          position: Offset.zero,
+          guides: [
+            SnapGuide(axis: SnapAxis.vertical, coord: 0, start: 0, end: 1000),
+          ],
+        );
+        // Moved.left = 8 → distance 8, OUTSIDE base 6 but INSIDE release 9.6.
+        // With hysteresis the engine should still snap.
+        final r = engine.snapPosition(
+          proposed: const Offset(8, 200),
+          size: const Size(50, 50),
+          peerRects: peers,
+          canvasSize: canvas,
+          previous: prev,
+        );
+        expect(
+          r.position.dx,
+          0,
+          reason: 'sticky guide should retain engagement within 1.6× threshold',
+        );
+        expect(r.guides, isNotEmpty);
+      },
+    );
 
     test('releases beyond release tolerance', () {
       const prev = SnapResult(
@@ -170,8 +175,11 @@ void main() {
         peerRects: peers,
         previous: prev,
       );
-      expect(r.position.dx, closeTo(125, 0.01),
-          reason: 'sticky spacing should retain engagement within 1.6× tol');
+      expect(
+        r.position.dx,
+        closeTo(125, 0.01),
+        reason: 'sticky spacing should retain engagement within 1.6× tol',
+      );
       expect(r.guides, isNotEmpty);
     });
   });

@@ -37,6 +37,5 @@ class WidgetSubTool extends SubTool {
   final Widget Function(BuildContext context, WidgetRef ref) builder;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      builder(context, ref);
+  Widget build(BuildContext context, WidgetRef ref) => builder(context, ref);
 }

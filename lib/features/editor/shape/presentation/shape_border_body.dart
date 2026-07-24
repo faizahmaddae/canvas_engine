@@ -29,19 +29,20 @@ class ShapeBorderBody extends StatelessWidget {
     return LayerBorderBody<ShapeLayer>(
       layer: layer,
       adapter: BorderPanelAdapter<ShapeLayer>(
-        command: ({
-          required layerId,
-          color,
-          clearColor = false,
-          width,
-          live = false,
-        }) => SetShapeStrokeCommand(
-          layerId: layerId,
-          color: color,
-          clearColor: clearColor,
-          width: width,
-          live: live,
-        ),
+        command:
+            ({
+              required layerId,
+              color,
+              clearColor = false,
+              width,
+              live = false,
+            }) => SetShapeStrokeCommand(
+              layerId: layerId,
+              color: color,
+              clearColor: clearColor,
+              width: width,
+              live: live,
+            ),
         read: (l) => (color: l.strokeColor, width: l.strokeWidth),
         hasColor: (l) => l.strokeColor != null,
         isStrokedKind: (l) => isStrokedShapeKind(l.kind),

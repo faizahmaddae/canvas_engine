@@ -11,31 +11,15 @@ import 'package:flutter/material.dart';
 /// controller, persistence, and any future tool routing all key off
 /// this enum.
 enum PaintToolType {
-  freestyle(
-    label: 'Freestyle',
-    icon: Icons.gesture_rounded,
-    available: true,
-  ),
-  arrow(
-    label: 'Arrow',
-    icon: Icons.arrow_right_alt_rounded,
-    available: true,
-  ),
-  line(
-    label: 'Line',
-    icon: Icons.show_chart_rounded,
-    available: true,
-  ),
+  freestyle(label: 'Freestyle', icon: Icons.gesture_rounded, available: true),
+  arrow(label: 'Arrow', icon: Icons.arrow_right_alt_rounded, available: true),
+  line(label: 'Line', icon: Icons.show_chart_rounded, available: true),
   rectangle(
     label: 'Rectangle',
     icon: Icons.crop_square_rounded,
     available: true,
   ),
-  circle(
-    label: 'Circle',
-    icon: Icons.circle_outlined,
-    available: true,
-  ),
+  circle(label: 'Circle', icon: Icons.circle_outlined, available: true),
   eraser(
     label: 'Eraser',
     icon: Icons.cleaning_services_outlined,
@@ -51,21 +35,9 @@ enum PaintToolType {
     icon: Icons.more_horiz_rounded,
     available: true,
   ),
-  hexagon(
-    label: 'Hexagon',
-    icon: Icons.hexagon_outlined,
-    available: true,
-  ),
-  polygon(
-    label: 'Polygon',
-    icon: Icons.pentagon_outlined,
-    available: true,
-  ),
-  blur(
-    label: 'Blur',
-    icon: Icons.blur_on_rounded,
-    available: true,
-  );
+  hexagon(label: 'Hexagon', icon: Icons.hexagon_outlined, available: true),
+  polygon(label: 'Polygon', icon: Icons.pentagon_outlined, available: true),
+  blur(label: 'Blur', icon: Icons.blur_on_rounded, available: true);
 
   const PaintToolType({
     required this.label,

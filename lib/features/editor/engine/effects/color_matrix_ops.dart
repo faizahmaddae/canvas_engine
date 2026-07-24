@@ -27,8 +27,24 @@ List<double> composeColorMatrices(List<double> a, List<double> b) {
 /// 4×5 identity colour matrix. Useful as the seed of a fold over a
 /// list of per-effect matrices.
 const List<double> kIdentityColorMatrix = <double>[
-  1, 0, 0, 0, 0,
-  0, 1, 0, 0, 0,
-  0, 0, 1, 0, 0,
-  0, 0, 0, 1, 0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
 ];

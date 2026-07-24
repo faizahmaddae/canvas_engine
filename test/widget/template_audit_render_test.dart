@@ -106,8 +106,9 @@ void main() {
       }
 
       final source = File('${dir.path}/document.json').readAsStringSync();
-      for (final match
-          in RegExp(r'"fontFamily":\s*"([^"]+)"').allMatches(source)) {
+      for (final match in RegExp(
+        r'"fontFamily":\s*"([^"]+)"',
+      ).allMatches(source)) {
         final family = match.group(1)!;
         if (!_fontAssets.containsKey(family)) {
           missingFonts.putIfAbsent(id, () => <String>{}).add(family);
@@ -165,8 +166,10 @@ void main() {
     tester.view.resetDevicePixelRatio();
 
     // ignore: avoid_print
-    print('AUDIT: rendered=$rendered decodeFailures=${failures.length} '
-        'fontGaps=${missingFonts.length}');
+    print(
+      'AUDIT: rendered=$rendered decodeFailures=${failures.length} '
+      'fontGaps=${missingFonts.length}',
+    );
     failures.forEach((id, e) {
       // ignore: avoid_print
       print('FAIL $id: $e');
@@ -176,7 +179,10 @@ void main() {
       print('FONT-GAP $id: ${fams.join(', ')} (family not in test font map)');
     });
     expect(failures, isEmpty);
-    expect(missingFonts, isEmpty,
-        reason: 'add families to _fontAssets so renders are font-accurate');
+    expect(
+      missingFonts,
+      isEmpty,
+      reason: 'add families to _fontAssets so renders are font-accurate',
+    );
   });
 }

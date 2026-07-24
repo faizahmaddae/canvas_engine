@@ -12,7 +12,6 @@ import 'app_tokens.dart';
 /// (ripples, focus rings, tonal fills, snackbars, …) can no longer
 /// produce violet anywhere in the app.
 abstract final class AppTheme {
-
   /// Primary UI font for Latin scripts. Bundled in `pubspec.yaml`
   /// already (no `google_fonts` dependency needed). Hanken Grotesk
   /// is geometrically close to Inter and ships a real Bold weight.
@@ -200,9 +199,7 @@ abstract final class AppTheme {
           side: WidgetStatePropertyAll(BorderSide(color: tokens.border)),
         ),
       ),
-      progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: tokens.accent,
-      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: tokens.accent),
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: tokens.accent,
         selectionColor: tokens.accent.withValues(alpha: 0.28),

@@ -9,21 +9,15 @@ import 'package:flutter_test/flutter_test.dart';
 /// Wraps a thumbnail in a minimal [MaterialApp] so [Theme.of] resolves
 /// and the box decoration can read `colorScheme`/`dividerColor`.
 Widget _host(Widget child) => MaterialApp(
-      home: Scaffold(
-        body: Center(child: child),
-      ),
-    );
-
-const _t = LayerTransform(
-  position: Offset.zero,
-  size: Size(100, 100),
+  home: Scaffold(body: Center(child: child)),
 );
+
+const _t = LayerTransform(position: Offset.zero, size: Size(100, 100));
 
 void main() {
   group('LayerThumbnail – ShapeLayer', () {
     for (final kind in ShapeKind.values) {
-      testWidgets('renders ${kind.name} without throwing',
-          (tester) async {
+      testWidgets('renders ${kind.name} without throwing', (tester) async {
         final layer = ShapeLayer(
           id: 's-${kind.name}',
           transform: _t,
@@ -59,9 +53,7 @@ void main() {
         transform: _t,
         kind: ShapeKind.rectangle,
       );
-      await tester.pumpWidget(
-        _host(LayerThumbnail(layer: layer, size: 64)),
-      );
+      await tester.pumpWidget(_host(LayerThumbnail(layer: layer, size: 64)));
       final box = tester.getSize(find.byType(LayerThumbnail));
       expect(box.width, 64);
       expect(box.height, 64);
@@ -69,8 +61,7 @@ void main() {
   });
 
   group('LayerThumbnail – ImageLayer', () {
-    testWidgets('builds for asset source without throwing',
-        (tester) async {
+    testWidgets('builds for asset source without throwing', (tester) async {
       final layer = ImageLayer(
         id: 'img-asset',
         transform: _t,
@@ -83,8 +74,7 @@ void main() {
       expect(find.byType(Image), findsWidgets);
     });
 
-    testWidgets('builds for network source without throwing',
-        (tester) async {
+    testWidgets('builds for network source without throwing', (tester) async {
       final layer = ImageLayer(
         id: 'img-net',
         transform: _t,
@@ -94,8 +84,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('honours non-default crop without throwing',
-        (tester) async {
+    testWidgets('honours non-default crop without throwing', (tester) async {
       final layer = ImageLayer(
         id: 'img-crop',
         transform: _t,
@@ -106,8 +95,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('honours non-default mask via ClipPath',
-        (tester) async {
+    testWidgets('honours non-default mask via ClipPath', (tester) async {
       final layer = ImageLayer(
         id: 'img-mask',
         transform: _t,
@@ -163,8 +151,7 @@ void main() {
       expect(find.byIcon(Icons.text_fields), findsOneWidget);
     });
 
-    testWidgets('emoji sticker renders glyph at large size',
-        (tester) async {
+    testWidgets('emoji sticker renders glyph at large size', (tester) async {
       final layer = TextLayer(
         id: 't-sticker',
         transform: _t,
@@ -172,17 +159,14 @@ void main() {
         style: const TextStyleSpec(),
         kind: TextLayerKind.emojiSticker,
       );
-      await tester.pumpWidget(
-        _host(LayerThumbnail(layer: layer, size: 40)),
-      );
+      await tester.pumpWidget(_host(LayerThumbnail(layer: layer, size: 40)));
       expect(find.text('🎉'), findsOneWidget);
       // Sticker glyph uses ~70% of the thumb (40 * 0.7 = 28).
       final txt = tester.widget<Text>(find.text('🎉'));
       expect(txt.style?.fontSize, closeTo(28, 0.001));
     });
 
-    testWidgets('normal text uses layer colour and family',
-        (tester) async {
+    testWidgets('normal text uses layer colour and family', (tester) async {
       final layer = TextLayer(
         id: 't-style',
         transform: _t,
@@ -212,8 +196,7 @@ void main() {
       expect(box.height, 40);
     });
 
-    testWidgets('always wraps content in a rounded clip',
-        (tester) async {
+    testWidgets('always wraps content in a rounded clip', (tester) async {
       final layer = ShapeLayer(
         id: 's',
         transform: _t,

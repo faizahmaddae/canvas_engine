@@ -40,7 +40,8 @@ void main() {
     test('cancel() is a no-op when no gesture is active', () {
       final c = ProviderContainer();
       addTearDown(c.dispose);
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .newDocument(width: 800, height: 800);
       // Capture initial state object identity.
       final before = c.read(interactionControllerProvider);
@@ -50,8 +51,11 @@ void main() {
       // No-op short-circuit: state instance must be unchanged so
       // listeners (overlay rebuilds, snap-guide painters) don't
       // churn on every focus loss.
-      expect(identical(before, after), isTrue,
-          reason: 'cancel() must not allocate when nothing is active');
+      expect(
+        identical(before, after),
+        isTrue,
+        reason: 'cancel() must not allocate when nothing is active',
+      );
     });
 
     test(
@@ -59,7 +63,8 @@ void main() {
       () {
         final c = ProviderContainer();
         addTearDown(c.dispose);
-        c.read(documentControllerProvider.notifier)
+        c
+            .read(documentControllerProvider.notifier)
             .newDocument(width: 800, height: 800);
         final layer = addRect(c, id: 'r');
         // Snapshot history BEFORE the gesture.
@@ -70,10 +75,7 @@ void main() {
         // Begin a move and push a few frames forward so liveTransform
         // diverges from the layer's committed transform.
         final ic = c.read(interactionControllerProvider.notifier);
-        ic.startMove(
-          layer: layer,
-          pointer: const Offset(160, 160),
-        );
+        ic.startMove(layer: layer, pointer: const Offset(160, 160));
         ic.update(const Offset(220, 200));
         expect(c.read(interactionControllerProvider).isActive, isTrue);
 

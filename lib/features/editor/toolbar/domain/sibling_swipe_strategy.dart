@@ -13,10 +13,7 @@ import 'package:flutter/foundation.dart';
 /// do?" answerable in one place.
 @immutable
 class SiblingSwipeStrategy<T> {
-  const SiblingSwipeStrategy({
-    required this.order,
-    this.excluded = const {},
-  });
+  const SiblingSwipeStrategy({required this.order, this.excluded = const {}});
 
   /// Canonical left→right order driving sibling navigation.
   final List<T> order;

@@ -20,8 +20,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// v2 `adjustments: {...}` shape. The wire-format change is
 /// *to* the current schema; no on-disk doc becomes unreadable.
 void main() {
-  test(
-      'legacy adjustments slot lifts to EffectStack entries on read '
+  test('legacy adjustments slot lifts to EffectStack entries on read '
       '(brightness=12, contrast=1.1, saturation=0.9)', () {
     final raw = File(
       'test/engine/fixtures/v2/05_image_with_crop_and_adjustments.json',
@@ -40,18 +39,23 @@ void main() {
     expect(adj.warmth, 0);
   });
 
-  test(
-      're-encoding the lifted document writes the v3 effects shape '
+  test('re-encoding the lifted document writes the v3 effects shape '
       'and never the legacy adjustments key', () {
     final raw = File(
       'test/engine/fixtures/v2/05_image_with_crop_and_adjustments.json',
     ).readAsStringSync();
     final doc = DocumentCodec.decode(raw);
     final reencoded = DocumentCodec.encode(doc);
-    expect(reencoded.contains('"adjustments"'), isFalse,
-        reason: 'writer must not emit the retired adjustments key');
-    expect(reencoded.contains('"effects"'), isTrue,
-        reason: 'lifted effects must surface on re-encode');
+    expect(
+      reencoded.contains('"adjustments"'),
+      isFalse,
+      reason: 'writer must not emit the retired adjustments key',
+    );
+    expect(
+      reencoded.contains('"effects"'),
+      isTrue,
+      reason: 'lifted effects must surface on re-encode',
+    );
     // Round-trip stability: the v3 form is a fixed point of the
     // codec going forward (re-encode → decode → re-encode is
     // byte-identical, even if the very first encode reshaped).

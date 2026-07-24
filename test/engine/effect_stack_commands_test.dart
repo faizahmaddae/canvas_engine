@@ -8,25 +8,24 @@ import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 ImageLayer _img({EffectStack effects = EffectStack.empty}) => ImageLayer(
-      id: 'img',
-      transform: const LayerTransform(
-        position: Offset.zero,
-        size: Size(100, 100),
-      ),
-      source: const ImageSource.asset('assets/test.png'),
-      effects: effects,
-    );
+  id: 'img',
+  transform: const LayerTransform(position: Offset.zero, size: Size(100, 100)),
+  source: const ImageSource.asset('assets/test.png'),
+  effects: effects,
+);
 
 EditorDocument _doc(ImageLayer layer) =>
     EditorDocument(layers: [layer], width: 200, height: 200);
 
-EditorDocument _seed() => _doc(_img(
-      effects: const EffectStack(<EditorEffect>[
-        BrightnessEffect(amount: 20),
-        ContrastEffect(amount: 1.4),
-        VignetteEffect(intensity: 0.5),
-      ]),
-    ));
+EditorDocument _seed() => _doc(
+  _img(
+    effects: const EffectStack(<EditorEffect>[
+      BrightnessEffect(amount: 20),
+      ContrastEffect(amount: 1.4),
+      VignetteEffect(intensity: 0.5),
+    ]),
+  ),
+);
 
 void main() {
   group('ReorderEffectCommand', () {
@@ -91,16 +90,8 @@ void main() {
     });
 
     test('does not merge', () {
-      const a = ReorderEffectCommand(
-        layerId: 'img',
-        oldIndex: 0,
-        newIndex: 1,
-      );
-      const b = ReorderEffectCommand(
-        layerId: 'img',
-        oldIndex: 1,
-        newIndex: 2,
-      );
+      const a = ReorderEffectCommand(layerId: 'img', oldIndex: 0, newIndex: 1);
+      const b = ReorderEffectCommand(layerId: 'img', oldIndex: 1, newIndex: 2);
       expect(b.mergeWith(a), isNull);
     });
   });
@@ -111,8 +102,7 @@ void main() {
         layerId: 'img',
         index: 0,
       ).apply(_seed());
-      final eff =
-          (after.layers.single as ImageLayer).effects.effects[0];
+      final eff = (after.layers.single as ImageLayer).effects.effects[0];
       expect(eff.enabled, isFalse);
       expect(eff, isA<BrightnessEffect>());
     });
@@ -133,8 +123,7 @@ void main() {
 
     test('invert undoes a toggle', () {
       final start = _seed();
-      const fwd =
-          ToggleEffectEnabledCommand(layerId: 'img', index: 2);
+      const fwd = ToggleEffectEnabledCommand(layerId: 'img', index: 2);
       final restored = fwd.invert(start).apply(fwd.apply(start));
       expect(DocumentCodec.encode(restored), DocumentCodec.encode(start));
     });
@@ -185,11 +174,13 @@ void main() {
     });
 
     test('deleting the last effect leaves an empty stack', () {
-      final start = _doc(_img(
-        effects: const EffectStack(<EditorEffect>[
-          BrightnessEffect(amount: 10),
-        ]),
-      ));
+      final start = _doc(
+        _img(
+          effects: const EffectStack(<EditorEffect>[
+            BrightnessEffect(amount: 10),
+          ]),
+        ),
+      );
       final after = const DeleteEffectCommand(
         layerId: 'img',
         index: 0,
@@ -234,20 +225,22 @@ void main() {
         SaturationEffect(amount: 0.7),
         ExposureEffect(amount: -22),
         WarmthEffect(amount: 33),
-        VignetteEffect(
-          intensity: 0.6,
-          feather: 0.3,
-          color: Color(0xFF112233),
-        ),
+        VignetteEffect(intensity: 0.6, feather: 0.3, color: Color(0xFF112233)),
       ];
       for (final eff in effects) {
         final off = eff.withEnabled(false);
-        expect(off.enabled, isFalse,
-            reason: 'enabled flip on ${eff.runtimeType}');
+        expect(
+          off.enabled,
+          isFalse,
+          reason: 'enabled flip on ${eff.runtimeType}',
+        );
         expect(off.runtimeType, eff.runtimeType);
         // Toggling back to true restores the original instance.
-        expect(off.withEnabled(true), eff,
-            reason: 'round-trip on ${eff.runtimeType}');
+        expect(
+          off.withEnabled(true),
+          eff,
+          reason: 'round-trip on ${eff.runtimeType}',
+        );
       }
     });
   });

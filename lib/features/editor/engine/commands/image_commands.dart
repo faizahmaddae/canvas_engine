@@ -48,10 +48,9 @@ class ReplaceImageSourceCommand extends EditorCommand {
     // the wrong sub-region (the new image has different framing /
     // composition / aspect), and a silent off-centre zoom is much
     // harder to recover from than a crop the user can re-apply.
-    return doc.replaceLayer(layer.copyAll(
-      source: source,
-      cropRect: ImageLayer.fullCrop,
-    ));
+    return doc.replaceLayer(
+      layer.copyAll(source: source, cropRect: ImageLayer.fullCrop),
+    );
   }
 
   @override
@@ -97,10 +96,7 @@ class _RestoreImageSourceCommand extends EditorCommand {
     final layer = doc.layerById(layerId);
     if (layer is! ImageLayer) return doc;
     if (layer.source == source && layer.cropRect == cropRect) return doc;
-    return doc.replaceLayer(layer.copyAll(
-      source: source,
-      cropRect: cropRect,
-    ));
+    return doc.replaceLayer(layer.copyAll(source: source, cropRect: cropRect));
   }
 
   @override
@@ -123,10 +119,7 @@ class _RestoreImageSourceCommand extends EditorCommand {
 /// preserved so re-applying or undoing the mask never disturbs the
 /// pixels or the layer's place on the canvas.
 class SetImageMaskCommand extends EditorCommand {
-  const SetImageMaskCommand({
-    required this.layerId,
-    required this.mask,
-  });
+  const SetImageMaskCommand({required this.layerId, required this.mask});
 
   final String layerId;
   final ImageMask mask;
@@ -191,10 +184,9 @@ class SetImageBorderCommand extends EditorCommand {
     if (newColor == layer.borderColor && newWidth == layer.borderWidth) {
       return doc;
     }
-    return doc.replaceLayer(layer.copyAll(
-      borderColor: newColor,
-      borderWidth: newWidth,
-    ));
+    return doc.replaceLayer(
+      layer.copyAll(borderColor: newColor, borderWidth: newWidth),
+    );
   }
 
   @override
@@ -278,12 +270,14 @@ class SetImageShadowCommand extends EditorCommand {
         newOpacity == layer.shadowOpacity) {
       return doc;
     }
-    return doc.replaceLayer(layer.copyAll(
-      shadowColor: newColor,
-      shadowBlur: newBlur,
-      shadowOffset: newOffset,
-      shadowOpacity: newOpacity,
-    ));
+    return doc.replaceLayer(
+      layer.copyAll(
+        shadowColor: newColor,
+        shadowBlur: newBlur,
+        shadowOffset: newOffset,
+        shadowOpacity: newOpacity,
+      ),
+    );
   }
 
   @override
@@ -473,8 +467,9 @@ class SetImageAdjustmentsCommand extends EditorCommand {
     );
     // copyWith preserves the stack mask by construction — rebuilding
     // via the bare constructor would silently drop a set stackMask.
-    final nextEffects = layer.effects
-        .copyWith(effects: List<EditorEffect>.unmodifiable(merged));
+    final nextEffects = layer.effects.copyWith(
+      effects: List<EditorEffect>.unmodifiable(merged),
+    );
     return doc.replaceLayer(layer.copyAll(effects: nextEffects));
   }
 
@@ -585,7 +580,8 @@ class SetImageVignetteCommand extends EditorCommand {
         .whereType<VignetteEffect>()
         .cast<VignetteEffect?>()
         .firstWhere((_) => true, orElse: () => null);
-    final base = existing ??
+    final base =
+        existing ??
         const VignetteEffect(
           intensity: VignetteEffect.defaultIntensity,
           feather: VignetteEffect.defaultFeather,
@@ -606,8 +602,9 @@ class SetImageVignetteCommand extends EditorCommand {
         ? <EditorEffect>[...keep, next]
         : keep;
     if (existing == null && !next.contributes) return doc;
-    final nextEffects = layer.effects
-        .copyWith(effects: List<EditorEffect>.unmodifiable(merged));
+    final nextEffects = layer.effects.copyWith(
+      effects: List<EditorEffect>.unmodifiable(merged),
+    );
     if (nextEffects == layer.effects) return doc;
     return doc.replaceLayer(layer.copyAll(effects: nextEffects));
   }
@@ -623,7 +620,8 @@ class SetImageVignetteCommand extends EditorCommand {
     // Restore every knob's prior value (including default values
     // when no vignette existed) so undo is a single atomic restore
     // even if the forward command only touched one field.
-    final prior = existing ??
+    final prior =
+        existing ??
         const VignetteEffect(
           intensity: VignetteEffect.defaultIntensity,
           feather: VignetteEffect.defaultFeather,
@@ -661,10 +659,7 @@ class SetImageVignetteCommand extends EditorCommand {
 /// disturbs the rest of the layer's appearance or its place on the
 /// canvas.
 class SetImageCropCommand extends EditorCommand {
-  const SetImageCropCommand({
-    required this.layerId,
-    required this.cropRect,
-  });
+  const SetImageCropCommand({required this.layerId, required this.cropRect});
 
   final String layerId;
   final Rect cropRect;
@@ -706,10 +701,7 @@ class SetImageCropCommand extends EditorCommand {
 /// by the Crop tab's Fill / Fit chips so the user can flip how the
 /// image lands inside the crop window without resizing the layer.
 class SetImageFitCommand extends EditorCommand {
-  const SetImageFitCommand({
-    required this.layerId,
-    required this.fit,
-  });
+  const SetImageFitCommand({required this.layerId, required this.fit});
 
   final String layerId;
   final BoxFit fit;
@@ -807,10 +799,13 @@ class ReorderEffectCommand extends EditorCommand {
     final next = List<EditorEffect>.of(effects);
     final moved = next.removeAt(oldIndex);
     next.insert(newIndex, moved);
-    return doc.replaceLayer(layer.copyAll(
-      effects: layer.effects
-          .copyWith(effects: List<EditorEffect>.unmodifiable(next)),
-    ));
+    return doc.replaceLayer(
+      layer.copyAll(
+        effects: layer.effects.copyWith(
+          effects: List<EditorEffect>.unmodifiable(next),
+        ),
+      ),
+    );
   }
 
   @override
@@ -852,10 +847,13 @@ class ToggleEffectEnabledCommand extends EditorCommand {
     final flipped = eff.withEnabled(!eff.enabled);
     final next = List<EditorEffect>.of(effects);
     next[index] = flipped;
-    return doc.replaceLayer(layer.copyAll(
-      effects: layer.effects
-          .copyWith(effects: List<EditorEffect>.unmodifiable(next)),
-    ));
+    return doc.replaceLayer(
+      layer.copyAll(
+        effects: layer.effects.copyWith(
+          effects: List<EditorEffect>.unmodifiable(next),
+        ),
+      ),
+    );
   }
 
   @override
@@ -873,10 +871,7 @@ class ToggleEffectEnabledCommand extends EditorCommand {
 /// stack. Inverse re-inserts the captured effect at the same index
 /// so undo restores both the value AND its position.
 class DeleteEffectCommand extends EditorCommand {
-  const DeleteEffectCommand({
-    required this.layerId,
-    required this.index,
-  });
+  const DeleteEffectCommand({required this.layerId, required this.index});
 
   final String layerId;
   final int index;
@@ -893,10 +888,13 @@ class DeleteEffectCommand extends EditorCommand {
     final next = List<EditorEffect>.of(effects)..removeAt(index);
     // copyWith keeps the stack mask when the last effect is deleted —
     // the mask is user state independent of the list's emptiness.
-    return doc.replaceLayer(layer.copyAll(
-      effects: layer.effects
-          .copyWith(effects: List<EditorEffect>.unmodifiable(next)),
-    ));
+    return doc.replaceLayer(
+      layer.copyAll(
+        effects: layer.effects.copyWith(
+          effects: List<EditorEffect>.unmodifiable(next),
+        ),
+      ),
+    );
   }
 
   @override
@@ -960,10 +958,7 @@ class SetStackMaskCommand extends EditorCommand {
   EditorCommand invert(EditorDocument before) {
     final layer = before.layerById(layerId);
     if (layer is! ImageLayer) return _noop;
-    return SetStackMaskCommand(
-      layerId: layerId,
-      mask: layer.effects.stackMask,
-    );
+    return SetStackMaskCommand(layerId: layerId, mask: layer.effects.stackMask);
   }
 
   @override
@@ -1002,14 +997,16 @@ class _InsertEffectCommand extends EditorCommand {
     final effects = layer.effects.effects;
     final clamped = index.clamp(0, effects.length);
     final next = List<EditorEffect>.of(effects)..insert(clamped, effect);
-    return doc.replaceLayer(layer.copyAll(
-      effects: layer.effects
-          .copyWith(effects: List<EditorEffect>.unmodifiable(next)),
-    ));
+    return doc.replaceLayer(
+      layer.copyAll(
+        effects: layer.effects.copyWith(
+          effects: List<EditorEffect>.unmodifiable(next),
+        ),
+      ),
+    );
   }
 
   @override
   EditorCommand invert(EditorDocument before) =>
       DeleteEffectCommand(layerId: layerId, index: index);
 }
-

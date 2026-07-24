@@ -15,10 +15,10 @@ void main() {
   const targetRect = Rect.fromLTWH(400, 460, 200, 80);
 
   EditorDocument docOf(List<dynamic> layers) => EditorDocument(
-        layers: List.unmodifiable(layers),
-        width: 1000,
-        height: 1000,
-      );
+    layers: List.unmodifiable(layers),
+    width: 1000,
+    height: 1000,
+  );
 
   group('TextColorResolver.resolve', () {
     test('keeps requested colour when it already contrasts the canvas', () {
@@ -32,10 +32,8 @@ void main() {
       expect(picked, const Color(0xFF000000));
     });
 
-    test(
-        'overrides white-on-white default to black for the canonical '
-        '"white canvas" case',
-        () {
+    test('overrides white-on-white default to black for the canonical '
+        '"white canvas" case', () {
       final picked = TextColorResolver.resolve(
         requested: const Color(0xFFFFFFFF),
         doc: docOf(const []),
@@ -54,10 +52,8 @@ void main() {
       expect(picked, TextColorResolver.kHighContrastLight);
     });
 
-    test(
-        'samples the topmost opaque shape under the text and switches '
-        'to white when shape is dark',
-        () {
+    test('samples the topmost opaque shape under the text and switches '
+        'to white when shape is dark', () {
       // A black rectangle covering the canvas centre. Default white
       // text reads fine over black, so it should pass through.
       final shape = ShapeLayer(
@@ -77,10 +73,8 @@ void main() {
       expect(picked, const Color(0xFFFFFFFF));
     });
 
-    test(
-        'samples a white shape sitting on the (default white) canvas '
-        'and overrides default white text to dark',
-        () {
+    test('samples a white shape sitting on the (default white) canvas '
+        'and overrides default white text to dark', () {
       final shape = ShapeLayer(
         id: 'bg',
         transform: const LayerTransform(
@@ -169,10 +163,8 @@ void main() {
       expect(picked, TextColorResolver.kHighContrastDark);
     });
 
-    test(
-        'image layer under the text yields an unknown sample so the '
-        'requested colour is preserved verbatim',
-        () {
+    test('image layer under the text yields an unknown sample so the '
+        'requested colour is preserved verbatim', () {
       // We can't summarise a photo as one colour, so the resolver
       // bails out and trusts the user's chosen colour rather than
       // forcing a black/white guess.

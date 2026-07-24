@@ -12,7 +12,6 @@ import 'package:canvas_engine/features/editor/engine/commands/transform_commands
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
-import 'package:canvas_engine/features/editor/toolbar/presentation/widgets/preset_chip.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/dock_sheet_chrome.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/editor_canvas.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';

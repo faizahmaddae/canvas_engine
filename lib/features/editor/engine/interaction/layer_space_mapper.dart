@@ -31,10 +31,7 @@ final class LayerSpaceMapper {
   /// layer-local → canvas: rotate about the layer centre.
   /// `c = center + R(rotation)·(l − size/2)`
   Offset layerToCanvas(Offset local) {
-    final lc = Offset(
-      transform.size.width / 2,
-      transform.size.height / 2,
-    );
+    final lc = Offset(transform.size.width / 2, transform.size.height / 2);
     final v = local - lc;
     final cosR = math.cos(transform.rotation);
     final sinR = math.sin(transform.rotation);
@@ -47,10 +44,7 @@ final class LayerSpaceMapper {
     final v = canvas - transform.center;
     final cosR = math.cos(-transform.rotation);
     final sinR = math.sin(-transform.rotation);
-    return Offset(
-          v.dx * cosR - v.dy * sinR,
-          v.dx * sinR + v.dy * cosR,
-        ) +
+    return Offset(v.dx * cosR - v.dy * sinR, v.dx * sinR + v.dy * cosR) +
         Offset(transform.size.width / 2, transform.size.height / 2);
   }
 

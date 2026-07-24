@@ -18,7 +18,9 @@ void main() {
   }
 
   void addImage(ProviderContainer c, {String id = 'img1'}) {
-    c.read(documentControllerProvider.notifier).execute(
+    c
+        .read(documentControllerProvider.notifier)
+        .execute(
           AddLayerCommand(
             ImageLayer(
               id: id,
@@ -103,11 +105,10 @@ void main() {
     test('exposure is applied and stored on the layer', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
-            const SetImageAdjustmentsCommand(
-              layerId: 'img1',
-              exposure: 30,
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetImageAdjustmentsCommand(layerId: 'img1', exposure: 30),
           );
       expect(readImage(c, 'img1').adjustments.exposure, 30);
     });
@@ -115,11 +116,10 @@ void main() {
     test('warmth is applied and stored on the layer', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
-            const SetImageAdjustmentsCommand(
-              layerId: 'img1',
-              warmth: -45,
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetImageAdjustmentsCommand(layerId: 'img1', warmth: -45),
           );
       expect(readImage(c, 'img1').adjustments.warmth, -45);
     });
@@ -127,7 +127,9 @@ void main() {
     test('undo restores all fields together', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetImageAdjustmentsCommand(
               layerId: 'img1',
               exposure: 20,
@@ -148,7 +150,9 @@ void main() {
       addImage(c);
       // 5 streamed brightness ticks should leave one history entry.
       for (final v in <double>[5, 10, 15, 20, 25]) {
-        c.read(documentControllerProvider.notifier).execute(
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(
               SetImageAdjustmentsCommand(
                 layerId: 'img1',
                 brightness: v,
@@ -165,17 +169,15 @@ void main() {
     test('non-live commands always push a fresh undo entry', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
-            const SetImageAdjustmentsCommand(
-              layerId: 'img1',
-              brightness: 10,
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetImageAdjustmentsCommand(layerId: 'img1', brightness: 10),
           );
-      c.read(documentControllerProvider.notifier).execute(
-            const SetImageAdjustmentsCommand(
-              layerId: 'img1',
-              brightness: 20,
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetImageAdjustmentsCommand(layerId: 'img1', brightness: 20),
           );
       // First undo -> brightness 10, not 0.
       c.read(documentControllerProvider.notifier).undo();
@@ -185,14 +187,18 @@ void main() {
     test('live commands of different fields do NOT merge', () {
       final c = makeContainer();
       addImage(c);
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetImageAdjustmentsCommand(
               layerId: 'img1',
               brightness: 10,
               live: true,
             ),
           );
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetImageAdjustmentsCommand(
               layerId: 'img1',
               contrast: 1.4,
@@ -209,7 +215,9 @@ void main() {
       final c = makeContainer();
       addImage(c);
       for (final v in <double>[5, 10, 15, 20, 30, 40]) {
-        c.read(documentControllerProvider.notifier).execute(
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(
               SetImageAdjustmentsCommand(
                 layerId: 'img1',
                 exposure: v,

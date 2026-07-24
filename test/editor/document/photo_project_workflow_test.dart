@@ -28,7 +28,9 @@ void main() {
   ProviderContainer makePhotoProject({Size dims = const Size(800, 600)}) {
     final c = ProviderContainer();
     addTearDown(c.dispose);
-    c.read(documentControllerProvider.notifier).newDocument(
+    c
+        .read(documentControllerProvider.notifier)
+        .newDocument(
           width: dims.width,
           height: dims.height,
           kind: ProjectKind.photo,
@@ -36,10 +38,7 @@ void main() {
     return c;
   }
 
-  ImageLayer makeBasePhoto(
-    String id, {
-    Size dims = const Size(800, 600),
-  }) =>
+  ImageLayer makeBasePhoto(String id, {Size dims = const Size(800, 600)}) =>
       ImageLayer(
         id: id,
         transform: LayerTransform(position: Offset.zero, size: dims),
@@ -49,24 +48,23 @@ void main() {
       );
 
   ShapeLayer makeShape(String id) => ShapeLayer(
-        id: id,
-        transform: LayerTransform(
-          position: Offset.zero,
-          size: const Size(100, 100),
-        ),
-        kind: ShapeKind.rectangle,
-        fillColor: const Color(0xFFFFFFFF),
-      );
+    id: id,
+    transform: LayerTransform(
+      position: Offset.zero,
+      size: const Size(100, 100),
+    ),
+    kind: ShapeKind.rectangle,
+    fillColor: const Color(0xFFFFFFFF),
+  );
 
-  void importPhoto(
-    ProviderContainer c,
-    ImageLayer layer,
-  ) {
-    c.read(documentControllerProvider.notifier).execute(
-          CompositeCommand(
-            [AddLayerCommand(layer), SetBasePhotoCommand(layer.id)],
-            labelOverride: 'Import photo',
-          ),
+  void importPhoto(ProviderContainer c, ImageLayer layer) {
+    c
+        .read(documentControllerProvider.notifier)
+        .execute(
+          CompositeCommand([
+            AddLayerCommand(layer),
+            SetBasePhotoCommand(layer.id),
+          ], labelOverride: 'Import photo'),
         );
     c.read(selectionControllerProvider.notifier).select(layer.id);
   }
@@ -77,15 +75,14 @@ void main() {
   /// document is no longer in an inconsistent "photo project with
   /// no photo" state.
   void removeBasePhotoUserConfirmed(ProviderContainer c, String id) {
-    c.read(documentControllerProvider.notifier).execute(
-          CompositeCommand(
-            [
-              const SetBasePhotoCommand(null),
-              RemoveLayerCommand(id),
-              const SetProjectKindCommand(ProjectKind.design),
-            ],
-            labelOverride: 'Remove base photo',
-          ),
+    c
+        .read(documentControllerProvider.notifier)
+        .execute(
+          CompositeCommand([
+            const SetBasePhotoCommand(null),
+            RemoveLayerCommand(id),
+            const SetProjectKindCommand(ProjectKind.design),
+          ], labelOverride: 'Remove base photo'),
         );
   }
 
@@ -203,11 +200,13 @@ void main() {
         ),
         source: ImageSource.asset('assets/i1.png'),
       );
-      c.read(documentControllerProvider.notifier).execute(
-            CompositeCommand(
-              [AddLayerCommand(layer), SetBasePhotoCommand('i1')],
-              labelOverride: 'Add image',
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            CompositeCommand([
+              AddLayerCommand(layer),
+              SetBasePhotoCommand('i1'),
+            ], labelOverride: 'Add image'),
           );
 
       final doc = c.read(documentControllerProvider);
@@ -231,10 +230,13 @@ void main() {
         ),
         source: ImageSource.asset('assets/i1.png'),
       );
-      c.read(documentControllerProvider.notifier).execute(
-            CompositeCommand(
-              [AddLayerCommand(layer), SetBasePhotoCommand('i1')],
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            CompositeCommand([
+              AddLayerCommand(layer),
+              SetBasePhotoCommand('i1'),
+            ]),
           );
       c
           .read(documentControllerProvider.notifier)

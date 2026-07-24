@@ -52,9 +52,7 @@ sealed class BackgroundFill {
         case typeRadial:
           return RadialGradientBackground._fromJson(m);
         default:
-          throw FormatException(
-            'unknown BackgroundFill discriminator "$type"',
-          );
+          throw FormatException('unknown BackgroundFill discriminator "$type"');
       }
     }
     throw FormatException(
@@ -135,12 +133,12 @@ class LinearGradientBackground extends BackgroundFill {
 
   @override
   Object toJson() => <String, dynamic>{
-        BackgroundFill._typeKey: BackgroundFill.typeLinear,
-        'startColor': startColor.toARGB32(),
-        'endColor': endColor.toARGB32(),
-        'angleDegrees': angleDegrees,
-        if (stops != null) 'stops': stops,
-      };
+    BackgroundFill._typeKey: BackgroundFill.typeLinear,
+    'startColor': startColor.toARGB32(),
+    'endColor': endColor.toARGB32(),
+    'angleDegrees': angleDegrees,
+    if (stops != null) 'stops': stops,
+  };
 
   factory LinearGradientBackground._fromJson(Map<String, dynamic> json) {
     final start = json['startColor'];
@@ -182,11 +180,11 @@ class LinearGradientBackground extends BackgroundFill {
 
   @override
   int get hashCode => Object.hash(
-        startColor,
-        endColor,
-        angleDegrees,
-        stops == null ? null : Object.hashAll(stops!),
-      );
+    startColor,
+    endColor,
+    angleDegrees,
+    stops == null ? null : Object.hashAll(stops!),
+  );
 }
 
 /// A radial gradient from [centerColor] at [focalPoint] outward to
@@ -217,20 +215,20 @@ class RadialGradientBackground extends BackgroundFill {
   /// are expressed as a fraction of the box's shorter side, so the
   /// value passes through unchanged.
   RadialGradient toFlutterGradient() => RadialGradient(
-        center: focalPoint,
-        radius: radius,
-        colors: [centerColor, edgeColor],
-      );
+    center: focalPoint,
+    radius: radius,
+    colors: [centerColor, edgeColor],
+  );
 
   @override
   Object toJson() => <String, dynamic>{
-        BackgroundFill._typeKey: BackgroundFill.typeRadial,
-        'centerColor': centerColor.toARGB32(),
-        'edgeColor': edgeColor.toARGB32(),
-        'focalX': focalPoint.x,
-        'focalY': focalPoint.y,
-        'radius': radius,
-      };
+    BackgroundFill._typeKey: BackgroundFill.typeRadial,
+    'centerColor': centerColor.toARGB32(),
+    'edgeColor': edgeColor.toARGB32(),
+    'focalX': focalPoint.x,
+    'focalY': focalPoint.y,
+    'radius': radius,
+  };
 
   factory RadialGradientBackground._fromJson(Map<String, dynamic> json) {
     final c = json['centerColor'];
@@ -266,6 +264,5 @@ class RadialGradientBackground extends BackgroundFill {
           other.radius == radius);
 
   @override
-  int get hashCode =>
-      Object.hash(centerColor, edgeColor, focalPoint, radius);
+  int get hashCode => Object.hash(centerColor, edgeColor, focalPoint, radius);
 }

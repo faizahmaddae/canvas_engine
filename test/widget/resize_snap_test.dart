@@ -21,7 +21,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   ProviderContainer makeContainer() {
     final c = ProviderContainer();
-    c.read(documentControllerProvider.notifier)
+    c
+        .read(documentControllerProvider.notifier)
         .newDocument(width: 800, height: 800);
     return c;
   }
@@ -51,7 +52,9 @@ void main() {
       addRect(c, id: 'peer', position: const Offset(200, 500));
       final mover = addRect(c, id: 'm', position: const Offset(50, 50));
 
-      c.read(interactionControllerProvider.notifier).startResize(
+      c
+          .read(interactionControllerProvider.notifier)
+          .startResize(
             layer: mover,
             handle: InteractionHandle.bottomRight,
             pointer: const Offset(150, 150),
@@ -63,8 +66,11 @@ void main() {
       final guides = c.read(interactionControllerProvider).snapGuides;
       expect(guides, hasLength(1));
       expect(guides.first.axis, SnapAxis.vertical);
-      expect(guides.first.coord, 200,
-          reason: 'right edge snapped to peer.left=200');
+      expect(
+        guides.first.coord,
+        200,
+        reason: 'right edge snapped to peer.left=200',
+      );
     });
 
     test('top-left resize snaps both moving edges independently', () {
@@ -73,7 +79,9 @@ void main() {
       addRect(c, id: 'pY', position: const Offset(400, 30));
       final mover = addRect(c, id: 'm', position: const Offset(100, 100));
 
-      c.read(interactionControllerProvider.notifier).startResize(
+      c
+          .read(interactionControllerProvider.notifier)
+          .startResize(
             layer: mover,
             handle: InteractionHandle.topLeft,
             pointer: const Offset(100, 100),
@@ -109,7 +117,9 @@ void main() {
           .read(documentControllerProvider.notifier)
           .execute(AddLayerCommand(mover));
 
-      c.read(interactionControllerProvider.notifier).startResize(
+      c
+          .read(interactionControllerProvider.notifier)
+          .startResize(
             layer: mover,
             handle: InteractionHandle.bottomRight,
             pointer: const Offset(150, 150),
@@ -121,48 +131,60 @@ void main() {
       final guides = c.read(interactionControllerProvider).snapGuides;
       // Exactly one guide — aspect lock allows snap on only one axis.
       expect(guides, hasLength(1));
-      expect(guides.first.axis, SnapAxis.horizontal,
-          reason: 'Y correction (2) was smaller, so Y axis wins');
+      expect(
+        guides.first.axis,
+        SnapAxis.horizontal,
+        reason: 'Y correction (2) was smaller, so Y axis wins',
+      );
       expect(guides.first.coord, 150);
     });
 
-    test('rotated layer is NOT snap-adjusted (resize snap is unrotated-only)',
-        () {
-      final c = makeContainer();
-      addRect(c, id: 'peer', position: const Offset(200, 50));
-      final mover = ShapeLayer(
-        id: 'm',
-        transform: const LayerTransform(
-          position: Offset(50, 50),
-          size: Size(100, 100),
-          rotation: 0.4,
-        ),
-        kind: ShapeKind.rectangle,
-      );
-      c
-          .read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(mover));
+    test(
+      'rotated layer is NOT snap-adjusted (resize snap is unrotated-only)',
+      () {
+        final c = makeContainer();
+        addRect(c, id: 'peer', position: const Offset(200, 50));
+        final mover = ShapeLayer(
+          id: 'm',
+          transform: const LayerTransform(
+            position: Offset(50, 50),
+            size: Size(100, 100),
+            rotation: 0.4,
+          ),
+          kind: ShapeKind.rectangle,
+        );
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(AddLayerCommand(mover));
 
-      c.read(interactionControllerProvider.notifier).startResize(
-            layer: mover,
-            handle: InteractionHandle.bottomRight,
-            pointer: const Offset(150, 150),
-          );
-      c
-          .read(interactionControllerProvider.notifier)
-          .update(const Offset(197, 150));
+        c
+            .read(interactionControllerProvider.notifier)
+            .startResize(
+              layer: mover,
+              handle: InteractionHandle.bottomRight,
+              pointer: const Offset(150, 150),
+            );
+        c
+            .read(interactionControllerProvider.notifier)
+            .update(const Offset(197, 150));
 
-      final guides = c.read(interactionControllerProvider).snapGuides;
-      expect(guides, isEmpty,
-          reason: 'rotated layers should not produce resize-time guides');
-    });
+        final guides = c.read(interactionControllerProvider).snapGuides;
+        expect(
+          guides,
+          isEmpty,
+          reason: 'rotated layers should not produce resize-time guides',
+        );
+      },
+    );
 
     test('no snap engaged → no guides', () {
       final c = makeContainer();
       addRect(c, id: 'peer', position: const Offset(500, 50));
       final mover = addRect(c, id: 'm', position: const Offset(50, 50));
 
-      c.read(interactionControllerProvider.notifier).startResize(
+      c
+          .read(interactionControllerProvider.notifier)
+          .startResize(
             layer: mover,
             handle: InteractionHandle.bottomRight,
             pointer: const Offset(150, 150),

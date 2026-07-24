@@ -38,15 +38,22 @@ void main() {
   for (final name in _fixtureFiles) {
     test('$name re-encodes to byte-identical content', () {
       final file = File('$_fixtureDir/$name');
-      expect(file.existsSync(), isTrue,
-          reason: 'fixture missing — run _generate_v2_fixtures_test.dart');
+      expect(
+        file.existsSync(),
+        isTrue,
+        reason: 'fixture missing — run _generate_v2_fixtures_test.dart',
+      );
       final raw = file.readAsStringSync();
       final doc = DocumentCodec.decode(raw);
       final reencoded = '${DocumentCodec.encode(doc)}\n';
-      expect(reencoded, raw,
-          reason: '$name no longer encodes byte-identically. Either a '
-              'codec change dropped/added a key, or a default-value '
-              'omission was broken. Inspect the diff before regenerating.');
+      expect(
+        reencoded,
+        raw,
+        reason:
+            '$name no longer encodes byte-identically. Either a '
+            'codec change dropped/added a key, or a default-value '
+            'omission was broken. Inspect the diff before regenerating.',
+      );
     });
   }
 }

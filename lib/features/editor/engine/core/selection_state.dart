@@ -10,6 +10,7 @@ enum InteractionHandle {
   bottomLeft,
   bottomRight,
   rotate,
+
   /// Multi-touch gesture (pinch / rotate / drag with 1–2 fingers). Used for
   /// native touch interaction; drives the same engine math as the discrete
   /// handles but interprets scale + rotation deltas together.
@@ -38,7 +39,7 @@ class SelectionState {
   /// public API so call sites that pass `SelectionState(selectedId: x)`
   /// still compile.
   SelectionState({String? selectedId})
-      : _ids = selectedId == null ? const <String>[] : <String>[selectedId];
+    : _ids = selectedId == null ? const <String>[] : <String>[selectedId];
 
   /// Insertion-ordered list of selected ids. The LAST entry is the
   /// primary selection. Stored as a `List` (not a `Set`) so order is
@@ -101,8 +102,7 @@ class SelectionState {
   /// Toggle [id]: if selected, remove; otherwise add (and make
   /// primary). Use this for additive-tap interactions
   /// (Cmd/Ctrl+click, Shift+tap).
-  SelectionState toggle(String id) =>
-      contains(id) ? remove(id) : add(id);
+  SelectionState toggle(String id) => contains(id) ? remove(id) : add(id);
 
   /// Replace the selection with [ids] verbatim (deduplicated, order
   /// preserved; the last unique id becomes primary).

@@ -35,7 +35,9 @@ Future<void> _pumpEditorWithGroup(
   container
       .read(documentControllerProvider.notifier)
       .newDocument(width: 800, height: 800);
-  container.read(documentControllerProvider.notifier).execute(
+  container
+      .read(documentControllerProvider.notifier)
+      .execute(
         AddLayerCommand(
           ShapeLayer(
             id: 'a',
@@ -47,7 +49,9 @@ Future<void> _pumpEditorWithGroup(
           ),
         ),
       );
-  container.read(documentControllerProvider.notifier).execute(
+  container
+      .read(documentControllerProvider.notifier)
+      .execute(
         AddLayerCommand(
           ShapeLayer(
             id: 'b',
@@ -73,119 +77,130 @@ Future<void> _pumpEditorWithGroup(
 }
 
 void main() {
-  testWidgets(
-    'two-finger pinch on a group commits the scaled transforms to '
-    'the document on release (no revert)',
-    (tester) async {
-      final container = _setup(tester);
-      await _pumpEditorWithGroup(tester, container);
+  testWidgets('two-finger pinch on a group commits the scaled transforms to '
+      'the document on release (no revert)', (tester) async {
+    final container = _setup(tester);
+    await _pumpEditorWithGroup(tester, container);
 
-      final aBefore =
-          container.read(documentControllerProvider).layerById('a')!.transform;
-      final bBefore =
-          container.read(documentControllerProvider).layerById('b')!.transform;
+    final aBefore = container
+        .read(documentControllerProvider)
+        .layerById('a')!
+        .transform;
+    final bBefore = container
+        .read(documentControllerProvider)
+        .layerById('b')!
+        .transform;
 
-      final vp = container.read(viewportControllerProvider);
-      Offset toScreen(Offset c) => c * vp.scale + vp.translation;
-      final centre = toScreen(const Offset(435, 400));
-      final p1 = centre + const Offset(-220, 0);
-      final p2 = centre + const Offset(220, 0);
+    final vp = container.read(viewportControllerProvider);
+    Offset toScreen(Offset c) => c * vp.scale + vp.translation;
+    final centre = toScreen(const Offset(435, 400));
+    final p1 = centre + const Offset(-220, 0);
+    final p2 = centre + const Offset(220, 0);
 
-      final f1 = await tester.startGesture(p1, pointer: 51);
-      await tester.pump();
-      final f2 = await tester.startGesture(p2, pointer: 52);
-      await tester.pump();
+    final f1 = await tester.startGesture(p1, pointer: 51);
+    await tester.pump();
+    final f2 = await tester.startGesture(p2, pointer: 52);
+    await tester.pump();
 
-      // Pinch out — fingers move 100px away from each other each side.
-      await f1.moveBy(const Offset(-100, 0));
-      await f2.moveBy(const Offset(100, 0));
-      await tester.pump();
-      await f1.moveBy(const Offset(-100, 0));
-      await f2.moveBy(const Offset(100, 0));
-      await tester.pump();
+    // Pinch out — fingers move 100px away from each other each side.
+    await f1.moveBy(const Offset(-100, 0));
+    await f2.moveBy(const Offset(100, 0));
+    await tester.pump();
+    await f1.moveBy(const Offset(-100, 0));
+    await f2.moveBy(const Offset(100, 0));
+    await tester.pump();
 
-      // Confirm live preview is applied.
-      final liveA =
-          container.read(interactionControllerProvider).groupLive['a']!;
-      expect(liveA.size.width, greaterThan(aBefore.size.width));
+    // Confirm live preview is applied.
+    final liveA = container.read(interactionControllerProvider).groupLive['a']!;
+    expect(liveA.size.width, greaterThan(aBefore.size.width));
 
-      await f1.up();
-      await f2.up();
-      await tester.pump();
-      await tester.pump();
+    await f1.up();
+    await f2.up();
+    await tester.pump();
+    await tester.pump();
 
-      // The bug: after release, document reverts to initial sizes.
-      final aAfter =
-          container.read(documentControllerProvider).layerById('a')!.transform;
-      final bAfter =
-          container.read(documentControllerProvider).layerById('b')!.transform;
-      expect(
-        aAfter.size.width,
-        greaterThan(aBefore.size.width),
-        reason: 'Layer a must retain its scaled size after release.',
-      );
-      expect(
-        bAfter.size.width,
-        greaterThan(bBefore.size.width),
-        reason: 'Layer b must retain its scaled size after release.',
-      );
-      // Drain any lingering double-tap timer so the test shutdown
-      // assertion `!timersPending` holds.
-      await tester.pump(const Duration(seconds: 1));
-    },
-  );
+    // The bug: after release, document reverts to initial sizes.
+    final aAfter = container
+        .read(documentControllerProvider)
+        .layerById('a')!
+        .transform;
+    final bAfter = container
+        .read(documentControllerProvider)
+        .layerById('b')!
+        .transform;
+    expect(
+      aAfter.size.width,
+      greaterThan(aBefore.size.width),
+      reason: 'Layer a must retain its scaled size after release.',
+    );
+    expect(
+      bAfter.size.width,
+      greaterThan(bBefore.size.width),
+      reason: 'Layer b must retain its scaled size after release.',
+    );
+    // Drain any lingering double-tap timer so the test shutdown
+    // assertion `!timersPending` holds.
+    await tester.pump(const Duration(seconds: 1));
+  });
 
-  testWidgets(
-    'drag on the bottom-right corner handle commits the scaled '
-    'transforms to the document on release (no revert)',
-    (tester) async {
-      final container = _setup(tester);
-      await _pumpEditorWithGroup(tester, container);
+  testWidgets('drag on the bottom-right corner handle commits the scaled '
+      'transforms to the document on release (no revert)', (tester) async {
+    final container = _setup(tester);
+    await _pumpEditorWithGroup(tester, container);
 
-      final aBefore =
-          container.read(documentControllerProvider).layerById('a')!.transform;
-      final bBefore =
-          container.read(documentControllerProvider).layerById('b')!.transform;
+    final aBefore = container
+        .read(documentControllerProvider)
+        .layerById('a')!
+        .transform;
+    final bBefore = container
+        .read(documentControllerProvider)
+        .layerById('b')!
+        .transform;
 
-      final vp = container.read(viewportControllerProvider);
-      Offset toScreen(Offset c) => c * vp.scale + vp.translation;
-      // Group bounds: (380,380)→(490,420). Bottom-right handle at
-      // screen-space (490,420) transformed.
-      final brHandle = toScreen(const Offset(490, 420));
+    final vp = container.read(viewportControllerProvider);
+    Offset toScreen(Offset c) => c * vp.scale + vp.translation;
+    // Group bounds: (380,380)→(490,420). Bottom-right handle at
+    // screen-space (490,420) transformed.
+    final brHandle = toScreen(const Offset(490, 420));
 
-      final g = await tester.startGesture(brHandle);
-      await tester.pump();
-      // Drag outward along the diagonal — pointer moves to scale up.
-      await g.moveBy(const Offset(60, 40));
-      await tester.pump();
-      await g.moveBy(const Offset(60, 40));
-      await tester.pump();
+    final g = await tester.startGesture(brHandle);
+    await tester.pump();
+    // Drag outward along the diagonal — pointer moves to scale up.
+    await g.moveBy(const Offset(60, 40));
+    await tester.pump();
+    await g.moveBy(const Offset(60, 40));
+    await tester.pump();
 
-      final liveA =
-          container.read(interactionControllerProvider).groupLive['a'];
-      expect(liveA, isNotNull,
-          reason: 'Corner handle must start a group-resize session.');
-      expect(liveA!.size.width, greaterThan(aBefore.size.width));
+    final liveA = container.read(interactionControllerProvider).groupLive['a'];
+    expect(
+      liveA,
+      isNotNull,
+      reason: 'Corner handle must start a group-resize session.',
+    );
+    expect(liveA!.size.width, greaterThan(aBefore.size.width));
 
-      await g.up();
-      await tester.pump();
-      await tester.pump();
+    await g.up();
+    await tester.pump();
+    await tester.pump();
 
-      final aAfter =
-          container.read(documentControllerProvider).layerById('a')!.transform;
-      final bAfter =
-          container.read(documentControllerProvider).layerById('b')!.transform;
-      expect(
-        aAfter.size.width,
-        greaterThan(aBefore.size.width),
-        reason: 'Layer a must retain its scaled size after release.',
-      );
-      expect(
-        bAfter.size.width,
-        greaterThan(bBefore.size.width),
-        reason: 'Layer b must retain its scaled size after release.',
-      );
-      await tester.pump(const Duration(seconds: 1));
-    },
-  );
+    final aAfter = container
+        .read(documentControllerProvider)
+        .layerById('a')!
+        .transform;
+    final bAfter = container
+        .read(documentControllerProvider)
+        .layerById('b')!
+        .transform;
+    expect(
+      aAfter.size.width,
+      greaterThan(aBefore.size.width),
+      reason: 'Layer a must retain its scaled size after release.',
+    );
+    expect(
+      bAfter.size.width,
+      greaterThan(bBefore.size.width),
+      reason: 'Layer b must retain its scaled size after release.',
+    );
+    await tester.pump(const Duration(seconds: 1));
+  });
 }

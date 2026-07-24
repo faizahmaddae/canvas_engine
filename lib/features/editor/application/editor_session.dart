@@ -6,10 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// editor's "Save project" action to decide between insert vs update.
 /// Cleared on navigation back to home.
 class EditorSession {
-  const EditorSession({
-    required this.name,
-    this.projectId,
-  });
+  const EditorSession({required this.name, this.projectId});
 
   /// Display name shown in the editor app bar / used as the saved
   /// project name.
@@ -21,9 +18,9 @@ class EditorSession {
   final String? projectId;
 
   EditorSession copyWith({String? name, String? projectId}) => EditorSession(
-        name: name ?? this.name,
-        projectId: projectId ?? this.projectId,
-      );
+    name: name ?? this.name,
+    projectId: projectId ?? this.projectId,
+  );
 }
 
 /// Holds the active [EditorSession]. Null when no editor is open.
@@ -38,5 +35,5 @@ class EditorSessionController extends Notifier<EditorSession?> {
 
 final editorSessionProvider =
     NotifierProvider<EditorSessionController, EditorSession?>(
-  EditorSessionController.new,
-);
+      EditorSessionController.new,
+    );

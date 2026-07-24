@@ -132,10 +132,10 @@ sealed class EditorEffect {
   /// enabled flag (omitted when the default `true`), and mask.
   @protected
   Map<String, dynamic> baseJson() => <String, dynamic>{
-        'type': type,
-        if (!enabled) 'enabled': false,
-        if (mask != null) 'mask': mask!.toJson(),
-      };
+    'type': type,
+    if (!enabled) 'enabled': false,
+    if (mask != null) 'mask': mask!.toJson(),
+  };
 
   /// Decoder for a single effect. Looks up the concrete factory in
   /// [_effectFactories] by the `type` discriminator. Throws on an
@@ -176,8 +176,7 @@ sealed class EditorEffect {
 /// original JSON byte-for-byte on resave so the newer build's data
 /// is preserved if the document is ever opened on that build again.
 final class UnknownEffect extends EditorEffect {
-  const UnknownEffect._(this._raw)
-      : super(enabled: false, mask: null);
+  const UnknownEffect._(this._raw) : super(enabled: false, mask: null);
 
   final Map<String, dynamic> _raw;
 
@@ -221,7 +220,7 @@ enum EffectKind {
 /// Registry of concrete effect decoders, populated by `part` files
 /// via [registerEffect].
 final Map<String, EditorEffect Function(Map<String, dynamic>)>
-    _effectFactories = <String, EditorEffect Function(Map<String, dynamic>)>{};
+_effectFactories = <String, EditorEffect Function(Map<String, dynamic>)>{};
 
 /// Internal hook so part-file effects can register their decoder
 /// without needing to mutate this file. Call from a top-level `final
@@ -238,16 +237,16 @@ void registerEffect(
 /// Per-instance memo cache for [EffectStack.composedColorMatrix].
 /// Identity-keyed so it never holds a strong reference to a stack
 /// after the document moves on; entries die with the stack.
-final Expando<List<double>> _composedColorMatrixCache =
-    Expando<List<double>>('EffectStack.composedColorMatrix');
+final Expando<List<double>> _composedColorMatrixCache = Expando<List<double>>(
+  'EffectStack.composedColorMatrix',
+);
 
 /// Sentinel placed in the cache when the stack composes to a `null`
 /// matrix. Without it, "no contributing effects" stacks would miss
 /// the cache on every call — they're the common case (effect added
 /// then zeroed out by the user) and recomputing the loop every
 /// frame is exactly the cost the cache exists to avoid.
-final List<double> _kNullMatrixSentinel = List<double>.unmodifiable(
-    <double>[]);
+final List<double> _kNullMatrixSentinel = List<double>.unmodifiable(<double>[]);
 
 /// Immutable, ordered list of effects on a layer, plus an optional
 /// [stackMask] that clips the composed output of the whole stack.
@@ -300,14 +299,16 @@ final class EffectStack {
     if (raw == null) return empty;
     if (raw is! List) {
       throw FormatException(
-          'EffectStack expected a JSON list, got ${raw.runtimeType}: $raw');
+        'EffectStack expected a JSON list, got ${raw.runtimeType}: $raw',
+      );
     }
     if (raw.isEmpty) return empty;
     final list = <EditorEffect>[];
     for (final entry in raw) {
       if (entry is! Map<String, dynamic>) {
         throw FormatException(
-            'Effect entries must be JSON objects, got ${entry.runtimeType}');
+          'Effect entries must be JSON objects, got ${entry.runtimeType}',
+        );
       }
       list.add(EditorEffect.fromJson(entry));
     }
@@ -345,8 +346,7 @@ final class EffectStack {
       return identical(cached, _kNullMatrixSentinel) ? null : cached;
     }
     final computed = _composeColorMatrix();
-    _composedColorMatrixCache[this] =
-        computed ?? _kNullMatrixSentinel;
+    _composedColorMatrixCache[this] = computed ?? _kNullMatrixSentinel;
     return computed;
   }
 
@@ -367,40 +367,39 @@ final class EffectStack {
   /// renderer below so the two paths can never disagree about an
   /// effect's math.
   static List<double>? _matrixOf(EditorEffect eff) => switch (eff) {
-        BrightnessEffect(:final amount) when amount != 0 =>
-          _brightnessMatrix(amount),
-        ContrastEffect(:final amount)
-            when amount != ContrastEffect.identityAmount =>
-          _contrastMatrix(amount),
-        SaturationEffect(:final amount)
-            when amount != SaturationEffect.identityAmount =>
-          _saturationMatrix(amount),
-        ExposureEffect(:final amount) when amount != 0 =>
-          _exposureMatrix(amount),
-        WarmthEffect(:final amount) when amount != 0 => _warmthMatrix(amount),
-        _ => null,
-      };
+    BrightnessEffect(:final amount) when amount != 0 => _brightnessMatrix(
+      amount,
+    ),
+    ContrastEffect(:final amount)
+        when amount != ContrastEffect.identityAmount =>
+      _contrastMatrix(amount),
+    SaturationEffect(:final amount)
+        when amount != SaturationEffect.identityAmount =>
+      _saturationMatrix(amount),
+    ExposureEffect(:final amount) when amount != 0 => _exposureMatrix(amount),
+    WarmthEffect(:final amount) when amount != 0 => _warmthMatrix(amount),
+    _ => null,
+  };
 
   /// True when any enabled, contributing effect carries a per-effect
   /// mask — the signal that the renderer must take the segmented
   /// Step 6 path ([renderSegments]) instead of the single composed
   /// matrix. False for every pre-Step-6 document, which keeps the
   /// fast path (and its widget tree) untouched.
-  bool get hasEnabledMaskedEffect => effects.any(
-        (e) => e.enabled && e.mask != null && e.contributes,
-      );
+  bool get hasEnabledMaskedEffect =>
+      effects.any((e) => e.enabled && e.mask != null && e.contributes);
 
   /// Custom-paint effects with a per-effect mask, in stack order.
   /// Rendered as individually mask-clipped overlays (the overlay
   /// draws on top, so masking the overlay alone implements §5's
   /// composite for this kind).
   Iterable<EditorEffect> get maskedCustomPaintEffects => effects.where(
-        (e) =>
-            e.enabled &&
-            e.mask != null &&
-            e.kind == EffectKind.customPaint &&
-            e.contributes,
-      );
+    (e) =>
+        e.enabled &&
+        e.mask != null &&
+        e.kind == EffectKind.customPaint &&
+        e.contributes,
+  );
 
   /// Step 6/3.3 render plan: every enabled, contributing effect
   /// folded into segments, in stack order (docs/effects-step6-per-
@@ -504,12 +503,12 @@ final class EffectStack {
   /// future feature; for now the contract matches the colour-matrix
   /// path exactly (skip if `!enabled || mask != null`).
   Iterable<EditorEffect> get customPaintEffects => effects.where(
-        (e) =>
-            e.enabled &&
-            e.mask == null &&
-            e.kind == EffectKind.customPaint &&
-            e.contributes,
-      );
+    (e) =>
+        e.enabled &&
+        e.mask == null &&
+        e.kind == EffectKind.customPaint &&
+        e.contributes,
+  );
 
   /// True when at least one [EffectKind.customPaint] effect would
   /// draw at the current parameters. Cheap pre-check the renderer

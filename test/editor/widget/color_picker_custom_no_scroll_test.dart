@@ -80,43 +80,41 @@ void main() {
           .style
           .color;
 
-  testWidgets(
-    'custom wheel has no scrollable viewport and every control is '
-    'hit-testable on the smallest phone',
-    (tester) async {
-      await openCustomWheel(tester);
+  testWidgets('custom wheel has no scrollable viewport and every control is '
+      'hit-testable on the smallest phone', (tester) async {
+    await openCustomWheel(tester);
 
-      final wheel = find.byKey(const ValueKey('color-picker-level-custom'));
-      expect(wheel, findsOneWidget, reason: 'سفارشی opens the wheel sheet');
+    final wheel = find.byKey(const ValueKey('color-picker-level-custom'));
+    expect(wheel, findsOneWidget, reason: 'سفارشی opens the wheel sheet');
 
-      // The broken pattern, pinned: drag controls must have no
-      // Scrollable ancestor anywhere up the tree.
+    // The broken pattern, pinned: drag controls must have no
+    // Scrollable ancestor anywhere up the tree.
+    expect(
+      find.ancestor(of: wheel, matching: find.byType(Scrollable)),
+      findsNothing,
+      reason:
+          'the wheel is all drag controls — a scroll view around '
+          'it steals the finger and hides controls below the fold',
+    );
+
+    // Every control visible AND reachable without any scrolling.
+    for (final key in const [
+      'color-picker-back',
+      'color-picker-close',
+      'color-picker-sv',
+      'color-picker-hue',
+      'color-picker-opacity',
+      'color-picker-hex',
+      'color-picker-copy',
+      'color-picker-eyedropper',
+    ]) {
       expect(
-        find.ancestor(of: wheel, matching: find.byType(Scrollable)),
-        findsNothing,
-        reason: 'the wheel is all drag controls — a scroll view around '
-            'it steals the finger and hides controls below the fold',
+        find.byKey(ValueKey(key)).hitTestable(),
+        findsOneWidget,
+        reason: '$key must be on screen and tappable with no scroll',
       );
-
-      // Every control visible AND reachable without any scrolling.
-      for (final key in const [
-        'color-picker-back',
-        'color-picker-close',
-        'color-picker-sv',
-        'color-picker-hue',
-        'color-picker-opacity',
-        'color-picker-hex',
-        'color-picker-copy',
-        'color-picker-eyedropper',
-      ]) {
-        expect(
-          find.byKey(ValueKey(key)).hitTestable(),
-          findsOneWidget,
-          reason: '$key must be on screen and tappable with no scroll',
-        );
-      }
-    },
-  );
+    }
+  });
 
   testWidgets(
     'dragging the HSV square changes the colour instead of scrolling',

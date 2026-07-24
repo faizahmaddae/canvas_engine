@@ -53,7 +53,9 @@ void main() {
   group('SetCanvasBackgroundModeCommand', () {
     test('apply swaps the mode', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetCanvasBackgroundModeCommand(
               CanvasBackgroundMode.transparent,
             ),
@@ -66,7 +68,9 @@ void main() {
 
     test('undo restores the previous mode', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetCanvasBackgroundModeCommand(
               CanvasBackgroundMode.transparent,
             ),
@@ -80,7 +84,9 @@ void main() {
 
     test('redoing restores transparent', () {
       final c = makeContainer();
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetCanvasBackgroundModeCommand(
               CanvasBackgroundMode.transparent,
             ),
@@ -97,18 +103,20 @@ void main() {
       final c = makeContainer();
       // Pick a colour, then go transparent, then back. The colour
       // must survive the round-trip so toggling is non-destructive.
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundCommand(color: Color(0xFFFF00FF)),
-          );
-      c.read(documentControllerProvider.notifier).execute(
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetCanvasBackgroundCommand(color: Color(0xFFFF00FF)));
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
             const SetCanvasBackgroundModeCommand(
               CanvasBackgroundMode.transparent,
             ),
           );
-      c.read(documentControllerProvider.notifier).execute(
-            const SetCanvasBackgroundModeCommand(
-              CanvasBackgroundMode.color,
-            ),
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetCanvasBackgroundModeCommand(CanvasBackgroundMode.color),
           );
       expect(
         c.read(documentControllerProvider).backgroundColor,

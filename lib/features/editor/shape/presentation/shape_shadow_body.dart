@@ -21,21 +21,16 @@ class ShapeShadowBody extends StatelessWidget {
     return LayerShadowBody<ShapeLayer>(
       layer: layer,
       adapter: ShadowPanelAdapter<ShapeLayer>(
-        command: ({
-          required layerId,
-          color,
-          blur,
-          offset,
-          opacity,
-          live = false,
-        }) => SetShapeShadowCommand(
-          layerId: layerId,
-          color: color,
-          blur: blur,
-          offset: offset,
-          opacity: opacity,
-          live: live,
-        ),
+        command:
+            ({required layerId, color, blur, offset, opacity, live = false}) =>
+                SetShapeShadowCommand(
+                  layerId: layerId,
+                  color: color,
+                  blur: blur,
+                  offset: offset,
+                  opacity: opacity,
+                  live: live,
+                ),
         read: (l) => (
           color: l.shadowColor,
           blur: l.shadowBlur,

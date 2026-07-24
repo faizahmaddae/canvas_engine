@@ -88,10 +88,7 @@ class PaintDraft {
   /// Build a finalized [PaintLayer] ready to ship through
   /// [AddLayerCommand]. Returns null when the stroke is degenerate
   /// (e.g. a zero-length line or a tap with a non-tap-friendly tool).
-  PaintLayer? toLayer({
-    required String id,
-    required Size docSize,
-  }) {
+  PaintLayer? toLayer({required String id, required Size docSize}) {
     if (points.isEmpty) return null;
     if (kind != PaintKind.freestyle && points.length < 2) return null;
     final bounds = previewBounds();
@@ -100,10 +97,7 @@ class PaintDraft {
     if (norm.isEmpty) return null;
     return PaintLayer(
       id: id,
-      transform: LayerTransform(
-        position: bounds.topLeft,
-        size: bounds.size,
-      ),
+      transform: LayerTransform(position: bounds.topLeft, size: bounds.size),
       kind: kind,
       // Blur is bbox-only; storing the drag points wastes JSON space
       // since the painter never reads them. Wrap the runtime list so

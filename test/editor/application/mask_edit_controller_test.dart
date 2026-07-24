@@ -19,15 +19,12 @@ const _mask = RectMask(rect: Rect.fromLTWH(10, 10, 80, 60), feather: 8);
 
 ImageLayer _image({LayerMask? stackMask}) => ImageLayer(
   id: 'img',
-  transform: const LayerTransform(
-    position: Offset.zero,
-    size: Size(200, 100),
-  ),
+  transform: const LayerTransform(position: Offset.zero, size: Size(200, 100)),
   source: const ImageSource.asset('stub.png'),
   effects: EffectStack(
-    List<EditorEffect>.unmodifiable(
-      <EditorEffect>[BrightnessEffect(amount: 20)],
-    ),
+    List<EditorEffect>.unmodifiable(<EditorEffect>[
+      BrightnessEffect(amount: 20),
+    ]),
     stackMask: stackMask,
   ),
 );
@@ -35,9 +32,11 @@ ImageLayer _image({LayerMask? stackMask}) => ImageLayer(
 ProviderContainer _container({LayerMask? stackMask}) {
   final c = ProviderContainer();
   addTearDown(c.dispose);
-  c.read(documentControllerProvider.notifier)
+  c
+      .read(documentControllerProvider.notifier)
       .newDocument(width: 400, height: 300);
-  c.read(documentControllerProvider.notifier)
+  c
+      .read(documentControllerProvider.notifier)
       .execute(AddLayerCommand(_image(stackMask: stackMask)));
   // Mount the controller so its document listener is registered.
   c.read(maskEditControllerProvider);
@@ -54,17 +53,22 @@ void main() {
     const size = Size(200, 100);
 
     test('translate clamps to the layer bounds', () {
-      final moved =
-          MaskEditController.translate(_mask, const Offset(500, -500), size);
+      final moved = MaskEditController.translate(
+        _mask,
+        const Offset(500, -500),
+        size,
+      );
       final b = MaskEditController.boundsOf(moved);
       expect(b.right, size.width);
       expect(b.top, 0);
-      expect(b.size, MaskEditController.boundsOf(_mask).size,
-          reason: 'translate never resizes');
+      expect(
+        b.size,
+        MaskEditController.boundsOf(_mask).size,
+        reason: 'translate never resizes',
+      );
     });
 
-    test('resize anchors the opposite corner and honours the minimum',
-        () {
+    test('resize anchors the opposite corner and honours the minimum', () {
       final shrunk = MaskEditController.resize(
         _mask,
         MaskEditHandle.bottomRight,
@@ -72,8 +76,11 @@ void main() {
         size,
       );
       final b = MaskEditController.boundsOf(shrunk);
-      expect(b.topLeft, MaskEditController.boundsOf(_mask).topLeft,
-          reason: 'opposite corner is the anchor');
+      expect(
+        b.topLeft,
+        MaskEditController.boundsOf(_mask).topLeft,
+        reason: 'opposite corner is the anchor',
+      );
       expect(b.width, MaskEditController.minMaskSide);
       expect(b.height, MaskEditController.minMaskSide);
     });
@@ -98,7 +105,10 @@ void main() {
         inverted: true,
       );
       final moved = MaskEditController.translate(
-          inverted, const Offset(5, 5), size);
+        inverted,
+        const Offset(5, 5),
+        size,
+      );
       expect(moved.feather, 8);
       expect(moved.inverted, isTrue);
     });
@@ -112,8 +122,11 @@ void main() {
       expect(s.active, isTrue);
       expect(s.draft, _mask);
       expect(s.entryMask, _mask);
-      expect(c.read(liveOverlayProvider).replacements, isEmpty,
-          reason: 'existing mask already renders from the document');
+      expect(
+        c.read(liveOverlayProvider).replacements,
+        isEmpty,
+        reason: 'existing mask already renders from the document',
+      );
     });
 
     test('open on a maskless layer seeds the centre default and stages '
@@ -123,8 +136,11 @@ void main() {
       final s = c.read(maskEditControllerProvider);
       expect(s.draft, isA<RectMask>());
       expect(s.entryMask, isNull);
-      expect(c.read(liveOverlayProvider).replacements, isNotEmpty,
-          reason: 'a fresh default mask must be visible immediately');
+      expect(
+        c.read(liveOverlayProvider).replacements,
+        isNotEmpty,
+        reason: 'a fresh default mask must be visible immediately',
+      );
     });
 
     test('updateDraft is chrome-only; endGesture stages the preview', () {
@@ -134,8 +150,11 @@ void main() {
       final moved = _mask.copyWith(rect: const Rect.fromLTWH(20, 10, 80, 60));
 
       ctl.updateDraft(moved);
-      expect(c.read(liveOverlayProvider).replacements, isEmpty,
-          reason: 'per-tick staging would raster per tick (design §4)');
+      expect(
+        c.read(liveOverlayProvider).replacements,
+        isEmpty,
+        reason: 'per-tick staging would raster per tick (design §4)',
+      );
 
       ctl.endGesture(moved);
       final staged =
@@ -157,8 +176,7 @@ void main() {
       expect(_docMask(c), moved);
 
       c.read(documentControllerProvider.notifier).undo();
-      expect(_docMask(c), _mask,
-          reason: 'the whole session is one undo entry');
+      expect(_docMask(c), _mask, reason: 'the whole session is one undo entry');
     });
 
     test('no-change commit pushes no history entry', () {
@@ -179,8 +197,7 @@ void main() {
       final c = _container(stackMask: _mask);
       final ctl = c.read(maskEditControllerProvider.notifier);
       ctl.open('img');
-      ctl.endGesture(
-          _mask.copyWith(rect: const Rect.fromLTWH(40, 20, 80, 60)));
+      ctl.endGesture(_mask.copyWith(rect: const Rect.fromLTWH(40, 20, 80, 60)));
       ctl.cancel(restoreSelection: true);
 
       expect(c.read(maskEditControllerProvider).active, isFalse);
@@ -194,16 +211,17 @@ void main() {
       ctl.open('img');
       // Someone else (undo from an unsuppressed surface, another
       // controller) rewrites the mask under the mode.
-      c.read(documentControllerProvider.notifier).execute(
-            const SetStackMaskCommand(layerId: 'img', mask: null),
-          );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(const SetStackMaskCommand(layerId: 'img', mask: null));
       expect(c.read(maskEditControllerProvider).active, isFalse);
     });
 
     test('layer deletion cancels the session', () {
       final c = _container(stackMask: _mask);
       c.read(maskEditControllerProvider.notifier).open('img');
-      c.read(documentControllerProvider.notifier)
+      c
+          .read(documentControllerProvider.notifier)
           .execute(const RemoveLayerCommand('img'));
       expect(c.read(maskEditControllerProvider).active, isFalse);
     });
@@ -217,8 +235,11 @@ void main() {
       ctl.open('img', priorSelectionId: 'img');
       c.read(selectionControllerProvider.notifier).clear();
       ctl.commit();
-      expect(c.read(selectionControllerProvider).selectedIds, {'img'},
-          reason: 'Done returns the user to the pre-mode context');
+      expect(
+        c.read(selectionControllerProvider).selectedIds,
+        {'img'},
+        reason: 'Done returns the user to the pre-mode context',
+      );
 
       // Seam-driven cancel must not fight the seam's selection state.
       ctl.open('img', priorSelectionId: 'img');

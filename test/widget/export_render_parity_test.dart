@@ -293,9 +293,11 @@ void main() {
       final bytes = await _capturePng(key);
       return _decodePng(bytes);
     });
-    for (var i = 0;
-        i < 40 && ((decoded!.argb(24, 24) >> 16) & 0xFF) >= 250;
-        i++) {
+    for (
+      var i = 0;
+      i < 40 && ((decoded!.argb(24, 24) >> 16) & 0xFF) >= 250;
+      i++
+    ) {
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 10)),
       );
@@ -315,8 +317,12 @@ void main() {
     // Mono-filtered pure red is a mid grey — far from the white
     // background, so a blank frame can no longer pass.
     expect(r, greaterThan(40));
-    expect(r, lessThan(200),
-        reason: 'pixel must be the filtered image, not the white '
-            'background (${(r, g, b)})');
+    expect(
+      r,
+      lessThan(200),
+      reason:
+          'pixel must be the filtered image, not the white '
+          'background (${(r, g, b)})',
+    );
   });
 }

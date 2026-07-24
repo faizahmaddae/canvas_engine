@@ -80,22 +80,22 @@ class _StackMaskSection extends ConsumerWidget {
     return switch (preset) {
       _MaskPreset.off => null,
       _MaskPreset.top => RectMask(
-          rect: Rect.fromLTWH(0, 0, s.width, s.height / 2),
-          feather: feather,
-        ),
+        rect: Rect.fromLTWH(0, 0, s.width, s.height / 2),
+        feather: feather,
+      ),
       _MaskPreset.bottom => RectMask(
-          rect: Rect.fromLTWH(0, s.height / 2, s.width, s.height / 2),
-          feather: feather,
-        ),
+        rect: Rect.fromLTWH(0, s.height / 2, s.width, s.height / 2),
+        feather: feather,
+      ),
       _MaskPreset.center => RectMask(
-          rect: Rect.fromLTWH(
-            s.width * 0.15,
-            s.height * 0.15,
-            s.width * 0.7,
-            s.height * 0.7,
-          ),
-          feather: feather,
+        rect: Rect.fromLTWH(
+          s.width * 0.15,
+          s.height * 0.15,
+          s.width * 0.7,
+          s.height * 0.7,
         ),
+        feather: feather,
+      ),
     };
   }
 
@@ -106,7 +106,8 @@ class _StackMaskSection extends ConsumerWidget {
     // An on-canvas edit usually produces a mask matching no preset —
     // without an explicit Custom state every chip would silently
     // deselect and the section would read as "off".
-    final isCustom = current != null &&
+    final isCustom =
+        current != null &&
         !_MaskPreset.values.any((p) => _maskFor(p) == current);
 
     String labelFor(_MaskPreset p) => switch (p) {
@@ -145,7 +146,9 @@ class _StackMaskSection extends ConsumerWidget {
                   selected: current == _maskFor(preset),
                   onSelected: (_) {
                     EditorHaptics.tap();
-                    ref.read(documentControllerProvider.notifier).execute(
+                    ref
+                        .read(documentControllerProvider.notifier)
+                        .execute(
                           SetStackMaskCommand(
                             layerId: layer.id,
                             mask: _maskFor(preset),

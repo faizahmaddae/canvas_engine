@@ -11,10 +11,7 @@ extension OffsetMath on Offset {
     final c = math.cos(angleRad);
     final dx = this.dx - pivot.dx;
     final dy = this.dy - pivot.dy;
-    return Offset(
-      pivot.dx + dx * c - dy * s,
-      pivot.dy + dx * s + dy * c,
-    );
+    return Offset(pivot.dx + dx * c - dy * s, pivot.dy + dx * s + dy * c);
   }
 }
 

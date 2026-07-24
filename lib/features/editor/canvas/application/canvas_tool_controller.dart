@@ -37,5 +37,5 @@ class CanvasToolController extends Notifier<CanvasToolSession> {
 
 final canvasToolControllerProvider =
     NotifierProvider<CanvasToolController, CanvasToolSession>(
-  CanvasToolController.new,
-);
+      CanvasToolController.new,
+    );

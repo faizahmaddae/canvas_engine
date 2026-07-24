@@ -19,10 +19,7 @@ void main() {
     });
 
     test('fromJson still accepts asset and url payloads', () {
-      expect(
-        ImageSource.fromJson({'asset': 'a.png'}).assetName,
-        'a.png',
-      );
+      expect(ImageSource.fromJson({'asset': 'a.png'}).assetName, 'a.png');
       expect(
         ImageSource.fromJson({'url': 'https://x/y.png'}).networkUrl,
         'https://x/y.png',

@@ -226,7 +226,8 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: widget.labelStyle ??
+                  style:
+                      widget.labelStyle ??
                       TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -241,7 +242,8 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
                 child: Text(
                   widget.format(widget.value),
                   textAlign: TextAlign.end,
-                  style: widget.readoutStyle ??
+                  style:
+                      widget.readoutStyle ??
                       TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
