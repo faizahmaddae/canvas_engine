@@ -23,78 +23,7 @@ import '../../ui/editor_tier_gap.dart';
 import '../application/paint_tool_controller.dart';
 import '../domain/paint_tool_type.dart';
 import 'paint_size_body.dart';
-
-// ─── Per-tool capability matrix ───────────────────────────────────
-//
-// Drives which sub-tool tiles the strip renders once a tool is
-// armed. `tool` is always present so re-picking is one tap. Pure
-// data, no enum changes — this lives next to the toolbar because
-// it's a UI-layer decision, not a domain rule.
-Set<String> _allowedSlotsFor(PaintToolType? tool) {
-  if (tool == null) return const {'tool'};
-  switch (tool) {
-    case PaintToolType.freestyle:
-      return const {'tool', 'color', 'size', 'opacity'};
-    case PaintToolType.arrow:
-      return const {'tool', 'color', 'size', 'opacity'};
-    // Style is wired to the line-family tools (Solid=line,
-    // Dashed=dashLine, Dotted=dashDotLine). Picking a style in
-    // the sheet calls selectTool() — so the slot is meaningful
-    // only on these three kinds. Shapes don't expose Style
-    // because there is no per-layer dash on the engine side.
-    case PaintToolType.line:
-    case PaintToolType.dashLine:
-    case PaintToolType.dashDotLine:
-      return const {'tool', 'color', 'size', 'opacity', 'dash'};
-    case PaintToolType.rectangle:
-    case PaintToolType.circle:
-    case PaintToolType.hexagon:
-      return const {'tool', 'color', 'size', 'fill', 'opacity'};
-    case PaintToolType.polygon:
-      return const {'tool', 'color', 'size', 'fill', 'opacity', 'polygon'};
-    case PaintToolType.eraser:
-      return const {'tool', 'size'};
-    case PaintToolType.blur:
-      return const {'tool', 'blur'};
-  }
-}
-
-// ─── Human-friendly value labels ──────────────────────────────────
-//
-// Tile `valueText` shows a word, not a number. Numbers stay inside
-// the sub-tool sheet for power users.
-String _strokeWord(AppLocalizations l10n, double w) {
-  if (w <= 4) return l10n.thinOption;
-  if (w <= 12) return l10n.mediumOption;
-  if (w <= 24) return l10n.thickOption;
-  return l10n.heavyOption;
-}
-
-String _opacityWord(AppLocalizations l10n, double alpha01) {
-  final p = (alpha01.clamp(0.0, 1.0) * 100).round();
-  if (p <= 35) return l10n.lightOption;
-  if (p <= 75) return l10n.normalOption;
-  return l10n.strongOption;
-}
-
-String _blurWord(AppLocalizations l10n, double r) {
-  if (r < 1) return l10n.noneOption;
-  if (r <= 16) return l10n.softOption;
-  return l10n.strongOption;
-}
-
-String _dashWordForTool(AppLocalizations l10n, PaintToolType? tool) {
-  switch (tool) {
-    case PaintToolType.dashLine:
-      return l10n.dashedOption;
-    case PaintToolType.dashDotLine:
-      return l10n.dottedOption;
-    case PaintToolType.line:
-      return l10n.solidOption;
-    default:
-      return l10n.solidOption;
-  }
-}
+import 'paint_tool_specs.dart';
 
 /// Bottom dock for paint mode.
 ///
@@ -104,36 +33,16 @@ String _dashWordForTool(AppLocalizations l10n, PaintToolType? tool) {
 /// and horizontal-swipe sibling navigation between sheets.
 ///
 /// All tools — primary and secondary — live in a single ordered
-/// strip ([_tools]), ranked by frequency of use. No "More" grid:
-/// every tool is reachable in ≤ 1 tap.
+/// strip ([paintToolSpecs]), ranked by frequency of use. No "More"
+/// grid: every tool is reachable in ≤ 1 tap.
 class PaintModeToolbar extends ConsumerStatefulWidget {
   const PaintModeToolbar({super.key});
 
   @override
   ConsumerState<PaintModeToolbar> createState() => _PaintModeToolbarState();
 
-  // ─── Tool registry ─────────────────────────────────────────────
-  //
-  // Flat single-tier strip — Tool · Color · Size · Fill · Opacity ·
-  // Blur · Sides · Dash. Ordered by expected frequency of use.
-  static final List<_PaintSpec> _tools = <_PaintSpec>[
-    _PaintSpec(id: 'tool', icon: Icons.gesture_rounded, label: 'Tool'),
-    _PaintSpec(id: 'color', icon: Icons.palette_rounded, label: 'Color'),
-    _PaintSpec(id: 'size', icon: Icons.line_weight_rounded, label: 'Size'),
-    _PaintSpec(
-      id: 'fill',
-      icon: Icons.format_color_fill_rounded,
-      label: 'Fill',
-    ),
-    _PaintSpec(id: 'opacity', icon: Icons.opacity_rounded, label: 'Opacity'),
-    _PaintSpec(id: 'blur', icon: Icons.blur_on_rounded, label: 'Blur'),
-    _PaintSpec(id: 'polygon', icon: Icons.pentagon_outlined, label: 'Sides'),
-    _PaintSpec(id: 'dash', icon: Icons.linear_scale_rounded, label: 'Style'),
-  ];
-
-  // ignore: library_private_types_in_public_api
-  static _PaintSpec? specById(String id) {
-    for (final s in _tools) {
+  static PaintSpec? specById(String id) {
+    for (final s in paintToolSpecs) {
       if (s.id == id) return s;
     }
     return null;
@@ -144,8 +53,8 @@ class PaintModeToolbar extends ConsumerStatefulWidget {
   /// currently-active tool so swipe-prev/next never lands on a
   /// slot the strip is hiding.
   static List<String> toolIdsFor(PaintToolType? tool) {
-    final allowed = _allowedSlotsFor(tool);
-    return _tools
+    final allowed = allowedPaintSlotsFor(tool);
+    return paintToolSpecs
         .map((s) => s.id)
         .where(allowed.contains)
         .toList(growable: false);
@@ -245,7 +154,7 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
     // surface. Opening any slot (including 'tool') never hides the
     // others; the open slot is highlighted, siblings stay tappable
     // so users can switch panels in one tap.
-    var allowed = _allowedSlotsFor(session.activeTool);
+    var allowed = allowedPaintSlotsFor(session.activeTool);
     // Safety guard: setBlurRadius / setPolygonSides update session
     // defaults only — they don't yet mirror to a selected paint
     // layer like setStrokeColor / setStrokeWidth do. Hide those
@@ -265,7 +174,7 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
     if (open != _lastOpen) {
       _lastOpen = open;
       if (open != null) {
-        final idx = PaintModeToolbar._tools.indexWhere((s) => s.id == open);
+        final idx = paintToolSpecs.indexWhere((s) => s.id == open);
         if (idx >= 0) {
           WidgetsBinding.instance.addPostFrameCallback(
             (_) => _ensureVisible(idx),
@@ -286,36 +195,36 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
             : MainAxisAlignment.center,
         children: [
           for (final i in _toolOrder(context, ref))
-            if (allowed.contains(PaintModeToolbar._tools[i].id)) ...[
+            if (allowed.contains(paintToolSpecs[i].id)) ...[
               if (_isTierBoundary(ref, i)) const EditorTierGap(),
               DockToolTile(
-                icon: PaintModeToolbar._tools[i].id == 'tool'
+                icon: paintToolSpecs[i].id == 'tool'
                     ? tool.icon
-                    : PaintModeToolbar._tools[i].icon,
-                label: PaintModeToolbar._tools[i].id == 'tool'
+                    : paintToolSpecs[i].icon,
+                label: paintToolSpecs[i].id == 'tool'
                     ? _paintToolLabel(context.l10n, session.activeTool) ??
                           context.l10n.toolLabel
-                    : _paintSpecLabel(context.l10n, PaintModeToolbar._tools[i]),
-                valueText: PaintModeToolbar._tools[i].id == 'tool'
+                    : _paintSpecLabel(context.l10n, paintToolSpecs[i]),
+                valueText: paintToolSpecs[i].id == 'tool'
                     ? null
                     : _paintValueText(
                         context.l10n,
-                        PaintModeToolbar._tools[i],
+                        paintToolSpecs[i],
                         session,
                         tool,
                       ),
-                swatchColor: PaintModeToolbar._tools[i].id == 'color'
+                swatchColor: paintToolSpecs[i].id == 'color'
                     ? session.strokeColor
-                    : PaintModeToolbar._tools[i].id == 'fill' && fillEnabled
+                    : paintToolSpecs[i].id == 'fill' && fillEnabled
                     ? session.fillColor
                     : null,
-                active: session.openSlot == PaintModeToolbar._tools[i].id,
+                active: session.openSlot == paintToolSpecs[i].id,
                 compact: _isCompact(context),
                 onTap: () {
                   EditorHaptics.tap();
                   // Toggling: re-tap of active tile dismisses the
                   // sheet; tapping a different tile switches.
-                  ctrl.toggleSlot(PaintModeToolbar._tools[i].id);
+                  ctrl.toggleSlot(paintToolSpecs[i].id);
                 },
                 // Long-press peek removed — too easy to undo by
                 // accident. Peek lives on the Undo chip in the sheet
@@ -340,7 +249,7 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
   /// row's alignment via [DockToolStrip.fitAlignment]; it never
   /// reverses tools.
   List<int> _toolOrder(BuildContext ctx, WidgetRef ref) {
-    return List<int>.generate(PaintModeToolbar._tools.length, (i) => i);
+    return List<int>.generate(paintToolSpecs.length, (i) => i);
   }
 
   bool _isTierBoundary(WidgetRef ref, int rawIndex) {
@@ -440,18 +349,10 @@ class PaintModeInlineExpansion extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Internal: spec & bodies
+// Internal: bodies (spec moved to paint_tool_specs.dart)
 // ─────────────────────────────────────────────────────────────────
 
-class _PaintSpec {
-  const _PaintSpec({required this.id, required this.icon, required this.label});
-
-  final String id;
-  final IconData icon;
-  final String label;
-}
-
-String _paintSpecLabel(AppLocalizations l10n, _PaintSpec spec) {
+String _paintSpecLabel(AppLocalizations l10n, PaintSpec spec) {
   return switch (spec.id) {
     'tool' => l10n.toolLabel,
     'color' => l10n.colorLabel,
@@ -467,17 +368,17 @@ String _paintSpecLabel(AppLocalizations l10n, _PaintSpec spec) {
 
 String? _paintValueText(
   AppLocalizations l10n,
-  _PaintSpec spec,
+  PaintSpec spec,
   PaintSession session,
   PaintToolType tool,
 ) {
   return switch (spec.id) {
-    'size' => _strokeWord(l10n, session.strokeWidth),
+    'size' => paintStrokeWord(l10n, session.strokeWidth),
     'fill' => session.fillColor == null ? l10n.offOption : l10n.onOption,
-    'opacity' => _opacityWord(l10n, session.strokeColor.a),
-    'blur' => _blurWord(l10n, session.blurRadius),
+    'opacity' => paintOpacityWord(l10n, session.strokeColor.a),
+    'blur' => paintBlurWord(l10n, session.blurRadius),
     'polygon' => l10n.sidesCount(session.polygonSides),
-    'dash' => _dashWordForTool(l10n, tool),
+    'dash' => paintDashWordForTool(l10n, tool),
     _ => null,
   };
 }
