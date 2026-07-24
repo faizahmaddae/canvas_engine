@@ -92,6 +92,24 @@ class EditorScreen extends ConsumerWidget {
     // commit-version makes the contract explicit so the next
     // accidental in-place mutation can't regress this.
     ref.watch(documentCommitVersionProvider);
+    // Selection-integrity owner (tb0 0.8): undo/redo mutate the
+    // document with no selection call, so dead selected ids linger —
+    // ghost counts in the multi chip, a never-firing selection seam,
+    // and sub-panels that silently remount on redo. Prune on every
+    // commit tick, BEFORE the selection-change listener below reacts:
+    // pruning changes selectedId, so the existing seam then closes
+    // the dead layer's panels through its normal path. Both listeners
+    // are idempotent.
+    ref.listen<int>(documentCommitVersionProvider, (prev, next) {
+      if (prev == next) return;
+      final pruned = ref
+          .read(selectionControllerProvider.notifier)
+          .pruneMissing(ref.read(documentControllerProvider));
+      if (!pruned) return;
+      if (ref.read(selectionControllerProvider).selectedIds.length < 2) {
+        ref.read(selectionModeProvider.notifier).exitMulti();
+      }
+    });
     // Selection-change seam: when the user picks a different layer
     // (or deselects to empty), collapse every object-tool's
     // currently-open sub-panel (Image/Shape/Sticker `openSlot`).

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../engine/core/editor_document.dart';
 import '../engine/core/selection_state.dart';
 
 /// Mobile selection mode.
@@ -38,8 +39,8 @@ class SelectionModeController extends Notifier<SelectionMode> {
 
 final selectionModeProvider =
     NotifierProvider<SelectionModeController, SelectionMode>(
-  SelectionModeController.new,
-);
+      SelectionModeController.new,
+    );
 
 class SelectionController extends Notifier<SelectionState> {
   @override
@@ -81,9 +82,34 @@ class SelectionController extends Notifier<SelectionState> {
     if (!state.hasSelection) return;
     state = state.clear();
   }
+
+  /// Drop every selected id whose layer no longer exists in [doc].
+  ///
+  /// Undo/redo mutate the document without any selection call, so an
+  /// undone AddLayer (or a redone delete) leaves dead ids behind —
+  /// pre-fix, every consumer had to defend with its own null-check,
+  /// the multi-select chip counted ghosts, and the selection-change
+  /// seam never fired (the id didn't change), stranding the dead
+  /// layer's open sub-panel for a silent remount on redo. This is
+  /// the single integrity owner: the commit-version listener in the
+  /// editor calls it after every execute/undo/redo tick.
+  ///
+  /// Returns true when anything was pruned (the caller decides
+  /// whether multi-select mode should collapse too).
+  bool pruneMissing(EditorDocument doc) {
+    final ids = state.selectedIds;
+    if (ids.isEmpty) return false;
+    final live = [
+      for (final id in ids)
+        if (doc.layerById(id) != null) id,
+    ];
+    if (live.length == ids.length) return false;
+    state = live.isEmpty ? state.clear() : state.replaceWith(live);
+    return true;
+  }
 }
 
 final selectionControllerProvider =
     NotifierProvider<SelectionController, SelectionState>(
-  SelectionController.new,
-);
+      SelectionController.new,
+    );

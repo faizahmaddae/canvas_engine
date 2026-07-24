@@ -26,13 +26,10 @@ import 'package:flutter_test/flutter_test.dart';
 // ---------------------------------------------------------------------------
 
 ShapeLayer _shape(String id, {Offset position = Offset.zero}) => ShapeLayer(
-      id: id,
-      transform: LayerTransform(
-        position: position,
-        size: const Size(100, 100),
-      ),
-      kind: ShapeKind.rectangle,
-    );
+  id: id,
+  transform: LayerTransform(position: position, size: const Size(100, 100)),
+  kind: ShapeKind.rectangle,
+);
 
 /// Widget that captures its [WidgetRef] for use in `testWidgets`.
 class _Probe extends ConsumerWidget {
@@ -51,7 +48,9 @@ class _Probe extends ConsumerWidget {
 Future<WidgetRef> _pumpRef(WidgetTester tester) async {
   _Probe._ref = null;
   await tester.pumpWidget(
-    const ProviderScope(child: MaterialApp(home: Scaffold(body: _Probe()))),
+    const ProviderScope(
+      child: MaterialApp(home: Scaffold(body: _Probe())),
+    ),
   );
   return _Probe._ref!;
 }
@@ -96,42 +95,51 @@ void main() {
 
   group('LayerActions.delete clears selection', () {
     testWidgets(
-        'deleting the selected layer clears selection (sibling not promoted)',
-        (tester) async {
-      final ref = await _pumpRef(tester);
-      final docCtl = ref.read(documentControllerProvider.notifier);
-      docCtl.newDocument(width: 800, height: 600);
-      docCtl.execute(AddLayerCommand(_shape('a')));
-      docCtl.execute(AddLayerCommand(_shape('b')));
-      ref.read(selectionControllerProvider.notifier).select('a');
+      'deleting the selected layer clears selection (sibling not promoted)',
+      (tester) async {
+        final ref = await _pumpRef(tester);
+        final docCtl = ref.read(documentControllerProvider.notifier);
+        docCtl.newDocument(width: 800, height: 600);
+        docCtl.execute(AddLayerCommand(_shape('a')));
+        docCtl.execute(AddLayerCommand(_shape('b')));
+        ref.read(selectionControllerProvider.notifier).select('a');
 
-      final layer = ref.read(documentControllerProvider).layerById('a')!;
-      await LayerActions.delete(
-        tester.element(find.byType(Scaffold)),
-        ref,
-        layer,
-      );
-      await tester.pump();
+        final layer = ref.read(documentControllerProvider).layerById('a')!;
+        await LayerActions.delete(
+          tester.element(find.byType(Scaffold)),
+          ref,
+          layer,
+        );
+        await tester.pump();
 
-      expect(ref.read(selectionControllerProvider).selectedId, isNull,
-          reason: 'selection must be cleared; sibling b must NOT be promoted');
-      expect(ref.read(documentControllerProvider).layerById('a'), isNull,
-          reason: 'layer a was removed');
-      expect(ref.read(documentControllerProvider).layerById('b'), isNotNull,
-          reason: 'layer b is untouched');
-    });
+        expect(
+          ref.read(selectionControllerProvider).selectedId,
+          isNull,
+          reason: 'selection must be cleared; sibling b must NOT be promoted',
+        );
+        expect(
+          ref.read(documentControllerProvider).layerById('a'),
+          isNull,
+          reason: 'layer a was removed',
+        );
+        expect(
+          ref.read(documentControllerProvider).layerById('b'),
+          isNotNull,
+          reason: 'layer b is untouched',
+        );
+      },
+    );
 
-    testWidgets(
-        'deleting the last layer leaves selection empty',
-        (tester) async {
+    testWidgets('deleting the last layer leaves selection empty', (
+      tester,
+    ) async {
       final ref = await _pumpRef(tester);
       final docCtl = ref.read(documentControllerProvider.notifier);
       docCtl.newDocument(width: 800, height: 600);
       docCtl.execute(AddLayerCommand(_shape('only')));
       ref.read(selectionControllerProvider.notifier).select('only');
 
-      final layer =
-          ref.read(documentControllerProvider).layerById('only')!;
+      final layer = ref.read(documentControllerProvider).layerById('only')!;
       await LayerActions.delete(
         tester.element(find.byType(Scaffold)),
         ref,
@@ -139,43 +147,52 @@ void main() {
       );
       await tester.pump();
 
-      expect(ref.read(selectionControllerProvider).hasSelection, isFalse,
-          reason: 'no layers remain; selection must be clear');
+      expect(
+        ref.read(selectionControllerProvider).hasSelection,
+        isFalse,
+        reason: 'no layers remain; selection must be clear',
+      );
       expect(ref.read(documentControllerProvider).layers, isEmpty);
     });
 
     testWidgets(
-        'deleting an unselected layer does not disturb current selection',
-        (tester) async {
-      final ref = await _pumpRef(tester);
-      final docCtl = ref.read(documentControllerProvider.notifier);
-      docCtl.newDocument(width: 800, height: 600);
-      docCtl.execute(AddLayerCommand(_shape('keep')));
-      docCtl.execute(AddLayerCommand(_shape('remove')));
-      ref.read(selectionControllerProvider.notifier).select('keep');
+      'deleting an unselected layer does not disturb current selection',
+      (tester) async {
+        final ref = await _pumpRef(tester);
+        final docCtl = ref.read(documentControllerProvider.notifier);
+        docCtl.newDocument(width: 800, height: 600);
+        docCtl.execute(AddLayerCommand(_shape('keep')));
+        docCtl.execute(AddLayerCommand(_shape('remove')));
+        ref.read(selectionControllerProvider.notifier).select('keep');
 
-      final layer =
-          ref.read(documentControllerProvider).layerById('remove')!;
-      await LayerActions.delete(
-        tester.element(find.byType(Scaffold)),
-        ref,
-        layer,
-      );
-      await tester.pump();
+        final layer = ref.read(documentControllerProvider).layerById('remove')!;
+        await LayerActions.delete(
+          tester.element(find.byType(Scaffold)),
+          ref,
+          layer,
+        );
+        await tester.pump();
 
-      // Selection on the surviving layer is cleared too — the current
-      // spec says delete always clears, regardless of which layer was
-      // deleted. This is safer than trying to preserve selection:
-      // if the user deletes a layer, the safest next state is "nothing
-      // is selected". They can tap to re-select.
-      expect(ref.read(selectionControllerProvider).selectedId, isNull,
-          reason: 'delete always clears selection');
-      expect(ref.read(documentControllerProvider).layerById('keep'),
-          isNotNull);
-    });
+        // Selection on the surviving layer is cleared too — the current
+        // spec says delete always clears, regardless of which layer was
+        // deleted. This is safer than trying to preserve selection:
+        // if the user deletes a layer, the safest next state is "nothing
+        // is selected". They can tap to re-select.
+        expect(
+          ref.read(selectionControllerProvider).selectedId,
+          isNull,
+          reason: 'delete always clears selection',
+        );
+        expect(
+          ref.read(documentControllerProvider).layerById('keep'),
+          isNotNull,
+        );
+      },
+    );
 
-    testWidgets('delete with 3 layers: no sibling auto-selection after any',
-        (tester) async {
+    testWidgets('delete with 3 layers: no sibling auto-selection after any', (
+      tester,
+    ) async {
       final ref = await _pumpRef(tester);
       final docCtl = ref.read(documentControllerProvider.notifier);
       docCtl.newDocument(width: 800, height: 600);
@@ -184,8 +201,7 @@ void main() {
       docCtl.execute(AddLayerCommand(_shape('z')));
       ref.read(selectionControllerProvider.notifier).select('y');
 
-      final layer =
-          ref.read(documentControllerProvider).layerById('y')!;
+      final layer = ref.read(documentControllerProvider).layerById('y')!;
       await LayerActions.delete(
         tester.element(find.byType(Scaffold)),
         ref,
@@ -193,15 +209,18 @@ void main() {
       );
       await tester.pump();
 
-      expect(ref.read(selectionControllerProvider).selectedId, isNull,
-          reason: 'deleting middle layer must not promote x or z');
+      expect(
+        ref.read(selectionControllerProvider).selectedId,
+        isNull,
+        reason: 'deleting middle layer must not promote x or z',
+      );
     });
   });
 
   group('undo after delete: layer restored, selection stays empty', () {
-    testWidgets(
-        'undo restores the deleted layer but does NOT auto-select it',
-        (tester) async {
+    testWidgets('undo restores the deleted layer but does NOT auto-select it', (
+      tester,
+    ) async {
       final ref = await _pumpRef(tester);
       final docCtl = ref.read(documentControllerProvider.notifier);
       docCtl.newDocument(width: 800, height: 600);
@@ -222,17 +241,21 @@ void main() {
       // Undo: the document restores layer 'a'; selection is NOT touched
       // by DocumentController.undo.
       ref.read(documentControllerProvider.notifier).undo();
-      expect(ref.read(documentControllerProvider).layerById('a'), isNotNull,
-          reason: 'layer a restored by undo');
-      expect(ref.read(selectionControllerProvider).selectedId, isNull,
-          reason:
-              'undo only restores document state; selection stays empty. '
-              'User can tap the restored layer to re-select it.');
+      expect(
+        ref.read(documentControllerProvider).layerById('a'),
+        isNotNull,
+        reason: 'layer a restored by undo',
+      );
+      expect(
+        ref.read(selectionControllerProvider).selectedId,
+        isNull,
+        reason:
+            'undo only restores document state; selection stays empty. '
+            'User can tap the restored layer to re-select it.',
+      );
     });
 
-    testWidgets(
-        'undo does not select a random existing layer',
-        (tester) async {
+    testWidgets('undo does not select a random existing layer', (tester) async {
       final ref = await _pumpRef(tester);
       final docCtl = ref.read(documentControllerProvider.notifier);
       docCtl.newDocument(width: 800, height: 600);
@@ -240,8 +263,7 @@ void main() {
       docCtl.execute(AddLayerCommand(_shape('victim')));
       ref.read(selectionControllerProvider.notifier).select('victim');
 
-      final layer =
-          ref.read(documentControllerProvider).layerById('victim')!;
+      final layer = ref.read(documentControllerProvider).layerById('victim')!;
       await LayerActions.delete(
         tester.element(find.byType(Scaffold)),
         ref,
@@ -250,8 +272,11 @@ void main() {
       await tester.pump();
 
       ref.read(documentControllerProvider.notifier).undo();
-      expect(ref.read(selectionControllerProvider).selectedId, isNull,
-          reason: 'bystander must not be auto-selected after undo');
+      expect(
+        ref.read(selectionControllerProvider).selectedId,
+        isNull,
+        reason: 'bystander must not be auto-selected after undo',
+      );
     });
   });
 
@@ -282,10 +307,12 @@ void main() {
       // without BuildContext, but we confirm the underlying indexOf
       // guard works as expected:
       final doc = c.read(documentControllerProvider);
-      expect(doc.indexOf('a'), isNull,
-          reason: 'stale id returns null from indexOf');
-      expect(doc.layers.length, 1,
-          reason: 'only layer b remains');
+      expect(
+        doc.indexOf('a'),
+        isNull,
+        reason: 'stale id returns null from indexOf',
+      );
+      expect(doc.layers.length, 1, reason: 'only layer b remains');
     });
   });
 
@@ -315,8 +342,7 @@ void main() {
       expect(c.read(documentControllerProvider).layerById('a'), isNotNull);
     });
 
-    test('undo after remove+clear: layer restored, selection stays null',
-        () {
+    test('undo after remove+clear: layer restored, selection stays null', () {
       final c = _seedTwo(selectId: 'a');
       c
           .read(documentControllerProvider.notifier)
@@ -324,49 +350,118 @@ void main() {
       c.read(selectionControllerProvider.notifier).clear();
 
       c.read(documentControllerProvider.notifier).undo();
-      expect(c.read(documentControllerProvider).layerById('a'), isNotNull,
-          reason: 'undo restores layer a');
-      expect(c.read(selectionControllerProvider).selectedId, isNull,
-          reason: 'undo does not touch selection');
+      expect(
+        c.read(documentControllerProvider).layerById('a'),
+        isNotNull,
+        reason: 'undo restores layer a',
+      );
+      expect(
+        c.read(selectionControllerProvider).selectedId,
+        isNull,
+        reason: 'undo does not touch selection',
+      );
     });
   });
 
-  group('paint eraser: selection cleared when erased layer was selected',
-      () {
+  group('paint eraser: selection cleared when erased layer was selected', () {
     // Models the fixed _eraseAt behavior at the provider level.
     test(
-        'clearing selection when selected layer is erased via RemoveLayerCommand',
-        () {
-      final c = _seedTwo(selectId: 'a');
-      // Simulate: eraser identifies hit = layer 'a', executes remove,
-      // then checks + clears selection.
-      final hitId = 'a';
-      c
-          .read(documentControllerProvider.notifier)
-          .execute(RemoveLayerCommand(hitId));
-      // This is what the fixed _eraseAt code does:
-      if (c.read(selectionControllerProvider).contains(hitId)) {
-        c.read(selectionControllerProvider.notifier).clear();
-      }
-      expect(c.read(selectionControllerProvider).selectedId, isNull);
-    });
+      'clearing selection when selected layer is erased via RemoveLayerCommand',
+      () {
+        final c = _seedTwo(selectId: 'a');
+        // Simulate: eraser identifies hit = layer 'a', executes remove,
+        // then checks + clears selection.
+        final hitId = 'a';
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(RemoveLayerCommand(hitId));
+        // This is what the fixed _eraseAt code does:
+        if (c.read(selectionControllerProvider).contains(hitId)) {
+          c.read(selectionControllerProvider.notifier).clear();
+        }
+        expect(c.read(selectionControllerProvider).selectedId, isNull);
+      },
+    );
 
     test(
-        'erasing non-selected layer leaves selection on the other layer alone',
-        () {
-      final c = _seedTwo(selectId: 'a');
-      // Erase 'b' while 'a' is selected — 'a' stays selected.
-      // Note: the fixed _eraseAt code ONLY clears if the erased layer
-      // was selected. So 'a' remains selected here.
-      const hitId = 'b';
+      'erasing non-selected layer leaves selection on the other layer alone',
+      () {
+        final c = _seedTwo(selectId: 'a');
+        // Erase 'b' while 'a' is selected — 'a' stays selected.
+        // Note: the fixed _eraseAt code ONLY clears if the erased layer
+        // was selected. So 'a' remains selected here.
+        const hitId = 'b';
+        c
+            .read(documentControllerProvider.notifier)
+            .execute(const RemoveLayerCommand(hitId));
+        if (c.read(selectionControllerProvider).contains(hitId)) {
+          c.read(selectionControllerProvider.notifier).clear();
+        }
+        // 'b' was not selected, so selection ('a') is untouched.
+        expect(c.read(selectionControllerProvider).selectedId, 'a');
+      },
+    );
+  });
+
+  group('SelectionController.pruneMissing (integrity owner, tb0 0.8)', () {
+    // Undo/redo mutate the document without any selection call —
+    // pruneMissing is the single owner that drops the dead ids.
+
+    test('undo of an AddLayer leaves a dead id; prune clears it', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
       c
           .read(documentControllerProvider.notifier)
-          .execute(const RemoveLayerCommand(hitId));
-      if (c.read(selectionControllerProvider).contains(hitId)) {
-        c.read(selectionControllerProvider.notifier).clear();
-      }
-      // 'b' was not selected, so selection ('a') is untouched.
-      expect(c.read(selectionControllerProvider).selectedId, 'a');
+          .newDocument(width: 500, height: 500);
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(AddLayerCommand(_shape('t')));
+      c.read(selectionControllerProvider.notifier).select('t');
+
+      c.read(documentControllerProvider.notifier).undo();
+      // Dead id still selected — the bug class under test.
+      expect(c.read(selectionControllerProvider).selectedId, 't');
+
+      final pruned = c
+          .read(selectionControllerProvider.notifier)
+          .pruneMissing(c.read(documentControllerProvider));
+      expect(pruned, isTrue);
+      expect(c.read(selectionControllerProvider).hasSelection, isFalse);
+    });
+
+    test('multi selection keeps only the surviving ids', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final docCtrl = c.read(documentControllerProvider.notifier);
+      docCtrl.newDocument(width: 500, height: 500);
+      docCtrl.execute(AddLayerCommand(_shape('a')));
+      docCtrl.execute(AddLayerCommand(_shape('b')));
+      docCtrl.execute(AddLayerCommand(_shape('c')));
+      c.read(selectionControllerProvider.notifier).selectMany(['a', 'b', 'c']);
+
+      docCtrl.execute(const RemoveLayerCommand('b'));
+      final pruned = c
+          .read(selectionControllerProvider.notifier)
+          .pruneMissing(c.read(documentControllerProvider));
+      expect(pruned, isTrue);
+      expect(c.read(selectionControllerProvider).selectedIds, ['a', 'c']);
+      expect(c.read(selectionControllerProvider).selectedId, 'c');
+    });
+
+    test('all ids alive → no-op, state untouched', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final docCtrl = c.read(documentControllerProvider.notifier);
+      docCtrl.newDocument(width: 500, height: 500);
+      docCtrl.execute(AddLayerCommand(_shape('a')));
+      c.read(selectionControllerProvider.notifier).select('a');
+      final before = c.read(selectionControllerProvider);
+
+      final pruned = c
+          .read(selectionControllerProvider.notifier)
+          .pruneMissing(c.read(documentControllerProvider));
+      expect(pruned, isFalse);
+      expect(c.read(selectionControllerProvider), same(before));
     });
   });
 }
