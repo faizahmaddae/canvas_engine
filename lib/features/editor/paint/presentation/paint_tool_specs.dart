@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../engine/modules/paint/paint_layer.dart';
 import '../domain/paint_tool_type.dart';
 
 // ─── Per-tool capability matrix ───────────────────────────────────
@@ -38,6 +39,39 @@ Set<String> allowedPaintSlotsFor(PaintToolType? tool) {
   }
 }
 
+/// The capability matrix for a SELECTED, already-committed layer
+/// (tb4 3/14).
+///
+/// Keyed by the layer's kind rather than by an armed tool, because
+/// restyling answers a different question: not "what can this tool
+/// draw?" but "what about this stroke can still change?". `tool`
+/// stays present as the escape hatch — picking a tool clears the
+/// selection and starts a new stroke.
+///
+/// The line family shows `dash` because a committed line kind can be
+/// restyled into its peers; box shapes show `fill`; only a blur patch
+/// shows `blur`. Nothing here is a control that does nothing, which
+/// is what the old selected-layer slot-hiding guard was papering over.
+Set<String> allowedPaintSlotsForKind(PaintKind kind) {
+  switch (kind) {
+    case PaintKind.freestyle:
+    case PaintKind.arrow:
+      return const {'tool', 'color', 'size', 'opacity'};
+    case PaintKind.line:
+    case PaintKind.dashLine:
+    case PaintKind.dashDotLine:
+      return const {'tool', 'color', 'size', 'opacity', 'dash'};
+    case PaintKind.rectangle:
+    case PaintKind.circle:
+    case PaintKind.hexagon:
+      return const {'tool', 'color', 'size', 'fill', 'opacity'};
+    case PaintKind.polygon:
+      return const {'tool', 'color', 'size', 'fill', 'opacity', 'polygon'};
+    case PaintKind.blur:
+      return const {'tool', 'blur'};
+  }
+}
+
 // ─── Human-friendly value labels ──────────────────────────────────
 //
 // Tile `valueText` shows a word, not a number. Numbers stay inside
@@ -60,6 +94,17 @@ String paintBlurWord(AppLocalizations l10n, double r) {
   if (r < 1) return l10n.noneOption;
   if (r <= 16) return l10n.softOption;
   return l10n.strongOption;
+}
+
+/// The same word for a COMMITTED layer's kind. `null` when the kind
+/// isn't a line style (the caller then falls back to the armed tool).
+String? paintDashWordForKind(AppLocalizations l10n, PaintKind? kind) {
+  return switch (kind) {
+    PaintKind.line => l10n.solidOption,
+    PaintKind.dashLine => l10n.dashedOption,
+    PaintKind.dashDotLine => l10n.dottedOption,
+    _ => null,
+  };
 }
 
 String paintDashWordForTool(AppLocalizations l10n, PaintToolType? tool) {

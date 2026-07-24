@@ -7,16 +7,17 @@ import '../../application/paint_tool_controller.dart';
 import '../paint_size_body.dart';
 
 /// Paint Size body wrapper — thin Riverpod adapter around the
-/// shared `PaintSizeBody`. Source values come from the session;
+/// shared `PaintSizeBody`. Source values come from the style view
+/// (selected layer, else session defaults);
 /// ticks route through `previewStrokeWidth` and the gesture end
 /// through `commitStrokeWidth`, so the overlay preview channel and
 /// selected-layer mirroring stay in the controller (contract §2).
 /// (The stale "Fill body" doc fragment that used to sit above this
 /// wrapper — a pre-split leftover — died with the dash plumbing.)
 class PaintSizeEntryBody extends ConsumerWidget {
-  const PaintSizeEntryBody({super.key, required this.session});
+  const PaintSizeEntryBody({super.key, required this.view});
 
-  final PaintSession session;
+  final PaintStyleView view;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,8 +26,8 @@ class PaintSizeEntryBody extends ConsumerWidget {
     // a layer is selected), the gesture end / chip tap commits ONE
     // undoable command via the controller.
     return PaintSizeBody(
-      value: session.strokeWidth,
-      color: session.strokeColor,
+      value: view.strokeWidth,
+      color: view.strokeColor,
       onChange: ctrl.previewStrokeWidth,
       onChangeEnd: ctrl.commitStrokeWidth,
     );

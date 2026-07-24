@@ -144,7 +144,6 @@ is a named constant with this rationale.
 | Dock sub-tool sheets / context / canvas panels | L | none (in-dock, reflow) |
 | Font browser | M(L-preview) | whisper |
 | Custom color picker | M(L-preview) | none |
-| Paint size sheet (until its dock migration) | M(L-preview) | none — fixes the dimmed-live-preview contradiction |
 | Composer (text add/edit) | D | whisper (20% today, unify at 2.8) |
 | Export sheet + preview | M + D(session) | full |
 | List/overflow sheets, pickers, dialogs | M | full |

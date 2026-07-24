@@ -362,7 +362,7 @@ void main() {
     await pumpBody(
       tester,
       container,
-      PaintSizeEntryBody(session: container.read(paintToolControllerProvider)),
+      PaintSizeEntryBody(view: container.read(paintStyleViewProvider)),
     );
 
     PaintLayer committed() =>

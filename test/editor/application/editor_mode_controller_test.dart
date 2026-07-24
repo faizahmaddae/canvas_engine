@@ -86,7 +86,7 @@ void main() {
     expect(mode(c), EditorToolMode.sticker);
   });
 
-  test('selected paint layer maps to idle (no dock mode until tb4)', () {
+  test('selected paint layer owns the paint dock (tb4 3/14)', () {
     final c = make();
     add(
       c,
@@ -98,7 +98,13 @@ void main() {
       ),
     );
     c.read(selectionControllerProvider.notifier).select('p');
-    expect(mode(c), EditorToolMode.idle);
+    expect(
+      mode(c),
+      EditorToolMode.paint,
+      reason:
+          'committed strokes are restylable — the strip shows what '
+          'this stroke can still become',
+    );
   });
 
   test('paint session outranks any selection', () {

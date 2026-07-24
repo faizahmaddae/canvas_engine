@@ -20,6 +20,7 @@ import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/commands/shape_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/background_fill.dart';
+import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/shape/application/shape_tool_controller.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
@@ -72,6 +73,7 @@ ProviderContainer _sampleEditor({
   bool withSelection = false,
   bool withLookPanel = false,
   bool withGradientFill = false,
+  bool withPaintSelected = false,
   String? openSheet,
 }) {
   final container = ProviderContainer();
@@ -134,6 +136,28 @@ ProviderContainer _sampleEditor({
         .read(imageToolControllerProvider.notifier)
         .toggleSlot(ImageToolSlot.look);
   }
+  if (withPaintSelected) {
+    // A committed stroke, selected — the paint dock in restyle mode
+    // (tb4 3/14): tiles keyed off the layer's kind, values read off
+    // the layer.
+    ctrl.execute(
+      AddLayerCommand(
+        PaintLayer(
+          id: 'paint-1',
+          transform: const LayerTransform(
+            position: Offset(160, 240),
+            size: Size(760, 420),
+          ),
+          kind: PaintKind.polygon,
+          normalizedPoints: const [Offset.zero, Offset(1, 1)],
+          strokeColor: const Color(0xFFC0872A),
+          strokeWidth: 14,
+          sides: 5,
+        ),
+      ),
+    );
+    container.read(selectionControllerProvider.notifier).select('paint-1');
+  }
   if (withGradientFill) {
     // The sample shape, re-filled with a gradient + its Style panel
     // open — the Solid | Gradient control in its gradient branch.
@@ -178,6 +202,7 @@ void main() {
     bool withSelection = false,
     bool withLookPanel = false,
     bool withGradientFill = false,
+    bool withPaintSelected = false,
     String? openSheet,
     Future<void> Function(WidgetTester tester)? interact,
   }) async {
@@ -192,6 +217,7 @@ void main() {
       withSelection: withSelection,
       withLookPanel: withLookPanel,
       withGradientFill: withGradientFill,
+      withPaintSelected: withPaintSelected,
       openSheet: openSheet,
     );
     addTearDown(container.dispose);
@@ -297,6 +323,28 @@ void main() {
       brightness: Brightness.dark,
       fileName: 'editor_panel_dark.png',
       openSheet: 'size',
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — paint restyle, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_paint_restyle_light.png',
+      withPaintSelected: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — paint restyle, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_paint_restyle_dark.png',
+      withPaintSelected: true,
     );
   });
 

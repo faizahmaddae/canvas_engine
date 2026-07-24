@@ -11,10 +11,11 @@ import 'selection_controller.dart';
 
 /// Which family of bottom-dock chrome owns the editor right now.
 ///
-/// [idle] is the main add-tools strip. A selected [PaintLayer]
-/// deliberately maps to [idle] for now — committed strokes have no
-/// dock mode yet and keep the floating bar (roadmap tb4 gives paint
-/// a real mode; when it does, only this mapping changes).
+/// [idle] is the main add-tools strip. [paint] covers BOTH an armed
+/// drawing session and a selected, already-committed stroke — tb4
+/// 3/14 gave committed strokes a real dock mode, so the strip shows
+/// what that stroke can still become. Drawing itself stays gated on
+/// `activeTool`, which a selection never sets.
 enum EditorToolMode { idle, text, image, shape, sticker, paint, multi }
 
 /// THE single derivation of the editor's dock mode (roadmap tb1
@@ -73,7 +74,7 @@ final editorToolModeProvider = Provider<EditorToolMode>((ref) {
     TextLayer _ => EditorToolMode.text,
     ImageLayer _ => EditorToolMode.image,
     ShapeLayer _ => EditorToolMode.shape,
-    PaintLayer _ => EditorToolMode.idle,
+    PaintLayer _ => EditorToolMode.paint,
     _ => EditorToolMode.idle,
   };
 });

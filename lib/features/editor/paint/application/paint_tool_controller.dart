@@ -8,6 +8,26 @@ import '../../engine/commands/paint_commands.dart';
 import '../../engine/modules/paint/paint_layer.dart';
 import '../domain/paint_tool_type.dart';
 
+/// The engine kind a tool draws. `null` for the eraser, which never
+/// reaches the draft pipeline.
+///
+/// Lives here (application) rather than in the draw surface so both
+/// the gesture pipeline and the dock's restyle path agree on the
+/// mapping — they used to hold separate copies.
+PaintKind? paintKindForTool(PaintToolType tool) => switch (tool) {
+  PaintToolType.freestyle => PaintKind.freestyle,
+  PaintToolType.line => PaintKind.line,
+  PaintToolType.arrow => PaintKind.arrow,
+  PaintToolType.rectangle => PaintKind.rectangle,
+  PaintToolType.circle => PaintKind.circle,
+  PaintToolType.dashLine => PaintKind.dashLine,
+  PaintToolType.dashDotLine => PaintKind.dashDotLine,
+  PaintToolType.hexagon => PaintKind.hexagon,
+  PaintToolType.polygon => PaintKind.polygon,
+  PaintToolType.blur => PaintKind.blur,
+  PaintToolType.eraser => null,
+};
+
 /// Snapshot of the user's current paint configuration.
 ///
 /// One immutable value object holds **everything** the paint pipeline
@@ -380,10 +400,56 @@ class PaintToolController extends Notifier<PaintSession> {
         );
   }
 
-  void setBlurRadius(double radius) =>
+  /// Blur sigma. Mirrors onto a selected blur layer so the control
+  /// edits what the user is looking at (tb4 3/14) — before this, the
+  /// slot was hidden whenever a paint layer was selected because it
+  /// only moved a session default.
+  void setBlurRadius(double radius) {
+    if (state.blurRadius != radius) {
       state = state.copyWith(blurRadius: radius);
-  void setPolygonSides(int sides) =>
+    }
+    final layer = selectedPaintLayer();
+    if (layer == null || layer.kind != PaintKind.blur) return;
+    if (layer.blurSigma == radius) return;
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(UpdatePaintStyleCommand(layerId: layer.id, blurSigma: radius));
+  }
+
+  /// Polygon side count. Mirrors onto a selected polygon layer.
+  void setPolygonSides(int sides) {
+    if (state.polygonSides != sides) {
       state = state.copyWith(polygonSides: sides);
+    }
+    final layer = selectedPaintLayer();
+    if (layer == null || layer.kind != PaintKind.polygon) return;
+    if (layer.sides == sides) return;
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(UpdatePaintStyleCommand(layerId: layer.id, sides: sides));
+  }
+
+  /// Pick a line style (solid / dashed / dotted).
+  ///
+  /// With a line-kind layer selected this restyles THAT layer — the
+  /// three styles are peers, so the switch is geometry-safe. With
+  /// nothing selected it arms the matching tool for the next stroke,
+  /// which is what the body did unconditionally before tb4 3/14 (and
+  /// why the slot had to be hidden for a selected layer).
+  void selectLineStyle(PaintToolType tool) {
+    final layer = selectedPaintLayer();
+    final kind = paintKindForTool(tool);
+    if (layer != null &&
+        kind != null &&
+        paintKindPeers(layer.kind).contains(kind)) {
+      if (layer.kind == kind) return;
+      ref
+          .read(documentControllerProvider.notifier)
+          .execute(UpdatePaintStyleCommand(layerId: layer.id, kind: kind));
+      return;
+    }
+    selectTool(tool);
+  }
 
   /// Switch the resize behavior of the currently-selected paint layer.
   /// No-op when nothing paint-y is selected, or when the mode is
@@ -398,8 +464,8 @@ class PaintToolController extends Notifier<PaintSession> {
   }
 
   /// Read the currently-selected paint layer (if any). Used by the
-  /// floating toolbar to render against the selected layer's style
-  /// instead of the session default.
+  /// dock to render against the selected layer's style instead of
+  /// the session default.
   PaintLayer? selectedPaintLayer() {
     final selection = ref.read(selectionControllerProvider);
     if (!selection.hasSelection) return null;
@@ -414,3 +480,62 @@ final paintToolControllerProvider =
     NotifierProvider<PaintToolController, PaintSession>(
       PaintToolController.new,
     );
+
+/// What the paint dock DISPLAYS.
+///
+/// With a paint layer selected the strip, its value labels and every
+/// body read that layer's committed style; with nothing selected they
+/// read the session's next-stroke defaults. Before tb4 3/14 the dock
+/// only ever showed session state, so selecting an old stroke and
+/// opening Color showed the colour of the *next* stroke rather than
+/// the one on screen.
+///
+/// Writers are unchanged: every setter already mirrors to the
+/// selected layer, so what you see is what you edit.
+@immutable
+class PaintStyleView {
+  const PaintStyleView({
+    required this.strokeColor,
+    required this.strokeWidth,
+    required this.fillColor,
+    required this.sides,
+    required this.blurRadius,
+    this.layerKind,
+  });
+
+  final Color strokeColor;
+  final double strokeWidth;
+  final Color? fillColor;
+  final int sides;
+  final double blurRadius;
+
+  /// The selected layer's kind, or `null` when the view is showing
+  /// session defaults.
+  final PaintKind? layerKind;
+}
+
+final paintStyleViewProvider = Provider<PaintStyleView>((ref) {
+  final session = ref.watch(paintToolControllerProvider);
+  final selection = ref.watch(selectionControllerProvider);
+  final id = selection.selectedId;
+  final layer = id == null
+      ? null
+      : ref.watch(documentControllerProvider).layerById(id);
+  if (layer is PaintLayer) {
+    return PaintStyleView(
+      strokeColor: layer.strokeColor,
+      strokeWidth: layer.strokeWidth,
+      fillColor: layer.fillColor,
+      sides: layer.sides,
+      blurRadius: layer.blurSigma,
+      layerKind: layer.kind,
+    );
+  }
+  return PaintStyleView(
+    strokeColor: session.strokeColor,
+    strokeWidth: session.strokeWidth,
+    fillColor: session.fillColor,
+    sides: session.polygonSides,
+    blurRadius: session.blurRadius,
+  );
+});

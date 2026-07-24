@@ -30,6 +30,7 @@ class PaintModeInlineExpansion extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(paintToolControllerProvider);
+    final view = ref.watch(paintStyleViewProvider);
     final openId = session.openSlot;
     if (openId == null) return const SizedBox.shrink();
     final spec = PaintModeToolbar.specById(openId);
@@ -53,7 +54,7 @@ class PaintModeInlineExpansion extends ConsumerWidget {
               ? context.l10n.chooseToolTitle
               : paintSpecLabel(context.l10n, spec),
           headerIcon: isPicker ? Icons.brush_rounded : spec.icon,
-          builder: (ctx, _) => _buildPaintBody(ctx, openId, session),
+          builder: (ctx, _) => _buildPaintBody(ctx, openId, view),
         );
 
     final ids = PaintModeToolbar.toolIdsFor(session.activeTool);
@@ -85,24 +86,24 @@ class PaintModeInlineExpansion extends ConsumerWidget {
   Widget _buildPaintBody(
     BuildContext context,
     String openId,
-    PaintSession session,
+    PaintStyleView view,
   ) {
     switch (openId) {
       case 'tool':
         return const PaintToolBody();
       case 'color':
-        return PaintColorBody(current: session.strokeColor);
+        return PaintColorBody(current: view.strokeColor);
       case 'fill':
         return PaintFillBody(
-          enabled: session.fillColor != null,
-          current: session.fillColor ?? session.strokeColor,
+          enabled: view.fillColor != null,
+          current: view.fillColor ?? view.strokeColor,
         );
       case 'polygon':
-        return PaintPolygonBody(value: session.polygonSides);
+        return PaintPolygonBody(value: view.sides);
       case 'dash':
         return const PaintDashBody();
       case 'size':
-        return PaintSizeEntryBody(session: session);
+        return PaintSizeEntryBody(view: view);
       default:
         return const SizedBox.shrink();
     }
@@ -129,7 +130,7 @@ Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
           context.l10n.softOption,
           context.l10n.strongOption,
         ],
-        readValue: (ref) => ref.watch(paintToolControllerProvider).blurRadius,
+        readValue: (ref) => ref.watch(paintStyleViewProvider).blurRadius,
         writeValue: (ref, v) =>
             ref.read(paintToolControllerProvider.notifier).setBlurRadius(v),
         format: (v) => EditorValueFormat.of(context).digits(v.round()),
@@ -151,26 +152,24 @@ Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
           context.l10n.strongOption,
         ],
         readValue: (ref) {
-          final c = ref.watch(paintToolControllerProvider).strokeColor;
+          final c = ref.watch(paintStyleViewProvider).strokeColor;
           return (c.a * 100).clamp(0.0, 100.0);
         },
         writeValue: (ref, v) {
-          final session = ref.read(paintToolControllerProvider);
-          final next = session.strokeColor.withValues(
-            alpha: (v / 100).clamp(0.0, 1.0),
-          );
+          final next = ref
+              .read(paintStyleViewProvider)
+              .strokeColor
+              .withValues(alpha: (v / 100).clamp(0.0, 1.0));
           ref.read(paintToolControllerProvider.notifier).setStrokeColor(next);
         },
         format: (v) => EditorValueFormat.of(context).percent(v.round()),
         leadingBuilder: (context, value) {
           // Mini swatch preview at the live opacity — instant proof
           // of what the stroke will look like before release.
-          final session = ProviderScope.containerOf(
-            context,
-          ).read(paintToolControllerProvider);
-          final c = session.strokeColor.withValues(
-            alpha: (value / 100).clamp(0.0, 1.0),
-          );
+          final c = ProviderScope.containerOf(context)
+              .read(paintStyleViewProvider)
+              .strokeColor
+              .withValues(alpha: (value / 100).clamp(0.0, 1.0));
           return Container(
             width: 22,
             height: 22,

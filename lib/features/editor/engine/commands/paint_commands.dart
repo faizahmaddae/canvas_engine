@@ -21,6 +21,9 @@ class UpdatePaintStyleCommand extends EditorCommand {
     this.strokeWidth,
     this.setFillColor = false,
     this.fillColor,
+    this.sides,
+    this.blurSigma,
+    this.kind,
     this.resizeMode,
     this.live = false,
   });
@@ -30,6 +33,20 @@ class UpdatePaintStyleCommand extends EditorCommand {
   final double? strokeWidth;
   final bool setFillColor;
   final Color? fillColor;
+
+  /// Polygon side count. Meaningful for [PaintKind.polygon]; the
+  /// codec drops it for kinds that ignore it.
+  final int? sides;
+
+  /// Gaussian sigma for [PaintKind.blur].
+  final double? blurSigma;
+
+  /// Restyle the layer's [PaintKind] (tb4 3/14). Constrained: the
+  /// target must be a peer of the layer's current kind
+  /// ([paintKindPeers]) or the change is dropped, so a restyle can
+  /// never invalidate the geometry the layer was drawn with.
+  final PaintKind? kind;
+
   final PaintResizeMode? resizeMode;
 
   /// When true, marks this command as part of a sanctioned burst
@@ -45,23 +62,40 @@ class UpdatePaintStyleCommand extends EditorCommand {
   @override
   String get label => 'Paint style';
 
+  /// The kind this command actually installs on [layer], or `null`
+  /// for "leave it alone" — which also covers a rejected switch to a
+  /// non-peer kind.
+  PaintKind? _targetKind(PaintLayer layer) {
+    final target = kind;
+    if (target == null || target == layer.kind) return null;
+    return paintKindPeers(layer.kind).contains(target) ? target : null;
+  }
+
   @override
   EditorDocument apply(EditorDocument doc) {
     final layer = doc.layerById(layerId);
     if (layer is! PaintLayer) return doc;
-    // copyWith uses a private sentinel to distinguish "leave fill
+    final nextKind = _targetKind(layer);
+    // `copyAll` uses a private sentinel to distinguish "leave fill
     // alone" from "set fill to null". Branch here to honor that
     // distinction without leaking the sentinel out of the layer.
+    // (`kind` is copyAll-only — copyWith cannot reach it.)
     final next = setFillColor
-        ? layer.copyWith(
+        ? layer.copyAll(
+            kind: nextKind,
             strokeColor: strokeColor,
             strokeWidth: strokeWidth,
             fillColor: fillColor,
+            sides: sides,
+            blurSigma: blurSigma,
             resizeMode: resizeMode,
           )
-        : layer.copyWith(
+        : layer.copyAll(
+            kind: nextKind,
             strokeColor: strokeColor,
             strokeWidth: strokeWidth,
+            sides: sides,
+            blurSigma: blurSigma,
             resizeMode: resizeMode,
           );
     if (identical(next, layer) || next == layer) return doc;
@@ -78,6 +112,12 @@ class UpdatePaintStyleCommand extends EditorCommand {
       strokeWidth: strokeWidth == null ? null : layer.strokeWidth,
       setFillColor: setFillColor,
       fillColor: setFillColor ? layer.fillColor : null,
+      sides: sides == null ? null : layer.sides,
+      blurSigma: blurSigma == null ? null : layer.blurSigma,
+      // Restoring the pre-command kind is always a peer of the kind
+      // this command installed (peer groups are symmetric), so the
+      // inverse can never be rejected.
+      kind: _targetKind(layer) == null ? null : layer.kind,
       resizeMode: resizeMode == null ? null : layer.resizeMode,
     );
   }
@@ -99,6 +139,9 @@ class UpdatePaintStyleCommand extends EditorCommand {
     if ((previous.strokeColor != null) != (strokeColor != null)) return null;
     if ((previous.strokeWidth != null) != (strokeWidth != null)) return null;
     if (previous.setFillColor != setFillColor) return null;
+    if ((previous.sides != null) != (sides != null)) return null;
+    if ((previous.blurSigma != null) != (blurSigma != null)) return null;
+    if ((previous.kind != null) != (kind != null)) return null;
     if ((previous.resizeMode != null) != (resizeMode != null)) return null;
     return this;
   }

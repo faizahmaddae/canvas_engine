@@ -8,6 +8,7 @@ import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../application/paint_tool_controller.dart';
+import '../../../engine/modules/paint/paint_layer.dart';
 import '../../domain/paint_tool_type.dart';
 
 String _dashPresetLabel(AppLocalizations l10n, String label) {
@@ -19,12 +20,23 @@ String _dashPresetLabel(AppLocalizations l10n, String label) {
   };
 }
 
+/// The line tool that draws [kind]. `null` for anything that isn't
+/// a line style, so the caller falls back to the armed tool.
+PaintToolType? _toolForKind(PaintKind? kind) => switch (kind) {
+  PaintKind.line => PaintToolType.line,
+  PaintKind.dashLine => PaintToolType.dashLine,
+  PaintKind.dashDotLine => PaintToolType.dashDotLine,
+  _ => null,
+};
+
 class PaintDashBody extends ConsumerWidget {
   const PaintDashBody({super.key});
 
   // Three line styles map 1:1 to engine kinds. Picking a chip
-  // calls selectTool() so the next stroke is genuinely solid /
-  // dashed / dotted — no phantom session state.
+  // calls selectLineStyle(): it restyles a selected line layer in
+  // place (the three kinds are geometry peers) and otherwise arms
+  // the matching tool for the next stroke — no phantom state either
+  // way.
   static const List<(String, PaintToolType)> _presets =
       <(String, PaintToolType)>[
         ('Solid', PaintToolType.line),
@@ -45,8 +57,11 @@ class PaintDashBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(paintToolControllerProvider);
+    final view = ref.watch(paintStyleViewProvider);
     final ctrl = ref.read(paintToolControllerProvider.notifier);
-    final active = session.activeTool;
+    // With a line layer selected the chips reflect THAT line's kind;
+    // otherwise they reflect the armed tool (tb4 3/14).
+    final activeTool = _toolForKind(view.layerKind) ?? session.activeTool;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -60,8 +75,8 @@ class PaintDashBody extends ConsumerWidget {
                 child: _DashChoice(
                   label: _dashPresetLabel(context.l10n, _presets[i].$1),
                   pattern: _previewPatterns[_presets[i].$2],
-                  selected: active == _presets[i].$2,
-                  onTap: () => ctrl.selectTool(_presets[i].$2),
+                  selected: activeTool == _presets[i].$2,
+                  onTap: () => ctrl.selectLineStyle(_presets[i].$2),
                 ),
               ),
             ],

@@ -25,6 +25,41 @@ enum PaintKind {
   blur,
 }
 
+/// Bounding-box shapes: the box IS the geometry, so one can become
+/// another without touching [PaintLayer.normalizedPoints].
+const Set<PaintKind> kBoxPaintKinds = <PaintKind>{
+  PaintKind.rectangle,
+  PaintKind.circle,
+  PaintKind.hexagon,
+  PaintKind.polygon,
+};
+
+/// Two-point line kinds that differ only in how the segment is
+/// stroked. Swapping among them is a pure style change.
+const Set<PaintKind> kLinePaintKinds = <PaintKind>{
+  PaintKind.line,
+  PaintKind.dashLine,
+  PaintKind.dashDotLine,
+};
+
+/// Which kinds [kind] may legally become on an ALREADY-COMMITTED
+/// layer (tb4 3/14).
+///
+/// Restyling a committed stroke must never silently invalidate its
+/// geometry. A freestyle polyline turned into a rectangle would
+/// throw away the points that are the whole drawing; a line turned
+/// into a blur patch would change what the layer *is*, not how it
+/// looks. So a kind may only move within its own geometry family:
+/// bounding-box shapes among themselves, line kinds among
+/// themselves. [PaintKind.freestyle], [PaintKind.arrow] and
+/// [PaintKind.blur] have no peers — each is its own tool, not a
+/// style of another.
+Set<PaintKind> paintKindPeers(PaintKind kind) {
+  if (kBoxPaintKinds.contains(kind)) return kBoxPaintKinds;
+  if (kLinePaintKinds.contains(kind)) return kLinePaintKinds;
+  return <PaintKind>{kind};
+}
+
 /// How a [PaintLayer] reacts when its bounding box is resized.
 ///
 /// The Paint floating toolbar exposes this as a per-layer choice

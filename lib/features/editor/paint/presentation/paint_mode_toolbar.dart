@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
-import '../../application/selection_controller.dart';
 import '../../presentation/widgets/editor_breakpoints.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
@@ -78,7 +77,11 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
   void _maybeAutoOpenPicker() {
     if (!mounted || _autoOpenedPicker) return;
     final session = ref.read(paintToolControllerProvider);
-    if (session.activeTool != null || session.openSlot != null) {
+    // A selected stroke means the strip mounted to RESTYLE, not to
+    // draw (tb4 3/14) — opening the tool picker over it would both
+    // hide the capsule and answer a question the user didn't ask.
+    final restyling = ref.read(paintStyleViewProvider).layerKind != null;
+    if (session.activeTool != null || session.openSlot != null || restyling) {
       // Tool already armed (e.g. coming back from another mode) or
       // some other slot is open — respect that and stay quiet.
       _autoOpenedPicker = true;
@@ -114,32 +117,28 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(paintToolControllerProvider);
-    // Watch selection so the strip rebuilds when a paint layer is
-    // selected/deselected (drives the blur/polygon safety guard
-    // below).
-    ref.watch(selectionControllerProvider);
+    // What the tiles DISPLAY: the selected layer's committed style
+    // when one is selected, else the session defaults (tb4 3/14).
+    final view = ref.watch(paintStyleViewProvider);
     final ctrl = ref.read(paintToolControllerProvider.notifier);
     final tool = session.activeTool ?? PaintToolType.freestyle;
-    final fillEnabled = session.fillColor != null;
+    final fillEnabled = view.fillColor != null;
     // The strip always reflects the active tool's full capability
     // surface. Opening any slot (including 'tool') never hides the
     // others; the open slot is highlighted, siblings stay tappable
     // so users can switch panels in one tap.
-    var allowed = allowedPaintSlotsFor(session.activeTool);
-    // Safety guard: setBlurRadius / setPolygonSides update session
-    // defaults only — they don't yet mirror to a selected paint
-    // layer like setStrokeColor / setStrokeWidth do. Hide those
-    // slots while a paint layer is selected so the controls can't
-    // appear to do nothing. Layer-targeted edits flow through the
-    // floating toolbar and the size sheet, both of which already
-    // mirror correctly.
-    if (ctrl.selectedPaintLayer() != null) {
-      // Dash also belongs here — `PaintDashBody` calls `selectTool`
-      // which only flips the session default; the selected line's
-      // dash pattern doesn't change, but the tile label would still
-      // update. Hide the slot so the UI never lies.
-      allowed = allowed.difference(const {'blur', 'polygon', 'dash'});
-    }
+    // An armed tool describes what the NEXT stroke can be; a
+    // selected layer describes what THIS stroke can still become.
+    // Arming wins, because selectTool() clears the selection anyway.
+    //
+    // (The old guard here subtracted blur/polygon/dash whenever a
+    // layer was selected, because those setters only moved session
+    // defaults. They mirror onto the layer now — tb4 3/14 — so the
+    // matrix can be honest instead of defensive.)
+    final layerKind = view.layerKind;
+    final allowed = session.activeTool == null && layerKind != null
+        ? allowedPaintSlotsForKind(layerKind)
+        : allowedPaintSlotsFor(session.activeTool);
 
     // Tier boundary sits before spec index 4 ('opacity') — but ONLY
     // when the opacity slot is actually visible, exactly like the
@@ -166,13 +165,13 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
                 : () => _paintValueText(
                     context.l10n,
                     paintToolSpecs[i],
-                    session,
+                    view,
                     tool,
                   ),
             swatchColor: paintToolSpecs[i].id == 'color'
-                ? () => session.strokeColor
+                ? () => view.strokeColor
                 : paintToolSpecs[i].id == 'fill' && fillEnabled
-                ? () => session.fillColor
+                ? () => view.fillColor
                 : null,
             tier: showTier2 && i >= 4 ? SlotTier.tier2 : SlotTier.tier1,
             onTap: () {
@@ -222,16 +221,18 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
 String? _paintValueText(
   AppLocalizations l10n,
   PaintSpec spec,
-  PaintSession session,
+  PaintStyleView view,
   PaintToolType tool,
 ) {
   return switch (spec.id) {
-    'size' => paintStrokeWord(l10n, session.strokeWidth),
-    'fill' => session.fillColor == null ? l10n.offOption : l10n.onOption,
-    'opacity' => paintOpacityWord(l10n, session.strokeColor.a),
-    'blur' => paintBlurWord(l10n, session.blurRadius),
-    'polygon' => l10n.sidesCount(session.polygonSides),
-    'dash' => paintDashWordForTool(l10n, tool),
+    'size' => paintStrokeWord(l10n, view.strokeWidth),
+    'fill' => view.fillColor == null ? l10n.offOption : l10n.onOption,
+    'opacity' => paintOpacityWord(l10n, view.strokeColor.a),
+    'blur' => paintBlurWord(l10n, view.blurRadius),
+    'polygon' => l10n.sidesCount(view.sides),
+    'dash' =>
+      paintDashWordForKind(l10n, view.layerKind) ??
+          paintDashWordForTool(l10n, tool),
     _ => null,
   };
 }

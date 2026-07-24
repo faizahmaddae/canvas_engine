@@ -570,33 +570,10 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
     return lx >= 0 && ly >= 0 && lx <= t.size.width && ly <= t.size.height;
   }
 
-  PaintKind _kindFor(PaintToolType tool) {
-    switch (tool) {
-      case PaintToolType.freestyle:
-        return PaintKind.freestyle;
-      case PaintToolType.line:
-        return PaintKind.line;
-      case PaintToolType.arrow:
-        return PaintKind.arrow;
-      case PaintToolType.rectangle:
-        return PaintKind.rectangle;
-      case PaintToolType.circle:
-        return PaintKind.circle;
-      case PaintToolType.dashLine:
-        return PaintKind.dashLine;
-      case PaintToolType.dashDotLine:
-        return PaintKind.dashDotLine;
-      case PaintToolType.hexagon:
-        return PaintKind.hexagon;
-      case PaintToolType.polygon:
-        return PaintKind.polygon;
-      case PaintToolType.blur:
-        return PaintKind.blur;
-      case PaintToolType.eraser:
-        // Eraser handled separately; never reaches the draft pipeline.
-        return PaintKind.freestyle;
-    }
-  }
+  /// Eraser never reaches the draft pipeline, so its `null` maps to
+  /// freestyle here.
+  PaintKind _kindFor(PaintToolType tool) =>
+      paintKindForTool(tool) ?? PaintKind.freestyle;
 }
 
 /// Raw multi-pointer recogniser for the paint surface.
