@@ -29,7 +29,7 @@ class EditorToolbar extends StatelessWidget {
 
 /// Backwards-compatible alias for callers that still use the legacy
 /// `ToolbarItem` name. Prefer [ToolbarSlot] for new code — it
-/// carries the extra fields (valueLabel, valueBadge, presentation,
-/// tier) the system needs in later phases.
+/// carries the extra fields (valueLabel, presentation, tier) the
+/// system needs in later phases.
 @Deprecated('Use ToolbarSlot from toolbar/domain/toolbar_slot.dart')
 typedef ToolbarItem = ToolbarSlot;

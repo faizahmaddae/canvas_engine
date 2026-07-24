@@ -38,10 +38,6 @@ enum SlotTier { tier1, tier2, tier3 }
 /// [ToolbarSlot.label].
 typedef SlotValueLabelBuilder = String? Function();
 
-/// Builder for an optional inline value badge (e.g. a color swatch
-/// rendered in place of the icon).
-typedef SlotValueBadgeBuilder = Widget? Function();
-
 /// Builder for the dynamic enabled state of a slot.
 typedef SlotEnabledBuilder = bool Function();
 
@@ -62,7 +58,6 @@ class ToolbarSlot {
     this.enabled = true,
     this.enabledBuilder,
     this.valueLabel,
-    this.valueBadge,
     this.presentation = SlotPresentation.instantAction,
     this.tier = SlotTier.tier1,
   });
@@ -76,9 +71,8 @@ class ToolbarSlot {
   /// Static label. Used when [valueLabel] is null or returns null.
   final String label;
 
-  /// Action invoked when the tile is tapped. For value-editing
-  /// slots in later phases this typically delegates to
-  /// `ToolbarController.toggleSlot(id)`.
+  /// Action invoked when the tile is tapped. Value-editing slots
+  /// typically delegate to their mode controller's toggle method.
   final VoidCallback onTap;
 
   /// Compile-time enabled flag. If [enabledBuilder] is provided it
@@ -93,10 +87,6 @@ class ToolbarSlot {
   /// "24pt"). Phase 1 doesn't use this; the field exists so future
   /// phases don't have to edit this model.
   final SlotValueLabelBuilder? valueLabel;
-
-  /// Resolves an optional badge widget (e.g. a color swatch) shown
-  /// in place of the icon.
-  final SlotValueBadgeBuilder? valueBadge;
 
   final SlotPresentation presentation;
 

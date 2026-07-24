@@ -45,29 +45,9 @@ class DocumentController extends Notifier<EditorDocument> {
 
   /// Bumps [documentCommitVersionProvider] so listeners (autosave,
   /// dirty-state indicators) can react only to *committed* document
-  /// changes — not 60fps live drag previews routed through
-  /// [liveReplace].
+  /// changes — not 60fps previews staged on `liveOverlayProvider`.
   void _bumpCommitVersion() {
     ref.read(documentCommitVersionProvider.notifier).bump();
-  }
-
-  /// Replace the current document state without pushing onto the undo
-  /// stack. Used historically for transient previews (live drag, live
-  /// text editing) where the final committed state was pushed via
-  /// [execute] on commit.
-  ///
-  /// **Deprecated.** Replaced by `liveOverlayProvider` — every
-  /// in-flight UI change now stages onto an in-memory overlay and the
-  /// canvas reads the merged view via `renderedDocumentProvider`.
-  /// That keeps the committed document instance stable during
-  /// gestures, so non-canvas widgets (layers panel, undo rail,
-  /// autosave) stop rebuilding at 60 fps. See
-  /// `live_overlay_controller.dart` for migration patterns.
-  @Deprecated(
-    'Use liveOverlayProvider instead — see live_overlay_controller.dart',
-  )
-  void liveReplace(EditorDocument document) {
-    state = document;
   }
 
   /// Discard all undo/redo history while keeping the current document

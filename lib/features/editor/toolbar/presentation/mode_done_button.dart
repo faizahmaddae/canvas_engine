@@ -11,9 +11,9 @@ import '../../../../l10n/l10n.dart';
 /// affordance with identical look-and-feel. Owns no observation
 /// logic: callers decide *when* to show it and *what* to do on tap.
 ///
-/// Phase 1 plugs this into `_ModeExitPill` (paint + text + any
-/// selection). Later phases swap the per-controller observation for
-/// a single `ToolbarController.exitMode()` call without re-skinning.
+/// `_ModeExitPill` (paint + text + any selection) renders through
+/// this; the mode-controller work routes its exit action here
+/// without re-skinning.
 class ModeDoneButton extends StatelessWidget {
   const ModeDoneButton({
     super.key,
