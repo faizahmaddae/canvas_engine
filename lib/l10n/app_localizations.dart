@@ -3488,6 +3488,12 @@ abstract class AppLocalizations {
   /// **'Something went wrong. Try again.'**
   String get somethingWentWrong;
 
+  /// No description provided for @journalWriteFailedWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Low storage — crash recovery is off. Free some space and save your project.'**
+  String get journalWriteFailedWarning;
+
   /// No description provided for @allowPhotoAccessSettings.
   ///
   /// In en, this message translates to:

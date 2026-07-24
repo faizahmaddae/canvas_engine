@@ -202,6 +202,12 @@ class ViewportController extends Notifier<ViewportState> {
   }
 
   /// Pan the viewport by a screen-space delta.
+  ///
+  /// Programmatic seam, like [zoomBy]: the real gesture path goes
+  /// through [gestureUpdate], and both of these survive tb5's dead-API
+  /// sweep because the widget tests drive the viewport through them —
+  /// deleting them would mean tests reaching into `state` directly,
+  /// which is worse (it would bypass the clamps this controller owns).
   void panBy(Offset delta) {
     if (delta == Offset.zero) return;
     final next = _clampTranslation(state.translation + delta, state.scale);
@@ -209,8 +215,8 @@ class ViewportController extends Notifier<ViewportState> {
     state = state.copyWith(translation: next, userAdjusted: true);
   }
 
-  /// Zoom around a screen-space focal point so the point under the user's
-  /// finger stays put. Used by pinch-to-zoom and the +/- buttons.
+  /// Zoom around a screen-space focal point so the point under the
+  /// user's finger stays put. See [panBy] on why this is kept.
   void zoomBy(double factor, Offset focal) {
     final newScale = (state.scale * factor)
         .clamp(_effectiveMinScale, _maxScale)

@@ -1,11 +1,9 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../engine/modules/image/image_layer.dart';
+import '../../engine/modules/image/image_source_provider.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../engine/modules/text/text_layer.dart';
 
@@ -84,16 +82,7 @@ class _ImageThumb extends StatelessWidget {
   final ImageLayer layer;
   final double size;
 
-  ImageProvider? _provider() {
-    final src = layer.source;
-    final asset = src.assetName;
-    final url = src.networkUrl;
-    final file = src.filePath;
-    if (asset != null) return AssetImage(asset);
-    if (url != null) return NetworkImage(url);
-    if (file != null && !kIsWeb) return FileImage(File(file));
-    return null;
-  }
+  ImageProvider? _provider() => imageProviderFor(layer.source);
 
   @override
   Widget build(BuildContext context) {

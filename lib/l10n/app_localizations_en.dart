@@ -1797,6 +1797,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get somethingWentWrong => 'Something went wrong. Try again.';
 
   @override
+  String get journalWriteFailedWarning =>
+      'Low storage — crash recovery is off. Free some space and save your project.';
+
+  @override
   String get allowPhotoAccessSettings =>
       'Allow photo access in Settings to continue.';
 }

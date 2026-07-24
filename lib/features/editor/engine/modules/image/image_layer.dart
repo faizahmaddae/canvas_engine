@@ -22,6 +22,8 @@ import '../../rendering/stack_mask_composite.dart';
 // effects module.
 export '../../effects/color_matrix_ops.dart' show composeColorMatrices;
 
+import 'image_source_provider.dart';
+
 part 'image_adjustments.dart';
 part 'image_filter_preset.dart';
 part 'image_layer_render.dart';
@@ -505,18 +507,9 @@ class ImageLayer extends EditorLayer {
   /// (the `Image.asset/.network/.file` constructors build these exact
   /// providers under the hood, wrapped in the same `cacheWidth` resize).
   ImageProvider? exportImageProvider() {
-    final ImageProvider? base = switch (source) {
-      ImageSource(:final assetName?) => AssetImage(assetName),
-      ImageSource(:final networkUrl?) => NetworkImage(networkUrl),
-      ImageSource(:final filePath?) =>
-        File(filePath).existsSync() ? FileImage(File(filePath)) : null,
-      _ => null,
-    };
-    if (base == null) return null;
-    return ResizeImage.resizeIfNeeded(
-      _decodeCacheWidth(transform.size.width),
-      null,
-      base,
+    return imageProviderFor(
+      source,
+      decodeWidth: _decodeCacheWidth(transform.size.width),
     );
   }
 

@@ -21,7 +21,6 @@ class ExportSize {
   const ExportSize._({
     required this.id,
     required this.label,
-    required this.subtitle,
     required this.target,
     this.isCustom = false,
   });
@@ -32,9 +31,6 @@ class ExportSize {
 
   /// Short display label (e.g. "Square").
   final String label;
-
-  /// Short subtitle — typically the dimensions or platform hint.
-  final String subtitle;
 
   /// Target output rectangle in pixels, or `null` for [original]
   /// (export uses the canvas size × the user's quality multiplier).
@@ -48,35 +44,30 @@ class ExportSize {
   static const ExportSize original = ExportSize._(
     id: 'original',
     label: 'Original',
-    subtitle: 'Use canvas size',
     target: null,
   );
 
   static const ExportSize square1080 = ExportSize._(
     id: 'square_1080',
     label: 'Square',
-    subtitle: '1080 × 1080',
     target: Size(1080, 1080),
   );
 
   static const ExportSize story1080x1920 = ExportSize._(
     id: 'story_1080x1920',
     label: 'Story',
-    subtitle: '1080 × 1920',
     target: Size(1080, 1920),
   );
 
   static const ExportSize portrait1080x1350 = ExportSize._(
     id: 'portrait_1080x1350',
     label: 'Portrait',
-    subtitle: '1080 × 1350 · 4:5',
     target: Size(1080, 1350),
   );
 
   static const ExportSize custom = ExportSize._(
     id: 'custom',
     label: 'Custom…',
-    subtitle: 'Pick exact pixels',
     target: null,
     isCustom: true,
   );
@@ -98,7 +89,6 @@ class ExportSize {
     return ExportSize._(
       id: 'custom_${width}x$height',
       label: 'Custom',
-      subtitle: '$width × $height',
       target: Size(width.toDouble(), height.toDouble()),
       isCustom: true,
     );

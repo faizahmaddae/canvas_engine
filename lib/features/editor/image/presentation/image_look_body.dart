@@ -1,6 +1,3 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,6 +12,7 @@ import '../../engine/commands/editor_command.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/effects/editor_effect.dart';
 import '../../engine/modules/image/image_layer.dart';
+import '../../engine/modules/image/image_source_provider.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/precision_disclosure.dart';
 import 'image_panel_shell.dart';
@@ -120,7 +118,7 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
     // reuses the same ImageProvider — Flutter dedupes the decode
     // and the 7 chips share one cached bitmap (cap 128px wide,
     // independent of canvas resolution).
-    final provider = _providerFor(layer.source);
+    final provider = imageProviderFor(layer.source);
 
     return ImagePanelShell(
       title: context.l10n.lookTool,
@@ -286,18 +284,6 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
       ),
     );
   }
-}
-
-/// Build an `ImageProvider` for the layer's source. Mirrors the
-/// resolution logic in `_ImageThumb` (`layer_thumbnail.dart`).
-ImageProvider? _providerFor(ImageSource src) {
-  final asset = src.assetName;
-  final url = src.networkUrl;
-  final file = src.filePath;
-  if (asset != null) return AssetImage(asset);
-  if (url != null) return NetworkImage(url);
-  if (file != null && !kIsWeb) return FileImage(File(file));
-  return null;
 }
 
 /// Resolve the vignette currently on the layer's effect stack, or

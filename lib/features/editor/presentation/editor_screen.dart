@@ -104,6 +104,22 @@ class EditorScreen extends ConsumerWidget {
     // pruning changes selectedId, so the existing seam then closes
     // the dead layer's panels through its normal path. Both listeners
     // are idempotent.
+    // The crash net going down is the one background failure the
+    // user has to hear about: the journal swallows write errors by
+    // design (it must never take the editor with it), so without
+    // this a full disk silently stops protecting their work
+    // (tb5 8/9). Once per session — a full disk does not un-fill
+    // itself between two debounced writes.
+    ref.listen<bool>(journalWriteFailedProvider, (prev, next) {
+      if (prev == true || !next || !context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.journalWriteFailedWarning),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    });
     ref.listen<int>(documentCommitVersionProvider, (prev, next) {
       if (prev == next) return;
       final pruned = ref

@@ -1,5 +1,3 @@
-import 'dart:io' as io;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,6 +7,7 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/modules/image/image_layer.dart';
+import '../../engine/modules/image/image_source_provider.dart';
 import '../../presentation/widgets/handle_drag_detector.dart';
 import '../../presentation/widgets/selection_overlay.dart' show DragPhase;
 import '../application/crop_controller.dart';
@@ -153,16 +152,7 @@ class _SourceAspectProbeState extends ConsumerState<_SourceAspectProbe> {
 /// Resolve an [ImageSource] to a provider, or `null` when the bytes
 /// are unreachable. Shared by the aspect probe and the preview so the
 /// two never disagree about whether an image exists.
-ImageProvider? _sourceProvider(ImageSource src) {
-  final filePath = src.filePath;
-  if (filePath != null) {
-    final file = io.File(filePath);
-    return file.existsSync() ? FileImage(file) : null;
-  }
-  if (src.assetName != null) return AssetImage(src.assetName!);
-  if (src.networkUrl != null) return NetworkImage(src.networkUrl!);
-  return null;
-}
+ImageProvider? _sourceProvider(ImageSource src) => imageProviderFor(src);
 
 // =============================================================
 // Top bar — Cancel / title / Done

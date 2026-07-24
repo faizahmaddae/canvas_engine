@@ -1798,6 +1798,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get somethingWentWrong => 'مشکلی پیش آمد. دوباره تلاش کنید.';
 
   @override
+  String get journalWriteFailedWarning =>
+      'فضای ذخیره‌سازی کم است — بازیابی خودکار کار نمی‌کند. کمی فضا آزاد کنید و پروژه را ذخیره کنید.';
+
+  @override
   String get allowPhotoAccessSettings =>
       'برای ادامه، دسترسی عکس را در تنظیمات فعال کنید.';
 }

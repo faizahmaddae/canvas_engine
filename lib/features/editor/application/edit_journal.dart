@@ -56,6 +56,15 @@ class EditJournal {
 
   /// Open or lazily create the journal directory for [projectId].
   /// Returns a journal handle bound to that project's file.
+  /// Called when a write fails — most often a full disk.
+  ///
+  /// The journal deliberately never throws (see the class doc): a
+  /// failed recovery write must not take the editor down with it.
+  /// But silence was its own bug — the user's only crash net was
+  /// gone and nothing said so. The owner sets this to surface it
+  /// once (tb5 8/9).
+  void Function(Object error)? onWriteFailure;
+
   static Future<EditJournal> open(String projectId) async {
     final docs = await getApplicationDocumentsDirectory();
     final dir = Directory('${docs.path}/journal');
@@ -116,8 +125,9 @@ class EditJournal {
       final tmp = File('${_file.path}.tmp');
       await tmp.writeAsString(json, flush: true);
       await tmp.rename(_file.path);
-    } catch (_) {
-      // Swallow. See class doc.
+    } catch (e) {
+      // Still swallowed — see the class doc — but no longer silent.
+      onWriteFailure?.call(e);
     }
   }
 

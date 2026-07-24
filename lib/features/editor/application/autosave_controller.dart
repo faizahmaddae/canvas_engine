@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/user_error.dart';
 import '../../home/application/project_store.dart';
 import 'document_controller.dart';
 import 'edit_journal.dart';
@@ -71,6 +72,17 @@ class AutosaveController extends Notifier<void> {
     });
   }
 
+  /// Raise the flag the editor watches. Once per session is enough:
+  /// a full disk does not un-fill itself between two debounced
+  /// writes, and repeating the warning every 1.5s would be noise on
+  /// top of a problem the user already knows about.
+  void _reportJournalFailure(Object error) {
+    if (!ref.mounted) return;
+    if (ref.read(journalWriteFailedProvider)) return;
+    debugLogError('editor/journal-write', error, StackTrace.current);
+    ref.read(journalWriteFailedProvider.notifier).raise();
+  }
+
   void _schedule() {
     _timer?.cancel();
     _timer = Timer(debounce, _flush);
@@ -102,6 +114,7 @@ class AutosaveController extends Notifier<void> {
             if (!ref.mounted) return;
             if (_journalProjectId != journalId) return;
             _journal = j;
+            j.onWriteFailure = _reportJournalFailure;
             _journal!.scheduleWrite(ref.read(documentControllerProvider));
           })
           .catchError((_) {
@@ -251,3 +264,20 @@ class AutosaveController extends Notifier<void> {
 final autosaveControllerProvider = NotifierProvider<AutosaveController, void>(
   AutosaveController.new,
 );
+
+/// True once a journal write has failed in this session — the crash
+/// net is not working and the editor says so.
+class JournalWriteFailedController extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void raise() {
+    if (state) return;
+    state = true;
+  }
+}
+
+final journalWriteFailedProvider =
+    NotifierProvider<JournalWriteFailedController, bool>(
+      JournalWriteFailedController.new,
+    );

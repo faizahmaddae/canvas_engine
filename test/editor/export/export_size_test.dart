@@ -39,7 +39,6 @@ void main() {
       final c = ExportSize.customSize(1234, 567);
       expect(c.isCustom, isTrue);
       expect(c.target, const Size(1234, 567));
-      expect(c.subtitle, '1234 × 567');
     });
 
     test('customSize() rejects non-positive dimensions', () {

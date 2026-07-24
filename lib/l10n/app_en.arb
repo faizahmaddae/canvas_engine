@@ -594,5 +594,6 @@
   "couldntOpenPhoto": "Couldn't open this photo. Try again or pick a different one.",
   "couldntLoadProjects": "Couldn't load your projects. Pull down to retry.",
   "somethingWentWrong": "Something went wrong. Try again.",
+  "journalWriteFailedWarning": "Low storage — crash recovery is off. Free some space and save your project.",
   "allowPhotoAccessSettings": "Allow photo access in Settings to continue."
 }
