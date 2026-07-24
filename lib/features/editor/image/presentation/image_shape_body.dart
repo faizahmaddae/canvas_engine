@@ -9,7 +9,7 @@ import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/modules/image/image_layer.dart';
-import '../../presentation/widgets/panel_option_tile.dart';
+import '../../toolbar/presentation/widgets/preset_chip.dart';
 import 'image_panel_shell.dart';
 
 /// Expanded panel body for the Image sub-tool's "Shape" tab.
@@ -53,7 +53,7 @@ class ImageShapeBody extends ConsumerWidget {
               itemBuilder: (_, i) {
                 final option = _options[i];
                 final selected = layer.mask == option.mask;
-                return PanelOptionTile(
+                return PresetChip.option(
                   width: 76,
                   selected: selected,
                   label: _shapeOptionLabel(context, option),

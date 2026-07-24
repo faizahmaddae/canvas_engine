@@ -11,12 +11,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../l10n/l10n.dart';
-import '../../widgets/controls/panel_chip.dart';
 import 'effect_sections.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../text/domain/text_style_presets.dart';
 import '../../../engine/modules/text/text_layer.dart';
-import '../../widgets/panel_option_tile.dart';
+import '../../../toolbar/presentation/widgets/preset_chip.dart';
 
 // ─── Styles sheet body ──────────────────────────────────────────
 //
@@ -147,7 +146,7 @@ class _EffectChipsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     Widget chip(_EffectCategory c, String label, {bool enabled = false}) {
-      final child = LayoutPresetChip(
+      final child = PresetChip(
         label: label,
         selected: open == c,
         onTap: () => onToggle(c),
@@ -157,7 +156,9 @@ class _EffectChipsRow extends StatelessWidget {
     }
 
     return SizedBox(
-      height: 36,
+      // 44 (was 36): the unified PresetChip pill is kMinHitTarget
+      // tall (tb2 15/16 chip-grammar unification).
+      height: 44,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.zero,
@@ -241,7 +242,7 @@ class _StylesRow extends StatelessWidget {
           // Kit tile: preview slot carries the "Aa" specimen; the
           // tile owns label + selection chrome (the old bespoke
           // _StyleChip and its in-preview selection ring are gone).
-          return PanelOptionTile(
+          return PresetChip.option(
             preview: SizedBox(
               width: 44,
               height: 40,

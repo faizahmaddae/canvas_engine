@@ -14,7 +14,7 @@ import '../../engine/core/canvas_sizing.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/precision_disclosure.dart';
-import 'panel_option_tile.dart';
+import '../../toolbar/presentation/widgets/preset_chip.dart';
 import 'section_label.dart';
 
 // Stroke width = clamp(effectiveDim × fraction, minPx, maxPx).
@@ -407,7 +407,7 @@ class _BorderChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PanelOptionTile(
+    return PresetChip.option(
       icon: icon,
       iconSize: iconSize,
       label: label,

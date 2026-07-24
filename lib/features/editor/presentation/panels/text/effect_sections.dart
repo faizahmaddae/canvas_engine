@@ -13,7 +13,7 @@ import '../../../engine/modules/text/text_layer.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../ui/editor_slider_row.dart';
 import '../../../ui/panel_offset_pad.dart';
-import '../../widgets/controls/panel_chip.dart';
+import '../../../toolbar/presentation/widgets/preset_chip.dart';
 import '../../widgets/controls/slider_row.dart';
 import 'precision/background_precision.dart';
 import 'precision/border_precision.dart';
@@ -31,14 +31,15 @@ class _PresetChipsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 36,
+      // 44 (was 36): unified PresetChip pill height (tb2 15/16).
+      height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         padding: EdgeInsets.zero,
         itemCount: chips.length,
         separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (_, i) => LayoutPresetChip(
+        itemBuilder: (_, i) => PresetChip(
           label: chips[i].label,
           selected: chips[i].selected,
           onTap: chips[i].onTap,

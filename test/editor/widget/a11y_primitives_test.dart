@@ -7,14 +7,15 @@
 // GestureDetector/InkWell with no accessible name or selected state.
 
 import 'package:canvas_engine/features/editor/presentation/widgets/dock_tool_tile.dart';
-import 'package:canvas_engine/features/editor/presentation/widgets/panel_option_tile.dart';
 import 'package:canvas_engine/features/editor/toolbar/presentation/widgets/preset_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Widget host(Widget child) {
-    return MaterialApp(home: Scaffold(body: Center(child: child)));
+    return MaterialApp(
+      home: Scaffold(body: Center(child: child)),
+    );
   }
 
   group('DockToolTile', () {
@@ -120,11 +121,11 @@ void main() {
     });
   });
 
-  group('PanelOptionTile', () {
+  group('PresetChip.option (tile mode)', () {
     testWidgets('exposes label, selected and a tap action', (tester) async {
       await tester.pumpWidget(
         host(
-          PanelOptionTile(
+          PresetChip.option(
             selected: true,
             icon: Icons.crop_square,
             label: 'Original',
@@ -134,7 +135,7 @@ void main() {
       );
 
       expect(
-        tester.getSemantics(find.byType(PanelOptionTile)),
+        tester.getSemantics(find.byType(PresetChip)),
         matchesSemantics(
           label: 'Original',
           isButton: true,
@@ -148,7 +149,7 @@ void main() {
     testWidgets('unselected tile reports selected: false', (tester) async {
       await tester.pumpWidget(
         host(
-          PanelOptionTile(
+          PresetChip.option(
             selected: false,
             icon: Icons.crop_square,
             label: 'Pop',
@@ -158,7 +159,7 @@ void main() {
       );
 
       expect(
-        tester.getSemantics(find.byType(PanelOptionTile)),
+        tester.getSemantics(find.byType(PresetChip)),
         matchesSemantics(
           label: 'Pop',
           isButton: true,

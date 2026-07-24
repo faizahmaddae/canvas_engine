@@ -12,7 +12,7 @@ import '../../engine/core/editor_layer.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/panel_direction_pad.dart';
 import '../../ui/precision_disclosure.dart';
-import 'panel_option_tile.dart';
+import '../../toolbar/presentation/widgets/preset_chip.dart';
 import 'section_label.dart';
 
 /// Adapter closing the gap between [LayerShadowBody]'s shared UI and
@@ -354,7 +354,7 @@ class _ShadowPresetChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PanelOptionTile(
+    return PresetChip.option(
       icon: preset.icon,
       iconSize: 18,
       label: _shadowPresetLabel(context, preset),

@@ -1,66 +1,12 @@
-// Shared control kit (Phase 2A §1): extracted verbatim from the
-// text_mode_toolbar library (text_panel_primitives.dart +
-// text_size_panel.dart) so every tool's panels can reuse it.
-// Rename-only promotion; no behaviour change.
+// Shared control kit (Phase 2A §1): extracted from the
+// text_mode_toolbar library so every tool's panels can reuse it.
+// tb2 15/16 (chip-grammar unification): the `LayoutPresetChip`
+// implementation this file used to own is deleted — [WordChipRow]
+// now renders the ONE canonical [PresetChip] family.
 
 import 'package:flutter/material.dart';
 
-import '../../../../../app/theme/app_tokens.dart';
-import '../../../../../core/utils/haptics.dart';
-
-/// Pill chip used inside `LayoutSliderCard` (Layout panel) and the
-/// Size panel's px-preset row / `WordChipRow`. Compact, flat — no
-/// border or fill on idle so the chip strip reads as the primary
-/// row, not a settings card.
-class LayoutPresetChip extends StatelessWidget {
-  const LayoutPresetChip({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = AppTokens.of(context);
-    return Material(
-      color: selected
-          ? tokens.accent.withValues(alpha: 0.14)
-          : tokens.surfaceMuted.withValues(alpha: 0.55),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(
-          color: selected
-              ? tokens.accent.withValues(alpha: 0.45)
-              : Colors.transparent,
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () {
-          EditorHaptics.snap();
-          onTap();
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected ? tokens.accent : tokens.textPrimary,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+import '../../../toolbar/presentation/widgets/preset_chip.dart';
 
 /// Word-preset chip row (e.g. Tight / Normal / Wide) — replaces a
 /// numeric slider with a 1-tap human-readable choice. Each preset
@@ -103,12 +49,11 @@ class WordChipRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selectedIndex = _selectedIndex();
-    // Same chip vocabulary as the Layout panel (compact pill, no
-    // hero shadow). Lets Size and Layout read as one family — and
-    // the row sheds ~10dp of vertical weight vs the old
-    // `PresetChip`.
+    // The ONE canonical chip family (tb2 15/16): 44dp pill, unified
+    // selected treatment. 44 (was 36) is the intended hit-floor
+    // reflow for every word/px preset row.
     return SizedBox(
-      height: 36,
+      height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -117,7 +62,7 @@ class WordChipRow extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: 6),
         itemBuilder: (_, i) {
           final o = options[i];
-          return LayoutPresetChip(
+          return PresetChip(
             label: o.label,
             selected: i == selectedIndex,
             onTap: () => onPick(o.value),

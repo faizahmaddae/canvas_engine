@@ -67,10 +67,10 @@ void main() {
     return container;
   }
 
-  /// The effect chips render at 12.5px (LayoutPresetChip) — the dock
+  /// The effect chips render at 15px (unified PresetChip pill, tb2 15/16) — the dock
   /// tile and preset labels use 11px, so font size disambiguates.
   Finder effectChip(String label) => find.byWidgetPredicate(
-    (w) => w is Text && w.data == label && w.style?.fontSize == 12.5,
+    (w) => w is Text && w.data == label && w.style?.fontSize == 15,
   );
 
   TextLayer layerOf(ProviderContainer c) =>

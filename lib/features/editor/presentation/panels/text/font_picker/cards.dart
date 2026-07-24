@@ -90,7 +90,7 @@ class FontCardStrip extends StatelessWidget {
 /// so wide display faces and narrow sans faces both feel right.
 ///
 /// Selected state uses the same soft-fill grammar as
-/// [PanelOptionTile] (the panel-wide preset chip): a `primary @
+/// `PresetChip.option` (the panel-wide preset tile): a `primary @
 /// 12 %` fill plus a 1dp `primary @ 50 %` border. The previous
 /// underline-only treatment was easy to miss when the strip was
 /// scrolled — users couldn't tell at a glance which font was

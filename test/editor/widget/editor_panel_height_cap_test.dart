@@ -12,7 +12,7 @@ import 'package:canvas_engine/features/editor/engine/commands/transform_commands
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
-import 'package:canvas_engine/features/editor/presentation/widgets/controls/panel_chip.dart';
+import 'package:canvas_engine/features/editor/toolbar/presentation/widgets/preset_chip.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/dock_sheet_chrome.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/editor_canvas.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
@@ -146,9 +146,12 @@ void main() {
   ]) {
     testWidgets('"$name" stays compact at worst-case style', (tester) async {
       await pumpWithSheet(tester, 'styles');
-      final chip = find.descendant(
-        of: find.byType(LayoutPresetChip),
-        matching: find.text(chipLabel),
+      // Effect chips are 15px unified-pill labels; the style-preset
+      // OPTION tiles in the same panel can carry the same word at
+      // 11px, so font size disambiguates (same idiom as
+      // text_effects_shadow_test).
+      final chip = find.byWidgetPredicate(
+        (w) => w is Text && w.data == chipLabel && w.style?.fontSize == 15,
       );
       expect(chip, findsOneWidget);
       await tester.tap(chip);

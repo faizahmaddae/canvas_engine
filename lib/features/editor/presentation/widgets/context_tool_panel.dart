@@ -8,7 +8,7 @@ import '../../engine/core/editor_layer.dart';
 import '../../engine/interaction/alignment_engine.dart';
 import 'editor_tool_panel_shell.dart';
 import 'layer_opacity_control.dart';
-import 'panel_option_tile.dart';
+import '../../toolbar/presentation/widgets/preset_chip.dart';
 import 'section_label.dart';
 
 class ContextToolPanelBody extends ConsumerWidget {
@@ -214,7 +214,7 @@ class _AlignTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: PanelOptionTile(
+      child: PresetChip.option(
         selected: false,
         icon: icon,
         label: label,

@@ -11,7 +11,7 @@ import '../../engine/commands/editor_command.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/effects/editor_effect.dart';
 import '../../engine/modules/image/image_layer.dart';
-import '../../presentation/widgets/panel_option_tile.dart';
+import '../../toolbar/presentation/widgets/preset_chip.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/precision_disclosure.dart';
 import 'image_panel_shell.dart';
@@ -423,7 +423,7 @@ class _PresetChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PanelOptionTile(
+    return PresetChip.option(
       icon: preset.icon,
       label: _adjustPresetLabel(context, preset),
       selected: selected,
