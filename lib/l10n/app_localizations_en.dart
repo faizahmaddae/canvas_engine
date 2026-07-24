@@ -1687,7 +1687,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previewExportTitle => 'Preview export';
 
   @override
-  String canvasDimensions(int width, int height) {
+  String canvasDimensions(String width, String height) {
     return 'Canvas $width × $height';
   }
 
@@ -1714,12 +1714,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qualityLabel => 'Quality';
 
   @override
-  String qualityPercent(int percent) {
+  String qualityPercent(String percent) {
     return 'Quality $percent%';
   }
 
   @override
-  String outputPixels(int width, int height) {
+  String outputPixels(String width, String height) {
     return 'Output: $width × $height px';
   }
 
@@ -1737,7 +1737,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterPositiveWholeNumbers => 'Enter positive whole numbers.';
 
   @override
-  String maximumDimensionEitherSide(int dimension) {
+  String maximumDimensionEitherSide(String dimension) {
     return 'Maximum is $dimension on either side.';
   }
 
@@ -1745,7 +1745,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useSizeAction => 'Use size';
 
   @override
-  String customSizeChip(int width, int height) {
+  String customSizeChip(String width, String height) {
     return 'Custom · $width×$height';
   }
 

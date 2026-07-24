@@ -64,6 +64,28 @@ sealed class BackgroundFill {
   /// Solid colours collapse to a bare `int` so v1 readers can still
   /// open documents that only use solid backgrounds.
   Object toJson();
+
+  /// The [Paint] that renders this fill laid out over [box].
+  ///
+  /// Canvas-level twin of `BackgroundFillBox` (the widget-level
+  /// painter): both resolve gradients through `toFlutterGradient`, so
+  /// a fill cannot look different between the widget tree and a
+  /// direct-to-canvas composite. Used by the export composer, which
+  /// has no widget tree to paint into.
+  ///
+  /// [box] is the *layout* rectangle for the gradient, not necessarily
+  /// the area being covered. The export composer lays the gradient out
+  /// over the document's destination rect and then paints it across
+  /// the whole output, so the letterbox bands continue the canvas
+  /// backdrop (Skia's default `TileMode.clamp` extends the edge
+  /// colours outward) instead of restarting it at a different scale.
+  Paint toPaint(Rect box) => switch (this) {
+    SolidBackground(:final color) => Paint()..color = color,
+    final LinearGradientBackground g =>
+      Paint()..shader = g.toFlutterGradient().createShader(box),
+    final RadialGradientBackground g =>
+      Paint()..shader = g.toFlutterGradient().createShader(box),
+  };
 }
 
 /// A single flat colour. The historical default for every existing document.

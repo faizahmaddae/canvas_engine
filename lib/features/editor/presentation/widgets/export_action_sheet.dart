@@ -12,6 +12,7 @@ import '../../../settings/application/settings_controller.dart';
 import '../../application/document_controller.dart';
 import '../../application/export_controller.dart';
 import '../../application/export_format.dart';
+import '../../application/export_intent.dart';
 import 'editor_modal_sheet.dart';
 import '../../application/export_session.dart';
 import '../../application/export_quality.dart';
@@ -83,6 +84,9 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
     final canvasW = doc.width.round();
     final canvasH = doc.height.round();
     final l10n = context.l10n;
+    // Named `values` (not `format`) so it never reads as the export
+    // *file* format this sheet also talks about.
+    final values = EditorValueFormat.of(context);
 
     return SafeArea(
       child: Padding(
@@ -120,7 +124,12 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        l10n.canvasDimensions(canvasW, canvasH),
+                        // Locale digits: the fa header reads
+                        // «بوم ۱۰۸۰ × ۱۰۸۰», not a Latin-digit island.
+                        l10n.canvasDimensions(
+                          values.digits(canvasW),
+                          values.digits(canvasH),
+                        ),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: tokens.textSecondary,
                           fontFeatures: const [FontFeature.tabularFigures()],
@@ -179,11 +188,17 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                 ),
               ],
               const SizedBox(height: 16),
+              // Two exit intents. Each carries its own [ExportIntent]
+              // into the preview so the confirmation button there IS
+              // the action the user asked for here.
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: _busy ? null : () => _openPreview(),
+                      key: const ValueKey('export-sheet-share'),
+                      onPressed: _busy
+                          ? null
+                          : () => _openPreview(ExportIntent.share),
                       icon: const Icon(Icons.visibility_outlined),
                       label: Text(l10n.previewShareAction),
                       style: OutlinedButton.styleFrom(
@@ -197,7 +212,10 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: FilledButton.icon(
-                      onPressed: _busy ? null : () => _openPreview(),
+                      key: const ValueKey('export-sheet-save'),
+                      onPressed: _busy
+                          ? null
+                          : () => _openPreview(ExportIntent.save),
                       icon: const Icon(Icons.image_search_rounded),
                       label: Text(l10n.previewSaveAction),
                       style: FilledButton.styleFrom(
@@ -225,7 +243,11 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
   /// the [ExportPreviewScreen] where they confirm Save / Share /
   /// Cancel. The bytes are reused inside the preview — no second
   /// render — so the user sees exactly what will be saved.
-  Future<void> _openPreview() async {
+  ///
+  /// [intent] is the exit the user tapped here; the preview promotes
+  /// it to its primary button instead of asking the same question
+  /// twice.
+  Future<void> _openPreview(ExportIntent intent) async {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final doc = ref.read(documentControllerProvider);
@@ -245,6 +267,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
       pixelWidth: pixelW,
       pixelHeight: pixelH,
       jpgQuality: _format == ExportFormat.jpg ? _jpgQuality : null,
+      intent: intent,
     );
     if (!mounted || outcome == null) return;
     switch (outcome.action) {
@@ -628,11 +651,12 @@ class _SizePickerRow extends StatelessWidget {
           // value is itself a custom one (matched via isCustom flag,
           // since the typed dimensions create a fresh instance).
           final selected = preset.isCustom ? value.isCustom : preset == value;
+          final values = EditorValueFormat.of(context);
           return _SizeChip(
             label: selected && preset.isCustom
                 ? context.l10n.customSizeChip(
-                    value.target?.width.round() ?? 0,
-                    value.target?.height.round() ?? 0,
+                    values.digits(value.target?.width.round() ?? 0),
+                    values.digits(value.target?.height.round() ?? 0),
                   )
                 : _sizeLabel(context.l10n, preset),
             selected: selected,
@@ -720,6 +744,7 @@ class _PresetOutputSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = AppTokens.of(context);
+    final values = EditorValueFormat.of(context);
     final target = size.target!;
     final tw = target.width.round();
     final th = target.height.round();
@@ -749,7 +774,10 @@ class _PresetOutputSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.l10n.outputPixels(tw, th),
+                  context.l10n.outputPixels(
+                    values.digits(tw),
+                    values.digits(th),
+                  ),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -793,18 +821,35 @@ class _CustomSizeDialog extends StatefulWidget {
 }
 
 class _CustomSizeDialogState extends State<_CustomSizeDialog> {
-  late final TextEditingController _w = TextEditingController(
-    text: widget.initial?.width.round().toString() ?? '1080',
-  );
-  late final TextEditingController _h = TextEditingController(
-    text: widget.initial?.height.round().toString() ?? '1080',
-  );
+  /// Default when the user has no custom size yet — 1080px is the
+  /// short edge every social preset in [ExportSize] is built on.
+  static const int _defaultDimension = 1080;
+
+  final TextEditingController _w = TextEditingController();
+  final TextEditingController _h = TextEditingController();
   String? _error;
+
+  /// Seeded in [didChangeDependencies] rather than the initialisers
+  /// because the seed text is locale-formatted and `context` is not
+  /// safe to read from a field initialiser.
+  bool _seeded = false;
 
   // Hard upper bound — Skia surface allocations beyond ~8K square
   // start to fail on mid-tier devices. 8000 leaves comfortable
   // headroom for the composite step.
   static const int _maxDimension = 8000;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_seeded) return;
+    _seeded = true;
+    final values = EditorValueFormat.of(context);
+    _w.text = values.digits(widget.initial?.width.round() ?? _defaultDimension);
+    _h.text = values.digits(
+      widget.initial?.height.round() ?? _defaultDimension,
+    );
+  }
 
   @override
   void dispose() {
@@ -814,15 +859,20 @@ class _CustomSizeDialogState extends State<_CustomSizeDialog> {
   }
 
   void _commit() {
-    final w = int.tryParse(_w.text.trim());
-    final h = int.tryParse(_h.text.trim());
+    // Parse through the ASCII fold: the field is *seeded* with locale
+    // digits, and a Persian keyboard types them too — plain
+    // `int.tryParse` would reject the value the user is looking at.
+    final w = int.tryParse(EditorValueFormat.toAsciiDigits(_w.text.trim()));
+    final h = int.tryParse(EditorValueFormat.toAsciiDigits(_h.text.trim()));
     if (w == null || h == null || w <= 0 || h <= 0) {
       setState(() => _error = context.l10n.enterPositiveWholeNumbers);
       return;
     }
     if (w > _maxDimension || h > _maxDimension) {
       setState(
-        () => _error = context.l10n.maximumDimensionEitherSide(_maxDimension),
+        () => _error = context.l10n.maximumDimensionEitherSide(
+          EditorValueFormat.of(context).digits(_maxDimension),
+        ),
       );
       return;
     }

@@ -1688,7 +1688,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get previewExportTitle => 'پیش‌نمایش خروجی';
 
   @override
-  String canvasDimensions(int width, int height) {
+  String canvasDimensions(String width, String height) {
     return 'بوم $width × $height';
   }
 
@@ -1715,12 +1715,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get qualityLabel => 'کیفیت';
 
   @override
-  String qualityPercent(int percent) {
+  String qualityPercent(String percent) {
     return 'کیفیت $percent٪';
   }
 
   @override
-  String outputPixels(int width, int height) {
+  String outputPixels(String width, String height) {
     return 'خروجی: $width × $height px';
   }
 
@@ -1738,7 +1738,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get enterPositiveWholeNumbers => 'عددهای صحیح و مثبت وارد کنید.';
 
   @override
-  String maximumDimensionEitherSide(int dimension) {
+  String maximumDimensionEitherSide(String dimension) {
     return 'حداکثر مقدار برای هر ضلع $dimension است.';
   }
 
@@ -1746,7 +1746,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get useSizeAction => 'استفاده از اندازه';
 
   @override
-  String customSizeChip(int width, int height) {
+  String customSizeChip(String width, String height) {
     return 'سفارشی · $width×$height';
   }
 

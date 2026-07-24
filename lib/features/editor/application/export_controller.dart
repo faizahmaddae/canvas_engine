@@ -63,9 +63,11 @@ class ExportController {
     final BackgroundFill effectiveFill = background != null
         ? SolidBackground(color: background)
         : doc.background;
-    // Legacy solid colour for the letterbox / JPG flatten composite
-    // path which still needs a single Color (gradients are baked into
-    // the *source* image; the surround stays solid).
+    // Legacy solid colour, still handed to the engine exporters'
+    // deprecated `background` parameter as the fallback behind
+    // `backgroundFill`. Every path that actually paints (canvas
+    // backdrop, JPG flatten, letterbox bands) resolves the full fill
+    // first, so this only ever matters if a fill goes missing.
     // ignore: deprecated_member_use
     final Color effectiveBackground = background ?? doc.backgroundColor;
     if (targetSize != null) {
@@ -164,6 +166,9 @@ class ExportController {
         source: source,
         target: effectiveTarget,
         background: background,
+        // Gradient canvases letterbox with the real gradient, not the
+        // dominant-tone approximation `background` carries.
+        backgroundFill: backgroundFill,
         // PNG keeps alpha; JPG must composite over an opaque fill.
         opaqueBackground:
             format == ExportFormat.jpg ||
@@ -249,9 +254,18 @@ class ExportController {
 }
 
 /// Paint [source] into a fresh image of [target] pixels, fitted
-/// (`BoxFit.contain`) and centred. Letterbox bands receive [background]
-/// when [opaqueBackground] is true; otherwise the bands stay
-/// transparent (PNG with transparent canvas mode).
+/// (`BoxFit.contain`) and centred. Letterbox bands receive the
+/// document's backdrop when [opaqueBackground] is true; otherwise the
+/// bands stay transparent (PNG with transparent canvas mode).
+///
+/// [backgroundFill] is the document's full [BackgroundFill] and takes
+/// precedence over the legacy solid [background] — a gradient canvas
+/// used to letterbox into a flat band of its start/centre colour,
+/// which is not the canvas the user was looking at. The gradient is
+/// laid out over the *destination* rect (where the artwork lands) and
+/// painted across the whole output, so the bands read as the canvas
+/// continuing past its own edge rather than a second, differently
+/// scaled gradient with a seam at the artwork boundary.
 ///
 /// Top-level so widget tests can drive the composer with a synthesised
 /// [ui.Image] without spinning up the off-screen overlay path.
@@ -260,19 +274,13 @@ Future<ui.Image> composeFitContain({
   required ui.Size target,
   required Color background,
   required bool opaqueBackground,
+  BackgroundFill? backgroundFill,
 }) async {
   final recorder = ui.PictureRecorder();
   final canvas = ui.Canvas(
     recorder,
     ui.Rect.fromLTWH(0, 0, target.width, target.height),
   );
-
-  if (opaqueBackground) {
-    canvas.drawRect(
-      ui.Rect.fromLTWH(0, 0, target.width, target.height),
-      ui.Paint()..color = background,
-    );
-  }
 
   final scaleX = target.width / source.width;
   final scaleY = target.height / source.height;
@@ -281,11 +289,20 @@ Future<ui.Image> composeFitContain({
   final destH = source.height * scale;
   final destLeft = (target.width - destW) / 2;
   final destTop = (target.height - destH) / 2;
+  final destRect = ui.Rect.fromLTWH(destLeft, destTop, destW, destH);
+
+  if (opaqueBackground) {
+    final fill = backgroundFill ?? SolidBackground(color: background);
+    canvas.drawRect(
+      ui.Rect.fromLTWH(0, 0, target.width, target.height),
+      fill.toPaint(destRect),
+    );
+  }
 
   canvas.drawImageRect(
     source,
     ui.Rect.fromLTWH(0, 0, source.width.toDouble(), source.height.toDouble()),
-    ui.Rect.fromLTWH(destLeft, destTop, destW, destH),
+    destRect,
     ui.Paint()
       ..filterQuality = ui.FilterQuality.high
       ..isAntiAlias = true,

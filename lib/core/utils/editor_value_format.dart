@@ -69,6 +69,33 @@ class EditorValueFormat {
     return b.toString();
   }
 
+  /// Fold locale digits back to ASCII so `int.parse` / `double.parse`
+  /// accept them — the inverse of [mapDigits] for *input* fields.
+  ///
+  /// Needed wherever a numeric field is seeded with [digits] (the
+  /// export custom-size dialog) or where a Persian keyboard can put
+  /// its own numerals into a field we then parse. Covers both the
+  /// Extended Arabic-Indic block Persian uses (U+06F0..U+06F9) and the
+  /// Arabic-Indic block (U+0660..U+0669) an Arabic keyboard produces,
+  /// plus the `٫` decimal separator. Static because input arrives
+  /// before any locale decision matters: every digit set folds the
+  /// same way.
+  static String toAsciiDigits(String s) {
+    final b = StringBuffer();
+    for (final code in s.codeUnits) {
+      if (code >= 0x06F0 && code <= 0x06F9) {
+        b.writeCharCode(0x30 + (code - 0x06F0));
+      } else if (code >= 0x0660 && code <= 0x0669) {
+        b.writeCharCode(0x30 + (code - 0x0660));
+      } else if (code == 0x066B) {
+        b.write('.'); // Arabic decimal separator
+      } else {
+        b.writeCharCode(code);
+      }
+    }
+    return b.toString();
+  }
+
   /// `96px` / `۹۶px` — the pixel unit stays Latin in both scripts
   /// (matches the shipped fa design language, e.g. the size panel's
   /// keypad label).

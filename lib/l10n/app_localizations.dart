@@ -3300,7 +3300,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Canvas {width} × {height}'**
-  String canvasDimensions(int width, int height);
+  String canvasDimensions(String width, String height);
 
   /// No description provided for @formatLabel.
   ///
@@ -3348,13 +3348,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Quality {percent}%'**
-  String qualityPercent(int percent);
+  String qualityPercent(String percent);
 
   /// No description provided for @outputPixels.
   ///
   /// In en, this message translates to:
   /// **'Output: {width} × {height} px'**
-  String outputPixels(int width, int height);
+  String outputPixels(String width, String height);
 
   /// No description provided for @matchesCanvasAspect.
   ///
@@ -3384,7 +3384,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Maximum is {dimension} on either side.'**
-  String maximumDimensionEitherSide(int dimension);
+  String maximumDimensionEitherSide(String dimension);
 
   /// No description provided for @useSizeAction.
   ///
@@ -3396,7 +3396,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Custom · {width}×{height}'**
-  String customSizeChip(int width, int height);
+  String customSizeChip(String width, String height);
 
   /// No description provided for @originalSizeQuality.
   ///
