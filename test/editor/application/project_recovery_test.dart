@@ -5,9 +5,10 @@
 //   1. A journal that differs from the persisted save is offered;
 //      a byte-identical journal is redundant and self-clears.
 //   2. Never-saved sessions journal under the reserved 'draft' slot.
-//   3. A deliberate exit (flushNow(sessionEnding: true)) clears the
-//      draft; an app-pause flush (default) keeps it — that is the
-//      process-death case the slot exists to recover.
+//   3. Both an app-pause flush (default) AND a deliberate exit
+//      (flushNow(sessionEnding: true)) keep a draft with content —
+//      back must never destroy the only copy of unsaved work. Only
+//      an untouched blank document clears the slot on exit.
 
 import 'dart:io';
 
@@ -237,8 +238,85 @@ void main() {
   });
 
   group('draft journal slot (autosave wiring)', () {
+    test('unsaved session journals to draft; pause AND exit keep it when '
+        'the document has content', () async {
+      // DELIBERATE EXPECTATION CHANGE (roadmap tb0 0.4): this test
+      // previously pinned "exit clears the draft" — walking away
+      // was the discard gesture. That made an accidental back-swipe
+      // after a long unsaved session an irreversible total loss.
+      // Exit now KEEPS the draft (Home's resume banner recovers
+      // it); only an untouched blank document still clears.
+      final docs = installFakeDocumentsDir();
+      final c = await _editorContainer();
+      c.read(editorSessionProvider.notifier).state = const EditorSession(
+        name: 'Untitled',
+      );
+
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(AddLayerCommand(_shape('a')));
+      await _settleJournal();
+      final draftFile = _journalFile(docs, AutosaveController.draftJournalId);
+      expect(
+        draftFile.existsSync(),
+        isTrue,
+        reason: 'never-saved docs must journal under the draft slot',
+      );
+
+      // App-pause style flush: journal must SURVIVE (the OS may kill
+      // the process next — that is the recovery case).
+      await c.read(autosaveControllerProvider.notifier).flushNow();
+      expect(
+        draftFile.existsSync(),
+        isTrue,
+        reason: 'a pause flush is not a discard gesture',
+      );
+
+      // Deliberate exit with CONTENT: the journal is the only copy
+      // of the work — it must survive for the resume offer.
+      await c
+          .read(autosaveControllerProvider.notifier)
+          .flushNow(sessionEnding: true);
+      expect(
+        draftFile.existsSync(),
+        isTrue,
+        reason: 'back must never destroy a non-empty unsaved doc',
+      );
+    });
+
+    test('exit flushes pending edits into the kept draft first', () async {
+      // A kept-but-stale journal is not enough: edits inside the
+      // 750 ms debounce window at the moment of exit must land in
+      // the surviving draft.
+      final docs = installFakeDocumentsDir();
+      final c = await _editorContainer();
+      c.read(editorSessionProvider.notifier).state = const EditorSession(
+        name: 'Untitled',
+      );
+
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(AddLayerCommand(_shape('a')));
+      await _settleJournal();
+      // Second edit, NOT settled — sits in the debounce window.
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(AddLayerCommand(_shape('b')));
+      await c
+          .read(autosaveControllerProvider.notifier)
+          .flushNow(sessionEnding: true);
+
+      final draftFile = _journalFile(docs, AutosaveController.draftJournalId);
+      expect(draftFile.existsSync(), isTrue);
+      expect(
+        draftFile.readAsStringSync(),
+        contains('"b"'),
+        reason: 'the exit flush must persist the latest edits',
+      );
+    });
+
     test(
-      'unsaved session journals to draft; pause keeps it, exit clears',
+      'exit with an untouched blank document still clears the slot',
       () async {
         final docs = installFakeDocumentsDir();
         final c = await _editorContainer();
@@ -246,32 +324,18 @@ void main() {
           name: 'Untitled',
         );
 
-        c
-            .read(documentControllerProvider.notifier)
-            .execute(AddLayerCommand(_shape('a')));
-        await _settleJournal();
+        // Journal something first so a file exists, then undo back to
+        // empty and clear history via a fresh blank document — the
+        // realistic path is simply: open editor, do nothing, leave.
         final draftFile = _journalFile(docs, AutosaveController.draftJournalId);
-        expect(
-          draftFile.existsSync(),
-          isTrue,
-          reason: 'never-saved docs must journal under the draft slot',
-        );
-
-        // App-pause style flush: journal must SURVIVE (the OS may kill
-        // the process next — that is the recovery case).
-        await c.read(autosaveControllerProvider.notifier).flushNow();
-        expect(
-          draftFile.existsSync(),
-          isTrue,
-          reason: 'a pause flush is not a discard gesture',
-        );
-
-        // Deliberate exit: leaving an unsaved doc is the product's
-        // discard gesture — the draft must not haunt the next launch.
         await c
             .read(autosaveControllerProvider.notifier)
             .flushNow(sessionEnding: true);
-        expect(draftFile.existsSync(), isFalse);
+        expect(
+          draftFile.existsSync(),
+          isFalse,
+          reason: 'blank round-trips must not spawn resume offers',
+        );
       },
     );
 

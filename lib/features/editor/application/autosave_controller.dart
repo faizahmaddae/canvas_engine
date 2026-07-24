@@ -119,19 +119,29 @@ class AutosaveController extends Notifier<void> {
   /// timer might otherwise drop the latest edits on the floor.
   ///
   /// [sessionEnding] distinguishes a deliberate exit (PopScope /
-  /// editor dispose) from an app-lifecycle pause. On a deliberate
-  /// exit with a never-saved document, the draft journal is cleared —
-  /// walking away from an unsaved doc is the product's discard
-  /// gesture, and keeping the journal would produce a bogus "resume
-  /// draft?" offer next launch. On a pause the journal is KEPT: the
-  /// OS may kill the process, and that is exactly the crash case the
-  /// draft slot exists to recover.
+  /// editor dispose) from an app-lifecycle pause. Exiting a
+  /// never-saved session with real content KEEPS (and fresh-flushes)
+  /// the draft journal — the journal is the only copy of that work,
+  /// the exit may be an accidental back-swipe, and Home's resume
+  /// banner is the recovery path. This deliberately reverses the
+  /// earlier "walking away is the discard gesture" rule (roadmap
+  /// tb0 0.4): silent, unconfirmed total loss is worse than an
+  /// occasional stale resume offer, which one tap dismisses. Only an
+  /// UNTOUCHED never-saved document (no layers, nothing to undo)
+  /// still clears the slot, so blank round-trips through the editor
+  /// never spawn bogus offers. On a pause the journal is always
+  /// kept: the OS may kill the process, and that is exactly the
+  /// crash case the draft slot exists to recover.
   Future<void> flushNow({bool sessionEnding = false}) async {
     _timer?.cancel();
     _timer = null;
     if (!ref.mounted) return;
-    final discardingDraft =
+    final neverSaved =
         sessionEnding && ref.read(editorSessionProvider)?.projectId == null;
+    final discardingDraft =
+        neverSaved &&
+        ref.read(documentControllerProvider).layers.isEmpty &&
+        !ref.read(documentControllerProvider.notifier).canUndo;
     if (discardingDraft) {
       if (_journalProjectId == draftJournalId) {
         await _journal?.clear();
