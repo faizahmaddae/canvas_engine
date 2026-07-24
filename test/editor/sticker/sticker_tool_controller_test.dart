@@ -9,44 +9,22 @@ void main() {
     return c;
   }
 
+  // Generic open/toggle/close semantics are pinned once in
+  // test/editor/toolbar/dock_tool_controller_test.dart (tb1 1.10);
+  // this file keeps only the sticker-specific pins.
+
   group('StickerToolController', () {
-    test('initial openSlot is null', () {
-      final c = makeContainer();
-      expect(c.read(stickerToolControllerProvider).openSlot, isNull);
-    });
-
-    test('toggleSlot opens then closes the same slot', () {
-      final c = makeContainer();
-      final ctrl = c.read(stickerToolControllerProvider.notifier);
-      ctrl.toggleSlot(StickerToolSlot.size);
-      expect(c.read(stickerToolControllerProvider).openSlot,
-          StickerToolSlot.size);
-      ctrl.toggleSlot(StickerToolSlot.size);
-      expect(c.read(stickerToolControllerProvider).openSlot, isNull);
-    });
-
-    test('toggling a different slot switches it', () {
+    test('sticker opts out of sibling-swipe: prev/next are no-ops', () {
       final c = makeContainer();
       final ctrl = c.read(stickerToolControllerProvider.notifier);
       ctrl.toggleSlot(StickerToolSlot.style);
-      ctrl.toggleSlot(StickerToolSlot.replace);
-      expect(c.read(stickerToolControllerProvider).openSlot,
-          StickerToolSlot.replace);
-    });
-
-    test('closePanel clears the open slot', () {
-      final c = makeContainer();
-      final ctrl = c.read(stickerToolControllerProvider.notifier);
-      ctrl.toggleSlot(StickerToolSlot.style);
-      ctrl.closePanel();
-      expect(c.read(stickerToolControllerProvider).openSlot, isNull);
-    });
-
-    test('closePanel is a no-op when nothing is open', () {
-      final c = makeContainer();
-      final ctrl = c.read(stickerToolControllerProvider.notifier);
-      ctrl.closePanel();
-      expect(c.read(stickerToolControllerProvider).openSlot, isNull);
+      ctrl.openNextSlot();
+      ctrl.openPrevSlot();
+      expect(
+        c.read(stickerToolControllerProvider).openSlot,
+        StickerToolSlot.style,
+        reason: 'no swipe strategy is wired for the sticker dock',
+      );
     });
   });
 
@@ -54,8 +32,7 @@ void main() {
     test('returns the matching slot for a known name', () {
       expect(StickerToolSlot.tryByName('style'), StickerToolSlot.style);
       expect(StickerToolSlot.tryByName('size'), StickerToolSlot.size);
-      expect(StickerToolSlot.tryByName('replace'),
-          StickerToolSlot.replace);
+      expect(StickerToolSlot.tryByName('replace'), StickerToolSlot.replace);
     });
 
     test('returns null for unknown / null', () {

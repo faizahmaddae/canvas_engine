@@ -9,54 +9,43 @@ void main() {
     return c;
   }
 
-  group('ImageToolController', () {
-    test('initial openSlot is null', () {
-      final c = makeContainer();
-      expect(c.read(imageToolControllerProvider).openSlot, isNull);
-    });
-
-    test('toggleSlot opens then closes the same slot', () {
-      final c = makeContainer();
-      final ctrl = c.read(imageToolControllerProvider.notifier);
-      ctrl.toggleSlot(ImageToolSlot.style);
-      expect(c.read(imageToolControllerProvider).openSlot,
-          ImageToolSlot.style);
-      ctrl.toggleSlot(ImageToolSlot.style);
-      expect(c.read(imageToolControllerProvider).openSlot, isNull);
-    });
-
-    test('toggling a different slot switches it', () {
-      final c = makeContainer();
-      final ctrl = c.read(imageToolControllerProvider.notifier);
-      ctrl.toggleSlot(ImageToolSlot.style);
-      ctrl.toggleSlot(ImageToolSlot.border);
-      expect(c.read(imageToolControllerProvider).openSlot,
-          ImageToolSlot.border);
-    });
-
-    test('closePanel clears the open slot', () {
-      final c = makeContainer();
-      final ctrl = c.read(imageToolControllerProvider.notifier);
-      ctrl.toggleSlot(ImageToolSlot.style);
-      ctrl.closePanel();
-      expect(c.read(imageToolControllerProvider).openSlot, isNull);
-    });
-  });
+  // Generic open/toggle/close semantics are pinned once in
+  // test/editor/toolbar/dock_tool_controller_test.dart (tb1 1.10);
+  // this file keeps only the image-specific pins.
 
   group('ImageToolController sibling navigation', () {
+    test('panel walk follows the rendered strip order (tb1 1.11)', () {
+      // Deliberate behavior change in 1.11: the walk used to follow
+      // enum declaration order (style→shape→border→shadow→…); it now
+      // derives from kImageStripOrder, i.e. what the user sees.
+      expect(kImagePanelSlotOrder, const [
+        ImageToolSlot.style,
+        ImageToolSlot.border,
+        ImageToolSlot.shadow,
+        ImageToolSlot.shape,
+        ImageToolSlot.adjust,
+        ImageToolSlot.effects,
+        ImageToolSlot.filters,
+      ]);
+    });
+
     test('openNextSlot walks the panel order and wraps', () {
       final c = makeContainer();
       final ctrl = c.read(imageToolControllerProvider.notifier);
       ctrl.toggleSlot(kImagePanelSlotOrder.first);
       for (var i = 1; i < kImagePanelSlotOrder.length; i++) {
         ctrl.openNextSlot();
-        expect(c.read(imageToolControllerProvider).openSlot,
-            kImagePanelSlotOrder[i]);
+        expect(
+          c.read(imageToolControllerProvider).openSlot,
+          kImagePanelSlotOrder[i],
+        );
       }
       ctrl.openNextSlot();
-      expect(c.read(imageToolControllerProvider).openSlot,
-          kImagePanelSlotOrder.first,
-          reason: 'wraps from last back to first');
+      expect(
+        c.read(imageToolControllerProvider).openSlot,
+        kImagePanelSlotOrder.first,
+        reason: 'wraps from last back to first',
+      );
     });
 
     test('openPrevSlot wraps from first back to last', () {
@@ -64,8 +53,10 @@ void main() {
       final ctrl = c.read(imageToolControllerProvider.notifier);
       ctrl.toggleSlot(kImagePanelSlotOrder.first);
       ctrl.openPrevSlot();
-      expect(c.read(imageToolControllerProvider).openSlot,
-          kImagePanelSlotOrder.last);
+      expect(
+        c.read(imageToolControllerProvider).openSlot,
+        kImagePanelSlotOrder.last,
+      );
     });
 
     test('open{Prev,Next}Slot is a no-op when no panel is open', () {
@@ -87,8 +78,11 @@ void main() {
         for (var i = 0; i < ImageToolSlot.values.length + 2; i++) {
           ctrl.openNextSlot();
           final reached = c.read(imageToolControllerProvider).openSlot!;
-          expect(reached.isPanel, isTrue,
-              reason: 'reached non-panel slot $reached from $start');
+          expect(
+            reached.isPanel,
+            isTrue,
+            reason: 'reached non-panel slot $reached from $start',
+          );
         }
         ctrl.closePanel();
       }

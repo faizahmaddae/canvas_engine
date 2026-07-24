@@ -9,53 +9,31 @@ void main() {
     return c;
   }
 
+  // Generic open/toggle/close semantics are pinned once in
+  // test/editor/toolbar/dock_tool_controller_test.dart (tb1 1.10);
+  // this file keeps only the shape-specific pins.
+
   group('ShapeToolController', () {
-    test('initial openSlot is null', () {
-      final c = makeContainer();
-      expect(c.read(shapeToolControllerProvider).openSlot, isNull);
-    });
-
-    test('toggleSlot opens then closes the same slot', () {
-      final c = makeContainer();
-      final ctrl = c.read(shapeToolControllerProvider.notifier);
-      ctrl.toggleSlot(ShapeToolSlot.style);
-      expect(c.read(shapeToolControllerProvider).openSlot,
-          ShapeToolSlot.style);
-      ctrl.toggleSlot(ShapeToolSlot.style);
-      expect(c.read(shapeToolControllerProvider).openSlot, isNull);
-    });
-
-    test('toggling a different slot switches it', () {
-      final c = makeContainer();
-      final ctrl = c.read(shapeToolControllerProvider.notifier);
-      ctrl.toggleSlot(ShapeToolSlot.style);
-      ctrl.toggleSlot(ShapeToolSlot.border);
-      expect(c.read(shapeToolControllerProvider).openSlot,
-          ShapeToolSlot.border);
-    });
-
-    test('closePanel clears the open slot', () {
-      final c = makeContainer();
-      final ctrl = c.read(shapeToolControllerProvider.notifier);
-      ctrl.toggleSlot(ShapeToolSlot.style);
-      ctrl.closePanel();
-      expect(c.read(shapeToolControllerProvider).openSlot, isNull);
-    });
-
     test('openNextSlot walks the canonical order and wraps', () {
       final c = makeContainer();
       final ctrl = c.read(shapeToolControllerProvider.notifier);
       ctrl.toggleSlot(ShapeToolSlot.style);
       ctrl.openNextSlot();
-      expect(c.read(shapeToolControllerProvider).openSlot,
-          ShapeToolSlot.border);
+      expect(
+        c.read(shapeToolControllerProvider).openSlot,
+        ShapeToolSlot.border,
+      );
       ctrl.openNextSlot();
-      expect(c.read(shapeToolControllerProvider).openSlot,
-          ShapeToolSlot.shadow);
+      expect(
+        c.read(shapeToolControllerProvider).openSlot,
+        ShapeToolSlot.shadow,
+      );
       ctrl.openNextSlot();
-      expect(c.read(shapeToolControllerProvider).openSlot,
-          ShapeToolSlot.style,
-          reason: 'wraps from last back to first');
+      expect(
+        c.read(shapeToolControllerProvider).openSlot,
+        ShapeToolSlot.style,
+        reason: 'wraps from last back to first',
+      );
     });
 
     test('openPrevSlot walks backwards and wraps', () {
@@ -63,12 +41,16 @@ void main() {
       final ctrl = c.read(shapeToolControllerProvider.notifier);
       ctrl.toggleSlot(ShapeToolSlot.style);
       ctrl.openPrevSlot();
-      expect(c.read(shapeToolControllerProvider).openSlot,
-          ShapeToolSlot.shadow,
-          reason: 'wraps from first back to last');
+      expect(
+        c.read(shapeToolControllerProvider).openSlot,
+        ShapeToolSlot.shadow,
+        reason: 'wraps from first back to last',
+      );
       ctrl.openPrevSlot();
-      expect(c.read(shapeToolControllerProvider).openSlot,
-          ShapeToolSlot.border);
+      expect(
+        c.read(shapeToolControllerProvider).openSlot,
+        ShapeToolSlot.border,
+      );
     });
 
     test('open{Prev,Next}Slot is a no-op when no panel is open', () {
@@ -87,8 +69,11 @@ void main() {
         for (var i = 0; i < ShapeToolSlot.values.length + 2; i++) {
           ctrl.openNextSlot();
           final reached = c.read(shapeToolControllerProvider).openSlot!;
-          expect(reached.isPanel, isTrue,
-              reason: 'reached non-panel slot $reached from $start');
+          expect(
+            reached.isPanel,
+            isTrue,
+            reason: 'reached non-panel slot $reached from $start',
+          );
         }
         ctrl.closePanel();
       }
@@ -113,8 +98,11 @@ void main() {
       // The controller starts with openSlot == null and nothing should
       // open it automatically — the user taps a tab when ready.
       final c = makeContainer();
-      expect(c.read(shapeToolControllerProvider).openSlot, isNull,
-          reason: 'shape insert must not auto-open any panel');
+      expect(
+        c.read(shapeToolControllerProvider).openSlot,
+        isNull,
+        reason: 'shape insert must not auto-open any panel',
+      );
     });
   });
 }

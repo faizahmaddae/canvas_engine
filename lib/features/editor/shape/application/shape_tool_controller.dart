@@ -1,17 +1,20 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/document_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/shape_commands.dart';
 import '../../engine/modules/shape/shape_layer.dart';
+import '../../toolbar/application/dock_tool_controller.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 
-/// Every chip in `ShapeModeToolbar`, in left→right strip order.
+/// Every chip in `ShapeModeToolbar` that drives the shape dock.
 ///
 /// `isPanel: false` means the chip participates in the strip but
 /// does not open a dock panel:
 ///   * [replace] — one-shot picker action.
+///
+/// Rendered strip order lives in [kShapeStripOrder]; sibling-swipe
+/// walks [kShapePanelSlotOrder], derived from that same list.
 enum ShapeToolSlot {
   style,
   border,
@@ -34,84 +37,58 @@ enum ShapeToolSlot {
   }
 }
 
-/// Display order of every Shape chip — including non-panel ones.
-const List<ShapeToolSlot> kShapeStripSlotOrder = ShapeToolSlot.values;
+/// Single source of truth for the Shape strip: every chip, in
+/// rendered left→right order. `ShapeModeToolbar` builds its chips
+/// by iterating THIS list, and [kShapePanelSlotOrder] is derived
+/// from it — a change to one cannot drift the other.
+///
+/// The two action entries are strip-only chips outside
+/// [ShapeToolSlot]: `'opacity'` opens a `ContextToolPanel` (a
+/// different host, so it stays out of the swipe walk) and `'more'`
+/// opens the selected-layer actions sheet.
+const List<DockStripEntry<ShapeToolSlot>> kShapeStripOrder =
+    <DockStripEntry<ShapeToolSlot>>[
+      DockStripEntry.slot(ShapeToolSlot.style),
+      DockStripEntry.slot(ShapeToolSlot.border),
+      DockStripEntry.slot(ShapeToolSlot.shadow),
+      DockStripEntry.action('opacity'),
+      DockStripEntry.action('more'),
+      DockStripEntry.slot(ShapeToolSlot.replace),
+    ];
 
-/// Panel-bearing slots only — drives sibling-swipe. Verified
-/// against `ShapeToolSlot.values.where((s) => s.isPanel)` by the
-/// drift test in `slot_order_consistency_test.dart`.
-const List<ShapeToolSlot> kShapePanelSlotOrder = <ShapeToolSlot>[
-  ShapeToolSlot.style,
-  ShapeToolSlot.border,
-  ShapeToolSlot.shadow,
-];
+/// Display order of every Shape dock slot (action chips excluded)
+/// — the [kShapeStripOrder] projection.
+final List<ShapeToolSlot> kShapeStripSlotOrder = List.unmodifiable(
+  kShapeStripOrder.map((e) => e.slot).whereType<ShapeToolSlot>(),
+);
+
+/// Panel-bearing slots in RENDERED order — drives sibling-swipe.
+/// Derived from [kShapeStripOrder]. Pinned against the pumped
+/// toolbar by `test/editor/widget/slot_order_consistency_test.dart`.
+final List<ShapeToolSlot> kShapePanelSlotOrder = List.unmodifiable(
+  kShapeStripOrder
+      .map((e) => e.slot)
+      .whereType<ShapeToolSlot>()
+      .where((s) => s.isPanel),
+);
 
 /// Slots intentionally skipped during sibling-swipe. Empty today.
 const Set<ShapeToolSlot> kShapeSlotsExcludedFromSwipe = <ShapeToolSlot>{};
 
 /// Shared prev/next walker for the Shape dock.
-const SiblingSwipeStrategy<ShapeToolSlot> kShapeSwipeStrategy =
+final SiblingSwipeStrategy<ShapeToolSlot> kShapeSwipeStrategy =
     SiblingSwipeStrategy<ShapeToolSlot>(
-  order: kShapePanelSlotOrder,
-  excluded: kShapeSlotsExcludedFromSwipe,
-);
-
-/// Snapshot of the in-dock state for the Shape sub-tool. Mirrors
-/// [ImageToolSession]: only tracks which sub-tab (Style / Border /
-/// Shadow) is currently expanded above the strip — the selected
-/// `ShapeLayer` is owned by the document/selection controllers.
-@immutable
-class ShapeToolSession {
-  const ShapeToolSession({this.openSlot});
-
-  static const ShapeToolSession initial = ShapeToolSession();
-
-  /// Currently expanded panel, or `null` when only the chip strip
-  /// is visible.
-  final ShapeToolSlot? openSlot;
-
-  ShapeToolSession copyWith({
-    ShapeToolSlot? openSlot,
-    bool clearOpenSlot = false,
-  }) {
-    return ShapeToolSession(
-      openSlot: clearOpenSlot ? null : (openSlot ?? this.openSlot),
+      order: kShapePanelSlotOrder,
+      excluded: kShapeSlotsExcludedFromSwipe,
     );
-  }
-}
 
-class ShapeToolController extends Notifier<ShapeToolSession> {
-  @override
-  ShapeToolSession build() => ShapeToolSession.initial;
+/// In-dock state for the Shape sub-tool — see [DockToolSession].
+typedef ShapeToolSession = DockToolSession<ShapeToolSlot>;
 
-  /// Toggle [slot] — if it's already open, close it; otherwise
-  /// switch to it. Mirrors the image-tool sheet toggle.
-  void toggleSlot(ShapeToolSlot slot) {
-    if (state.openSlot == slot) {
-      state = state.copyWith(clearOpenSlot: true);
-    } else {
-      state = state.copyWith(openSlot: slot);
-    }
-  }
-
-  void closePanel() {
-    if (state.openSlot == null) return;
-    state = state.copyWith(clearOpenSlot: true);
-  }
-
-  /// Open the slot before the current one in
-  /// [kShapePanelSlotOrder]. Wraps. No-op when no slot is open.
-  void openPrevSlot() {
-    final next = kShapeSwipeStrategy.prev(state.openSlot);
-    if (next != null) state = state.copyWith(openSlot: next);
-  }
-
-  /// Open the slot after the current one in
-  /// [kShapePanelSlotOrder]. Wraps. No-op when no slot is open.
-  void openNextSlot() {
-    final next = kShapeSwipeStrategy.next(state.openSlot);
-    if (next != null) state = state.copyWith(openSlot: next);
-  }
+/// Shape dock controller — the generic [DockToolController] plus
+/// the shape-only resize-mode bridge used by the floating toolbar.
+class ShapeToolController extends DockToolController<ShapeToolSlot> {
+  ShapeToolController() : super(swipe: kShapeSwipeStrategy);
 
   /// Switch the resize behaviour of the currently-selected shape
   /// layer. Mirrors `PaintToolController.setResizeMode` so the
@@ -123,9 +100,9 @@ class ShapeToolController extends Notifier<ShapeToolSession> {
     final layer = selectedShapeLayer();
     if (layer == null) return;
     if (layer.effectiveResizeMode == mode && layer.resizeMode == mode) return;
-    ref.read(documentControllerProvider.notifier).execute(
-          SetShapeResizeModeCommand(layerId: layer.id, mode: mode),
-        );
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(SetShapeResizeModeCommand(layerId: layer.id, mode: mode));
   }
 
   /// Read the currently-selected shape layer (if any). Used by the
@@ -134,13 +111,14 @@ class ShapeToolController extends Notifier<ShapeToolSession> {
   ShapeLayer? selectedShapeLayer() {
     final selection = ref.read(selectionControllerProvider);
     if (!selection.hasSelection) return null;
-    final layer =
-        ref.read(documentControllerProvider).layerById(selection.selectedId!);
+    final layer = ref
+        .read(documentControllerProvider)
+        .layerById(selection.selectedId!);
     return layer is ShapeLayer ? layer : null;
   }
 }
 
 final shapeToolControllerProvider =
     NotifierProvider<ShapeToolController, ShapeToolSession>(
-  ShapeToolController.new,
-);
+      ShapeToolController.new,
+    );
