@@ -7,7 +7,7 @@
 //   * a small "Base photo" badge label,
 // and we do NOT render
 //   * any transform handles,
-//   * the floating QuickActionsOverlay (direct duplicate / delete),
+//   * the floating QuickCapsule (tb2 9/16 — accelerators + More),
 //   * the transform HUD readout.
 // Normal layers and overlay images keep their full chrome.
 
@@ -20,7 +20,7 @@ import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.d
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/editor_canvas.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/layers_panel.dart';
-import 'package:canvas_engine/features/editor/presentation/widgets/quick_actions_overlay.dart';
+import 'package:canvas_engine/features/editor/presentation/widgets/quick_capsule.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/selection_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,8 +98,9 @@ void main() {
       expect(frames.single.onBody, isNull);
       // Badge label is shown.
       expect(find.text('Base photo'), findsOneWidget);
-      // Floating quick-actions toolbar is suppressed.
-      expect(find.byType(QuickActionsOverlay), findsNothing);
+      // The protected base photo gets NO quick-capsule — its badge
+      // is its only chrome (tb2 9/16).
+      expect(find.byType(QuickCapsule), findsNothing);
     });
 
     testWidgets('overlay image in photo project keeps full chrome', (
@@ -119,9 +120,9 @@ void main() {
       expect(frames, hasLength(1));
       expect(frames.single.showHandles, isTrue);
       expect(frames.single.onBody, isNotNull);
-      // Image structural actions now live in the contextual Image
-      // toolbar's More entry, not as a direct duplicate/delete pill.
-      expect(find.byType(QuickActionsOverlay), findsNothing);
+      // Non-protected images get the unified quick-capsule
+      // (tb2 9/16): style + crop accelerators + More.
+      expect(find.byType(QuickCapsule), findsOneWidget);
       // No "Base photo" label on the overlay.
       expect(find.text('Base photo'), findsNothing);
     });
@@ -142,7 +143,7 @@ void main() {
       );
       expect(frame.showHandles, isTrue);
       expect(frame.onBody, isNotNull);
-      expect(find.byType(QuickActionsOverlay), findsNothing);
+      expect(find.byType(QuickCapsule), findsOneWidget);
       expect(find.text('Base photo'), findsNothing);
     });
 

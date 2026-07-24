@@ -8,9 +8,9 @@
 /// radius, shadow, active-state tint) had to be done in two places.
 ///
 /// ## What it is *not*
-/// * Not a place for the `QuickActionsOverlay` style (opaque rounded
-///   pill with dividers + a destructive action). That bar deliberately
-///   uses a different aesthetic and lives in its own file.
+/// * Not a home for structural actions (duplicate / delete / order)
+///   — those live in the layer overflow sheet, reached through the
+///   quick-capsule's More pill.
 /// * Not a "do everything" toolbar abstraction. Each tool still owns
 ///   its own pill content (which sheets to open, what label to show,
 ///   which command to dispatch). Only the *shell* and *button shape*
@@ -23,7 +23,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_tokens.dart';
-import '../../../../l10n/l10n.dart';
 
 /// Standard height of a single-row floating glass bar. Kept in sync
 /// with the value Paint and Shape pass to [FloatingToolbarPositioner].
@@ -184,54 +183,6 @@ class FloatingColorDot extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Icon + label pair shared by the **Scale ↔ Free** resize-mode pill
-/// in Paint and Shape floating toolbars. Centralised so both bars
-/// stay visually identical — same icons (`aspect_ratio_rounded` /
-/// `crop_free_rounded`), same labels ("Scale" / "Free"), same
-/// active-state colour rule.
-///
-/// Stateless: callers own the pill itself and pass `isScale` from
-/// their own model (`PaintLayer.resizeMode == scale`,
-/// `ShapeLayer.effectiveResizeMode == scale`, …).
-class ResizeModePillContent extends StatelessWidget {
-  const ResizeModePillContent({
-    super.key,
-    required this.isScale,
-    required this.foreground,
-    required this.activeColor,
-  });
-
-  final bool isScale;
-  final Color foreground;
-  final Color activeColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final tint = isScale ? activeColor : foreground;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(
-          isScale ? Icons.aspect_ratio_rounded : Icons.crop_free_rounded,
-          size: 16,
-          color: tint,
-        ),
-        const SizedBox(width: 5),
-        Text(
-          isScale ? context.l10n.scaleLabel : context.l10n.freeLabel,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w700,
-            color: tint,
-            height: 1,
-          ),
-        ),
-      ],
     );
   }
 }

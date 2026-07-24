@@ -19,7 +19,6 @@ import 'package:canvas_engine/features/editor/engine/commands/transform_commands
 import 'package:canvas_engine/features/editor/engine/core/editor_layer.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
-import 'package:canvas_engine/features/editor/paint/presentation/paint_size_sheet.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/export_action_sheet.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/layer_overflow_sheet.dart';
 import 'package:canvas_engine/features/editor/text/presentation/text_input_flow_sheet.dart';
@@ -140,15 +139,9 @@ void main() {
     return c;
   }
 
-  testWidgets('paint size sheet — no overflow @ short landscape', (
-    tester,
-  ) async {
-    applyView(tester, shortLandscape);
-    final c = docContainer();
-    addTearDown(c.dispose);
-    await pumpAndOpen(tester, c, (ctx, ref) => showPaintSizeSheet(ctx, ref));
-    expect(tester.takeException(), isNull);
-  });
+  // The modal paint size sheet died with the floating toolbars
+  // (tb2 9/16) — width edits ride the paint dock's size slot, whose
+  // body has its own overflow coverage.
 
   testWidgets('layer overflow sheet — no overflow @ short landscape', (
     tester,

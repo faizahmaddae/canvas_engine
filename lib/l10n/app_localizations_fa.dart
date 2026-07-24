@@ -1225,6 +1225,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get shadowOffsetPadSemantics => 'جهت و فاصله سایه';
 
   @override
+  String get quickActionsSemantics => 'دسترسی سریع';
+
+  @override
   String get textQuickActionsSemantics => 'دسترسی سریع متن';
 
   @override

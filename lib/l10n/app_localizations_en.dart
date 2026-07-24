@@ -1224,6 +1224,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shadowOffsetPadSemantics => 'Shadow direction and distance';
 
   @override
+  String get quickActionsSemantics => 'Quick actions';
+
+  @override
   String get textQuickActionsSemantics => 'Text quick actions';
 
   @override

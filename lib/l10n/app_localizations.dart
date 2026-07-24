@@ -2390,6 +2390,12 @@ abstract class AppLocalizations {
   /// **'Shadow direction and distance'**
   String get shadowOffsetPadSemantics;
 
+  /// Accessibility label for the floating quick-capsule shown above any selected layer.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick actions'**
+  String get quickActionsSemantics;
+
   /// Accessibility label for the floating quick-capsule shown above a selected text layer.
   ///
   /// In en, this message translates to:

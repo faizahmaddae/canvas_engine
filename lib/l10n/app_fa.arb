@@ -382,6 +382,7 @@
   "fillColorTitle": "رنگ پرکردن",
   "shadowColorTitle": "رنگ سایه",
   "shadowOffsetPadSemantics": "جهت و فاصله سایه",
+  "quickActionsSemantics": "دسترسی سریع",
   "textQuickActionsSemantics": "دسترسی سریع متن",
   "exactSizeTitle": "اندازه دقیق",
   "blurDirectionOpacitySubtitle": "محو، جهت، شفافیت",

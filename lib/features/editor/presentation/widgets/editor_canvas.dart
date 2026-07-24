@@ -29,25 +29,19 @@ import '../../engine/core/selection_state.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/interaction/layer_space_mapper.dart';
 import '../../engine/interaction/group_engine.dart';
-import '../../engine/modules/image/image_layer.dart';
 import '../../engine/modules/text/text_layer.dart';
-import '../../engine/modules/paint/paint_layer.dart';
-import '../../engine/modules/shape/shape_layer.dart';
 import '../../engine/rendering/background_fill_box.dart';
 import '../../engine/rendering/layer_renderer.dart';
 import '../../crop/application/crop_controller.dart';
 import '../../canvas/presentation/widgets/canvas_checkerboard.dart';
 import '../../paint/application/paint_tool_controller.dart';
-import '../../paint/presentation/paint_floating_toolbar.dart';
 import '../../paint/presentation/paint_gesture_surface.dart';
-import '../../shape/presentation/shape_floating_toolbar.dart';
 import '../../text/presentation/text_edit_flow.dart';
-import '../../text/presentation/text_quick_capsule.dart';
 import '../../text/application/add_text_composer_state.dart';
 import 'animated_guides_layer.dart';
 import 'canvas_framing.dart';
 import 'mask_edit_overlay.dart';
-import 'quick_actions_overlay.dart';
+import 'quick_capsule.dart';
 import 'selection_overlay.dart';
 import 'transform_hud.dart';
 
@@ -882,55 +876,18 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
                         _buildHud(doc.layers, selection, viewport),
                       // Floating text quick-capsule (re-added,
                       // redesigned): a lean edit/font/size/color/more
-                      // pill over the selection. Routes to the SAME
-                      // panels the bottom bar opens — quick in-place
-                      // access, not a second full bar.
-                      if (selection.count == 1 &&
-                          !addTextComposerOpen &&
-                          !maskEditActive)
-                        _buildTextQuickCapsule(doc.layers, selection, viewport),
-                      // Floating contextual paint toolbar. Appears next to
-                      // a selected paint layer with stroke color, size, and
-                      // resize behavior toggle (type-checks its layer kind).
-                      if (selection.count == 1 &&
-                          !addTextComposerOpen &&
-                          !maskEditActive)
-                        _buildPaintFloatingToolbar(
-                          doc.layers,
-                          selection,
-                          viewport,
-                        ),
-                      // Floating contextual shape toolbar — mirror of
-                      // the paint toolbar. Surfaces the resize-mode
-                      // toggle (Scale ↔ Free) for the selected shape
-                      // so the user can override the kind-based
-                      // default (e.g. let a circle stretch, or lock
-                      // a rectangle's aspect). Mutually exclusive
-                      // with the other floating bars (each builder
-                      // type-checks its layer kind).
-                      if (selection.count == 1 &&
-                          !addTextComposerOpen &&
-                          !maskEditActive)
-                        _buildShapeFloatingToolbar(
-                          doc.layers,
-                          selection,
-                          viewport,
-                        ),
-                      // Quick actions pill — fallback structural actions
-                      // for selected layer types that do not yet have a
-                      // contextual toolbar More entry. Visibility is
-                      // further gated inside the builder on inline-editing
-                      // and active transform sessions so the bar never
-                      // chases a moving selection.
+                      // pill over the selection. THE one floating
+                      // quick-capsule (tb2 9/16): registry-derived
+                      // per-type accelerators routing to the SAME
+                      // surfaces the bottom bar opens — quick
+                      // in-place access, not a second full bar. The
+                      // protected base photo keeps its badge and
+                      // gets NO capsule.
                       if (selection.count == 1 &&
                           !_isProtectedSelection(doc, selection) &&
                           !addTextComposerOpen &&
                           !maskEditActive)
-                        _buildQuickActionsOverlay(
-                          doc.layers,
-                          selection,
-                          viewport,
-                        ),
+                        _buildQuickCapsule(doc.layers, selection, viewport),
                       // Note: the legacy in-canvas image crop overlay
                       // was removed. Cropping now happens in the
                       // full-screen [CropModeOverlay] mounted by the
@@ -1363,7 +1320,16 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
   /// context panel is open — it just opened that surface; stacking
   /// on top of it would be noise. Emoji stickers are excluded (they
   /// carry no text flow; the generic quick-actions pill serves them).
-  Widget _buildTextQuickCapsule(
+  /// THE one floating quick-capsule builder (tb2 9/16) — the five
+  /// per-type builders collapsed to one. Per-type contents live in
+  /// [QuickCapsule]'s registry; this builder owns only the guards
+  /// every old builder shared:
+  ///   * inline edit on the selected layer (text) hides it,
+  ///   * an in-flight transform session hides it (never chase a
+  ///     moving selection),
+  ///   * the shared [canvasChromeSuppressedProvider] signal
+  ///     (tb1 15/17) hides ALL floating chrome uniformly.
+  Widget _buildQuickCapsule(
     List<EditorLayer> layers,
     SelectionState selection,
     ViewportState viewport,
@@ -1374,141 +1340,6 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
         layer = l;
         break;
       }
-    }
-    if (layer is! TextLayer || layer.isSticker) {
-      return const SizedBox.shrink();
-    }
-    final textLayer = layer;
-    return Consumer(
-      builder: (context, ref, _) {
-        final isEditing = ref.watch(
-          editingControllerProvider.select((id) => id == textLayer.id),
-        );
-        if (isEditing) return const SizedBox.shrink();
-        final inSession = ref.watch(
-          interactionControllerProvider.select(
-            (s) => s.session?.layerId == textLayer.id,
-          ),
-        );
-        if (inSession) return const SizedBox.shrink();
-        // One shared suppression signal for ALL floating chrome
-        // (tb1 15/17) — hides while any panel/sheet/session owns the
-        // dock, uniformly across tools.
-        if (ref.watch(canvasChromeSuppressedProvider)) {
-          return const SizedBox.shrink();
-        }
-        return TextQuickCapsule(layer: textLayer, viewport: viewport);
-      },
-    );
-  }
-
-  /// Floating contextual toolbar for the selected paint layer. Hidden
-  /// while a transform gesture is in flight (we don't want the bar to
-  /// chase the layer mid-drag). Mutually exclusive with the text
-  /// floating toolbar — type-checks the selected layer is a
-  /// [PaintLayer] and returns nothing otherwise.
-  Widget _buildPaintFloatingToolbar(
-    List<EditorLayer> layers,
-    SelectionState selection,
-    ViewportState viewport,
-  ) {
-    EditorLayer? layer;
-    for (final l in layers) {
-      if (l.id == selection.selectedId) {
-        layer = l;
-        break;
-      }
-    }
-    if (layer is! PaintLayer) return const SizedBox.shrink();
-    final paintLayer = layer;
-    return Consumer(
-      builder: (context, ref, _) {
-        final inSession = ref.watch(
-          interactionControllerProvider.select(
-            (s) => s.session?.layerId == paintLayer.id,
-          ),
-        );
-        if (inSession) return const SizedBox.shrink();
-        // Shared suppression signal (tb1 15/17). Note this is a
-        // superset of the old guard — the paint bar previously
-        // ignored the context panel, one of the documented drifts.
-        if (ref.watch(canvasChromeSuppressedProvider)) {
-          return const SizedBox.shrink();
-        }
-        return PaintFloatingToolbar(layer: paintLayer, viewport: viewport);
-      },
-    );
-  }
-
-  /// Floating contextual toolbar for the selected shape layer.
-  /// Hidden while a transform gesture is in flight (so the bar
-  /// never chases the layer mid-drag) and while the shape dock's
-  /// sub-tool sheet (Style / Border / Shadow) is open (so the bar
-  /// never stacks on top of the sheet handle). Type-checks the
-  /// selected layer is a [ShapeLayer] and returns nothing
-  /// otherwise — mirrors `_buildPaintFloatingToolbar`.
-  Widget _buildShapeFloatingToolbar(
-    List<EditorLayer> layers,
-    SelectionState selection,
-    ViewportState viewport,
-  ) {
-    EditorLayer? layer;
-    for (final l in layers) {
-      if (l.id == selection.selectedId) {
-        layer = l;
-        break;
-      }
-    }
-    if (layer is! ShapeLayer) return const SizedBox.shrink();
-    final shapeLayer = layer;
-    return Consumer(
-      builder: (context, ref, _) {
-        final inSession = ref.watch(
-          interactionControllerProvider.select(
-            (s) => s.session?.layerId == shapeLayer.id,
-          ),
-        );
-        if (inSession) return const SizedBox.shrink();
-        // Shared suppression signal (tb1 15/17).
-        if (ref.watch(canvasChromeSuppressedProvider)) {
-          return const SizedBox.shrink();
-        }
-        return ShapeFloatingToolbar(layer: shapeLayer, viewport: viewport);
-      },
-    );
-  }
-
-  /// Quick actions pill (duplicate / bring-forward / delete) for
-  /// layer types that do NOT bring their own contextual More entry.
-  /// Text, image, paint, and shape layers route structural actions
-  /// through their contextual toolbars so the canvas never shows two
-  /// stacked action bars at once.
-  ///
-  /// Hidden during inline-edit and during a transform gesture so the
-  /// bar never chases a moving selection.
-  Widget _buildQuickActionsOverlay(
-    List<EditorLayer> layers,
-    SelectionState selection,
-    ViewportState viewport,
-  ) {
-    EditorLayer? layer;
-    for (final l in layers) {
-      if (l.id == selection.selectedId) {
-        layer = l;
-        break;
-      }
-    }
-    // Normal text + image + paint + shape suppress the generic
-    // quick-actions overlay because their contextual toolbars own
-    // that space and expose structural actions through More. Emoji
-    // stickers, although stored as TextLayer, do NOT surface the
-    // text toolbar — so they need the generic quick actions to stay
-    // reachable (delete, duplicate, transform).
-    if ((layer is TextLayer && !layer.isSticker) ||
-        layer is ImageLayer ||
-        layer is PaintLayer ||
-        layer is ShapeLayer) {
-      return const SizedBox.shrink();
     }
     if (layer == null) return const SizedBox.shrink();
     final selectedLayer = layer;
@@ -1524,12 +1355,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           ),
         );
         if (inSession) return const SizedBox.shrink();
-        // Shared suppression signal (tb1 15/17). Superset of the old
-        // guard — the pill previously ignored the canvas-tool panel.
         if (ref.watch(canvasChromeSuppressedProvider)) {
           return const SizedBox.shrink();
         }
-        return QuickActionsOverlay(layer: selectedLayer, viewport: viewport);
+        return QuickCapsule(layer: selectedLayer, viewport: viewport);
       },
     );
   }

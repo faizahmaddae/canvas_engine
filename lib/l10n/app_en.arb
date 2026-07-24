@@ -401,6 +401,8 @@
   "shadowColorTitle": "Shadow color",
   "shadowOffsetPadSemantics": "Shadow direction and distance",
   "@shadowOffsetPadSemantics": {"description": "Accessibility label for the 2D shadow offset pad — dragging the dot sets shadow direction and distance together."},
+  "quickActionsSemantics": "Quick actions",
+  "@quickActionsSemantics": {"description": "Accessibility label for the floating quick-capsule shown above any selected layer."},
   "textQuickActionsSemantics": "Text quick actions",
   "@textQuickActionsSemantics": {"description": "Accessibility label for the floating quick-capsule shown above a selected text layer."},
   "exactSizeTitle": "Exact size",
