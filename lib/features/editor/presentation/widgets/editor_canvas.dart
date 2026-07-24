@@ -11,10 +11,10 @@ import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
 import '../../application/canvas_capture.dart';
 import '../../application/document_controller.dart';
+import '../../application/canvas_chrome_visibility.dart';
 import '../../application/editing_controller.dart';
 import '../../application/editor_lifecycle.dart';
 import '../../application/editor_session.dart';
-import '../../application/context_toolbar_controller.dart';
 import '../../application/interaction_controller.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/mask_edit_controller.dart';
@@ -36,14 +36,10 @@ import '../../engine/rendering/background_fill_box.dart';
 import '../../engine/rendering/layer_renderer.dart';
 import '../../crop/application/crop_controller.dart';
 import '../../canvas/presentation/widgets/canvas_checkerboard.dart';
-import '../../image/application/image_tool_controller.dart';
 import '../../paint/application/paint_tool_controller.dart';
-import '../../sticker/application/sticker_tool_controller.dart';
-import '../../shape/application/shape_tool_controller.dart';
 import '../../paint/presentation/paint_floating_toolbar.dart';
 import '../../paint/presentation/paint_gesture_surface.dart';
 import '../../shape/presentation/shape_floating_toolbar.dart';
-import '../../text/application/text_tool_controller.dart';
 import '../../text/presentation/text_edit_flow.dart';
 import '../../text/presentation/text_quick_capsule.dart';
 import '../../text/application/add_text_composer_state.dart';
@@ -1378,17 +1374,12 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           ),
         );
         if (inSession) return const SizedBox.shrink();
-        // Mirror the paint/shape guard: hide while the text dock
-        // sheet is open so the capsule never stacks on the panel it
-        // routes to (openSlot/panelExpanded were retired in tb1 6b).
-        final dockBusy = ref.watch(
-          textToolControllerProvider.select((s) => s.openSheet != null),
-        );
-        if (dockBusy) return const SizedBox.shrink();
-        final contextPanelOpen = ref.watch(
-          contextToolbarControllerProvider.select((panel) => panel != null),
-        );
-        if (contextPanelOpen) return const SizedBox.shrink();
+        // One shared suppression signal for ALL floating chrome
+        // (tb1 15/17) — hides while any panel/sheet/session owns the
+        // dock, uniformly across tools.
+        if (ref.watch(canvasChromeSuppressedProvider)) {
+          return const SizedBox.shrink();
+        }
         return TextQuickCapsule(layer: textLayer, viewport: viewport);
       },
     );
@@ -1421,14 +1412,12 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           ),
         );
         if (inSession) return const SizedBox.shrink();
-        // Mirror the text-mode guard: hide while any paint dock
-        // sub-tool sheet is open so the floating bar never stacks
-        // on top of the sheet handle (and never duplicates the
-        // controls the sheet already exposes).
-        final sheetOpen = ref.watch(
-          paintToolControllerProvider.select((s) => s.openSlot != null),
-        );
-        if (sheetOpen) return const SizedBox.shrink();
+        // Shared suppression signal (tb1 15/17). Note this is a
+        // superset of the old guard — the paint bar previously
+        // ignored the context panel, one of the documented drifts.
+        if (ref.watch(canvasChromeSuppressedProvider)) {
+          return const SizedBox.shrink();
+        }
         return PaintFloatingToolbar(layer: paintLayer, viewport: viewport);
       },
     );
@@ -1463,13 +1452,10 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           ),
         );
         if (inSession) return const SizedBox.shrink();
-        final sheetOpen = ref.watch(
-          shapeToolControllerProvider.select((s) => s.openSlot != null),
-        );
-        final contextPanelOpen = ref.watch(
-          contextToolbarControllerProvider.select((panel) => panel != null),
-        );
-        if (sheetOpen || contextPanelOpen) return const SizedBox.shrink();
+        // Shared suppression signal (tb1 15/17).
+        if (ref.watch(canvasChromeSuppressedProvider)) {
+          return const SizedBox.shrink();
+        }
         return ShapeFloatingToolbar(layer: shapeLayer, viewport: viewport);
       },
     );
@@ -1521,29 +1507,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
           ),
         );
         if (inSession) return const SizedBox.shrink();
-        // Hide while an Image sub-tool panel is open above the
-        // dock — the dock is taller and the floating pill would
-        // sit on top of (or fight for vertical room with) the
-        // selection controls. Mirrors how text/paint suppress
-        // their floating bars while their sheet is open.
-        final imagePanelOpen = ref.watch(
-          imageToolControllerProvider.select((s) => s.openSlot != null),
-        );
-        if (imagePanelOpen) return const SizedBox.shrink();
-        // Mirror the image-mode guard for the Sticker sub-tools so
-        // the floating pill never stacks on top of the Style /
-        // Size / Replace panel that owns the bottom of the screen.
-        final stickerPanelOpen = ref.watch(
-          stickerToolControllerProvider.select((s) => s.openSlot != null),
-        );
-        if (stickerPanelOpen) return const SizedBox.shrink();
-        // Mirror for the Shape sub-tools — same reason: Style /
-        // Border / Shadow / Replace panels would otherwise have
-        // a floating pill stacking on top of them on small phones.
-        final shapePanelOpen = ref.watch(
-          shapeToolControllerProvider.select((s) => s.openSlot != null),
-        );
-        if (shapePanelOpen) return const SizedBox.shrink();
+        // Shared suppression signal (tb1 15/17). Superset of the old
+        // guard — the pill previously ignored the canvas-tool panel.
+        if (ref.watch(canvasChromeSuppressedProvider)) {
+          return const SizedBox.shrink();
+        }
         return QuickActionsOverlay(layer: selectedLayer, viewport: viewport);
       },
     );
