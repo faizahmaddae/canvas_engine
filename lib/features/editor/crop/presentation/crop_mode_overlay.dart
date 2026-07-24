@@ -3,33 +3,37 @@ import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../l10n/l10n.dart';
+import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/constants/engine_constants.dart';
 import '../../../../core/utils/haptics.dart';
+import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../../presentation/widgets/handle_drag_detector.dart';
 import '../../presentation/widgets/selection_overlay.dart' show DragPhase;
 import '../application/crop_controller.dart';
 
-/// Full-screen Crop Mode overlay. Mounted above the editor canvas
-/// whenever [CropSession.active] is true. Owns the dim, the image
-/// preview, the crop frame + handles, and the bottom action bar.
+/// Crop Mode session surface. Mounted above the editor canvas
+/// whenever [CropSession.active] is true. Owns the scrim, the source
+/// preview, the crop frame + handles, and the bottom control card.
 ///
 /// **Why this does not use `EditorToolPanelShell`:** Crop is a
-/// full-screen mode, not a bottom-dock panel. It needs to own the
-/// status-bar region, the canvas, the dim, and its own bottom
-/// action bar with **Cancel** and **Done** semantics that genuinely
-/// commit/abort a draft. The shell is for in-dock sub-tools that
-/// share the editor's chrome \u2014 forking it for a full-screen mode
-/// would muddy the contract for both. This overlay is the canonical
-/// example of when to skip the shell.
+/// draft session (interaction contract §1 class D), not a bottom-dock
+/// sub-tool. It needs its own Done/Cancel that genuinely commit or
+/// abort a draft, and — unlike mask-edit, which can leave the live
+/// canvas underneath — it must show pixels *outside* the layer's box,
+/// which the canvas clips. So it takes over the screen while keeping
+/// the mask-edit chrome grammar: token surfaces, an accent-outlined
+/// region over a scrim, and a floating control card carrying
+/// Cancel / Done.
 ///
 /// UX contract:
-///   * The image preview is rendered **uncropped** so the user can
-///     always see the full image while choosing the crop.
-///   * Aspect chips and corner drags only mutate the draft. The
-///     document is untouched until **Done**, and **Cancel** is a
-///     true no-op.
+///   * The preview is the **whole source bitmap** with the layer's
+///     current window drawn on it, at the layer's Look. Nothing a
+///     previous crop hid is out of reach — see
+///     [CropSession.draftBounds].
+///   * Aspect chips and drags only mutate the draft. The document is
+///     untouched until **Done**, and **Cancel** is a true no-op.
 class CropModeOverlay extends ConsumerWidget {
   const CropModeOverlay({super.key});
 
@@ -49,15 +53,15 @@ class CropModeOverlay extends ConsumerWidget {
       });
       return const SizedBox.shrink();
     }
+    final tokens = AppTokens.of(context);
     return Material(
-      color: Colors.black,
+      color: tokens.workspace,
       child: SafeArea(
         bottom: false,
         child: Column(
           children: [
             _SourceAspectProbe(layer: layer),
             const _CropTopBar(),
-            const Divider(height: 1, thickness: 1, color: Color(0xFF1A1A1A)),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) => _CropCanvas(
@@ -66,7 +70,6 @@ class CropModeOverlay extends ConsumerWidget {
                 ),
               ),
             ),
-            const Divider(height: 1, thickness: 1, color: Color(0xFF1A1A1A)),
             _CropBottomBar(layer: layer),
           ],
         ),
@@ -77,9 +80,10 @@ class CropModeOverlay extends ConsumerWidget {
 
 /// Zero-size widget that resolves the layer's image source once and
 /// reports the bitmap's natural aspect into the crop session
-/// ([CropController.setSourceAspect]). Commit needs that ratio to
-/// map the display-space draft into a persistent source window;
-/// until it resolves, commit falls back to the legacy reshape.
+/// ([CropController.setSourceAspect]). Both the non-destructive frame
+/// bounds and the source-window commit need that ratio; until it
+/// resolves the session stays in display space and commit falls back
+/// to the legacy reshape.
 class _SourceAspectProbe extends ConsumerStatefulWidget {
   const _SourceAspectProbe({required this.layer});
   final ImageLayer layer;
@@ -106,17 +110,7 @@ class _SourceAspectProbeState extends ConsumerState<_SourceAspectProbe> {
 
   void _resolve() {
     _detach();
-    final src = widget.layer.source;
-    ImageProvider? provider;
-    final filePath = src.filePath;
-    if (filePath != null) {
-      final file = io.File(filePath);
-      if (file.existsSync()) provider = FileImage(file);
-    } else if (src.assetName != null) {
-      provider = AssetImage(src.assetName!);
-    } else if (src.networkUrl != null) {
-      provider = NetworkImage(src.networkUrl!);
-    }
+    final provider = _sourceProvider(widget.layer.source);
     if (provider == null) return;
     final stream = provider.resolve(createLocalImageConfiguration(context));
     final listener = ImageStreamListener(
@@ -156,6 +150,20 @@ class _SourceAspectProbeState extends ConsumerState<_SourceAspectProbe> {
   Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
+/// Resolve an [ImageSource] to a provider, or `null` when the bytes
+/// are unreachable. Shared by the aspect probe and the preview so the
+/// two never disagree about whether an image exists.
+ImageProvider? _sourceProvider(ImageSource src) {
+  final filePath = src.filePath;
+  if (filePath != null) {
+    final file = io.File(filePath);
+    return file.existsSync() ? FileImage(file) : null;
+  }
+  if (src.assetName != null) return AssetImage(src.assetName!);
+  if (src.networkUrl != null) return NetworkImage(src.networkUrl!);
+  return null;
+}
+
 // =============================================================
 // Top bar — Cancel / title / Done
 // =============================================================
@@ -166,6 +174,7 @@ class _CropTopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ctrl = ref.read(cropControllerProvider.notifier);
+    final tokens = AppTokens.of(context);
     return SizedBox(
       height: 56,
       child: Padding(
@@ -179,21 +188,28 @@ class _CropTopBar extends ConsumerWidget {
                 ctrl.cancelCrop();
               },
               style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
+                foregroundColor: tokens.accent,
                 minimumSize: const Size(64, 44),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                textStyle: const TextStyle(
+              ),
+              // Weight and size ride on the CHILD, not on
+              // ButtonStyle.textStyle: a bare TextStyle there REPLACES
+              // the theme's button style, taking the locale-aware
+              // family with it — Persian labels fell back to a face
+              // with no Persian coverage. A Text style merges.
+              child: Text(
+                context.l10n.cancelAction,
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              child: Text(context.l10n.cancelAction),
             ),
             const Spacer(),
             Text(
               context.l10n.cropImageAction,
               style: TextStyle(
-                color: Colors.white,
+                color: tokens.textPrimary,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.2,
@@ -207,8 +223,8 @@ class _CropTopBar extends ConsumerWidget {
                 ctrl.commitCrop();
               },
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                backgroundColor: tokens.brand,
+                foregroundColor: tokens.onBrand,
                 // Painted pill stays 38dp; the tap target grows to
                 // the 44dp floor via Material's padded density
                 // (kMinHitTarget a11y pass — the 56dp bar has room,
@@ -219,12 +235,14 @@ class _CropTopBar extends ConsumerWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(19),
                 ),
-                textStyle: const TextStyle(
+              ),
+              child: Text(
+                context.l10n.doneAction,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              child: Text(context.l10n.doneAction),
             ),
           ],
         ),
@@ -234,7 +252,7 @@ class _CropTopBar extends ConsumerWidget {
 }
 
 // =============================================================
-// Canvas — image preview + draggable crop frame
+// Canvas — source preview + draggable crop frame
 // =============================================================
 
 class _CropCanvas extends ConsumerWidget {
@@ -244,8 +262,9 @@ class _CropCanvas extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(cropControllerProvider);
     // Asymmetric padding: extra bottom clearance so the crop frame
-    // never visually crowds the control panel below it.
+    // never visually crowds the control card below it.
     const paddingSide = 28.0;
     const paddingBottom = 48.0;
     final paneW = (available.width - paddingSide * 2).clamp(
@@ -261,12 +280,18 @@ class _CropCanvas extends ConsumerWidget {
     if (paneW <= 0 || paneH <= 0 || layerW <= 0 || layerH <= 0) {
       return const SizedBox.shrink();
     }
-    final layerAspect = layerW / layerH;
+    // Preview aspect: the WHOLE source once its ratio is known, so a
+    // re-opened crop shows every pixel the frame can still reach —
+    // and shows it undistorted, which a fill-fitted (already cropped)
+    // layer previewed at its own box aspect never was. Before the
+    // ratio resolves we mirror the layer box + its fit, which is the
+    // basis commit falls back to.
+    final previewAspect = session.sourceAspect ?? (layerW / layerH);
     double imgW = paneW;
-    double imgH = imgW / layerAspect;
+    double imgH = imgW / previewAspect;
     if (imgH > paneH) {
       imgH = paneH;
-      imgW = imgH * layerAspect;
+      imgW = imgH * previewAspect;
     }
     // Center image within the asymmetric pane (shifted slightly upward).
     final offsetY = paddingSide + (paneH - imgH) / 2;
@@ -280,7 +305,15 @@ class _CropCanvas extends ConsumerWidget {
       children: [
         Positioned.fromRect(
           rect: imageRect,
-          child: IgnorePointer(child: _UncroppedImage(layer: layer)),
+          child: IgnorePointer(
+            child: _SourcePreview(
+              layer: layer,
+              // `contain` inside an exactly source-shaped box is a
+              // no-op scale; it only guards against rounding when the
+              // aspect is still the layer's fallback.
+              fit: session.sourceAspect == null ? layer.fit : BoxFit.contain,
+            ),
+          ),
         ),
         Positioned.fill(
           child: _CropFrameLayer(layer: layer, imageRect: imageRect),
@@ -290,45 +323,47 @@ class _CropCanvas extends ConsumerWidget {
   }
 }
 
-/// Renders the layer's image source at its natural fit, ignoring
-/// `cropRect`, mask, border, and shadow — crop mode is about
-/// choosing pixels, not styling the silhouette.
-class _UncroppedImage extends StatelessWidget {
-  const _UncroppedImage({required this.layer});
+/// Colour-matrix **Look** the layer renders with: its filter preset
+/// composed with the effect stack's adjustments, in the same order
+/// [ImageLayer.buildContent] applies them. Custom-paint effects
+/// (vignette) are deliberately excluded — they anchor to the layer
+/// box, so painting them over a preview of the whole source would put
+/// the falloff somewhere the user never sees it.
+List<double>? lookMatrixOf(ImageLayer layer) {
+  final filter = imageFilterMatrix(layer.filterPreset);
+  final adjustments = layer.effects.composedColorMatrix;
+  if (filter == null) return adjustments;
+  if (adjustments == null) return filter;
+  return composeColorMatrices(adjustments, filter);
+}
+
+/// Renders the layer's image source at [fit], ignoring `cropRect`,
+/// mask, border, and shadow — crop mode is about choosing pixels, not
+/// styling the silhouette — but **keeping the Look**, so what the
+/// user frames is what they get.
+class _SourcePreview extends StatelessWidget {
+  const _SourcePreview({required this.layer, required this.fit});
   final ImageLayer layer;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
-    final src = layer.source;
-    if (src.assetName != null) {
-      return Image.asset(
-        src.assetName!,
-        fit: layer.fit,
-        errorBuilder: (_, _, _) =>
-            _CropUnavailableImage(label: context.l10n.imageUnavailableLabel),
-      );
+    final provider = _sourceProvider(layer.source);
+    if (provider == null) {
+      return _CropUnavailableImage(label: context.l10n.imageUnavailableLabel);
     }
-    if (src.networkUrl != null) {
-      return Image.network(
-        src.networkUrl!,
-        fit: layer.fit,
-        errorBuilder: (_, _, _) =>
-            _CropUnavailableImage(label: context.l10n.imageUnavailableLabel),
-      );
-    }
-    if (src.filePath != null) {
-      final file = io.File(src.filePath!);
-      if (!file.existsSync()) {
-        return _CropUnavailableImage(label: context.l10n.imageUnavailableLabel);
-      }
-      return Image.file(
-        file,
-        fit: layer.fit,
-        errorBuilder: (_, _, _) =>
-            _CropUnavailableImage(label: context.l10n.imageUnavailableLabel),
-      );
-    }
-    return const ColoredBox(color: Color(0x22FFFFFF));
+    final Widget pixels = Image(
+      image: provider,
+      fit: fit,
+      errorBuilder: (_, _, _) =>
+          _CropUnavailableImage(label: context.l10n.imageUnavailableLabel),
+    );
+    final matrix = lookMatrixOf(layer);
+    if (matrix == null) return pixels;
+    return ColorFiltered(
+      colorFilter: ColorFilter.matrix(matrix),
+      child: pixels,
+    );
   }
 }
 
@@ -339,12 +374,13 @@ class _CropUnavailableImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
     return Semantics(
       label: label,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: const Color(0xFF181818),
-          border: Border.all(color: const Color(0xFF5A5A5A)),
+          color: tokens.surfaceMuted,
+          border: Border.all(color: tokens.border),
         ),
         child: Center(
           child: Padding(
@@ -352,8 +388,8 @@ class _CropUnavailableImage extends StatelessWidget {
             child: Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: tokens.textSecondary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -366,7 +402,7 @@ class _CropUnavailableImage extends StatelessWidget {
 }
 
 // =============================================================
-// Crop frame — mask, handles, gestures
+// Crop frame — scrim, handles, gestures
 // =============================================================
 
 class _CropFrameLayer extends ConsumerStatefulWidget {
@@ -384,25 +420,43 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
   Rect? _dragStartDraft;
   Offset? _dragStartGlobal;
 
-  Rect _draftToScreen(Rect d) {
-    final r = widget.imageRect;
+  /// Screen pixels one draft unit spans on each axis.
+  ///
+  /// The preview covers the whole source while the draft is
+  /// normalised over the displayed window, so a draft unit is only
+  /// part of the pane — [CropSession.displayBasis] is the conversion.
+  /// When the two spaces coincide this is exactly the image rect.
+  Size _draftUnit(Rect basis) => Size(
+    widget.imageRect.width * basis.width,
+    widget.imageRect.height * basis.height,
+  );
+
+  /// Top-left of the draft's origin in screen space.
+  Offset _draftOrigin(Rect basis) => Offset(
+    widget.imageRect.left + basis.left * widget.imageRect.width,
+    widget.imageRect.top + basis.top * widget.imageRect.height,
+  );
+
+  Rect _draftToScreen(Rect d, Rect basis) {
+    final o = _draftOrigin(basis);
+    final u = _draftUnit(basis);
     return Rect.fromLTRB(
-      r.left + d.left * r.width,
-      r.top + d.top * r.height,
-      r.left + d.right * r.width,
-      r.top + d.bottom * r.height,
+      o.dx + d.left * u.width,
+      o.dy + d.top * u.height,
+      o.dx + d.right * u.width,
+      o.dy + d.bottom * u.height,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(cropControllerProvider);
-    final frame = _draftToScreen(session.draftCrop);
-    const handleHit = 36.0;
-    const handleDot = 14.0;
-    // Edge handles: shorter cross-axis length keeps them visually
-    // distinct from corners while still offering a generous touch
-    // target along the edge they live on.
+    final tokens = AppTokens.of(context);
+    final frame = _draftToScreen(session.draftCrop, session.displayBasis);
+    // Corners use the shared 48dp handle target; edge affordances
+    // stay elongated bars so the two are distinguishable by touch.
+    const handleHit = EngineConstants.handleTouchSize;
+    const handleDot = EngineConstants.handleVisualSize;
     const edgeHitMain = 56.0;
     const edgeHitCross = 28.0;
     const edgeBarMain = 26.0;
@@ -412,7 +466,16 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
       children: [
         Positioned.fill(
           child: IgnorePointer(
-            child: CustomPaint(painter: _CropMaskPainter(frame: frame)),
+            child: CustomPaint(
+              painter: _CropScrimPainter(
+                frame: frame,
+                // Mask-edit's scrim value: dark enough to read the
+                // frame, light enough that the pixels you are about
+                // to discard are still legible.
+                scrimColor: Colors.black.withValues(alpha: 0.45),
+                outlineColor: tokens.accent,
+              ),
+            ),
           ),
         ),
         Positioned.fromRect(
@@ -425,7 +488,7 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
         // Centered on the midpoint of each edge. Single-axis drag
         // keeps free crops natural and, when an aspect is locked,
         // resizes the perpendicular axis symmetrically around the
-        // opposite edge \u2014 matching iOS Photos / Instagram.
+        // opposite edge — matching iOS Photos / Instagram.
         Positioned(
           left: frame.center.dx - edgeHitMain / 2,
           top: frame.top - edgeHitCross / 2,
@@ -433,8 +496,12 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
           height: edgeHitCross,
           child: HandleDragDetector(
             onDrag: (gp, phase) => _onHandle(_Handle.t, gp, phase),
-            child: const Center(
-              child: _EdgeBar(width: edgeBarMain, height: edgeBarCross),
+            child: Center(
+              child: _EdgeBar(
+                width: edgeBarMain,
+                height: edgeBarCross,
+                color: tokens.accent,
+              ),
             ),
           ),
         ),
@@ -445,8 +512,12 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
           height: edgeHitCross,
           child: HandleDragDetector(
             onDrag: (gp, phase) => _onHandle(_Handle.b, gp, phase),
-            child: const Center(
-              child: _EdgeBar(width: edgeBarMain, height: edgeBarCross),
+            child: Center(
+              child: _EdgeBar(
+                width: edgeBarMain,
+                height: edgeBarCross,
+                color: tokens.accent,
+              ),
             ),
           ),
         ),
@@ -457,8 +528,12 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
           height: edgeHitMain,
           child: HandleDragDetector(
             onDrag: (gp, phase) => _onHandle(_Handle.l, gp, phase),
-            child: const Center(
-              child: _EdgeBar(width: edgeBarCross, height: edgeBarMain),
+            child: Center(
+              child: _EdgeBar(
+                width: edgeBarCross,
+                height: edgeBarMain,
+                color: tokens.accent,
+              ),
             ),
           ),
         ),
@@ -469,8 +544,12 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
           height: edgeHitMain,
           child: HandleDragDetector(
             onDrag: (gp, phase) => _onHandle(_Handle.r, gp, phase),
-            child: const Center(
-              child: _EdgeBar(width: edgeBarCross, height: edgeBarMain),
+            child: Center(
+              child: _EdgeBar(
+                width: edgeBarCross,
+                height: edgeBarMain,
+                color: tokens.accent,
+              ),
             ),
           ),
         ),
@@ -494,14 +573,7 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black87, width: 2),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x66000000),
-                        blurRadius: 4,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
+                    border: Border.all(color: tokens.accent, width: 2),
                   ),
                 ),
               ),
@@ -524,13 +596,21 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
         final start = _dragStartDraft;
         final origin = _dragStartGlobal;
         if (start == null || origin == null) return;
-        final r = widget.imageRect;
-        if (r.width <= 0 || r.height <= 0) return;
-        final dxNorm = (globalPos.dx - origin.dx) / r.width;
-        final dyNorm = (globalPos.dy - origin.dy) / r.height;
+        final unit = _draftUnit(session.displayBasis);
+        if (unit.width <= 0 || unit.height <= 0) return;
+        final dxNorm = (globalPos.dx - origin.dx) / unit.width;
+        final dyNorm = (globalPos.dy - origin.dy) / unit.height;
+        // The frame roams the whole source, not just the window the
+        // layer displays — that is what keeps crop non-destructive.
+        final bounds = session.draftBounds;
         Rect next;
         if (h == _Handle.body) {
-          next = CropController.translate(start, dxNorm, dyNorm);
+          next = CropController.translate(
+            start,
+            dxNorm,
+            dyNorm,
+            bounds: bounds,
+          );
         } else {
           // Aspect is stored in image-pixel space; convert to
           // normalised-space aspect so the handle drag stays
@@ -546,6 +626,7 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
             dx: dxNorm,
             dy: dyNorm,
             aspect: aspectNorm,
+            bounds: bounds,
           );
         }
         ctrl.updateDraft(next);
@@ -572,12 +653,17 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
   };
 }
 
-/// Visual edge-handle bar. Small white pill anchored on the crop
-/// frame edge, mirrored in styling to the corner dots.
+/// Visual edge-handle bar. Small pill anchored on the crop frame
+/// edge, mirrored in styling to the corner dots.
 class _EdgeBar extends StatelessWidget {
-  const _EdgeBar({required this.width, required this.height});
+  const _EdgeBar({
+    required this.width,
+    required this.height,
+    required this.color,
+  });
   final double width;
   final double height;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -587,36 +673,35 @@ class _EdgeBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(2),
-        border: Border.all(color: Colors.black87, width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x55000000),
-            blurRadius: 3,
-            offset: Offset(0, 1),
-          ),
-        ],
+        border: Border.all(color: color, width: 1),
       ),
     );
   }
 }
 
-class _CropMaskPainter extends CustomPainter {
-  _CropMaskPainter({required this.frame});
+class _CropScrimPainter extends CustomPainter {
+  _CropScrimPainter({
+    required this.frame,
+    required this.scrimColor,
+    required this.outlineColor,
+  });
   final Rect frame;
+  final Color scrimColor;
+  final Color outlineColor;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final dim = Paint()..color = const Color(0xB3000000);
+    final dim = Paint()..color = scrimColor;
     final outer = Path()..addRect(Offset.zero & size);
     final inner = Path()..addRect(frame);
     canvas.drawPath(Path.combine(PathOperation.difference, outer, inner), dim);
     final stroke = Paint()
-      ..color = Colors.white
+      ..color = outlineColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     canvas.drawRect(frame, stroke);
     final guide = Paint()
-      ..color = Colors.white24
+      ..color = outlineColor.withValues(alpha: 0.35)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.8;
     for (var i = 1; i < 3; i++) {
@@ -628,11 +713,14 @@ class _CropMaskPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CropMaskPainter old) => old.frame != frame;
+  bool shouldRepaint(covariant _CropScrimPainter old) =>
+      old.frame != frame ||
+      old.scrimColor != scrimColor ||
+      old.outlineColor != outlineColor;
 }
 
 // =============================================================
-// Bottom bar — aspect chips + Reset
+// Bottom card — aspect chips + Reset
 // =============================================================
 
 class _CropBottomBar extends ConsumerWidget {
@@ -643,6 +731,7 @@ class _CropBottomBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(cropControllerProvider);
     final ctrl = ref.read(cropControllerProvider.notifier);
+    final tokens = AppTokens.of(context);
     final layerH = layer.transform.size.height;
     final layerAspect = layerH == 0 ? 1.0 : layer.transform.size.width / layerH;
     final presets = <_AspectChip>[
@@ -654,74 +743,77 @@ class _CropBottomBar extends ConsumerWidget {
       const _AspectChip(label: '16:9', aspect: 16 / 9),
       const _AspectChip(label: '9:16', aspect: 9 / 16),
     ];
-    // SafeArea wraps the panel so content is always lifted above
-    // the gesture-navigation pill / home indicator.  The Container
-    // sits *outside* SafeArea so its dark background bleeds edge-
-    // to-edge behind the system bar.
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF0D0D0D),
-        border: Border(top: BorderSide(color: Color(0xFF2A2A2A), width: 1)),
-      ),
-      child: SafeArea(
-        top: false,
-        minimum: const EdgeInsets.only(bottom: 24),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(0, 14, 0, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Row 1: aspect chip scroll strip ──────────────
-              SizedBox(
-                height: 38,
-                child: ListView.separated(
-                  key: const ValueKey('crop-aspect-strip'),
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: presets.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 10),
-                  itemBuilder: (_, i) {
-                    final p = presets[i];
-                    final selected = _aspectMatches(
-                      session.aspectRatio,
-                      p.aspect,
-                    );
-                    return _ChipButton(
-                      label: p.label,
-                      selected: selected,
-                      onTap: () {
-                        EditorHaptics.tap();
-                        ctrl.setAspectRatio(p.aspect);
-                      },
-                    );
+    // Floating control card, mask-edit grammar: a rounded [surface]
+    // slab inset from the edges rather than a full-bleed bar, so the
+    // session reads as chrome over the work instead of a new screen.
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: Material(
+          color: tokens.surface.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(16),
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Row 1: aspect chip scroll strip ──────────────
+                SizedBox(
+                  height: 38,
+                  child: ListView.separated(
+                    key: const ValueKey('crop-aspect-strip'),
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: presets.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 10),
+                    itemBuilder: (_, i) {
+                      final p = presets[i];
+                      final selected = _aspectMatches(
+                        session.aspectRatio,
+                        p.aspect,
+                      );
+                      return _ChipButton(
+                        label: p.label,
+                        selected: selected,
+                        onTap: () {
+                          EditorHaptics.tap();
+                          ctrl.setAspectRatio(p.aspect);
+                        },
+                      );
+                    },
+                  ),
+                ),
+                // ── Row 2: Reset crop (centered, secondary) ──────
+                const SizedBox(height: 10),
+                TextButton.icon(
+                  onPressed: () {
+                    EditorHaptics.tap();
+                    ctrl.resetCrop();
                   },
-                ),
-              ),
-              // ── Row 2: Reset crop (centered, secondary) ──────
-              const SizedBox(height: 10),
-              TextButton.icon(
-                onPressed: () {
-                  EditorHaptics.tap();
-                  ctrl.resetCrop();
-                },
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: Text(context.l10n.restoreImageAction),
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xD9FFFFFF), // ~white85
-                  minimumSize: const Size(140, 44),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(22),
-                    side: const BorderSide(color: Color(0xFF3A3A3A), width: 1),
+                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                  label: Text(
+                    context.l10n.restoreImageAction,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                    ),
                   ),
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
+                  style: TextButton.styleFrom(
+                    foregroundColor: tokens.textSecondary,
+                    minimumSize: const Size(140, 44),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(22),
+                      side: BorderSide(color: tokens.border, width: 1),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -753,20 +845,26 @@ class _ChipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
     return Material(
-      color: selected ? Colors.white : const Color(0xFF252525),
+      color: selected ? tokens.brand : tokens.surfaceMuted,
       borderRadius: BorderRadius.circular(19),
-      elevation: selected ? 3 : 0,
-      shadowColor: Colors.white24,
       child: InkWell(
         borderRadius: BorderRadius.circular(19),
         onTap: onTap,
-        child: Padding(
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(19),
+            border: Border.all(
+              color: selected ? tokens.brand : tokens.border,
+              width: 1,
+            ),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
           child: Text(
             label,
             style: TextStyle(
-              color: selected ? Colors.black : Colors.white,
+              color: selected ? tokens.onBrand : tokens.textPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 13,
               letterSpacing: 0.1,

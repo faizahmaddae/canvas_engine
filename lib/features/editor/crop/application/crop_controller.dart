@@ -30,6 +30,7 @@ class CropSession {
     this.aspectRatio,
     this.originalAspect,
     this.sourceAspect,
+    this.displayBasis = ImageLayer.fullCrop,
     this.priorSelectionId,
   });
 
@@ -65,6 +66,42 @@ class CropSession {
   /// full-axis crops.
   final double? sourceAspect;
 
+  /// Source-normalised window that the draft's unit box maps onto.
+  ///
+  /// Two coordinate spaces meet here. [draftCrop] is normalised over
+  /// the window the layer **currently displays** (the centred strip
+  /// for a cover fit, the whole bitmap for fill) — that is the basis
+  /// `cropRect` itself uses and the one [commitCrop] converts
+  /// through. The overlay, by contrast, previews the **whole source**
+  /// so the user can see every pixel the frame could still reach.
+  /// This rect is the bridge: `displayBasis ∘ draftCrop` is the
+  /// source window the draft selects.
+  ///
+  /// [ImageLayer.fullCrop] until the overlay reports [sourceAspect]
+  /// (and for fits where a source window is not derivable) — which
+  /// collapses the two spaces onto each other, so every caller that
+  /// never resolves an image keeps the pre-v2 behaviour verbatim.
+  final Rect displayBasis;
+
+  /// The FULL source expressed in draft coordinates — the clamp the
+  /// crop frame obeys.
+  ///
+  /// Wider than the unit box exactly when the layer is showing less
+  /// than the whole bitmap, and that is what makes crop
+  /// non-destructive: the frame can always be dragged back out over
+  /// pixels the current fit (or an earlier crop) hid, so no commit
+  /// ever puts pixels out of reach.
+  Rect get draftBounds {
+    final b = displayBasis;
+    if (b.width <= 0 || b.height <= 0) return ImageLayer.fullCrop;
+    return Rect.fromLTRB(
+      -b.left / b.width,
+      -b.top / b.height,
+      (1 - b.left) / b.width,
+      (1 - b.top) / b.height,
+    );
+  }
+
   /// Selection that was active **before** Crop opened, captured so
   /// the editor can restore it on commit/cancel.
   ///
@@ -86,6 +123,7 @@ class CropSession {
     Object? aspectRatio = _sentinel,
     Object? originalAspect = _sentinel,
     Object? sourceAspect = _sentinel,
+    Rect? displayBasis,
     Object? priorSelectionId = _sentinel,
   }) {
     return CropSession(
@@ -103,6 +141,7 @@ class CropSession {
       sourceAspect: identical(sourceAspect, _sentinel)
           ? this.sourceAspect
           : sourceAspect as double?,
+      displayBasis: displayBasis ?? this.displayBasis,
       priorSelectionId: identical(priorSelectionId, _sentinel)
           ? this.priorSelectionId
           : priorSelectionId as String?,
@@ -170,11 +209,30 @@ class CropController extends Notifier<CropSession> {
   /// reported by the overlay once the image stream resolves. Safe to
   /// call repeatedly; ignored when no session is active or the value
   /// is degenerate.
+  ///
+  /// Resolving the ratio is also what unlocks the non-destructive
+  /// frame: it is the missing term in [CropSession.displayBasis], and
+  /// without the basis we cannot say where the currently-displayed
+  /// window sits inside the source, so the frame stays confined to
+  /// what the layer already shows.
   void setSourceAspect(double aspect) {
     if (!state.active) return;
     if (!aspect.isFinite || aspect <= 0) return;
     if (state.sourceAspect == aspect) return;
-    state = state.copyWith(sourceAspect: aspect);
+    final layerId = state.layerId;
+    final layer = layerId == null
+        ? null
+        : ref.read(documentControllerProvider).layerById(layerId);
+    state = state.copyWith(
+      sourceAspect: aspect,
+      displayBasis: layer is ImageLayer
+          ? displayBasisFor(
+              fit: layer.fit,
+              boxSize: layer.transform.size,
+              sourceAspect: aspect,
+            )
+          : ImageLayer.fullCrop,
+    );
   }
 
   /// Close crop mode without committing.
@@ -199,16 +257,22 @@ class CropController extends Notifier<CropSession> {
 
   /// Reset the draft to the full image. Does NOT commit; the user
   /// still has to tap Done (or hit Cancel to back out).
+  ///
+  /// "Full image" is [CropSession.draftBounds] — the whole source,
+  /// not merely the window the layer happens to display. On a layer
+  /// whose fit is hiding pixels this genuinely restores them, which
+  /// is what "Restore image" promises; it collapses to
+  /// [ImageLayer.fullCrop] whenever the two spaces coincide.
   void resetCrop() {
     if (!state.active) return;
-    state = state.copyWith(draftCrop: ImageLayer.fullCrop, aspectRatio: null);
+    state = state.copyWith(draftCrop: state.draftBounds, aspectRatio: null);
   }
 
-  /// Update the draft from a gesture. Rect is clamped to [0..1]
-  /// with min side ≥ [minNorm].
+  /// Update the draft from a gesture. Rect is clamped to the
+  /// session's [CropSession.draftBounds] with min side ≥ [minNorm].
   void updateDraft(Rect r) {
     if (!state.active) return;
-    state = state.copyWith(draftCrop: sanitise(r));
+    state = state.copyWith(draftCrop: sanitise(r, bounds: state.draftBounds));
   }
 
   /// Apply an aspect ratio preset.
@@ -238,7 +302,10 @@ class CropController extends Notifier<CropSession> {
     }
     final layerAspect = state.originalAspect ?? 1.0;
     final next = _fitAspect(
-      bounds: ImageLayer.fullCrop,
+      // Presets fit the whole source, not just the displayed window,
+      // so "16:9" on a portrait-cropped photo can reclaim the pixels
+      // it needs instead of shrinking inside the current frame.
+      bounds: state.draftBounds,
       aspect: aspectRatio,
       layerAspect: layerAspect,
     );
@@ -252,7 +319,7 @@ class CropController extends Notifier<CropSession> {
   void selectOriginal() {
     if (!state.active) return;
     final aspect = state.originalAspect;
-    state = state.copyWith(draftCrop: ImageLayer.fullCrop, aspectRatio: aspect);
+    state = state.copyWith(draftCrop: state.draftBounds, aspectRatio: aspect);
   }
 
   /// Commit the draft.
@@ -286,7 +353,7 @@ class CropController extends Notifier<CropSession> {
       _restoreSelection(prior);
       return;
     }
-    final draft = sanitise(s.draftCrop);
+    final draft = sanitise(s.draftCrop, bounds: s.draftBounds);
     // No-op crop (Done with no change): close the session without
     // touching history. Two cases:
     //   * Fresh layer + fullCrop draft → nothing to do.
@@ -345,10 +412,11 @@ class CropController extends Notifier<CropSession> {
           ? 1.0
           : oldSize.width / oldSize.height;
       // Basis the user drew the draft in (overlay ignores cropRect).
-      final displayBasis = ImageLayer.visibleSourceWindow(
+      // Same helper the session uses, so the frame the user dragged
+      // and the window we persist can never drift apart.
+      final basis = displayBasisFor(
         fit: layer.fit,
-        cropRect: ImageLayer.fullCrop,
-        boxAspect: boxAspect,
+        boxSize: oldSize,
         sourceAspect: srcAspect,
       );
       // Window the old box actually displayed (includes cropRect) —
@@ -361,10 +429,10 @@ class CropController extends Notifier<CropSession> {
         sourceAspect: srcAspect,
       );
       final newCrop = Rect.fromLTWH(
-        displayBasis.left + draft.left * displayBasis.width,
-        displayBasis.top + draft.top * displayBasis.height,
-        draft.width * displayBasis.width,
-        draft.height * displayBasis.height,
+        basis.left + draft.left * basis.width,
+        basis.top + draft.top * basis.height,
+        draft.width * basis.width,
+        draft.height * basis.height,
       );
       final refW = shownBefore.width <= 0 ? 1.0 : shownBefore.width;
       final refH = shownBefore.height <= 0 ? 1.0 : shownBefore.height;
@@ -436,18 +504,47 @@ class CropController extends Notifier<CropSession> {
   // Pure helpers (also used by tests).
   // --------------------------------------------------------------
 
-  /// Clamp [r] to [0..1] and enforce [minNorm] on each side.
+  /// Source-normalised window a layer box displays with nothing
+  /// cropped — the basis a crop draft is expressed in.
+  ///
+  /// Returns [ImageLayer.fullCrop] (draft space == source space)
+  /// whenever the window is not derivable: no resolved
+  /// [CropSession.sourceAspect], or a fit whose mapping
+  /// [ImageLayer.visibleSourceWindow] does not model. Both cases fall
+  /// back to the legacy display-space commit, so the fallback shape
+  /// here and in [commitCrop] must stay identical.
+  static Rect displayBasisFor({
+    required BoxFit fit,
+    required Size boxSize,
+    required double? sourceAspect,
+  }) {
+    if (sourceAspect == null) return ImageLayer.fullCrop;
+    if (fit != BoxFit.cover && fit != BoxFit.fill) return ImageLayer.fullCrop;
+    return ImageLayer.visibleSourceWindow(
+      fit: fit,
+      cropRect: ImageLayer.fullCrop,
+      boxAspect: boxSize.height <= 0 ? 1.0 : boxSize.width / boxSize.height,
+      sourceAspect: sourceAspect,
+    );
+  }
+
+  /// Clamp [r] to [bounds] and enforce [minNorm] on each side.
   /// Public so [CropModeOverlay]'s pure resize helpers and unit
   /// tests can reuse the same clamp logic.
-  static Rect sanitise(Rect r) {
-    double l = r.left.clamp(0.0, 1.0);
-    double t = r.top.clamp(0.0, 1.0);
-    double rt = r.right.clamp(0.0, 1.0);
-    double b = r.bottom.clamp(0.0, 1.0);
-    if (rt - l < minNorm) rt = math.min(1.0, l + minNorm);
-    if (b - t < minNorm) b = math.min(1.0, t + minNorm);
-    if (rt - l < minNorm) l = math.max(0.0, rt - minNorm);
-    if (b - t < minNorm) t = math.max(0.0, b - minNorm);
+  ///
+  /// [bounds] defaults to the unit box, which is the whole picture
+  /// only while draft space and source space coincide; pass
+  /// [CropSession.draftBounds] to let the frame reach pixels the
+  /// layer's fit is currently hiding.
+  static Rect sanitise(Rect r, {Rect bounds = ImageLayer.fullCrop}) {
+    double l = r.left.clamp(bounds.left, bounds.right);
+    double t = r.top.clamp(bounds.top, bounds.bottom);
+    double rt = r.right.clamp(bounds.left, bounds.right);
+    double b = r.bottom.clamp(bounds.top, bounds.bottom);
+    if (rt - l < minNorm) rt = math.min(bounds.right, l + minNorm);
+    if (b - t < minNorm) b = math.min(bounds.bottom, t + minNorm);
+    if (rt - l < minNorm) l = math.max(bounds.left, rt - minNorm);
+    if (b - t < minNorm) t = math.max(bounds.top, b - minNorm);
     return Rect.fromLTRB(l, t, rt, b);
   }
 
@@ -484,6 +581,7 @@ class CropController extends Notifier<CropSession> {
     }
     return sanitise(
       Rect.fromCenter(center: bounds.center, width: w, height: h),
+      bounds: bounds,
     );
   }
 
@@ -495,15 +593,28 @@ class CropController extends Notifier<CropSession> {
   }) => fitAspect(bounds: bounds, aspect: aspect, layerAspect: layerAspect);
 
   /// Translate [r] by ([dx], [dy]) in normalised units, clamping the
-  /// result so the rect stays fully inside `[0..1]`.
+  /// result so the rect stays fully inside [bounds].
   ///
   /// Pure helper shared between the overlay's body-drag handler and
   /// unit tests so both branches use the identical clamp.
-  static Rect translate(Rect r, double dx, double dy) {
+  static Rect translate(
+    Rect r,
+    double dx,
+    double dy, {
+    Rect bounds = ImageLayer.fullCrop,
+  }) {
     final w = r.width;
     final h = r.height;
-    final l = (r.left + dx).clamp(0.0, 1.0 - w);
-    final t = (r.top + dy).clamp(0.0, 1.0 - h);
+    // A frame wider than the bounds cannot slide at all — max() keeps
+    // the clamp range non-inverted instead of throwing.
+    final double l = (r.left + dx).clamp(
+      bounds.left,
+      math.max<double>(bounds.left, bounds.right - w),
+    );
+    final double t = (r.top + dy).clamp(
+      bounds.top,
+      math.max<double>(bounds.top, bounds.bottom - h),
+    );
     return Rect.fromLTWH(l, t, w, h);
   }
 
@@ -525,6 +636,7 @@ class CropController extends Notifier<CropSession> {
     required double dx,
     required double dy,
     double? aspect,
+    Rect bounds = ImageLayer.fullCrop,
   }) {
     double l = r.left, t = r.top, rt = r.right, b = r.bottom;
     switch (handle) {
@@ -649,7 +761,7 @@ class CropController extends Notifier<CropSession> {
       }
       next = Rect.fromLTRB(nl, nt, nr, nb);
     }
-    return sanitise(next);
+    return sanitise(next, bounds: bounds);
   }
 }
 

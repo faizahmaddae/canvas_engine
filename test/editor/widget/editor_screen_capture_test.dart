@@ -15,6 +15,8 @@ import 'package:canvas_engine/app/theme/app_theme.dart';
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/editor_session.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
+import 'package:canvas_engine/features/editor/crop/application/crop_controller.dart';
+import 'package:canvas_engine/features/editor/crop/presentation/crop_mode_overlay.dart';
 import 'package:canvas_engine/features/editor/canvas/application/canvas_tool_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
@@ -76,6 +78,7 @@ ProviderContainer _sampleEditor({
   bool withGradientFill = false,
   bool withPaintSelected = false,
   bool withCanvasPanel = false,
+  bool withCropSession = false,
   String? openSheet,
 }) {
   final container = ProviderContainer();
@@ -177,6 +180,27 @@ ProviderContainer _sampleEditor({
         .read(shapeToolControllerProvider.notifier)
         .toggleSlot(ShapeToolSlot.style);
   }
+  if (withCropSession) {
+    // Crop v2's on-canvas session (tb4 10/14): the frame is drawn over
+    // the WHOLE source, so the missing-file placeholder stands in for
+    // the bitmap and the chrome is what this variant proves.
+    ctrl.execute(
+      AddLayerCommand(
+        ImageLayer(
+          id: 'img-crop',
+          transform: const LayerTransform(
+            position: Offset(140, 200),
+            size: Size(800, 600),
+          ),
+          source: const ImageSource.file('/nonexistent-capture-image.png'),
+        ),
+      ),
+    );
+    container.read(selectionControllerProvider.notifier).select('img-crop');
+    container
+        .read(cropControllerProvider.notifier)
+        .openCrop('img-crop', priorSelectionId: 'img-crop');
+  }
   if (withCanvasPanel) {
     // Canvas panel open with nothing selected — the tier-3 entry
     // clears selection first, so this mirrors the real path (tb4
@@ -212,6 +236,7 @@ void main() {
     bool withGradientFill = false,
     bool withPaintSelected = false,
     bool withCanvasPanel = false,
+    bool withCropSession = false,
     String? openSheet,
     Future<void> Function(WidgetTester tester)? interact,
   }) async {
@@ -228,6 +253,7 @@ void main() {
       withGradientFill: withGradientFill,
       withPaintSelected: withPaintSelected,
       withCanvasPanel: withCanvasPanel,
+      withCropSession: withCropSession,
       openSheet: openSheet,
     );
     addTearDown(container.dispose);
@@ -263,7 +289,13 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    expect(find.byType(AppBar), findsOneWidget);
+    // Crop owns the whole screen and replaces the app bar with its
+    // own chrome, so that variant asserts the session instead.
+    if (withCropSession) {
+      expect(find.byType(CropModeOverlay), findsOneWidget);
+    } else {
+      expect(find.byType(AppBar), findsOneWidget);
+    }
 
     final boundary =
         boundaryKey.currentContext!.findRenderObject()!
@@ -333,6 +365,28 @@ void main() {
       brightness: Brightness.dark,
       fileName: 'editor_panel_dark.png',
       openSheet: 'size',
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — crop session, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_crop_light.png',
+      withCropSession: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — crop session, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_crop_dark.png',
+      withCropSession: true,
     );
   });
 
