@@ -30,6 +30,8 @@ import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dar
 import 'package:canvas_engine/features/editor/image/application/image_tool_controller.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
 import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
+import 'package:canvas_engine/features/editor/presentation/widgets/editor_breakpoints.dart';
+import 'package:canvas_engine/features/editor/presentation/widgets/quick_capsule.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -79,6 +81,8 @@ ProviderContainer _sampleEditor({
   bool withPaintSelected = false,
   bool withCanvasPanel = false,
   bool withCropSession = false,
+  bool withMultiSelect = false,
+  bool withQuickCapsule = false,
   String? openSheet,
 }) {
   final container = ProviderContainer();
@@ -207,6 +211,25 @@ ProviderContainer _sampleEditor({
     // 4/14: Size section above Background).
     container.read(canvasToolControllerProvider.notifier).togglePanel();
   }
+  if (withMultiSelect) {
+    // Two layers selected in explicit multi-select mode (the
+    // long-press modal state). Proves the multi chrome: the count
+    // chip, the per-layer selection rects, and the fact that the
+    // single-selection floating capsule stands down.
+    container.read(selectionModeProvider.notifier).enterMulti();
+    container.read(selectionControllerProvider.notifier).selectMany(const [
+      'shape-1',
+      'text-1',
+    ]);
+  }
+  if (withQuickCapsule) {
+    // THE floating quick-capsule (tb2 9/16) over a shape: fill swatch
+    // + corner pills + More. Selection only, no dock panel — an open
+    // panel trips canvasChromeSuppressedProvider and the capsule
+    // hides itself, which is why this cannot be folded into the
+    // gradient-fill variant.
+    container.read(selectionControllerProvider.notifier).select('shape-1');
+  }
   if (withSelection || openSheet != null) {
     container.read(selectionControllerProvider.notifier).select('text-1');
   }
@@ -227,20 +250,34 @@ void main() {
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  Future<void> capture(
+  /// The phone viewport every variant used before tb1's breakpoints
+  /// landed, and still the default here.
+  const phoneView = Size(440, 956);
+
+  /// Tablet-class viewport: shortestSide 1024 clears
+  /// [EditorBreakpoints.wideMinShortestSide] (600), so the wide
+  /// branch of the responsive chrome is what gets captured.
+  const wideView = Size(1024, 1366);
+
+  /// Renders one variant and returns the PNG bytes. Writing to disk is
+  /// the caller's job so the determinism check can render twice
+  /// without producing two files.
+  Future<Uint8List> render(
     WidgetTester tester, {
     required Brightness brightness,
-    required String fileName,
     bool withSelection = false,
     bool withLookPanel = false,
     bool withGradientFill = false,
     bool withPaintSelected = false,
     bool withCanvasPanel = false,
     bool withCropSession = false,
+    bool withMultiSelect = false,
+    bool withQuickCapsule = false,
+    Size viewSize = phoneView,
     String? openSheet,
     Future<void> Function(WidgetTester tester)? interact,
   }) async {
-    tester.view.physicalSize = const Size(440, 956);
+    tester.view.physicalSize = viewSize;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -254,6 +291,8 @@ void main() {
       withPaintSelected: withPaintSelected,
       withCanvasPanel: withCanvasPanel,
       withCropSession: withCropSession,
+      withMultiSelect: withMultiSelect,
+      withQuickCapsule: withQuickCapsule,
       openSheet: openSheet,
     );
     addTearDown(container.dispose);
@@ -296,6 +335,18 @@ void main() {
     } else {
       expect(find.byType(AppBar), findsOneWidget);
     }
+    // The capsule is the *point* of its variant, and it self-hides on
+    // several signals — capturing a blank canvas because a guard
+    // fired would be a silently-useless PNG.
+    if (withQuickCapsule) {
+      expect(find.byType(QuickCapsule), findsOneWidget);
+    }
+    // Multi-select stands the single-selection capsule down; if that
+    // ever regresses the capture would look identical to the single
+    // case and nobody would notice from the PNG alone.
+    if (withMultiSelect) {
+      expect(find.byType(QuickCapsule), findsNothing);
+    }
 
     final boundary =
         boundaryKey.currentContext!.findRenderObject()!
@@ -307,11 +358,48 @@ void main() {
       () => image!.toByteData(format: ui.ImageByteFormat.png),
     );
     final bytes = byteData!.buffer.asUint8List();
+    image!.dispose();
+    return bytes;
+  }
+
+  /// Renders a variant and writes it to `build/test_exports/` for
+  /// human review. Thin wrapper over [render] — every existing call
+  /// site keeps its exact shape.
+  Future<void> capture(
+    WidgetTester tester, {
+    required Brightness brightness,
+    required String fileName,
+    bool withSelection = false,
+    bool withLookPanel = false,
+    bool withGradientFill = false,
+    bool withPaintSelected = false,
+    bool withCanvasPanel = false,
+    bool withCropSession = false,
+    bool withMultiSelect = false,
+    bool withQuickCapsule = false,
+    Size viewSize = phoneView,
+    String? openSheet,
+    Future<void> Function(WidgetTester tester)? interact,
+  }) async {
+    final bytes = await render(
+      tester,
+      brightness: brightness,
+      withSelection: withSelection,
+      withLookPanel: withLookPanel,
+      withGradientFill: withGradientFill,
+      withPaintSelected: withPaintSelected,
+      withCanvasPanel: withCanvasPanel,
+      withCropSession: withCropSession,
+      withMultiSelect: withMultiSelect,
+      withQuickCapsule: withQuickCapsule,
+      viewSize: viewSize,
+      openSheet: openSheet,
+      interact: interact,
+    );
     final file = File('${outputDir.path}/$fileName');
     file.writeAsBytesSync(bytes);
     // ignore: avoid_print
     print('  → wrote ${file.path} (${bytes.length} bytes)');
-    image!.dispose();
   }
 
   testWidgets('EditorScreen visual capture — light', (tester) async {
@@ -455,6 +543,163 @@ void main() {
       withCanvasPanel: true,
     );
   });
+
+  // -- Stage 4 surfaces (roadmap 5.4) --------------------------------
+
+  testWidgets('EditorScreen visual capture — multi-select, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_multi_select_light.png',
+      withMultiSelect: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — multi-select, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_multi_select_dark.png',
+      withMultiSelect: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — quick capsule, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_quick_capsule_light.png',
+      withQuickCapsule: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — quick capsule, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_quick_capsule_dark.png',
+      withQuickCapsule: true,
+    );
+  });
+
+  testWidgets('the wide variant really is on the far side of the breakpoint', (
+    tester,
+  ) async {
+    // Guards the two captures below from silently becoming duplicate
+    // phone shots if the breakpoint constant ever moves.
+    expect(EditorBreakpoints.isWideFor(wideView), isTrue);
+    expect(EditorBreakpoints.isWideFor(phoneView), isFalse);
+  });
+
+  testWidgets('EditorScreen visual capture — iPad wide, light', (tester) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_wide_light.png',
+      viewSize: wideView,
+      withSelection: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — iPad wide, dark', (tester) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_wide_dark.png',
+      viewSize: wideView,
+      withSelection: true,
+    );
+  });
+
+  // -- Determinism (roadmap 5.4) -------------------------------------
+  //
+  // NOT goldens. This repo has no golden infrastructure and CI renders
+  // on ubuntu while development happens on macOS, so a committed
+  // reference PNG would fail in CI for font-rasterisation reasons that
+  // have nothing to do with the code under review.
+  //
+  // What IS checkable without a reference image is *self-consistency*:
+  // render the same variant twice inside one test run and require the
+  // two byte streams to match. That catches the failure modes a human
+  // reviewing PNGs cannot see —
+  //
+  //   * unseeded randomness in a painter,
+  //   * an animation whose phase depends on the wall clock rather than
+  //     the test's fake clock, so the capture lands mid-flight,
+  //   * hash-ordered iteration leaking into paint order,
+  //   * uninitialised state that differs between the first and second
+  //     build of the same tree.
+  //
+  // — and it does so on both platforms, because it never compares
+  // against anything but itself.
+
+  for (final (name, build)
+      in <(String, Future<Uint8List> Function(WidgetTester))>[
+        ('base', (t) => render(t, brightness: Brightness.light)),
+        (
+          'selection',
+          (t) => render(t, brightness: Brightness.light, withSelection: true),
+        ),
+        (
+          'quick capsule',
+          (t) =>
+              render(t, brightness: Brightness.light, withQuickCapsule: true),
+        ),
+        (
+          'multi-select',
+          (t) => render(t, brightness: Brightness.light, withMultiSelect: true),
+        ),
+        (
+          'iPad wide',
+          (t) => render(
+            t,
+            brightness: Brightness.light,
+            viewSize: wideView,
+            withSelection: true,
+          ),
+        ),
+      ]) {
+    testWidgets('$name renders byte-identically twice in one run', (
+      tester,
+    ) async {
+      final first = await build(tester);
+      final second = await build(tester);
+      expect(
+        second.length,
+        first.length,
+        reason:
+            '$name: the two renders produced different PNG sizes — the '
+            'editor is drawing something non-deterministic',
+      );
+      // Compare the bytes, but report the first differing offset
+      // rather than dumping two multi-megabyte lists into the failure.
+      var firstDiff = -1;
+      for (var i = 0; i < first.length; i++) {
+        if (first[i] != second[i]) {
+          firstDiff = i;
+          break;
+        }
+      }
+      expect(
+        firstDiff,
+        -1,
+        reason:
+            '$name: two renders of the same variant differ, first at byte '
+            '$firstDiff of ${first.length}. Something in this surface is '
+            'non-deterministic (unseeded random, wall-clock animation '
+            'phase, hash-ordered paint). Captures of it are not '
+            'reviewable until that is fixed.',
+      );
+    });
+  }
 
   testWidgets('EditorScreen visual capture — look panel, light', (
     tester,
