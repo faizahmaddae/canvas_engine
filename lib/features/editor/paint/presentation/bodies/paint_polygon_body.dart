@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/utils/editor_value_format.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../../presentation/widgets/section_label.dart';
 import '../../../toolbar/presentation/widgets/preset_chip.dart';
@@ -40,7 +41,7 @@ class PaintPolygonBody extends ConsumerWidget {
               const sides = <int>[3, 4, 5, 6, 7, 8, 10, 12];
               final n = sides[i];
               return PresetChip(
-                label: '$n',
+                label: EditorValueFormat.of(context).digits(n),
                 selected: n == value,
                 onTap: () => ctrl.setPolygonSides(n),
               );

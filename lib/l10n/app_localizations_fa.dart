@@ -410,7 +410,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String multiSelectCount(int count) {
-    return 'چندانتخاب · $count';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'چندانتخاب · $countString';
   }
 
   @override
@@ -454,7 +458,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String layersSelectedCount(int count) {
-    return '$count لایه انتخاب شده';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString لایه انتخاب شده';
   }
 
   @override
@@ -700,12 +708,20 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String minutesAgo(int count) {
-    return '$count دقیقه پیش';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString دقیقه پیش';
   }
 
   @override
   String hoursAgo(int count) {
-    return '$count ساعت پیش';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString ساعت پیش';
   }
 
   @override
@@ -713,17 +729,29 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String daysAgo(int count) {
-    return '$count روز پیش';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString روز پیش';
   }
 
   @override
   String weeksAgo(int count) {
-    return '$count هفته پیش';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString هفته پیش';
   }
 
   @override
   String monthsAgo(int count) {
-    return '$count ماه پیش';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString ماه پیش';
   }
 
   @override
@@ -902,6 +930,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get addTextTitle => 'افزودن متن';
 
   @override
+  String get addImageTitle => 'افزودن عکس';
+
+  @override
   String get galleryAction => 'گالری';
 
   @override
@@ -1004,7 +1035,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String imageLayerTitle(int index) {
-    return 'تصویر $index';
+    final intl.NumberFormat indexNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String indexString = indexNumberFormat.format(index);
+
+    return 'تصویر $indexString';
   }
 
   @override
@@ -1450,7 +1485,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String sidesCount(int count) {
-    return '$count ضلع';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString ضلع';
   }
 
   @override

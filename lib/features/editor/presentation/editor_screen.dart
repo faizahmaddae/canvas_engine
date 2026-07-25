@@ -70,6 +70,7 @@ import '../text/presentation/text_mode_toolbar.dart';
 import '../toolbar/presentation/mode_done_button.dart';
 import 'widgets/editor_canvas.dart';
 import 'widgets/editor_modal_sheet.dart';
+import 'widgets/image_source_sheet.dart';
 import 'widgets/editor_tool_dock.dart';
 import '../toolbar/domain/toolbar_slot.dart';
 import 'widgets/context_tool_panel.dart';
@@ -1112,9 +1113,16 @@ class EditorScreen extends ConsumerWidget {
                     return ListTile(
                       leading: const Icon(Icons.image_outlined),
                       title: Text(context.l10n.imageLayerTitle(i + 1)),
+                      // The title is the generic «تصویر ۱» counter, so
+                      // this pair IS the discriminator between rows —
+                      // and composed by hand it hit the same neutral-`×`
+                      // reversal 612dd38 fixed elsewhere, pointing the
+                      // user at the wrong layer.
                       subtitle: Text(
-                        '${layer.transform.size.width.round()} '
-                        '\u00d7 ${layer.transform.size.height.round()}',
+                        EditorValueFormat.of(ctx).dimensions(
+                          layer.transform.size.width.round(),
+                          layer.transform.size.height.round(),
+                        ),
                       ),
                       onTap: () => Navigator.of(ctx).pop(layer),
                     );

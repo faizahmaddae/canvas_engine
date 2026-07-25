@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/utils/editor_value_format.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
@@ -297,13 +298,41 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                             // distinguishable at a glance; the dot
                             // separator keeps it compact and reads
                             // well in light/dark.
-                            Text(
-                              '${_formatSize(p.width, p.height)}  \u00B7  $relativeTime',
-                              style: AppTypeScale.caption.copyWith(
-                                color: tokens.textMuted,
-                                fontSize: 11,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                            // Two segments, not one ellipsised string:
+                            // the size is short and bounded, the
+                            // relative time is the part that can grow,
+                            // so the time yields first. One `Text`
+                            // clipped whichever came last — on a 360dp
+                            // phone that was «۴ د…», a card that no
+                            // longer says when it was touched.
+                            Builder(
+                              builder: (context) {
+                                final style = AppTypeScale.caption.copyWith(
+                                  color: tokens.textMuted,
+                                  fontSize: 11,
+                                );
+                                return Row(
+                                  children: [
+                                    Text(
+                                      EditorValueFormat.of(context).dimensions(
+                                        _sizeComponent(p.width),
+                                        _sizeComponent(p.height),
+                                      ),
+                                      maxLines: 1,
+                                      style: style,
+                                    ),
+                                    Text('  \u00B7  ', style: style),
+                                    Flexible(
+                                      child: Text(
+                                        relativeTime,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: style,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -801,14 +830,18 @@ class _ErrorBox extends StatelessWidget {
   }
 }
 
-/// Formats canvas dimensions as `W × H` with no decimals when the
-/// values are whole numbers (the common case — preset sizes are all
-/// integers). Used by [ProjectCard]'s metadata line.
-String _formatSize(double w, double h) {
-  String fmt(double v) =>
-      v == v.roundToDouble() ? v.toInt().toString() : v.toStringAsFixed(1);
-  return '${fmt(w)} \u00D7 ${fmt(h)}';
-}
+/// Drops the `.0` on whole numbers (the common case — every preset
+/// size is an integer) before the value reaches the shared formatter.
+///
+/// The `W × H` composition itself deliberately does NOT live here any
+/// more. It used to, and that private copy reproduced the exact defect
+/// commit 612dd38 fixed in `EditorValueFormat.dimensions`: `×` is a
+/// bidi-neutral sitting between two number runs, so under the app's
+/// default RTL it resolved to the paragraph direction and painted the
+/// two numbers in reverse — a 1080×1350 portrait project announced
+/// itself on its own card as `1350 × 1080`. One composer, one fix.
+num _sizeComponent(double v) =>
+    v == v.roundToDouble() ? v.toInt() : double.parse(v.toStringAsFixed(1));
 
 String _relativeTime(AppLocalizations l10n, DateTime t) {
   final now = DateTime.now();

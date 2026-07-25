@@ -64,6 +64,30 @@ void main() {
     expect(stripped.indexOf('۱۰۸۰'), lessThan(stripped.indexOf('۱۳۵۰')));
   });
 
+  test('signed keeps the sign in FRONT of the number, isolated', () {
+    // Same failure mode as `dimensions`, one glyph smaller: a leading
+    // '+' is a bidi-neutral, so without the isolate an RTL paragraph
+    // moves it past the digits and '+12' paints as '12+'.
+    const lri = '\u2066';
+    const pdi = '\u2069';
+    expect(fa.signed(12), '$lri+۱۲$pdi');
+    expect(en.signed(12), '$lri+12$pdi');
+
+    // Negatives carry U+2212 MINUS, not a hyphen.
+    expect(fa.signed(-12), '$lri\u2212۱۲$pdi');
+    expect(en.signed(-40), '$lri\u221240$pdi');
+
+    // Zero is unsigned, so it needs no isolate at all.
+    expect(fa.signed(0), '۰');
+    expect(en.signed(0), '0');
+
+    // Rounds like every other readout.
+    expect(en.signed(2.6), '$lri+3$pdi');
+
+    final stripped = fa.signed(12).replaceAll(lri, '').replaceAll(pdi, '');
+    expect(stripped.indexOf('+'), lessThan(stripped.indexOf('۱')));
+  });
+
   test('mapDigits preserves pre-formatted strings (trailing zeros)', () {
     expect(fa.mapDigits('2.00'), '۲٫۰۰');
     expect(en.mapDigits('2.00'), '2.00');

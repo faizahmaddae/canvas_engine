@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/utils/editor_value_format.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
@@ -14,7 +15,6 @@ import '../../engine/effects/editor_effect.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../application/image_tool_controller.dart';
 import 'image_panel_shell.dart';
-import '../../../../core/utils/editor_value_format.dart';
 
 /// Expanded panel body for the Image sub-tool's "Effects" tab.
 ///
@@ -445,7 +445,7 @@ EffectDisplay effectDisplay(BuildContext context, EditorEffect e) =>
       BrightnessEffect(:final amount) => EffectDisplay(
         icon: Icons.brightness_6_rounded,
         name: context.l10n.brightnessLabel,
-        summary: _signed(amount),
+        summary: EditorValueFormat.of(context).signed(amount),
       ),
       ContrastEffect(:final amount) => EffectDisplay(
         icon: Icons.contrast_rounded,
@@ -460,12 +460,12 @@ EffectDisplay effectDisplay(BuildContext context, EditorEffect e) =>
       ExposureEffect(:final amount) => EffectDisplay(
         icon: Icons.wb_sunny_outlined,
         name: context.l10n.exposureLabel,
-        summary: _signed(amount),
+        summary: EditorValueFormat.of(context).signed(amount),
       ),
       WarmthEffect(:final amount) => EffectDisplay(
         icon: Icons.thermostat_rounded,
         name: context.l10n.warmthLabel,
-        summary: _signed(amount),
+        summary: EditorValueFormat.of(context).signed(amount),
       ),
       VignetteEffect(:final intensity) => EffectDisplay(
         icon: Icons.vignette_outlined,
@@ -485,8 +485,3 @@ EffectDisplay effectDisplay(BuildContext context, EditorEffect e) =>
         summary: context.l10n.inactiveLabel,
       ),
     };
-
-String _signed(double v) {
-  final r = v.round();
-  return r > 0 ? '+$r' : '$r';
-}

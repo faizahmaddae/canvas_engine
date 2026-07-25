@@ -1778,6 +1778,12 @@ abstract class AppLocalizations {
   /// **'Add text'**
   String get addTextTitle;
 
+  /// No description provided for @addImageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add image'**
+  String get addImageTitle;
+
   /// No description provided for @galleryAction.
   ///
   /// In en, this message translates to:

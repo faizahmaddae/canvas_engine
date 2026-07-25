@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/constants/engine_constants.dart';
+import '../../../../core/utils/editor_value_format.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
@@ -724,14 +725,19 @@ class _CropBottomBar extends ConsumerWidget {
     final tokens = AppTokens.of(context);
     final layerH = layer.transform.size.height;
     final layerAspect = layerH == 0 ? 1.0 : layer.transform.size.width / layerH;
+    // Ratio labels are numbers, so they follow the same digit rule as
+    // every other value in the editor: Persian digits under fa. They
+    // were the last ASCII numerals left in the Persian UI, sitting one
+    // row away from «عمودی ۴:۵» in the size picker.
+    final values = EditorValueFormat.of(context);
     final presets = <_AspectChip>[
       _AspectChip(label: context.l10n.freeOption, aspect: null),
       _AspectChip(label: context.l10n.originalOption, aspect: layerAspect),
-      const _AspectChip(label: '1:1', aspect: 1),
-      const _AspectChip(label: '4:5', aspect: 4 / 5),
-      const _AspectChip(label: '5:4', aspect: 5 / 4),
-      const _AspectChip(label: '16:9', aspect: 16 / 9),
-      const _AspectChip(label: '9:16', aspect: 9 / 16),
+      _AspectChip(label: values.mapDigits('1:1'), aspect: 1),
+      _AspectChip(label: values.mapDigits('4:5'), aspect: 4 / 5),
+      _AspectChip(label: values.mapDigits('5:4'), aspect: 5 / 4),
+      _AspectChip(label: values.mapDigits('16:9'), aspect: 16 / 9),
+      _AspectChip(label: values.mapDigits('9:16'), aspect: 9 / 16),
     ];
     // Floating control card, mask-edit grammar: a rounded [surface]
     // slab inset from the edges rather than a full-bleed bar, so the

@@ -411,7 +411,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String multiSelectCount(int count) {
-    return 'Multi-select · $count';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Multi-select · $countString';
   }
 
   @override
@@ -455,7 +459,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String layersSelectedCount(int count) {
-    return '$count layers selected';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString layers selected';
   }
 
   @override
@@ -701,12 +709,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String minutesAgo(int count) {
-    return '${count}m ago';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '${countString}m ago';
   }
 
   @override
   String hoursAgo(int count) {
-    return '${count}h ago';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '${countString}h ago';
   }
 
   @override
@@ -714,17 +730,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String daysAgo(int count) {
-    return '${count}d ago';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '${countString}d ago';
   }
 
   @override
   String weeksAgo(int count) {
-    return '${count}w ago';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '${countString}w ago';
   }
 
   @override
   String monthsAgo(int count) {
-    return '${count}mo ago';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '${countString}mo ago';
   }
 
   @override
@@ -902,6 +930,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addTextTitle => 'Add text';
 
   @override
+  String get addImageTitle => 'Add image';
+
+  @override
   String get galleryAction => 'Gallery';
 
   @override
@@ -1003,7 +1034,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String imageLayerTitle(int index) {
-    return 'Image $index';
+    final intl.NumberFormat indexNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String indexString = indexNumberFormat.format(index);
+
+    return 'Image $indexString';
   }
 
   @override
@@ -1448,7 +1483,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sidesCount(int count) {
-    return '$count sides';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString sides';
   }
 
   @override
