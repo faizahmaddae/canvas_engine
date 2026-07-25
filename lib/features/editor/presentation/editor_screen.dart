@@ -1387,34 +1387,72 @@ class _DocumentTitle extends ConsumerWidget {
                         color: tokens.textPrimary,
                       ),
                     ),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          // Dirty state, said once: a document that
-                          // has never been saved as a project lives
-                          // only in the crash journal, and nothing
-                          // in the old top bar admitted that. Once
-                          // it IS a project, autosave keeps it
-                          // current and the badge has nothing left
-                          // to warn about, so it disappears rather
-                          // than blinking on every keystroke.
-                          if (unsaved)
-                            TextSpan(
-                              text: '${context.l10n.unsavedBadge} • ',
-                              style: TextStyle(
-                                color: tokens.accentDeep,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                    // The subtitle has three segments of different
+                    // importance, and the old single ellipsised Text
+                    // cut whatever ran off the end — which on a
+                    // narrow phone was the ZOOM. That is the one
+                    // segment that must never be cut: the invisible
+                    // fit-to-screen tap target below is pinned to the
+                    // trailing end precisely because the zoom lives
+                    // there, so a truncated subtitle left a 48×44
+                    // button sitting on top of an ellipsis (tb8 1/2).
+                    //
+                    // The dimensions DROP rather than ellipsise. A
+                    // half-rendered number pair ("۱۳… ۱۰۸۰ ×") is
+                    // worse than absent — it reads as a wrong number
+                    // rather than as missing information, which is
+                    // the same failure mode the RTL swap had.
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final values = EditorValueFormat.of(context);
+                        final style = Theme.of(context).textTheme.labelSmall!
+                            .copyWith(color: tokens.textSecondary);
+                        final badge = unsaved
+                            ? '${context.l10n.unsavedBadge} • '
+                            : '';
+                        final dims =
+                            '${values.dimensions(size.width.toInt(), size.height.toInt())} • ';
+                        final zoom = values.percent((scale * 100).round());
+
+                        double widthOf(String text) {
+                          final painter = TextPainter(
+                            text: TextSpan(text: text, style: style),
+                            textDirection: Directionality.of(context),
+                            maxLines: 1,
+                          )..layout();
+                          return painter.width;
+                        }
+
+                        final fits =
+                            widthOf('$badge$dims$zoom') <= constraints.maxWidth;
+                        return Text.rich(
                           TextSpan(
-                            text:
-                                '${EditorValueFormat.of(context).dimensions(size.width.toInt(), size.height.toInt())} • ${EditorValueFormat.of(context).percent((scale * 100).round())}',
+                            children: [
+                              // Dirty state, said once: a document
+                              // that has never been saved lives only
+                              // in the crash journal, and nothing in
+                              // the old top bar admitted that. Once
+                              // it IS a project, autosave keeps it
+                              // current and the badge disappears
+                              // rather than blinking on every
+                              // keystroke.
+                              if (unsaved)
+                                TextSpan(
+                                  text: badge,
+                                  style: TextStyle(
+                                    color: tokens.accentDeep,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              if (fits) TextSpan(text: dims),
+                              TextSpan(text: zoom),
+                            ],
                           ),
-                        ],
-                      ),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: tokens.textSecondary,
-                      ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: style,
+                        );
+                      },
                     ),
                   ],
                 ),

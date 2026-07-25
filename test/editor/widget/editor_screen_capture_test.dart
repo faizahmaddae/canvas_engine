@@ -83,6 +83,7 @@ ProviderContainer _sampleEditor({
   bool withCropSession = false,
   bool withMultiSelect = false,
   bool withQuickCapsule = false,
+  bool portraitDoc = false,
   String? openSheet,
 }) {
   final container = ProviderContainer();
@@ -90,7 +91,15 @@ ProviderContainer _sampleEditor({
     name: 'پوستر نوروز',
   );
   final ctrl = container.read(documentControllerProvider.notifier);
-  ctrl.newDocument(width: 1080, height: 1080);
+  // Square by default — but a square document hides an entire class
+  // of bug. The RTL dimension swap (tb7 7/7) shipped because W and H
+  // were equal in every capture, so `1080 × 1080` reads the same in
+  // both directions. `portraitDoc` gives that class somewhere to
+  // fail (tb8 2/2).
+  ctrl.newDocument(
+    width: portraitDoc ? 1080 : 1080,
+    height: portraitDoc ? 1350 : 1080,
+  );
   ctrl.execute(
     AddLayerCommand(
       ShapeLayer(
@@ -273,6 +282,7 @@ void main() {
     bool withCropSession = false,
     bool withMultiSelect = false,
     bool withQuickCapsule = false,
+    bool portraitDoc = false,
     Size viewSize = phoneView,
     String? openSheet,
     Future<void> Function(WidgetTester tester)? interact,
@@ -293,6 +303,7 @@ void main() {
       withCropSession: withCropSession,
       withMultiSelect: withMultiSelect,
       withQuickCapsule: withQuickCapsule,
+      portraitDoc: portraitDoc,
       openSheet: openSheet,
     );
     addTearDown(container.dispose);
@@ -377,6 +388,7 @@ void main() {
     bool withCropSession = false,
     bool withMultiSelect = false,
     bool withQuickCapsule = false,
+    bool portraitDoc = false,
     Size viewSize = phoneView,
     String? openSheet,
     Future<void> Function(WidgetTester tester)? interact,
@@ -392,6 +404,7 @@ void main() {
       withCropSession: withCropSession,
       withMultiSelect: withMultiSelect,
       withQuickCapsule: withQuickCapsule,
+      portraitDoc: portraitDoc,
       viewSize: viewSize,
       openSheet: openSheet,
       interact: interact,
@@ -453,6 +466,36 @@ void main() {
       brightness: Brightness.dark,
       fileName: 'editor_panel_dark.png',
       openSheet: 'size',
+    );
+  });
+
+  // A NON-SQUARE document (tb8 2/2). Every other variant is 1080 ×
+  // 1080, and that symmetry is exactly what let the RTL dimension
+  // swap ship: `1080 × 1080` reads identically in both directions, so
+  // no capture and no test could see W and H trading places. This
+  // variant is where that class of bug has to show itself — the top
+  // bar's «۱۰۸۰ × ۱۳۵۰» is legible in the PNG.
+  testWidgets('EditorScreen visual capture — portrait doc, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_portrait_doc_light.png',
+      portraitDoc: true,
+      withSelection: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — portrait doc, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_portrait_doc_dark.png',
+      portraitDoc: true,
+      withSelection: true,
     );
   });
 
