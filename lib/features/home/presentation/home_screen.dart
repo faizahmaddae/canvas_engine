@@ -13,6 +13,7 @@ import 'home_actions.dart';
 import 'widgets/home_header.dart';
 import 'widgets/quick_action_card.dart';
 import 'widgets/recent_projects_section.dart';
+import 'widgets/resume_draft_card.dart';
 import 'widgets/suggested_templates_rail.dart';
 
 /// Home root content. Composed of small, independently-tested widgets
@@ -26,10 +27,14 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  /// One draft-recovery offer per Home mount — re-showing the banner
-  /// on every rebuild would nag; a declined offer stays declined
-  /// until the next cold start.
+  /// One draft-recovery offer per Home mount — re-offering on every
+  /// rebuild would nag; a declined offer stays declined until the next
+  /// cold start.
   bool _draftOfferShown = false;
+
+  /// The pending draft, once the async read has resolved. Non-null is
+  /// what puts [ResumeDraftCard] on screen.
+  String? _pendingDraftJson;
 
   @override
   void initState() {
@@ -44,36 +49,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .read(projectRecoveryServiceProvider)
         .pendingDraftJson();
     if (draftJson == null || !mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final recovery = ref.read(projectRecoveryServiceProvider);
-    // Re-offers can race a still-visible banner — never stack two.
-    messenger.hideCurrentMaterialBanner();
-    messenger.showMaterialBanner(
-      MaterialBanner(
-        content: Text(context.l10n.resumeDraftBanner),
-        leading: const Icon(Icons.restore_rounded),
-        actions: [
-          TextButton(
-            onPressed: () {
-              messenger.hideCurrentMaterialBanner();
-              recovery.clearDraft();
-            },
-            child: Text(context.l10n.discardAction),
-          ),
-          FilledButton(
-            onPressed: () {
-              messenger.hideCurrentMaterialBanner();
-              // Journal survives until the resumed session either
-              // saves (rebinds + clears) or is deliberately closed
-              // (sessionEnding flush clears) — so a crash *during*
-              // the resumed session is still covered.
-              HomeActions(context, ref).resumeDraft(draftJson);
-            },
-            child: Text(context.l10n.resumeAction),
-          ),
-        ],
-      ),
-    );
+    setState(() => _pendingDraftJson = draftJson);
+  }
+
+  void _discardDraft() {
+    ref.read(projectRecoveryServiceProvider).clearDraft();
+    setState(() => _pendingDraftJson = null);
+  }
+
+  void _resumeDraft(String draftJson) {
+    setState(() => _pendingDraftJson = null);
+    // Journal survives until the resumed session either saves
+    // (rebinds + clears) or is deliberately closed (sessionEnding
+    // flush clears) — so a crash *during* the resumed session is
+    // still covered.
+    HomeActions(context, ref).resumeDraft(draftJson);
   }
 
   @override
@@ -105,6 +95,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           slivers: [
             const SliverToBoxAdapter(child: HomeHeader()),
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+            if (_pendingDraftJson case final String draftJson)
+              SliverToBoxAdapter(
+                child: ResumeDraftCard(
+                  key: const ValueKey('home-resume-draft'),
+                  onResume: () => _resumeDraft(draftJson),
+                  onDiscard: _discardDraft,
+                ),
+              ),
             // Create row (redesign doc §3): two equal cards, the
             // filled ink card is THE primary action.
             SliverToBoxAdapter(
