@@ -36,16 +36,20 @@ class EditorSegmentedControl<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    return Container(
-      height: 36,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: tokens.surfaceMuted.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    // A row of pills at the READING-START edge, not a full-width
+    // track (tb7 4/7). The prototype's Solid/Gradient switch is two
+    // small pills, the same object as every other choice chip in the
+    // panel; a full-bleed track made a two-way choice look like the
+    // panel's primary control, which it is not — the fill body
+    // underneath is. Start-aligned so the pills hang under the
+    // section label that introduces them.
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          for (final segment in segments)
+          for (final segment in segments) ...[
+            if (segment != segments.first) const SizedBox(width: 8),
             _SegmentTile(
               key: segment.itemKey,
               label: segment.label,
@@ -53,6 +57,7 @@ class EditorSegmentedControl<T> extends StatelessWidget {
               onTap: () => onChanged(segment.value),
               tokens: tokens,
             ),
+          ],
         ],
       ),
     );
@@ -75,28 +80,36 @@ class _SegmentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: AppMotion.of(context, AppMotion.state),
-          curve: Curves.easeOut,
-          decoration: BoxDecoration(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.state),
+        curve: Curves.easeOut,
+        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: selected
+              ? tokens.accent.withValues(alpha: 0.16)
+              : Colors.transparent,
+          // Same fully-round pill as PresetChip (tb7 3/7): one chip
+          // vocabulary across the whole panel.
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(
             color: selected
-                ? tokens.accent.withValues(alpha: 0.16)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
+                ? tokens.accent
+                : tokens.border.withValues(alpha: 0.9),
+            width: selected ? 1.5 : 1,
           ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
-              color: selected ? tokens.accentDeep : tokens.textSecondary,
-            ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+            color: selected ? tokens.accentDeep : tokens.textSecondary,
           ),
         ),
       ),
