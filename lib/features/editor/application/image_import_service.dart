@@ -3,66 +3,29 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart' as picker;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/engine_constants.dart';
-import '../../../core/utils/haptics.dart';
-import '../../../l10n/l10n.dart';
 
 const _uuid = Uuid();
 
 /// Application-layer image-import primitives shared by every flow
 /// that lets the user pick a photo (editor "Add image", image-layer
-/// "Replace"): source-picker sheet, natural-size resolution, and
-/// stable on-disk persistence. Extracted out of `editor_screen.dart`
-/// (Phase 4 plan §5.2) — presentation code should not own file IO.
+/// "Replace"): natural-size resolution and stable on-disk
+/// persistence. Extracted out of `editor_screen.dart` (Phase 4 plan
+/// §5.2) — presentation code should not own file IO.
 ///
 /// Each caller keeps its own orchestration and policy
 /// (`_addImage`'s base-photo-claim logic, `replaceImageLayer`'s
 /// relink messaging) — only the mechanical IO steps are shared here.
 
-/// Bottom sheet asking the user where the image should come from.
-/// Returns `null` on dismiss/back so the caller can bail cleanly.
-Future<picker.ImageSource?> pickImageSource(BuildContext context) {
-  final l10n = context.l10n;
-  // NOT on the shared modal host (tb2 8/16 deferred): this file is
-  // APPLICATION layer and the import-direction gate rightly forbids
-  // importing the presentation-layer host. The real fix is moving
-  // this UI helper to presentation/ — a relocation, not a chrome
-  // swap; until then it keeps the stock sheet.
-  return showModalBottomSheet<picker.ImageSource>(
-    context: context,
-    showDragHandle: true,
-    builder: (ctx) {
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(l10n.galleryAction),
-              onTap: () {
-                EditorHaptics.tap();
-                Navigator.pop(ctx, picker.ImageSource.gallery);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
-              title: Text(l10n.cameraAction),
-              onTap: () {
-                EditorHaptics.tap();
-                Navigator.pop(ctx, picker.ImageSource.camera);
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      );
-    },
-  );
-}
+/// The source-picker sheet used to live here and, because this is the
+/// APPLICATION layer, it could not reach the presentation layer's
+/// shared sheet host — so it shipped as bare stock Material chrome.
+/// tb2 8/16 recorded the relocation as the real fix; it now lives at
+/// `presentation/widgets/image_source_sheet.dart`. This file keeps
+/// only the mechanical IO it was extracted to own.
 
 /// Aspect-preserving longest-side cap for imported photos
 /// ([EngineConstants.kMaxImportDimension], tb3 7/7).
