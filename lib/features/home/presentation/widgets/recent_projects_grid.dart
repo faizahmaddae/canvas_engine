@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../core/utils/text_measure.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
@@ -86,7 +87,7 @@ class RecentProjectsGrid extends ConsumerWidget {
               if (count > 0) ...[
                 const SizedBox(width: 8),
                 Text(
-                  '$count',
+                  EditorValueFormat.of(context).digits(count),
                   style: AppTypeScale.caption.copyWith(color: tokens.textMuted),
                 ),
               ],
@@ -298,39 +299,43 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                             // distinguishable at a glance; the dot
                             // separator keeps it compact and reads
                             // well in light/dark.
-                            // Two segments, not one ellipsised string:
-                            // the size is short and bounded, the
-                            // relative time is the part that can grow,
-                            // so the time yields first. One `Text`
-                            // clipped whichever came last — on a 360dp
-                            // phone that was «۴ د…», a card that no
-                            // longer says when it was touched.
-                            Builder(
-                              builder: (context) {
+                            // Measured, not ellipsised. A card in the
+                            // 2-up grid has ~150dp for this line and
+                            // «۱۰۸۰ × ۱۳۵۰  ·  ۲۹ دقیقه پیش» needs far
+                            // more, so SOMETHING has to go. Ellipsis
+                            // picks the wrong victim either way: one
+                            // `Text` cut the time mid-word, and making
+                            // only the time flexible silently clipped
+                            // the height off the dimension pair — half
+                            // a number pair reads as a different
+                            // number. So the size, which is what tells
+                            // a stack of «طرح بی‌نام» cards apart, is
+                            // always whole, and the time is appended
+                            // only when it fits (tb8's rule for the
+                            // editor's own title subtitle).
+                            LayoutBuilder(
+                              builder: (context, constraints) {
                                 final style = AppTypeScale.caption.copyWith(
                                   color: tokens.textMuted,
                                   fontSize: 11,
                                 );
-                                return Row(
-                                  children: [
-                                    Text(
-                                      EditorValueFormat.of(context).dimensions(
-                                        _sizeComponent(p.width),
-                                        _sizeComponent(p.height),
-                                      ),
-                                      maxLines: 1,
-                                      style: style,
-                                    ),
-                                    Text('  \u00B7  ', style: style),
-                                    Flexible(
-                                      child: Text(
-                                        relativeTime,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                final size = EditorValueFormat.of(context)
+                                    .dimensions(
+                                      _sizeComponent(p.width),
+                                      _sizeComponent(p.height),
+                                    );
+                                final full = '$size \u00B7 $relativeTime';
+                                return Text(
+                                  textFits(
+                                        context,
+                                        full,
                                         style: style,
-                                      ),
-                                    ),
-                                  ],
+                                        maxWidth: constraints.maxWidth,
+                                      )
+                                      ? full
+                                      : size,
+                                  maxLines: 1,
+                                  style: style,
                                 );
                               },
                             ),

@@ -93,14 +93,44 @@ void main() {
     expect(stripped, isNot(contains('۱۰۸۰٫۰')));
   });
 
-  testWidgets('the size survives narrow widths — the TIME yields first', (
+  testWidgets('the size survives narrow widths — the TIME is dropped', (
     tester,
   ) async {
-    // One ellipsised string cut whichever fact came last. The size is
-    // short and bounded; the relative time is the one that can grow,
-    // so it is the one allowed to truncate.
-    await pump(tester, p: project(width: 1920, height: 1080), width: 240);
+    // One ellipsised string cut whichever fact came last; making only
+    // the time flexible silently clipped the HEIGHT off the pair, and
+    // «۱۰۸۰ ×» reads as a different canvas. Whole-or-absent, never
+    // half: the size always survives, the time is appended only when
+    // there is room for all of it.
+    await pump(tester, p: project(width: 1920, height: 1080), width: 200);
     expect(tester.takeException(), isNull);
-    expect(stripBidi(allText(tester)), contains('۱۹۲۰ × ۱۰۸۰'));
+
+    final stripped = stripBidi(allText(tester));
+    expect(stripped, contains('۱۹۲۰ × ۱۰۸۰'));
+    expect(
+      stripped,
+      isNot(contains('·')),
+      reason: 'the separator only appears when the time came with it',
+    );
+  });
+
+  testWidgets('a wide card keeps BOTH facts', (tester) async {
+    await pump(tester, p: project(width: 1080, height: 1350), width: 560);
+    final stripped = stripBidi(allText(tester));
+    expect(stripped, contains('۱۰۸۰ × ۱۳۵۰'));
+    expect(stripped, contains('·'));
+  });
+
+  testWidgets('the dimension pair is never truncated', (tester) async {
+    // The specific regression: at a width where the full line does not
+    // fit, the pair must be complete rather than cut after the «×».
+    for (final width in const [140.0, 180.0, 240.0, 320.0]) {
+      await pump(tester, p: project(width: 2480, height: 3508), width: width);
+      final stripped = stripBidi(allText(tester));
+      expect(
+        stripped,
+        contains('۲۴۸۰ × ۳۵۰۸'),
+        reason: 'half a number pair at ${width}dp reads as a wrong canvas',
+      );
+    }
   });
 }

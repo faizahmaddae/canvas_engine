@@ -52,6 +52,16 @@ Future<void> _pumpHome(
     }
   });
 
+  // The metadata line is measured, not ellipsised (a clipped `W ×`
+  // reads as a different canvas), so the card drops the relative time
+  // when the pair plus the time will not fit. The test font is a
+  // fixed-width stand-in that measures far wider than Vazir does on a
+  // device, so at the default 800dp surface these cards would report
+  // "no room" for something that fits comfortably in the product.
+  // Give the grid the width it needs to exercise the both-facts case.
+  await tester.binding.setSurfaceSize(const Size(1400, 900));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,

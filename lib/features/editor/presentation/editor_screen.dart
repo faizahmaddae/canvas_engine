@@ -79,6 +79,7 @@ import 'widgets/export_action_sheet.dart';
 import 'widgets/layers_panel.dart';
 import 'widgets/multi_select_mode_toolbar.dart';
 import '../../../core/utils/editor_value_format.dart';
+import '../../../core/utils/text_measure.dart';
 
 const _uuid = Uuid();
 
@@ -1422,17 +1423,12 @@ class _DocumentTitle extends ConsumerWidget {
                             '${values.dimensions(size.width.toInt(), size.height.toInt())} • ';
                         final zoom = values.percent((scale * 100).round());
 
-                        double widthOf(String text) {
-                          final painter = TextPainter(
-                            text: TextSpan(text: text, style: style),
-                            textDirection: Directionality.of(context),
-                            maxLines: 1,
-                          )..layout();
-                          return painter.width;
-                        }
-
-                        final fits =
-                            widthOf('$badge$dims$zoom') <= constraints.maxWidth;
+                        final fits = textFits(
+                          context,
+                          '$badge$dims$zoom',
+                          style: style,
+                          maxWidth: constraints.maxWidth,
+                        );
                         return Text.rich(
                           TextSpan(
                             children: [
