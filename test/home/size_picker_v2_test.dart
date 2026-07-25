@@ -114,8 +114,31 @@ void main() {
   ) async {
     await pumpAndOpen(tester, locale: const Locale('fa'));
 
-    expect(find.byIcon(Icons.chevron_left_rounded), findsWidgets);
-    expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+    // The tile always names the FORWARD glyph. `chevron_right_rounded`
+    // carries `matchTextDirection`, so Flutter flips it for RTL at
+    // paint time; naming `chevron_left_rounded` under RTL instead
+    // mirrored an already-mirroring glyph and the drill-in arrow came
+    // out pointing at the screen edge. Assert the mechanism, not a
+    // glyph identity — the identity is what let the bug through.
+    expect(find.byIcon(Icons.chevron_right_rounded), findsWidgets);
+    expect(find.byIcon(Icons.chevron_left_rounded), findsNothing);
+
+    final icon = tester.widget<Icon>(
+      find.byIcon(Icons.chevron_right_rounded).first,
+    );
+    expect(
+      icon.icon!.matchTextDirection,
+      isTrue,
+      reason: 'the glyph has to be one Flutter will mirror for us',
+    );
+  });
+
+  testWidgets('LTR: the preset chevron uses the same forward glyph', (
+    tester,
+  ) async {
+    await pumpAndOpen(tester, locale: const Locale('en'));
+    expect(find.byIcon(Icons.chevron_right_rounded), findsWidgets);
+    expect(find.byIcon(Icons.chevron_left_rounded), findsNothing);
   });
 
   testWidgets('dark mode: ink surface + cream CTA', (tester) async {

@@ -359,11 +359,12 @@ class _PresetTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
     final l10n = context.l10n;
-    // Chevron points "forward" (start -> end), so it mirrors under
-    // RTL — Material has no auto-mirroring chevron glyph.
-    final forwardChevron = Directionality.of(context) == TextDirection.rtl
-        ? Icons.chevron_left_rounded
-        : Icons.chevron_right_rounded;
+    // `chevron_right_rounded` already carries `matchTextDirection`,
+    // so Flutter mirrors it for us. Picking `chevron_left_rounded`
+    // under RTL by hand mirrored it a *second* time and the drill-in
+    // affordance ended up pointing back out of the row — a `>` sitting
+    // on the row's left edge, aimed at the screen edge.
+    const forwardChevron = Icons.chevron_right_rounded;
     return Material(
       color: tokens.surface,
       borderRadius: BorderRadius.circular(14),
