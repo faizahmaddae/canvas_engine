@@ -1649,41 +1649,37 @@ class _ModeExitPill extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final paintOpen = ref.watch(
-      paintToolControllerProvider.select((s) => s.panelOpen),
-    );
-    final textOpen = ref.watch(
-      textToolControllerProvider.select((s) => s.panelOpen),
-    );
+    // ONE mode derivation (tb6 4/5): this pill used to re-derive its
+    // own `inMode` from paint/text `panelOpen` — a second ladder
+    // beside `editorToolModeProvider`, and one that disagreed with it
+    // about text (the provider keys on the add-composer, the pill
+    // keyed on the sheet). Two ladders drift; that is the whole
+    // reason tb1 collapsed the original three. The pill now reads the
+    // provider and adds exactly one rule of its own, below.
+    final mode = ref.watch(editorToolModeProvider);
     final selectionId = ref.watch(
       selectionControllerProvider.select((s) => s.selectedId),
     );
     // COMMITTED doc, narrowly selected (tb1 16/17): the pill only
-    // needs existence/type/protection of the selected layer — facts
-    // that change on commits, never on 60fps overlay preview ticks.
-    // The old full renderedDocumentProvider watch made this pill
-    // (and with it the screen-level Positioned subtree) rebuild
-    // every preview frame. Behavior note: during the add-composer
-    // the staged layer exists only on the overlay, so the pill is
-    // now hidden behind the composer's modal barrier instead of
-    // invisible-but-present — no user-visible difference.
-    final selectedLayer = ref.watch(
-      documentControllerProvider.select(
-        (d) => selectionId == null ? null : d.layerById(selectionId),
-      ),
-    );
+    // needs the protection flag of the selected layer — a fact that
+    // changes on commits, never on 60fps overlay preview ticks. The
+    // old full renderedDocumentProvider watch made this pill (and
+    // with it the screen-level Positioned subtree) rebuild every
+    // preview frame.
     final isProtectedBase = ref.watch(
       documentControllerProvider.select(
         (d) => selectionId != null && d.isProtectedBasePhoto(selectionId),
       ),
     );
-    // Protected base photo (photo project) is the canvas itself --
-    // it is intentionally selectable for tool targeting but never
-    // shows object-selection chrome (frame, quick actions). Done
-    // belongs to that chrome family, so suppress it here too.
-    final hasObjectSelection = selectedLayer != null && !isProtectedBase;
-    final inMode = paintOpen || textOpen || hasObjectSelection;
-    if (!inMode) return const SizedBox.shrink();
+    // The pill's ONE additional rule: the protected base photo (photo
+    // project) is the canvas itself — intentionally selectable for
+    // tool targeting, but it never shows object-selection chrome
+    // (frame, quick actions). Done belongs to that chrome family, so
+    // it is suppressed there even though the mode ladder correctly
+    // reports `image`. Every other non-idle mode shows the pill.
+    if (mode == EditorToolMode.idle || isProtectedBase) {
+      return const SizedBox.shrink();
+    }
 
     // Single canonical verb: every commit / dismiss path on the
     // canvas is "Done". Avoids Hick's-law confusion from flipping

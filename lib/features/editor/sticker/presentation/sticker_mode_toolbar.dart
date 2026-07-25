@@ -6,6 +6,7 @@ import '../../engine/modules/text/text_layer.dart';
 import '../../toolbar/application/dock_tool_controller.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
+import '../../presentation/widgets/layer_overflow_sheet.dart';
 import '../application/sticker_tool_controller.dart';
 
 // Barrel re-exports so callers (e.g. EditorScreen) can keep
@@ -62,7 +63,30 @@ class StickerModeToolbar extends ConsumerWidget {
     final l10n = context.l10n;
     final slot = entry.slot;
     if (slot == null) {
-      throw StateError('Unknown sticker strip action: ${entry.actionId}');
+      return switch (entry.actionId) {
+        'more' => ToolbarSlot(
+          id: 'more',
+          icon: Icons.more_horiz_rounded,
+          label: l10n.moreActionsSemantics,
+          onTap: () {
+            // Same shape as every other mode's More: close this
+            // mode's panel first so the sheet never stacks on one.
+            ctrl.closePanel();
+            final scaffold = Scaffold.maybeOf(context);
+            showLayerOverflowSheet(
+              context,
+              ref,
+              layer: layer,
+              onOpenLayers: scaffold == null
+                  ? null
+                  : () => scaffold.openEndDrawer(),
+            );
+          },
+        ),
+        _ => throw StateError(
+          'Unknown sticker strip action: ${entry.actionId}',
+        ),
+      };
     }
     return switch (slot) {
       StickerToolSlot.style => ToolbarSlot(

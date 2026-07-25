@@ -58,12 +58,12 @@ enum ImageToolSlot {
 const List<DockStripEntry<ImageToolSlot>> kImageStripOrder =
     <DockStripEntry<ImageToolSlot>>[
       DockStripEntry.slot(ImageToolSlot.look),
+      DockStripEntry.slot(ImageToolSlot.crop),
       DockStripEntry.slot(ImageToolSlot.border),
       DockStripEntry.slot(ImageToolSlot.shadow),
       DockStripEntry.action('opacity'),
       DockStripEntry.slot(ImageToolSlot.replace),
       DockStripEntry.action('more'),
-      DockStripEntry.slot(ImageToolSlot.crop),
       DockStripEntry.slot(ImageToolSlot.shape),
       DockStripEntry.slot(ImageToolSlot.effects),
       DockStripEntry.slot(ImageToolSlot.selective),
@@ -77,7 +77,10 @@ final List<ImageToolSlot> kImageStripSlotOrder = List.unmodifiable(
 
 /// Panel-bearing slots in RENDERED order — drives sibling-swipe.
 /// Derived from [kImageStripOrder] so the walk follows the strip
-/// the user sees: look → border → shadow → shape → effects (wrap).
+/// the user sees. Crop is second (tb6 2/5): it is the most-reached
+/// photo action and had drifted to slot 7 of 10 as the strip grew,
+/// which put it past the scroll fold on a phone — the approved
+/// prototype had it in the first pair.
 /// Pinned against the pumped toolbar by
 /// `test/editor/widget/slot_order_consistency_test.dart`.
 final List<ImageToolSlot> kImagePanelSlotOrder = List.unmodifiable(

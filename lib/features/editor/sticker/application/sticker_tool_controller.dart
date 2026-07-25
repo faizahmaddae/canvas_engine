@@ -30,11 +30,20 @@ enum StickerToolSlot {
 /// by iterating THIS list. Sticker has no swipe walk (see above) —
 /// the list still exists so the strip shares the same single-source
 /// grammar as Image/Shape.
+///
+/// `'more'` opens the selected-layer actions sheet. It was the one
+/// mode whose strip omitted it (tb6 3/5), which left a sticker's
+/// structural actions — reorder, rename, lock, delete — reachable
+/// only through the floating capsule. The capsule is an accelerator
+/// that hides while a panel is open and never renders for the
+/// protected base photo, so "accelerator only" meant "sometimes
+/// unreachable". Every other mode carries this chip.
 const List<DockStripEntry<StickerToolSlot>> kStickerStripOrder =
     <DockStripEntry<StickerToolSlot>>[
       DockStripEntry.slot(StickerToolSlot.style),
       DockStripEntry.slot(StickerToolSlot.size),
       DockStripEntry.slot(StickerToolSlot.replace),
+      DockStripEntry.action('more'),
     ];
 
 /// Display order of every Sticker chip — the [kStickerStripOrder]

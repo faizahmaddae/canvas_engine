@@ -128,6 +128,15 @@ void main() {
       renderedIds,
       kStickerStripOrder.map((e) => e.slot?.name ?? e.actionId).toList(),
     );
-    expect(kStickerStripSlotOrder.map((s) => s.name).toList(), renderedIds);
+    // The slot-only projection excludes action chips. Sticker gained
+    // a 'more' action in tb6 3/5, so the projection is now a strict
+    // subset of the rendered ids rather than equal to them — compare
+    // it against the rendered ids with the actions filtered out.
+    final renderedSlotIds = kStickerStripOrder
+        .where((e) => e.slot != null)
+        .map((e) => e.slot!.name)
+        .toList();
+    expect(kStickerStripSlotOrder.map((s) => s.name).toList(), renderedSlotIds);
+    expect(renderedSlotIds.every(renderedIds.contains), isTrue);
   });
 }
