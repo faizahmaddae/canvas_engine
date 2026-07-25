@@ -24,10 +24,20 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
+import 'editor_breakpoints.dart';
 
 /// Standard height of a single-row floating glass bar. Kept in sync
 /// with the value Paint and Shape pass to [FloatingToolbarPositioner].
-const double kFloatingBarHeight = 40;
+///
+/// This is [kMinHitTarget], deliberately. The bar was 40 and its
+/// `ClipRRect` clips hit-testing, so every pill inside it topped out
+/// at a 40dp tap area — under the floor the rest of the editor holds
+/// itself to, and not fixable from inside the clip. tb2's a11y pass
+/// recorded it as a structural ceiling and deferred it; raising the
+/// shell is the structural change it was waiting for. The painted
+/// pill row is unchanged at 32dp — only the glass capsule around it
+/// grows, by 4dp.
+const double kFloatingBarHeight = kMinHitTarget;
 
 /// Standard horizontal margin from screen edges enforced by the
 /// positioner. Constant so callers don't drift.
@@ -60,10 +70,19 @@ class FloatingGlassBar extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
+          // The hairline rides on `foregroundDecoration`, not on the
+          // fill: a `Border` in the box decoration INSETS the child by
+          // its width on every side, and 0.6 on each edge is enough to
+          // put a pill at 42.8dp — under the touch floor the bar was
+          // just raised to meet. Painting it over the child keeps the
+          // same pixel and gives the 1.2dp back to the pills.
+          foregroundDecoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: borderColor, width: 0.6),
+          ),
           decoration: BoxDecoration(
             color: tokens.surface.withValues(alpha: isDark ? 0.55 : 0.78),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: borderColor, width: 0.6),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.16),
@@ -72,12 +91,12 @@ class FloatingGlassBar extends StatelessWidget {
               ),
             ],
           ),
-          // Horizontal only (tb2 a11y pass): the 4dp vertical
-          // breathing room moved INSIDE [FloatingPillButton] so the
-          // pills' tap area spans the full 40dp bar height while
-          // the painted pill row stays exactly where it was. The
-          // glass shell's own box is unchanged (callers size it via
-          // SizedBox(height: kFloatingBarHeight)).
+          // Horizontal only (tb2 a11y pass): the vertical breathing
+          // room lives INSIDE [FloatingPillButton] so the pills' tap
+          // area spans the full bar height while the painted pill row
+          // stays exactly where it was. The glass shell's own box is
+          // sized by the caller via SizedBox(height:
+          // kFloatingBarHeight).
           padding: const EdgeInsets.symmetric(horizontal: 6),
           child: child,
         ),
@@ -115,14 +134,11 @@ class FloatingPillButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    // Hit area = the full 40dp bar height (tb2 a11y pass): the
-    // InkWell wraps a transparent 4dp vertical halo around the
-    // painted 32dp pill (the halo used to be the glass shell's own
-    // padding, so the painted pixels are identical). 40dp is the
-    // structural ceiling here — the pills live inside the bar's
-    // 40dp ClipRRect, which clips hit-testing; reaching the full
-    // 44dp kMinHitTarget needs the bar chrome itself to change and
-    // is deferred with the Stage-2 modal host work.
+    // Hit area = the full bar height (tb2 a11y pass): the InkWell
+    // wraps a transparent vertical halo around the painted 32dp pill,
+    // so the painted pixels are independent of the tap area. The bar
+    // is now kMinHitTarget tall, which puts the halo at 6dp and the
+    // pills on the floor the rest of the editor holds itself to.
     return Semantics(
       button: true,
       label: semanticLabel,
@@ -134,7 +150,9 @@ class FloatingPillButton extends StatelessWidget {
           splashColor: tokens.accent.withValues(alpha: 0.10),
           highlightColor: tokens.accent.withValues(alpha: 0.05),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(
+              vertical: (kFloatingBarHeight - 32) / 2,
+            ),
             child: AnimatedContainer(
               duration: AppMotion.of(context, AppMotion.state),
               curve: Curves.easeOut,

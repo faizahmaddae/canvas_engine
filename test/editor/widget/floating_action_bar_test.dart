@@ -1,5 +1,6 @@
 import 'package:canvas_engine/features/editor/presentation/widgets/floating_action_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:canvas_engine/features/editor/presentation/widgets/editor_breakpoints.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Smoke tests for the shared floating-bar primitives. These widgets
@@ -99,6 +100,58 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('a'), findsOneWidget);
     expect(find.text('b'), findsOneWidget);
+  });
+
+  testWidgets('every pill clears the 44dp touch floor', (tester) async {
+    // The bar's ClipRRect clips hit-testing, so a pill can never be
+    // taller than the shell around it. tb2's a11y pass got the pills
+    // to the full bar height and recorded the 40dp shell as a
+    // structural ceiling it could not pass; the shell is now
+    // kMinHitTarget, which is what actually lifts them onto the floor.
+    // The PAINTED pill row stays 32dp — only the halo grew.
+    await tester.pumpWidget(
+      host(
+        SizedBox(
+          height: kFloatingBarHeight,
+          child: FloatingGlassBar(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingPillButton(
+                  key: const ValueKey('pill-a'),
+                  onTap: () {},
+                  semanticLabel: 'a',
+                  child: const Text('a'),
+                ),
+                FloatingPillButton(
+                  key: const ValueKey('pill-b'),
+                  onTap: () {},
+                  semanticLabel: 'b',
+                  child: const Text('b'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    for (final key in const [ValueKey('pill-a'), ValueKey('pill-b')]) {
+      expect(
+        tester.getSize(find.byKey(key)).height,
+        greaterThanOrEqualTo(kMinHitTarget),
+        reason: '$key is below the editor-wide touch floor',
+      );
+    }
+
+    // And the pill still PAINTS at 32.
+    final painted = tester.getSize(
+      find.descendant(
+        of: find.byKey(const ValueKey('pill-a')),
+        matching: find.byType(AnimatedContainer),
+      ),
+    );
+    expect(painted.height, 32);
   });
 
   testWidgets('FloatingColorDot paints the requested colour as fill', (
