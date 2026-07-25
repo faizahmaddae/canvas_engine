@@ -67,10 +67,12 @@ void main() {
     return container;
   }
 
-  /// The effect chips render at 15px (unified PresetChip pill, tb2 15/16) — the dock
-  /// tile and preset labels use 11px, so font size disambiguates.
+  /// The effect chips render at 12.5px (unified PresetChip pill —
+  /// tb2 15/16, resized to the prototype's pill grammar in tb7 3/7).
+  /// The dock tile and preset labels use 10-11px, so font size still
+  /// disambiguates.
   Finder effectChip(String label) => find.byWidgetPredicate(
-    (w) => w is Text && w.data == label && w.style?.fontSize == 15,
+    (w) => w is Text && w.data == label && w.style?.fontSize == 12.5,
   );
 
   TextLayer layerOf(ProviderContainer c) =>

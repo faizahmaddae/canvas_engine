@@ -145,12 +145,13 @@ void main() {
   ]) {
     testWidgets('"$name" stays compact at worst-case style', (tester) async {
       await pumpWithSheet(tester, 'styles');
-      // Effect chips are 15px unified-pill labels; the style-preset
+      // Effect chips are 12.5px unified-pill labels (tb7 3/7 resized
+      // them to the prototype's pill grammar); the style-preset
       // OPTION tiles in the same panel can carry the same word at
-      // 11px, so font size disambiguates (same idiom as
+      // 10-11px, so font size still disambiguates (same idiom as
       // text_effects_shadow_test).
       final chip = find.byWidgetPredicate(
-        (w) => w is Text && w.data == chipLabel && w.style?.fontSize == 15,
+        (w) => w is Text && w.data == chipLabel && w.style?.fontSize == 12.5,
       );
       expect(chip, findsOneWidget);
       await tester.tap(chip);

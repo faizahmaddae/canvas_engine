@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../app/theme/app_motion.dart';
 import '../../../../../app/theme/app_tokens.dart';
+import '../../../presentation/widgets/editor_breakpoints.dart';
 import '../../../../../core/utils/haptics.dart';
 
 /// THE preset-choice family for every editor panel (tb2 15/16 —
@@ -114,10 +115,24 @@ class _PresetChipState extends State<PresetChip> {
       fill = tokens.accent.withValues(alpha: 0.10);
     } else if (tile && _hover) {
       fill = tokens.textPrimary.withValues(alpha: 0.06);
+    } else if (tile) {
+      fill = tokens.surfaceMuted.withValues(alpha: 0.35);
     } else {
-      fill = tokens.surfaceMuted.withValues(alpha: tile ? 0.35 : 0.55);
+      // An unselected pill is an OUTLINE, not a filled slab: the
+      // prototype's row of pills reads as a set of options, and a
+      // filled unselected chip competes with the selected one.
+      fill = Colors.transparent;
     }
-    final shadow = selected
+    // Pills carry a hairline; selected swaps it to the accent.
+    final border = tile
+        ? null
+        : Border.all(
+            color: selected
+                ? tokens.accent
+                : tokens.border.withValues(alpha: 0.9),
+            width: selected ? 1.5 : 1,
+          );
+    final shadow = selected && tile
         ? [
             BoxShadow(
               color: tokens.accent.withValues(alpha: 0.28),
@@ -126,7 +141,9 @@ class _PresetChipState extends State<PresetChip> {
             ),
           ]
         : const <BoxShadow>[];
-    final radius = BorderRadius.circular(tile ? 10 : 14);
+    // Pills are FULLY round (tb7 3/7) — the prototype's chip
+    // vocabulary. Tiles keep their 10dp card corner.
+    final radius = BorderRadius.circular(tile ? 10 : 99);
 
     void handleTap() {
       // Pill chips self-fire; option tiles keep caller-owned
@@ -140,10 +157,10 @@ class _PresetChipState extends State<PresetChip> {
         : Text(
             widget.label!,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
               color: fg,
-              letterSpacing: -0.1,
+              letterSpacing: 0,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           );
@@ -153,11 +170,13 @@ class _PresetChipState extends State<PresetChip> {
       curve: AppMotion.curve,
       constraints: BoxConstraints(
         minWidth: widget.minWidth,
-        // Both modes meet the kMinHitTarget floor; the pill is
-        // exactly 44, tiles grow with their glyph+label content.
-        minHeight: 44,
+        // Tiles grow with their glyph+label content; the pill is
+        // painted at 36 and padded out to the 44 floor.
+        minHeight: tile ? 44 : 0,
       ),
-      height: tile ? null : 44,
+      // Painted 36 like the prototype; the 44dp hit floor is restored
+      // by the outer padding below, the ModeDoneButton split.
+      height: tile ? null : 36,
       width: widget.width,
       padding: tile
           ? const EdgeInsets.symmetric(vertical: 8)
@@ -166,6 +185,7 @@ class _PresetChipState extends State<PresetChip> {
       decoration: BoxDecoration(
         color: fill,
         borderRadius: radius,
+        border: border,
         boxShadow: shadow,
       ),
       child: tile ? Center(child: content) : content,
@@ -176,6 +196,14 @@ class _PresetChipState extends State<PresetChip> {
         onEnter: (_) => setState(() => _hover = true),
         onExit: (_) => setState(() => _hover = false),
         cursor: SystemMouseCursors.click,
+        child: body,
+      );
+    } else {
+      // Restore the 44dp touch floor around the 36dp painted pill —
+      // the GestureDetector below is `opaque`, so the padding is live
+      // hit area, not dead space.
+      body = Padding(
+        padding: const EdgeInsets.symmetric(vertical: (kMinHitTarget - 36) / 2),
         child: body,
       );
     }

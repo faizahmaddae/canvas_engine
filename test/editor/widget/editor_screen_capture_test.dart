@@ -769,10 +769,12 @@ void main() {
     });
   }
 
-  /// Effect chips render at 15px (unified PresetChip pill, tb2 15/16); the dock tile
-  /// labels use 11px, so font size disambiguates duplicate strings.
+  /// Effect chips render at 12.5px (unified PresetChip pill — tb2
+  /// 15/16, resized to the prototype's pill grammar in tb7 3/7); the
+  /// dock tile labels use 10-11px, so font size still disambiguates
+  /// duplicate strings.
   Finder effectChip(String label) => find.byWidgetPredicate(
-    (w) => w is Text && w.data == label && w.style?.fontSize == 15,
+    (w) => w is Text && w.data == label && w.style?.fontSize == 12.5,
   );
 
   for (final (b, name) in [
