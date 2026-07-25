@@ -91,11 +91,15 @@ void main() {
     // Auto-open picker stayed quiet: a tool was already armed.
     expect(container.read(paintToolControllerProvider).openSlot, isNull);
 
-    // Capability matrix for freestyle: {tool, color, size, opacity},
-    // in registry order. The tool tile shows the ACTIVE tool's icon
-    // (freestyle = gesture); fill/blur/polygon/dash are hidden.
+    // Capability matrix for freestyle: {tool, eraser, color, size,
+    // opacity}, in registry order. The tool tile shows the active DRAW
+    // tool's icon (freestyle = gesture) and the eraser sits beside it
+    // permanently — swapping between them is the mode's most frequent
+    // action and used to cost a round trip through the picker.
+    // fill/blur/polygon/dash stay hidden.
     expect(stripTileIcons(tester), [
       AppIcons.freehandTool,
+      AppIcons.eraserTool,
       AppIcons.colorTool,
       AppIcons.strokeWeight,
       AppIcons.opacity,

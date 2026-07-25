@@ -15,9 +15,9 @@ Set<String> allowedPaintSlotsFor(PaintToolType? tool) {
   if (tool == null) return const {'tool'};
   switch (tool) {
     case PaintToolType.freestyle:
-      return const {'tool', 'color', 'size', 'opacity'};
+      return const {'tool', 'eraser', 'color', 'size', 'opacity'};
     case PaintToolType.arrow:
-      return const {'tool', 'color', 'size', 'opacity'};
+      return const {'tool', 'eraser', 'color', 'size', 'opacity'};
     // Style is wired to the line-family tools (Solid=line,
     // Dashed=dashLine, Dotted=dashDotLine). Picking a style in
     // the sheet calls selectTool() — so the slot is meaningful
@@ -26,15 +26,23 @@ Set<String> allowedPaintSlotsFor(PaintToolType? tool) {
     case PaintToolType.line:
     case PaintToolType.dashLine:
     case PaintToolType.dashDotLine:
-      return const {'tool', 'color', 'size', 'opacity', 'dash'};
+      return const {'tool', 'eraser', 'color', 'size', 'opacity', 'dash'};
     case PaintToolType.rectangle:
     case PaintToolType.circle:
     case PaintToolType.hexagon:
-      return const {'tool', 'color', 'size', 'fill', 'opacity'};
+      return const {'tool', 'eraser', 'color', 'size', 'fill', 'opacity'};
     case PaintToolType.polygon:
-      return const {'tool', 'color', 'size', 'fill', 'opacity', 'polygon'};
+      return const {
+        'tool',
+        'eraser',
+        'color',
+        'size',
+        'fill',
+        'opacity',
+        'polygon',
+      };
     case PaintToolType.eraser:
-      return const {'tool', 'size'};
+      return const {'tool', 'eraser', 'size'};
     case PaintToolType.blur:
       return const {'tool', 'blur'};
   }
@@ -57,17 +65,25 @@ Set<String> allowedPaintSlotsForKind(PaintKind kind) {
   switch (kind) {
     case PaintKind.freestyle:
     case PaintKind.arrow:
-      return const {'tool', 'color', 'size', 'opacity'};
+      return const {'tool', 'eraser', 'color', 'size', 'opacity'};
     case PaintKind.line:
     case PaintKind.dashLine:
     case PaintKind.dashDotLine:
-      return const {'tool', 'color', 'size', 'opacity', 'dash'};
+      return const {'tool', 'eraser', 'color', 'size', 'opacity', 'dash'};
     case PaintKind.rectangle:
     case PaintKind.circle:
     case PaintKind.hexagon:
-      return const {'tool', 'color', 'size', 'fill', 'opacity'};
+      return const {'tool', 'eraser', 'color', 'size', 'fill', 'opacity'};
     case PaintKind.polygon:
-      return const {'tool', 'color', 'size', 'fill', 'opacity', 'polygon'};
+      return const {
+        'tool',
+        'eraser',
+        'color',
+        'size',
+        'fill',
+        'opacity',
+        'polygon',
+      };
     case PaintKind.blur:
       return const {'tool', 'blur'};
   }
@@ -136,6 +152,7 @@ class PaintSpec {
 String paintSpecLabel(AppLocalizations l10n, PaintSpec spec) {
   return switch (spec.id) {
     'tool' => l10n.toolLabel,
+    'eraser' => l10n.eraserTool,
     'color' => l10n.colorLabel,
     'size' => l10n.sizeTool,
     'fill' => l10n.fillLabel,
@@ -153,6 +170,7 @@ String paintSpecLabel(AppLocalizations l10n, PaintSpec spec) {
 // Blur · Sides · Dash. Ordered by expected frequency of use.
 final List<PaintSpec> paintToolSpecs = <PaintSpec>[
   PaintSpec(id: 'tool', icon: AppIcons.freehandTool, label: 'Tool'),
+  PaintSpec(id: 'eraser', icon: AppIcons.eraserTool, label: 'Eraser'),
   PaintSpec(id: 'color', icon: AppIcons.colorTool, label: 'Color'),
   PaintSpec(id: 'size', icon: AppIcons.strokeWeight, label: 'Size'),
   PaintSpec(id: 'fill', icon: AppIcons.paintFill, label: 'Fill'),

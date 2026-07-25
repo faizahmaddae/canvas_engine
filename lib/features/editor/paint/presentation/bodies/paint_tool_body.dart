@@ -63,7 +63,10 @@ class PaintToolBody extends ConsumerWidget {
         (PaintToolType.arrow, 'Arrow'),
         (PaintToolType.dashLine, 'Dashed'),
         (PaintToolType.dashDotLine, 'Dash dot'),
-        (PaintToolType.eraser, 'Eraser'),
+        // No Eraser here — it has a permanent tile on the strip, one
+        // tap from anywhere. Listing it in both places meant two
+        // homes for one action, and it sat alone on a second grid row
+        // with four empty cells beside it.
       ],
     ),
     _ToolGroup(

@@ -190,11 +190,42 @@ class PaintToolController extends Notifier<PaintSession> {
   void selectTool(PaintToolType tool) {
     if (!tool.available) return;
     ref.read(selectionControllerProvider.notifier).clear();
+    if (tool != PaintToolType.eraser) _lastDrawTool = tool;
     state = state.copyWith(
       panelOpen: true,
       activeTool: tool,
       clearOpenSlot: true,
     );
+  }
+
+  /// The last non-eraser tool, so [toggleEraser] has somewhere to
+  /// return to. Erasing is a detour from drawing, not a destination.
+  PaintToolType _lastDrawTool = PaintToolType.freestyle;
+
+  /// The tool the strip's draw tile represents — never the eraser,
+  /// which owns its own tile.
+  PaintToolType get drawTool => _lastDrawTool;
+
+  /// Flip between erasing and whatever was being drawn before.
+  ///
+  /// This is the paint mode's most frequent switch and it used to cost
+  /// a round trip through the tool picker — tap the tool tile, wait for
+  /// a panel covering most of the canvas, find the eraser in a grid,
+  /// tap it, watch the panel close. Twice, to get back. One tap now,
+  /// in both directions.
+  void toggleEraser() {
+    if (state.activeTool == PaintToolType.eraser) {
+      selectTool(_lastDrawTool);
+    } else {
+      // NOT through selectTool's bookkeeping — the eraser must not
+      // become the tool it returns to.
+      ref.read(selectionControllerProvider.notifier).clear();
+      state = state.copyWith(
+        panelOpen: true,
+        activeTool: PaintToolType.eraser,
+        clearOpenSlot: true,
+      );
+    }
   }
 
   /// Deselect the current tool while keeping the panel open. Lets the

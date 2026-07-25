@@ -1,3 +1,5 @@
+import '../../../../core/utils/editor_value_format.dart';
+import '../../../../core/utils/haptics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -39,11 +41,18 @@ class PaintModeToolbar extends ConsumerStatefulWidget {
   /// navigation to jump to the prev/next tool. Filtered by the
   /// currently-active tool so swipe-prev/next never lands on a
   /// slot the strip is hiding.
+  /// The sibling-swipe order — the slots a left/right swipe on an open
+  /// sheet can page through.
+  ///
+  /// Excludes `eraser`, which is on the strip but has no sheet: it is
+  /// a mode toggle, not a sub-tool. Paging onto it would open nothing
+  /// and silently swap the user's tool mid-swipe.
   static List<String> toolIdsFor(PaintToolType? tool) {
     final allowed = allowedPaintSlotsFor(tool);
     return paintToolSpecs
         .map((s) => s.id)
         .where(allowed.contains)
+        .where((id) => id != 'eraser')
         .toList(growable: false);
   }
 }
@@ -122,6 +131,8 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
     final view = ref.watch(paintStyleViewProvider);
     final ctrl = ref.read(paintToolControllerProvider.notifier);
     final tool = session.activeTool ?? PaintToolType.freestyle;
+    final drawTool = ctrl.drawTool;
+    final erasing = session.activeTool == PaintToolType.eraser;
     final fillEnabled = view.fillColor != null;
     // The strip always reflects the active tool's full capability
     // surface. Opening any slot (including 'tool') never hides the
@@ -151,19 +162,23 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
         if (allowed.contains(paintToolSpecs[i].id))
           ToolbarSlot(
             id: paintToolSpecs[i].id,
-            // The Tool tile mirrors the ACTIVE tool's icon so the
-            // strip reads as state.
+            // The Tool tile mirrors the active DRAW tool's icon so the
+            // strip reads as state. Deliberately not the eraser: that
+            // has its own tile beside this one, and a tool tile
+            // wearing an eraser next to an eraser tile said the same
+            // thing twice while hiding what you would return to.
             icon: paintToolSpecs[i].id == 'tool'
-                ? tool.icon
+                ? drawTool.icon
                 : paintToolSpecs[i].icon,
             label: paintToolSpecs[i].id == 'tool'
-                ? paintToolLabel(context.l10n, session.activeTool) ??
+                ? paintToolLabel(context.l10n, drawTool) ??
                       context.l10n.toolLabel
                 : paintSpecLabel(context.l10n, paintToolSpecs[i]),
             valueLabel: paintToolSpecs[i].id == 'tool'
                 ? null
                 : () => _paintValueText(
                     context.l10n,
+                    EditorValueFormat.of(context),
                     paintToolSpecs[i],
                     view,
                     tool,
@@ -175,6 +190,23 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
                 : null,
             tier: showTier2 && i >= 4 ? SlotTier.tier2 : SlotTier.tier1,
             onTap: () {
+              // The eraser is a MODE, not a panel: it flips straight
+              // to erasing and back, with no sheet in between. Every
+              // other tile opens its sub-tool.
+              if (paintToolSpecs[i].id == 'eraser') {
+                EditorHaptics.toggle();
+                ctrl.toggleEraser();
+                return;
+              }
+              // While erasing, the draw tile is READING as its tool
+              // («Pen»), so tapping it should go there. Opening the
+              // picker instead answered a question the user had not
+              // asked. A second tap still opens it, from the pen.
+              if (paintToolSpecs[i].id == 'tool' && erasing) {
+                EditorHaptics.toggle();
+                ctrl.toggleEraser();
+                return;
+              }
               // Toggling: re-tap of active tile dismisses the
               // sheet; tapping a different tile switches.
               ctrl.toggleSlot(paintToolSpecs[i].id);
@@ -192,7 +224,10 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
         // SlotStrip auto-scrolls the active tile into view on
         // openSlot changes — replaces the _ensureVisible plumbing
         // this widget used to carry.
-        activeId: session.openSlot,
+        // The eraser tile lights from the armed TOOL; every other
+        // tile lights from its open sheet. Without this the eraser
+        // would look unselected the whole time it was erasing.
+        activeId: erasing ? 'eraser' : session.openSlot,
         controller: _scroll,
         // Unified strip grammar (tb2 16/16): the default 70dp tile
         // extent + 12dp strip padding every other mode uses — the
@@ -220,14 +255,20 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
 
 String? _paintValueText(
   AppLocalizations l10n,
+  EditorValueFormat values,
   PaintSpec spec,
   PaintStyleView view,
   PaintToolType tool,
 ) {
   return switch (spec.id) {
-    'size' => paintStrokeWord(l10n, view.strokeWidth),
+    // Numbers, not adjectives. The value REPLACES the category label
+    // on a tile, so «Medium» and «Strong» were the whole caption — a
+    // tile that said «Strong» under a droplet, with nothing anywhere
+    // saying it meant opacity. A number carries its own unit, and it
+    // moves while you drag the slider.
+    'size' => values.px(view.strokeWidth.round()),
     'fill' => view.fillColor == null ? l10n.offOption : l10n.onOption,
-    'opacity' => paintOpacityWord(l10n, view.strokeColor.a),
+    'opacity' => values.percent((view.strokeColor.a * 100).round()),
     'blur' => paintBlurWord(l10n, view.blurRadius),
     'polygon' => l10n.sidesCount(view.sides),
     'dash' =>
