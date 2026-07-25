@@ -268,6 +268,7 @@ class _LayerBorderBodyState<L extends EditorLayer>
             if (adapter.showPrecisionSlider) ...[
               const SizedBox(height: 6),
               PrecisionDisclosure(
+                compact: true,
                 icon: Icons.tune_rounded,
                 titleClosed: context.l10n.adjustPrecisely,
                 subtitle: context.l10n.widthLabel,

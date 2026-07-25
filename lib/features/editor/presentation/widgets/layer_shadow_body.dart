@@ -200,6 +200,7 @@ class _LayerShadowBodyState<L extends EditorLayer>
             ),
             const SizedBox(height: 2),
             PrecisionDisclosure(
+              compact: true,
               icon: Icons.tune_rounded,
               titleClosed: context.l10n.adjustPrecisely,
               subtitle: context.l10n.blurDirectionOpacitySubtitle,

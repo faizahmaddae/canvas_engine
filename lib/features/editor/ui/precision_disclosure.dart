@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
+import '../presentation/widgets/editor_breakpoints.dart';
 
 /// Canonical "Adjust precisely" expand/collapse disclosure.
 ///
@@ -40,7 +41,23 @@ class PrecisionDisclosure extends StatefulWidget {
     this.chevronColorOpen,
     this.titleSize = 13,
     this.chevronSize = 22,
+    this.compact = false,
   });
+
+  /// The approved prototype's disclosure grammar (tb7 1/7): ONE line,
+  /// no leading icon, no subtitle, accent-coloured title, small
+  /// chevron — a text link rather than a card row.
+  ///
+  /// The two-line form this widget was born with came from the Phase 4
+  /// inventory, before the prototype existed. It costs ~54dp of pure
+  /// chrome before the user reaches a single control, and a panel with
+  /// two disclosures (Look) spent ~108dp saying nothing. Compact keeps
+  /// the same tap semantics and the same 44dp hit floor — only the
+  /// PAINTED row shrinks, the same trick [ModeDoneButton] uses.
+  ///
+  /// [subtitle] is still honoured when set: it moves into the
+  /// accessibility label so screen-reader users lose nothing.
+  final bool compact;
 
   /// Leading icon. `null` omits it (the text-panel look).
   final IconData? icon;
@@ -108,7 +125,11 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
           container: true,
           button: true,
           expanded: _open,
-          label: title,
+          // Compact drops the visible subtitle but not the information:
+          // it rides along in the spoken label.
+          label: widget.compact && widget.subtitle != null
+              ? '$title · ${widget.subtitle}'
+              : title,
           child: Material(
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(10),
@@ -118,75 +139,93 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
                 EditorHaptics.tap();
                 setState(() => _open = !_open);
               },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 4,
+              child: ConstrainedBox(
+                // Painted row shrinks; the touch floor does not.
+                constraints: BoxConstraints(
+                  minHeight: widget.compact ? kMinHitTarget : 0,
                 ),
-                child: Row(
-                  children: [
-                    if (widget.icon != null) ...[
-                      Icon(widget.icon, size: 16, color: tokens.accent),
-                      const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: widget.subtitle != null
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  title,
-                                  style: TextStyle(
-                                    fontSize: widget.titleSize,
-                                    fontWeight: FontWeight.w600,
-                                    color: tokens.textPrimary,
-                                  ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: widget.compact ? 4 : 10,
+                    horizontal: 4,
+                  ),
+                  child: Row(
+                    children: [
+                      if (widget.icon != null && !widget.compact) ...[
+                        Icon(widget.icon, size: 16, color: tokens.accent),
+                        const SizedBox(width: 8),
+                      ],
+                      Expanded(
+                        child: widget.compact
+                            ? Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: chevronColor,
+                                  letterSpacing: 0.1,
                                 ),
-                                const SizedBox(height: 1),
-                                Text(
-                                  widget.subtitle!,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: tokens.textSecondary,
+                              )
+                            : widget.subtitle != null
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: TextStyle(
+                                      fontSize: widget.titleSize,
+                                      fontWeight: FontWeight.w600,
+                                      color: tokens.textPrimary,
+                                    ),
                                   ),
+                                  const SizedBox(height: 1),
+                                  Text(
+                                    widget.subtitle!,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: tokens.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: widget.titleSize,
+                                  fontWeight: FontWeight.w600,
+                                  color: tokens.textPrimary,
                                 ),
-                              ],
-                            )
-                          : Text(
-                              title,
-                              style: TextStyle(
-                                fontSize: widget.titleSize,
-                                fontWeight: FontWeight.w600,
-                                color: tokens.textPrimary,
                               ),
-                            ),
-                    ),
-                    if (widget.headerValue != null) ...[
-                      Text(
-                        widget.headerValue!,
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(
-                              color: chevronColor,
-                              fontWeight: FontWeight.w600,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
                       ),
-                      const SizedBox(width: 2),
+                      if (widget.headerValue != null) ...[
+                        Text(
+                          widget.headerValue!,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: chevronColor,
+                                fontWeight: FontWeight.w600,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                        ),
+                        const SizedBox(width: 2),
+                      ],
+                      AnimatedRotation(
+                        turns: _open ? 0.25 : 0,
+                        duration: widget.animationDuration,
+                        child: Icon(
+                          Icons.chevron_right_rounded,
+                          size: widget.compact ? 18 : widget.chevronSize,
+                          color: chevronColor,
+                        ),
+                      ),
                     ],
-                    AnimatedRotation(
-                      turns: _open ? 0.25 : 0,
-                      duration: widget.animationDuration,
-                      child: Icon(
-                        Icons.chevron_right_rounded,
-                        size: widget.chevronSize,
-                        color: chevronColor,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),

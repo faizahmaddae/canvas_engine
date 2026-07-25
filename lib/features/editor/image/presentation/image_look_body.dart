@@ -153,6 +153,7 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
           ),
           const SizedBox(height: 6),
           PrecisionDisclosure(
+            compact: true,
             icon: Icons.tune_rounded,
             titleClosed: context.l10n.adjustPrecisely,
             subtitle: context.l10n.adjustPreciselySubtitle,
@@ -232,6 +233,7 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
           // the colour adjustments because users think of it as
           // "one of the knobs", not as a separate tool.
           PrecisionDisclosure(
+            compact: true,
             icon: Icons.vignette_outlined,
             titleClosed: context.l10n.vignetteLabel,
             subtitle: context.l10n.vignetteSubtitle,
