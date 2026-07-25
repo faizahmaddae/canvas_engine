@@ -20,9 +20,9 @@ import 'dock_sheet_chrome.dart';
 /// the dock when scrolled to the end.
 const EdgeInsets kEditorPanelDefaultBodyPadding = EdgeInsets.fromLTRB(
   12,
+  10,
   12,
-  12,
-  24,
+  16,
 );
 
 /// Body padding used by [SubToolSheet] (Text / Paint sub-tools).
@@ -31,14 +31,15 @@ const EdgeInsets kEditorPanelDefaultBodyPadding = EdgeInsets.fromLTRB(
 /// are dominated by full-width sliders — the extra side margin
 /// improves thumb reach on the slider track edges and gives the
 /// label-row breathing room. Vertical values mirror the default
-/// rhythm (`12` top / `24` bottom + a touch extra) so the floating
-/// mode-exit pill above the panel and the chip strip below both
-/// have visible clearance from the scrolling content.
+/// rhythm so the floating mode-exit pill above the panel and the chip
+/// strip below both keep visible clearance from the scrolling
+/// content — trimmed in tb7 6/7 once the disclosures and chips got
+/// their own compact grammar and the old gap read as a hole.
 const EdgeInsets kEditorSubToolBodyPadding = EdgeInsets.fromLTRB(
   20,
-  14,
+  12,
   20,
-  28,
+  20,
 );
 
 /// Unified shell for every sub-tool panel rendered inside the
