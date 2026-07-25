@@ -33,6 +33,41 @@ Command history not snapshots · reflowPreservingZoom not refit-on-open · fit-b
 recognizer/arena gestures not pointer counting · ColorPickerBody live/settled contract · doc-resize
 anchor policy explicit · Vazir stack · registry-derived capsule.
 
+## Shipped divergences — accepted, recorded after the parity review (2026-07-24)
+
+A post-Stage-5 review compared the shipped editor against the approved prototype's ten tour claims.
+Eight held outright; the review found four gaps, three of which were fixed in `tb6` (multi-strip
+batch actions, crop's strip position, sticker's missing More chip, plus the Done pill's duplicate
+mode derivation). What remains below is **deliberate and permanent** — the prototype was a direction
+validator, not a specification of the final tool inventory, and in each case the shipped behaviour is
+the better answer. They are written down because a future reader comparing the two would otherwise
+read them as defects.
+
+- **"Two fingers = ALWAYS the viewport" is not literal.** When the first finger lands on the selected
+  layer's chrome quad, two fingers pinch/rotate **the layer**, not the canvas (`selection_overlay.dart`
+  `addAllowedPointer`). This is the Canva/CapCut rule: pinching a small object must not require both
+  fingers inside its bounding box. Two fingers starting anywhere else navigate. Pinned by
+  `viewport_gesture_routing_test.dart` and by contract §5 (row 4 vs row 6).
+- **"Exit paint only via Done" is not literal.** A tap on the pasteboard also exits
+  (`canvas_gesture_router.dart`). Without it a user who has panned the canvas away has no visible way
+  out. Pinned by `paint_gesture_navigation_test.dart`.
+- **Save indicator.** The prototype had a transient two-state dot (saving… / saved). Shipped renders a
+  binary "unsaved" badge in the title subtitle that clears permanently on first save. The per-write
+  pulse was noise on a 1.5 s debounce.
+- **Strips are supersets, not copies.** The prototype carried a simplified subset. Shipped image =
+  10 tiles (adds border, mask shape, effects, selective), paint = 8 (adds fill, opacity, blur, sides,
+  dash), shape = 6, and shape's `fill`/`corner` are merged into one Style panel. Idle, text and
+  sticker match the prototype. Removing real engine capabilities to match a mock would be a
+  regression.
+- **The capsule carries a trailing ⋯ More pill** the prototype lacked, so a three-accelerator type
+  renders four buttons. More is the capability-driven overflow every mode shares; without it the
+  capsule would be the one surface that dead-ends.
+- **No `done` tile in the paint strip / no `exit` tile in the multi strip.** Both are floating
+  affordances instead (`ModeDoneButton`, the multi-select exit chip) — always visible, never scrolled
+  off a strip.
+- **The prototype's state line under the canvas is not shipped.** It carried a `simtag:
+  EditorModeController` badge: a teaching device for the prototype's reviewer, never product UI.
+
 ## Stage 0 — Correctness triage (`tb0`, 11 commits) — no visual redesign
 (0.4/0.4b are deliberate SEMANTICS changes, owned as such.)
 
