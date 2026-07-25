@@ -607,7 +607,9 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
           // normalised-space aspect so the handle drag stays
           // visually locked on a non-square layer.
           final aspectImage = session.aspectRatio;
-          final layerAspect = session.originalAspect ?? 1.0;
+          // Same denominator the preset chips use — the draft unit
+          // box, not the layer box. See CropSession.draftUnitAspect.
+          final layerAspect = session.draftUnitAspect;
           final aspectNorm = (aspectImage == null || layerAspect <= 0)
               ? null
               : aspectImage / layerAspect;

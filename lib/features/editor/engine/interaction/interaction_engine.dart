@@ -314,6 +314,21 @@ class InteractionEngine {
         height = width / aspect;
         if (signY < 0) top = anchorLocal.dy - height;
       }
+      // The aspect correction SHRINKS one axis, so it can undo the
+      // min-size clamp applied above: a 1080×1350 layer dragged fully
+      // in bottomed out at 19.2 × 24 rather than 24 × 24. Scale the
+      // locked pair back up until both axes clear their floor again —
+      // one uniform bump, so the ratio survives.
+      final bump = math.max(
+        width <= 0 ? 1.0 : minW / width,
+        height <= 0 ? 1.0 : minH / height,
+      );
+      if (bump > 1) {
+        if (signX < 0) left = anchorLocal.dx - width * bump;
+        if (signY < 0) top = anchorLocal.dy - height * bump;
+        width *= bump;
+        height *= bump;
+      }
     }
 
     final newLocalRect = Rect.fromLTWH(left, top, width, height);

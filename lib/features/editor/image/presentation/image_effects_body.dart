@@ -75,9 +75,19 @@ class _StackMaskSection extends ConsumerWidget {
   /// contract). Feather = 15% of the shorter side: wide enough that
   /// the region edge reads as a gradient, not a hard seam, on any
   /// layer size — a presentation tuning choice, not engine math.
+  ///
+  /// Clamped to [LayerMask.maxFeatherPx], which the engine asserts on.
+  /// 15% of the short side passes 256px once the layer is ~1707px
+  /// across — which the shipped A4-300dpi preset (2480×3508) reaches
+  /// on its own, so a full-bleed photo there tripped the assert rather
+  /// than applying the preset. `mask_edit_controller` already clamps
+  /// at both of its call sites; this was the one that did not.
   LayerMask? _maskFor(_MaskPreset preset) {
     final s = layer.transform.size;
-    final feather = math.min(s.width, s.height) * 0.15;
+    final feather = (math.min(s.width, s.height) * 0.15).clamp(
+      0.0,
+      LayerMask.maxFeatherPx,
+    );
     return switch (preset) {
       _MaskPreset.off => null,
       _MaskPreset.top => RectMask(

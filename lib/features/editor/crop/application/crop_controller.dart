@@ -102,6 +102,30 @@ class CropSession {
     );
   }
 
+  /// Aspect (w/h) of **one unit of draft space**, measured in image
+  /// pixels. The denominator for turning a user-facing image-pixel
+  /// ratio ("16:9") into the normalised ratio the draft rect obeys.
+  ///
+  /// Draft coordinates are normalised over [displayBasis] — the window
+  /// of the source the layer shows *right now* — so the conversion has
+  /// to divide by the pixel aspect of THAT window. [originalAspect]
+  /// (the layer's box) only coincides with it while the layer still
+  /// shows the whole bitmap. After one crop commit they diverge, and
+  /// both the preset chips and the handle drag were still dividing by
+  /// the box: re-opening Crop on a 16:9-cropped square photo and
+  /// tapping «۱:۱» produced a visibly non-square frame.
+  ///
+  /// Falls back to the box aspect when the source has not resolved,
+  /// which is exactly the pre-`displayBasis` behaviour.
+  double get draftUnitAspect {
+    final src = sourceAspect;
+    final b = displayBasis;
+    if (src != null && src > 0 && b.width > 0 && b.height > 0) {
+      return src * b.width / b.height;
+    }
+    return originalAspect ?? 1.0;
+  }
+
   /// Selection that was active **before** Crop opened, captured so
   /// the editor can restore it on commit/cancel.
   ///
@@ -300,7 +324,7 @@ class CropController extends Notifier<CropSession> {
       state = state.copyWith(aspectRatio: null);
       return;
     }
-    final layerAspect = state.originalAspect ?? 1.0;
+    final layerAspect = state.draftUnitAspect;
     final next = _fitAspect(
       // Presets fit the whole source, not just the displayed window,
       // so "16:9" on a portrait-cropped photo can reclaim the pixels

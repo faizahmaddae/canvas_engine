@@ -157,6 +157,62 @@ void main() {
       expect(next.size.width, closeTo(80, 1e-6));
       expect(next.size.height, closeTo(60, 1e-6));
     });
+
+    test('an aspect-locked resize still clears BOTH floors', () {
+      // The aspect correction shrinks one axis, which could undo the
+      // min-size clamp applied just before it. On a 200x100 layer the
+      // width clamped to 24, then the lock pulled height down to 12 —
+      // half the engine floor. Both axes have to clear it, and the
+      // ratio has to survive.
+      final session = engine.startResize(
+        layerId: 'a',
+        transform: base,
+        corner: InteractionHandle.bottomRight,
+        pointer: const Offset(300, 200),
+      );
+      final next = engine.updateResize(
+        session,
+        const Offset(-500, -500),
+        capabilities: const LayerCapabilities(keepsAspectRatio: true),
+      );
+
+      expect(
+        next.size.width,
+        greaterThanOrEqualTo(EngineConstants.minLayerSize - 1e-6),
+      );
+      expect(
+        next.size.height,
+        greaterThanOrEqualTo(EngineConstants.minLayerSize - 1e-6),
+      );
+      expect(
+        next.size.width / next.size.height,
+        closeTo(base.size.width / base.size.height, 1e-6),
+        reason: 'the bump is uniform, so the locked ratio survives it',
+      );
+    });
+
+    test('a portrait aspect-locked resize clears them too', () {
+      final portrait = LayerTransform(
+        position: const Offset(0, 0),
+        size: const Size(1080, 1350),
+      );
+      final session = engine.startResize(
+        layerId: 'a',
+        transform: portrait,
+        corner: InteractionHandle.bottomRight,
+        pointer: const Offset(1080, 1350),
+      );
+      final next = engine.updateResize(
+        session,
+        const Offset(-9000, -9000),
+        capabilities: const LayerCapabilities(keepsAspectRatio: true),
+      );
+      expect(
+        math.min(next.size.width, next.size.height),
+        greaterThanOrEqualTo(EngineConstants.minLayerSize - 1e-6),
+      );
+      expect(next.size.width / next.size.height, closeTo(1080 / 1350, 1e-6));
+    });
   });
 
   group('gesture', () {
