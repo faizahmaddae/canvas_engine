@@ -174,12 +174,24 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
   }
 
   Widget _buildScaffold(BuildContext context, AppTokens tokens) {
+    // This screen is a permanently-dark surface — a neutral surround is
+    // the right frame for judging an exported image, whatever theme the
+    // rest of the app is in. So it resolves its chrome from the DARK
+    // token set regardless of the ambient brightness. Reading `tokens`
+    // here would paint a light-mode `brand` (ink) button onto black.
+    final onDark = AppTokens.dark;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         elevation: 0,
+        // `AppBarTheme.titleTextStyle` pins `color: scheme.onSurface`,
+        // and a style's own colour beats `foregroundColor` — under the
+        // light theme that painted near-black text on this black bar.
+        titleTextStyle: Theme.of(
+          context,
+        ).appBarTheme.titleTextStyle?.copyWith(color: Colors.white),
         title: Text(context.l10n.previewExportTitle),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
@@ -260,6 +272,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   _InfoChip(icon: Icons.aspect_ratio_rounded, text: _sizeLabel),
                   _InfoChip(
@@ -338,8 +351,8 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                       icon: Icon(_iconFor(widget.intent)),
                       label: Text(_labelFor(context, widget.intent)),
                       style: FilledButton.styleFrom(
-                        backgroundColor: tokens.brand,
-                        foregroundColor: tokens.onBrand,
+                        backgroundColor: onDark.brand,
+                        foregroundColor: onDark.onBrand,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -495,8 +508,15 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: Colors.white70),
           const SizedBox(width: 6),
+          // A chip carries ONE fact — a dimension pair, a byte count.
+          // Letting it wrap split "1080 × 1350" across two lines, and
+          // half of a number pair reads as a different number. If the
+          // chip genuinely cannot fit, the `Wrap` gives it a run of its
+          // own rather than breaking the value in half.
           Text(
             text,
+            maxLines: 1,
+            softWrap: false,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 12.5,
