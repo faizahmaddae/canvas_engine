@@ -315,6 +315,32 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
                           _HeaderValueChip(value: widget.headerValue!),
                           const SizedBox(width: 8),
                         ],
+                        // Sibling navigation, made VISIBLE (tb7 2/7).
+                        // onPrev/onNext were swipe-only: the feature
+                        // existed and nothing on screen said so, which
+                        // is the definition of undiscoverable. The
+                        // approved prototype put ‹ › next to the ✕ in
+                        // every panel that has siblings. Directional
+                        // icons — Material's *_rounded chevrons carry
+                        // matchTextDirection, so they mirror under RTL
+                        // on their own.
+                        if (widget.onPrev != null || widget.onNext != null) ...[
+                          _NavChip(
+                            icon: Icons.chevron_left_rounded,
+                            semanticLabel: MaterialLocalizations.of(
+                              context,
+                            ).previousPageTooltip,
+                            onTap: widget.onPrev,
+                          ),
+                          _NavChip(
+                            icon: Icons.chevron_right_rounded,
+                            semanticLabel: MaterialLocalizations.of(
+                              context,
+                            ).nextPageTooltip,
+                            onTap: widget.onNext,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
                         if (widget.onUndo != null)
                           _UndoChip(onUndo: widget.onUndo!),
                         if (widget.headerAction != null) ...[
@@ -541,6 +567,55 @@ class _HeaderValueChip extends StatelessWidget {
           color: tokens.textSecondary,
           fontWeight: FontWeight.w700,
           fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    );
+  }
+}
+
+/// A small ‹ / › sibling-navigation button in the panel header.
+///
+/// Deliberately sized NOT to grow the header: the dense header is the
+/// point of the prototype's layout, and the 44dp chrome floor is
+/// specified for primary dismiss/commit affordances (see
+/// `chrome_hit_targets_test`) — these are secondary accelerators for a
+/// gesture that still works. `InkResponse.radius` gives the finger a
+/// circular target wider than the painted glyph.
+class _NavChip extends StatelessWidget {
+  const _NavChip({
+    required this.icon,
+    required this.semanticLabel,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String semanticLabel;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: InkResponse(
+        onTap: onTap == null
+            ? null
+            : () {
+                EditorHaptics.tap();
+                onTap!();
+              },
+        radius: 22,
+        child: SizedBox(
+          width: 30,
+          height: 28,
+          child: Icon(
+            icon,
+            size: 24,
+            color: onTap == null
+                ? tokens.textMuted.withValues(alpha: 0.4)
+                : tokens.textSecondary,
+          ),
         ),
       ),
     );

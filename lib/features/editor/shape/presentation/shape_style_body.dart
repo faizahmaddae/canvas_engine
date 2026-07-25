@@ -116,6 +116,9 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
     return ShapePanelShell(
       title: context.l10n.styleTool,
       icon: Icons.palette_outlined,
+      headerValue: EditorValueFormat.of(
+        context,
+      ).percent((layer.fillOpacity * 100).round()),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

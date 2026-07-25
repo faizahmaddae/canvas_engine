@@ -24,12 +24,23 @@ class ImagePanelShell extends ConsumerWidget {
     super.key,
     required this.title,
     required this.icon,
+    this.headerValue,
     required this.child,
     this.bodyPadding,
   });
 
   final String title;
   final IconData icon;
+
+  /// Live value shown as a small chip in the panel header (tb7 2/7).
+  ///
+  /// The approved prototype put the current value — `۹۶px`, a hex
+  /// colour, `۱۳۵°` — in EVERY panel header, so the number the panel
+  /// edits is readable without hunting for the control that owns it.
+  /// The chrome supported it from the start; only the text and paint
+  /// sub-tools ever passed it, so the object panels shipped without.
+  final String? headerValue;
+
   final Widget child;
 
   /// Passed through to [EditorToolPanelShell.bodyPadding]. Fixed-
@@ -43,6 +54,7 @@ class ImagePanelShell extends ConsumerWidget {
     return EditorToolPanelShell(
       title: title,
       icon: icon,
+      headerValue: headerValue,
       onClose: ctrl.closePanel,
       onPrev: ctrl.openPrevSlot,
       onNext: ctrl.openNextSlot,

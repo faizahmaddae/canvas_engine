@@ -124,13 +124,16 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
     return ImagePanelShell(
       title: context.l10n.lookTool,
       icon: Icons.auto_awesome_outlined,
+      // The active preset IS the panel's value — the prototype's
+      // header chip read the current state of whatever the panel owns.
+      headerValue: _filterLabel(context, layer.filterPreset),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header already says "Look" — no duplicate SectionLabel.
           SizedBox(
-            height: 100,
+            height: 84,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
@@ -376,8 +379,8 @@ class _FilterChipState extends State<_FilterChip> {
     if (widget.imageProvider != null) {
       preview = Image(
         image: ResizeImage(widget.imageProvider!, width: 128),
-        width: 60,
-        height: 60,
+        width: 52,
+        height: 52,
         fit: BoxFit.cover,
         gaplessPlayback: true,
         errorBuilder: (_, _, _) => _gradientFallback(),
@@ -413,7 +416,7 @@ class _FilterChipState extends State<_FilterChip> {
             child: AnimatedContainer(
               duration: AppMotion.standard,
               curve: AppMotion.curve,
-              width: 72,
+              width: 62,
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
               decoration: BoxDecoration(
                 color: bg,
@@ -430,7 +433,7 @@ class _FilterChipState extends State<_FilterChip> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(width: 60, height: 60, child: preview),
+                        child: SizedBox(width: 52, height: 52, child: preview),
                       ),
                       // Subtle hairline so the thumb edge still
                       // reads on very light/dark images.
@@ -455,13 +458,13 @@ class _FilterChipState extends State<_FilterChip> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     _filterLabel(context, widget.preset),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                       color: fg,
                       letterSpacing: 0.2,
