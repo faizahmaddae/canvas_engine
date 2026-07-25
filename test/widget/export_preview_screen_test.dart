@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:canvas_engine/features/editor/application/export_format.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/export_preview_screen.dart';
+import '../support/bidi_text.dart';
 
 /// 1×1 transparent PNG — small valid byte buffer for `Image.memory`.
 final Uint8List _tinyPng = Uint8List.fromList(const <int>[
@@ -94,7 +95,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('1080 × 720'), findsOneWidget);
+      expect(findBidiText('1080 × 720'), findsOneWidget);
       expect(find.text('PNG'), findsOneWidget);
       // PNG has no quality knob -> no quality chip.
       expect(find.textContaining('Quality'), findsNothing);
@@ -116,7 +117,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('2160 × 2160'), findsOneWidget);
+      expect(findBidiText('2160 × 2160'), findsOneWidget);
       expect(find.text('JPG'), findsOneWidget);
       expect(find.text('Quality 85%'), findsOneWidget);
     });

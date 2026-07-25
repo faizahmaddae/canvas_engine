@@ -108,6 +108,19 @@ class EditorValueFormat {
   /// `135°` / `۱۳۵°`.
   String degrees(num value) => '${digits(value)}°';
 
-  /// `1080 × 1080` with locale digits.
-  String dimensions(num w, num h) => '${digits(w)} × ${digits(h)}';
+  /// `1080 × 1350` with locale digits, and in THAT order under RTL.
+  ///
+  /// Without the isolate this is a genuine wrong-information bug, not
+  /// a cosmetic one. `W × H` is two number runs around a neutral `×`;
+  /// in an RTL paragraph the bidi algorithm resolves that neutral to
+  /// the paragraph direction and renders the pair right-to-left, so
+  /// a 1080 × 1350 canvas displayed as "1350 × 1080" — the user reads
+  /// the wrong dimensions. Square documents hide it, which is why
+  /// every capture missed it: the capture fixture is 1080 × 1080.
+  ///
+  /// LRI … PDI (U+2066 / U+2069) isolates the whole expression as one
+  /// left-to-right run, so the order survives regardless of the
+  /// surrounding paragraph direction. Isolating each number alone
+  /// would NOT work — the `×` between two isolates is still neutral.
+  String dimensions(num w, num h) => '\u2066${digits(w)} × ${digits(h)}\u2069';
 }

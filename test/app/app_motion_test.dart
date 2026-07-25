@@ -26,17 +26,15 @@ void main() {
   }
 
   testWidgets('normally the role duration passes through', (tester) async {
-    expect(
-      await resolve(tester, disableAnimations: false),
-      AppMotion.standard,
-    );
+    expect(await resolve(tester, disableAnimations: false), AppMotion.standard);
   });
 
   testWidgets('Reduce Motion collapses the tween to zero', (tester) async {
     expect(
       await resolve(tester, disableAnimations: true),
       Duration.zero,
-      reason: 'the end state still happens — it just arrives without '
+      reason:
+          'the end state still happens — it just arrives without '
           'the animation',
     );
   });

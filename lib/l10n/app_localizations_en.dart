@@ -1693,8 +1693,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previewExportTitle => 'Preview export';
 
   @override
-  String canvasDimensions(String width, String height) {
-    return 'Canvas $width × $height';
+  String canvasDimensions(String size) {
+    return 'Canvas $size';
   }
 
   @override
@@ -1725,8 +1725,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String outputPixels(String width, String height) {
-    return 'Output: $width × $height px';
+  String outputPixels(String size) {
+    return 'Output: $size px';
   }
 
   @override
@@ -1751,8 +1751,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useSizeAction => 'Use size';
 
   @override
-  String customSizeChip(String width, String height) {
-    return 'Custom · $width×$height';
+  String customSizeChip(String size) {
+    return 'Custom · $size';
   }
 
   @override

@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../support/bidi_text.dart';
 
 // 1×1 transparent PNG so the preview's decoder has real bytes.
 final Uint8List _tinyPng = Uint8List.fromList(const [
@@ -59,8 +60,8 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('۱۰۸۰ × ۷۲۰'), findsOneWidget);
-      expect(find.text('1080 × 720'), findsNothing);
+      expect(findBidiText('۱۰۸۰ × ۷۲۰'), findsOneWidget);
+      expect(findBidiText('1080 × 720'), findsNothing);
     });
 
     testWidgets('the quality chip uses Persian digits and ٪', (tester) async {
@@ -95,7 +96,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('1080 × 720'), findsOneWidget);
+      expect(findBidiText('1080 × 720'), findsOneWidget);
       expect(find.text('Quality 85%'), findsOneWidget);
     });
   });
@@ -136,11 +137,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // Header chip: «بوم ۱۰۸۰ × ۱۰۸۰».
-      expect(find.text('بوم ۱۰۸۰ × ۱۰۸۰'), findsOneWidget);
+      expect(findBidiText('بوم ۱۰۸۰ × ۱۰۸۰'), findsOneWidget);
       // Quality cards: the 1×/2×/3× badges and their output sizes.
-      expect(find.text('۱×'), findsOneWidget);
-      expect(find.text('۱۰۸۰ × ۱۰۸۰ px'), findsOneWidget);
-      expect(find.text('۲۱۶۰ × ۲۱۶۰ px'), findsOneWidget);
+      expect(findBidiText('۱×'), findsOneWidget);
+      expect(findBidiText('۱۰۸۰ × ۱۰۸۰ px'), findsOneWidget);
+      expect(findBidiText('۲۱۶۰ × ۲۱۶۰ px'), findsOneWidget);
       // No Latin-digit leftovers anywhere in the sheet.
       expect(find.textContaining('1080'), findsNothing);
     });
@@ -191,7 +192,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('عددهای صحیح و مثبت وارد کنید.'), findsNothing);
-      expect(find.text('سفارشی · ۱۰۸۰×۱۰۸۰'), findsOneWidget);
+      expect(findBidiText('سفارشی · ۱۰۸۰ × ۱۰۸۰'), findsOneWidget);
     });
   });
 }

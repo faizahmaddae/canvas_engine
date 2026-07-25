@@ -1694,8 +1694,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get previewExportTitle => 'پیش‌نمایش خروجی';
 
   @override
-  String canvasDimensions(String width, String height) {
-    return 'بوم $width × $height';
+  String canvasDimensions(String size) {
+    return 'بوم $size';
   }
 
   @override
@@ -1726,8 +1726,8 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String outputPixels(String width, String height) {
-    return 'خروجی: $width × $height px';
+  String outputPixels(String size) {
+    return 'خروجی: $size px';
   }
 
   @override
@@ -1752,8 +1752,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get useSizeAction => 'استفاده از اندازه';
 
   @override
-  String customSizeChip(String width, String height) {
-    return 'سفارشی · $width×$height';
+  String customSizeChip(String size) {
+    return 'سفارشی · $size';
   }
 
   @override

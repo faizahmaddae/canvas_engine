@@ -1,3 +1,4 @@
+import '../../core/utils/editor_value_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -386,7 +387,10 @@ class _PresetTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${preset.width.toInt()} × ${preset.height.toInt()} px',
+                        // Through the shared formatter so the pair
+                        // keeps its order under RTL — a bare
+                        // 'W × H' renders as 'H × W' in Persian.
+                        '${EditorValueFormat.of(context).dimensions(preset.width.toInt(), preset.height.toInt())} px',
                         style: AppTypeScale.caption.copyWith(
                           fontSize: 11,
                           color: tokens.textMuted,

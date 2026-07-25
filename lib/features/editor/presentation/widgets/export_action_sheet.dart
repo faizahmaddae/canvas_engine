@@ -127,8 +127,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                         // Locale digits: the fa header reads
                         // «بوم ۱۰۸۰ × ۱۰۸۰», not a Latin-digit island.
                         l10n.canvasDimensions(
-                          values.digits(canvasW),
-                          values.digits(canvasH),
+                          values.dimensions(canvasW, canvasH),
                         ),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: tokens.textSecondary,
@@ -655,8 +654,10 @@ class _SizePickerRow extends StatelessWidget {
           return _SizeChip(
             label: selected && preset.isCustom
                 ? context.l10n.customSizeChip(
-                    values.digits(value.target?.width.round() ?? 0),
-                    values.digits(value.target?.height.round() ?? 0),
+                    values.dimensions(
+                      value.target?.width.round() ?? 0,
+                      value.target?.height.round() ?? 0,
+                    ),
                   )
                 : _sizeLabel(context.l10n, preset),
             selected: selected,
@@ -774,10 +775,7 @@ class _PresetOutputSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.l10n.outputPixels(
-                    values.digits(tw),
-                    values.digits(th),
-                  ),
+                  context.l10n.outputPixels(values.dimensions(tw, th)),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     fontFeatures: const [FontFeature.tabularFigures()],

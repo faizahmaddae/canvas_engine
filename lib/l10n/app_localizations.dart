@@ -3311,8 +3311,8 @@ abstract class AppLocalizations {
   /// No description provided for @canvasDimensions.
   ///
   /// In en, this message translates to:
-  /// **'Canvas {width} × {height}'**
-  String canvasDimensions(String width, String height);
+  /// **'Canvas {size}'**
+  String canvasDimensions(String size);
 
   /// No description provided for @formatLabel.
   ///
@@ -3365,8 +3365,8 @@ abstract class AppLocalizations {
   /// No description provided for @outputPixels.
   ///
   /// In en, this message translates to:
-  /// **'Output: {width} × {height} px'**
-  String outputPixels(String width, String height);
+  /// **'Output: {size} px'**
+  String outputPixels(String size);
 
   /// No description provided for @matchesCanvasAspect.
   ///
@@ -3407,8 +3407,8 @@ abstract class AppLocalizations {
   /// No description provided for @customSizeChip.
   ///
   /// In en, this message translates to:
-  /// **'Custom · {width}×{height}'**
-  String customSizeChip(String width, String height);
+  /// **'Custom · {size}'**
+  String customSizeChip(String size);
 
   /// No description provided for @originalSizeQuality.
   ///

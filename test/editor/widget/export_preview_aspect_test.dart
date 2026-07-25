@@ -7,6 +7,7 @@ import 'package:canvas_engine/features/editor/presentation/widgets/export_previe
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../support/bidi_text.dart';
 
 /// Render a solid-colour PNG of [w] x [h] pixels for use as preview
 /// bytes in a widget test.
@@ -167,7 +168,7 @@ void main() {
       );
       await tester.pump();
       // Before the async decode resolves, the label uses the props.
-      expect(find.text('6720 \u00d7 4480'), findsOneWidget);
+      expect(findBidiText('6720 \u00d7 4480'), findsOneWidget);
     });
 
     testWidgets('matches the actual decoded bitmap dimensions after decode', (
@@ -194,7 +195,7 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 50));
       });
       await tester.pump();
-      expect(find.text('320 \u00d7 200'), findsOneWidget);
+      expect(findBidiText('320 \u00d7 200'), findsOneWidget);
       // And the AspectRatio re-binds to the decoded ratio.
       expect(_previewAspect(tester), closeTo(320 / 200, 1e-9));
     });
