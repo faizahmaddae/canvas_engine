@@ -31,16 +31,12 @@ void main() {
   test('degrees and dimensions', () {
     expect(fa.degrees(135), '۱۳۵°');
     expect(en.degrees(135), '135°');
-    // Dimensions carry bidi isolates — see the dedicated test below
-    // for why. Compare on the stripped form here.
-    expect(
-      fa.dimensions(1080, 1350).replaceAll(RegExp('[\u2066\u2069]'), ''),
-      '۱۰۸۰ × ۱۳۵۰',
-    );
-    expect(
-      en.dimensions(1080, 1350).replaceAll(RegExp('[\u2066\u2069]'), ''),
-      '1080 × 1350',
-    );
+    // Dimensions carry bidi isolates and no-break spaces — see the
+    // dedicated test below for why. Compare on the stripped form here.
+    String plain(String s) =>
+        s.replaceAll(RegExp('[\u2066\u2069]'), '').replaceAll('\u00A0', ' ');
+    expect(plain(fa.dimensions(1080, 1350)), '۱۰۸۰ × ۱۳۵۰');
+    expect(plain(en.dimensions(1080, 1350)), '1080 × 1350');
   });
 
   test('dimensions isolate the pair so RTL cannot reverse W and H', () {
@@ -52,8 +48,14 @@ void main() {
     // Square documents hide it, which is why the captures never did.
     const lri = '\u2066';
     const pdi = '\u2069';
-    expect(fa.dimensions(1080, 1350), '$lri۱۰۸۰ × ۱۳۵۰$pdi');
-    expect(en.dimensions(1920, 1080), '${lri}1920 × 1080$pdi');
+    // NO-BREAK spaces (U+00A0), not U+0020: an ordinary space inside
+    // the isolate is a break opportunity, and a caller short of room
+    // lost everything after it — the export chip rendered «۱۰۸۰ ×»,
+    // which reads as a different canvas rather than as truncation.
+    const nb = '\u00A0';
+    expect(fa.dimensions(1080, 1350), '$lri۱۰۸۰$nb×$nb۱۳۵۰$pdi');
+    expect(en.dimensions(1920, 1080), '${lri}1920$nb×${nb}1080$pdi');
+    expect(fa.dimensions(1080, 1350), isNot(contains(' ')));
 
     // The width still precedes the height inside the isolate — the
     // whole point is that the ORDER is what survives.
@@ -62,6 +64,30 @@ void main() {
         .replaceAll(lri, '')
         .replaceAll(pdi, '');
     expect(stripped.indexOf('۱۰۸۰'), lessThan(stripped.indexOf('۱۳۵۰')));
+  });
+
+  test('dimensionsPlain carries no bidi control characters', () {
+    // The isolate is not free: no bundled font — Vazir included —
+    // has a glyph for U+2066/U+2069, so those codepoints force a
+    // font-fallback run inside the value. On the export preview's
+    // chip that fallback made the shaper drop the trailing digit and
+    // «۱۰۸۰ × ۱۳۵۰» rendered as «۱۰۸۰ × ۱۳۵», stating a canvas size
+    // that was not the one being exported. Callers that can set the
+    // direction on the widget should take the plain form instead.
+    const lri = '\u2066';
+    const pdi = '\u2069';
+    for (final f in [fa, en]) {
+      final plain = f.dimensionsPlain(1080, 1350);
+      expect(plain, isNot(contains(lri)));
+      expect(plain, isNot(contains(pdi)));
+      expect(plain, isNot(contains('\u200E')));
+      // Same visible value as the isolated form, minus the marks.
+      expect(
+        plain,
+        f.dimensions(1080, 1350).replaceAll(RegExp('[$lri$pdi]'), ''),
+      );
+    }
+    expect(fa.dimensionsPlain(1080, 1350), '۱۰۸۰\u00A0×\u00A0۱۳۵۰');
   });
 
   test('signed keeps the sign in FRONT of the number, isolated', () {

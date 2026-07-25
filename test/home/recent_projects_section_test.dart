@@ -11,6 +11,8 @@ import 'package:canvas_engine/features/home/domain/project.dart';
 import 'package:canvas_engine/features/home/presentation/widgets/project_thumb.dart';
 import 'package:canvas_engine/features/home/presentation/widgets/recent_projects_grid.dart';
 
+import '../support/bidi_text.dart';
+
 Project _seed({
   required String id,
   required String name,
@@ -95,7 +97,7 @@ void main() {
     expect(find.text('Birthday card'), findsOneWidget);
     // Size + relative time live on the same metadata line.
     expect(
-      find.textContaining('1080 \u00D7 1080'),
+      findBidiTextContaining('1080 \u00D7 1080'),
       findsOneWidget,
       reason: 'card should display canvas dimensions',
     );
@@ -111,7 +113,7 @@ void main() {
       tester,
       projects: [_seed(id: 'p1', name: 'Imported', w: 1234.5, h: 800)],
     );
-    expect(find.textContaining('1234.5 \u00D7 800'), findsOneWidget);
+    expect(findBidiTextContaining('1234.5 \u00D7 800'), findsOneWidget);
   });
 
   testWidgets('empty state shows the create CTA', (tester) async {

@@ -153,10 +153,14 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
   int get _aspectWidth => _decodedWidth ?? widget.pixelWidth;
   int get _aspectHeight => _decodedHeight ?? widget.pixelHeight;
 
+  /// Plain — no bidi isolate. The chip renders it in an explicitly
+  /// LTR subtree instead (see [_InfoChip]), which guarantees the same
+  /// order without putting codepoints in the string that no bundled
+  /// font can shape.
   String get _sizeLabel {
     final w = _decodedWidth ?? widget.pixelWidth;
     final h = _decodedHeight ?? widget.pixelHeight;
-    return EditorValueFormat.of(context).dimensions(w, h);
+    return EditorValueFormat.of(context).dimensionsPlain(w, h);
   }
 
   String get _byteSizeLabel => EditorValueFormat.of(
@@ -266,39 +270,66 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
               ),
             ),
             // Info chips — what the user is about to commit to.
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _InfoChip(icon: Icons.aspect_ratio_rounded, text: _sizeLabel),
-                  _InfoChip(
-                    icon: Icons.image_outlined,
-                    text: widget.format.label,
+            //
+            // A horizontally scrollable Row, NOT a Wrap. Inside the
+            // scroll view each chip is laid out against an unbounded
+            // width, so it can never be handed less room than its
+            // content needs — which is the only way to guarantee the
+            // dimension chip does not lose its second number. A `Wrap`
+            // passes its own maxWidth down, and a chip squeezed by
+            // that clipped «۱۳۵۰» off «۱۰۸۰ × ۱۳۵۰», leaving a chip
+            // that stated a different canvas size than the one being
+            // saved.
+            LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                physics: const ClampingScrollPhysics(),
+                // minWidth = viewport, maxWidth = infinity: the Row
+                // fills and centres while the chips fit, and grows past
+                // the viewport (scrolling) once they do not. Either way
+                // its children see an UNBOUNDED width and size to their
+                // own content.
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: constraints.maxWidth - 32,
                   ),
-                  if (widget.format == ExportFormat.jpg &&
-                      widget.jpgQuality != null)
-                    _InfoChip(
-                      icon: Icons.tune_rounded,
-                      // The arb string owns the percent sign (`%` /
-                      // `٪`), so only the digits are formatted here —
-                      // `percent()` would double the glyph.
-                      text: context.l10n.qualityPercent(
-                        EditorValueFormat.of(
-                          context,
-                        ).digits((widget.jpgQuality! * 100).round()),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 8,
+                    children: [
+                      _InfoChip(
+                        icon: Icons.aspect_ratio_rounded,
+                        text: _sizeLabel,
                       ),
-                    ),
-                  _InfoChip(
-                    icon: Icons.sd_storage_outlined,
-                    text: _byteSizeLabel,
+                      _InfoChip(
+                        icon: Icons.image_outlined,
+                        text: widget.format.label,
+                      ),
+                      if (widget.format == ExportFormat.jpg &&
+                          widget.jpgQuality != null)
+                        _InfoChip(
+                          icon: Icons.tune_rounded,
+                          // The arb string owns the percent sign (`%` /
+                          // `٪`), so only the digits are formatted here —
+                          // `percent()` would double the glyph.
+                          text: context.l10n.qualityPercent(
+                            EditorValueFormat.of(
+                              context,
+                            ).digits((widget.jpgQuality! * 100).round()),
+                          ),
+                        ),
+                      _InfoChip(
+                        icon: Icons.sd_storage_outlined,
+                        text: _byteSizeLabel,
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
+
             // Action bar. Order is Cancel · other intent · chosen
             // intent, so the button under the user's thumb is the one
             // they already asked for in the sheet.
@@ -489,6 +520,15 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
   }
 }
 
+/// One fact about the export: its pixel size, its format, its weight.
+///
+/// The label always renders left-to-right. Every value a chip carries
+/// is a number or a format name, none of which should ever be
+/// reordered by the surrounding paragraph — and doing it here, on the
+/// widget, means the strings themselves stay free of bidi control
+/// characters. Those characters have no glyph in any bundled font, so
+/// they split the shaping run and this chip was dropping real digits
+/// because of it: a 1080 × 1350 export announced «۱۰۸۰ × ۱۳۵».
 class _InfoChip extends StatelessWidget {
   const _InfoChip({required this.icon, required this.text});
   final IconData icon;
@@ -505,6 +545,7 @@ class _InfoChip extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        textDirection: TextDirection.ltr,
         children: [
           Icon(icon, size: 14, color: Colors.white70),
           const SizedBox(width: 6),
@@ -517,11 +558,21 @@ class _InfoChip extends StatelessWidget {
             text,
             maxLines: 1,
             softWrap: false,
+            textDirection: TextDirection.ltr,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
-              fontFeatures: [FontFeature.tabularFigures()],
+              // NO tabular figures here, deliberately. None of the
+              // bundled fonts (Vazir included) carry a glyph for the
+              // bidi isolate characters `dimensions` wraps with, so
+              // those codepoints force a fallback run — and combined
+              // with `tnum` the shaper dropped real digits: this chip
+              // rendered «۱۰۸۰ ×» for a 1080 × 1350 export, stating a
+              // canvas size that was not the one being saved. Every
+              // other dimension readout in the app renders correctly
+              // because none of them ask for tabular figures. These
+              // chips are static, so the feature bought nothing.
             ),
           ),
         ],

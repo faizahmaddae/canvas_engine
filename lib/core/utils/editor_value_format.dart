@@ -136,8 +136,33 @@ class EditorValueFormat {
   /// left-to-right run, so the order survives regardless of the
   /// surrounding paragraph direction. Isolating each number alone
   /// would NOT work — the `×` between two isolates is still neutral.
+  ///
+  /// The spaces are NO-BREAK (U+00A0), and that is load-bearing too.
+  /// With ordinary spaces the pair carries two break opportunities
+  /// INSIDE the isolate, and a caller even slightly short of room
+  /// loses everything after the first one: the export preview's chip
+  /// rendered a flat «۱۰۸۰ ×», which to a reader is not a truncated
+  /// string — it is a different canvas size. Whole or absent, never
+  /// half; a value that will not fit has to be dropped by the caller,
+  /// not quietly broken by the line breaker.
   String dimensions(num w, num h) =>
-      '\u2066${digits(w)} \u00D7 ${digits(h)}\u2069';
+      '\u2066${digits(w)}\u00A0\u00D7\u00A0${digits(h)}\u2069';
+
+  /// The same pair with NO bidi control characters, for callers that
+  /// can render it in an explicitly left-to-right subtree.
+  ///
+  /// Prefer this wherever the value stands alone in its own `Text`.
+  /// The isolate in [dimensions] exists for values embedded in a
+  /// larger Persian string, where a widget-level direction is not an
+  /// option — but it is not free: no bundled font, Vazir included,
+  /// carries a glyph for U+2066/U+2069, so those codepoints force a
+  /// font-fallback run in the middle of the value. On the export
+  /// preview's chip that fallback made the shaper drop the trailing
+  /// digit and «۱۰۸۰ × ۱۳۵۰» rendered as «۱۰۸۰ × ۱۳۵» — a chip
+  /// stating a canvas size that was not the one being exported.
+  /// Setting the direction on the widget carries no such risk.
+  String dimensionsPlain(num w, num h) =>
+      '${digits(w)}\u00A0\u00D7\u00A0${digits(h)}';
 
   /// `+12` / `+۱۲` — a signed delta, with the sign kept in
   /// FRONT of the number.
