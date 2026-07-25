@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/editor_value_format.dart';
 import '../../../../core/utils/haptics.dart';
@@ -8,7 +9,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../app/ui/size_picker_dialog.dart';
 import '../../application/document_controller.dart';
+import '../../canvas/presentation/widgets/canvas_checkerboard.dart';
 import '../../engine/core/editor_document.dart';
+import '../../engine/rendering/background_fill_box.dart';
 import '../../presentation/widgets/editor_tool_panel_shell.dart';
 import '../../presentation/widgets/section_label.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
@@ -17,6 +20,7 @@ import '../../ui/fill_mode_section.dart';
 import '../application/canvas_commands.dart';
 import '../application/canvas_resize.dart';
 import '../application/canvas_tool_controller.dart';
+import 'aspect_thumb.dart';
 import '../../../../app/theme/app_icons.dart';
 
 /// Expanded panel body for the Canvas tool. Three sections:
@@ -85,7 +89,24 @@ class CanvasPanelBody extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SectionLabel(context.l10n.sizeTool),
+          SectionLabel(
+            context.l10n.sizeTool,
+            // The dimensions ride on the label's line rather than
+            // owning a row of their own — a whole row to restate one
+            // short value, in the surface with the least room.
+            trailing: Text(
+              EditorValueFormat.of(
+                context,
+              ).dimensions(doc.width.round(), doc.height.round()),
+              textAlign: TextAlign.end,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: tokens.textPrimary,
+              ),
+            ),
+          ),
           const _CanvasSizeSection(),
           const SizedBox(height: 14),
           if (isPhotoProject)
@@ -93,7 +114,17 @@ class CanvasPanelBody extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 10),
               child: _PhotoProjectHint(tokens: tokens),
             ),
-          SectionLabel(context.l10n.backgroundTool),
+          SectionLabel(
+            context.l10n.backgroundTool,
+            // What colour IS it? The swatch used to live below the
+            // fold, under two rows of chips, so the panel could tell
+            // you the background was a solid colour without ever
+            // showing you which one.
+            trailing: _BackgroundSwatch(
+              fill: currentFill,
+              transparent: isTransparent,
+            ),
+          ),
           EditorSegmentedControl<CanvasBackgroundMode>(
             value: mode,
             segments: [
@@ -114,30 +145,71 @@ class CanvasPanelBody extends ConsumerWidget {
               _commitMode(ref, next);
             },
           ),
-          const SizedBox(height: 12),
-          Opacity(
-            opacity: isTransparent ? 0.4 : 1.0,
-            child: IgnorePointer(
-              ignoring: isTransparent,
-              // Solid | Gradient, with the shared two-level picker
-              // embedded in the solid branch. Drags stream live
-              // (transient) commits; settled changes commit for real.
-              // Recents and alpha policy live inside the picker.
-              //
-              // The canvas background is the contract's §2 exemption:
-              // it has no layer to stage on the live overlay, so it
-              // previews through merging live commands instead.
-              child: FillModeSection(
-                fill: currentFill,
-                solidTitle: context.l10n.canvasBackgroundTitle,
-                onSolidChanged: (c) => _commit(ref, c, live: true),
-                onSolidCommitted: (c) => _commit(ref, c),
-                onFillChanged: (f) => _commitFill(ref, f, live: true),
-                onFillCommitted: (f) => _commitFill(ref, f),
-              ),
-            ),
+          // Collapsed, not dimmed. Solid/Gradient is a CHILD of the
+          // colour mode — greying it out left a dead half-panel of
+          // controls that still claimed the space and read as broken.
+          AnimatedSize(
+            duration: AppMotion.of(context, AppMotion.reveal),
+            curve: AppMotion.curve,
+            alignment: Alignment.topCenter,
+            child: isTransparent
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    // Solid | Gradient, with the shared two-level picker
+                    // embedded in the solid branch. Drags stream live
+                    // (transient) commits; settled changes commit for real.
+                    // Recents and alpha policy live inside the picker.
+                    //
+                    // The canvas background is the contract's §2 exemption:
+                    // it has no layer to stage on the live overlay, so it
+                    // previews through merging live commands instead.
+                    child: FillModeSection(
+                      fill: currentFill,
+                      solidTitle: context.l10n.canvasBackgroundTitle,
+                      onSolidChanged: (c) => _commit(ref, c, live: true),
+                      onSolidCommitted: (c) => _commit(ref, c),
+                      onFillChanged: (f) => _commitFill(ref, f, live: true),
+                      onFillCommitted: (f) => _commitFill(ref, f),
+                    ),
+                  ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The background's current value, shown on the Background label's own
+/// line: the solid colour, the gradient's own sweep, or the
+/// transparency checker.
+///
+/// Small but load-bearing — it is the only place in the panel that
+/// answers "what is it right now" without the user opening anything.
+class _BackgroundSwatch extends StatelessWidget {
+  const _BackgroundSwatch({required this.fill, required this.transparent});
+
+  final BackgroundFill fill;
+  final bool transparent;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: Container(
+        width: 34,
+        height: 18,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(color: tokens.border),
+        ),
+        // Same renderer the canvas itself uses, so a gradient reads
+        // as the gradient rather than as an approximation of it.
+        child: transparent
+            ? const CanvasCheckerboard(tile: 5)
+            : BackgroundFillBox(fill: fill),
       ),
     );
   }
@@ -148,17 +220,16 @@ class CanvasPanelBody extends ConsumerWidget {
 /// full-bleed story, 16:9 landscape); anything else is a job for
 /// Custom… rather than a longer scroller nobody reads to the end of.
 class _AspectPreset {
-  const _AspectPreset(this.width, this.height, this.icon);
+  const _AspectPreset(this.width, this.height);
   final double width;
   final double height;
-  final IconData icon;
 }
 
 const _aspectPresets = <_AspectPreset>[
-  _AspectPreset(1080, 1080, AppIcons.squareShape),
-  _AspectPreset(1080, 1350, AppIcons.aspectPortrait),
-  _AspectPreset(1080, 1920, AppIcons.storyPreset),
-  _AspectPreset(1280, 720, AppIcons.landscapeBox),
+  _AspectPreset(1080, 1080),
+  _AspectPreset(1080, 1350),
+  _AspectPreset(1080, 1920),
+  _AspectPreset(1280, 720),
 ];
 
 /// Document-size controls: current dimensions + aspect presets +
@@ -207,7 +278,6 @@ class _CanvasSizeSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tokens = AppTokens.of(context);
     final l10n = context.l10n;
     final width = ref.watch(documentControllerProvider.select((d) => d.width));
     final height = ref.watch(
@@ -218,20 +288,6 @@ class _CanvasSizeSection extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 4, 8),
-          child: Text(
-            EditorValueFormat.of(
-              context,
-            ).dimensions(width.round(), height.round()),
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: tokens.textPrimary,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ),
         SizedBox(
           height: 84,
           child: ListView.separated(
@@ -242,11 +298,15 @@ class _CanvasSizeSection extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (_, i) {
               if (i == _aspectPresets.length) {
+                // Custom has no ratio of its own, so it shows an
+                // empty dashed frame — still a canvas, shape not
+                // decided yet. A sliders glyph here read as a
+                // different KIND of control than its four neighbours.
                 return PresetChip.option(
                   key: const ValueKey('canvas-size-custom'),
                   width: 76,
                   selected: false,
-                  icon: AppIcons.precisionAdjust,
+                  preview: const AspectThumb(width: 1, height: 1, dashed: true),
                   label: l10n.customLabel,
                   onTap: () => _openCustom(context, ref),
                 );
@@ -260,7 +320,10 @@ class _CanvasSizeSection extends ConsumerWidget {
                 ),
                 width: 76,
                 selected: selected,
-                icon: preset.icon,
+                preview: AspectThumb(
+                  width: preset.width,
+                  height: preset.height,
+                ),
                 label: _aspectLabel(l10n, preset),
                 onTap: () {
                   if (selected) return;

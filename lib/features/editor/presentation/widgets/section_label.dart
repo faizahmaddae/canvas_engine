@@ -29,6 +29,7 @@ class SectionLabel extends StatelessWidget {
     this.padding = const EdgeInsetsDirectional.fromSTEB(4, 4, 4, 6),
     this.uppercase = false,
     this.letterSpacing = 0,
+    this.trailing,
   });
 
   final String text;
@@ -40,19 +41,37 @@ class SectionLabel extends StatelessWidget {
 
   final double letterSpacing;
 
+  /// Optional widget pinned to the row's trailing edge — the section's
+  /// current VALUE, sitting on the label's own line.
+  ///
+  /// A value stacked under its label costs a whole extra row to say
+  /// one short thing, and panels are the surface with the least room
+  /// to spare. Reserved for values, not for actions: a label row is
+  /// not a place a user should have to look for a control.
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
+    final label = Text(
+      uppercase ? text.toUpperCase() : text,
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: letterSpacing,
+        color: AppTokens.of(context).textSecondary,
+      ),
+    );
     return Padding(
       padding: padding,
-      child: Text(
-        uppercase ? text.toUpperCase() : text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: letterSpacing,
-          color: AppTokens.of(context).textSecondary,
-        ),
-      ),
+      child: trailing == null
+          ? label
+          : Row(
+              children: [
+                label,
+                const Spacer(),
+                Flexible(child: trailing!),
+              ],
+            ),
     );
   }
 }
