@@ -69,11 +69,18 @@ class ProjectThumb extends StatelessWidget {
                   : EmptyDesignPlaceholder(name: project.name),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              project.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypeScale.caption.copyWith(color: tokens.textSecondary),
+            // Flexible so the caption yields instead of overflowing
+            // when the user's text-size setting grows the line beyond
+            // the rail's remaining height.
+            Flexible(
+              child: Text(
+                project.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypeScale.caption.copyWith(
+                  color: tokens.textSecondary,
+                ),
+              ),
             ),
           ],
         ),

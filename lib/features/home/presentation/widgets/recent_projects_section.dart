@@ -92,8 +92,15 @@ class RecentProjectsSection extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         SizedBox(
-          // Thumb (140) + gap (4) + caption line (~21) + slack.
-          height: 168,
+          // Thumb (140) + gap (4) + caption line + slack. The caption
+          // line scales with the user's text-size setting, so the
+          // strip height has to as well — pinned at 168 it sheared the
+          // descenders off «پروژه» at Large and overflowed at Largest.
+          // Capped at 1.6 so an extreme setting stretches the rail
+          // instead of eating the whole screen.
+          height:
+              144 +
+              21 * MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.6),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),

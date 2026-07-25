@@ -67,6 +67,14 @@ read them as defects.
   off a strip.
 - **The prototype's state line under the canvas is not shipped.** It carried a `simtag:
   EditorModeController` badge: a teaching device for the prototype's reviewer, never product UI.
+- **Crop is a full-screen mode with its own top bar**, not the prototype's single floating pill
+  (`انصراف · ۱:۱ · آزاد · انجام شد`). Crop wants the maximum canvas area it can get, and the shipped
+  mode carries aspect presets, rotate, flip and the grid toggle — a pill that hosted all four would be
+  a panel wearing a pill's clothes. Device-approved at Gate C. **Decision closed 2026-07-25.**
+- **The colour panel is the full `ColorPickerBody`** (two-level palette, recents from prefs, hex entry,
+  canvas eyedropper), not the prototype's single row of eight swatches. The prototype's row was the
+  cheapest thing that could show *where* colour lives; matching it would delete four working
+  capabilities. **Decision closed 2026-07-25.**
 
 ## Stage 0 — Correctness triage (`tb0`, 11 commits) — no visual redesign
 (0.4/0.4b are deliberate SEMANTICS changes, owned as such.)
