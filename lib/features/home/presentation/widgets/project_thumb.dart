@@ -2,11 +2,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/ui/saffron_diamond.dart';
+import '../../../editor/application/imported_image_path_codec.dart';
+import '../../../editor/engine/core/editor_document.dart';
+import '../../../editor/engine/rendering/document_thumbnail.dart';
+import '../../../editor/engine/serialization/document_codec.dart';
 import '../../domain/project.dart';
 
 /// One recent-work thumbnail on Home's horizontal rail. Quiet
@@ -17,9 +22,16 @@ import '../../domain/project.dart';
 /// never read as a blank white card — its saved PNG *is* blank, so
 /// rendering it looks broken. Empty projects get the subtle
 /// mark+label placeholder instead, as do projects with no usable
-/// thumbnail (no path, stale version, deleted file). The rail is a
-/// teaser, not a renderer — it never decodes the document for a
-/// preview.
+/// thumbnail (no path, stale version, deleted file).
+///
+/// The rail used to stop there — "a teaser, not a renderer" — and
+/// show the empty-design mark for ANY project without a usable PNG.
+/// That is a claim, not a fallback: a project with a photo and a
+/// headline in it announced itself on Home as an empty design, while
+/// the Projects tab rendered the same document correctly one tab
+/// away. Both now go through [ProjectPreview], which live-renders
+/// when the PNG is missing or stale and reserves the empty-design
+/// mark for documents that really are empty.
 class ProjectThumb extends StatelessWidget {
   const ProjectThumb({
     super.key,
@@ -34,15 +46,9 @@ class ProjectThumb extends StatelessWidget {
   final double width;
   final double height;
 
-  bool get _hasFreshThumbnail =>
-      project.thumbnailPath != null &&
-      project.thumbnailVersion >= Project.currentThumbnailVersion;
-
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    final showPreview =
-        _hasFreshThumbnail && !isEmptyDesignJson(project.documentJson);
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
@@ -59,14 +65,7 @@ class ProjectThumb extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadii.button),
                 border: Border.all(color: tokens.border),
               ),
-              child: showPreview
-                  ? Image.file(
-                      File(project.thumbnailPath!),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) =>
-                          EmptyDesignPlaceholder(name: project.name),
-                    )
-                  : EmptyDesignPlaceholder(name: project.name),
+              child: ProjectPreview(project: project),
             ),
             const SizedBox(height: AppSpacing.xs),
             // Flexible so the caption yields instead of overflowing
@@ -86,6 +85,114 @@ class ProjectThumb extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// The one thing that decides what a saved project LOOKS like,
+/// wherever it is shown.
+///
+/// The cascade, in order:
+///   1. genuinely empty document  → the empty-design mark;
+///   2. a fresh PNG on disk       → that PNG, letterboxed;
+///   3. anything else             → a live render of the document;
+///   4. undecodable JSON          → a neutral icon.
+///
+/// Step 3 is what the Home rail was missing. It had steps 1, 2 and
+/// then fell back to step 1's placeholder — so "no thumbnail yet" and
+/// "nothing in it" were indistinguishable, and a real design read as
+/// empty. A cached PNG is an optimisation; the document is the truth,
+/// and a preview should never be MORE wrong than the data allows.
+class ProjectPreview extends ConsumerWidget {
+  const ProjectPreview({super.key, required this.project});
+
+  final Project project;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = AppTokens.of(context);
+    // Neutral "page" colour behind the preview (paper-muted in light,
+    // ink-muted in dark) — lets a letterboxed portrait or landscape
+    // canvas breathe instead of being hard-cropped.
+    final canvasBg = tokens.surfaceMuted;
+
+    if (isEmptyDesignJson(project.documentJson)) {
+      return ColoredBox(
+        color: canvasBg,
+        child: EmptyDesignPlaceholder(name: project.name),
+      );
+    }
+
+    // Only trust a cached PNG if it exists AND was produced by the
+    // current renderer. Older PNGs baked an opaque white backdrop and
+    // would mis-represent any coloured or transparent canvas.
+    final thumb = project.thumbnailPath;
+    final pngIsFresh =
+        thumb != null &&
+        project.thumbnailVersion >= Project.currentThumbnailVersion &&
+        File(thumb).existsSync();
+
+    if (pngIsFresh) {
+      return ColoredBox(
+        color: canvasBg,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Image.file(
+            File(thumb),
+            // contain, so the whole canvas is visible — a portrait
+            // 1080x1920 design is shown in full rather than
+            // centre-cropped into a meaningless square.
+            fit: BoxFit.contain,
+            cacheWidth: 480,
+            gaplessPlayback: true,
+            filterQuality: FilterQuality.medium,
+            errorBuilder: (_, _, _) =>
+                EmptyDesignPlaceholder(name: project.name),
+          ),
+        ),
+      );
+    }
+
+    // Null on the first frame, before the directory future lands; the
+    // decode then falls back to a raw one until it resolves.
+    final importedImagesDir = ref
+        .watch(importedImagesDirectoryProvider)
+        .value
+        ?.path;
+    final doc = _tryDecode(project.documentJson, importedImagesDir);
+    if (doc != null) {
+      return ColoredBox(
+        color: canvasBg,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: FittedBox(
+            fit: BoxFit.contain,
+            alignment: Alignment.center,
+            child: RepaintBoundary(child: DocumentThumbnail(document: doc)),
+          ),
+        ),
+      );
+    }
+
+    // Corrupt JSON — still better than a blank rectangle.
+    return DecoratedBox(
+      decoration: BoxDecoration(color: canvasBg),
+      child: Center(
+        child: Icon(Icons.image_outlined, size: 28, color: tokens.textMuted),
+      ),
+    );
+  }
+
+  static EditorDocument? _tryDecode(String json, String? importedImagesDir) {
+    try {
+      if (importedImagesDir == null) return DocumentCodec.decode(json);
+      return ImportedImagePathCodec.decodeToRuntime(
+        json,
+        importedImagesDir: importedImagesDir,
+        fileExists: (path) => File(path).existsSync(),
+      );
+    } catch (_) {
+      return null;
+    }
   }
 }
 

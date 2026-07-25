@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -11,14 +9,10 @@ import '../../../../core/utils/text_measure.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../editor/application/imported_image_path_codec.dart';
-import '../../../editor/engine/core/editor_document.dart';
-import '../../../editor/engine/rendering/document_thumbnail.dart';
-import '../../../editor/engine/serialization/document_codec.dart';
 import '../../application/project_delete_service.dart';
 import '../../application/project_store.dart';
 import '../../domain/project.dart';
-import 'project_thumb.dart' show EmptyDesignPlaceholder, isEmptyDesignJson;
+import 'project_thumb.dart' show ProjectPreview;
 
 const _uuid = Uuid();
 
@@ -216,21 +210,6 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
     final l10n = context.l10n;
     final p = widget.project;
     final relativeTime = _relativeTime(l10n, p.lastModified);
-    final thumb = p.thumbnailPath;
-    // Only trust a cached PNG if it exists AND was produced by the
-    // current renderer. Older PNGs baked an opaque white backdrop
-    // and would mis-represent any coloured/transparent canvas.
-    final pngIsFresh =
-        thumb != null &&
-        p.thumbnailVersion >= Project.currentThumbnailVersion &&
-        File(thumb).existsSync();
-    // Resolved lazily; null on the first frame before the dir future
-    // lands, in which case the live-render falls back to a raw decode
-    // (unchanged behaviour) until it resolves.
-    final importedImagesDir = ref
-        .watch(importedImagesDirectoryProvider)
-        .value
-        ?.path;
 
     return AnimatedScale(
       scale: _pressed ? 0.97 : 1,
@@ -261,11 +240,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      _Thumb(
-                        project: p,
-                        usePng: pngIsFresh,
-                        importedImagesDir: importedImagesDir,
-                      ),
+                      ProjectPreview(project: p),
                       if (widget.isLastOpened)
                         const PositionedDirectional(
                           start: 8,
@@ -505,111 +480,6 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
 }
 
 enum _CardAction { open, rename, duplicate, delete }
-
-class _Thumb extends StatelessWidget {
-  const _Thumb({
-    required this.project,
-    required this.usePng,
-    required this.importedImagesDir,
-  });
-
-  final Project project;
-
-  /// Current `<docs>/imported_images` path, or null before it resolves.
-  /// When present the live-render decodes through the path codec so a
-  /// canonical `imported_images/<file>` reference (or a rebasable legacy
-  /// absolute path) resolves to a usable absolute path for the preview;
-  /// when null it falls back to a raw decode (existing behaviour).
-  final String? importedImagesDir;
-
-  /// True when the cached PNG at `project.thumbnailPath` was
-  /// produced by the current renderer and exists on disk. False
-  /// means we must live-render from `project.documentJson` so a
-  /// stale white backdrop never reaches the user.
-  final bool usePng;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = AppTokens.of(context);
-    // Neutral "page" colour behind the thumbnail (paper-muted in
-    // light, ink-muted in dark) — lets letterboxed portrait/
-    // landscape canvases breathe instead of being hard-cropped by
-    // BoxFit.cover (which previously sliced text / off-centre
-    // subjects out of the preview).
-    final canvasBg = tokens.surfaceMuted;
-
-    // Navigation-doc rule, same as the Home rail: an empty design
-    // must never read as a blank white thumbnail — its PNG (and its
-    // live render) are featureless canvas-colour rectangles.
-    if (isEmptyDesignJson(project.documentJson)) {
-      return ColoredBox(
-        color: canvasBg,
-        child: EmptyDesignPlaceholder(name: project.name),
-      );
-    }
-
-    if (usePng) {
-      return ColoredBox(
-        color: canvasBg,
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Image.file(
-            File(project.thumbnailPath!),
-            // contain so the entire canvas is visible — a portrait
-            // 1080×1920 design is shown in full, not centre-cropped
-            // into a meaningless square. The 6 px padding plus the
-            // tinted background reads as "sheet on a page".
-            fit: BoxFit.contain,
-            cacheWidth: 480, // ~card-pixel width on hi-dpi mobile
-            gaplessPlayback: true,
-            filterQuality: FilterQuality.medium,
-          ),
-        ),
-      );
-    }
-
-    // Stale PNG (old renderer) or no PNG yet — render the actual
-    // document. Single source of truth: same `DocumentThumbnail`
-    // widget the templates strip uses, so canvas background and
-    // transparent-mode are always honoured. Decoding happens once
-    // per build; documents are small JSON.
-    final doc = _tryDecode(project.documentJson, importedImagesDir);
-    if (doc != null) {
-      return ColoredBox(
-        color: canvasBg,
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: FittedBox(
-            fit: BoxFit.contain,
-            alignment: Alignment.center,
-            child: RepaintBoundary(child: DocumentThumbnail(document: doc)),
-          ),
-        ),
-      );
-    }
-
-    // Final fallback: corrupt JSON — still better than blank.
-    return DecoratedBox(
-      decoration: BoxDecoration(color: canvasBg),
-      child: Center(
-        child: Icon(Icons.image_outlined, size: 28, color: tokens.textMuted),
-      ),
-    );
-  }
-
-  static EditorDocument? _tryDecode(String json, String? importedImagesDir) {
-    try {
-      if (importedImagesDir == null) return DocumentCodec.decode(json);
-      return ImportedImagePathCodec.decodeToRuntime(
-        json,
-        importedImagesDir: importedImagesDir,
-        fileExists: (path) => File(path).existsSync(),
-      );
-    } catch (_) {
-      return null;
-    }
-  }
-}
 
 class _LastOpenedBadge extends StatelessWidget {
   const _LastOpenedBadge();
