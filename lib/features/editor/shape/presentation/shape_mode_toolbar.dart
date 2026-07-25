@@ -82,7 +82,8 @@ class ShapeModeToolbar extends ConsumerWidget {
         'more' => ToolbarSlot(
           id: 'more',
           icon: AppIcons.moreActions,
-          label: l10n.moreActionsSemantics,
+          label: l10n.moreLabel,
+          semanticLabel: l10n.moreActionsSemantics,
           onTap: () {
             ctrl.closePanel();
             contextCtrl.closePanel();

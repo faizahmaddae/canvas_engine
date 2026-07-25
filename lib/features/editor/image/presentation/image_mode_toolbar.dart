@@ -76,7 +76,8 @@ class ImageModeToolbar extends ConsumerWidget {
         'more' => ToolbarSlot(
           id: 'more',
           icon: AppIcons.moreActions,
-          label: l10n.moreActionsSemantics,
+          label: l10n.moreLabel,
+          semanticLabel: l10n.moreActionsSemantics,
           onTap: () {
             imageCtrl.closePanel();
             contextCtrl.closePanel();
@@ -125,7 +126,8 @@ class ImageModeToolbar extends ConsumerWidget {
       ImageToolSlot.replace => ToolbarSlot(
         id: ImageToolSlot.replace.name,
         icon: AppIcons.replace,
-        label: imageReplacementActionLabel(context, layer),
+        label: imageReplacementTileLabel(context, layer),
+        semanticLabel: imageReplacementActionLabel(context, layer),
         onTap: () {
           contextCtrl.closePanel();
           replaceImageLayer(
@@ -139,7 +141,8 @@ class ImageModeToolbar extends ConsumerWidget {
       ImageToolSlot.crop => ToolbarSlot(
         id: ImageToolSlot.crop.name,
         icon: AppIcons.cropTool,
-        label: l10n.cropImageAction,
+        label: l10n.cropTool,
+        semanticLabel: l10n.cropImageAction,
         tier: SlotTier.tier2,
         // Crop is a full-screen mode — it does NOT toggle the
         // dock's expanded slot. Instead we open the centralised

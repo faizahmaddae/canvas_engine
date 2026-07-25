@@ -2108,6 +2108,12 @@ abstract class AppLocalizations {
   /// **'Replace image'**
   String get replaceImageAction;
 
+  /// No description provided for @relinkTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Relink'**
+  String get relinkTool;
+
   /// No description provided for @relinkImageAction.
   ///
   /// In en, this message translates to:
@@ -2179,6 +2185,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Font size'**
   String get fontSizeSemantics;
+
+  /// No description provided for @moreLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get moreLabel;
 
   /// No description provided for @moreActionsSemantics.
   ///

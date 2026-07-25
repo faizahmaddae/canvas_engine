@@ -67,6 +67,7 @@ void main() {
     expect(find.text('بیشتر'), findsOneWidget);
     expect(find.text('هم‌تراز کردن'), findsNothing);
     expect(find.text('More actions'), findsNothing);
+    expect(find.text('More'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -115,6 +116,7 @@ void main() {
       expect(find.text('بیشتر'), findsOneWidget);
       expect(find.text('چیدمان'), findsNothing);
       expect(find.text('More actions'), findsNothing);
+      expect(find.text('More'), findsNothing);
       // Bar consolidation (2026-07): decoration tiles are gone from
       // the bar — سایه/زمینه route through استایل's effect chips,
       // کادر is the خط دور chip, تغییر اندازه lives under بیشتر.

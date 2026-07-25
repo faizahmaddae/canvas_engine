@@ -102,10 +102,10 @@ void main() {
       ),
     );
 
-    expect(find.text('Crop image'), findsOneWidget);
-    expect(find.text('Replace image'), findsOneWidget);
+    expect(find.text('Crop'), findsOneWidget);
+    expect(find.text('Replace'), findsOneWidget);
     expect(find.text('Opacity'), findsOneWidget);
-    expect(find.text('More actions'), findsOneWidget);
+    expect(find.text('More'), findsOneWidget);
   });
 
   testWidgets('image toolbar uses short Persian primary labels', (
@@ -143,7 +143,7 @@ void main() {
     expect(find.text('جایگزین'), findsOneWidget);
     expect(find.text('بیشتر'), findsOneWidget);
     expect(find.text('جایگزینی تصویر'), findsNothing);
-    expect(find.text('More actions'), findsNothing);
+    expect(find.text('More'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -206,8 +206,8 @@ void main() {
       ),
     );
 
-    expect(find.text('Relink image'), findsOneWidget);
-    expect(find.text('Replace image'), findsNothing);
+    expect(find.text('Relink'), findsOneWidget);
+    expect(find.text('Replace'), findsNothing);
   });
 
   testWidgets('crop overlay exposes obvious Cancel Done and Restore actions', (
@@ -224,6 +224,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('Cancel'), findsOneWidget);
+    // The overlay is a screen, not a 60dp tile — it keeps the full
+    // phrase. Only the dock tile shortens to «Crop».
     expect(find.text('Crop image'), findsOneWidget);
     expect(find.text('Done'), findsOneWidget);
     expect(find.text('Restore image'), findsOneWidget);

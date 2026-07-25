@@ -113,7 +113,8 @@ class MultiSelectModeToolbar extends ConsumerWidget {
       ToolbarSlot(
         id: 'more',
         icon: AppIcons.moreActions,
-        label: l10n.moreActionsSemantics,
+        label: l10n.moreLabel,
+        semanticLabel: l10n.moreActionsSemantics,
         onTap: () {
           contextCtrl.closePanel();
           showLayerOverflowSheet(

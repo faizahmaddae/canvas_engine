@@ -66,6 +66,7 @@ class ToolbarSlot {
     this.enabled = true,
     this.enabledBuilder,
     this.availableBuilder,
+    this.semanticLabel,
     this.valueLabel,
     this.swatchColor,
     this.fontFamily,
@@ -80,7 +81,14 @@ class ToolbarSlot {
   final IconData icon;
 
   /// Static label. Used when [valueLabel] is null or returns null.
+  ///
+  /// Printed on a 60dp-wide tile, so it must be ONE short word. Pass
+  /// [semanticLabel] when the spoken name needs to be fuller.
   final String label;
+
+  /// Spoken name, when it should differ from the printed [label].
+  /// See [DockToolTile.semanticLabel].
+  final String? semanticLabel;
 
   /// Action invoked when the tile is tapped. Value-editing slots
   /// typically delegate to their mode controller's toggle method.

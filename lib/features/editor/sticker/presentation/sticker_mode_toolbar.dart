@@ -68,7 +68,8 @@ class StickerModeToolbar extends ConsumerWidget {
         'more' => ToolbarSlot(
           id: 'more',
           icon: AppIcons.moreActions,
-          label: l10n.moreActionsSemantics,
+          label: l10n.moreLabel,
+          semanticLabel: l10n.moreActionsSemantics,
           onTap: () {
             // Same shape as every other mode's More: close this
             // mode's panel first so the sheet never stacks on one.

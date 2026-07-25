@@ -41,6 +41,7 @@ class DockToolTile extends StatefulWidget {
     required this.onTap,
     this.enabled = true,
     this.unavailable = false,
+    this.semanticLabel,
     this.active = false,
     this.swatchColor,
     this.fontFamily,
@@ -68,6 +69,18 @@ class DockToolTile extends StatefulWidget {
   /// the recovery with it; leaving them fully lit makes the tile lie
   /// until the user taps it.
   final bool unavailable;
+
+  /// Spoken name, when it should differ from the printed one.
+  ///
+  /// A tile is 66dp wide and gives its label 60 of them, so the label
+  /// has to be one short word — «More», «Crop», «Replace» — with the
+  /// icon carrying the rest. A screen reader has no icon, and "More"
+  /// on its own tells it nothing. Printing the long form instead is
+  /// not the answer either: it ellipsises to «More acti…», which loses
+  /// exactly the word that would have distinguished it.
+  ///
+  /// So the two names are allowed to differ. Defaults to [label].
+  final String? semanticLabel;
   final bool active;
 
   /// Long-press peek handlers. When both are supplied, a
@@ -283,7 +296,7 @@ class _DockToolTileState extends State<DockToolTile> {
     // is intentionally not exposed here; onTap (select this tool)
     // is the control's core function.
     return Semantics(
-      label: widget.label,
+      label: widget.semanticLabel ?? widget.label,
       value: widget.valueText,
       button: true,
       enabled: enabled,

@@ -1112,6 +1112,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get replaceImageAction => 'Replace image';
 
   @override
+  String get relinkTool => 'Relink';
+
+  @override
   String get relinkImageAction => 'Relink image';
 
   @override
@@ -1146,6 +1149,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fontSizeSemantics => 'Font size';
+
+  @override
+  String get moreLabel => 'More';
 
   @override
   String get moreActionsSemantics => 'More actions';

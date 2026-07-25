@@ -183,8 +183,10 @@ void main() {
     await pumpEditor(tester, container);
 
     expectMinimalAppBar();
-    expect(find.text('Crop image'), findsOneWidget);
-    expect(find.text('Relink image'), findsOneWidget);
+    // Printed labels are one word (a tile gives them 60dp); the full
+    // phrase is what a screen reader gets. See dock_label_fit_test.
+    expect(find.text('Crop'), findsOneWidget);
+    expect(find.text('Relink'), findsOneWidget);
     expect(find.text('Opacity'), findsOneWidget);
   });
 
@@ -251,7 +253,7 @@ void main() {
     expect(find.text('Align'), findsOneWidget);
     expect(find.text('Opacity'), findsOneWidget);
     expect(find.text('Layers'), findsOneWidget);
-    expect(find.text('More actions'), findsOneWidget);
+    expect(find.text('More'), findsOneWidget);
 
     await tester.tap(find.text('Align'));
     await tester.pumpAndSettle();

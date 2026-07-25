@@ -1113,6 +1113,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get replaceImageAction => 'جایگزین';
 
   @override
+  String get relinkTool => 'اتصال';
+
+  @override
   String get relinkImageAction => 'اتصال مجدد';
 
   @override
@@ -1147,6 +1150,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get fontSizeSemantics => 'اندازه فونت';
+
+  @override
+  String get moreLabel => 'بیشتر';
 
   @override
   String get moreActionsSemantics => 'بیشتر';

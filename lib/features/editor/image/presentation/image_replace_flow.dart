@@ -23,10 +23,22 @@ bool imageSourceIsKnownUnavailable(ImageSource source) {
   return !File(path).existsSync();
 }
 
+/// Full phrase — sheet titles, menu rows, screen readers.
 String imageReplacementActionLabel(BuildContext context, ImageLayer layer) {
   return imageSourceIsKnownUnavailable(layer.source)
       ? context.l10n.relinkImageAction
       : context.l10n.replaceImageAction;
+}
+
+/// One word, for a 60dp dock tile. «Replace image» ellipsised there to
+/// «Replace i…», which is strictly worse than «Replace»: it spends the
+/// same room and ends mid-word. The tile pairs this with
+/// [imageReplacementActionLabel] as its spoken name, so nothing is
+/// lost for a screen reader.
+String imageReplacementTileLabel(BuildContext context, ImageLayer layer) {
+  return imageSourceIsKnownUnavailable(layer.source)
+      ? context.l10n.relinkTool
+      : context.l10n.replaceTool;
 }
 
 Future<void> replaceImageLayer(
