@@ -40,6 +40,7 @@ class DockToolTile extends StatefulWidget {
     required this.label,
     required this.onTap,
     this.enabled = true,
+    this.unavailable = false,
     this.active = false,
     this.swatchColor,
     this.fontFamily,
@@ -57,6 +58,16 @@ class DockToolTile extends StatefulWidget {
   final String label;
   final VoidCallback onTap;
   final bool enabled;
+
+  /// Precondition not met, but the tool is still worth offering —
+  /// renders dimmed like [enabled]`: false` while STAYING tappable,
+  /// so the tap can explain and offer a way to satisfy it.
+  ///
+  /// Look and Crop in a document with no photo are the case this
+  /// exists for. Disabling them would make the tile honest and take
+  /// the recovery with it; leaving them fully lit makes the tile lie
+  /// until the user taps it.
+  final bool unavailable;
   final bool active;
 
   /// Long-press peek handlers. When both are supplied, a
@@ -110,10 +121,11 @@ class _DockToolTileState extends State<DockToolTile> {
     // Active = primary @ 12% fill + primary fg + label w700.
     // Hover  = onSurface @ 6% fill (only when not active).
     // Press  = scale 0.97 (tactile feedback only — no lift).
-    final fg = !enabled
+    final dim = !enabled || widget.unavailable;
+    final fg = dim
         ? tokens.textPrimary.withValues(alpha: 0.35)
         : (active ? tokens.accent : tokens.textPrimary);
-    final iconColor = !enabled
+    final iconColor = dim
         ? tokens.textSecondary.withValues(alpha: 0.35)
         : (active ? tokens.accent : tokens.textSecondary);
 

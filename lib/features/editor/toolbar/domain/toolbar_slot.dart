@@ -65,6 +65,7 @@ class ToolbarSlot {
     required this.onTap,
     this.enabled = true,
     this.enabledBuilder,
+    this.availableBuilder,
     this.valueLabel,
     this.swatchColor,
     this.fontFamily,
@@ -93,6 +94,23 @@ class ToolbarSlot {
   /// on selection / document state without rebuilding the registry.
   final SlotEnabledBuilder? enabledBuilder;
 
+  /// Runtime resolver for whether the slot's PRECONDITION is met —
+  /// distinct from [enabledBuilder], and deliberately so.
+  ///
+  /// A disabled slot is inert: it does not fire [onTap], so it can
+  /// neither explain itself nor offer a way out. That is right for a
+  /// control with nothing to act on (Clear effects with no effects).
+  /// It is wrong for a tool the user could still WANT — Look and Crop
+  /// in a document with no photo. Disabling those would trade a
+  /// misleading tile for a dead one and take the recovery with it.
+  ///
+  /// An unavailable slot renders dimmed, exactly like a disabled one,
+  /// but STAYS tappable: the tile is honest at a glance, and the tap
+  /// still reaches the handler that offers to satisfy the
+  /// precondition. Honesty and recovery, rather than one or the
+  /// other.
+  final SlotEnabledBuilder? availableBuilder;
+
   /// Resolves the dynamic value text shown under the icon (e.g.
   /// "24pt"). Phase 1 doesn't use this; the field exists so future
   /// phases don't have to edit this model.
@@ -113,4 +131,7 @@ class ToolbarSlot {
 
   /// Effective enabled state at the moment of rendering.
   bool get isEnabled => enabledBuilder?.call() ?? enabled;
+
+  /// Whether the slot's precondition holds. See [availableBuilder].
+  bool get isAvailable => availableBuilder?.call() ?? true;
 }

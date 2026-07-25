@@ -167,6 +167,7 @@ class _SlotStripState extends State<SlotStrip> {
             swatchColor: slot.swatchColor?.call(),
             fontFamily: slot.fontFamily?.call(),
             enabled: slot.isEnabled,
+            unavailable: !slot.isAvailable,
             active: slot.id == widget.activeId,
             compact: compact,
             onTap: () {

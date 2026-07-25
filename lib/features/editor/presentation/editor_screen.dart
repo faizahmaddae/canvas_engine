@@ -403,6 +403,14 @@ class EditorScreen extends ConsumerWidget {
   /// projects both see the full set so nothing is hidden, but the
   /// grouping makes the photo flow obvious to a user who imported
   /// a photo and the design flow obvious to one who started blank.
+  /// Whether anything in the document is an [ImageLayer] — the
+  /// precondition Crop and Look share.
+  static bool _hasImageLayer(WidgetRef ref) => ref
+      .watch(documentControllerProvider)
+      .layers
+      .whereType<ImageLayer>()
+      .isNotEmpty;
+
   List<ToolbarSlot> _buildToolbarItems(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return [
@@ -449,11 +457,20 @@ class EditorScreen extends ConsumerWidget {
         },
       ),
       // ── tier 2 — Edit the photo ─────────────────────────────────
+      //
+      // Both act on an ImageLayer, so in a document with no photo
+      // neither can do anything. They stay VISIBLE — hiding them
+      // would mean a user who started blank never learns the app can
+      // crop or restyle a photo at all — and stay TAPPABLE, because
+      // the tap is what offers to import one. They just render dimmed
+      // so the tile says so before it is pressed rather than after
+      // (see ToolbarSlot.availableBuilder).
       ToolbarSlot(
         id: 'crop',
         icon: AppIcons.cropTool,
         label: l10n.cropTool,
         tier: SlotTier.tier2,
+        availableBuilder: () => _hasImageLayer(ref),
         onTap: () => _openCrop(context, ref),
       ),
       ToolbarSlot(
@@ -461,6 +478,7 @@ class EditorScreen extends ConsumerWidget {
         icon: AppIcons.lookTool,
         label: l10n.lookTool,
         tier: SlotTier.tier2,
+        availableBuilder: () => _hasImageLayer(ref),
         onTap: () => _openLook(context, ref),
       ),
       // ── tier 3 — Document ───────────────────────────────────────
