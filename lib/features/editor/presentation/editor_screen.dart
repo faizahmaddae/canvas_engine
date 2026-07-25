@@ -80,6 +80,7 @@ import 'widgets/layers_panel.dart';
 import 'widgets/multi_select_mode_toolbar.dart';
 import '../../../core/utils/editor_value_format.dart';
 import '../../../core/utils/text_measure.dart';
+import '../../../app/theme/app_icons.dart';
 
 const _uuid = Uuid();
 
@@ -273,14 +274,14 @@ class EditorScreen extends ConsumerWidget {
                         builder: (ctx) => IconButton(
                           tooltip: l10n.layersTooltip,
                           onPressed: () => Scaffold.of(ctx).openEndDrawer(),
-                          icon: const Icon(Icons.layers_outlined),
+                          icon: const Icon(AppIcons.layersPanel),
                         ),
                       ),
                       Builder(
                         builder: (ctx) => IconButton(
                           tooltip: l10n.editorExport,
                           onPressed: () => ExportActionSheet.open(ctx),
-                          icon: const Icon(Icons.ios_share_outlined),
+                          icon: const Icon(AppIcons.share),
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -408,31 +409,31 @@ class EditorScreen extends ConsumerWidget {
       // ── tier 1 — Add ────────────────────────────────────────────
       ToolbarSlot(
         id: 'image',
-        icon: Icons.add_photo_alternate_outlined,
+        icon: AppIcons.photoTool,
         label: l10n.photoTool,
         onTap: () => _addImage(context, ref),
       ),
       ToolbarSlot(
         id: 'text',
-        icon: Icons.text_fields_rounded,
+        icon: AppIcons.textTool,
         label: l10n.textTool,
         onTap: () => _startTextInputFlow(context, ref),
       ),
       ToolbarSlot(
         id: 'sticker',
-        icon: Icons.emoji_emotions_outlined,
+        icon: AppIcons.stickerTool,
         label: l10n.stickerTool,
         onTap: () => _addSticker(context, ref),
       ),
       ToolbarSlot(
         id: 'shape',
-        icon: Icons.category_outlined,
+        icon: AppIcons.shapeTool,
         label: l10n.shapeTool,
         onTap: () => _openShapePicker(context, ref),
       ),
       ToolbarSlot(
         id: 'paint',
-        icon: Icons.brush_outlined,
+        icon: AppIcons.drawTool,
         label: l10n.drawTool,
         onTap: () {
           final ctrl = ref.read(paintToolControllerProvider.notifier);
@@ -450,14 +451,14 @@ class EditorScreen extends ConsumerWidget {
       // ── tier 2 — Edit the photo ─────────────────────────────────
       ToolbarSlot(
         id: 'crop',
-        icon: Icons.crop_rotate_rounded,
+        icon: AppIcons.cropTool,
         label: l10n.cropTool,
         tier: SlotTier.tier2,
         onTap: () => _openCrop(context, ref),
       ),
       ToolbarSlot(
         id: 'look',
-        icon: Icons.auto_awesome_outlined,
+        icon: AppIcons.lookTool,
         label: l10n.lookTool,
         tier: SlotTier.tier2,
         onTap: () => _openLook(context, ref),
@@ -465,7 +466,7 @@ class EditorScreen extends ConsumerWidget {
       // ── tier 3 — Document ───────────────────────────────────────
       ToolbarSlot(
         id: 'canvas',
-        icon: Icons.aspect_ratio_rounded,
+        icon: AppIcons.canvasSize,
         label: l10n.canvasTool,
         tier: SlotTier.tier3,
         onTap: () => _openCanvas(ref),
@@ -1112,7 +1113,7 @@ class EditorScreen extends ConsumerWidget {
                   itemBuilder: (_, i) {
                     final layer = candidates[i];
                     return ListTile(
-                      leading: const Icon(Icons.image_outlined),
+                      leading: const Icon(AppIcons.imagePlaceholder),
                       title: Text(context.l10n.imageLayerTitle(i + 1)),
                       // The title is the generic «تصویر ۱» counter, so
                       // this pair IS the discriminator between rows —
@@ -1524,32 +1525,32 @@ class _DocumentTitle extends ConsumerWidget {
       items: [
         _menuItem(
           _DocumentAction.rename,
-          Icons.drive_file_rename_outline_rounded,
+          AppIcons.rename,
           l10n.renameAction,
           tokens,
         ),
         _menuItem(
           _DocumentAction.resize,
-          Icons.aspect_ratio_rounded,
+          AppIcons.canvasSize,
           l10n.resizeCanvasAction,
           tokens,
         ),
         _menuItem(
           _DocumentAction.fit,
-          Icons.fit_screen_outlined,
+          AppIcons.fitToScreen,
           l10n.editorFitToScreen,
           tokens,
         ),
         const PopupMenuDivider(),
         _menuItem(
           _DocumentAction.history,
-          Icons.history_rounded,
+          AppIcons.history,
           l10n.documentHistoryAction,
           tokens,
         ),
         _menuItem(
           _DocumentAction.save,
-          Icons.bookmark_add_outlined,
+          AppIcons.saveProject,
           l10n.editorSaveProject,
           tokens,
         ),
@@ -1665,7 +1666,7 @@ class _UndoRedoActions extends ConsumerWidget {
                   doc.undo();
                 }
               : null,
-          icon: const Icon(Icons.undo_rounded),
+          icon: const Icon(AppIcons.undo),
         ),
         IconButton(
           tooltip: context.l10n.redoTooltip,
@@ -1675,7 +1676,7 @@ class _UndoRedoActions extends ConsumerWidget {
                   doc.redo();
                 }
               : null,
-          icon: const Icon(Icons.redo_rounded),
+          icon: const Icon(AppIcons.redo),
         ),
       ],
     );

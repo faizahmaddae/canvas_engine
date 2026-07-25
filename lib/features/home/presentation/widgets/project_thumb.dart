@@ -13,6 +13,7 @@ import '../../../editor/engine/core/editor_document.dart';
 import '../../../editor/engine/rendering/document_thumbnail.dart';
 import '../../../editor/engine/serialization/document_codec.dart';
 import '../../domain/project.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// One recent-work thumbnail on Home's horizontal rail. Quiet
 /// chrome: hairline-bordered surface card, radius 12, the project's
@@ -177,7 +178,11 @@ class ProjectPreview extends ConsumerWidget {
     return DecoratedBox(
       decoration: BoxDecoration(color: canvasBg),
       child: Center(
-        child: Icon(Icons.image_outlined, size: 28, color: tokens.textMuted),
+        child: Icon(
+          AppIcons.imagePlaceholder,
+          size: 28,
+          color: tokens.textMuted,
+        ),
       ),
     );
   }
@@ -288,11 +293,7 @@ class NewProjectTile extends StatelessWidget {
                 width: width,
                 height: height,
                 child: Center(
-                  child: Icon(
-                    Icons.add_rounded,
-                    size: 24,
-                    color: tokens.accent,
-                  ),
+                  child: Icon(AppIcons.add, size: 24, color: tokens.accent),
                 ),
               ),
             ),

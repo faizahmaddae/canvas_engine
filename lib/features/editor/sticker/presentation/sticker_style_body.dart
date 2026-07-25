@@ -8,6 +8,7 @@ import '../../application/document_controller.dart';
 import '../../engine/commands/text_commands.dart';
 import '../../engine/modules/text/text_layer.dart';
 import 'sticker_panel_shell.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Catalogue of sticker style presets. Each preset is just a
 /// transformation on a [TextStyleSpec] — we never replace the
@@ -42,15 +43,15 @@ extension StickerStylePresetX on StickerStylePreset {
   IconData get icon {
     switch (this) {
       case StickerStylePreset.original:
-        return Icons.emoji_emotions_outlined;
+        return AppIcons.stickerTool;
       case StickerStylePreset.softShadow:
-        return Icons.blur_on_rounded;
+        return AppIcons.shadowTool;
       case StickerStylePreset.pop:
-        return Icons.flash_on_rounded;
+        return AppIcons.stickerPresetPop;
       case StickerStylePreset.glow:
-        return Icons.wb_sunny_outlined;
+        return AppIcons.exposure;
       case StickerStylePreset.outline:
-        return Icons.format_shapes_rounded;
+        return AppIcons.stickerPresetOutline;
     }
   }
 
@@ -120,7 +121,7 @@ class StickerStyleBody extends ConsumerWidget {
     final tokens = AppTokens.of(context);
     return StickerPanelShell(
       title: context.l10n.styleTool,
-      icon: Icons.auto_awesome_outlined,
+      icon: AppIcons.lookTool,
       // Full-bleed body: zero horizontal gutter so the preset
       // carousel runs from the panel's left edge to its right
       // edge. Vertical rhythm matches the default panel padding

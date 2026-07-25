@@ -12,6 +12,7 @@ import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// Widget tests for the image-toolbar Crop entry-point. Verifies
 /// that tapping the Crop tab opens the centralised crop session
@@ -61,7 +62,7 @@ void main() {
 
     expect(container.read(cropControllerProvider).active, isFalse);
 
-    final cropFinder = find.byIcon(Icons.crop_rotate_rounded);
+    final cropFinder = find.byIcon(AppIcons.cropTool);
     await tester.scrollUntilVisible(cropFinder, 80);
     await tester.tap(cropFinder);
     await tester.pump();
@@ -164,7 +165,7 @@ void main() {
       ),
     );
 
-    final opacityFinder = find.byIcon(Icons.opacity);
+    final opacityFinder = find.byIcon(AppIcons.opacity);
     await tester.scrollUntilVisible(opacityFinder, 80);
     await tester.tap(opacityFinder);
     await tester.pumpAndSettle();

@@ -11,6 +11,7 @@ import '../../engine/modules/text/text_layer.dart';
 import '../../presentation/widgets/editor_modal_sheet.dart';
 import '../../application/recent_colors_controller.dart';
 import '../application/text_tool_controller.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../domain/text_style_presets.dart'
     show defaultFontFamilyForContent, textDirectionForContent;
 
@@ -623,7 +624,7 @@ class _PaletteDotState extends State<_PaletteDot> {
                   ScaleTransition(scale: anim, child: child),
               child: widget.selected
                   ? Icon(
-                      Icons.check_rounded,
+                      AppIcons.confirm,
                       key: const ValueKey('check'),
                       size: 18,
                       color: tickColor,
@@ -661,7 +662,7 @@ class _MoreColorButton extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: tokens.border, width: 1.2),
           ),
-          child: Icon(Icons.add_rounded, size: 20, color: tokens.textSecondary),
+          child: Icon(AppIcons.add, size: 20, color: tokens.textSecondary),
         ),
       ),
     );
@@ -774,7 +775,7 @@ class _BoldGlyph extends StatelessWidget {
       // (پررنگ) and the sibling toggles use the Material format icons
       // (format_italic / format_underline), so bold matches the set.
       child: Icon(
-        Icons.format_bold_rounded,
+        AppIcons.bold,
         size: 15,
         color: active ? tokens.accent : tokens.textPrimary,
       ),

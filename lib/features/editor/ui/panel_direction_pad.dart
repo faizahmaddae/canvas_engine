@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_icons.dart';
 
 /// 3×3 grid of direction cells for offset-based controls (shadow
 /// direction today; any future 2D-offset knob).
@@ -130,14 +131,14 @@ class _DirectionPadCell extends StatelessWidget {
         child: Center(
           child: isCenter
               ? Icon(
-                  Icons.center_focus_strong_outlined,
+                  AppIcons.offsetCenter,
                   size: 16,
                   color: selected ? tokens.accent : tokens.textSecondary,
                 )
               : Transform.rotate(
                   angle: _arrowAngle(dx, dy),
                   child: Icon(
-                    Icons.arrow_upward_rounded,
+                    AppIcons.offsetDirection,
                     size: 16,
                     color: selected ? tokens.accent : tokens.textSecondary,
                   ),

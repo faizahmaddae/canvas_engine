@@ -6,6 +6,7 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../app/ui/saffron_diamond.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/presentation/settings_screen.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Home chrome (home redesign doc §1–2): wordmark «کانواس» + the
 /// saffron-diamond mark at the start, a settings icon in a quiet
@@ -53,7 +54,7 @@ class HomeHeader extends StatelessWidget {
                     builder: (_) => const SettingsScreen(),
                   ),
                 ),
-                icon: const Icon(Icons.settings_outlined, size: 20),
+                icon: const Icon(AppIcons.settings, size: 20),
                 style: IconButton.styleFrom(
                   backgroundColor: tokens.surface,
                   foregroundColor: tokens.textSecondary,

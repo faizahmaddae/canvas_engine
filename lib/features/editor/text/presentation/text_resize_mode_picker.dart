@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../engine/modules/text/text_layer.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Shared picker UI for [TextResizeMode].
 ///
@@ -77,7 +78,7 @@ Future<TextResizeMode?> pickTextResizeMode(
                       ],
                     ),
                   ),
-                  if (selected) Icon(Icons.check_rounded, color: tokens.accent),
+                  if (selected) Icon(AppIcons.confirm, color: tokens.accent),
                 ],
               ),
             ),
@@ -95,14 +96,14 @@ Future<TextResizeMode?> pickTextResizeMode(
               TextResizeMode.scaleText,
               ctx.l10n.scaleTextTitle,
               ctx.l10n.scaleTextSubtitle,
-              Icons.zoom_out_map_rounded,
+              AppIcons.scaleUniform,
             ),
             const SizedBox(height: 4),
             tile(
               TextResizeMode.resizeBox,
               ctx.l10n.resizeBoxTitle,
               ctx.l10n.resizeBoxSubtitle,
-              Icons.crop_landscape_rounded,
+              AppIcons.landscapeBox,
             ),
           ],
         ),
@@ -140,8 +141,8 @@ String textResizeModeLabel(TextResizeMode mode) {
 IconData textResizeModeIcon(TextResizeMode mode) {
   switch (mode) {
     case TextResizeMode.scaleText:
-      return Icons.zoom_out_map_rounded;
+      return AppIcons.scaleUniform;
     case TextResizeMode.resizeBox:
-      return Icons.crop_landscape_rounded;
+      return AppIcons.landscapeBox;
   }
 }

@@ -5,6 +5,7 @@ import 'package:canvas_engine/app/ui/size_picker_dialog.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// v2 restyle of the canvas-size sheet: tokens only (no violet),
 /// AppPrimaryButton CTA, hairline preset rows, RTL chevron, dark
@@ -120,12 +121,10 @@ void main() {
     // mirrored an already-mirroring glyph and the drill-in arrow came
     // out pointing at the screen edge. Assert the mechanism, not a
     // glyph identity — the identity is what let the bug through.
-    expect(find.byIcon(Icons.chevron_right_rounded), findsWidgets);
-    expect(find.byIcon(Icons.chevron_left_rounded), findsNothing);
+    expect(find.byIcon(AppIcons.drillIn), findsWidgets);
+    expect(find.byIcon(AppIcons.navPrevious), findsNothing);
 
-    final icon = tester.widget<Icon>(
-      find.byIcon(Icons.chevron_right_rounded).first,
-    );
+    final icon = tester.widget<Icon>(find.byIcon(AppIcons.drillIn).first);
     expect(
       icon.icon!.matchTextDirection,
       isTrue,
@@ -137,8 +136,8 @@ void main() {
     tester,
   ) async {
     await pumpAndOpen(tester, locale: const Locale('en'));
-    expect(find.byIcon(Icons.chevron_right_rounded), findsWidgets);
-    expect(find.byIcon(Icons.chevron_left_rounded), findsNothing);
+    expect(find.byIcon(AppIcons.drillIn), findsWidgets);
+    expect(find.byIcon(AppIcons.navPrevious), findsNothing);
   });
 
   testWidgets('dark mode: ink surface + cream CTA', (tester) async {

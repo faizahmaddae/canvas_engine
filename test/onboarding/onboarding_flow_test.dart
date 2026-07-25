@@ -18,6 +18,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 void main() {
   setUp(() {
@@ -307,7 +308,7 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: CanvasEngineApp()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(AppIcons.settings));
     await tester.pumpAndSettle();
     final resetLabel = find.text('بازنشانی شروع اولیه');
     await tester.scrollUntilVisible(

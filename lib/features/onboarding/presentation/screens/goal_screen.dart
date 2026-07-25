@@ -11,6 +11,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../templates/domain/template.dart';
 import '../../application/onboarding_controller.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// The six onboarding goals map onto existing template categories.
 ///
@@ -25,22 +26,22 @@ import '../../application/onboarding_controller.dart';
 const List<_GoalSpec> _goals = [
   _GoalSpec(
     category: TemplateCategory.instagramStory,
-    icon: Icons.amp_stories_outlined,
+    icon: AppIcons.categoryStory,
   ),
   _GoalSpec(
     category: TemplateCategory.promotionalPoster,
-    icon: Icons.campaign_outlined,
+    icon: AppIcons.categoryPoster,
   ),
   _GoalSpec(
     category: TemplateCategory.poetryPost,
-    icon: Icons.auto_stories_outlined,
+    icon: AppIcons.categoryPoetry,
   ),
   _GoalSpec(
     category: TemplateCategory.youtubeThumbnail,
-    icon: Icons.smart_display_outlined,
+    icon: AppIcons.videoPreset,
   ),
-  _GoalSpec(category: TemplateCategory.quote, icon: Icons.text_fields_outlined),
-  _GoalSpec(category: TemplateCategory.social, icon: Icons.crop_din),
+  _GoalSpec(category: TemplateCategory.quote, icon: AppIcons.goalQuote),
+  _GoalSpec(category: TemplateCategory.social, icon: AppIcons.categorySocial),
 ];
 
 class _GoalSpec {
@@ -224,7 +225,7 @@ class _GoalCard extends StatelessWidget {
                   top: AppSpacing.sm,
                   start: AppSpacing.sm,
                   child: Icon(
-                    Icons.check_circle,
+                    AppIcons.selectedCheck,
                     size: 16,
                     color: tokens.accent,
                   ),

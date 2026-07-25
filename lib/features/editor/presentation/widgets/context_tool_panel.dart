@@ -10,6 +10,7 @@ import 'editor_tool_panel_shell.dart';
 import 'layer_opacity_control.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
 import 'section_label.dart';
+import '../../../../app/theme/app_icons.dart';
 
 class ContextToolPanelBody extends ConsumerWidget {
   const ContextToolPanelBody({
@@ -29,7 +30,7 @@ class ContextToolPanelBody extends ConsumerWidget {
         title: isMulti
             ? context.l10n.alignSelectedLayersTitle
             : context.l10n.alignToCanvasTitle,
-        icon: Icons.align_horizontal_left_rounded,
+        icon: AppIcons.alignLeft,
         onClose: () =>
             ref.read(contextToolbarControllerProvider.notifier).closePanel(),
         bodyPadding: const EdgeInsetsDirectional.fromSTEB(12, 8, 12, 18),
@@ -39,7 +40,7 @@ class ContextToolPanelBody extends ConsumerWidget {
       ),
       ContextToolPanel.opacity => EditorToolPanelShell(
         title: context.l10n.opacityLabel,
-        icon: Icons.opacity,
+        icon: AppIcons.opacity,
         onClose: () =>
             ref.read(contextToolbarControllerProvider.notifier).closePanel(),
         bodyPadding: const EdgeInsetsDirectional.fromSTEB(20, 4, 20, 18),
@@ -69,19 +70,19 @@ class _AlignPanel extends ConsumerWidget {
           label: context.l10n.alignHorizontalGroup,
           actions: [
             _AlignTileData(
-              icon: Icons.align_horizontal_left_rounded,
+              icon: AppIcons.alignLeft,
               label: context.l10n.alignLeftAction,
               tooltip: context.l10n.alignLeftAction,
               onTap: () => _runAlign(ref, isMulti, AlignAxis.left),
             ),
             _AlignTileData(
-              icon: Icons.align_horizontal_center_rounded,
+              icon: AppIcons.alignHorizontalCenter,
               label: context.l10n.alignCenterAction,
               tooltip: context.l10n.alignCenterAction,
               onTap: () => _runAlign(ref, isMulti, AlignAxis.centerX),
             ),
             _AlignTileData(
-              icon: Icons.align_horizontal_right_rounded,
+              icon: AppIcons.alignRight,
               label: context.l10n.alignRightAction,
               tooltip: context.l10n.alignRightAction,
               onTap: () => _runAlign(ref, isMulti, AlignAxis.right),
@@ -93,19 +94,19 @@ class _AlignPanel extends ConsumerWidget {
           label: context.l10n.alignVerticalGroup,
           actions: [
             _AlignTileData(
-              icon: Icons.align_vertical_top_rounded,
+              icon: AppIcons.alignTop,
               label: context.l10n.alignTopAction,
               tooltip: context.l10n.alignTopAction,
               onTap: () => _runAlign(ref, isMulti, AlignAxis.top),
             ),
             _AlignTileData(
-              icon: Icons.align_vertical_center_rounded,
+              icon: AppIcons.alignVerticalCenter,
               label: context.l10n.alignMiddleAction,
               tooltip: context.l10n.alignMiddleAction,
               onTap: () => _runAlign(ref, isMulti, AlignAxis.centerY),
             ),
             _AlignTileData(
-              icon: Icons.align_vertical_bottom_rounded,
+              icon: AppIcons.alignBottom,
               label: context.l10n.alignBottomAction,
               tooltip: context.l10n.alignBottomAction,
               onTap: () => _runAlign(ref, isMulti, AlignAxis.bottom),
@@ -118,7 +119,7 @@ class _AlignPanel extends ConsumerWidget {
             label: context.l10n.distributeGroup,
             actions: [
               _AlignTileData(
-                icon: Icons.space_bar_rounded,
+                icon: AppIcons.distributeHorizontal,
                 label: context.l10n.horizontalOption,
                 tooltip: context.l10n.distributeHorizontallyAction,
                 onTap: () => ref
@@ -126,7 +127,7 @@ class _AlignPanel extends ConsumerWidget {
                     .distribute(DistributeAxis.horizontal),
               ),
               _AlignTileData(
-                icon: Icons.unfold_more_rounded,
+                icon: AppIcons.distributeVertical,
                 label: context.l10n.verticalOption,
                 tooltip: context.l10n.distributeVerticallyAction,
                 onTap: () => ref

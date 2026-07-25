@@ -5,6 +5,7 @@ import '../../engine/commands/shape_commands.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/layer_shadow_body.dart';
 import 'shape_panel_shell.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Expanded panel body for the Shape sub-tool's "Shadow" tab.
 ///
@@ -39,7 +40,7 @@ class ShapeShadowBody extends StatelessWidget {
         ),
         shell: ({required child}) => ShapePanelShell(
           title: context.l10n.shadowTool,
-          icon: Icons.layers_outlined,
+          icon: AppIcons.shadowTool,
           child: child,
         ),
       ),

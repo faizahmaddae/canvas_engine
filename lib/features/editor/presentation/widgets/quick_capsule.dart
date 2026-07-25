@@ -52,6 +52,7 @@ import 'floating_action_bar.dart';
 import 'floating_toolbar_positioner.dart';
 import 'layer_overflow_sheet.dart';
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// One capsule item: an accelerator pill.
 class _CapsuleItem {
@@ -136,7 +137,7 @@ class QuickCapsule extends ConsumerWidget {
               semanticLabel: context.l10n.moreActionsSemantics,
               onTap: () => _openOverflow(context, ref),
               child: Icon(
-                Icons.more_horiz_rounded,
+                AppIcons.moreActions,
                 size: 18,
                 color: tokens.textPrimary,
               ),
@@ -196,7 +197,7 @@ class QuickCapsule extends ConsumerWidget {
       return [
         _CapsuleItem(
           semanticLabel: l10n.editTextAction,
-          child: Icon(Icons.edit_rounded, size: 18, color: tokens.textPrimary),
+          child: Icon(AppIcons.editText, size: 18, color: tokens.textPrimary),
           onTap: () {
             EditorHaptics.tap();
             showEditTextLayerFlow(context, ref, l);
@@ -231,11 +232,7 @@ class QuickCapsule extends ConsumerWidget {
       return [
         _CapsuleItem(
           semanticLabel: l10n.replaceTool,
-          child: Icon(
-            Icons.swap_horiz_rounded,
-            size: 18,
-            color: tokens.textPrimary,
-          ),
+          child: Icon(AppIcons.replace, size: 18, color: tokens.textPrimary),
           onTap: () {
             EditorHaptics.tap();
             ref
@@ -252,11 +249,7 @@ class QuickCapsule extends ConsumerWidget {
       return [
         _CapsuleItem(
           semanticLabel: l10n.lookTool,
-          child: Icon(
-            Icons.auto_awesome_outlined,
-            size: 18,
-            color: tokens.textPrimary,
-          ),
+          child: Icon(AppIcons.lookTool, size: 18, color: tokens.textPrimary),
           onTap: () {
             EditorHaptics.tap();
             contextCtrl.closePanel();
@@ -265,11 +258,7 @@ class QuickCapsule extends ConsumerWidget {
         ),
         _CapsuleItem(
           semanticLabel: l10n.cropImageAction,
-          child: Icon(
-            Icons.crop_rotate_rounded,
-            size: 18,
-            color: tokens.textPrimary,
-          ),
+          child: Icon(AppIcons.cropTool, size: 18, color: tokens.textPrimary),
           onTap: () {
             // Same one-shot entry as the image dock's Crop tile:
             // close panels first so leaving crop never reveals a
@@ -306,7 +295,7 @@ class QuickCapsule extends ConsumerWidget {
         _CapsuleItem(
           semanticLabel: l10n.cornerRadiusLabel,
           child: Icon(
-            Icons.rounded_corner_rounded,
+            AppIcons.cornerRadius,
             size: 18,
             color: tokens.textPrimary,
           ),

@@ -10,6 +10,7 @@ import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// Widget-level coverage for the Shape sub-tool surface:
 ///   * Shape toolbar renders Style / Border / Shadow / Opacity / Replace / More tabs.
@@ -64,12 +65,16 @@ void main() {
       // Slot strip enters compact mode in landscape (test default), which
       // hides static labels — finding by icon is the stable signal that
       // each tab is mounted.
-      expect(find.byIcon(Icons.palette_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.border_outer_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.blur_on_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.opacity), findsOneWidget);
-      expect(find.byIcon(Icons.swap_horiz_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.more_horiz_rounded), findsOneWidget);
+      expect(find.byIcon(AppIcons.colorTool), findsOneWidget);
+      expect(find.byIcon(AppIcons.borderTool), findsOneWidget);
+      // Shadow has its own glyph now. It used to borrow the BLUR
+      // icon here and the LAYERS icon on the image toolbar — one tool
+      // drawn three different ways, and one of those ways identical to
+      // the layers-drawer button sitting beside it.
+      expect(find.byIcon(AppIcons.shadowTool), findsOneWidget);
+      expect(find.byIcon(AppIcons.opacity), findsOneWidget);
+      expect(find.byIcon(AppIcons.replace), findsOneWidget);
+      expect(find.byIcon(AppIcons.moreActions), findsOneWidget);
     },
   );
 
@@ -93,7 +98,7 @@ void main() {
 
     expect(container.read(shapeToolControllerProvider).openSlot, isNull);
 
-    final shadowFinder = find.byIcon(Icons.blur_on_rounded);
+    final shadowFinder = find.byIcon(AppIcons.shadowTool);
     await tester.scrollUntilVisible(shadowFinder, 80);
     await tester.tap(shadowFinder);
     await tester.pump();
@@ -163,7 +168,7 @@ void main() {
       ),
     );
 
-    final opacityFinder = find.byIcon(Icons.opacity);
+    final opacityFinder = find.byIcon(AppIcons.opacity);
     await tester.scrollUntilVisible(opacityFinder, 80);
     await tester.tap(opacityFinder);
     await tester.pumpAndSettle();

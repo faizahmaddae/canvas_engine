@@ -25,6 +25,7 @@ import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 ShapeLayer _shape(String id) => ShapeLayer(
   id: id,
@@ -141,7 +142,7 @@ void main() {
       find.text('Edit text'),
       find.text('Align'),
       find.text('Opacity'),
-      find.byIcon(Icons.format_bold_rounded), // B/I/U inline row
+      find.byIcon(AppIcons.bold), // B/I/U inline row
       find.text('Rename'),
       find.text('Duplicate'),
       find.text('Bring forward'),
@@ -185,7 +186,7 @@ void main() {
 
     expect(find.text('Edit text'), findsNothing);
     expect(find.text('Text direction'), findsNothing);
-    expect(find.byIcon(Icons.format_bold_rounded), findsNothing);
+    expect(find.byIcon(AppIcons.bold), findsNothing);
     expect(find.text('Align'), findsOneWidget);
     expect(find.text('Opacity'), findsOneWidget);
     expect(find.text('Resize behavior'), findsOneWidget);

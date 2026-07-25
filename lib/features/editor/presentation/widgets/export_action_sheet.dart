@@ -22,6 +22,7 @@ import '../../ui/editor_slider_row.dart';
 import 'export_preview_screen.dart';
 import 'section_label.dart';
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Modal export sheet. The user picks an [ExportQuality] preset and
 /// then taps **Save Image** or **Share** — both actions reuse the same
@@ -198,7 +199,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                       onPressed: _busy
                           ? null
                           : () => _openPreview(ExportIntent.share),
-                      icon: const Icon(Icons.visibility_outlined),
+                      icon: const Icon(AppIcons.visible),
                       label: Text(l10n.previewShareAction),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -215,7 +216,7 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                       onPressed: _busy
                           ? null
                           : () => _openPreview(ExportIntent.save),
-                      icon: const Icon(Icons.image_search_rounded),
+                      icon: const Icon(AppIcons.exportSave),
                       label: Text(l10n.previewSaveAction),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -480,9 +481,7 @@ class _QualityCard extends StatelessWidget {
                 ),
               ),
               Icon(
-                selected
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked,
+                selected ? AppIcons.selectedCheck : AppIcons.selectionUnchecked,
                 color: selected ? tokens.accent : tokens.border,
                 size: 22,
               ),
@@ -764,11 +763,7 @@ class _PresetOutputSummary extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.aspect_ratio_rounded,
-            size: 20,
-            color: tokens.textSecondary,
-          ),
+          Icon(AppIcons.canvasSize, size: 20, color: tokens.textSecondary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

@@ -17,6 +17,7 @@ import '../../ui/fill_mode_section.dart';
 import '../application/canvas_commands.dart';
 import '../application/canvas_resize.dart';
 import '../application/canvas_tool_controller.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Expanded panel body for the Canvas tool. Three sections:
 ///
@@ -77,7 +78,7 @@ class CanvasPanelBody extends ConsumerWidget {
 
     return EditorToolPanelShell(
       title: context.l10n.canvasTool,
-      icon: Icons.aspect_ratio_rounded,
+      icon: AppIcons.canvasSize,
       onClose: () =>
           ref.read(canvasToolControllerProvider.notifier).closePanel(),
       child: Column(
@@ -154,10 +155,10 @@ class _AspectPreset {
 }
 
 const _aspectPresets = <_AspectPreset>[
-  _AspectPreset(1080, 1080, Icons.crop_square_rounded),
-  _AspectPreset(1080, 1350, Icons.crop_portrait_rounded),
-  _AspectPreset(1080, 1920, Icons.smartphone_outlined),
-  _AspectPreset(1280, 720, Icons.crop_landscape_rounded),
+  _AspectPreset(1080, 1080, AppIcons.squareShape),
+  _AspectPreset(1080, 1350, AppIcons.aspectPortrait),
+  _AspectPreset(1080, 1920, AppIcons.storyPreset),
+  _AspectPreset(1280, 720, AppIcons.landscapeBox),
 ];
 
 /// Document-size controls: current dimensions + aspect presets +
@@ -245,7 +246,7 @@ class _CanvasSizeSection extends ConsumerWidget {
                   key: const ValueKey('canvas-size-custom'),
                   width: 76,
                   selected: false,
-                  icon: Icons.tune_rounded,
+                  icon: AppIcons.precisionAdjust,
                   label: l10n.customLabel,
                   onTap: () => _openCustom(context, ref),
                 );
@@ -311,7 +312,7 @@ class _PhotoProjectHint extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded, size: 16, color: tokens.accent),
+          Icon(AppIcons.info, size: 16, color: tokens.accent),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

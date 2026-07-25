@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../engine/modules/paint/paint_layer.dart';
 import '../domain/paint_tool_type.dart';
+import '../../../../app/theme/app_icons.dart';
 
 // ─── Per-tool capability matrix ───────────────────────────────────
 //
@@ -151,12 +152,12 @@ String paintSpecLabel(AppLocalizations l10n, PaintSpec spec) {
 // Flat single-tier strip — Tool · Color · Size · Fill · Opacity ·
 // Blur · Sides · Dash. Ordered by expected frequency of use.
 final List<PaintSpec> paintToolSpecs = <PaintSpec>[
-  PaintSpec(id: 'tool', icon: Icons.gesture_rounded, label: 'Tool'),
-  PaintSpec(id: 'color', icon: Icons.palette_rounded, label: 'Color'),
-  PaintSpec(id: 'size', icon: Icons.line_weight_rounded, label: 'Size'),
-  PaintSpec(id: 'fill', icon: Icons.format_color_fill_rounded, label: 'Fill'),
-  PaintSpec(id: 'opacity', icon: Icons.opacity_rounded, label: 'Opacity'),
-  PaintSpec(id: 'blur', icon: Icons.blur_on_rounded, label: 'Blur'),
-  PaintSpec(id: 'polygon', icon: Icons.pentagon_outlined, label: 'Sides'),
-  PaintSpec(id: 'dash', icon: Icons.linear_scale_rounded, label: 'Style'),
+  PaintSpec(id: 'tool', icon: AppIcons.freehandTool, label: 'Tool'),
+  PaintSpec(id: 'color', icon: AppIcons.colorTool, label: 'Color'),
+  PaintSpec(id: 'size', icon: AppIcons.strokeWeight, label: 'Size'),
+  PaintSpec(id: 'fill', icon: AppIcons.paintFill, label: 'Fill'),
+  PaintSpec(id: 'opacity', icon: AppIcons.opacity, label: 'Opacity'),
+  PaintSpec(id: 'blur', icon: AppIcons.blur, label: 'Blur'),
+  PaintSpec(id: 'polygon', icon: AppIcons.polygonTool, label: 'Sides'),
+  PaintSpec(id: 'dash', icon: AppIcons.dashStyle, label: 'Style'),
 ];

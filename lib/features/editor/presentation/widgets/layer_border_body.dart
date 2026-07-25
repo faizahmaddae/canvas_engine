@@ -17,6 +17,7 @@ import '../../ui/precision_disclosure.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
 import 'section_label.dart';
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../app/theme/app_icons.dart';
 
 // Stroke width = clamp(effectiveDim × fraction, minPx, maxPx).
 // Fractions are tuned so 1080-square (the most common design
@@ -269,7 +270,7 @@ class _LayerBorderBodyState<L extends EditorLayer>
               const SizedBox(height: 6),
               PrecisionDisclosure(
                 compact: true,
-                icon: Icons.tune_rounded,
+                icon: AppIcons.precisionAdjust,
                 titleClosed: context.l10n.adjustPrecisely,
                 subtitle: context.l10n.widthLabel,
                 chevronColorClosed: tokens.accent,
@@ -328,26 +329,20 @@ class _BorderThicknessChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final entries = <(_ChipKey, double, String, IconData, double)>[
       if (allowNone)
-        (_ChipKey.none, 0, context.l10n.noneOption, Icons.block_rounded, 18),
-      (
-        _ChipKey.thin,
-        thin,
-        context.l10n.thinOption,
-        Icons.horizontal_rule_rounded,
-        16,
-      ),
+        (_ChipKey.none, 0, context.l10n.noneOption, AppIcons.noneOption, 18),
+      (_ChipKey.thin, thin, context.l10n.thinOption, AppIcons.strokeWeight, 16),
       (
         _ChipKey.medium,
         medium,
         context.l10n.mediumOption,
-        Icons.horizontal_rule_rounded,
+        AppIcons.strokeWeight,
         22,
       ),
       (
         _ChipKey.bold,
         bold,
         context.l10n.thickOption,
-        Icons.horizontal_rule_rounded,
+        AppIcons.strokeWeight,
         30,
       ),
     ];

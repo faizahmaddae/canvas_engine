@@ -8,6 +8,7 @@ import '../../engine/commands/layer_state_commands.dart';
 import '../../engine/commands/transform_commands.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Shared layer-opacity slider for every selected-layer action surface.
 ///
@@ -134,7 +135,7 @@ class _MultiLayerOpacityControlState
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.opacity, size: 20, color: theme.hintColor),
+                      Icon(AppIcons.opacity, size: 20, color: theme.hintColor),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -150,7 +151,7 @@ class _MultiLayerOpacityControlState
               )
             : Row(
                 children: [
-                  Icon(Icons.opacity, size: 16, color: theme.hintColor),
+                  Icon(AppIcons.opacity, size: 16, color: theme.hintColor),
                   const SizedBox(width: 8),
                   Expanded(child: slider),
                   SizedBox(
@@ -240,7 +241,7 @@ class _LayerOpacityControlState extends ConsumerState<LayerOpacityControl> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.opacity, size: 20, color: theme.hintColor),
+                      Icon(AppIcons.opacity, size: 20, color: theme.hintColor),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -256,7 +257,7 @@ class _LayerOpacityControlState extends ConsumerState<LayerOpacityControl> {
               )
             : Row(
                 children: [
-                  Icon(Icons.opacity, size: 16, color: theme.hintColor),
+                  Icon(AppIcons.opacity, size: 16, color: theme.hintColor),
                   const SizedBox(width: 8),
                   Expanded(child: slider),
                   SizedBox(

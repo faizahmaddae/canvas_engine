@@ -14,6 +14,7 @@ import '../../engine/modules/text/text_layer.dart';
 import 'layer_actions.dart';
 import 'layer_opacity_control.dart';
 import 'layer_thumbnail.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Right-side drawer listing every layer in the document, topmost first.
 ///
@@ -130,7 +131,7 @@ class _PanelHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.layers_outlined, size: 20),
+              const Icon(AppIcons.layersPanel, size: 20),
               const SizedBox(width: 8),
               Text(
                 context.l10n.layersTooltip,
@@ -317,7 +318,7 @@ class _LayerTile extends ConsumerWidget {
                         child: const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 4),
                           child: Icon(
-                            Icons.drag_indicator,
+                            AppIcons.dragHandle,
                             size: 18,
                             color: Colors.grey,
                           ),
@@ -329,7 +330,7 @@ class _LayerTile extends ConsumerWidget {
                         child: const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 4),
                           child: Icon(
-                            Icons.drag_indicator,
+                            AppIcons.dragHandle,
                             size: 18,
                             color: Colors.grey,
                           ),
@@ -345,8 +346,8 @@ class _LayerTile extends ConsumerWidget {
                         padding: const EdgeInsetsDirectional.only(end: 4),
                         child: Icon(
                           isSelected
-                              ? Icons.check_circle_rounded
-                              : Icons.radio_button_unchecked,
+                              ? AppIcons.selectedCheck
+                              : AppIcons.selectionUnchecked,
                           key: ValueKey('layers-multi-check-${layer.id}'),
                           size: 18,
                           color: isSelected
@@ -380,12 +381,14 @@ class _LayerTile extends ConsumerWidget {
                     ),
                     if (isPrimary)
                       _IconAction(
-                        icon: Icons.drive_file_rename_outline_rounded,
+                        icon: AppIcons.rename,
                         tooltip: context.l10n.renameAction,
                         onTap: () => LayerActions.rename(context, ref, layer),
                       ),
                     _IconAction(
-                      icon: layer.locked ? Icons.lock : Icons.lock_open,
+                      icon: layer.locked
+                          ? AppIcons.layerLocked
+                          : AppIcons.layerUnlocked,
                       tooltip: layer.locked
                           ? context.l10n.unlockAction
                           : context.l10n.lockAction,
@@ -402,9 +405,7 @@ class _LayerTile extends ConsumerWidget {
                       },
                     ),
                     _IconAction(
-                      icon: layer.visible
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
+                      icon: layer.visible ? AppIcons.visible : AppIcons.hidden,
                       tooltip: layer.visible
                           ? context.l10n.hideAction
                           : context.l10n.showAction,
@@ -421,7 +422,7 @@ class _LayerTile extends ConsumerWidget {
                       },
                     ),
                     _IconAction(
-                      icon: Icons.delete_outline,
+                      icon: AppIcons.deleteLayer,
                       tooltip: protected
                           ? context.l10n.protectedBasePhotoTooltip
                           : context.l10n.deleteAction,

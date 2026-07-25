@@ -6,6 +6,7 @@ import '../../engine/modules/image/image_layer.dart';
 import '../../engine/modules/image/image_source_provider.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../engine/modules/text/text_layer.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Renders a small, type-aware preview of an [EditorLayer] for use in
 /// the Layers panel. Unlike the on-canvas widgets (which build the
@@ -53,7 +54,7 @@ class LayerThumbnail extends StatelessWidget {
     } else if (layer is TextLayer) {
       child = _TextThumb(layer: layer, size: size);
     } else {
-      child = const Icon(Icons.layers_outlined, size: 18);
+      child = const Icon(AppIcons.layersPanel, size: 18);
     }
 
     return SizedBox(
@@ -88,7 +89,7 @@ class _ImageThumb extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = _provider();
     if (provider == null) {
-      return const _Fallback(icon: Icons.image_outlined);
+      return const _Fallback(icon: AppIcons.imagePlaceholder);
     }
     // Cap decode at 2× the thumbnail to keep memory tiny while
     // staying crisp on hi-DPI screens.
@@ -99,8 +100,7 @@ class _ImageThumb extends StatelessWidget {
       width: size,
       height: size,
       gaplessPlayback: true,
-      errorBuilder: (_, _, _) =>
-          const _Fallback(icon: Icons.broken_image_outlined),
+      errorBuilder: (_, _, _) => const _Fallback(icon: AppIcons.imageBroken),
     );
 
     final crop = layer.cropRect;
@@ -129,7 +129,7 @@ class _ImageThumb extends StatelessWidget {
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
                   errorBuilder: (_, _, _) =>
-                      const _Fallback(icon: Icons.broken_image_outlined),
+                      const _Fallback(icon: AppIcons.imageBroken),
                 ),
               ),
             ],
@@ -256,7 +256,7 @@ class _TextThumb extends StatelessWidget {
   Widget build(BuildContext context) {
     final raw = layer.content.trim();
     if (raw.isEmpty) {
-      return const _Fallback(icon: Icons.text_fields);
+      return const _Fallback(icon: AppIcons.textLayer);
     }
 
     if (layer.isSticker) {

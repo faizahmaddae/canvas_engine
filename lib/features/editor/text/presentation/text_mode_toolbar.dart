@@ -30,6 +30,7 @@ import '../application/text_tool_controller.dart';
 import '../domain/font_catalog.dart';
 import 'text_bodies.dart';
 import '../../presentation/widgets/layer_overflow_sheet.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Bottom dock for text mode — Canva-style.
 ///
@@ -68,12 +69,12 @@ class TextModeToolbar extends ConsumerWidget {
   static final List<_ToolSpec> _tools = <_ToolSpec>[
     _ToolSpec(
       id: 'font',
-      icon: Icons.text_fields_rounded,
+      icon: AppIcons.textTool,
       bodyBuilder: TextBodies.fontBody,
     ),
     _ToolSpec(
       id: 'size',
-      icon: Icons.format_size_rounded,
+      icon: AppIcons.fontSize,
       // No short dock variant: the strip tile reads simply "Size".
       // The numeric value lives inside the sheet body where it can
       // be read precisely without crowding the dock with bucket
@@ -83,7 +84,7 @@ class TextModeToolbar extends ConsumerWidget {
     ),
     _ToolSpec(
       id: 'color',
-      icon: Icons.palette_rounded,
+      icon: AppIcons.colorTool,
       bodyBuilder: TextBodies.colorBody,
     ),
     _ToolSpec(
@@ -91,15 +92,15 @@ class TextModeToolbar extends ConsumerWidget {
       // both are typeface-level, look-defining choices and users
       // who reach for one often want the other in the same flow.
       id: 'styles',
-      icon: Icons.auto_awesome_rounded,
+      icon: AppIcons.stylePresets,
       bodyBuilder: TextBodies.stylesBody,
     ),
     _ToolSpec(
       id: 'layout',
-      icon: Icons.format_align_center_rounded,
+      icon: AppIcons.textAlignCenter,
       bodyBuilder: TextBodies.layoutBody,
     ),
-    _ToolSpec(id: 'more', icon: Icons.more_horiz_rounded),
+    _ToolSpec(id: 'more', icon: AppIcons.moreActions),
     // 'background' / 'border' / 'shadow' / 'behavior' specs removed
     // in the bar consolidation. A stale persisted
     // TextSession.openSheet with one of those ids resolves to no

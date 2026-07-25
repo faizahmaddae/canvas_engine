@@ -25,6 +25,7 @@ import '../../engine/core/editor_layer.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/modules/image/image_layer.dart';
 import 'image_replace_flow.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Screen-space badges for every unfilled photo slot in [layers].
 ///
@@ -126,11 +127,7 @@ class _PhotoSlotBadge extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.add_photo_alternate_outlined,
-                  size: 16,
-                  color: tokens.onBrand,
-                ),
+                Icon(AppIcons.photoTool, size: 16, color: tokens.onBrand),
                 const SizedBox(width: 6),
                 Text(
                   label,

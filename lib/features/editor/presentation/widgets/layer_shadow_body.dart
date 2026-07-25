@@ -17,6 +17,7 @@ import '../../ui/precision_disclosure.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
 import 'section_label.dart';
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Adapter closing the gap between [LayerShadowBody]'s shared UI and
 /// each layer type's own command/shell wiring.
@@ -201,7 +202,7 @@ class _LayerShadowBodyState<L extends EditorLayer>
             const SizedBox(height: 2),
             PrecisionDisclosure(
               compact: true,
-              icon: Icons.tune_rounded,
+              icon: AppIcons.precisionAdjust,
               titleClosed: context.l10n.adjustPrecisely,
               subtitle: context.l10n.blurDirectionOpacitySubtitle,
               // The icon-header family used a constant accent
@@ -274,7 +275,7 @@ class _ShadowPreset {
   static const none = _ShadowPreset(
     id: 'none',
     label: 'None',
-    icon: Icons.block_outlined,
+    icon: AppIcons.noneOption,
     blur: 0,
     offset: Offset.zero,
     opacity: 0,
@@ -282,7 +283,7 @@ class _ShadowPreset {
   static const soft = _ShadowPreset(
     id: 'soft',
     label: 'Soft',
-    icon: Icons.blur_on_outlined,
+    icon: AppIcons.shadowPresetSoft,
     blur: 18,
     offset: Offset(0, 8),
     opacity: 0.35,
@@ -290,7 +291,7 @@ class _ShadowPreset {
   static const hard = _ShadowPreset(
     id: 'hard',
     label: 'Hard',
-    icon: Icons.square_outlined,
+    icon: AppIcons.shadowPresetHard,
     blur: 2,
     offset: Offset(4, 4),
     opacity: 0.6,
@@ -298,7 +299,7 @@ class _ShadowPreset {
   static const glow = _ShadowPreset(
     id: 'glow',
     label: 'Glow',
-    icon: Icons.wb_sunny_outlined,
+    icon: AppIcons.exposure,
     blur: 24,
     offset: Offset.zero,
     opacity: 0.55,
@@ -306,7 +307,7 @@ class _ShadowPreset {
   static const lift = _ShadowPreset(
     id: 'lift',
     label: 'Lift',
-    icon: Icons.unfold_more_rounded,
+    icon: AppIcons.distributeVertical,
     blur: 30,
     offset: Offset(0, 16),
     opacity: 0.25,

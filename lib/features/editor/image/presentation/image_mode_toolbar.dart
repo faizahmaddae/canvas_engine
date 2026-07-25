@@ -13,6 +13,7 @@ import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
 import '../application/image_tool_controller.dart';
 import 'image_replace_flow.dart';
+import '../../../../app/theme/app_icons.dart';
 
 // Panel-vs-non-panel classification lives on [ImageToolSlot]. The
 // strip renders [kImageStripOrder] verbatim — the same list the
@@ -65,7 +66,7 @@ class ImageModeToolbar extends ConsumerWidget {
       return switch (entry.actionId) {
         'opacity' => ToolbarSlot(
           id: 'opacity',
-          icon: Icons.opacity,
+          icon: AppIcons.opacity,
           label: l10n.opacityLabel,
           onTap: () {
             imageCtrl.closePanel();
@@ -74,7 +75,7 @@ class ImageModeToolbar extends ConsumerWidget {
         ),
         'more' => ToolbarSlot(
           id: 'more',
-          icon: Icons.more_horiz_rounded,
+          icon: AppIcons.moreActions,
           label: l10n.moreActionsSemantics,
           onTap: () {
             imageCtrl.closePanel();
@@ -96,7 +97,7 @@ class ImageModeToolbar extends ConsumerWidget {
     return switch (slot) {
       ImageToolSlot.look => ToolbarSlot(
         id: ImageToolSlot.look.name,
-        icon: Icons.auto_awesome_outlined,
+        icon: AppIcons.lookTool,
         label: l10n.lookTool,
         onTap: () {
           contextCtrl.closePanel();
@@ -105,7 +106,7 @@ class ImageModeToolbar extends ConsumerWidget {
       ),
       ImageToolSlot.border => ToolbarSlot(
         id: ImageToolSlot.border.name,
-        icon: Icons.border_outer_rounded,
+        icon: AppIcons.borderTool,
         label: l10n.borderTool,
         onTap: () {
           contextCtrl.closePanel();
@@ -114,7 +115,7 @@ class ImageModeToolbar extends ConsumerWidget {
       ),
       ImageToolSlot.shadow => ToolbarSlot(
         id: ImageToolSlot.shadow.name,
-        icon: Icons.layers_outlined,
+        icon: AppIcons.shadowTool,
         label: l10n.shadowTool,
         onTap: () {
           contextCtrl.closePanel();
@@ -123,7 +124,7 @@ class ImageModeToolbar extends ConsumerWidget {
       ),
       ImageToolSlot.replace => ToolbarSlot(
         id: ImageToolSlot.replace.name,
-        icon: Icons.swap_horiz_rounded,
+        icon: AppIcons.replace,
         label: imageReplacementActionLabel(context, layer),
         onTap: () {
           contextCtrl.closePanel();
@@ -137,7 +138,7 @@ class ImageModeToolbar extends ConsumerWidget {
       ),
       ImageToolSlot.crop => ToolbarSlot(
         id: ImageToolSlot.crop.name,
-        icon: Icons.crop_rotate_rounded,
+        icon: AppIcons.cropTool,
         label: l10n.cropImageAction,
         tier: SlotTier.tier2,
         // Crop is a full-screen mode — it does NOT toggle the
@@ -161,7 +162,7 @@ class ImageModeToolbar extends ConsumerWidget {
       ),
       ImageToolSlot.shape => ToolbarSlot(
         id: ImageToolSlot.shape.name,
-        icon: Icons.crop_square_rounded,
+        icon: AppIcons.squareShape,
         label: l10n.shapeTool,
         tier: SlotTier.tier2,
         onTap: () {
@@ -177,7 +178,7 @@ class ImageModeToolbar extends ConsumerWidget {
       // control, so the tile disables until the stack has an effect.
       ImageToolSlot.selective => ToolbarSlot(
         id: ImageToolSlot.selective.name,
-        icon: Icons.center_focus_strong_rounded,
+        icon: AppIcons.selectiveMask,
         label: l10n.selectiveMaskLabel,
         tier: SlotTier.tier2,
         enabledBuilder: () => layer.effects.effects.isNotEmpty,
@@ -194,7 +195,7 @@ class ImageModeToolbar extends ConsumerWidget {
       ),
       ImageToolSlot.effects => ToolbarSlot(
         id: ImageToolSlot.effects.name,
-        icon: Icons.layers_rounded,
+        icon: AppIcons.effects,
         label: l10n.effectsTool,
         tier: SlotTier.tier2,
         onTap: () {

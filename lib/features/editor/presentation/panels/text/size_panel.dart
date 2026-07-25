@@ -20,6 +20,7 @@ import '../../../text/application/text_tool_controller.dart';
 import '../../../ui/editor_slider_row.dart';
 import '../../widgets/controls/panel_chip.dart';
 import '../../../../../core/utils/editor_value_format.dart';
+import '../../../../../app/theme/app_icons.dart';
 
 /// Broad safety clamp for direct font-size mutation (nudge + exact
 /// keypad entry). Intentionally far wider than the named-preset
@@ -165,13 +166,13 @@ class SizeBody extends ConsumerWidget {
               ),
             ),
             _NudgeButton(
-              icon: Icons.remove_rounded,
+              icon: AppIcons.decrement,
               semanticLabel: context.l10n.sizeDecreaseAction,
               onTap: () => _bump(ctrl, style.fontSize, -1),
             ),
             const SizedBox(width: 4),
             _NudgeButton(
-              icon: Icons.add_rounded,
+              icon: AppIcons.add,
               semanticLabel: context.l10n.sizeIncreaseAction,
               onTap: () => _bump(ctrl, style.fontSize, 1),
             ),

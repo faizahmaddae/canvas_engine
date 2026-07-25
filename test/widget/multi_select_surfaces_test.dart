@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// Multi-select surfaces (tb3 5/7): the interactive exit chip and the
 /// membership-toggling layers drawer — plus the app-bar zoom-readout
@@ -125,9 +126,9 @@ void main() {
       await pumpPanel(tester, c);
 
       // Checked state mirrors membership, not just the primary.
-      expect(checkIconOf(tester, 'a'), Icons.check_circle_rounded);
-      expect(checkIconOf(tester, 'b'), Icons.check_circle_rounded);
-      expect(checkIconOf(tester, 'c'), Icons.radio_button_unchecked);
+      expect(checkIconOf(tester, 'a'), AppIcons.selectedCheck);
+      expect(checkIconOf(tester, 'b'), AppIcons.selectedCheck);
+      expect(checkIconOf(tester, 'c'), AppIcons.selectionUnchecked);
 
       // Tap 'c' → ADDED to the group (audit: drawer-can't-extend-multi).
       await tapRow(tester, 'c');
@@ -135,7 +136,7 @@ void main() {
         c.read(selectionControllerProvider).selectedIds,
         unorderedEquals(['a', 'b', 'c']),
       );
-      expect(checkIconOf(tester, 'c'), Icons.check_circle_rounded);
+      expect(checkIconOf(tester, 'c'), AppIcons.selectedCheck);
       expect(c.read(selectionModeProvider), SelectionMode.multi);
 
       // Tap 'c' again → removed.
@@ -144,7 +145,7 @@ void main() {
         c.read(selectionControllerProvider).selectedIds,
         unorderedEquals(['a', 'b']),
       );
-      expect(checkIconOf(tester, 'c'), Icons.radio_button_unchecked);
+      expect(checkIconOf(tester, 'c'), AppIcons.selectionUnchecked);
     });
 
     testWidgets('dropping below 2 members exits multi mode', (tester) async {
@@ -179,7 +180,7 @@ void main() {
         unorderedEquals(['a', 'b']),
         reason: 'a locked layer must not join a group transform',
       );
-      expect(checkIconOf(tester, 'lock'), Icons.radio_button_unchecked);
+      expect(checkIconOf(tester, 'lock'), AppIcons.selectionUnchecked);
     });
 
     testWidgets('single-mode drawer behaviour is unchanged: row tap '

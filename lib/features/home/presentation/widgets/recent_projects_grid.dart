@@ -13,6 +13,7 @@ import '../../application/project_delete_service.dart';
 import '../../application/project_store.dart';
 import '../../domain/project.dart';
 import 'project_thumb.dart' show ProjectPreview;
+import '../../../../app/theme/app_icons.dart';
 
 const _uuid = Uuid();
 
@@ -322,7 +323,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                         visualDensity: VisualDensity.compact,
                         tooltip: l10n.moreTooltip,
                         color: tokens.textSecondary,
-                        icon: const Icon(Icons.more_horiz_rounded),
+                        icon: const Icon(AppIcons.moreActions),
                         onPressed: () => _showActionsSheet(context),
                       ),
                     ],
@@ -350,23 +351,23 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.open_in_new_rounded),
+              leading: const Icon(AppIcons.openProject),
               title: Text(l10n.openAction),
               onTap: () => Navigator.pop(ctx, _CardAction.open),
             ),
             ListTile(
-              leading: const Icon(Icons.drive_file_rename_outline_rounded),
+              leading: const Icon(AppIcons.rename),
               title: Text(l10n.renameAction),
               onTap: () => Navigator.pop(ctx, _CardAction.rename),
             ),
             ListTile(
-              leading: const Icon(Icons.content_copy_rounded),
+              leading: const Icon(AppIcons.duplicate),
               title: Text(l10n.duplicateAction),
               onTap: () => Navigator.pop(ctx, _CardAction.duplicate),
             ),
             ListTile(
               leading: Icon(
-                Icons.delete_outline_rounded,
+                AppIcons.delete,
                 color: Theme.of(ctx).colorScheme.error,
               ),
               title: Text(
@@ -498,7 +499,7 @@ class _LastOpenedBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.history_rounded, size: 12, color: tokens.saffronOnText),
+          Icon(AppIcons.history, size: 12, color: tokens.saffronOnText),
           const SizedBox(width: 4),
           Text(
             context.l10n.lastOpenedLabel,
@@ -644,11 +645,7 @@ class _CompactEmpty extends StatelessWidget {
               color: tokens.brandSoft,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              Icons.collections_outlined,
-              size: 22,
-              color: tokens.accent,
-            ),
+            child: Icon(AppIcons.emptyProjects, size: 22, color: tokens.accent),
           ),
           const SizedBox(width: 12),
           Expanded(

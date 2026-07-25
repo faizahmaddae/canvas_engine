@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_tokens.dart';
+import '../theme/app_icons.dart';
 
 /// App identity mark (design doc §4) — a placeholder glyph for now,
 /// replace the icon when a real logo mark exists.
@@ -26,11 +27,7 @@ class BrandMark extends StatelessWidget {
         color: tokens.onBrand.withValues(alpha: 0.18),
         shape: BoxShape.circle,
       ),
-      child: Icon(
-        Icons.auto_awesome_mosaic_rounded,
-        color: tokens.onBrand,
-        size: size * 0.55,
-      ),
+      child: Icon(AppIcons.brandMark, color: tokens.onBrand, size: size * 0.55),
     );
   }
 }

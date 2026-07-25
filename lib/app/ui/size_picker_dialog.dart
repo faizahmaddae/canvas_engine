@@ -6,6 +6,7 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../app/ui/app_primary_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
+import '../theme/app_icons.dart';
 
 /// Picked canvas size returned by [SizePickerDialog].
 class CanvasSize {
@@ -48,32 +49,37 @@ enum _PresetGroupKind { square, portrait, landscape, story, print }
 
 const List<_PresetGroup> _presetGroups = [
   _PresetGroup(_PresetGroupKind.square, [
-    _Preset(_PresetKind.instagramPost, 1080, 1080, Icons.camera_alt_outlined),
-    _Preset(_PresetKind.square, 1024, 1024, Icons.crop_square_rounded),
+    _Preset(
+      _PresetKind.instagramPost,
+      1080,
+      1080,
+      AppIcons.sizePresetInstagramPost,
+    ),
+    _Preset(_PresetKind.square, 1024, 1024, AppIcons.squareShape),
   ]),
   _PresetGroup(_PresetGroupKind.portrait, [
-    _Preset(_PresetKind.portrait45, 1080, 1350, Icons.crop_portrait_rounded),
+    _Preset(_PresetKind.portrait45, 1080, 1350, AppIcons.aspectPortrait),
   ]),
   _PresetGroup(_PresetGroupKind.landscape, [
-    _Preset(
-      _PresetKind.youtubeThumbnail,
-      1280,
-      720,
-      Icons.smart_display_outlined,
-    ),
-    _Preset(_PresetKind.linkedInPost, 1200, 628, Icons.work_outline_rounded),
-    _Preset(_PresetKind.hd1080p, 1920, 1080, Icons.hd_outlined),
+    _Preset(_PresetKind.youtubeThumbnail, 1280, 720, AppIcons.videoPreset),
+    _Preset(_PresetKind.linkedInPost, 1200, 628, AppIcons.presetLinkedIn),
+    _Preset(_PresetKind.hd1080p, 1920, 1080, AppIcons.presetHd1080p),
   ]),
   _PresetGroup(_PresetGroupKind.story, [
-    _Preset(_PresetKind.story, 1080, 1920, Icons.smartphone_outlined),
+    _Preset(_PresetKind.story, 1080, 1920, AppIcons.storyPreset),
   ]),
   // Print sizes came from the editor's own New-document dialog, which
   // tb4 5/14 retired. They land here rather than dying with it — 300
   // dpi A4 is a real thing people make, and Custom is a poor
   // substitute for a labelled preset when the numbers are 2480×3508.
   _PresetGroup(_PresetGroupKind.print, [
-    _Preset(_PresetKind.a4Portrait300, 2480, 3508, Icons.description_outlined),
-    _Preset(_PresetKind.a4Landscape300, 3508, 2480, Icons.article_outlined),
+    _Preset(_PresetKind.a4Portrait300, 2480, 3508, AppIcons.presetA4Portrait),
+    _Preset(
+      _PresetKind.a4Landscape300,
+      3508,
+      2480,
+      AppIcons.sizePresetA4Landscape,
+    ),
   ]),
 ];
 
@@ -298,7 +304,7 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
                           Padding(
                             padding: const EdgeInsets.only(top: 14),
                             child: Icon(
-                              Icons.close_rounded,
+                              AppIcons.close,
                               size: 16,
                               color: tokens.textMuted,
                             ),
@@ -364,7 +370,7 @@ class _PresetTile extends StatelessWidget {
     // under RTL by hand mirrored it a *second* time and the drill-in
     // affordance ended up pointing back out of the row — a `>` sitting
     // on the row's left edge, aimed at the screen edge.
-    const forwardChevron = Icons.chevron_right_rounded;
+    const forwardChevron = AppIcons.drillIn;
     return Material(
       color: tokens.surface,
       borderRadius: BorderRadius.circular(14),

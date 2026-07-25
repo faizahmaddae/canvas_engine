@@ -8,6 +8,7 @@ import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
 import '../../presentation/widgets/layer_overflow_sheet.dart';
 import '../application/sticker_tool_controller.dart';
+import '../../../../app/theme/app_icons.dart';
 
 // Barrel re-exports so callers (e.g. EditorScreen) can keep
 // importing `sticker_mode_toolbar.dart` and pick up every sticker
@@ -66,7 +67,7 @@ class StickerModeToolbar extends ConsumerWidget {
       return switch (entry.actionId) {
         'more' => ToolbarSlot(
           id: 'more',
-          icon: Icons.more_horiz_rounded,
+          icon: AppIcons.moreActions,
           label: l10n.moreActionsSemantics,
           onTap: () {
             // Same shape as every other mode's More: close this
@@ -91,19 +92,19 @@ class StickerModeToolbar extends ConsumerWidget {
     return switch (slot) {
       StickerToolSlot.style => ToolbarSlot(
         id: StickerToolSlot.style.name,
-        icon: Icons.auto_awesome_outlined,
+        icon: AppIcons.lookTool,
         label: l10n.styleTool,
         onTap: () => ctrl.toggleSlot(StickerToolSlot.style),
       ),
       StickerToolSlot.size => ToolbarSlot(
         id: StickerToolSlot.size.name,
-        icon: Icons.photo_size_select_large_rounded,
+        icon: AppIcons.sizeTool,
         label: l10n.sizeTool,
         onTap: () => ctrl.toggleSlot(StickerToolSlot.size),
       ),
       StickerToolSlot.replace => ToolbarSlot(
         id: StickerToolSlot.replace.name,
-        icon: Icons.swap_horiz_rounded,
+        icon: AppIcons.replace,
         label: l10n.replaceTool,
         onTap: () => ctrl.toggleSlot(StickerToolSlot.replace),
       ),

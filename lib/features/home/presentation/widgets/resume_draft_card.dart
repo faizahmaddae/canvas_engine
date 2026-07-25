@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// The "you have an unsaved design" offer, shown at the top of Home
 /// when the recovery journal still holds a draft.
@@ -63,7 +64,7 @@ class ResumeDraftCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppRadii.button),
                   ),
                   child: Icon(
-                    Icons.restore_rounded,
+                    AppIcons.resumeDraft,
                     size: 18,
                     color: tokens.accentDeep,
                   ),

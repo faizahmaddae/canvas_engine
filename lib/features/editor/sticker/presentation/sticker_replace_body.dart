@@ -9,6 +9,7 @@ import '../../engine/commands/text_commands.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../presentation/sticker_picker_sheet.dart';
 import 'sticker_panel_shell.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Body for the Sticker "Replace" tab. Big preview of the current
 /// glyph + a single centered CTA that re-opens the emoji picker
@@ -24,7 +25,7 @@ class StickerReplaceBody extends ConsumerWidget {
     final tokens = AppTokens.of(context);
     return StickerPanelShell(
       title: context.l10n.replaceTool,
-      icon: Icons.swap_horiz_rounded,
+      icon: AppIcons.replace,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -47,7 +48,7 @@ class StickerReplaceBody extends ConsumerWidget {
           Center(
             child: FilledButton.icon(
               onPressed: () => _replace(context, ref),
-              icon: const Icon(Icons.swap_horiz_rounded),
+              icon: const Icon(AppIcons.replace),
               label: Text(context.l10n.chooseAnotherStickerAction),
               style: FilledButton.styleFrom(
                 backgroundColor: tokens.brand,

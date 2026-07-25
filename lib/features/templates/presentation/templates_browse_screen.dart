@@ -11,6 +11,7 @@ import '../../../l10n/l10n.dart';
 import '../application/template_repository_provider.dart';
 import '../domain/template.dart';
 import 'template_presentation_order.dart';
+import '../../../app/theme/app_icons.dart';
 
 /// The Templates tab — the full catalog browser (navigation doc):
 /// search + category chips + language chips + a LAZY 2-column
@@ -207,11 +208,7 @@ class _SearchField extends StatelessWidget {
           color: tokens.textMuted,
           height: 1.4,
         ),
-        prefixIcon: Icon(
-          Icons.search_rounded,
-          size: 20,
-          color: tokens.textMuted,
-        ),
+        prefixIcon: Icon(AppIcons.search, size: 20, color: tokens.textMuted),
         isDense: true,
         filled: true,
         fillColor: tokens.surface,
@@ -386,7 +383,7 @@ class _EmptyTemplatesState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_off_rounded, size: 32, color: tokens.textMuted),
+            Icon(AppIcons.noResults, size: 32, color: tokens.textMuted),
             const SizedBox(height: AppSpacing.md),
             Text(
               l10n.noTemplatesFoundTitle,

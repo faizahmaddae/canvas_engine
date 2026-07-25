@@ -18,6 +18,7 @@ import '../../ui/canvas_preset_scale.dart';
 import '../../ui/fill_mode_section.dart';
 import 'shape_panel_shell.dart';
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Expanded panel body for the Shape sub-tool's "Style" tab.
 ///
@@ -115,7 +116,7 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
 
     return ShapePanelShell(
       title: context.l10n.styleTool,
-      icon: Icons.palette_outlined,
+      icon: AppIcons.styleTool,
       headerValue: EditorValueFormat.of(
         context,
       ).percent((layer.fillOpacity * 100).round()),

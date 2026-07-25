@@ -6,6 +6,7 @@ import 'package:canvas_engine/features/home/presentation/widgets/quick_action_ca
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// Home redesign commit 1 (docs/home-screen-redesign-2026-07.md):
 /// the v2 chrome — wordmark header with the saffron diamond and a
@@ -32,7 +33,7 @@ void main() {
 
       expect(find.byType(SaffronDiamond), findsOneWidget);
       expect(find.text('Canvas'), findsOneWidget); // homeBrandTitle (en)
-      expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.settings), findsOneWidget);
       // Greeting headline + subtitle present.
       expect(find.byType(Text), findsAtLeastNWidgets(3));
       expect(tester.takeException(), isNull);
@@ -59,7 +60,7 @@ void main() {
         host(
           QuickActionCard(
             label: 'New design',
-            icon: Icons.add_rounded,
+            icon: AppIcons.add,
             filled: true,
             onTap: () => tapped = true,
           ),
@@ -73,7 +74,7 @@ void main() {
 
       final label = tester.widget<Text>(find.text('New design'));
       expect(label.style?.color, AppTokens.light.onBrand);
-      final icon = tester.widget<Icon>(find.byIcon(Icons.add_rounded));
+      final icon = tester.widget<Icon>(find.byIcon(AppIcons.add));
       expect(icon.color, AppTokens.light.accent);
 
       await tester.tap(find.byType(QuickActionCard));
@@ -87,7 +88,7 @@ void main() {
         host(
           QuickActionCard(
             label: 'Edit a photo',
-            icon: Icons.photo_outlined,
+            icon: AppIcons.editPhoto,
             onTap: () {},
           ),
         ),
@@ -109,7 +110,7 @@ void main() {
         host(
           QuickActionCard(
             label: 'New design',
-            icon: Icons.add_rounded,
+            icon: AppIcons.add,
             filled: true,
             onTap: () {},
           ),

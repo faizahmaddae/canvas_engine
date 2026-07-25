@@ -20,6 +20,7 @@ import 'bodies/paint_tool_body.dart';
 import 'paint_mode_toolbar.dart';
 import 'paint_tool_specs.dart';
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// In-dock sheet panel for paint mode. Routes [PaintSession.openSlot]
 /// → its body and renders it inside the dock's `expanded` slot with
@@ -53,7 +54,7 @@ class PaintModeInlineExpansion extends ConsumerWidget {
           headerTitle: isPicker
               ? context.l10n.chooseToolTitle
               : paintSpecLabel(context.l10n, spec),
-          headerIcon: isPicker ? Icons.brush_rounded : spec.icon,
+          headerIcon: isPicker ? AppIcons.drawTool : spec.icon,
           builder: (ctx, _) => _buildPaintBody(ctx, openId, view),
         );
 
@@ -119,7 +120,7 @@ Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
     <String, SubTool>{
       'blur': SliderSubTool(
         headerTitle: context.l10n.blurLabel,
-        headerIcon: Icons.blur_on_rounded,
+        headerIcon: AppIcons.blur,
         min: 0,
         max: 64,
         // Preset-first: 3 human choices users actually pick. Slider
@@ -141,7 +142,7 @@ Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
       // slider is a faster surface for the same setter the picker calls.
       'opacity': SliderSubTool(
         headerTitle: context.l10n.strokeOpacityLabel,
-        headerIcon: Icons.opacity_rounded,
+        headerIcon: AppIcons.opacity,
         min: 0,
         max: 100,
         // Three plain-language steps cover ≥95% of intents.

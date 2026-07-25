@@ -6,6 +6,7 @@
 import 'package:canvas_engine/features/editor/presentation/widgets/editor_modal_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 void main() {
   Future<BuildContext> pumpHostApp(WidgetTester tester) async {
@@ -112,12 +113,12 @@ void main() {
     showEditorSheet<void>(
       ctx,
       title: 'Sheet title',
-      titleIcon: Icons.tune_rounded,
+      titleIcon: AppIcons.precisionAdjust,
       builder: (_) => const SizedBox(height: 60),
     );
     await tester.pumpAndSettle();
     expect(find.text('Sheet title'), findsOneWidget);
-    expect(find.byIcon(Icons.tune_rounded), findsOneWidget);
+    expect(find.byIcon(AppIcons.precisionAdjust), findsOneWidget);
   });
 
   testWidgets('keyboardAware lifts the card above the view insets', (

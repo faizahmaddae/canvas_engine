@@ -13,6 +13,7 @@ import 'package:canvas_engine/features/editor/presentation/widgets/layers_panel.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 ImageLayer _img(String id, {bool locked = false}) => ImageLayer(
   id: id,
@@ -72,7 +73,7 @@ void main() {
           child: const MaterialApp(home: Scaffold(body: LayersPanel())),
         ),
       );
-      final delete = find.widgetWithIcon(IconButton, Icons.delete_outline);
+      final delete = find.widgetWithIcon(IconButton, AppIcons.deleteLayer);
       expect(delete, findsOneWidget);
       expect(tester.widget<IconButton>(delete).onPressed, isNull);
     });
@@ -94,7 +95,7 @@ void main() {
           child: const MaterialApp(home: Scaffold(body: LayersPanel())),
         ),
       );
-      final delete = find.widgetWithIcon(IconButton, Icons.delete_outline);
+      final delete = find.widgetWithIcon(IconButton, AppIcons.deleteLayer);
       expect(delete, findsOneWidget);
       expect(tester.widget<IconButton>(delete).onPressed, isNotNull);
     });
@@ -113,7 +114,7 @@ void main() {
       );
       final buttons = tester
           .widgetList<IconButton>(
-            find.widgetWithIcon(IconButton, Icons.delete_outline),
+            find.widgetWithIcon(IconButton, AppIcons.deleteLayer),
           )
           .toList();
       expect(buttons, hasLength(2));

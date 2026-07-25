@@ -16,6 +16,7 @@ import '../../text/presentation/text_edit_flow.dart';
 import '../../text/presentation/text_resize_mode_picker.dart';
 import 'controls/toggle_segment.dart';
 import 'layer_actions.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// THE layer overflow sheet — the single «⋯ / بیشتر» destination for
 /// every layer type and for multi-selection (tb2 7/16; replaces the
@@ -149,7 +150,7 @@ class _LayerOverflowSheet extends StatelessWidget {
       // 1 — Edit text
       if (textLayer != null)
         ListTile(
-          leading: const Icon(Icons.edit_rounded),
+          leading: const Icon(AppIcons.editText),
           title: Text(l10n.editTextAction),
           onTap: () => _popThen(context, () {
             showEditTextLayerFlow(hostContext, parentRef, textLayer);
@@ -157,9 +158,9 @@ class _LayerOverflowSheet extends StatelessWidget {
         ),
       // 2 — Align (context panel link)
       ListTile(
-        leading: const Icon(Icons.align_horizontal_left_rounded),
+        leading: const Icon(AppIcons.alignLeft),
         title: Text(l10n.alignAction),
-        trailing: const Icon(Icons.chevron_right_rounded),
+        trailing: const Icon(AppIcons.drillIn),
         onTap: () => _popThen(context, () {
           parentRef
               .read(contextToolbarControllerProvider.notifier)
@@ -168,9 +169,9 @@ class _LayerOverflowSheet extends StatelessWidget {
       ),
       // 3 — Opacity (context panel link)
       ListTile(
-        leading: const Icon(Icons.opacity),
+        leading: const Icon(AppIcons.opacity),
         title: Text(l10n.opacityLabel),
-        trailing: const Icon(Icons.chevron_right_rounded),
+        trailing: const Icon(AppIcons.drillIn),
         onTap: () => _popThen(context, () {
           parentRef
               .read(contextToolbarControllerProvider.notifier)
@@ -185,7 +186,7 @@ class _LayerOverflowSheet extends StatelessWidget {
       ],
       // 5 — Rename
       ListTile(
-        leading: const Icon(Icons.drive_file_rename_outline_rounded),
+        leading: const Icon(AppIcons.rename),
         title: Text(l10n.renameAction),
         onTap: () => _popThen(context, () {
           LayerActions.rename(hostContext, parentRef, layer);
@@ -193,7 +194,7 @@ class _LayerOverflowSheet extends StatelessWidget {
       ),
       // 6 — Duplicate
       ListTile(
-        leading: const Icon(Icons.copy_all_outlined),
+        leading: const Icon(AppIcons.duplicate),
         title: Text(l10n.duplicateAction),
         onTap: () => _popThen(context, () {
           LayerActions.duplicate(parentRef, layer);
@@ -202,14 +203,14 @@ class _LayerOverflowSheet extends StatelessWidget {
       // 6b — Flip. Whole-layer and decisive rather than tunable,
       // which is why it lives here and not on a strip.
       ListTile(
-        leading: const Icon(Icons.flip_rounded),
+        leading: const Icon(AppIcons.flipHorizontal),
         title: Text(l10n.flipHorizontalAction),
         onTap: () => _popThen(context, () {
           LayerActions.flip(parentRef, layer, horizontal: true);
         }),
       ),
       ListTile(
-        leading: const Icon(Icons.flip_rounded),
+        leading: const Icon(AppIcons.flipVertical),
         title: Text(l10n.flipVerticalAction),
         onTap: () => _popThen(context, () {
           LayerActions.flip(parentRef, layer, horizontal: false);
@@ -218,7 +219,7 @@ class _LayerOverflowSheet extends StatelessWidget {
       // 7 — Reorder
       ListTile(
         enabled: canForward,
-        leading: const Icon(Icons.flip_to_front_rounded),
+        leading: const Icon(AppIcons.bringForward),
         title: Text(l10n.bringForwardAction),
         onTap: !canForward
             ? null
@@ -228,7 +229,7 @@ class _LayerOverflowSheet extends StatelessWidget {
       ),
       ListTile(
         enabled: canBackward,
-        leading: const Icon(Icons.flip_to_back_rounded),
+        leading: const Icon(AppIcons.sendBackward),
         title: Text(l10n.sendBackwardAction),
         onTap: !canBackward
             ? null
@@ -240,9 +241,7 @@ class _LayerOverflowSheet extends StatelessWidget {
       // what the tap DOES (lock_open while locked = "tap to unlock"),
       // matching the row's action-verb label.
       ListTile(
-        leading: Icon(
-          layer.locked ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-        ),
+        leading: Icon(layer.locked ? AppIcons.unlock : AppIcons.lock),
         title: Text(
           layer.locked ? l10n.unlockLayerAction : l10n.lockLayerAction,
         ),
@@ -258,7 +257,7 @@ class _LayerOverflowSheet extends StatelessWidget {
           subtitle: Text(
             localizedTextResizeModeLabel(context, textLayer.resizeMode),
           ),
-          trailing: const Icon(Icons.chevron_right_rounded),
+          trailing: const Icon(AppIcons.drillIn),
           onTap: () => _popThen(context, () async {
             final current = textLayer.resizeMode;
             final picked = await pickTextResizeMode(hostContext, current);
@@ -299,7 +298,7 @@ class _LayerOverflowSheet extends StatelessWidget {
               textLayer.textDirectionMode,
             ),
           ),
-          trailing: const Icon(Icons.chevron_right_rounded),
+          trailing: const Icon(AppIcons.drillIn),
           onTap: () => _popThen(context, () async {
             final current = textLayer.textDirectionMode;
             final picked = await pickTextDirectionMode(hostContext, current);
@@ -313,15 +312,15 @@ class _LayerOverflowSheet extends StatelessWidget {
       // 11 — Layers drawer link
       if (onOpenLayers != null)
         ListTile(
-          leading: const Icon(Icons.layers_outlined),
+          leading: const Icon(AppIcons.layersPanel),
           title: Text(l10n.layersTooltip),
-          trailing: const Icon(Icons.chevron_right_rounded),
+          trailing: const Icon(AppIcons.drillIn),
           onTap: () => _popThen(context, onOpenLayers!),
         ),
       // 12 — Delete (danger)
       const Divider(height: 1),
       ListTile(
-        leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
+        leading: Icon(AppIcons.delete, color: scheme.error),
         title: Text(l10n.deleteAction, style: TextStyle(color: scheme.error)),
         onTap: () => _deleteSingle(context),
       ),
@@ -358,14 +357,14 @@ class _LayerOverflowSheet extends StatelessWidget {
     return [
       // Count header — identifies the batch the rows below act on.
       ListTile(
-        leading: const Icon(Icons.checklist_rounded),
+        leading: const Icon(AppIcons.multiSelectCount),
         title: Text(l10n.multiSelectCount(selectedLayers.length)),
       ),
       // Align (canonical row 2)
       ListTile(
-        leading: const Icon(Icons.align_horizontal_left_rounded),
+        leading: const Icon(AppIcons.alignLeft),
         title: Text(l10n.alignAction),
-        trailing: const Icon(Icons.chevron_right_rounded),
+        trailing: const Icon(AppIcons.drillIn),
         onTap: () => _popThen(context, () {
           parentRef
               .read(contextToolbarControllerProvider.notifier)
@@ -375,7 +374,7 @@ class _LayerOverflowSheet extends StatelessWidget {
       // Batch duplicate (canonical row 6) — one composite, clones
       // become the new multi selection.
       ListTile(
-        leading: const Icon(Icons.copy_all_outlined),
+        leading: const Icon(AppIcons.duplicate),
         title: Text(l10n.duplicateAction),
         onTap: () {
           final label = l10n.duplicateAction;
@@ -386,7 +385,7 @@ class _LayerOverflowSheet extends StatelessWidget {
       ),
       // Batch flip — each layer about its OWN centre, one composite.
       ListTile(
-        leading: const Icon(Icons.flip_rounded),
+        leading: const Icon(AppIcons.flipHorizontal),
         title: Text(l10n.flipHorizontalAction),
         onTap: () {
           final label = l10n.flipHorizontalAction;
@@ -401,7 +400,7 @@ class _LayerOverflowSheet extends StatelessWidget {
         },
       ),
       ListTile(
-        leading: const Icon(Icons.flip_rounded),
+        leading: const Icon(AppIcons.flipVertical),
         title: Text(l10n.flipVerticalAction),
         onTap: () {
           final label = l10n.flipVerticalAction;
@@ -418,9 +417,7 @@ class _LayerOverflowSheet extends StatelessWidget {
       // Batch lock/unlock (canonical row 8, ACTION icon) — one
       // composite; unlocks only when EVERY member is locked.
       ListTile(
-        leading: Icon(
-          allLocked ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-        ),
+        leading: Icon(allLocked ? AppIcons.unlock : AppIcons.lock),
         title: Text(allLocked ? l10n.unlockLayerAction : l10n.lockLayerAction),
         onTap: () {
           final label = allLocked
@@ -439,9 +436,9 @@ class _LayerOverflowSheet extends StatelessWidget {
       // Layers drawer link (canonical row 11)
       if (onOpenLayers != null)
         ListTile(
-          leading: const Icon(Icons.layers_outlined),
+          leading: const Icon(AppIcons.layersPanel),
           title: Text(l10n.layersTooltip),
-          trailing: const Icon(Icons.chevron_right_rounded),
+          trailing: const Icon(AppIcons.drillIn),
           onTap: () => _popThen(context, onOpenLayers!),
         ),
       // Batch delete (canonical row 12) — one composite, one undo
@@ -449,7 +446,7 @@ class _LayerOverflowSheet extends StatelessWidget {
       // (see LayerActions.deleteMany), so no confirm is required.
       const Divider(height: 1),
       ListTile(
-        leading: Icon(Icons.delete_outline_rounded, color: scheme.error),
+        leading: Icon(AppIcons.delete, color: scheme.error),
         title: Text(l10n.deleteAction, style: TextStyle(color: scheme.error)),
         onTap: () {
           final label = l10n.deleteAction;
@@ -490,9 +487,7 @@ class _ResizeModeToggleRowState extends State<_ResizeModeToggleRow> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return ListTile(
-      leading: Icon(
-        _isScale ? Icons.aspect_ratio_rounded : Icons.crop_free_rounded,
-      ),
+      leading: Icon(_isScale ? AppIcons.canvasSize : AppIcons.freeRegion),
       title: Text(l10n.resizeBehaviorTitle),
       subtitle: Text(_isScale ? l10n.scaleLabel : l10n.freeLabel),
       onTap: () {
@@ -542,7 +537,7 @@ class _InlineStyleToggleRowState extends State<_InlineStyleToggleRow> {
               label: l10n.boldAction,
               button: true,
               child: ToggleSegment(
-                icon: Icons.format_bold_rounded,
+                icon: AppIcons.bold,
                 selected: _bold,
                 onTap: () {
                   setState(() => _bold = !_bold);
@@ -554,7 +549,7 @@ class _InlineStyleToggleRowState extends State<_InlineStyleToggleRow> {
               label: l10n.italicAction,
               button: true,
               child: ToggleSegment(
-                icon: Icons.format_italic_rounded,
+                icon: AppIcons.textItalic,
                 selected: _italic,
                 onTap: () {
                   setState(() => _italic = !_italic);
@@ -566,7 +561,7 @@ class _InlineStyleToggleRowState extends State<_InlineStyleToggleRow> {
               label: l10n.underlineAction,
               button: true,
               child: ToggleSegment(
-                icon: Icons.format_underline_rounded,
+                icon: AppIcons.textUnderline,
                 selected: _underline,
                 onTap: () {
                   setState(() => _underline = !_underline);

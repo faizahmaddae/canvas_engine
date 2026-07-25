@@ -4,6 +4,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../presentation/widgets/editor_breakpoints.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Reusable "Done" pill chrome.
 ///
@@ -20,7 +21,7 @@ class ModeDoneButton extends StatelessWidget {
     super.key,
     required this.onPressed,
     this.label,
-    this.icon = Icons.check_rounded,
+    this.icon = AppIcons.confirm,
   });
 
   final VoidCallback onPressed;

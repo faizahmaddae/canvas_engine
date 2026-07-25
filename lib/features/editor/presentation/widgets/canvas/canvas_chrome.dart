@@ -25,6 +25,7 @@ import '../quick_capsule.dart';
 import '../selection_overlay.dart';
 import '../transform_hud.dart';
 import 'canvas_gesture_router.dart';
+import '../../../../../app/theme/app_icons.dart';
 
 /// Builds the **screen-space chrome** slice of the editor canvas' outer
 /// Stack: the select-and-move claim surface, the single/group selection
@@ -733,7 +734,7 @@ class _MultiSelectModeChip extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.check_circle_outline,
+                      AppIcons.multiSelectCount,
                       size: 14,
                       color: tokens.onBrand,
                     ),
@@ -747,7 +748,7 @@ class _MultiSelectModeChip extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(Icons.close_rounded, size: 14, color: tokens.onBrand),
+                    Icon(AppIcons.close, size: 14, color: tokens.onBrand),
                   ],
                 ),
               ),
@@ -785,7 +786,7 @@ class _ProtectedBaseBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.lock_outline, size: 12, color: tokens.onBrand),
+          Icon(AppIcons.layerLocked, size: 12, color: tokens.onBrand),
           const SizedBox(width: 4),
           Text(
             context.l10n.basePhotoLabel,

@@ -16,6 +16,7 @@ import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// Records which exit the preview actually fired.
 class _RecordingExportService extends ImageExportService {
@@ -113,7 +114,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(_primary),
-          matching: find.byIcon(Icons.ios_share_outlined),
+          matching: find.byIcon(AppIcons.share),
         ),
         findsOneWidget,
         reason: 'the primary carries the intent icon, not a generic one',
@@ -142,7 +143,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(_primary),
-          matching: find.byIcon(Icons.download_rounded),
+          matching: find.byIcon(AppIcons.exportSave),
         ),
         findsOneWidget,
       );

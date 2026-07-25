@@ -5,13 +5,14 @@ import 'package:canvas_engine/features/editor/toolbar/presentation/sub_tool_shee
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 class _StubSubTool extends SubTool {
   const _StubSubTool();
   @override
   String get headerTitle => 'Color';
   @override
-  IconData get headerIcon => Icons.palette_rounded;
+  IconData get headerIcon => AppIcons.colorTool;
   @override
   bool get supportsSiblingSwipe => true;
   @override
@@ -45,13 +46,13 @@ void main() {
       // unified shell rather than reach into DockSheetChrome.
       expect(find.byType(EditorToolPanelShell), findsOneWidget);
       expect(find.text('Color'), findsOneWidget);
-      expect(find.byIcon(Icons.palette_rounded), findsOneWidget);
+      expect(find.byIcon(AppIcons.colorTool), findsOneWidget);
       expect(find.text('sub-body'), findsOneWidget);
       // No "Done" — close action is the honest neutral ✕.
       expect(find.text('Done'), findsNothing);
-      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.byIcon(AppIcons.close), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(find.byIcon(AppIcons.close));
       await tester.pumpAndSettle();
       expect(closed, 1);
     });
@@ -76,7 +77,7 @@ void main() {
           ),
         );
 
-        expect(find.byIcon(Icons.close_rounded), findsNothing);
+        expect(find.byIcon(AppIcons.close), findsNothing);
         expect(find.text('Done'), findsNothing);
       },
     );

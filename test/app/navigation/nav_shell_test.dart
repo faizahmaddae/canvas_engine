@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/temp_projects_dir.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// Navigation doc commit 1: the root NavShell hosts Home + the two
 /// existing browser screens behind a v2 BottomTabBar.
@@ -82,12 +83,10 @@ void main() {
   ) async {
     await pump(tester);
 
-    final activeIcon = tester.widget<Icon>(find.byIcon(Icons.home_rounded));
+    final activeIcon = tester.widget<Icon>(find.byIcon(AppIcons.homeTab));
     expect(activeIcon.color, AppTokens.light.accent);
 
-    final inactiveIcon = tester.widget<Icon>(
-      find.byIcon(Icons.folder_outlined),
-    );
+    final inactiveIcon = tester.widget<Icon>(find.byIcon(AppIcons.projectsTab));
     expect(inactiveIcon.color, AppTokens.light.textMuted);
   });
 
@@ -108,7 +107,7 @@ void main() {
     final decoration = bar.decoration as BoxDecoration;
     expect(decoration.color, AppTokens.dark.pageBg);
 
-    final activeIcon = tester.widget<Icon>(find.byIcon(Icons.home_rounded));
+    final activeIcon = tester.widget<Icon>(find.byIcon(AppIcons.homeTab));
     expect(activeIcon.color, AppTokens.dark.accent);
   });
 }

@@ -15,6 +15,7 @@ import '../../../../ui/precision_disclosure.dart';
 import '../../../widgets/controls/precision_divider.dart';
 import '../../../widgets/controls/slider_row.dart';
 import '../../../../../../core/utils/editor_value_format.dart';
+import '../../../../../../app/theme/app_icons.dart';
 
 /// "Adjust precisely" disclosure for the Shadow panel. Mirrors the
 /// Background/Border treatment — single chevron, whole-row tappable,
@@ -88,10 +89,10 @@ void applyShadowPreset(
 }
 
 const List<IconData> shadowPresetIcons = [
-  Icons.cloud_outlined, // Soft
-  Icons.crop_din_rounded, // Hard
-  Icons.flare_rounded, // Glow
-  Icons.vertical_align_top_rounded, // Lift
+  AppIcons.shadowPresetSoft, // Soft
+  AppIcons.shadowPresetHard, // Hard
+  AppIcons.shadowPresetGlow, // Glow
+  AppIcons.shadowPresetLift, // Lift
 ];
 
 /// Macro preset for the Shadow sub-tool. Writes blur + opacity in

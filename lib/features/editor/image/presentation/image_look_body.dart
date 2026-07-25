@@ -17,6 +17,7 @@ import '../../engine/modules/image/image_source_provider.dart';
 import '../../ui/editor_slider_row.dart';
 import '../../ui/precision_disclosure.dart';
 import 'image_panel_shell.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// The Image dock's «Look» panel — the one surface that owns how a
 /// photo is graded (tb4 1/14).
@@ -123,7 +124,7 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
 
     return ImagePanelShell(
       title: context.l10n.lookTool,
-      icon: Icons.auto_awesome_outlined,
+      icon: AppIcons.lookTool,
       // The active preset IS the panel's value — the prototype's
       // header chip read the current state of whatever the panel owns.
       headerValue: _filterLabel(context, layer.filterPreset),
@@ -157,7 +158,7 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
           const SizedBox(height: 6),
           PrecisionDisclosure(
             compact: true,
-            icon: Icons.tune_rounded,
+            icon: AppIcons.precisionAdjust,
             titleClosed: context.l10n.adjustPrecisely,
             subtitle: context.l10n.adjustPreciselySubtitle,
             chevronColorClosed: tokens.accent,
@@ -237,7 +238,7 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
           // "one of the knobs", not as a separate tool.
           PrecisionDisclosure(
             compact: true,
-            icon: Icons.vignette_outlined,
+            icon: AppIcons.vignette,
             titleClosed: context.l10n.vignetteLabel,
             subtitle: context.l10n.vignetteSubtitle,
             chevronColorClosed: tokens.accent,
@@ -512,7 +513,7 @@ class _SelectedBadge extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: tokens.surface, width: 1.5),
       ),
-      child: Icon(Icons.check_rounded, size: 10, color: tokens.onBrand),
+      child: Icon(AppIcons.confirm, size: 10, color: tokens.onBrand),
     );
   }
 }

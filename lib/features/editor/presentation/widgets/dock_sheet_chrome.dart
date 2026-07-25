@@ -4,6 +4,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../core/utils/haptics.dart';
 import 'editor_breakpoints.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Default fraction of screen height a panel may consume before
 /// its body starts scrolling. Single source of truth — every
@@ -326,14 +327,14 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
                         // on their own.
                         if (widget.onPrev != null || widget.onNext != null) ...[
                           _NavChip(
-                            icon: Icons.chevron_left_rounded,
+                            icon: AppIcons.navPrevious,
                             semanticLabel: MaterialLocalizations.of(
                               context,
                             ).previousPageTooltip,
                             onTap: widget.onPrev,
                           ),
                           _NavChip(
-                            icon: Icons.chevron_right_rounded,
+                            icon: AppIcons.drillIn,
                             semanticLabel: MaterialLocalizations.of(
                               context,
                             ).nextPageTooltip,
@@ -448,7 +449,7 @@ class _UndoChip extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.undo_rounded, size: 14, color: tokens.textSecondary),
+                Icon(AppIcons.undo, size: 14, color: tokens.textSecondary),
                 const SizedBox(width: 4),
                 Text(
                   context.l10n.undoTooltip,
@@ -486,7 +487,7 @@ class _CloseChipVisual extends StatelessWidget {
         color: tokens.surfaceMuted.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(Icons.close_rounded, size: 16, color: tokens.textSecondary),
+      child: Icon(AppIcons.close, size: 16, color: tokens.textSecondary),
     );
   }
 }

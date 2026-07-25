@@ -8,6 +8,7 @@ import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
 import 'editor_modal_sheet.dart';
 import 'history_labels.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Opens the read-only history browser — the shipped counterpart of
 /// the approved prototype's top-bar history popover.
@@ -22,7 +23,7 @@ Future<void> showHistoryBrowser(BuildContext context, WidgetRef ref) {
   return showEditorSheet<void>(
     context,
     title: context.l10n.historyTitle,
-    titleIcon: Icons.history_rounded,
+    titleIcon: AppIcons.history,
     // Whisper, not full: the browser reflects the canvas, so keeping
     // the canvas dimly visible behind it reinforces "this is a view
     // of what you see", and it never mutates the document.
@@ -206,7 +207,11 @@ class _HistoryRow extends StatelessWidget {
               ),
             ),
             if (isCurrent)
-              Icon(Icons.adjust_rounded, size: 16, color: tokens.accentDeep),
+              Icon(
+                AppIcons.historyCurrentStep,
+                size: 16,
+                color: tokens.accentDeep,
+              ),
           ],
         ),
       ),

@@ -7,6 +7,7 @@ import '../../editor/application/export_quality.dart';
 import '../../onboarding/application/onboarding_complete_provider.dart';
 import '../../templates/domain/template.dart';
 import '../application/settings_controller.dart';
+import '../../../app/theme/app_icons.dart';
 
 /// User-facing preferences screen.
 ///
@@ -30,25 +31,25 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           _SectionHeader(l10n.appearanceSection),
           _NavTile(
-            icon: Icons.brightness_auto_rounded,
+            icon: AppIcons.themeMode,
             title: l10n.themeTitle,
             subtitle: _themeModeLabel(l10n, settings.themeMode),
             onTap: () => _openThemePicker(context, ref, settings),
           ),
           _NavTile(
-            icon: Icons.translate_rounded,
+            icon: AppIcons.appLanguage,
             title: l10n.languageTitle,
             subtitle: _localePreferenceLabel(l10n, settings.localePreference),
             onTap: () => _openLanguagePicker(context, ref, settings),
           ),
           _NavTile(
-            icon: Icons.language_rounded,
+            icon: AppIcons.contentLanguages,
             title: l10n.settingsContentLanguagesTitle,
             subtitle: _contentLanguagesLabel(l10n, settings.contentLanguages),
             onTap: () => _openContentLanguagesPicker(context, ref, settings),
           ),
           _NavTile(
-            icon: Icons.dashboard_customize_outlined,
+            icon: AppIcons.enabledCategories,
             title: l10n.settingsEnabledCategoriesTitle,
             subtitle: _enabledCategoriesLabel(l10n, settings.enabledCategories),
             onTap: () => _openEnabledCategoriesPicker(context, ref, settings),
@@ -56,21 +57,21 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           _SectionHeader(l10n.canvasInteractionSection),
           _SwitchTile(
-            icon: Icons.pan_tool_alt_outlined,
+            icon: AppIcons.canvasPan,
             title: l10n.enableCanvasPanTitle,
             subtitle: l10n.enableCanvasPanSubtitle,
             value: settings.canvasPanEnabled,
             onChanged: controller.setCanvasPanEnabled,
           ),
           _SwitchTile(
-            icon: Icons.zoom_in_rounded,
+            icon: AppIcons.zoom,
             title: l10n.enableCanvasZoomTitle,
             subtitle: l10n.enableCanvasZoomSubtitle,
             value: settings.canvasZoomEnabled,
             onChanged: controller.setCanvasZoomEnabled,
           ),
           _SwitchTile(
-            icon: Icons.screen_rotation_alt_outlined,
+            icon: AppIcons.canvasRotation,
             title: l10n.enableCanvasRotationTitle,
             subtitle: l10n.enableCanvasRotationSubtitle,
             value: settings.canvasRotationEnabled,
@@ -79,7 +80,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           _SectionHeader(l10n.exportSection),
           _NavTile(
-            icon: Icons.high_quality_outlined,
+            icon: AppIcons.exportQuality,
             title: l10n.defaultExportQualityTitle,
             subtitle:
                 '${_exportQualityLabel(l10n, settings.defaultExportQuality)} '
@@ -89,28 +90,28 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           _SectionHeader(l10n.editorSection),
           _SwitchTile(
-            icon: Icons.straighten_rounded,
+            icon: AppIcons.snapToGuides,
             title: l10n.snapToGuidesTitle,
             subtitle: l10n.snapToGuidesSubtitle,
             value: settings.snapToGuides,
             onChanged: controller.setSnapToGuides,
           ),
           _SwitchTile(
-            icon: Icons.space_bar_rounded,
+            icon: AppIcons.distributeHorizontal,
             title: l10n.showSpacingGuidesTitle,
             subtitle: l10n.showSpacingGuidesSubtitle,
             value: settings.showSpacingGuides,
             onChanged: controller.setShowSpacingGuides,
           ),
           _SwitchTile(
-            icon: Icons.touch_app_outlined,
+            icon: AppIcons.touchGesture,
             title: l10n.multiFingerUndoRedoTitle,
             subtitle: l10n.multiFingerUndoRedoSubtitle,
             value: settings.multiFingerUndoRedoEnabled,
             onChanged: controller.setMultiFingerUndoRedoEnabled,
           ),
           _SwitchTile(
-            icon: Icons.front_hand_outlined,
+            icon: AppIcons.rightHandedToolbar,
             title: l10n.rightHandedToolbarTitle,
             subtitle: l10n.rightHandedToolbarSubtitle,
             value: settings.rightHandedToolbar,
@@ -260,11 +261,11 @@ String _categoryLabel(AppLocalizations l10n, TemplateCategory category) =>
     };
 
 IconData _categoryIcon(TemplateCategory category) => switch (category) {
-  TemplateCategory.instagramStory => Icons.phone_iphone_rounded,
-  TemplateCategory.youtubeThumbnail => Icons.play_circle_outline_rounded,
-  TemplateCategory.poetryPost => Icons.format_quote_rounded,
-  TemplateCategory.promotionalPoster => Icons.campaign_rounded,
-  _ => Icons.auto_awesome_rounded,
+  TemplateCategory.instagramStory => AppIcons.categoryInstagramStory,
+  TemplateCategory.youtubeThumbnail => AppIcons.categoryYoutubeThumbnail,
+  TemplateCategory.poetryPost => AppIcons.categoryPoetryPost,
+  TemplateCategory.promotionalPoster => AppIcons.categoryPoster,
+  _ => AppIcons.stylePresets,
 };
 
 String _exportQualityLabel(AppLocalizations l10n, ExportQuality quality) =>
@@ -546,7 +547,7 @@ class _NavTile extends StatelessWidget {
       leading: Icon(icon),
       title: Text(title),
       subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right_rounded),
+      trailing: const Icon(AppIcons.drillIn),
       onTap: onTap,
     );
   }

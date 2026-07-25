@@ -8,6 +8,7 @@ import '../../../../../../app/theme/app_tokens.dart';
 import '../../../../../../core/utils/haptics.dart';
 import '../../../../../../l10n/l10n.dart';
 import '../../../../text/domain/font_catalog.dart';
+import '../../../../../../app/theme/app_icons.dart';
 
 /// Sample preview text used inside a [_FontCard]. Picks a string
 /// that flatters the family's personality:
@@ -226,7 +227,7 @@ class _AllFontsCard extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: Icon(
-                    Icons.grid_view_rounded,
+                    AppIcons.gridView,
                     size: 22,
                     color: tokens.accent,
                   ),

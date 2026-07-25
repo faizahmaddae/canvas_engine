@@ -5,6 +5,7 @@ import '../../engine/commands/shape_commands.dart';
 import '../../engine/modules/shape/shape_layer.dart';
 import '../../presentation/widgets/layer_border_body.dart';
 import 'shape_panel_shell.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Expanded panel body for the Shape sub-tool's "Border" tab.
 ///
@@ -51,7 +52,7 @@ class ShapeBorderBody extends StatelessWidget {
             : (l.strokeColor ?? const Color(0xFF000000)),
         shell: ({required child}) => ShapePanelShell(
           title: context.l10n.borderTool,
-          icon: Icons.border_outer_rounded,
+          icon: AppIcons.borderTool,
           child: child,
         ),
       ),

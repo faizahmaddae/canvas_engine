@@ -15,6 +15,7 @@ import '../../../text/application/text_tool_controller.dart';
 import '../../../ui/editor_slider_row.dart';
 import '../../widgets/controls/slider_row.dart';
 import '../../widgets/controls/toggle_segment.dart';
+import '../../../../../app/theme/app_icons.dart';
 
 class LayoutPanel extends ConsumerWidget {
   const LayoutPanel({super.key, required this.layer});
@@ -108,17 +109,17 @@ class _AlignmentSegmentedControl extends StatelessWidget {
     return ToggleSegmentGroup(
       children: [
         ToggleSegment(
-          icon: Icons.format_align_left_rounded,
+          icon: AppIcons.textAlignLeft,
           selected: isLeft,
           onTap: onLeft,
         ),
         ToggleSegment(
-          icon: Icons.format_align_center_rounded,
+          icon: AppIcons.textAlignCenter,
           selected: isCenter,
           onTap: onCenter,
         ),
         ToggleSegment(
-          icon: Icons.format_align_right_rounded,
+          icon: AppIcons.textAlignRight,
           selected: isRight,
           onTap: onRight,
         ),

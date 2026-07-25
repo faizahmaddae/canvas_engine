@@ -11,6 +11,7 @@ import '../../engine/commands/image_commands.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
 import 'image_panel_shell.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Expanded panel body for the Image sub-tool's "Shape" tab.
 ///
@@ -36,7 +37,7 @@ class ImageShapeBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ImagePanelShell(
       title: context.l10n.shapeTool,
-      icon: Icons.crop_square_rounded,
+      icon: AppIcons.squareShape,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

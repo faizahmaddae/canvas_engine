@@ -5,6 +5,7 @@ import '../../engine/commands/image_commands.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../../presentation/widgets/layer_shadow_body.dart';
 import 'image_panel_shell.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Expanded panel body for the Image sub-tool's "Shadow" tab.
 ///
@@ -39,7 +40,7 @@ class ImageShadowBody extends StatelessWidget {
         ),
         shell: ({required child}) => ImagePanelShell(
           title: context.l10n.shadowTool,
-          icon: Icons.layers_outlined,
+          icon: AppIcons.shadowTool,
           child: child,
         ),
       ),

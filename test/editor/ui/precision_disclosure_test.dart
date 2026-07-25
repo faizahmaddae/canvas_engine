@@ -2,6 +2,7 @@ import 'package:canvas_engine/app/theme/app_tokens.dart';
 import 'package:canvas_engine/features/editor/ui/precision_disclosure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 Widget _host(Widget child) => MaterialApp(
   home: Scaffold(body: Center(child: child)),
@@ -15,7 +16,7 @@ void main() {
       await tester.pumpWidget(
         _host(
           PrecisionDisclosure(
-            icon: Icons.tune_rounded,
+            icon: AppIcons.precisionAdjust,
             titleClosed: 'Adjust precisely',
             subtitle: 'Blur, direction, opacity',
             children: const [Text('inner-content')],
@@ -47,7 +48,7 @@ void main() {
           ),
         ),
       );
-      expect(find.byIcon(Icons.tune_rounded), findsNothing);
+      expect(find.byIcon(AppIcons.precisionAdjust), findsNothing);
       expect(find.text('Adjust precisely'), findsOneWidget);
 
       await tester.tap(find.text('Adjust precisely'));

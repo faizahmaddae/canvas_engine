@@ -5,6 +5,7 @@ import '../../engine/commands/image_commands.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../../presentation/widgets/layer_border_body.dart';
 import 'image_panel_shell.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Expanded panel body for the Image sub-tool's "Border" tab.
 ///
@@ -42,7 +43,7 @@ class ImageBorderBody extends StatelessWidget {
         showPrecisionSlider: true,
         shell: ({required child}) => ImagePanelShell(
           title: context.l10n.borderTool,
-          icon: Icons.border_outer_rounded,
+          icon: AppIcons.borderTool,
           child: child,
         ),
       ),

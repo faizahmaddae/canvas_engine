@@ -6,6 +6,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import 'editor_modal_sheet.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// "Where should this photo come from?" — gallery or camera.
 ///
@@ -24,7 +25,7 @@ Future<picker.ImageSource?> pickImageSource(BuildContext context) {
   return showEditorSheet<picker.ImageSource>(
     context,
     title: l10n.addImageTitle,
-    titleIcon: Icons.add_photo_alternate_outlined,
+    titleIcon: AppIcons.photoTool,
     // The sheet host pads nothing for its child — each caller owns its
     // own gutters, so the cards need the page gutter here or they sit
     // flush against the card edge and the gesture bar.
@@ -40,7 +41,7 @@ Future<picker.ImageSource?> pickImageSource(BuildContext context) {
           Expanded(
             child: _SourceCard(
               key: const ValueKey('image-source-gallery'),
-              icon: Icons.photo_library_outlined,
+              icon: AppIcons.photoLibrary,
               label: l10n.galleryAction,
               onTap: () {
                 EditorHaptics.tap();
@@ -52,7 +53,7 @@ Future<picker.ImageSource?> pickImageSource(BuildContext context) {
           Expanded(
             child: _SourceCard(
               key: const ValueKey('image-source-camera'),
-              icon: Icons.photo_camera_outlined,
+              icon: AppIcons.camera,
               label: l10n.cameraAction,
               onTap: () {
                 EditorHaptics.tap();

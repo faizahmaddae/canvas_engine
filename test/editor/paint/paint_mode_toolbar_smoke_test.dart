@@ -25,6 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -94,10 +95,10 @@ void main() {
     // in registry order. The tool tile shows the ACTIVE tool's icon
     // (freestyle = gesture); fill/blur/polygon/dash are hidden.
     expect(stripTileIcons(tester), [
-      Icons.gesture_rounded,
-      Icons.palette_rounded,
-      Icons.line_weight_rounded,
-      Icons.opacity_rounded,
+      AppIcons.freehandTool,
+      AppIcons.colorTool,
+      AppIcons.strokeWeight,
+      AppIcons.opacity,
     ]);
 
     // The sibling-swipe id list is filtered by the same matrix.
@@ -116,7 +117,7 @@ void main() {
     expect(container.read(paintToolControllerProvider).openSlot, isNull);
     expect(find.byType(ColorPickerBody), findsNothing);
 
-    await tester.tap(stripTile(Icons.palette_rounded));
+    await tester.tap(stripTile(AppIcons.colorTool));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
@@ -124,7 +125,7 @@ void main() {
     expect(find.byType(ColorPickerBody), findsOneWidget);
 
     // Toggle idiom: re-tapping the active tile dismisses the sheet.
-    await tester.tap(stripTile(Icons.palette_rounded));
+    await tester.tap(stripTile(AppIcons.colorTool));
     await tester.pump();
     expect(container.read(paintToolControllerProvider).openSlot, isNull);
 
@@ -138,7 +139,7 @@ void main() {
   ) async {
     final container = await pumpPaintMode(tester);
 
-    await tester.tap(stripTile(Icons.line_weight_rounded));
+    await tester.tap(stripTile(AppIcons.strokeWeight));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
@@ -159,10 +160,7 @@ void main() {
     // tiles render the blur glyph today (the tool tile mirrors the
     // active tool's icon, the blur slot has the same icon in its
     // spec); this doubling is deliberate current behaviour.
-    expect(stripTileIcons(tester), [
-      Icons.blur_on_rounded,
-      Icons.blur_on_rounded,
-    ]);
+    expect(stripTileIcons(tester), [AppIcons.blur, AppIcons.blur]);
     expect(PaintModeToolbar.toolIdsFor(PaintToolType.blur), ['tool', 'blur']);
   });
 }

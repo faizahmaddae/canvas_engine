@@ -12,6 +12,7 @@ import '../../application/export_session.dart';
 import '../../application/image_export_service.dart';
 import '../../canvas/presentation/widgets/canvas_checkerboard.dart';
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Reason the [ExportPreviewScreen] popped, surfaced to the caller.
 enum ExportPreviewAction { save, share, cancel }
@@ -198,7 +199,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
         ).appBarTheme.titleTextStyle?.copyWith(color: Colors.white),
         title: Text(context.l10n.previewExportTitle),
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: const Icon(AppIcons.close),
           tooltip: context.l10n.cancelAction,
           onPressed: _busy ? null : _onCancel,
         ),
@@ -299,18 +300,15 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                     mainAxisSize: MainAxisSize.min,
                     spacing: 8,
                     children: [
+                      _InfoChip(icon: AppIcons.canvasSize, text: _sizeLabel),
                       _InfoChip(
-                        icon: Icons.aspect_ratio_rounded,
-                        text: _sizeLabel,
-                      ),
-                      _InfoChip(
-                        icon: Icons.image_outlined,
+                        icon: AppIcons.imagePlaceholder,
                         text: widget.format.label,
                       ),
                       if (widget.format == ExportFormat.jpg &&
                           widget.jpgQuality != null)
                         _InfoChip(
-                          icon: Icons.tune_rounded,
+                          icon: AppIcons.precisionAdjust,
                           // The arb string owns the percent sign (`%` /
                           // `٪`), so only the digits are formatted here —
                           // `percent()` would double the glyph.
@@ -320,10 +318,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                             ).digits((widget.jpgQuality! * 100).round()),
                           ),
                         ),
-                      _InfoChip(
-                        icon: Icons.sd_storage_outlined,
-                        text: _byteSizeLabel,
-                      ),
+                      _InfoChip(icon: AppIcons.fileSize, text: _byteSizeLabel),
                     ],
                   ),
                 ),
@@ -341,7 +336,7 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                     child: OutlinedButton.icon(
                       key: const ValueKey('export-preview-cancel'),
                       onPressed: _busy ? null : _onCancel,
-                      icon: const Icon(Icons.close_rounded),
+                      icon: const Icon(AppIcons.close),
                       label: Text(context.l10n.cancelAction),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
@@ -416,8 +411,8 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
       };
 
   IconData _iconFor(ExportIntent intent) => switch (intent) {
-    ExportIntent.save => Icons.download_rounded,
-    ExportIntent.share => Icons.ios_share_outlined,
+    ExportIntent.save => AppIcons.exportSave,
+    ExportIntent.share => AppIcons.share,
   };
 
   VoidCallback _actionFor(ExportIntent intent) => switch (intent) {

@@ -29,6 +29,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 ShapeLayer _shape(String id) => ShapeLayer(
   id: id,
@@ -164,7 +165,7 @@ void main() {
       of: find.byType(EditorScreen),
       matching: find.byType(Scrollable),
     );
-    final lookTile = find.byIcon(Icons.auto_awesome_outlined);
+    final lookTile = find.byIcon(AppIcons.lookTool);
     await tester.scrollUntilVisible(lookTile, 80, scrollable: strip.first);
     await tester.tap(lookTile);
     await settle(tester);
@@ -230,7 +231,7 @@ void main() {
         of: find.byType(EditorScreen),
         matching: find.byType(Scrollable),
       );
-      final lookTile = find.byIcon(Icons.auto_awesome_outlined);
+      final lookTile = find.byIcon(AppIcons.lookTool);
       await tester.scrollUntilVisible(lookTile, 80, scrollable: strip.first);
       await tester.tap(lookTile);
       await settle(tester);

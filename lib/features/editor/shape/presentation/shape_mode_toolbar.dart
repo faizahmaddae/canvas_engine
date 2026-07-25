@@ -9,6 +9,7 @@ import '../../toolbar/application/dock_tool_controller.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
 import '../application/shape_tool_controller.dart';
+import '../../../../app/theme/app_icons.dart';
 
 // Panel-vs-non-panel classification lives on [ShapeToolSlot]. The
 // strip renders [kShapeStripOrder] verbatim — the same list the
@@ -71,7 +72,7 @@ class ShapeModeToolbar extends ConsumerWidget {
       return switch (entry.actionId) {
         'opacity' => ToolbarSlot(
           id: 'opacity',
-          icon: Icons.opacity,
+          icon: AppIcons.opacity,
           label: l10n.opacityLabel,
           onTap: () {
             ctrl.closePanel();
@@ -80,7 +81,7 @@ class ShapeModeToolbar extends ConsumerWidget {
         ),
         'more' => ToolbarSlot(
           id: 'more',
-          icon: Icons.more_horiz_rounded,
+          icon: AppIcons.moreActions,
           label: l10n.moreActionsSemantics,
           onTap: () {
             ctrl.closePanel();
@@ -102,7 +103,7 @@ class ShapeModeToolbar extends ConsumerWidget {
     return switch (slot) {
       ShapeToolSlot.style => ToolbarSlot(
         id: ShapeToolSlot.style.name,
-        icon: Icons.palette_rounded,
+        icon: AppIcons.colorTool,
         label: l10n.colorLabel,
         onTap: () {
           contextCtrl.closePanel();
@@ -111,7 +112,7 @@ class ShapeModeToolbar extends ConsumerWidget {
       ),
       ShapeToolSlot.border => ToolbarSlot(
         id: ShapeToolSlot.border.name,
-        icon: Icons.border_outer_rounded,
+        icon: AppIcons.borderTool,
         label: l10n.borderTool,
         onTap: () {
           contextCtrl.closePanel();
@@ -120,7 +121,7 @@ class ShapeModeToolbar extends ConsumerWidget {
       ),
       ShapeToolSlot.shadow => ToolbarSlot(
         id: ShapeToolSlot.shadow.name,
-        icon: Icons.blur_on_rounded,
+        icon: AppIcons.shadowTool,
         label: l10n.shadowTool,
         onTap: () {
           contextCtrl.closePanel();
@@ -132,7 +133,7 @@ class ShapeModeToolbar extends ConsumerWidget {
       // preserves access without crowding the core styling tabs.
       ShapeToolSlot.replace => ToolbarSlot(
         id: ShapeToolSlot.replace.name,
-        icon: Icons.swap_horiz_rounded,
+        icon: AppIcons.replace,
         label: l10n.replaceTool,
         tier: SlotTier.tier2,
         onTap: () {

@@ -15,6 +15,7 @@ import '../../application/image_import_service.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/image_commands.dart';
 import '../../engine/modules/image/image_layer.dart';
+import '../../../../app/theme/app_icons.dart';
 
 bool imageSourceIsKnownUnavailable(ImageSource source) {
   final path = source.filePath;
@@ -100,8 +101,8 @@ Future<picker.ImageSource?> _pickImageSource(
           ListTile(
             leading: Icon(
               imageSourceIsKnownUnavailable(layer.source)
-                  ? Icons.link_rounded
-                  : Icons.swap_horiz_rounded,
+                  ? AppIcons.imageSourceUnavailable
+                  : AppIcons.replace,
             ),
             title: Text(title),
             subtitle: imageSourceIsKnownUnavailable(layer.source)
@@ -110,7 +111,7 @@ Future<picker.ImageSource?> _pickImageSource(
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.photo_library_outlined),
+            leading: const Icon(AppIcons.photoLibrary),
             title: Text(l10n.galleryAction),
             onTap: () {
               EditorHaptics.tap();
@@ -118,7 +119,7 @@ Future<picker.ImageSource?> _pickImageSource(
             },
           ),
           ListTile(
-            leading: const Icon(Icons.photo_camera_outlined),
+            leading: const Icon(AppIcons.camera),
             title: Text(l10n.cameraAction),
             onTap: () {
               EditorHaptics.tap();

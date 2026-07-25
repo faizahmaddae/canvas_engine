@@ -19,6 +19,7 @@ import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 void main() {
   // A real one-layer document, encoded by the codec itself rather
@@ -125,7 +126,7 @@ void main() {
   ) async {
     await pump(tester, project(documentJson: 'not json at all'));
     expect(tester.takeException(), isNull);
-    expect(find.byIcon(Icons.image_outlined), findsOneWidget);
+    expect(find.byIcon(AppIcons.imagePlaceholder), findsOneWidget);
   });
 
   testWidgets('the rail thumb renders the same preview as the grid', (

@@ -5,6 +5,7 @@ import 'package:canvas_engine/features/editor/presentation/widgets/editor_tool_p
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 void main() {
   group('EditorToolPanelShell', () {
@@ -19,7 +20,7 @@ void main() {
                 alignment: Alignment.bottomCenter,
                 child: EditorToolPanelShell(
                   title: 'Border',
-                  icon: Icons.border_outer_rounded,
+                  icon: AppIcons.borderTool,
                   onClose: () => closed += 1,
                   child: const Text('body'),
                 ),
@@ -29,14 +30,14 @@ void main() {
         );
 
         expect(find.text('Border'), findsOneWidget);
-        expect(find.byIcon(Icons.border_outer_rounded), findsOneWidget);
+        expect(find.byIcon(AppIcons.borderTool), findsOneWidget);
         expect(find.text('body'), findsOneWidget);
         // Header chip is the neutral ✕ icon — the honest close
         // affordance for panels that don't commit on exit.
         expect(find.text('Done'), findsNothing);
-        expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+        expect(find.byIcon(AppIcons.close), findsOneWidget);
 
-        await tester.tap(find.byIcon(Icons.close_rounded));
+        await tester.tap(find.byIcon(AppIcons.close));
         await tester.pumpAndSettle();
         expect(closed, 1);
       },
@@ -52,7 +53,7 @@ void main() {
               alignment: Alignment.bottomCenter,
               child: EditorToolPanelShell(
                 title: 'Font',
-                icon: Icons.text_fields_rounded,
+                icon: AppIcons.textTool,
                 onClose: () {},
                 showCloseAction: false,
                 child: const Text('body'),
@@ -62,7 +63,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(find.byIcon(AppIcons.close), findsNothing);
       expect(find.text('Done'), findsNothing);
     });
 
@@ -77,7 +78,7 @@ void main() {
               alignment: Alignment.bottomCenter,
               child: EditorToolPanelShell(
                 title: 'Filter',
-                icon: Icons.tune_rounded,
+                icon: AppIcons.precisionAdjust,
                 onClose: () => closed += 1,
                 onConfirm: () => confirmed += 1,
                 confirmLabel: 'Apply',
@@ -90,7 +91,7 @@ void main() {
 
       // Confirm pill replaces the ✕ when both are set.
       expect(find.text('Apply'), findsOneWidget);
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(find.byIcon(AppIcons.close), findsNothing);
 
       await tester.tap(find.text('Apply'));
       await tester.pumpAndSettle();
@@ -107,7 +108,7 @@ void main() {
               alignment: Alignment.bottomCenter,
               child: EditorToolPanelShell(
                 title: 'Color',
-                icon: Icons.palette_rounded,
+                icon: AppIcons.colorTool,
                 onClose: () {},
                 onUndo: () => undid += 1,
                 child: const Text('body'),
@@ -117,7 +118,7 @@ void main() {
         ),
       );
 
-      final undo = find.byIcon(Icons.undo_rounded);
+      final undo = find.byIcon(AppIcons.undo);
       expect(undo, findsOneWidget);
       await tester.tap(undo);
       await tester.pumpAndSettle();
@@ -199,7 +200,7 @@ void main() {
                 alignment: Alignment.bottomCenter,
                 child: EditorToolPanelShell(
                   title: 'Pad',
-                  icon: Icons.straighten_rounded,
+                  icon: AppIcons.snapToGuides,
                   onClose: () {},
                   bodyPadding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                   child: SizedBox(key: tag, width: double.infinity, height: 12),
@@ -236,7 +237,7 @@ void main() {
                     alignment: Alignment.bottomCenter,
                     child: ImagePanelShell(
                       title: 'Shape',
-                      icon: Icons.crop_square_rounded,
+                      icon: AppIcons.squareShape,
                       child: const Text('image-body'),
                     ),
                   ),
@@ -258,7 +259,7 @@ void main() {
       expect(find.text('Shape'), findsOneWidget);
       expect(find.text('image-body'), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(find.byIcon(AppIcons.close));
       await tester.pumpAndSettle();
 
       expect(container.read(imageToolControllerProvider).openSlot, isNull);
@@ -301,7 +302,7 @@ void main() {
                 alignment: Alignment.bottomCenter,
                 child: EditorToolPanelShell(
                   title: 'Style',
-                  icon: Icons.palette_outlined,
+                  icon: AppIcons.styleTool,
                   onClose: () {},
                   onPrev: () => prev += 1,
                   onNext: () => next += 1,

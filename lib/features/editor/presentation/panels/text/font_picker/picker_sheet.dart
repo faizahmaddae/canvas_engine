@@ -20,6 +20,7 @@ import '../../../../../../l10n/l10n.dart';
 import '../../../../text/domain/font_catalog.dart';
 import '../../../widgets/editor_modal_sheet.dart';
 import 'tabs.dart';
+import '../../../../../../app/theme/app_icons.dart';
 
 /// Debounce for the highlight→canvas preview. Each highlight costs
 /// one full re-layout of the real layer (contract §8 keeps the
@@ -182,11 +183,7 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Row(
             children: [
-              Icon(
-                Icons.font_download_outlined,
-                size: 18,
-                color: tokens.accent,
-              ),
+              Icon(AppIcons.fontFamily, size: 18, color: tokens.accent),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -202,7 +199,7 @@ class _FontPickerSheetState extends State<_FontPickerSheet> {
                 child: Padding(
                   padding: const EdgeInsets.all(4),
                   child: Icon(
-                    Icons.close_rounded,
+                    AppIcons.close,
                     size: 18,
                     color: tokens.textSecondary,
                   ),
@@ -378,7 +375,7 @@ class _FontPickerList extends StatelessWidget {
                     ),
                   ),
                   if (selected)
-                    Icon(Icons.check_rounded, size: 18, color: tokens.accent),
+                    Icon(AppIcons.confirm, size: 18, color: tokens.accent),
                 ],
               ),
             ),

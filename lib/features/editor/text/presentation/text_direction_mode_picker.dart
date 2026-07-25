@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../engine/modules/text/text_layer.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Shared picker UI for a text layer's base paragraph direction.
 ///
@@ -50,7 +51,7 @@ Future<TextDirectionMode?> pickTextDirectionMode(
                       ),
                     ),
                   ),
-                  if (selected) Icon(Icons.check_rounded, color: tokens.accent),
+                  if (selected) Icon(AppIcons.confirm, color: tokens.accent),
                 ],
               ),
             ),
@@ -67,19 +68,19 @@ Future<TextDirectionMode?> pickTextDirectionMode(
             tile(
               TextDirectionMode.auto,
               ctx.l10n.textDirectionAutoTitle,
-              Icons.swap_horiz_rounded,
+              AppIcons.replace,
             ),
             const SizedBox(height: 4),
             tile(
               TextDirectionMode.rtl,
               ctx.l10n.textDirectionRtlTitle,
-              Icons.format_textdirection_r_to_l_rounded,
+              AppIcons.textDirectionRtl,
             ),
             const SizedBox(height: 4),
             tile(
               TextDirectionMode.ltr,
               ctx.l10n.textDirectionLtrTitle,
-              Icons.format_textdirection_l_to_r_rounded,
+              AppIcons.textDirectionLtr,
             ),
           ],
         ),
@@ -111,10 +112,10 @@ String localizedTextDirectionModeLabel(
 IconData textDirectionModeIcon(TextDirectionMode mode) {
   switch (mode) {
     case TextDirectionMode.auto:
-      return Icons.swap_horiz_rounded;
+      return AppIcons.replace;
     case TextDirectionMode.rtl:
-      return Icons.format_textdirection_r_to_l_rounded;
+      return AppIcons.textDirectionRtl;
     case TextDirectionMode.ltr:
-      return Icons.format_textdirection_l_to_r_rounded;
+      return AppIcons.textDirectionLtr;
   }
 }

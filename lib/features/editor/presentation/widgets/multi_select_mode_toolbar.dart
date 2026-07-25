@@ -8,6 +8,7 @@ import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
 import 'layer_actions.dart';
 import 'layer_overflow_sheet.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Bottom contextual strip for group selections.
 ///
@@ -47,7 +48,7 @@ class MultiSelectModeToolbar extends ConsumerWidget {
     final slots = <ToolbarSlot>[
       ToolbarSlot(
         id: 'align',
-        icon: Icons.align_horizontal_left_rounded,
+        icon: AppIcons.alignLeft,
         label: l10n.alignAction,
         onTap: () => contextCtrl.toggle(ContextToolPanel.align),
       ),
@@ -57,7 +58,7 @@ class MultiSelectModeToolbar extends ConsumerWidget {
       // tile a thumb lands on when reaching for duplicate.
       ToolbarSlot(
         id: 'duplicate',
-        icon: Icons.copy_all_outlined,
+        icon: AppIcons.duplicate,
         label: l10n.duplicateAction,
         onTap: () {
           contextCtrl.closePanel();
@@ -66,7 +67,7 @@ class MultiSelectModeToolbar extends ConsumerWidget {
       ),
       ToolbarSlot(
         id: 'lock',
-        icon: allLocked ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+        icon: allLocked ? AppIcons.unlock : AppIcons.lock,
         // The SHORT verb on the tile — a dock tile has room for one
         // word before it ellipsises. The history entry keeps the long
         // form, which is what the undo list has to be explicit about.
@@ -83,7 +84,7 @@ class MultiSelectModeToolbar extends ConsumerWidget {
       ),
       ToolbarSlot(
         id: 'delete',
-        icon: Icons.delete_outline_rounded,
+        icon: AppIcons.delete,
         label: l10n.deleteAction,
         onTap: () {
           contextCtrl.closePanel();
@@ -95,13 +96,13 @@ class MultiSelectModeToolbar extends ConsumerWidget {
       ),
       ToolbarSlot(
         id: 'opacity',
-        icon: Icons.opacity,
+        icon: AppIcons.opacity,
         label: l10n.opacityLabel,
         onTap: () => contextCtrl.toggle(ContextToolPanel.opacity),
       ),
       ToolbarSlot(
         id: 'layers',
-        icon: Icons.layers_outlined,
+        icon: AppIcons.layersPanel,
         label: l10n.layersTooltip,
         enabled: onOpenLayers != null,
         onTap: () {
@@ -111,7 +112,7 @@ class MultiSelectModeToolbar extends ConsumerWidget {
       ),
       ToolbarSlot(
         id: 'more',
-        icon: Icons.more_horiz_rounded,
+        icon: AppIcons.moreActions,
         label: l10n.moreActionsSemantics,
         onTap: () {
           contextCtrl.closePanel();

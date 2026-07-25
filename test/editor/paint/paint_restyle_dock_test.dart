@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -121,7 +122,7 @@ void main() {
       // Before tb4 3/14 a safety guard stripped this tile whenever a
       // paint layer was selected, because the setter behind it only
       // moved a session default.
-      expect(find.byIcon(Icons.pentagon_outlined), findsOneWidget);
+      expect(find.byIcon(AppIcons.polygonTool), findsOneWidget);
     });
 
     testWidgets('no tool picker is auto-opened over a selection', (

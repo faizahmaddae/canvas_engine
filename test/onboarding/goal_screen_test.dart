@@ -7,6 +7,7 @@ import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// Design direction v2: GoalScreen widget test — selection toggles
 /// through the onboarding controller (saffron ring + check on the
@@ -114,7 +115,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(cardKey),
-        matching: find.byIcon(Icons.check_circle),
+        matching: find.byIcon(AppIcons.selectedCheck),
       ),
       findsNothing,
     );
@@ -131,7 +132,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(cardKey),
-        matching: find.byIcon(Icons.check_circle),
+        matching: find.byIcon(AppIcons.selectedCheck),
       ),
       findsOneWidget,
     );

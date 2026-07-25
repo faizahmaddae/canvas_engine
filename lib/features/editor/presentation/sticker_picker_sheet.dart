@@ -5,6 +5,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/l10n.dart';
 import 'widgets/editor_modal_sheet.dart';
+import '../../../app/theme/app_icons.dart';
 
 /// Bottom-sheet emoji picker used by the Sticker tool.
 ///
@@ -168,7 +169,7 @@ class _NoRecentsHint extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.emoji_emotions_outlined,
+              AppIcons.stickerTool,
               size: 36,
               color: tokens.textSecondary.withValues(alpha: 0.7),
             ),

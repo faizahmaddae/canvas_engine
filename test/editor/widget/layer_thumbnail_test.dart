@@ -5,6 +5,7 @@ import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dar
 import 'package:canvas_engine/features/editor/presentation/widgets/layer_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// Wraps a thumbnail in a minimal [MaterialApp] so [Theme.of] resolves
 /// and the box decoration can read `colorScheme`/`dividerColor`.
@@ -148,7 +149,7 @@ void main() {
         style: const TextStyleSpec(),
       );
       await tester.pumpWidget(_host(LayerThumbnail(layer: layer)));
-      expect(find.byIcon(Icons.text_fields), findsOneWidget);
+      expect(find.byIcon(AppIcons.textLayer), findsOneWidget);
     });
 
     testWidgets('emoji sticker renders glyph at large size', (tester) async {

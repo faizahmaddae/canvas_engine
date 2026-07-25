@@ -9,6 +9,7 @@ import '../../engine/commands/transform_commands.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../ui/canvas_preset_scale.dart';
 import 'sticker_panel_shell.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Body for the Sticker "Size" tab. Four square presets that resize
 /// the layer around its visual centre so the sticker appears to
@@ -41,7 +42,7 @@ class StickerSizeBody extends ConsumerWidget {
     final currentSide = layer.transform.size.shortestSide;
     return StickerPanelShell(
       title: context.l10n.sizeTool,
-      icon: Icons.photo_size_select_large_rounded,
+      icon: AppIcons.sizeTool,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

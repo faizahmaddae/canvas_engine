@@ -4,6 +4,7 @@ import '../../../app/theme/app_motion.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 import '../presentation/widgets/editor_breakpoints.dart';
+import '../../../app/theme/app_icons.dart';
 
 /// Canonical "Adjust precisely" expand/collapse disclosure.
 ///
@@ -215,11 +216,17 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
                         ),
                         const SizedBox(width: 2),
                       ],
+                      // A quarter turn CLOCKWISE only points the
+                      // caret downward while it is pointing right.
+                      // `drillIn` mirrors under RTL, so in Persian
+                      // the closed caret points LEFT and +0.25 turned
+                      // it UP — an expanded section claiming it was
+                      // collapsed. Turn the other way when mirrored.
                       AnimatedRotation(
-                        turns: _open ? 0.25 : 0,
+                        turns: _open ? disclosureOpenTurns(context) : 0,
                         duration: widget.animationDuration,
                         child: Icon(
-                          Icons.chevron_right_rounded,
+                          AppIcons.drillIn,
                           size: widget.compact ? 18 : widget.chevronSize,
                           color: chevronColor,
                         ),
@@ -247,3 +254,13 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
     );
   }
 }
+
+/// Which way a disclosure caret has to turn to end up pointing DOWN.
+///
+/// The caret glyph mirrors under RTL (it is the drill-in caret), so the
+/// closed state points right under LTR and left under RTL. A fixed
+/// +0.25 turn lands on "down" only from the right-pointing state; from
+/// the left-pointing one it lands on "up", which reads as still
+/// collapsed. Shared by every disclosure that animates its caret.
+double disclosureOpenTurns(BuildContext context) =>
+    Directionality.of(context) == TextDirection.rtl ? -0.25 : 0.25;

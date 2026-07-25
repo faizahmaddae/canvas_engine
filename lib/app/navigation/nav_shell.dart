@@ -9,6 +9,7 @@ import '../../l10n/l10n.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_tokens.dart';
 import '../ui/bottom_tab_bar.dart';
+import '../theme/app_icons.dart';
 
 /// Active tab of the root [NavShell]. A provider (not local state)
 /// so launcher rails can jump to a tab — Home's «مشاهده همه» links
@@ -66,18 +67,18 @@ class _NavShellState extends ConsumerState<NavShell> {
             ref.read(navShellIndexProvider.notifier).select(value),
         items: [
           BottomTabItem(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home_rounded,
+            icon: AppIcons.homeTab,
+            activeIcon: AppIcons.homeTab,
             label: l10n.navHomeTab,
           ),
           BottomTabItem(
-            icon: Icons.grid_view_outlined,
-            activeIcon: Icons.grid_view_rounded,
+            icon: AppIcons.templatesTab,
+            activeIcon: AppIcons.gridView,
             label: l10n.templatesTitle,
           ),
           BottomTabItem(
-            icon: Icons.folder_outlined,
-            activeIcon: Icons.folder_rounded,
+            icon: AppIcons.projectsTab,
+            activeIcon: AppIcons.projectsTab,
             label: l10n.navProjectsTab,
           ),
         ],

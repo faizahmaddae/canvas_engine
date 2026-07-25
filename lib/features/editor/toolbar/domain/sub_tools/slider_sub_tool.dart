@@ -13,7 +13,7 @@ import '../sub_tool.dart';
 /// ```dart
 /// SliderSubTool(
 ///   headerTitle: 'Size',
-///   headerIcon: Icons.line_weight_rounded,
+///   headerIcon: AppIcons.strokeWeight,
 ///   min: 1, max: 80,
 ///   presets: const [2, 4, 6, 10, 18, 30],
 ///   readValue: (ref) => ref.watch(paintToolControllerProvider).strokeWidth,

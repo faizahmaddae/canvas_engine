@@ -12,6 +12,7 @@ import '../../engine/modules/image/image_source_provider.dart';
 import '../../presentation/widgets/handle_drag_detector.dart';
 import '../../presentation/widgets/selection_overlay.dart' show DragPhase;
 import '../application/crop_controller.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Crop Mode session surface. Mounted above the editor canvas
 /// whenever [CropSession.active] is true. Owns the scrim, the source
@@ -791,7 +792,7 @@ class _CropBottomBar extends ConsumerWidget {
                     EditorHaptics.tap();
                     ctrl.resetCrop();
                   },
-                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                  icon: const Icon(AppIcons.reset, size: 16),
                   label: Text(
                     context.l10n.restoreImageAction,
                     style: const TextStyle(

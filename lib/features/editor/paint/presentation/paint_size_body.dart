@@ -7,6 +7,8 @@ import '../../../../l10n/l10n.dart';
 import '../../presentation/widgets/section_label.dart';
 import '../../toolbar/presentation/widgets/preset_chip.dart';
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../ui/precision_disclosure.dart';
 
 /// Shared Paint Size UI rendered in BOTH the inline dock panel and
 /// the floating-toolbar modal sheet. One source of truth so a
@@ -264,11 +266,17 @@ class _PaintSizePrecisionAdvancedState
                     ),
                   ),
                   const SizedBox(width: 2),
+                  // A quarter turn CLOCKWISE only points the
+                  // caret downward while it is pointing right.
+                  // `drillIn` mirrors under RTL, so in Persian
+                  // the closed caret points LEFT and +0.25 turned
+                  // it UP — an expanded section claiming it was
+                  // collapsed. Turn the other way when mirrored.
                   AnimatedRotation(
-                    turns: _open ? 0.25 : 0,
+                    turns: _open ? disclosureOpenTurns(context) : 0,
                     duration: AppMotion.reveal,
                     child: Icon(
-                      Icons.chevron_right_rounded,
+                      AppIcons.drillIn,
                       size: 18,
                       color: _open ? tokens.accent : muted,
                     ),

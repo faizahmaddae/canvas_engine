@@ -25,6 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -145,7 +146,7 @@ void main() {
       return container;
     }
 
-    Finder undoButton() => find.widgetWithIcon(IconButton, Icons.undo_rounded);
+    Finder undoButton() => find.widgetWithIcon(IconButton, AppIcons.undo);
     bool undoEnabled(WidgetTester tester) =>
         tester.widget<IconButton>(undoButton()).onPressed != null;
 
@@ -163,9 +164,7 @@ void main() {
       );
       expect(
         tester
-            .widget<IconButton>(
-              find.widgetWithIcon(IconButton, Icons.redo_rounded),
-            )
+            .widget<IconButton>(find.widgetWithIcon(IconButton, AppIcons.redo))
             .onPressed,
         isNull,
       );

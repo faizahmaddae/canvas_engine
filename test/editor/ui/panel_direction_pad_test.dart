@@ -1,6 +1,7 @@
 import 'package:canvas_engine/features/editor/ui/panel_direction_pad.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 Widget _host(Widget child, {TextDirection dir = TextDirection.ltr}) =>
     MaterialApp(
@@ -32,7 +33,7 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.byIcon(Icons.center_focus_strong_outlined));
+      await tester.tap(find.byIcon(AppIcons.offsetCenter));
       expect(picked, Offset.zero);
     });
 
@@ -49,7 +50,7 @@ void main() {
           ),
         ),
       );
-      final arrows = find.byIcon(Icons.arrow_upward_rounded);
+      final arrows = find.byIcon(AppIcons.offsetDirection);
       expect(arrows, findsNWidgets(8));
       await tester.tap(arrows.first);
       expect(picked, isNotNull);
@@ -74,7 +75,7 @@ void main() {
       final centerCell = tester.widget<Material>(
         find
             .ancestor(
-              of: find.byIcon(Icons.center_focus_strong_outlined),
+              of: find.byIcon(AppIcons.offsetCenter),
               matching: find.byType(Material),
             )
             .first,
@@ -130,7 +131,7 @@ void main() {
             dir: dir,
           ),
         );
-        await tester.tap(find.byIcon(Icons.arrow_upward_rounded).first);
+        await tester.tap(find.byIcon(AppIcons.offsetDirection).first);
         return picked;
       }
 

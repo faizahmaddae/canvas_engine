@@ -15,6 +15,7 @@ import '../../engine/effects/editor_effect.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../application/image_tool_controller.dart';
 import 'image_panel_shell.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Expanded panel body for the Image sub-tool's "Effects" tab.
 ///
@@ -44,7 +45,7 @@ class ImageEffectsBody extends ConsumerWidget {
     final effects = layer.effects.effects;
     return ImagePanelShell(
       title: context.l10n.effectsTool,
-      icon: Icons.layers_rounded,
+      icon: AppIcons.effects,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -182,7 +183,7 @@ class _StackMaskSection extends ConsumerWidget {
             alignment: AlignmentDirectional.centerStart,
             child: FilledButton.tonalIcon(
               onPressed: () => _openMaskEditor(ref),
-              icon: const Icon(Icons.crop_free_rounded, size: 18),
+              icon: const Icon(AppIcons.freeRegion, size: 18),
               label: Text(context.l10n.adjustRegionAction),
             ),
           ),
@@ -214,11 +215,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.auto_awesome_outlined,
-            size: 28,
-            color: tokens.textSecondary,
-          ),
+          Icon(AppIcons.lookTool, size: 28, color: tokens.textSecondary),
           const SizedBox(height: 8),
           Text(
             context.l10n.noEffectsApplied,
@@ -348,7 +345,7 @@ class _EffectRow extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(4),
                     child: Icon(
-                      Icons.drag_handle_rounded,
+                      AppIcons.dragHandle,
                       size: 18,
                       color: tokens.textSecondary,
                     ),
@@ -394,9 +391,7 @@ class _EffectRow extends ConsumerWidget {
                       ? context.l10n.hideAction
                       : context.l10n.showAction,
                   icon: Icon(
-                    effect.enabled
-                        ? Icons.visibility_rounded
-                        : Icons.visibility_off_rounded,
+                    effect.enabled ? AppIcons.visible : AppIcons.hidden,
                     size: 18,
                   ),
                   onPressed: () {
@@ -414,7 +409,7 @@ class _EffectRow extends ConsumerWidget {
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   tooltip: context.l10n.deleteAction,
-                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                  icon: const Icon(AppIcons.delete, size: 18),
                   onPressed: () {
                     EditorHaptics.tap();
                     ref
@@ -453,32 +448,32 @@ class EffectDisplay {
 EffectDisplay effectDisplay(BuildContext context, EditorEffect e) =>
     switch (e) {
       BrightnessEffect(:final amount) => EffectDisplay(
-        icon: Icons.brightness_6_rounded,
+        icon: AppIcons.brightness,
         name: context.l10n.brightnessLabel,
         summary: EditorValueFormat.of(context).signed(amount),
       ),
       ContrastEffect(:final amount) => EffectDisplay(
-        icon: Icons.contrast_rounded,
+        icon: AppIcons.contrast,
         name: context.l10n.contrastLabel,
         summary: EditorValueFormat.of(context).percent((amount * 100).round()),
       ),
       SaturationEffect(:final amount) => EffectDisplay(
-        icon: Icons.color_lens_outlined,
+        icon: AppIcons.saturation,
         name: context.l10n.saturationLabel,
         summary: EditorValueFormat.of(context).percent((amount * 100).round()),
       ),
       ExposureEffect(:final amount) => EffectDisplay(
-        icon: Icons.wb_sunny_outlined,
+        icon: AppIcons.exposure,
         name: context.l10n.exposureLabel,
         summary: EditorValueFormat.of(context).signed(amount),
       ),
       WarmthEffect(:final amount) => EffectDisplay(
-        icon: Icons.thermostat_rounded,
+        icon: AppIcons.warmthEffect,
         name: context.l10n.warmthLabel,
         summary: EditorValueFormat.of(context).signed(amount),
       ),
       VignetteEffect(:final intensity) => EffectDisplay(
-        icon: Icons.vignette_outlined,
+        icon: AppIcons.vignette,
         name: context.l10n.vignetteLabel,
         summary: EditorValueFormat.of(
           context,
@@ -490,7 +485,7 @@ EffectDisplay effectDisplay(BuildContext context, EditorEffect e) =>
         // preserves its raw JSON so resaving doesn't drop data;
         // surface a generic row in the panel so the user can see
         // (and remove) the entry instead of a crash or silent gap.
-        icon: Icons.help_outline_rounded,
+        icon: AppIcons.unknownEffect,
         name: context.l10n.unknownEffectLabel(e.type),
         summary: context.l10n.inactiveLabel,
       ),

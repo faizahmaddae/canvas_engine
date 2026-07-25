@@ -12,6 +12,7 @@ import '../../editor/application/canvas_capture.dart';
 import '../../editor/application/recent_colors_controller.dart';
 import '../../editor/presentation/widgets/editor_modal_sheet.dart';
 import 'eyedropper_overlay.dart';
+import '../../../app/theme/app_icons.dart';
 
 /// Curated preset palette — neutrals first, then warm → cool
 /// primaries. Exactly 12 entries so the picker's preset grid is
@@ -334,7 +335,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
             if (_eyedropperAvailable) ...[
               _RoundIconButton(
                 key: const ValueKey('color-picker-eyedropper'),
-                icon: Icons.colorize_rounded,
+                icon: AppIcons.eyedropper,
                 tooltip: context.l10n.eyedropperTooltip,
                 onTap: _eyedrop,
               ),
@@ -416,7 +417,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
           children: [
             _RoundIconButton(
               key: const ValueKey('color-picker-back'),
-              icon: Icons.arrow_back_rounded,
+              icon: AppIcons.back,
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               onTap: () {
                 EditorHaptics.tap();
@@ -436,7 +437,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
             if (widget.onClose != null)
               _RoundIconButton(
                 key: const ValueKey('color-picker-close'),
-                icon: Icons.close_rounded,
+                icon: AppIcons.close,
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 onTap: widget.onClose!,
               ),
@@ -512,7 +513,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
             if (_eyedropperAvailable) ...[
               _RoundIconButton(
                 key: const ValueKey('color-picker-eyedropper'),
-                icon: Icons.colorize_rounded,
+                icon: AppIcons.eyedropper,
                 tooltip: context.l10n.eyedropperTooltip,
                 onTap: _eyedrop,
               ),
@@ -531,7 +532,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
             const SizedBox(width: 8),
             _RoundIconButton(
               key: const ValueKey('color-picker-copy'),
-              icon: Icons.copy_rounded,
+              icon: AppIcons.copyValue,
               tooltip: context.l10n.copyColorTooltip,
               onTap: _copyHex,
             ),
@@ -637,7 +638,7 @@ class _PickerHeader extends StatelessWidget {
         ),
         _RoundIconButton(
           key: const ValueKey('color-picker-close'),
-          icon: Icons.close_rounded,
+          icon: AppIcons.close,
           tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
           onTap: onClose,
         ),
@@ -1030,7 +1031,7 @@ class _SwatchState extends State<_Swatch> {
               ),
               child: widget.selected
                   ? Icon(
-                      Icons.check_rounded,
+                      AppIcons.confirm,
                       size: widget.size * 0.4,
                       color: checkColor,
                     )

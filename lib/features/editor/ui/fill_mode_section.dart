@@ -9,6 +9,7 @@ import '../../color_picker/presentation/color_picker_sheet.dart';
 import '../engine/core/background_fill.dart';
 import 'editor_segmented_control.dart';
 import 'editor_slider_row.dart';
+import '../../../app/theme/app_icons.dart';
 
 /// Solid | Gradient fill control shared by the shape Style panel and
 /// the canvas Background panel (tb4 2/14).
@@ -253,7 +254,7 @@ class _GradientSwatch extends StatelessWidget {
           child: selected
               ? Center(
                   child: Icon(
-                    Icons.check_rounded,
+                    AppIcons.confirm,
                     size: 16,
                     color: tokens.onBrand,
                   ),

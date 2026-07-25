@@ -21,6 +21,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' show ByteData, FontLoader, rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 Future<void> _loadAppFonts() async {
   const families = <String, List<String>>{
@@ -133,7 +134,7 @@ void main() {
                             child: Row(
                               children: [
                                 Icon(
-                                  Icons.history_rounded,
+                                  AppIcons.history,
                                   color: tokens.textPrimary,
                                 ),
                                 const SizedBox(width: 8),

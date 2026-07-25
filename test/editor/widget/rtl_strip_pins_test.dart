@@ -30,17 +30,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// Main-toolbar tier-1 registry icons in registry order (image,
 /// text, sticker, shape, paint) — mirrors `_buildToolbarItems` in
 /// editor_screen.dart. Order pins use this prefix because a lazy
 /// ListView only builds the tiles near the at-rest edge.
 const List<IconData> _tier1Icons = [
-  Icons.add_photo_alternate_outlined,
-  Icons.text_fields_rounded,
-  Icons.emoji_emotions_outlined,
-  Icons.category_outlined,
-  Icons.brush_outlined,
+  AppIcons.photoTool,
+  AppIcons.textTool,
+  AppIcons.stickerTool,
+  AppIcons.shapeTool,
+  AppIcons.drawTool,
 ];
 
 void main() {

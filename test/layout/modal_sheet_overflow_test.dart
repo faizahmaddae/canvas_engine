@@ -30,6 +30,7 @@ import 'package:flutter/services.dart' show FontLoader, rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 Future<void> _loadAppFonts() async {
   const families = <String, List<String>>{
@@ -228,7 +229,7 @@ void main() {
     // tiles); open it by its stable, locale-independent leading icon.
     // Scroll it into view first — in the short viewport the row sits
     // below the fold and the lazy ListView hasn't built it yet.
-    final target = find.byIcon(Icons.dashboard_customize_outlined);
+    final target = find.byIcon(AppIcons.enabledCategories);
     await tester.scrollUntilVisible(
       target,
       120,

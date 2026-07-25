@@ -15,6 +15,7 @@ import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:canvas_engine/app/theme/app_icons.dart';
 
 void main() {
   late ProviderContainer container;
@@ -80,7 +81,7 @@ void main() {
   ) async {
     await pumpToolbar(tester);
 
-    final tile = find.byIcon(Icons.center_focus_strong_rounded);
+    final tile = find.byIcon(AppIcons.selectiveMask);
     expect(tile, findsOneWidget);
 
     await tester.tap(tile, warnIfMissed: false);
@@ -98,7 +99,7 @@ void main() {
     addAnEffect();
     await pumpToolbar(tester);
 
-    await tester.tap(find.byIcon(Icons.center_focus_strong_rounded));
+    await tester.tap(find.byIcon(AppIcons.selectiveMask));
     await tester.pump();
 
     final session = container.read(maskEditControllerProvider);

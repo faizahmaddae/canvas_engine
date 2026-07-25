@@ -12,6 +12,7 @@ import '../../engine/core/selection_state.dart';
 import '../../engine/core/viewport_state.dart';
 import '../../engine/interaction/layer_space_mapper.dart';
 import 'handle_drag_detector.dart';
+import '../../../../app/theme/app_icons.dart';
 
 enum DragPhase { start, update, end }
 
@@ -611,7 +612,7 @@ class _RotateGlyph extends StatelessWidget {
       child: Transform.rotate(
         angle: math.pi / 4,
         child: Icon(
-          Icons.refresh,
+          AppIcons.rotateHandle,
           size: 14,
           color: active ? Colors.white : color,
         ),

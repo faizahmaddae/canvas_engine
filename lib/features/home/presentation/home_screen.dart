@@ -15,6 +15,7 @@ import 'widgets/quick_action_card.dart';
 import 'widgets/recent_projects_section.dart';
 import 'widgets/resume_draft_card.dart';
 import 'widgets/suggested_templates_rail.dart';
+import '../../../app/theme/app_icons.dart';
 
 /// Home root content. Composed of small, independently-tested widgets
 /// and routes every editor-launching action through [HomeActions] so
@@ -116,7 +117,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: QuickActionCard(
                         key: const ValueKey('home-create-new'),
                         label: context.l10n.blankCanvasCta,
-                        icon: Icons.add_rounded,
+                        icon: AppIcons.add,
                         filled: true,
                         onTap: actions.createNew,
                       ),
@@ -126,7 +127,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: QuickActionCard(
                         key: const ValueKey('home-edit-photo'),
                         label: context.l10n.editPhotoCta,
-                        icon: Icons.photo_outlined,
+                        icon: AppIcons.editPhoto,
                         onTap: actions.importPhoto,
                       ),
                     ),
