@@ -194,22 +194,34 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
     final clamped = widget.value.clamp(widget.min, widget.max);
     final label = widget.label;
 
-    final slider = Listener(
-      onPointerCancel: (_) => _endDrag(),
-      child: Slider(
-        value: clamped,
-        min: widget.min,
-        max: widget.max,
-        divisions: widget.divisions,
-        // A stepped slider (divisions != null) shows the Material
-        // drag tooltip with the formatted value — matches the JPG-
-        // quality slider's existing '$pct%' tooltip exactly.
-        // Continuous sliders never showed a tooltip; unchanged.
-        label: widget.divisions != null ? widget.format(clamped) : null,
-        semanticFormatterCallback: widget.format,
-        onChangeStart: widget.enabled ? _onChangeStart : null,
-        onChanged: widget.enabled ? _onChanged : null,
-        onChangeEnd: widget.enabled ? (_) => _endDrag() : null,
+    // Density pass (tb7 5/7): Material's default Slider reserves ~48dp
+    // of height for a 24dp press overlay. The prototype's rows are
+    // 20dp — far below a comfortable touch target — so this meets it
+    // partway: the overlay shrinks to 18 and the row lands on exactly
+    // the 44dp floor. Going lower would trade real usability for
+    // density, which is not the trade the prototype was arguing for.
+    final slider = SliderTheme(
+      data: SliderTheme.of(context).copyWith(
+        overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+        trackHeight: 4,
+      ),
+      child: Listener(
+        onPointerCancel: (_) => _endDrag(),
+        child: Slider(
+          value: clamped,
+          min: widget.min,
+          max: widget.max,
+          divisions: widget.divisions,
+          // A stepped slider (divisions != null) shows the Material
+          // drag tooltip with the formatted value — matches the JPG-
+          // quality slider's existing '$pct%' tooltip exactly.
+          // Continuous sliders never showed a tooltip; unchanged.
+          label: widget.divisions != null ? widget.format(clamped) : null,
+          semanticFormatterCallback: widget.format,
+          onChangeStart: widget.enabled ? _onChangeStart : null,
+          onChanged: widget.enabled ? _onChanged : null,
+          onChangeEnd: widget.enabled ? (_) => _endDrag() : null,
+        ),
       ),
     );
 
