@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../engine/core/editor_document.dart';
+import '../engine/core/selection_state.dart';
 import '../engine/modules/image/image_layer.dart';
 import '../engine/modules/paint/paint_layer.dart';
 import '../engine/modules/shape/shape_layer.dart';
@@ -42,6 +44,34 @@ enum EditorToolMode { idle, text, image, shape, sticker, paint, multi }
 ///     per-tool `openSlot`/`openSheet` values only choose WHICH
 ///     panel shows inside the mode that owns the dock.
 ///  4. Nothing selected → idle.
+/// How many selected layers an action could actually operate on:
+/// still present in the document, and not the protected base photo.
+///
+/// This is NOT `selection.count`. A selection can outlive the layers
+/// it names — an undo, a delete, a document swap — and the raw count
+/// then over-reports. The dock has always filtered; the multi-select
+/// chip did not, and the two disagreed on screen: the chip announced
+/// «چندانتخاب · ۱۰» over a document holding six layers with one of
+/// them selected, while the dock correctly showed that layer's own
+/// tools. One derivation, so they cannot drift apart again.
+int _actionableCount(EditorDocument doc, SelectionState selection) {
+  var actionable = 0;
+  for (final id in selection.selectedIds) {
+    final layer = doc.layerById(id);
+    if (layer == null || doc.isProtectedBasePhoto(id)) continue;
+    actionable++;
+  }
+  return actionable;
+}
+
+/// Public view of [_actionableCount] for chrome that labels the
+/// multi-selection.
+final actionableSelectionCountProvider = Provider<int>((ref) {
+  final selection = ref.watch(selectionControllerProvider);
+  if (!selection.hasSelection) return 0;
+  return _actionableCount(ref.watch(documentControllerProvider), selection);
+});
+
 final editorToolModeProvider = Provider<EditorToolMode>((ref) {
   // 1 — explicit sessions.
   final paintOpen = ref.watch(
@@ -55,15 +85,8 @@ final editorToolModeProvider = Provider<EditorToolMode>((ref) {
   if (!selection.hasSelection) return EditorToolMode.idle;
   final doc = ref.watch(documentControllerProvider);
 
-  // 2 — group selection (actionable = exists and not the protected
-  // base photo, mirroring _selectedLayersForActions).
-  var actionable = 0;
-  for (final id in selection.selectedIds) {
-    final layer = doc.layerById(id);
-    if (layer == null || doc.isProtectedBasePhoto(id)) continue;
-    actionable++;
-  }
-  if (actionable > 1) return EditorToolMode.multi;
+  // 2 — group selection.
+  if (_actionableCount(doc, selection) > 1) return EditorToolMode.multi;
 
   // 3 — selected layer type. Emoji stickers are TextLayers but get
   // the sticker strip: font/layout controls don't apply to a single

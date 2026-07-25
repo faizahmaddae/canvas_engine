@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
+import '../../../../core/utils/editor_value_format.dart';
 import '../../application/document_controller.dart';
+import '../../application/editor_mode_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/layer_state_commands.dart';
 import '../../engine/core/editor_document.dart';
@@ -34,7 +36,13 @@ class LayersPanel extends ConsumerWidget {
       child: SafeArea(
         child: Column(
           children: [
-            _PanelHeader(count: total, selectionCount: selection.count),
+            _PanelHeader(
+              count: total,
+              // The ACTIONABLE count, not the raw one: a selection can
+              // outlive the layers it names, and the raw count then
+              // over-reports (see actionableSelectionCountProvider).
+              selectionCount: ref.watch(actionableSelectionCountProvider),
+            ),
             const Divider(height: 1),
             Expanded(
               child: total == 0
@@ -129,7 +137,10 @@ class _PanelHeader extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const Spacer(),
-              Text('$count', style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                EditorValueFormat.of(context).digits(count),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ],
           ),
           if (selectionCount > 1 || count > 1) ...[

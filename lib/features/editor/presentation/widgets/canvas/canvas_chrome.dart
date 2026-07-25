@@ -8,6 +8,7 @@ import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../../application/canvas_chrome_visibility.dart';
 import '../../../application/editing_controller.dart';
+import '../../../application/editor_mode_controller.dart';
 import '../../../application/interaction_controller.dart';
 import '../../../application/mask_edit_controller.dart';
 import '../../../application/selection_controller.dart';
@@ -671,9 +672,17 @@ class _MultiSelectModeChip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(selectionModeProvider);
-    if (mode != SelectionMode.multi) return const SizedBox.shrink();
-    final count = ref.watch(selectionControllerProvider.select((s) => s.count));
+    // Gated on the DOCK's own derivation, and labelled with the same
+    // count it uses. Watching `selectionMode` alone let the chip
+    // outlive the state it describes: a selection can name layers that
+    // no longer exist (an undo, a delete), and the chip announced
+    // «چندانتخاب · ۱۰» over a six-layer document while the dock —
+    // which has always filtered — correctly showed the single
+    // surviving layer's own tools.
+    if (ref.watch(editorToolModeProvider) != EditorToolMode.multi) {
+      return const SizedBox.shrink();
+    }
+    final count = ref.watch(actionableSelectionCountProvider);
     final tokens = AppTokens.of(context);
     return PositionedDirectional(
       // The 44dp hit halo centres the painted ~26dp pill, so 4/8 here
