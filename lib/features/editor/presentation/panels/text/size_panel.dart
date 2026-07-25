@@ -8,7 +8,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../app/theme/app_tokens.dart';
@@ -244,18 +243,33 @@ class _ExactSizeDialog extends StatefulWidget {
 }
 
 class _ExactSizeDialogState extends State<_ExactSizeDialog> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.initial.round().toString(),
-  );
+  TextEditingController? _controller;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Needs an inherited `Localizations`, so not `initState`. The pill
+    // that opens this dialog reads «۹۶px»; the box behind it used to
+    // open prefilled with a Latin `96`.
+    _controller ??= TextEditingController(
+      text: EditorValueFormat.of(context).digits(widget.initial.round()),
+    );
+  }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   void _submit() {
-    Navigator.of(context).pop(double.tryParse(_controller.text.trim()));
+    // A Persian keyboard types ۱۲۰; `double.tryParse` reads that as
+    // null, so the dialog silently discarded what the user typed.
+    Navigator.of(context).pop(
+      double.tryParse(
+        EditorValueFormat.toAsciiDigits(_controller!.text.trim()),
+      ),
+    );
   }
 
   @override
@@ -267,7 +281,7 @@ class _ExactSizeDialogState extends State<_ExactSizeDialog> {
         controller: _controller,
         autofocus: true,
         keyboardType: const TextInputType.numberWithOptions(decimal: false),
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        inputFormatters: [EditorValueFormat.localeDigitsOnly],
         textAlign: TextAlign.center,
         decoration: const InputDecoration(suffixText: 'px'),
         onSubmitted: (_) => _submit(),

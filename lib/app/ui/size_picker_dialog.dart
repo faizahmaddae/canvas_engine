@@ -1,6 +1,5 @@
 import '../../core/utils/editor_value_format.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
@@ -145,21 +144,30 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
   late final TextEditingController _heightCtrl;
   String? _customError;
 
+  bool _seeded = false;
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Seeded here rather than in `initState` because the locale-aware
+    // formatter needs an inherited `Localizations`. A Persian user saw
+    // the preset list in «۱۰۸۰ × ۱۳۵۰» and the two boxes underneath
+    // prefilled with Latin `1080`.
+    if (_seeded) return;
+    _seeded = true;
     final initial = widget.initial;
     _widthCtrl = TextEditingController(
-      text: _seedText(initial?.width ?? _kDefaultCustomSide),
+      text: _seedText(context, initial?.width ?? _kDefaultCustomSide),
     );
     _heightCtrl = TextEditingController(
-      text: _seedText(initial?.height ?? _kDefaultCustomSide),
+      text: _seedText(context, initial?.height ?? _kDefaultCustomSide),
     );
   }
 
   // The field is digits-only, so a fractional document size (a crop
   // can leave one) seeds as its rounded whole pixel.
-  static String _seedText(double value) => value.round().toString();
+  static String _seedText(BuildContext context, double value) =>
+      EditorValueFormat.of(context).digits(value.round());
 
   @override
   void dispose() {
@@ -175,8 +183,15 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
   }
 
   void _confirmCustom() {
-    final w = double.tryParse(_widthCtrl.text.trim());
-    final h = double.tryParse(_heightCtrl.text.trim());
+    // Fold Persian/Arabic numerals to ASCII before parsing: a Persian
+    // keyboard types ۸۰۰, `double.tryParse` returns null for it, and
+    // the dialog rejected input the user could see in the box.
+    final w = double.tryParse(
+      EditorValueFormat.toAsciiDigits(_widthCtrl.text.trim()),
+    );
+    final h = double.tryParse(
+      EditorValueFormat.toAsciiDigits(_heightCtrl.text.trim()),
+    );
     if (w == null || h == null || w < 16 || h < 16 || w > 16384 || h > 16384) {
       setState(() => _customError = context.l10n.customSizeValidation);
       return;
@@ -446,7 +461,7 @@ class _DimensionField extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: false),
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      inputFormatters: [EditorValueFormat.localeDigitsOnly],
       onSubmitted: onSubmitted,
       style: AppTypeScale.body.copyWith(color: tokens.textPrimary, height: 1.4),
       decoration: InputDecoration(

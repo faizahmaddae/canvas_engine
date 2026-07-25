@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 /// Locale-aware numeric readouts for editor chrome (tb2 11/16).
@@ -80,6 +81,19 @@ class EditorValueFormat {
   /// plus the `٫` decimal separator. Static because input arrives
   /// before any locale decision matters: every digit set folds the
   /// same way.
+  /// Input formatter for a digits-only field in a Persian-first app.
+  ///
+  /// `FilteringTextInputFormatter.digitsOnly` allows `[0-9]` and
+  /// nothing else, so a Persian keyboard's ۸۰۰ was deleted keystroke
+  /// by keystroke — the field stayed empty while the user watched
+  /// themselves type into it. This accepts all three digit sets the
+  /// app can receive; fold the result through [toAsciiDigits] before
+  /// parsing.
+  static final TextInputFormatter localeDigitsOnly =
+      FilteringTextInputFormatter.allow(
+        RegExp(r'[0-9\u06F0-\u06F9\u0660-\u0669]'),
+      );
+
   static String toAsciiDigits(String s) {
     final b = StringBuffer();
     for (final code in s.codeUnits) {
@@ -122,5 +136,21 @@ class EditorValueFormat {
   /// left-to-right run, so the order survives regardless of the
   /// surrounding paragraph direction. Isolating each number alone
   /// would NOT work — the `×` between two isolates is still neutral.
-  String dimensions(num w, num h) => '\u2066${digits(w)} × ${digits(h)}\u2069';
+  String dimensions(num w, num h) =>
+      '\u2066${digits(w)} \u00D7 ${digits(h)}\u2069';
+
+  /// `+12` / `+۱۲` — a signed delta, with the sign kept in
+  /// FRONT of the number.
+  ///
+  /// Same isolate, same reason as [dimensions] on a smaller scale: a
+  /// leading `+` is a bidi-neutral, so in an RTL paragraph it drifts to
+  /// the far side of the digits and `+12` paints as `12+`. Negative
+  /// values carry U+2212 MINUS rather than a hyphen so the glyph reads
+  /// as arithmetic and matches the `+`'s weight.
+  String signed(num value) {
+    final r = value.round();
+    if (r == 0) return digits(0);
+    final sign = r > 0 ? '+' : '\u2212';
+    return '\u2066$sign${digits(r.abs())}\u2069';
+  }
 }
