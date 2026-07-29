@@ -60,9 +60,21 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
   /// Active chip highlight: a preset is "current" iff merging its
   /// visual subset onto the layer's style is a no-op. Same merge
   /// rule the controller uses on apply.
+  /// Which preset the layer's current style corresponds to, matched
+  /// against what applying that preset would ACTUALLY produce.
+  ///
+  /// `p.spec` is the authored preset; `readableOnCanvas` may repaint it
+  /// (a near-white fill on white paper becomes dark). Matching on the
+  /// authored value meant tapping such a preset applied the resolved
+  /// spec and then highlighted nothing — the rail went blank right
+  /// after you chose from it. Apply, preview and match now share one
+  /// projection.
   String? _matchPresetId(TextStyleSpec style) {
+    final resolve = ref
+        .read(textToolControllerProvider.notifier)
+        .readableOnCanvas;
     for (final p in kTextStylePresets) {
-      final merged = mergePresetVisual(current: style, preset: p.spec);
+      final merged = mergePresetVisual(current: style, preset: resolve(p.spec));
       if (merged == style) return p.id;
     }
     return null;
@@ -107,6 +119,13 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
               presets: presets,
               activeId: activeId,
               onPick: apply,
+              // Preview what APPLYING will produce, not what the
+              // preset literally declares — several are authored
+              // light-on-dark and get recoloured by
+              // `readableOnCanvas` when the canvas is light.
+              resolveColor: ref
+                  .read(textToolControllerProvider.notifier)
+                  .readableOnCanvas,
             ),
           ),
         const SizedBox(height: 10),
@@ -214,11 +233,17 @@ class _StylesRow extends StatelessWidget {
     required this.presets,
     required this.activeId,
     required this.onPick,
+    required this.resolveColor,
   });
 
   final List<TextStylePreset> presets;
   final String? activeId;
   final ValueChanged<TextStylePreset> onPick;
+
+  /// Maps a preset to the spec it will actually apply as. Same
+  /// function the controller runs on pick, so preview and result
+  /// cannot disagree.
+  final TextStyleSpec Function(TextStyleSpec) resolveColor;
 
   // Kit tile vertical layout: 40 preview + label ≈ 76 (matches the
   // StyleTileRow rail below so the two rails read identically).
@@ -246,7 +271,7 @@ class _StylesRow extends StatelessWidget {
             preview: SizedBox(
               width: 44,
               height: 40,
-              child: _StylePreviewTile(spec: p.spec),
+              child: _StylePreviewTile(spec: resolveColor(p.spec)),
             ),
             label: textStylePresetLabel(context.l10n, p),
             selected: p.id == activeId,
@@ -268,12 +293,13 @@ class _StylesRow extends StatelessWidget {
 /// at a fixed 22pt so every tile reads at the same rhythm
 /// regardless of the preset's intended font-size on a real layer.
 ///
-/// Backdrop is **adaptive** (not a flat dark gradient): when the
-/// preset's text colour is light (white/near-white) the tile uses
-/// a soft dark slate card so the glyphs read truthfully; when it's
-/// dark the tile uses a clean off-white card. Mirrors how the
-/// preset is actually used on a real canvas — no preview lies, no
-/// "row of dark boxes" feeling.
+/// Backdrop is **adaptive**, and it adapts to the spec the caller
+/// passes in — which is the RESOLVED spec, i.e. the one applying the
+/// preset will really produce. That distinction is the whole point:
+/// while the tile adapted to the preset's *authored* colour, a
+/// white-on-nothing preset previewed as white glyphs on an invented
+/// dark slate and then landed as dark glyphs on white paper. Feeding
+/// it the resolved colour makes the two agree again.
 class _StylePreviewTile extends StatelessWidget {
   const _StylePreviewTile({required this.spec});
 

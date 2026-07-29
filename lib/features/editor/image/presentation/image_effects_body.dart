@@ -355,7 +355,7 @@ class _EffectRow extends ConsumerWidget {
                 Icon(
                   view.icon,
                   size: 18,
-                  color: dim ? tokens.textSecondary : tokens.accent,
+                  color: dim ? tokens.textSecondary : tokens.accentText,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -376,10 +376,22 @@ class _EffectRow extends ConsumerWidget {
                         ),
                       ),
                       if (view.summary.isNotEmpty)
-                        Text(
-                          view.summary,
-                          style: tt.bodySmall?.copyWith(
-                            color: tokens.textSecondary,
+                        // Pinned LTR. Summaries are numeric runs with a
+                        // leading sign and a trailing unit, both of
+                        // which are bidi-neutral: unpinned in this RTL
+                        // row «+۵۰٪» painted as «۵۰٪+», with the sign
+                        // stranded on the far side of the digits. The
+                        // widget-level pin is preferred over LRI/PDI
+                        // because no bundled family, Vazir included,
+                        // carries glyphs for those codepoints — see
+                        // EditorValueFormat.dimensionsPlain.
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(
+                            view.summary,
+                            style: tt.bodySmall?.copyWith(
+                              color: tokens.textSecondary,
+                            ),
                           ),
                         ),
                     ],
@@ -450,27 +462,31 @@ EffectDisplay effectDisplay(BuildContext context, EditorEffect e) =>
       BrightnessEffect(:final amount) => EffectDisplay(
         icon: AppIcons.brightness,
         name: context.l10n.brightnessLabel,
-        summary: EditorValueFormat.of(context).signed(amount),
+        summary: EditorValueFormat.of(context).signedPlain(amount),
       ),
       ContrastEffect(:final amount) => EffectDisplay(
         icon: AppIcons.contrast,
         name: context.l10n.contrastLabel,
-        summary: EditorValueFormat.of(context).percent((amount * 100).round()),
+        summary: EditorValueFormat.of(
+          context,
+        ).signedPercent(((amount - 1) * 100).round()),
       ),
       SaturationEffect(:final amount) => EffectDisplay(
         icon: AppIcons.saturation,
         name: context.l10n.saturationLabel,
-        summary: EditorValueFormat.of(context).percent((amount * 100).round()),
+        summary: EditorValueFormat.of(
+          context,
+        ).signedPercent(((amount - 1) * 100).round()),
       ),
       ExposureEffect(:final amount) => EffectDisplay(
         icon: AppIcons.exposure,
         name: context.l10n.exposureLabel,
-        summary: EditorValueFormat.of(context).signed(amount),
+        summary: EditorValueFormat.of(context).signedPlain(amount),
       ),
       WarmthEffect(:final amount) => EffectDisplay(
         icon: AppIcons.warmthEffect,
         name: context.l10n.warmthLabel,
-        summary: EditorValueFormat.of(context).signed(amount),
+        summary: EditorValueFormat.of(context).signedPlain(amount),
       ),
       VignetteEffect(:final intensity) => EffectDisplay(
         icon: AppIcons.vignette,

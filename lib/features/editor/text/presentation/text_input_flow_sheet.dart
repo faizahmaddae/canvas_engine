@@ -8,8 +8,10 @@ import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/modules/text/text_layer.dart';
+import '../../presentation/widgets/editor_breakpoints.dart';
 import '../../presentation/widgets/editor_modal_sheet.dart';
 import '../../application/recent_colors_controller.dart';
+import '../application/text_color_resolver.dart';
 import '../application/text_tool_controller.dart';
 import '../../../../app/theme/app_icons.dart';
 import '../domain/text_style_presets.dart'
@@ -104,6 +106,21 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
     super.dispose();
   }
 
+  /// [staged] when it is legible on the composer's own field fill,
+  /// else the ordinary input colour.
+  ///
+  /// The field is `surfaceMuted @45%` over `surface`; compositing that
+  /// by hand is exactly what the resolver's ratio helper is for.
+  Color _legibleOnField(Color staged, AppTokens tokens) {
+    final fill = Color.alphaBlend(
+      tokens.surfaceMuted.withValues(alpha: 0.45),
+      tokens.surface,
+    );
+    return TextColorResolver.contrastRatio(staged, fill) >= 4.5
+        ? staged
+        : tokens.textPrimary;
+  }
+
   bool get _canSubmit => _controller.text.trim().isNotEmpty;
 
   void _submit() {
@@ -153,11 +170,14 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                     ),
                   ),
                 ),
+                // `VisualDensity.compact` cut Material's 40dp minimum to
+                // 32 — under the repo's own 44dp floor — on the two
+                // buttons a thumb has to hit with the keyboard up.
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: TextButton.styleFrom(
                     foregroundColor: tokens.textSecondary,
-                    visualDensity: VisualDensity.compact,
+                    minimumSize: const Size(0, kMinHitTarget),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 6,
@@ -172,7 +192,7 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
                   style: FilledButton.styleFrom(
                     backgroundColor: tokens.brand,
                     foregroundColor: tokens.onBrand,
-                    visualDensity: VisualDensity.compact,
+                    minimumSize: const Size(0, kMinHitTarget),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
                       vertical: 10,
@@ -191,81 +211,106 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
             // Add button"). Cursor / selection / focus border all
             // tinted to the theme accent so the input reads as the
             // single hero element on the sheet.
-            TextField(
-              key: const ValueKey('add-text-input'),
-              controller: _controller,
-              focusNode: _focusNode,
-              autofocus: true,
-              minLines: 1,
-              maxLines: 3,
-              keyboardType: TextInputType.multiline,
-              textInputAction: TextInputAction.newline,
-              textCapitalization: TextCapitalization.sentences,
-              // Suppress the keyboard's prediction strip and
-              // learned-phrase autocorrect so previously-typed
-              // unrelated content (notes, pasted text) can't be
-              // surfaced as suggestions inside the composer.
-              enableSuggestions: false,
-              autocorrect: false,
-              cursorColor: tokens.accent,
-              cursorWidth: 2,
-              scrollPadding: const EdgeInsets.all(20),
-              // Direction + alignment follow the dominant script of
-              // the current content so the editor mirrors what the
-              // canvas will render: Persian/Arabic → RTL,
-              // right-aligned; Latin → LTR, left-aligned. The font
-              // is the app's Persian default (Vazir) for every
-              // script — it carries Latin glyphs too.
-              textDirection: direction,
-              textAlign: direction == TextDirection.rtl
-                  ? TextAlign.right
-                  : TextAlign.left,
-              style: TextStyle(
-                fontFamily: defaultFontFamilyForContent(_controller.text),
-                fontSize: 18,
-              ),
-              onChanged: (value) {
-                // Keep the staged canvas layer in lockstep with
-                // every keystroke. Note: the layer's committed
-                // font is governed by the controller and a
-                // user-picked font from the Font tool is never
-                // overwritten.
-                widget.onLiveChange?.call(value);
+            // Wrapped in a Consumer so the field can mirror the quick
+            // pills sitting directly under it. Bold and Colour used to
+            // toggle their pill and change nothing else on the sheet —
+            // the only way to find out what «پررنگ» did was to commit
+            // and look at the canvas.
+            Consumer(
+              builder: (context, ref, _) {
+                final staged = stagedComposerStyle(ref);
+                return TextField(
+                  key: const ValueKey('add-text-input'),
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  autofocus: true,
+                  minLines: 1,
+                  maxLines: 3,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
+                  textCapitalization: TextCapitalization.sentences,
+                  // Suppress the keyboard's prediction strip and
+                  // learned-phrase autocorrect so previously-typed
+                  // unrelated content (notes, pasted text) can't be
+                  // surfaced as suggestions inside the composer.
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  cursorColor: tokens.accent,
+                  cursorWidth: 2,
+                  scrollPadding: const EdgeInsets.all(20),
+                  // Direction + alignment follow the dominant script of
+                  // the current content so the editor mirrors what the
+                  // canvas will render: Persian/Arabic → RTL,
+                  // right-aligned; Latin → LTR, left-aligned. The font
+                  // is the app's Persian default (Vazir) for every
+                  // script — it carries Latin glyphs too.
+                  textDirection: direction,
+                  textAlign: direction == TextDirection.rtl
+                      ? TextAlign.right
+                      : TextAlign.left,
+                  style: TextStyle(
+                    fontFamily: defaultFontFamilyForContent(_controller.text),
+                    fontSize: 18,
+                    // The exact staged weight, not a two-state guess:
+                    // the default is w600, so `isBold ? w700 : null`
+                    // previewed the untouched default as w700 and its
+                    // "off" state as the theme weight, not w400.
+                    fontWeight: staged.fontWeight,
+                    fontStyle: staged.italic
+                        ? FontStyle.italic
+                        : FontStyle.normal,
+                    // The staged colour was resolved against the
+                    // CANVAS, not against this field. On a white canvas
+                    // it lands near-black, and the field's own fill is
+                    // near-black in dark mode — 1.13:1, an input you
+                    // cannot read while typing into it. Preview the
+                    // real colour only where it survives on this fill.
+                    color: _legibleOnField(staged.color, tokens),
+                  ),
+                  onChanged: (value) {
+                    // Keep the staged canvas layer in lockstep with
+                    // every keystroke. Note: the layer's committed
+                    // font is governed by the controller and a
+                    // user-picked font from the Font tool is never
+                    // overwritten.
+                    widget.onLiveChange?.call(value);
+                  },
+                  decoration: InputDecoration(
+                    hintText: context.l10n.typeSomethingHint,
+                    // Hint follows the same direction + font as the
+                    // input itself so the empty-state visual matches
+                    // what the user will see once they start typing.
+                    hintTextDirection: direction,
+                    hintStyle: TextStyle(
+                      fontFamily: defaultFontFamilyForContent(_controller.text),
+                      color: tokens.textSecondary.withValues(alpha: 0.7),
+                    ),
+                    isDense: true,
+                    filled: true,
+                    fillColor: tokens.surfaceMuted.withValues(alpha: 0.45),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: tokens.border.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(
+                        color: tokens.border.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: tokens.accent, width: 1.6),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 16,
+                    ),
+                  ),
+                );
               },
-              decoration: InputDecoration(
-                hintText: context.l10n.typeSomethingHint,
-                // Hint follows the same direction + font as the
-                // input itself so the empty-state visual matches
-                // what the user will see once they start typing.
-                hintTextDirection: direction,
-                hintStyle: TextStyle(
-                  fontFamily: defaultFontFamilyForContent(_controller.text),
-                  color: tokens.textSecondary.withValues(alpha: 0.7),
-                ),
-                isDense: true,
-                filled: true,
-                fillColor: tokens.surfaceMuted.withValues(alpha: 0.45),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(
-                    color: tokens.border.withValues(alpha: 0.4),
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(
-                    color: tokens.border.withValues(alpha: 0.4),
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: tokens.accent, width: 1.6),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 16,
-                ),
-              ),
             ),
             const SizedBox(height: 12),
             // Quick-style strip — intentionally minimal for the
@@ -293,6 +338,23 @@ class _TextInputFlowSheetState extends State<_TextInputFlowSheet> {
 /// bar — we deliberately avoid routing to the dock's Color sheet
 /// (it would render behind the modal and be invisible) or pushing
 /// a second modal (it would steal keyboard focus and stack UI).
+/// The style the composer is currently staging.
+///
+/// Bound to the staged layer's CURRENT style when one is selected (a
+/// live add session writes through to the layer via `liveOverlay`, not
+/// to `defaultStyle`), else to the session default. Shared by the quick
+/// pills and the input field so the field is a preview of what Add will
+/// produce rather than a differently-styled box next to the controls.
+TextStyleSpec stagedComposerStyle(WidgetRef ref) {
+  final session = ref.watch(textToolControllerProvider);
+  final doc = ref.watch(renderedDocumentProvider);
+  final selectedId = ref.watch(selectionControllerProvider).selectedId;
+  final selectedLayer = selectedId == null ? null : doc.layerById(selectedId);
+  return (selectedLayer is TextLayer)
+      ? selectedLayer.style
+      : session.defaultStyle;
+}
+
 class _AddTextQuickStyleBar extends ConsumerStatefulWidget {
   const _AddTextQuickStyleBar();
 
@@ -340,20 +402,8 @@ class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
 
   @override
   Widget build(BuildContext context) {
-    final session = ref.watch(textToolControllerProvider);
     final ctrl = ref.read(textToolControllerProvider.notifier);
-    // Bind UI state to the staged layer's *current* style when one
-    // is selected (live add session) — _applyStyle writes through
-    // to the layer (via liveOverlay), not defaultStyle, so reading
-    // defaultStyle here would leave Bold/Color toggles stuck on
-    // stale state. Watch the merged view + selection so the bar
-    // rebuilds whenever the staged layer changes.
-    final doc = ref.watch(renderedDocumentProvider);
-    final selectedId = ref.watch(selectionControllerProvider).selectedId;
-    final selectedLayer = selectedId == null ? null : doc.layerById(selectedId);
-    final style = (selectedLayer is TextLayer)
-        ? selectedLayer.style
-        : session.defaultStyle;
+    final style = stagedComposerStyle(ref);
     final currentArgb = style.color.toARGB32();
     final recents = ref.watch(recentColorsControllerProvider);
     return Column(
@@ -491,7 +541,7 @@ class _ColorTray extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 12),
+            padding: const EdgeInsetsDirectional.only(start: 12),
             child: Text(
               context.l10n.colorsLabel,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -739,7 +789,9 @@ class _QuickPillState extends State<_QuickPill> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: widget.active ? tokens.accent : tokens.textSecondary,
+                    color: widget.active
+                        ? tokens.accentText
+                        : tokens.textSecondary,
                   ),
                 ),
               ],
@@ -777,7 +829,7 @@ class _BoldGlyph extends StatelessWidget {
       child: Icon(
         AppIcons.bold,
         size: 15,
-        color: active ? tokens.accent : tokens.textPrimary,
+        color: active ? tokens.accentText : tokens.textPrimary,
       ),
     );
   }

@@ -225,7 +225,14 @@ void main() {
           ),
         ),
       );
-      final semantics = tester.getSemantics(find.byType(EditorSliderRow));
+      // The label must be on the SLIDER's node, not on an ancestor.
+      // This test previously asserted it on the row — which is exactly
+      // the shape three reviewers rejected: a wrapper above the slider
+      // leaves the SeekBar (the node a screen reader focuses and
+      // adjusts) unnamed, while the visible label Text concatenates
+      // onto the row and the parameter is announced twice. Asserting
+      // on the row node pinned the defect.
+      final semantics = tester.getSemantics(find.byType(Slider));
       expect(semantics.label, contains('Opacity'));
       final slider = tester.widget<Slider>(find.byType(Slider));
       expect(slider.semanticFormatterCallback, isNotNull);
@@ -246,7 +253,8 @@ void main() {
           ),
         ),
       );
-      final semantics = tester.getSemantics(find.byType(EditorSliderRow));
+      // Likewise on the slider's own node — see the note above.
+      final semantics = tester.getSemantics(find.byType(Slider));
       expect(semantics.label, contains('Blur amount'));
     });
   });

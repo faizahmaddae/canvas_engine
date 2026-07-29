@@ -68,6 +68,22 @@ class TextColorResolver {
     return _bestContrast(bg);
   }
 
+  /// [requested] when it is legible against an ALREADY-RESOLVED
+  /// background, else the black/white that maximises contrast on it.
+  ///
+  /// [resolve] samples the document for you; this variant is for
+  /// callers that know the surface the glyphs actually land on and
+  /// that surface is NOT the document — a preset painting its own
+  /// translucent plate, where the glyphs sit on plate-over-document
+  /// and resolving against the document alone can make things worse.
+  static Color resolveAgainst({
+    required Color requested,
+    required Color background,
+  }) {
+    if (_contrastRatio(requested, background) >= kMinContrast) return requested;
+    return _bestContrast(background);
+  }
+
   /// Returns the representative colour of the topmost opaque layer
   /// whose bounding rect covers [targetRect]'s centre, or [canvasFill]
   /// if no such layer is found.
@@ -124,6 +140,13 @@ class TextColorResolver {
   /// WCAG 2.1 relative luminance of a colour, treating it as opaque
   /// sRGB. Alpha is ignored — callers filter translucent layers out
   /// before reaching this.
+  ///
+  /// Public because the resolver is not the only surface that has to
+  /// answer "is this legible against that": the Add-text composer's
+  /// input field previews the staged colour, which was picked against
+  /// the CANVAS and can land invisible on the field's own fill.
+  static double contrastRatio(Color a, Color b) => _contrastRatio(a, b);
+
   static double _luminance(Color c) {
     double channel(double v) =>
         v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4) as double;

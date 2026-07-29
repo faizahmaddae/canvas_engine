@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -116,13 +118,28 @@ class _SourceAspectProbeState extends ConsumerState<_SourceAspectProbe> {
     final stream = provider.resolve(createLocalImageConfiguration(context));
     final listener = ImageStreamListener(
       (ImageInfo info, bool _) {
-        final image = info.image;
-        if (image.height > 0 && mounted) {
-          ref
-              .read(cropControllerProvider.notifier)
-              .setSourceAspect(image.width / image.height);
-        }
+        final aspect = info.image.height > 0
+            ? info.image.width / info.image.height
+            : null;
         info.dispose();
+        if (aspect == null || !mounted) return;
+        // DEFERRED, and that is the whole point.
+        //
+        // `addListener` delivers synchronously when the bitmap is
+        // already in the image cache — i.e. on every crop open after
+        // the first — and that lands this callback inside `build()`.
+        // Writing a Riverpod provider there throws "Tried to modify a
+        // provider while the widget tree was building"; the exception
+        // surfaced through the image stream, `_SourcePreview`'s
+        // errorBuilder caught it, and crop rendered
+        // «تصویر در دسترس نیست». So the photo appeared the first time
+        // and never again, and the user cropped blind from the second
+        // attempt onward. Deferring makes the cached and uncached paths
+        // behave identically.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ref.read(cropControllerProvider.notifier).setSourceAspect(aspect);
+        });
       },
       // Unresolvable source (missing file, dead URL): stay silent —
       // commit simply keeps the legacy fallback path.
@@ -180,7 +197,7 @@ class _CropTopBar extends ConsumerWidget {
                 ctrl.cancelCrop();
               },
               style: TextButton.styleFrom(
-                foregroundColor: tokens.accent,
+                foregroundColor: tokens.accentText,
                 minimumSize: const Size(64, 44),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
@@ -257,7 +274,23 @@ class _CropCanvas extends ConsumerWidget {
     final session = ref.watch(cropControllerProvider);
     // Asymmetric padding: extra bottom clearance so the crop frame
     // never visually crowds the control card below it.
-    const paddingSide = 28.0;
+    //
+    // The SIDE inset also has to clear Android's back-gesture strip.
+    // At a flat 28dp the left/right handles of a full-width photo —
+    // the state crop opens in — landed inside that strip, so the first
+    // drag a user tries was swallowed by the system as a back gesture:
+    // crop closed, the crop was discarded, and nothing said why.
+    // `systemGestureInsets` is the platform's own answer for how wide
+    // that strip is, so honour it and keep 28 as the visual floor.
+    // `systemGestureInsets` reports where the system MAY claim a
+    // gesture; sitting a draggable handle exactly on that line still
+    // loses races, so clear it by a finger's worth rather than
+    // touching it.
+    final gestureInsets = MediaQuery.systemGestureInsetsOf(context);
+    final paddingSide = math.max(
+      28.0,
+      math.max(gestureInsets.left, gestureInsets.right) + 16.0,
+    );
     const paddingBottom = 48.0;
     final paneW = (available.width - paddingSide * 2).clamp(
       0.0,
@@ -760,8 +793,14 @@ class _CropBottomBar extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // ── Row 1: aspect chip scroll strip ──────────────
+                // Height scales with the text. At a flat 38dp the chip
+                // stayed 38dp while the glyphs grew, so at 1.3x the
+                // final ی of «اصلی» was sheared to a stub — Persian
+                // descenders are the first thing a fixed row height
+                // eats. Also lifts the chip off its 38dp floor toward
+                // the 44dp target.
                 SizedBox(
-                  height: 38,
+                  height: MediaQuery.textScalerOf(context).scale(44),
                   child: ListView.separated(
                     key: const ValueKey('crop-aspect-strip'),
                     scrollDirection: Axis.horizontal,
@@ -807,7 +846,7 @@ class _CropBottomBar extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(22),
-                      side: BorderSide(color: tokens.border, width: 1),
+                      side: BorderSide(color: tokens.borderStrong, width: 1),
                     ),
                   ),
                 ),
@@ -845,28 +884,50 @@ class _ChipButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    return Material(
-      color: selected ? tokens.brand : tokens.surfaceMuted,
-      borderRadius: BorderRadius.circular(19),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(19),
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
+    // The crop session's only control row announced itself as seven
+    // plain Views with no role and no selected state, so a screen
+    // reader could neither tell they were buttons nor which ratio was
+    // active (WCAG 4.1.2, Level A).
+    //
+    // Mirrors `PresetChip` exactly, including the two parts that are
+    // easy to drop: `ExcludeSemantics` around the visual subtree, or
+    // the inner `Text` concatenates onto this node and every chip
+    // announces its label twice («اصلی اصلی»); and `onTap` here,
+    // because excluding the subtree also excludes the InkWell's tap
+    // action, leaving a button a screen reader cannot activate.
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      onTap: onTap,
+      child: ExcludeSemantics(
+        child: Material(
+          color: selected ? tokens.brand : tokens.surfaceMuted,
+          borderRadius: BorderRadius.circular(19),
+          child: InkWell(
             borderRadius: BorderRadius.circular(19),
-            border: Border.all(
-              color: selected ? tokens.brand : tokens.border,
-              width: 1,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? tokens.onBrand : tokens.textPrimary,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-              letterSpacing: 0.1,
+            onTap: onTap,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(19),
+                border: Border.all(
+                  // `borderStrong`: the unselected edge measured 1.26:1
+                  // against the crop card — the same invisible hairline
+                  // that was fixed in PresetChip but never reached here.
+                  color: selected ? tokens.brand : tokens.borderStrong,
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: selected ? tokens.onBrand : tokens.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  letterSpacing: 0.1,
+                ),
+              ),
             ),
           ),
         ),

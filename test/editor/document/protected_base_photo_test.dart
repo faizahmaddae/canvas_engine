@@ -11,7 +11,7 @@ import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
-import 'package:canvas_engine/features/editor/image/application/image_target_resolver.dart';
+import 'package:canvas_engine/features/editor/image/application/image_target.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -88,17 +88,14 @@ void main() {
       expect(doc.isProtectedBasePhoto('i'), isFalse);
     });
 
-    test('Crop/Filters/Adjust resolve base photo with NO selection', () {
+    test('Crop/Look resolve base photo with NO selection', () {
       final c = makePhotoProject();
       final doc = c.read(documentControllerProvider);
-      final outcome = resolveImageTarget(doc, selectedId: null);
-      // Single image present -> auto-select to the base photo.
-      expect(outcome, isA<ImageTargetAutoSelect>());
-      expect((outcome as ImageTargetAutoSelect).layer.id, 'photo');
+      expect(resolveRoleTarget(doc)?.id, 'photo');
     });
 
-    test('Crop resolves base photo even when an overlay is selected '
-        '(via basePhotoLayerId fallback when overlay is non-image)', () {
+    test('Crop resolves base photo even when an overlay is selected: the '
+        'project role names the target, not the selection (§10)', () {
       final c = makePhotoProject();
       // Add a shape overlay and select it: resolver should still
       // fall through to the base photo because the selection is
@@ -120,10 +117,7 @@ void main() {
           );
       c.read(selectionControllerProvider.notifier).select('s');
       final doc = c.read(documentControllerProvider);
-      final outcome = resolveImageTarget(doc, selectedId: 's');
-      // Only one image (the photo) -> auto-select to it.
-      expect(outcome, isA<ImageTargetAutoSelect>());
-      expect((outcome as ImageTargetAutoSelect).layer.id, 'photo');
+      expect(resolveRoleTarget(doc)?.id, 'photo');
     });
 
     test('selecting an overlay layer is NOT protected (normal chrome)', () {

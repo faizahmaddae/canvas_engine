@@ -205,9 +205,18 @@ Widget buildProtectedBaseBadge({
     centerCanvas.dy + dx * sin + dy * cos,
   );
   final tl = tlCanvas * viewport.scale + viewport.translation;
+  // Above the photo when there is room, INSIDE its top edge when
+  // there isn't. Unclamped, `tl.dy - 28` slid under the app bar the
+  // moment a tall sub-tool panel pushed the canvas up: the pill kept
+  // ~11 of its 27dp and what survived was the bottom half of the
+  // Persian glyphs — the dots and ascenders that tell پ/ب/ی apart are
+  // exactly what got cut. This is the ONLY on-canvas explanation for
+  // why the Image tools appeared, so it must never be half-drawn.
+  const badgeHeight = 28.0;
+  final above = tl.dy - badgeHeight;
   return Positioned(
-    left: tl.dx,
-    top: tl.dy - 28,
+    left: math.max(0, tl.dx),
+    top: above >= 0 ? above : math.max(0, tl.dy + 4),
     child: const IgnorePointer(child: _ProtectedBaseBadge()),
   );
 }

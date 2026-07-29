@@ -41,6 +41,7 @@ class DockToolTile extends StatefulWidget {
     required this.onTap,
     this.enabled = true,
     this.unavailable = false,
+    this.unavailableHint,
     this.semanticLabel,
     this.active = false,
     this.swatchColor,
@@ -69,6 +70,12 @@ class DockToolTile extends StatefulWidget {
   /// the recovery with it; leaving them fully lit makes the tile lie
   /// until the user taps it.
   final bool unavailable;
+
+  /// Spoken precondition, announced only while [unavailable]. The dim
+  /// treatment says "not now" to sighted users; without this the
+  /// screen reader says nothing at all and the tile reads as an
+  /// ordinary button (contract §10.3).
+  final String? unavailableHint;
 
   /// Spoken name, when it should differ from the printed one.
   ///
@@ -134,13 +141,25 @@ class _DockToolTileState extends State<DockToolTile> {
     // Active = primary @ 12% fill + primary fg + label w700.
     // Hover  = onSurface @ 6% fill (only when not active).
     // Press  = scale 0.97 (tactile feedback only — no lift).
-    final dim = !enabled || widget.unavailable;
+    // `unavailable` and `enabled: false` are NOT the same state and
+    // must not share a treatment. A disabled tile is inert, so WCAG's
+    // inactive-component exemption applies and 35% is fine. An
+    // unavailable tile is deliberately live — the whole point is that
+    // the user finds it and taps it to learn the precondition — so it
+    // has to stay readable: at 35% the icon measured 1.65:1 and the
+    // label 2.16:1, below even the 3:1 floor for non-text UI, on the
+    // two tools (Look, Crop) a photo-first user most needs to find.
+    // 0.70 puts the label at ~5.6:1 and the icon at ~3.5:1 while still
+    // reading as clearly recessed next to a full-strength tile.
+    final disabled = !enabled;
+    final dimAlpha = disabled ? 0.35 : 0.70;
+    final dim = disabled || widget.unavailable;
     final fg = dim
-        ? tokens.textPrimary.withValues(alpha: 0.35)
-        : (active ? tokens.accent : tokens.textPrimary);
+        ? tokens.textPrimary.withValues(alpha: dimAlpha)
+        : (active ? tokens.accentText : tokens.textPrimary);
     final iconColor = dim
-        ? tokens.textSecondary.withValues(alpha: 0.35)
-        : (active ? tokens.accent : tokens.textSecondary);
+        ? tokens.textSecondary.withValues(alpha: dimAlpha)
+        : (active ? tokens.accentText : tokens.textSecondary);
 
     final tileWidth = compact ? kDockToolTileWidthCompact : kDockToolTileWidth;
     final iconSize = compact ? 24.0 : 28.0;
@@ -193,48 +212,56 @@ class _DockToolTileState extends State<DockToolTile> {
     // hover bounds appear larger than the selected bounds. Keeping
     // Padding outside the InkWell guarantees all three states
     // (hover, press, selected) share identical visual bounds.
-    Widget tile = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 1),
-      child: MouseRegion(
-        onEnter: enabled ? (_) => setState(() => _hover = true) : null,
-        onExit: enabled ? (_) => setState(() => _hover = false) : null,
-        cursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: enabled
-                ? () {
-                    EditorHaptics.tap();
-                    widget.onTap();
-                  }
-                : null,
-            borderRadius: BorderRadius.circular(14),
-            // Hover/press painted via AnimatedContainer's `bg` so
-            // the bounds always match the selected fill exactly.
-            // Suppress Material's own overlays (which paint on the
-            // InkWell's *full* layout box, ignoring our radius
-            // visually).
-            hoverColor: Colors.transparent,
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            focusColor: Colors.transparent,
-            child: AnimatedContainer(
-              duration: AppMotion.of(context, AppMotion.reveal),
-              curve: AppMotion.curve,
-              width: tileWidth,
-              decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  iconWidget,
-                  if (showLabel) ...[
-                    SizedBox(height: compact ? 3 : 6),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: tileWidth - 6),
+    Widget tile = MouseRegion(
+      onEnter: enabled ? (_) => setState(() => _hover = true) : null,
+      onExit: enabled ? (_) => setState(() => _hover = false) : null,
+      cursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: enabled
+              ? () {
+                  EditorHaptics.tap();
+                  widget.onTap();
+                }
+              : null,
+          borderRadius: BorderRadius.circular(14),
+          // Hover/press painted via AnimatedContainer's `bg` so
+          // the bounds always match the selected fill exactly.
+          // Suppress Material's own overlays (which paint on the
+          // InkWell's *full* layout box, ignoring our radius
+          // visually).
+          hoverColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          focusColor: Colors.transparent,
+          child: AnimatedContainer(
+            duration: AppMotion.of(context, AppMotion.reveal),
+            curve: AppMotion.curve,
+            width: tileWidth,
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                iconWidget,
+                if (showLabel) ...[
+                  SizedBox(height: compact ? 3 : 6),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: tileWidth - 6),
+                    // A live VALUE ("۶px", "۱۰۰٪") is a number plus a
+                    // unit, and the unit is a bidi neutral: under RTL it
+                    // drifts to whichever side the surrounding paragraph
+                    // dictates, so one formatter painted «٪۱۶» in the app
+                    // bar and «۱۰۰٪» here. Pinning the direction at the
+                    // widget avoids the LRI/PDI font-fallback digit-drop
+                    // this repo has already been bitten by. Category
+                    // LABELS are ordinary Persian and stay directional.
+                    child: _MaybeLtr(
+                      ltr: widget.valueText != null,
                       child: Text(
                         displayLabel,
                         maxLines: 1,
@@ -251,9 +278,9 @@ class _DockToolTileState extends State<DockToolTile> {
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
         ),
@@ -295,9 +322,30 @@ class _DockToolTileState extends State<DockToolTile> {
     // peek long-press (undo/redo preview) has no AT equivalent and
     // is intentionally not exposed here; onTap (select this tool)
     // is the control's core function.
+    // Strip spacing goes OUTSIDE the gesture detector, not inside it.
+    // While it sat inside, the detector's `opaque` box covered an 8dp
+    // band above and below the tile where `onTapDown` fired — playing
+    // the 0.97 press animation — but the InkWell that owns `onTap`
+    // did not, so the tile visibly reacted and then did nothing. The
+    // reactive box and the tappable box are now the same 66x64dp
+    // rect, comfortably over the 48dp floor. (It still has to stay
+    // outside the InkWell: as `margin` the ripple and hover overlay
+    // would paint the full spacing box and out-size the selected
+    // fill.)
+    tile = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 1),
+      child: tile,
+    );
+
+    // `enabled` stays true for an unavailable tile — it IS tappable,
+    // and announcing otherwise would hide the recovery from exactly
+    // the users who cannot see the dim. The unmet precondition rides
+    // the hint instead, so the dim treatment and the spoken name say
+    // the same thing (contract §10.3).
     return Semantics(
       label: widget.semanticLabel ?? widget.label,
       value: widget.valueText,
+      hint: widget.unavailable ? widget.unavailableHint : null,
       button: true,
       enabled: enabled,
       selected: active,
@@ -305,4 +353,18 @@ class _DockToolTileState extends State<DockToolTile> {
       child: ExcludeSemantics(child: tile),
     );
   }
+}
+
+/// Wraps [child] in a left-to-right [Directionality] when [ltr] is set,
+/// and passes it straight through otherwise.
+class _MaybeLtr extends StatelessWidget {
+  const _MaybeLtr({required this.ltr, required this.child});
+
+  final bool ltr;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ltr
+      ? Directionality(textDirection: TextDirection.ltr, child: child)
+      : child;
 }

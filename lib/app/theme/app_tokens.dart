@@ -23,6 +23,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.onBrand,
     required this.accent,
     required this.accentDeep,
+    required this.accentText,
     required this.rose,
     required this.saffron,
     required this.teal,
@@ -37,6 +38,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.textSecondary,
     required this.textMuted,
     required this.border,
+    required this.borderStrong,
   });
 
   // ─── primary (ink / cream) ─────────────────────────────────────
@@ -68,6 +70,23 @@ class AppTokens extends ThemeExtension<AppTokens> {
   /// [accent].
   final Color accentDeep;
 
+  /// The saffron stop for **glyphs** — labels, links, section
+  /// headers, active tile text, chevrons.
+  ///
+  /// [accent] is tuned as a FILL (diamonds, slider tracks, tints,
+  /// borders) and at `#C0872A` it measures 2.92:1 on `surface`,
+  /// 2.69:1 on `pageBg` and 2.29:1 on the crop bar — every light-mode
+  /// text use of it failed WCAG AA, including the crop session's only
+  /// Cancel and the sole cue for which tool is open. This keeps the
+  /// same saffron hue and saturation, drops the value, and clears
+  /// 4.5:1 on all five light backgrounds the accent lands on
+  /// (surface 6.72, pageBg 6.21, active tile 6.02, selected option
+  /// tile 4.57, crop bar 5.28). Dark mode already passed at 7.47:1,
+  /// so there it stays equal to [accent].
+  ///
+  /// Rule: paint glyphs with this, everything else with [accent].
+  final Color accentText;
+
   // ─── category accents (template thumbs; fixed across modes) ───
   final Color rose;
   final Color saffron;
@@ -94,6 +113,23 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final Color textMuted;
   final Color border;
 
+  /// Boundary stop for components whose EDGE is load-bearing — the
+  /// only thing separating an option tile from the panel behind it.
+  ///
+  /// [border] is a decorative hairline: it measures 1.31:1 on light
+  /// `surface` and 1.19:1 on dark, which is fine for a divider between
+  /// two labelled rows and useless as the sole outline of a control.
+  /// Option tiles drawn with only a `surfaceMuted @35%` fill and a
+  /// `border` hairline were invisible rectangles — a row of options
+  /// read as floating glyphs with one highlighted box among them.
+  /// This clears WCAG 1.4.11's 3:1 against every surface a bounded
+  /// component sits on — `surface`, `pageBg`, `workspace` and the
+  /// unselected tile fill — in BOTH modes. `token_contrast_test.dart`
+  /// pins that; the first value chosen here cleared surface and fill
+  /// and missed `pageBg` at 2.94:1, which is exactly the kind of
+  /// near-miss the test exists to stop.
+  final Color borderStrong;
+
   static const AppTokens light = AppTokens(
     brand: Color(0xFF1F1B16),
     brandStrong: Color(0xFF1F1B16),
@@ -102,6 +138,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     onBrand: Color(0xFFF4EEE1),
     accent: Color(0xFFC0872A),
     accentDeep: Color(0xFFA5731E),
+    accentText: Color(0xFF735119),
     rose: Color(0xFFD87995),
     saffron: Color(0xFFE5A044),
     teal: Color(0xFF22B8A0),
@@ -116,6 +153,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textSecondary: Color(0xFF6B6155),
     textMuted: Color(0xFF9C8F7C),
     border: Color(0xFFE3D9C6),
+    borderStrong: Color(0xFF85785C),
   );
 
   static const AppTokens dark = AppTokens(
@@ -126,6 +164,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     onBrand: Color(0xFF1F1B16),
     accent: Color(0xFFD4A24A),
     accentDeep: Color(0xFFC0872A),
+    accentText: Color(0xFFD4A24A),
     rose: Color(0xFFD87995),
     saffron: Color(0xFFE5A044),
     teal: Color(0xFF22B8A0),
@@ -140,6 +179,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     textSecondary: Color(0xFFA9A090),
     textMuted: Color(0xFF7C7264),
     border: Color(0xFF2E2820),
+    borderStrong: Color(0xFF7B7060),
   );
 
   /// Resolves the instance matching the ambient theme's brightness.
@@ -157,6 +197,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     Color? onBrand,
     Color? accent,
     Color? accentDeep,
+    Color? accentText,
     Color? rose,
     Color? saffron,
     Color? teal,
@@ -171,6 +212,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
     Color? textSecondary,
     Color? textMuted,
     Color? border,
+    Color? borderStrong,
   }) {
     return AppTokens(
       brand: brand ?? this.brand,
@@ -180,6 +222,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       onBrand: onBrand ?? this.onBrand,
       accent: accent ?? this.accent,
       accentDeep: accentDeep ?? this.accentDeep,
+      accentText: accentText ?? this.accentText,
       rose: rose ?? this.rose,
       saffron: saffron ?? this.saffron,
       teal: teal ?? this.teal,
@@ -194,6 +237,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       textSecondary: textSecondary ?? this.textSecondary,
       textMuted: textMuted ?? this.textMuted,
       border: border ?? this.border,
+      borderStrong: borderStrong ?? this.borderStrong,
     );
   }
 
@@ -209,6 +253,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       onBrand: c(onBrand, other.onBrand),
       accent: c(accent, other.accent),
       accentDeep: c(accentDeep, other.accentDeep),
+      accentText: c(accentText, other.accentText),
       rose: c(rose, other.rose),
       saffron: c(saffron, other.saffron),
       teal: c(teal, other.teal),
@@ -223,6 +268,7 @@ class AppTokens extends ThemeExtension<AppTokens> {
       textSecondary: c(textSecondary, other.textSecondary),
       textMuted: c(textMuted, other.textMuted),
       border: c(border, other.border),
+      borderStrong: c(borderStrong, other.borderStrong),
     );
   }
 }

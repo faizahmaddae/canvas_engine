@@ -111,7 +111,7 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
         ? (widget.titleOpen ?? widget.titleClosed)
         : widget.titleClosed;
     final chevronColor = _open
-        ? (widget.chevronColorOpen ?? tokens.accent)
+        ? (widget.chevronColorOpen ?? tokens.accentText)
         : (widget.chevronColorClosed ?? tokens.textSecondary);
 
     return Column(
@@ -131,107 +131,118 @@ class _PrecisionDisclosureState extends State<PrecisionDisclosure> {
           label: widget.compact && widget.subtitle != null
               ? '$title · ${widget.subtitle}'
               : title,
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            child: InkWell(
+          // The visible title/subtitle Texts inside would otherwise
+          // concatenate onto this node, so the header announced
+          // «تنظیم دقیق · روشنایی، … / تنظیم دقیق» — the title twice.
+          // `onTap` moves up here because excluding the subtree also
+          // excludes the InkWell's tap action.
+          onTap: () {
+            EditorHaptics.tap();
+            setState(() => _open = !_open);
+          },
+          child: ExcludeSemantics(
+            child: Material(
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(10),
-              onTap: () {
-                EditorHaptics.tap();
-                setState(() => _open = !_open);
-              },
-              child: ConstrainedBox(
-                // Painted row shrinks; the touch floor does not.
-                constraints: BoxConstraints(
-                  minHeight: widget.compact ? kMinHitTarget : 0,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: widget.compact ? 4 : 10,
-                    horizontal: 4,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () {
+                  EditorHaptics.tap();
+                  setState(() => _open = !_open);
+                },
+                child: ConstrainedBox(
+                  // Painted row shrinks; the touch floor does not.
+                  constraints: BoxConstraints(
+                    minHeight: widget.compact ? kMinHitTarget : 0,
                   ),
-                  child: Row(
-                    children: [
-                      if (widget.icon != null && !widget.compact) ...[
-                        Icon(widget.icon, size: 16, color: tokens.accent),
-                        const SizedBox(width: 8),
-                      ],
-                      Expanded(
-                        child: widget.compact
-                            ? Text(
-                                title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: widget.compact ? 4 : 10,
+                      horizontal: 4,
+                    ),
+                    child: Row(
+                      children: [
+                        if (widget.icon != null && !widget.compact) ...[
+                          Icon(widget.icon, size: 16, color: tokens.accentText),
+                          const SizedBox(width: 8),
+                        ],
+                        Expanded(
+                          child: widget.compact
+                              ? Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: chevronColor,
+                                    letterSpacing: 0.1,
+                                  ),
+                                )
+                              : widget.subtitle != null
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      title,
+                                      style: TextStyle(
+                                        fontSize: widget.titleSize,
+                                        fontWeight: FontWeight.w600,
+                                        color: tokens.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 1),
+                                    Text(
+                                      widget.subtitle!,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: tokens.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  title,
+                                  style: TextStyle(
+                                    fontSize: widget.titleSize,
+                                    fontWeight: FontWeight.w600,
+                                    color: tokens.textPrimary,
+                                  ),
+                                ),
+                        ),
+                        if (widget.headerValue != null) ...[
+                          Text(
+                            widget.headerValue!,
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
                                   color: chevronColor,
-                                  letterSpacing: 0.1,
-                                ),
-                              )
-                            : widget.subtitle != null
-                            ? Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    title,
-                                    style: TextStyle(
-                                      fontSize: widget.titleSize,
-                                      fontWeight: FontWeight.w600,
-                                      color: tokens.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 1),
-                                  Text(
-                                    widget.subtitle!,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                      color: tokens.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : Text(
-                                title,
-                                style: TextStyle(
-                                  fontSize: widget.titleSize,
                                   fontWeight: FontWeight.w600,
-                                  color: tokens.textPrimary,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
                                 ),
-                              ),
-                      ),
-                      if (widget.headerValue != null) ...[
-                        Text(
-                          widget.headerValue!,
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(
-                                color: chevronColor,
-                                fontWeight: FontWeight.w600,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
+                          ),
+                          const SizedBox(width: 2),
+                        ],
+                        // A quarter turn CLOCKWISE only points the
+                        // caret downward while it is pointing right.
+                        // `drillIn` mirrors under RTL, so in Persian
+                        // the closed caret points LEFT and +0.25 turned
+                        // it UP — an expanded section claiming it was
+                        // collapsed. Turn the other way when mirrored.
+                        AnimatedRotation(
+                          turns: _open ? disclosureOpenTurns(context) : 0,
+                          duration: widget.animationDuration,
+                          child: Icon(
+                            AppIcons.drillIn,
+                            size: widget.compact ? 18 : widget.chevronSize,
+                            color: chevronColor,
+                          ),
                         ),
-                        const SizedBox(width: 2),
                       ],
-                      // A quarter turn CLOCKWISE only points the
-                      // caret downward while it is pointing right.
-                      // `drillIn` mirrors under RTL, so in Persian
-                      // the closed caret points LEFT and +0.25 turned
-                      // it UP — an expanded section claiming it was
-                      // collapsed. Turn the other way when mirrored.
-                      AnimatedRotation(
-                        turns: _open ? disclosureOpenTurns(context) : 0,
-                        duration: widget.animationDuration,
-                        child: Icon(
-                          AppIcons.drillIn,
-                          size: widget.compact ? 18 : widget.chevronSize,
-                          color: chevronColor,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

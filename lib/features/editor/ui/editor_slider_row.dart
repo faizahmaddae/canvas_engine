@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_tokens.dart';
@@ -49,11 +51,14 @@ enum EditorSliderHaptics {
 ///
 /// ## Accessibility
 ///
-/// Every row wraps in `Semantics(label: ...)` with the underlying
-/// [Slider.semanticFormatterCallback] set to [format] — this is a
-/// deliberate behaviour addition (Phase 4 plan D2): before this
-/// widget, only 2 of ~20 slider-family controls in the app exposed
-/// anything to a screen reader.
+/// The name is merged onto the SLIDER's own semantics node, and the
+/// visible label/readout `Text`s are excluded from the tree. Both
+/// halves matter: a `Semantics` wrapper around the whole row produces
+/// a node ABOVE the slider's, so the SeekBar a screen reader focuses
+/// and adjusts is left unnamed, and the visible label concatenates
+/// onto the row node so the parameter is announced twice. The value
+/// itself is carried by [Slider.semanticFormatterCallback] (set to
+/// [format]), so the readout Text would be a third repetition.
 class EditorSliderRow extends StatefulWidget {
   const EditorSliderRow({
     super.key,
@@ -74,6 +79,7 @@ class EditorSliderRow extends StatefulWidget {
     this.semanticLabel,
     this.labelStyle,
     this.readoutStyle,
+    this.origin,
   });
 
   /// Label rendered in a fixed-width leading column. `null` omits
@@ -143,6 +149,18 @@ class EditorSliderRow extends StatefulWidget {
   /// `labelMedium` base with tabular figures — pass it explicitly.
   final TextStyle? readoutStyle;
 
+  /// Neutral value for a **bipolar** parameter (brightness, warmth,
+  /// exposure …). When set, the filled segment runs from here to the
+  /// thumb instead of from [min], and a tick marks the origin.
+  ///
+  /// Without it a slider whose neutral sits mid-track paints half its
+  /// track filled at rest, so "untouched" and "half applied" look
+  /// identical — the Look panel's five adjustment rows all showed a
+  /// half-saffron track while every value was at its default. `null`
+  /// (the default) keeps the plain min→thumb fill every existing
+  /// unipolar row uses.
+  final double? origin;
+
   @override
   State<EditorSliderRow> createState() => _EditorSliderRowState();
 }
@@ -200,10 +218,17 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
     // partway: the overlay shrinks to 18 and the row lands on exactly
     // the 44dp floor. Going lower would trade real usability for
     // density, which is not the trade the prototype was arguing for.
+    final origin = widget.origin;
     final slider = SliderTheme(
       data: SliderTheme.of(context).copyWith(
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
         trackHeight: 4,
+        trackShape: origin == null
+            ? null
+            : _OriginTrackShape(
+                origin: ((origin - widget.min) / (widget.max - widget.min))
+                    .clamp(0.0, 1.0),
+              ),
       ),
       child: Listener(
         onPointerCancel: (_) => _endDrag(),
@@ -225,15 +250,29 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
       ),
     );
 
-    return Semantics(
-      label: widget.semanticLabel ?? label,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
-        child: Row(
-          children: [
-            if (label != null)
-              SizedBox(
-                width: widget.labelWidth,
+    // The name goes on the SLIDER's own node, and the visible Texts are
+    // excluded from the tree.
+    //
+    // The previous form put a plain `Semantics(label:)` around the whole
+    // row. That node sits ABOVE the Slider's node, so the SeekBar —
+    // the node TalkBack focuses and the one that owns increase/decrease
+    // — was handed no name at all and announced a bare «۰», while the
+    // row node concatenated the visible label Text on top of its own
+    // label and said the parameter twice: «روشنایی روشنایی ۰».
+    //
+    // This is the shared row behind every adjustment slider in the
+    // editor (Look's five fine-tune rows, vignette, border width,
+    // shadow, mask feather, text, shape, export), so fixing it here is
+    // the fix — `layer_opacity_control` carries the same shape for its
+    // bespoke slider and was, for one round, the only place it worked.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+      child: Row(
+        children: [
+          if (label != null)
+            SizedBox(
+              width: widget.labelWidth,
+              child: ExcludeSemantics(
                 child: Text(
                   label,
                   maxLines: 1,
@@ -247,25 +286,122 @@ class _EditorSliderRowState extends State<EditorSliderRow> {
                       ),
                 ),
               ),
-            Expanded(child: slider),
-            if (widget.showReadout)
-              SizedBox(
-                width: widget.readoutWidth,
-                child: Text(
-                  widget.format(widget.value),
-                  textAlign: TextAlign.end,
-                  style:
-                      widget.readoutStyle ??
-                      TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.textPrimary,
-                      ),
+            ),
+          Expanded(
+            child: MergeSemantics(
+              child: Semantics(
+                label: widget.semanticLabel ?? label,
+                child: slider,
+              ),
+            ),
+          ),
+          if (widget.showReadout)
+            SizedBox(
+              width: widget.readoutWidth,
+              // Numeric readouts render LTR. A unit like `٪` or `px`
+              // is a bidi-neutral / Latin run beside Persian digits
+              // (class AN), so the paragraph direction decides which
+              // side it lands on — and that made the SAME formatter
+              // paint «٪۱۶» in the app bar and «۱۰۰٪» in the dock.
+              // Pinning the direction at the widget (rather than
+              // wrapping the string in LRI/PDI) also avoids the
+              // font-fallback digit-drop those codepoints cause: no
+              // bundled family, Vazir included, has glyphs for them.
+              // Excluded: the same number is already the slider
+              // node's `value`, so leaving it in the tree made the
+              // row read the figure a second time.
+              child: ExcludeSemantics(
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    widget.format(widget.value),
+                    textAlign: TextAlign.end,
+                    style:
+                        widget.readoutStyle ??
+                        TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.textPrimary,
+                        ),
+                  ),
                 ),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
+    );
+  }
+}
+
+/// Track that fills from a fixed [origin] (0..1 of the track's span)
+/// to the thumb, and paints a hairline tick at the origin.
+///
+/// Written against the parent-data the framework hands every track
+/// shape, so it inherits RTL handling: [textDirection] tells us which
+/// physical end `min` sits at, and the origin is mirrored with it.
+class _OriginTrackShape extends RoundedRectSliderTrackShape {
+  const _OriginTrackShape({required this.origin});
+
+  /// Normalized position of the neutral value along min→max.
+  final double origin;
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset offset, {
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required Animation<double> enableAnimation,
+    required Offset thumbCenter,
+    Offset? secondaryOffset,
+    bool isDiscrete = false,
+    bool isEnabled = false,
+    double additionalActiveTrackHeight = 2,
+    required TextDirection textDirection,
+  }) {
+    final rect = getPreferredRect(
+      parentBox: parentBox,
+      offset: offset,
+      sliderTheme: sliderTheme,
+      isEnabled: isEnabled,
+      isDiscrete: isDiscrete,
+    );
+    if (rect.isEmpty) return;
+
+    final active = sliderTheme.activeTrackColor ?? const Color(0xFF000000);
+    final inactive = sliderTheme.inactiveTrackColor ?? const Color(0x33000000);
+    final radius = Radius.circular(rect.height / 2);
+
+    // Whole track in the inactive tone first; the filled span is then
+    // drawn over it, so the two never disagree about the rounding.
+    context.canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, radius),
+      Paint()..color = inactive,
+    );
+
+    final originX = textDirection == TextDirection.rtl
+        ? rect.right - origin * rect.width
+        : rect.left + origin * rect.width;
+    final from = math.min(originX, thumbCenter.dx);
+    final to = math.max(originX, thumbCenter.dx);
+    if (to - from > 0.5) {
+      context.canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTRB(from, rect.top, to, rect.bottom),
+          radius,
+        ),
+        Paint()..color = active,
+      );
+    }
+
+    // Origin tick: the "no change" landmark. Drawn last so it stays
+    // legible whichever side the fill is on.
+    context.canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTRB(originX - 1, rect.top - 2, originX + 1, rect.bottom + 2),
+        const Radius.circular(1),
+      ),
+      Paint()..color = active.withValues(alpha: 0.55),
     );
   }
 }

@@ -365,9 +365,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collapseTooltip => 'Collapse';
 
   @override
-  String get dismissPanelSemantics => 'Dismiss panel';
-
-  @override
   String get undoLastChangeSemantics => 'Undo last change';
 
   @override
@@ -398,9 +395,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showAction => 'Show';
 
   @override
-  String get protectedBasePhotoTooltip => 'Protected base photo';
-
-  @override
   String get basePhotoLabel => 'Base photo';
 
   @override
@@ -408,6 +402,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hiddenLabel => 'Hidden';
+
+  @override
+  String get borderColorEnablesHint => 'Picking a colour turns the border on.';
+
+  @override
+  String get hexColorFieldLabel => 'Hex colour code';
+
+  @override
+  String get colorBlack => 'Black';
+
+  @override
+  String get colorWhite => 'White';
+
+  @override
+  String get colorSlate => 'Grey';
+
+  @override
+  String get colorRed => 'Red';
+
+  @override
+  String get colorAmber => 'Amber';
+
+  @override
+  String get colorYellow => 'Yellow';
+
+  @override
+  String get colorGreen => 'Green';
+
+  @override
+  String get colorCyan => 'Cyan';
+
+  @override
+  String get colorBlue => 'Blue';
+
+  @override
+  String get colorPurple => 'Purple';
+
+  @override
+  String get colorPink => 'Pink';
+
+  @override
+  String get colorTeal => 'Teal';
+
+  @override
+  String colorCustomSwatch(String hex) {
+    return 'Colour $hex';
+  }
+
+  @override
+  String get layerKindImage => 'Photo';
+
+  @override
+  String get layerKindText => 'Text';
+
+  @override
+  String get layerKindShape => 'Shape';
+
+  @override
+  String get layerKindSticker => 'Sticker';
+
+  @override
+  String get layerKindPaint => 'Drawing';
+
+  @override
+  String get layerKindGeneric => 'Layer';
+
+  @override
+  String layerAutoName(String kind, int index) {
+    final intl.NumberFormat indexNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String indexString = indexNumberFormat.format(index);
+
+    return '$kind $indexString';
+  }
 
   @override
   String multiSelectCount(int count) {
@@ -484,6 +552,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verticalOption => 'Vertical';
+
+  @override
+  String get dirTopStart => 'Up and left';
+
+  @override
+  String get dirTop => 'Up';
+
+  @override
+  String get dirTopEnd => 'Up and right';
+
+  @override
+  String get dirStart => 'Left';
+
+  @override
+  String get dirCenter => 'No offset';
+
+  @override
+  String get dirEnd => 'Right';
+
+  @override
+  String get dirBottomStart => 'Down and left';
+
+  @override
+  String get dirBottom => 'Down';
+
+  @override
+  String get dirBottomEnd => 'Down and right';
 
   @override
   String get alignLeftAction => 'Align left';
@@ -1020,9 +1115,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String pickImageToAction(String action) {
-    return 'Pick an image to $action';
+  String showPhotoToAction(String action) {
+    return 'Show the photo to $action.';
   }
+
+  @override
+  String get toolNeedsPhotoHint => 'Needs a visible photo';
 
   @override
   String get cropActionVerb => 'crop';
@@ -1030,15 +1128,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String savedProject(String name) {
     return 'Saved “$name”';
-  }
-
-  @override
-  String imageLayerTitle(int index) {
-    final intl.NumberFormat indexNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String indexString = indexNumberFormat.format(index);
-
-    return 'Image $indexString';
   }
 
   @override

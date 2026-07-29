@@ -30,6 +30,7 @@ import '../canvas/presentation/canvas_panel_body.dart';
 import '../crop/application/crop_controller.dart';
 import '../crop/presentation/crop_mode_overlay.dart';
 import '../engine/commands/transform_commands.dart';
+import '../engine/commands/layer_state_commands.dart';
 import '../engine/commands/shape_commands.dart';
 import '../engine/core/canvas_sizing.dart';
 import '../engine/core/editor_document.dart';
@@ -40,7 +41,7 @@ import '../engine/modules/image/image_layer.dart';
 import '../engine/modules/shape/shape_defaults.dart';
 import '../engine/modules/shape/shape_layer.dart';
 import '../engine/modules/text/text_layer.dart';
-import '../image/application/image_target_resolver.dart';
+import '../image/application/image_target.dart';
 import '../image/application/image_tool_controller.dart';
 import '../image/application/main_strip_image_entry.dart';
 import '../image/presentation/image_border_body.dart';
@@ -69,7 +70,6 @@ import '../text/presentation/text_input_flow_sheet.dart';
 import '../text/presentation/text_mode_toolbar.dart';
 import '../toolbar/presentation/mode_done_button.dart';
 import 'widgets/editor_canvas.dart';
-import 'widgets/editor_modal_sheet.dart';
 import 'widgets/image_source_sheet.dart';
 import 'widgets/editor_tool_dock.dart';
 import '../toolbar/domain/toolbar_slot.dart';
@@ -191,6 +191,9 @@ class EditorScreen extends ConsumerWidget {
     final cropActive = ref.watch(
       cropControllerProvider.select((s) => s.active),
     );
+    final textFlowOpen =
+        ref.watch(addTextComposerOpenProvider) ||
+        ref.watch(textEditFlowOpenProvider);
     // Mask-edit mode hides the same chrome: its bottom strip is the
     // only editing surface while the user shapes the region, and the
     // undo rail must hide because a mid-draft undo would mutate the
@@ -318,7 +321,18 @@ class EditorScreen extends ConsumerWidget {
                 // painted 36dp pill centred (tb2 a11y pass), so the
                 // 4dp transparent halo puts the VISIBLE pill exactly
                 // where it has always been (8dp from the top edge).
-                if (!cropActive && !maskEditActive)
+                // …and NOT while a text composer/edit flow owns the
+                // screen. The pill reads «تمام» — the app's own commit
+                // word — and floats directly above a sheet whose commit
+                // button says «افزودن», both pill-shaped, both on the
+                // physical left. But the pill belongs to the route
+                // UNDER the modal, so a tap aimed at it lands on the
+                // sheet's dismissible barrier: pop(null) → cancelLiveEdit
+                // → everything typed is gone, with no confirm and
+                // nothing on the undo stack. Every other piece of canvas
+                // chrome already suppresses itself on these flags; the
+                // pill was the one that didn't.
+                if (!cropActive && !maskEditActive && !textFlowOpen)
                   const PositionedDirectional(
                     top: 4,
                     end: 8,
@@ -391,29 +405,63 @@ class EditorScreen extends ConsumerWidget {
   ///   tier1 — **Add** something to the canvas
   ///     Image · Text · Sticker · Shape · Paint
   ///
-  ///   tier2 — **Edit the photo** (operate on an existing image
-  ///     layer; resolves the target via [resolveImageTarget] so the
-  ///     user doesn't have to select the photo first)
-  ///     Crop · Adjust · Filters
+  ///   tier2 — **Edit the photo** — the P-scope group (contract §10).
+  ///     Crop · Look, targeting the protected base photo and nothing
+  ///     else. PHOTO PROJECTS ONLY: a design document has no such
+  ///     role, so it does not render this group at all (§10.1). That
+  ///     is absence, not unavailability — the distinction §10.3 draws.
   ///
   ///   tier3 — **Document**
   ///     Canvas (size / background)
   ///
-  /// Order is the same on every project kind — design and photo
-  /// projects both see the full set so nothing is hidden, but the
-  /// grouping makes the photo flow obvious to a user who imported
-  /// a photo and the design flow obvious to one who started blank.
-  /// Whether anything in the document is an [ImageLayer] — the
-  /// precondition Crop and Look share.
-  static bool _hasImageLayer(WidgetRef ref) => ref
-      .watch(documentControllerProvider)
-      .layers
-      .whereType<ImageLayer>()
-      .isNotEmpty;
+  /// Group ORDER follows project kind, because the strip does not
+  /// fit. Eight slots need ~560dp of a 402dp content width, so the
+  /// sixth tile is always cut and the rest are behind a scroll whose
+  /// only affordance is a 24dp fade. With tier 1 leading, the three
+  /// tools past the fold were Crop, Look and Canvas — i.e. a user who
+  /// arrived through «ویرایش عکس» found the five verbs they did not
+  /// come for and had to discover a scroll to reach the two they did.
+  ///
+  /// So a photo project leads with the photo group; a design project
+  /// has only Add + Document to order, and keeps Add first.
+  /// Handedness still never reorders anything (see
+  /// [SlotStrip.fitAlignment]) — only project kind does.
+  ///
+  /// Whether the P-scope role target qualifies — the precondition
+  /// Crop and Look share (§10.2). Distinct from "is this a photo
+  /// project": the group is CONSTRUCTED on project kind and made
+  /// AVAILABLE on this, which is §10.4's separation of placement
+  /// from availability.
+  static bool _roleTargetAvailable(WidgetRef ref) =>
+      resolveRoleTarget(ref.watch(documentControllerProvider)) != null;
+
+  /// Whether this document is a PHOTO project — the stable property
+  /// the group order keys off.
+  ///
+  /// Deliberately not "does any image layer exist". A design project
+  /// where the user dropped in one decorative image is still an
+  /// add-content workflow, and keying off layer contents reshuffled the
+  /// strip on undo/redo of ANY image add — chrome moving as a
+  /// side-effect of an unrelated edit.
+  ///
+  /// This does not make the order undo-invariant, and the earlier
+  /// version of this comment wrongly implied it did.
+  /// `SetProjectKindCommand` is part of the base-photo delete composite
+  /// (`LayerActions.deleteWithoutConfirm`) and is inverted on undo, so
+  /// removing the base photo — and undoing that removal — does reorder
+  /// the strip. That is the one edit where the workflow genuinely
+  /// changes, and it is the trade being made: one deliberate flip
+  /// instead of one per image layer touched.
+  static bool _isPhotoProject(WidgetRef ref) => ref.watch(
+    documentControllerProvider.select(
+      (d) => d.projectKind == ProjectKind.photo,
+    ),
+  );
 
   List<ToolbarSlot> _buildToolbarItems(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return [
+    final hasPhoto = _isPhotoProject(ref);
+    final add = <ToolbarSlot>[
       // ── tier 1 — Add ────────────────────────────────────────────
       ToolbarSlot(
         id: 'image',
@@ -456,21 +504,28 @@ class EditorScreen extends ConsumerWidget {
           }
         },
       ),
-      // ── tier 2 — Edit the photo ─────────────────────────────────
-      //
-      // Both act on an ImageLayer, so in a document with no photo
-      // neither can do anything. They stay VISIBLE — hiding them
-      // would mean a user who started blank never learns the app can
-      // crop or restyle a photo at all — and stay TAPPABLE, because
-      // the tap is what offers to import one. They just render dimmed
-      // so the tile says so before it is pressed rather than after
-      // (see ToolbarSlot.availableBuilder).
+    ];
+    // ── tier 2 — Edit the photo (P scope, §10) ────────────────────
+    //
+    // Built ONLY for a photo project — see `hasPhoto` below. Both
+    // target the protected base photo, a role `ProjectKind.design`
+    // does not have, and §10.1 keeps a control off a surface whose
+    // scope is inadmissible there rather than dimming it forever.
+    //
+    // Where the group DOES exist and its target does not qualify
+    // (deleted, or hidden from the layers drawer), the tiles stay
+    // VISIBLE and TAPPABLE and render dimmed — the tap is what
+    // explains the precondition and offers to satisfy it. That is
+    // §10.3's split: absent when the scope cannot apply, dimmed when
+    // it applies and the target is missing. Never present-and-inert.
+    final photo = <ToolbarSlot>[
       ToolbarSlot(
         id: 'crop',
         icon: AppIcons.cropTool,
         label: l10n.cropTool,
         tier: SlotTier.tier2,
-        availableBuilder: () => _hasImageLayer(ref),
+        availableBuilder: () => _roleTargetAvailable(ref),
+        unavailableHint: l10n.toolNeedsPhotoHint,
         onTap: () => _openCrop(context, ref),
       ),
       ToolbarSlot(
@@ -478,10 +533,13 @@ class EditorScreen extends ConsumerWidget {
         icon: AppIcons.lookTool,
         label: l10n.lookTool,
         tier: SlotTier.tier2,
-        availableBuilder: () => _hasImageLayer(ref),
+        availableBuilder: () => _roleTargetAvailable(ref),
+        unavailableHint: l10n.toolNeedsPhotoHint,
         onTap: () => _openLook(context, ref),
       ),
-      // ── tier 3 — Document ───────────────────────────────────────
+    ];
+    // ── tier 3 — Document ─────────────────────────────────────────
+    final document = <ToolbarSlot>[
       ToolbarSlot(
         id: 'canvas',
         icon: AppIcons.canvasSize,
@@ -490,6 +548,10 @@ class EditorScreen extends ConsumerWidget {
         onTap: () => _openCanvas(ref),
       ),
     ];
+    // Photo group first in a photo project — see the doc above. A
+    // design project omits the group entirely (§10.1), so its strip
+    // is Add + Document and carries one divider instead of two.
+    return hasPhoto ? [...photo, ...document, ...add] : [...add, ...document];
   }
 
   /// Resolves everything the bottom dock renders — mode key, chip
@@ -547,14 +609,17 @@ class EditorScreen extends ConsumerWidget {
 
     Widget? expanded;
     Object? expandedKey;
-    if (contextPanel != null && selectedLayersForActions.isNotEmpty) {
+    final contextPanelLayers = contextPanel == null
+        ? const <EditorLayer>[]
+        : _layersForContextPanel(ref, selection, contextPanel);
+    if (contextPanel != null && contextPanelLayers.isNotEmpty) {
       expanded = ContextToolPanelBody(
         panel: contextPanel,
-        layers: selectedLayersForActions,
+        layers: contextPanelLayers,
       );
       expandedKey =
           'context:${contextPanel.name}:'
-          '${selectedLayersForActions.map((l) => l.id).join(',')}';
+          '${contextPanelLayers.map((l) => l.id).join(',')}';
     } else if (textSelected && textOpenSheet != null) {
       expanded = const TextModeSheetPanel();
       expandedKey = 'text-sheet:$textOpenSheet';
@@ -654,17 +719,47 @@ class EditorScreen extends ConsumerWidget {
 
   List<EditorLayer> _selectedLayersForActions(
     WidgetRef ref,
-    SelectionState selection,
-  ) {
+    SelectionState selection, {
+    bool includeProtectedBase = false,
+  }) {
     final doc = ref.watch(documentControllerProvider);
     final out = <EditorLayer>[];
     for (final id in selection.selectedIds) {
       final layer = doc.layerById(id);
-      if (layer == null || doc.isProtectedBasePhoto(id)) continue;
+      if (layer == null) continue;
+      if (!includeProtectedBase && doc.isProtectedBasePhoto(id)) continue;
       out.add(layer);
     }
     return out;
   }
+
+  /// Layers the open [ContextToolPanel] should act on.
+  ///
+  /// Splits on the panel because the base-photo protection is not
+  /// uniform across them: Align moves a layer, which the base photo
+  /// must never do, so it keeps the filtered list. Opacity only fades
+  /// the photo toward the canvas background — meaningful, reversible
+  /// and non-destructive — so excluding the base photo there produced
+  /// a tile that highlighted itself and then rendered no panel at all
+  /// (the Image dock's `شفافیت` dead-end).
+  List<EditorLayer> _layersForContextPanel(
+    WidgetRef ref,
+    SelectionState selection,
+    ContextToolPanel panel,
+  ) => _selectedLayersForActions(
+    ref,
+    selection,
+    // Opacity only. Align was briefly added here to stop the «تراز»
+    // row swallowing its tap — but that made the panel MOUNT for a
+    // layer whose every align button `AlignmentController` refuses
+    // (it bails on `locked`), turning a vanishing sheet into six
+    // buttons that silently did nothing, which reads as working and is
+    // harder to diagnose. The row is gated off at its source instead
+    // (`layer_overflow_sheet`): the base photo IS the canvas, so
+    // aligning it to the canvas has no meaning. Opacity, by contrast,
+    // genuinely applies to it.
+    includeProtectedBase: panel == ContextToolPanel.opacity,
+  );
 
   /// Merged-view layer for the selected id, narrowed to the ONE
   /// layer object (tb1 16/17). The old full renderedDocumentProvider
@@ -836,12 +931,16 @@ class EditorScreen extends ConsumerWidget {
     final id = _uuid.v4();
     // In photo-mode projects, the very first imported image becomes
     // the locked base photo (matches the home-screen import flow).
-    // In design mode, no locking -- we still claim the base-photo
-    // pointer if vacant so Crop / Filters / Adjust resolve cleanly,
-    // but the layer behaves like any other image.
-    final shouldClaimBase = doc.basePhotoLayerId == null;
-    final lockAsBasePhoto =
-        shouldClaimBase && doc.projectKind == ProjectKind.photo;
+    //
+    // A design project claims NOTHING (§10.1). It used to claim the
+    // pointer "so Crop / Filters / Adjust resolve cleanly", which is
+    // how a design document came to carry a marker that silently
+    // aimed those tools at whichever image happened to be imported
+    // first, while `isProtectedBasePhoto` — kind-gated — rendered no
+    // chrome for it anywhere. Nothing reads the pointer in a design
+    // project now, so nothing may write one.
+    final claimAsBasePhoto =
+        doc.basePhotoLayerId == null && doc.projectKind == ProjectKind.photo;
     final layer = ImageLayer(
       id: id,
       transform: LayerTransform(
@@ -849,9 +948,9 @@ class EditorScreen extends ConsumerWidget {
         size: fitted,
       ),
       source: ImageSource.file(stablePath),
-      locked: lockAsBasePhoto,
+      locked: claimAsBasePhoto,
     );
-    if (shouldClaimBase) {
+    if (claimAsBasePhoto) {
       ref
           .read(documentControllerProvider.notifier)
           .execute(
@@ -1039,143 +1138,104 @@ class EditorScreen extends ConsumerWidget {
         .execute(ReplaceShapeKindCommand(layerId: layer.id, kind: kind));
   }
 
-  /// Resolves which [ImageLayer] a main-toolbar image action should
-  /// target. See [resolveImageTarget] for the priority order. This
-  /// async wrapper additionally:
-  ///   - on `AutoSelect`, mutates the selection so the dock's
-  ///     image-mode branch picks up the layer;
-  ///   - on `Ambiguous`, opens an image chooser sheet and treats
-  ///     the user's pick as a manual selection;
-  ///   - on `NoneAvailable`, shows a snackbar.
+  /// Resolves the [ImageLayer] a main-strip P-scope command targets
+  /// — the protected base photo, or nothing (contract §10.2). There
+  /// is no ladder, no fallback to another image and no chooser: see
+  /// [resolveRoleTarget].
   ///
-  /// Returns `null` when no target was resolved (no images, or the
-  /// user dismissed the chooser); callers should bail.
-  Future<ImageLayer?> _resolveImageTarget(
+  /// Selects the target so the dock's image-mode branch renders
+  /// against it; callers snapshot the prior selection first and §4
+  /// restores it on exit.
+  ///
+  /// On `null` the control was unavailable and this shows the
+  /// recovery matching the precondition that failed (§10.3) —
+  /// unhide for a hidden photo, import for a missing one. Callers
+  /// bail.
+  ImageLayer? _resolveImageTarget(
     BuildContext context,
     WidgetRef ref, {
     required String actionVerb,
-  }) async {
-    final doc = ref.read(documentControllerProvider);
-    final selectedId = ref.read(selectionControllerProvider).selectedId;
-    final outcome = resolveImageTarget(doc, selectedId: selectedId);
-    switch (outcome) {
-      case ImageTargetSelected(:final layer):
-        return layer;
-      case ImageTargetAutoSelect(:final layer):
-        ref.read(selectionControllerProvider.notifier).select(layer.id);
-        return layer;
-      case ImageTargetNoneAvailable():
-        // Don't dead-end — offer a one-tap recovery so the user
-        // can satisfy the precondition without hunting for the
-        // Photo tile. The action verb is woven into the message so
-        // Crop / Adjust / Filters each surface as a coherent
-        // sentence ("Import a photo to crop").
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.hideCurrentSnackBar();
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.importPhotoToAction(actionVerb)),
-            behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: context.l10n.addPhotoAction,
-              onPressed: () => _addImage(context, ref),
-            ),
-          ),
-        );
-        return null;
-      case ImageTargetAmbiguous(:final candidates):
-        final picked = await _pickImageFromCanvas(
-          context,
-          candidates: candidates,
-          actionVerb: actionVerb,
-        );
-        if (picked == null) return null;
-        ref.read(selectionControllerProvider.notifier).select(picked.id);
-        return picked;
-    }
-  }
-
-  /// Bottom sheet listing every [ImageLayer] currently on the
-  /// canvas. Used by [_resolveImageTarget] to disambiguate when the
-  /// document has multiple images, none is selected, and there is no
-  /// base-photo fallback. Returns the user's choice, or `null` on
-  /// dismiss/cancel.
-  Future<ImageLayer?> _pickImageFromCanvas(
-    BuildContext context, {
-    required List<ImageLayer> candidates,
-    required String actionVerb,
   }) {
-    // FULL barrier (contract §9: pickers). Card + handle come from
-    // the shared modal host (tb2 8/16).
-    return showEditorSheet<ImageLayer>(
-      context,
-      builder: (ctx) {
-        final theme = Theme.of(ctx);
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                child: Text(
-                  context.l10n.pickImageToAction(actionVerb),
-                  style: theme.textTheme.titleMedium,
-                ),
-              ),
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: candidates.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (_, i) {
-                    final layer = candidates[i];
-                    return ListTile(
-                      leading: const Icon(AppIcons.imagePlaceholder),
-                      title: Text(context.l10n.imageLayerTitle(i + 1)),
-                      // The title is the generic «تصویر ۱» counter, so
-                      // this pair IS the discriminator between rows —
-                      // and composed by hand it hit the same neutral-`×`
-                      // reversal 612dd38 fixed elsewhere, pointing the
-                      // user at the wrong layer.
-                      subtitle: Text(
-                        EditorValueFormat.of(ctx).dimensions(
-                          layer.transform.size.width.round(),
-                          layer.transform.size.height.round(),
-                        ),
+    final doc = ref.read(documentControllerProvider);
+    final layer = resolveRoleTarget(doc);
+    if (layer != null) {
+      ref.read(selectionControllerProvider.notifier).select(layer.id);
+      return layer;
+    }
+    // Don't dead-end — offer a one-tap recovery so the user can
+    // satisfy the precondition without hunting for the tool that
+    // does. The action verb is woven in so each command surfaces as
+    // a coherent sentence ("Import a photo to crop").
+    final l10n = context.l10n;
+    final hidden = roleTargetBlock(doc) == RoleTargetBlock.hidden;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          hidden
+              ? l10n.showPhotoToAction(actionVerb)
+              : l10n.importPhotoToAction(actionVerb),
+        ),
+        behavior: SnackBarBehavior.floating,
+        // A SnackBar's dismiss timer only starts once its entrance
+        // animation completes, and that animation stops advancing
+        // when a full-screen route covers the messenger
+        // (TickerMode goes false) — which is how one of these was
+        // observed still on screen fourteen minutes and three
+        // documents later, parked over the crop panel's own
+        // controls. No duration can fix a timer that never starts,
+        // so the real cure is the `clearSnackBars()` calls at every
+        // full-screen entry point; this is just the ordinary
+        // Material default, stated rather than inherited.
+        duration: const Duration(seconds: 4),
+        action: hidden
+            ? SnackBarAction(
+                label: l10n.showAction,
+                // The base photo is hideable from the layers drawer,
+                // which is the only way to reach this branch.
+                onPressed: () => ref
+                    .read(documentControllerProvider.notifier)
+                    .execute(
+                      SetLayerVisibilityCommand(
+                        layerId: doc.basePhotoLayerId!,
+                        visible: true,
                       ),
-                      onTap: () => Navigator.of(ctx).pop(layer),
-                    );
-                  },
-                ),
+                    ),
+              )
+            : SnackBarAction(
+                label: l10n.addPhotoAction,
+                onPressed: () => _addImage(context, ref),
               ),
-              const SizedBox(height: 4),
-            ],
-          ),
-        );
-      },
+      ),
     );
+    return null;
   }
 
-  /// Opens the centralised [CropModeOverlay] for the resolved
-  /// [ImageLayer] (selected -> only-image -> base-photo ->
-  /// chooser).
+  /// Opens the centralised [CropModeOverlay] for the P-scope role
+  /// target — the protected base photo, or nothing (§10.2).
   ///
   /// We snapshot the **prior** selection BEFORE
-  /// [_resolveImageTarget] (which may auto-select an image to
-  /// resolve a target) and pass it into [CropController.openCrop].
+  /// [_resolveImageTarget] (which selects the role target so the
+  /// dock renders against it) and pass it into
+  /// [CropController.openCrop].
   /// On Done/Cancel that snapshot is restored, so opening Crop
   /// from the main toolbar lands the user back on the main toolbar
   /// instead of stranding them in the image sub-tools.
-  Future<void> _openCrop(BuildContext context, WidgetRef ref) async {
+  void _openCrop(BuildContext context, WidgetRef ref) {
     final priorSelectionId = ref.read(selectionControllerProvider).selectedId;
-    final layer = await _resolveImageTarget(
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final layer = _resolveImageTarget(
       context,
       ref,
       actionVerb: context.l10n.cropActionVerb,
     );
     if (layer == null) return;
     EditorHaptics.tap();
+    // Nothing transient may survive into a full-screen session: it
+    // would freeze there (see the duration note above) and it floats
+    // exactly where the crop card's own buttons are.
+    messenger?.clearSnackBars();
     ref
         .read(cropControllerProvider.notifier)
         .openCrop(layer.id, priorSelectionId: priorSelectionId);
@@ -1188,12 +1248,12 @@ class EditorScreen extends ConsumerWidget {
   ///
   /// One entry for what used to be two main-strip tiles (Adjust and
   /// Filters): both channels now live in the same panel (tb4 1/14).
-  Future<void> _openLook(BuildContext context, WidgetRef ref) async {
-    // Snapshot BEFORE resolution (which may auto-select) — same
-    // prior-selection semantics as [_openCrop], restored when the
-    // panel closes (contract §4, tb2 10/16).
+  void _openLook(BuildContext context, WidgetRef ref) {
+    // Snapshot BEFORE resolution (which selects the role target) —
+    // same prior-selection semantics as [_openCrop], restored when
+    // the panel closes (contract §4, tb2 10/16).
     final priorSelectionId = ref.read(selectionControllerProvider).selectedId;
-    final layer = await _resolveImageTarget(
+    final layer = _resolveImageTarget(
       context,
       ref,
       actionVerb: context.l10n.lookActionVerb,
@@ -1435,19 +1495,37 @@ class _DocumentTitle extends ConsumerWidget {
                         final values = EditorValueFormat.of(context);
                         final style = Theme.of(context).textTheme.labelSmall!
                             .copyWith(color: tokens.textSecondary);
-                        final badge = unsaved
-                            ? '${context.l10n.unsavedBadge} • '
-                            : '';
                         final dims =
-                            '${values.dimensions(size.width.toInt(), size.height.toInt())} • ';
+                            '${values.dimensions(size.width.toInt(), size.height.toInt())} ';
                         final zoom = values.percent((scale * 100).round());
-
-                        final fits = textFits(
+                        // The bullet joins segments of the SAME kind.
+                        // On a narrow phone `dims` drops out (below),
+                        // and «ذخیره‌نشده • ٪۱۶» then read as "16%
+                        // saved" — a progress bar, not a zoom level.
+                        // So the separator is only a bullet when there
+                        // is a middle segment to separate, and the zoom
+                        // carries its own glyph either way so the
+                        // number can never borrow its meaning from the
+                        // word next to it.
+                        // The zoom glyph is a WidgetSpan, so `textFits`
+                        // cannot see it; reserve its 11dp box + 2dp gap
+                        // or the measurement says "fits", the icon is
+                        // drawn, and the zoom itself ellipsises away —
+                        // the exact segment the fit-to-screen tap
+                        // target below is pinned to.
+                        const zoomGlyphWidth = 13.0;
+                        final fitsDims = textFits(
                           context,
-                          '$badge$dims$zoom',
+                          unsaved
+                              ? '${context.l10n.unsavedBadge} • $dims$zoom'
+                              : '$dims$zoom',
                           style: style,
-                          maxWidth: constraints.maxWidth,
+                          maxWidth: constraints.maxWidth - zoomGlyphWidth,
                         );
+                        final badge = unsaved
+                            ? '${context.l10n.unsavedBadge}${fitsDims ? ' • ' : '  '}'
+                            : '';
+                        final fits = fitsDims;
                         return Text.rich(
                           TextSpan(
                             children: [
@@ -1463,17 +1541,54 @@ class _DocumentTitle extends ConsumerWidget {
                                 TextSpan(
                                   text: badge,
                                   style: TextStyle(
-                                    color: tokens.accentDeep,
+                                    // Glyph stop. accentDeep measured
+                                    // 3.88:1 on cream at 11sp w700 —
+                                    // normal text, so 4.5:1 applies.
+                                    color: tokens.accentText,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               if (fits) TextSpan(text: dims),
-                              TextSpan(text: zoom),
+                              WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Padding(
+                                  padding: const EdgeInsetsDirectional.only(
+                                    end: 2,
+                                  ),
+                                  child: Icon(
+                                    AppIcons.fitToScreen,
+                                    size: 11,
+                                    color: tokens.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              // Own LTR run so the `٪` lands on the
+                              // same side of the digits as every other
+                              // readout in the app (dock tiles, slider
+                              // rows). As a bare TextSpan it inherited
+                              // this RTL paragraph and painted «٪۱۶»
+                              // while the dock painted «۱۰۰٪».
+                              WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: Text(zoom, style: style),
+                                ),
+                              ),
                             ],
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: style,
+                          semanticsLabel: [
+                            if (unsaved) context.l10n.unsavedBadge,
+                            if (fits)
+                              values.dimensionsPlain(
+                                size.width.toInt(),
+                                size.height.toInt(),
+                              ),
+                            '${context.l10n.editorFitToScreen} $zoom',
+                          ].join(' · '),
                         );
                       },
                     ),

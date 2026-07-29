@@ -14,6 +14,7 @@ import 'package:canvas_engine/features/editor/application/selection_controller.d
 import 'package:canvas_engine/features/editor/canvas/application/canvas_tool_controller.dart';
 import 'package:canvas_engine/features/editor/canvas/presentation/canvas_panel_body.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
+import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_layer.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
@@ -52,9 +53,14 @@ ImageLayer _image(String id) => ImageLayer(
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  /// [basePhotoId], when given, seeds a PHOTO project whose base
+  /// photo is that layer. The main-strip Look/Crop tiles are P scope
+  /// (contract §10) and exist only there, so any test that taps them
+  /// must pass it.
   Future<ProviderContainer> pumpEditor(
     WidgetTester tester, {
     List<EditorLayer> layers = const [],
+    String? basePhotoId,
   }) async {
     tester.view.physicalSize = const Size(440, 956);
     tester.view.devicePixelRatio = 1.0;
@@ -65,9 +71,16 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final docCtl = container.read(documentControllerProvider.notifier);
-    docCtl.newDocument(width: 1080, height: 1080);
+    docCtl.newDocument(
+      width: 1080,
+      height: 1080,
+      kind: basePhotoId == null ? ProjectKind.design : ProjectKind.photo,
+    );
     for (final layer in layers) {
       docCtl.execute(AddLayerCommand(layer));
+    }
+    if (basePhotoId != null) {
+      docCtl.execute(SetBasePhotoCommand(basePhotoId));
     }
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -157,7 +170,11 @@ void main() {
 
   testWidgets('main-strip Look auto-selects the image and restores the (empty) '
       'prior selection when the panel closes', (tester) async {
-    final container = await pumpEditor(tester, layers: [_image('img-1')]);
+    final container = await pumpEditor(
+      tester,
+      layers: [_image('img-1')],
+      basePhotoId: 'img-1',
+    );
     expect(container.read(selectionControllerProvider).hasSelection, isFalse);
 
     // Reach the tier-2 Look tile on the main strip.
@@ -225,7 +242,11 @@ void main() {
     'switching panels inside image mode takes ownership: no restore on '
     'the eventual close',
     (tester) async {
-      final container = await pumpEditor(tester, layers: [_image('img-1')]);
+      final container = await pumpEditor(
+        tester,
+        layers: [_image('img-1')],
+        basePhotoId: 'img-1',
+      );
 
       final strip = find.descendant(
         of: find.byType(EditorScreen),

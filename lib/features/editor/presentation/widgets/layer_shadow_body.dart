@@ -207,8 +207,8 @@ class _LayerShadowBodyState<L extends EditorLayer>
               subtitle: context.l10n.blurDirectionOpacitySubtitle,
               // The icon-header family used a constant accent
               // chevron regardless of open state — preserve exactly.
-              chevronColorClosed: tokens.accent,
-              chevronColorOpen: tokens.accent,
+              chevronColorClosed: tokens.accentText,
+              chevronColorOpen: tokens.accentText,
               children: [
                 const SizedBox(height: 4),
                 Center(

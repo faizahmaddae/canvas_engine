@@ -113,7 +113,6 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
     final layer = widget.layer;
     final adj = layer.adjustments;
     final vignette = _activeVignette(layer);
-    final tokens = AppTokens.of(context);
     final fmt = EditorValueFormat.of(context);
 
     // Resolve the live image once at the body level so each chip
@@ -161,8 +160,6 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
             icon: AppIcons.precisionAdjust,
             titleClosed: context.l10n.adjustPrecisely,
             subtitle: context.l10n.adjustPreciselySubtitle,
-            chevronColorClosed: tokens.accent,
-            chevronColorOpen: tokens.accent,
             children: [
               const SizedBox(height: 4),
               EditorSliderRow(
@@ -172,7 +169,8 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
                 value: adj.brightness,
                 min: -100,
                 max: 100,
-                format: (v) => fmt.digits(v.round()),
+                origin: 0,
+                format: fmt.signedPlain,
                 onChanged: (v) => _previewSlider(
                   SetImageAdjustmentsCommand(layerId: layer.id, brightness: v),
                 ),
@@ -185,7 +183,8 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
                 value: adj.contrast,
                 min: 0,
                 max: 2,
-                format: (v) => fmt.percent((v * 100).round()),
+                origin: 1,
+                format: (v) => fmt.signedPercent(((v - 1) * 100).round()),
                 onChanged: (v) => _previewSlider(
                   SetImageAdjustmentsCommand(layerId: layer.id, contrast: v),
                 ),
@@ -198,7 +197,8 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
                 value: adj.saturation,
                 min: 0,
                 max: 2,
-                format: (v) => fmt.percent((v * 100).round()),
+                origin: 1,
+                format: (v) => fmt.signedPercent(((v - 1) * 100).round()),
                 onChanged: (v) => _previewSlider(
                   SetImageAdjustmentsCommand(layerId: layer.id, saturation: v),
                 ),
@@ -211,7 +211,8 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
                 value: adj.exposure,
                 min: -100,
                 max: 100,
-                format: (v) => fmt.digits(v.round()),
+                origin: 0,
+                format: fmt.signedPlain,
                 onChanged: (v) => _previewSlider(
                   SetImageAdjustmentsCommand(layerId: layer.id, exposure: v),
                 ),
@@ -224,7 +225,8 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
                 value: adj.warmth,
                 min: -100,
                 max: 100,
-                format: (v) => fmt.digits(v.round()),
+                origin: 0,
+                format: fmt.signedPlain,
                 onChanged: (v) => _previewSlider(
                   SetImageAdjustmentsCommand(layerId: layer.id, warmth: v),
                 ),
@@ -241,8 +243,6 @@ class _ImageLookBodyState extends ConsumerState<ImageLookBody> {
             icon: AppIcons.vignette,
             titleClosed: context.l10n.vignetteLabel,
             subtitle: context.l10n.vignetteSubtitle,
-            chevronColorClosed: tokens.accent,
-            chevronColorOpen: tokens.accent,
             children: [
               const SizedBox(height: 4),
               EditorSliderRow(
@@ -370,7 +370,9 @@ class _FilterChipState extends State<_FilterChip> {
     } else {
       bg = Colors.transparent;
     }
-    final fg = selected ? tokens.accent : tokens.textSecondary;
+    // Glyph stop. The fill saffron put the SELECTED preset's label —
+    // the one word saying which filter is on — at 2.61:1.
+    final fg = selected ? tokens.accentText : tokens.textSecondary;
 
     // Real-image preview. Decoded at 128px via cacheWidth so memory
     // stays tiny regardless of source resolution. Falls back to a
@@ -396,82 +398,106 @@ class _FilterChipState extends State<_FilterChip> {
       );
     }
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: (_) => setState(() => _down = true),
-        onTapCancel: () => setState(() => _down = false),
-        onTapUp: (_) => setState(() => _down = false),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(14),
-            hoverColor: Colors.transparent,
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            focusColor: Colors.transparent,
-            child: AnimatedContainer(
-              duration: AppMotion.standard,
-              curve: AppMotion.curve,
-              width: 62,
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: BoxDecoration(
-                color: bg,
+    // Role + selected state, and the visual subtree excluded so the
+    // thumbnail and caption don't concatenate onto the node. Same
+    // shape as `PresetChip`; without it the Filter tool's primary
+    // control announced as a plain ImageView and a screen reader could
+    // not tell which look was applied (WCAG 4.1.2, Level A).
+    return Semantics(
+      button: true,
+      selected: widget.selected,
+      label: _filterLabel(context, widget.preset),
+      onTap: widget.onTap,
+      child: ExcludeSemantics(
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _hover = true),
+          onExit: (_) => setState(() => _hover = false),
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (_) => setState(() => _down = true),
+            onTapCancel: () => setState(() => _down = false),
+            onTapUp: (_) => setState(() => _down = false),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Thumbnail with optional ✓ badge inset in the
-                  // corner. Inset (not -2 overhang) so the selected
-                  // chip occupies the *exact* same bounds as every
-                  // other chip — no apparent height lift.
-                  Stack(
+                hoverColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                focusColor: Colors.transparent,
+                child: AnimatedContainer(
+                  duration: AppMotion.standard,
+                  curve: AppMotion.curve,
+                  width: 62,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: bg,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: SizedBox(width: 52, height: 52, child: preview),
-                      ),
-                      // Subtle hairline so the thumb edge still
-                      // reads on very light/dark images.
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: tokens.border.withValues(alpha: 0.45),
-                                width: 1,
+                      // Thumbnail with optional ✓ badge inset in the
+                      // corner. Inset (not -2 overhang) so the selected
+                      // chip occupies the *exact* same bounds as every
+                      // other chip — no apparent height lift.
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: SizedBox(
+                              width: 52,
+                              height: 52,
+                              child: preview,
+                            ),
+                          ),
+                          // Subtle hairline so the thumb edge still
+                          // reads on very light/dark images.
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: tokens.border.withValues(
+                                      alpha: 0.45,
+                                    ),
+                                    width: 1,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
+                          if (selected)
+                            PositionedDirectional(
+                              end: 4,
+                              bottom: 4,
+                              child: _SelectedBadge(tokens: tokens),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _filterLabel(context, widget.preset),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w600,
+                          color: fg,
+                          letterSpacing: 0.2,
                         ),
                       ),
-                      if (selected)
-                        PositionedDirectional(
-                          end: 4,
-                          bottom: 4,
-                          child: _SelectedBadge(tokens: tokens),
-                        ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _filterLabel(context, widget.preset),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                      color: fg,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

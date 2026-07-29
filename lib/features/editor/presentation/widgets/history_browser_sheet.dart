@@ -157,7 +157,7 @@ class _HistoryRow extends StatelessWidget {
     final isUndone = state == _RowState.undone;
 
     final Color textColor = switch (state) {
-      _RowState.current => tokens.accentDeep,
+      _RowState.current => tokens.accentText,
       _RowState.undone => tokens.textMuted,
       _RowState.applied => tokens.textPrimary,
     };
@@ -210,7 +210,7 @@ class _HistoryRow extends StatelessWidget {
               Icon(
                 AppIcons.historyCurrentStep,
                 size: 16,
-                color: tokens.accentDeep,
+                color: tokens.accentText,
               ),
           ],
         ),

@@ -66,7 +66,7 @@ class ResumeDraftCard extends StatelessWidget {
                   child: Icon(
                     AppIcons.resumeDraft,
                     size: 18,
-                    color: tokens.accentDeep,
+                    color: tokens.accentText,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -150,7 +150,7 @@ class _DraftAction extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: filled ? tokens.onBrand : tokens.accentDeep,
+                  color: filled ? tokens.onBrand : tokens.accentText,
                 ),
               ),
             ),

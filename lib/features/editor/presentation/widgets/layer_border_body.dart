@@ -23,11 +23,18 @@ import '../../../../app/theme/app_icons.dart';
 // Fractions are tuned so 1080-square (the most common design
 // canvas) lands at ≈1 / ≈4 / ≈11 px. Shared by every layer type so
 // image-borders and shape-borders scale identically.
-const double _thinFraction = 0.001; // ≈ 0.1 % of canvas
+// 0.002, not 0.001. At 0.1 % a 2400-px canvas yields ~1.08 canvas px,
+// which at the editor's fit zoom (16 % for an imported photo) lands
+// under a single device pixel: «نازک» and «هیچ‌کدام» rendered
+// pixel-identical while the نازک tile reported itself selected. It is
+// the first real option in the row, so it is the one a first-time user
+// tries. `_thinMin` rises with it so a small canvas keeps a stroke
+// that survives the same zoom-out.
+const double _thinFraction = 0.002; // ≈ 0.2 % of canvas
 const double _mediumFraction = 0.004; // ≈ 0.4 % of canvas
 const double _boldFraction = 0.010; // ≈ 1.0 % of canvas
 
-const double _thinMin = 1, _thinMax = 12;
+const double _thinMin = 2, _thinMax = 12;
 const double _mediumMin = 3, _mediumMax = 48;
 const double _boldMin = 8, _boldMax = 120;
 
@@ -248,6 +255,22 @@ class _LayerBorderBodyState<L extends EditorLayer>
           if (!stroked) ...[
             const SizedBox(height: 12),
             SectionLabel(context.l10n.colorLabel),
+            // With thickness at "None" there is no border on screen,
+            // yet the picker still shows a swatch as chosen — a claim
+            // about rendered state that isn't true. Picking a colour
+            // DOES turn the border on (`_colorCommitWidth` promotes
+            // the width to Medium), so say that instead of hiding a
+            // working control.
+            if (width <= 0)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  context.l10n.borderColorEnablesHint,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: tokens.textSecondary),
+                ),
+              ),
             // The shared two-level picker, embedded. Picking a
             // colour with no border yet promotes the width to
             // `medium` so the pick is immediately visible.
@@ -273,8 +296,8 @@ class _LayerBorderBodyState<L extends EditorLayer>
                 icon: AppIcons.precisionAdjust,
                 titleClosed: context.l10n.adjustPrecisely,
                 subtitle: context.l10n.widthLabel,
-                chevronColorClosed: tokens.accent,
-                chevronColorOpen: tokens.accent,
+                chevronColorClosed: tokens.accentText,
+                chevronColorOpen: tokens.accentText,
                 children: [
                   const SizedBox(height: 4),
                   EditorSliderRow(
@@ -327,24 +350,23 @@ class _BorderThicknessChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final entries = <(_ChipKey, double, String, IconData, double)>[
-      if (allowNone)
-        (_ChipKey.none, 0, context.l10n.noneOption, AppIcons.noneOption, 18),
-      (_ChipKey.thin, thin, context.l10n.thinOption, AppIcons.strokeWeight, 16),
+    // Thickness previews are RULES, not glyphs. The shared
+    // `AppIcons.strokeWeight` dot rendered at 16/22/30 produced three
+    // near-identical small circles — and in Persian numerals a small
+    // circle IS the digit zero, so the three chips read as "۰ thin /
+    // ۰ medium / ۰ thick" beside a fourth chip literally labelled
+    // "None". A 1/2.5/4-dp bar shows the actual difference and cannot
+    // be misread as a numeral.
+    final entries = <(_ChipKey, double, String, Widget?)>[
+      if (allowNone) (_ChipKey.none, 0, context.l10n.noneOption, null),
+      (_ChipKey.thin, thin, context.l10n.thinOption, const _RulePreview(1)),
       (
         _ChipKey.medium,
         medium,
         context.l10n.mediumOption,
-        AppIcons.strokeWeight,
-        22,
+        const _RulePreview(2.5),
       ),
-      (
-        _ChipKey.bold,
-        bold,
-        context.l10n.thickOption,
-        AppIcons.strokeWeight,
-        30,
-      ),
+      (_ChipKey.bold, bold, context.l10n.thickOption, const _RulePreview(4)),
     ];
     // Tolerance scales with the canvas-aware preset values so
     // "Medium" on a 4K canvas still matches its chip cleanly. Floor
@@ -372,8 +394,7 @@ class _BorderThicknessChips extends StatelessWidget {
         for (final entry in entries) ...[
           Expanded(
             child: _BorderChip(
-              icon: entry.$4,
-              iconSize: entry.$5,
+              preview: entry.$4,
               label: entry.$3,
               selected: entry.$1 == activeKey,
               onTap: () => onPick(entry.$2),
@@ -390,27 +411,63 @@ enum _ChipKey { none, thin, medium, bold, custom }
 
 class _BorderChip extends StatelessWidget {
   const _BorderChip({
-    required this.icon,
-    required this.iconSize,
+    required this.preview,
     required this.label,
     required this.selected,
     required this.onTap,
   });
 
-  final IconData icon;
-  final double iconSize;
+  /// `null` renders the "None" glyph; otherwise a [_RulePreview].
+  final Widget? preview;
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    if (preview == null) {
+      return PresetChip.option(
+        icon: AppIcons.noneOption,
+        iconSize: 18,
+        label: label,
+        selected: selected,
+        onTap: onTap,
+      );
+    }
     return PresetChip.option(
-      icon: icon,
-      iconSize: iconSize,
+      preview: preview,
       label: label,
       selected: selected,
       onTap: onTap,
+    );
+  }
+}
+
+/// A horizontal rule at [thickness] dp, drawn in the chip's current
+/// foreground colour (PresetChip wraps previews in an [IconTheme] set
+/// to that colour, so the selected tile's accent tint carries through).
+/// Boxed to the glyph slot's 18dp height so swapping weights never
+/// reflows the tile.
+class _RulePreview extends StatelessWidget {
+  const _RulePreview(this.thickness);
+
+  final double thickness;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = IconTheme.of(context).color ?? const Color(0xFF000000);
+    return SizedBox(
+      height: 18,
+      width: 26,
+      child: Center(
+        child: Container(
+          height: thickness,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(thickness / 2),
+          ),
+        ),
+      ),
     );
   }
 }

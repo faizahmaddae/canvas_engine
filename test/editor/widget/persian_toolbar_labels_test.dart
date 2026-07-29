@@ -108,17 +108,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('فونت'), findsOneWidget);
+      expect(find.text('قلم'), findsOneWidget);
       expect(find.text('اندازه'), findsOneWidget);
       expect(find.text('رنگ'), findsOneWidget);
-      expect(find.text('استایل'), findsOneWidget);
+      expect(find.text('سبک'), findsOneWidget);
       expect(find.text('تراز'), findsOneWidget);
       expect(find.text('بیشتر'), findsOneWidget);
       expect(find.text('چیدمان'), findsNothing);
       expect(find.text('More actions'), findsNothing);
       expect(find.text('More'), findsNothing);
       // Bar consolidation (2026-07): decoration tiles are gone from
-      // the bar — سایه/زمینه route through استایل's effect chips,
+      // the bar — سایه/زمینه route through سبک's effect chips,
       // کادر is the خط دور chip, تغییر اندازه lives under بیشتر.
       // The strip is exactly these six tiles and never scrolls.
       expect(find.text('سایه'), findsNothing);

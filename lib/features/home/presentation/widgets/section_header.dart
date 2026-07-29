@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/warm_palette.dart';
 
 /// Shared section header used across Home: title on the leading
@@ -25,6 +26,9 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = WarmPalette.of(context);
+    // Glyph stop, not the fill stop: WarmPalette.accent is the same
+    // 2.7:1 saffron and this is an 'see all' text button.
+    final accentText = AppTokens.of(context).accentText;
     final canAct = actionLabel != null && onAction != null;
     final titleStyle = compact
         ? theme.textTheme.titleSmall
@@ -52,7 +56,7 @@ class SectionHeader extends StatelessWidget {
             child: TextButton(
               onPressed: onAction,
               style: TextButton.styleFrom(
-                foregroundColor: palette.accent,
+                foregroundColor: accentText,
                 padding: EdgeInsets.zero,
                 minimumSize: Size(0, compact ? 28 : 48),
                 tapTargetSize: compact

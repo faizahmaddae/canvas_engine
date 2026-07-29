@@ -384,8 +384,12 @@ class _BottomStrip extends ConsumerWidget {
                         EditorHaptics.tap();
                         ctl.cancel(restoreSelection: true);
                       },
+                      // Glyph stop. `accent` is the FILL stop and
+                      // measures 2.92:1 on this surface — same
+                      // construct, same fix as the crop overlay's
+                      // Cancel one directory over.
                       style: TextButton.styleFrom(
-                        foregroundColor: tokens.accent,
+                        foregroundColor: tokens.accentText,
                       ),
                       child: Text(context.l10n.cancelAction),
                     ),

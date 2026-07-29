@@ -12,7 +12,13 @@ class TextStyleSpec {
     this.fontFamily,
     this.fontSize = 96,
     this.color = const Color(0xFFFFFFFF),
-    this.fontWeight = FontWeight.w600,
+    // w400, not w600. `isBold` is `>= w600` because that is where bold
+    // is synthesized, so a w600 default meant every brand-new layer
+    // rendered faux-bold AND reported bold — the composer opened with
+    // the Bold pill lit and no way to describe the state as anything
+    // else. Defaulting below the threshold makes "off" both the
+    // starting point and a reachable destination.
+    this.fontWeight = FontWeight.w400,
     this.italic = false,
     this.underline = false,
     this.letterSpacing = 0,
@@ -82,6 +88,13 @@ class TextStyleSpec {
   /// True when [fontWeight] is at or above [FontWeight.w600]. Lets the
   /// toolbar treat "bold" as a boolean toggle without exposing the
   /// full weight ladder yet (a future phase can add a weight picker).
+  ///
+  /// w600 is the threshold because it is where the engine starts
+  /// SYNTHESIZING bold: most bundled families ship a single face —
+  /// `Vazir_Regular`, the Persian default, declares exactly one — so
+  /// w600 and w700 rasterize identically and w400 is the only weight
+  /// that renders un-bolded. A toggle drawn from any pair above the
+  /// threshold would change the model and nothing on screen.
   bool get isBold => fontWeight.value >= FontWeight.w600.value;
 
   /// Copy with optional overrides. Pass [clearShadow]/[clearBackground]
@@ -237,9 +250,14 @@ class TextStyleSpec {
 
   factory TextStyleSpec.fromJson(Map<String, dynamic> json) {
     final fontWeightValue = json['fontWeight'];
+    // Falls back to the CONSTRUCTOR default, which is the codec's
+    // documented promise: anything omitted on encode decodes back to
+    // the canonical default style. Nothing this app has written is
+    // affected either way — `toJson` emits `fontWeight` unconditionally,
+    // so the branch is only reachable from a hand-crafted payload.
     final fontWeight = fontWeightValue is num
         ? _fontWeightFromValue(fontWeightValue.toInt())
-        : FontWeight.w600;
+        : const TextStyleSpec().fontWeight;
     final alignName = json['alignment'];
     final alignment = alignName is String
         ? TextAlign.values.firstWhere(

@@ -69,7 +69,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get onboardingGoalInstagram => 'استوری اینستاگرام';
 
   @override
-  String get onboardingGoalYoutube => 'تامنیل یوتیوب';
+  String get onboardingGoalYoutube => 'کاور یوتیوب';
 
   @override
   String get onboardingGoalPoetry => 'شعر و نقل قول';
@@ -265,7 +265,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get applyAction => 'اعمال';
 
   @override
-  String get doneAction => 'انجام شد';
+  String get doneAction => 'تمام';
 
   @override
   String get shareAction => 'اشتراک‌گذاری';
@@ -364,9 +364,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get collapseTooltip => 'جمع کردن';
 
   @override
-  String get dismissPanelSemantics => 'بستن پنل';
-
-  @override
   String get undoLastChangeSemantics => 'واگرد آخرین تغییر';
 
   @override
@@ -397,16 +394,87 @@ class AppLocalizationsFa extends AppLocalizations {
   String get showAction => 'نمایش';
 
   @override
-  String get protectedBasePhotoTooltip => 'عکس پایه محافظت‌شده';
-
-  @override
   String get basePhotoLabel => 'عکس پایه';
 
   @override
-  String get lockedLabel => 'قفل';
+  String get lockedLabel => 'قفل‌شده';
 
   @override
   String get hiddenLabel => 'پنهان';
+
+  @override
+  String get borderColorEnablesHint => 'انتخاب رنگ، کادر را روشن می‌کند.';
+
+  @override
+  String get hexColorFieldLabel => 'کد رنگ هگز';
+
+  @override
+  String get colorBlack => 'سیاه';
+
+  @override
+  String get colorWhite => 'سفید';
+
+  @override
+  String get colorSlate => 'خاکستری';
+
+  @override
+  String get colorRed => 'قرمز';
+
+  @override
+  String get colorAmber => 'کهربایی';
+
+  @override
+  String get colorYellow => 'زرد';
+
+  @override
+  String get colorGreen => 'سبز';
+
+  @override
+  String get colorCyan => 'فیروزه‌ای روشن';
+
+  @override
+  String get colorBlue => 'آبی';
+
+  @override
+  String get colorPurple => 'بنفش';
+
+  @override
+  String get colorPink => 'صورتی';
+
+  @override
+  String get colorTeal => 'فیروزه‌ای';
+
+  @override
+  String colorCustomSwatch(String hex) {
+    return 'رنگ $hex';
+  }
+
+  @override
+  String get layerKindImage => 'عکس';
+
+  @override
+  String get layerKindText => 'متن';
+
+  @override
+  String get layerKindShape => 'شکل';
+
+  @override
+  String get layerKindSticker => 'استیکر';
+
+  @override
+  String get layerKindPaint => 'طراحی';
+
+  @override
+  String get layerKindGeneric => 'لایه';
+
+  @override
+  String layerAutoName(String kind, int index) {
+    final intl.NumberFormat indexNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String indexString = indexNumberFormat.format(index);
+
+    return '$kind $indexString';
+  }
 
   @override
   String multiSelectCount(int count) {
@@ -483,6 +551,33 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get verticalOption => 'عمودی';
+
+  @override
+  String get dirTopStart => 'بالا-چپ';
+
+  @override
+  String get dirTop => 'بالا';
+
+  @override
+  String get dirTopEnd => 'بالا-راست';
+
+  @override
+  String get dirStart => 'چپ';
+
+  @override
+  String get dirCenter => 'بدون جابه‌جایی';
+
+  @override
+  String get dirEnd => 'راست';
+
+  @override
+  String get dirBottomStart => 'پایین-چپ';
+
+  @override
+  String get dirBottom => 'پایین';
+
+  @override
+  String get dirBottomEnd => 'پایین-راست';
 
   @override
   String get alignLeftAction => 'چپ';
@@ -658,7 +753,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get portrait45Preset => 'عمودی ۴:۵';
 
   @override
-  String get youtubeThumbnailPreset => 'تامبنیل یوتیوب';
+  String get youtubeThumbnailPreset => 'کاور یوتیوب';
 
   @override
   String get linkedInPostPreset => 'پست لینکدین';
@@ -781,7 +876,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get templatesCategoryChipAds => 'پست تبلیغاتی';
 
   @override
-  String get templatesCategoryChipThumbnails => 'تامنیل';
+  String get templatesCategoryChipThumbnails => 'کاور';
 
   @override
   String get templatesCategoryChipQuotes => 'شعر';
@@ -814,7 +909,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeTemplatesAdvertisingPosts => 'پست تبلیغاتی';
 
   @override
-  String get homeTemplatesYoutubeThumbnails => 'تامبنیل یوتیوب';
+  String get homeTemplatesYoutubeThumbnails => 'کاور یوتیوب';
 
   @override
   String get homeTemplatesQuotesPoems => 'شعر و نقل‌قول';
@@ -836,7 +931,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get categoryInstagramStory => 'استوری اینستاگرام';
 
   @override
-  String get categoryYoutubeThumbnail => 'تامبنیل یوتیوب';
+  String get categoryYoutubeThumbnail => 'کاور یوتیوب';
 
   @override
   String get categoryPoetryPost => 'پست شعر';
@@ -950,7 +1045,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get addShapeSubtitle =>
-      'یک شکل انتخاب کنید — بعدا می‌توانید استایل آن را تغییر دهید.';
+      'یک شکل انتخاب کنید — بعدا می‌توانید سبک آن را تغییر دهید.';
 
   @override
   String get shapeSectionBasic => 'پایه';
@@ -1021,9 +1116,12 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String pickImageToAction(String action) {
-    return 'یک تصویر برای $action انتخاب کنید';
+  String showPhotoToAction(String action) {
+    return 'برای $action عکس را نمایش دهید.';
   }
+
+  @override
+  String get toolNeedsPhotoHint => 'به یک عکس قابل‌مشاهده نیاز دارد';
 
   @override
   String get cropActionVerb => 'برش';
@@ -1031,15 +1129,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String savedProject(String name) {
     return '«$name» ذخیره شد';
-  }
-
-  @override
-  String imageLayerTitle(int index) {
-    final intl.NumberFormat indexNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String indexString = indexNumberFormat.format(index);
-
-    return 'تصویر $indexString';
   }
 
   @override
@@ -1080,13 +1169,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get strokeSizeSemantics => 'اندازه خط';
 
   @override
-  String get styleTool => 'استایل';
+  String get styleTool => 'سبک';
 
   @override
-  String get lookTool => 'لوک';
+  String get lookTool => 'فیلتر';
 
   @override
-  String get lookActionVerb => 'تغییر لوک';
+  String get lookActionVerb => 'تغییر فیلتر';
 
   @override
   String get sizeTool => 'اندازه';
@@ -1104,7 +1193,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get shadowTool => 'سایه';
 
   @override
-  String get effectsTool => 'افکت‌ها';
+  String get effectsTool => 'جلوه‌ها';
 
   @override
   String get replaceTool => 'جایگزین';
@@ -1131,10 +1220,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get fillLabel => 'رنگ';
 
   @override
-  String get fontTool => 'فونت';
+  String get fontTool => 'قلم';
 
   @override
-  String get stylesTool => 'استایل';
+  String get stylesTool => 'سبک';
 
   @override
   String get layoutTool => 'تراز';
@@ -1143,13 +1232,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get resizeTool => 'تغییر اندازه';
 
   @override
-  String get bgShortLabel => 'زمینه';
+  String get bgShortLabel => 'پس‌زمینه';
 
   @override
   String get textColorTitle => 'رنگ متن';
 
   @override
-  String get fontSizeSemantics => 'اندازه فونت';
+  String get fontSizeSemantics => 'اندازه قلم';
 
   @override
   String get moreLabel => 'بیشتر';
@@ -1181,7 +1270,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get resizeBoxSubtitle =>
-      'کشیدن گوشه، عرض شکست خط را تغییر می‌دهد. اندازه فونت ثابت می‌ماند و ارتفاع خودکار تنظیم می‌شود.';
+      'کشیدن گوشه، عرض شکست خط را تغییر می‌دهد. اندازه قلم ثابت می‌ماند و ارتفاع خودکار تنظیم می‌شود.';
 
   @override
   String get scaleTextSummary =>
@@ -1225,16 +1314,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get strokeOpacityLabel => 'شفافیت خط';
 
   @override
-  String get stylePresetClassic => 'کلاسیک';
+  String get stylePresetClassic => 'معمولی';
 
   @override
   String get stylePresetQuote => 'نقل‌قول';
 
   @override
-  String get stylePresetHighlight => 'هایلایت';
+  String get stylePresetHighlight => 'برجسته';
 
   @override
-  String get stylePresetShadowSoft => 'سایه';
+  String get stylePresetShadowSoft => 'سایه نرم';
 
   @override
   String get stylePresetContrast => 'کنتراست';
@@ -1243,7 +1332,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get stylePresetGlass => 'شیشه‌ای';
 
   @override
-  String get stylePresetCaption => 'کپشن';
+  String get stylePresetCaption => 'شرح';
 
   @override
   String get stylePresetSubtitleBand => 'زیرنویس';
@@ -1258,7 +1347,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get stylePresetHashtag => 'هشتگ';
 
   @override
-  String get stylePresetOutline => 'دورخط';
+  String get stylePresetOutline => 'حاشیه‌دار';
 
   @override
   String get stylePresetNeon => 'نئون';
@@ -1267,16 +1356,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get stylePresetPoster => 'پوستر';
 
   @override
-  String get stylePresetSticker => 'استیکر';
+  String get stylePresetSticker => 'برچسبی';
 
   @override
-  String get stylePresetPop3d => 'پاپ';
+  String get stylePresetPop3d => 'سه‌بعدی';
 
   @override
   String get effectStrokeLabel => 'خط دور';
 
   @override
-  String get effectGradientLabel => 'گرادیان';
+  String get effectGradientLabel => 'طیف رنگ';
 
   @override
   String get distanceLabel => 'فاصله';
@@ -1318,7 +1407,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get shapeLabel => 'شکل';
 
   @override
-  String get styleLabel => 'استایل';
+  String get styleLabel => 'سبک';
 
   @override
   String get directionLabel => 'جهت';
@@ -1327,7 +1416,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get behaviorLabel => 'رفتار';
 
   @override
-  String get noneOption => 'بدون';
+  String get noneOption => 'هیچ‌کدام';
 
   @override
   String get pillOption => 'کپسولی';
@@ -1360,7 +1449,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get glowOption => 'درخشش';
 
   @override
-  String get liftOption => 'برجسته';
+  String get liftOption => 'شناور';
 
   @override
   String get reflowBoxTitle => 'بازچینی کادر';
@@ -1409,10 +1498,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get adjustPrecisely => 'تنظیم دقیق';
 
   @override
-  String get systemDefaultFont => 'فونت پیش‌فرض سیستم';
+  String get systemDefaultFont => 'قلم پیش‌فرض دستگاه';
 
   @override
-  String get allFontsTitle => 'همه فونت‌ها';
+  String get allFontsTitle => 'همه قلم‌ها';
 
   @override
   String get recommendedFontsLabel => 'پیشنهادی';
@@ -1427,7 +1516,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get fontScriptPersian => 'فارسی';
 
   @override
-  String get fontCategorySans => 'سنس';
+  String get fontCategorySans => 'ساده';
 
   @override
   String get fontCategoryModern => 'مدرن';
@@ -1505,7 +1594,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get shapesGroup => 'شکل‌ها';
 
   @override
-  String get effectsGroup => 'افکت‌ها';
+  String get effectsGroup => 'جلوه‌ها';
 
   @override
   String get penTool => 'قلم';
@@ -1580,7 +1669,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get featherLabel => 'نرمی لبه';
 
   @override
-  String get vignetteColorTitle => 'رنگ وینیت';
+  String get vignetteColorTitle => 'رنگ محو لبه‌ها';
 
   @override
   String get popOption => 'برجسته';
@@ -1623,7 +1712,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get dramaOption => 'دراما';
 
   @override
-  String get vignetteLabel => 'وینیت';
+  String get vignetteLabel => 'محو لبه‌ها';
 
   @override
   String get adjustPreciselySubtitle =>
@@ -1633,10 +1722,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get vignetteSubtitle => 'تیره‌سازی شعاعی نرم از مرکز';
 
   @override
-  String get noEffectsApplied => 'هیچ افکتی اعمال نشده است.';
+  String get noEffectsApplied => 'هیچ جلوه‌ای اعمال نشده است.';
 
   @override
-  String get openLookToAddEffectHint => 'برای اضافه کردن، «لوک» را باز کنید.';
+  String get openLookToAddEffectHint => 'برای اضافه کردن، «فیلتر» را باز کنید.';
 
   @override
   String get selectiveMaskLabel => 'انتخابی';
@@ -1692,7 +1781,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String unknownEffectLabel(String type) {
-    return 'افکت ناشناخته ($type)';
+    return 'جلوه ناشناخته ($type)';
   }
 
   @override
@@ -1702,7 +1791,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get roundedOption => 'گرد';
 
   @override
-  String get squircleOption => 'اسکوئرکل';
+  String get squircleOption => 'مربع گرد';
 
   @override
   String get starOption => 'ستاره';
@@ -1977,7 +2066,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get histRestoreImage => 'بازگردانی تصویر';
 
   @override
-  String get histPaintStyle => 'استایل طراحی';
+  String get histPaintStyle => 'سبک طراحی';
 
   @override
   String get histPaintResize => 'حالت تغییر اندازهٔ طراحی';
@@ -2001,19 +2090,19 @@ class AppLocalizationsFa extends AppLocalizations {
   String get histReplaceShape => 'جایگزینی شکل';
 
   @override
-  String get histVignette => 'وینیت';
+  String get histVignette => 'محو لبه‌ها';
 
   @override
-  String get histEffectDelete => 'حذف افکت';
+  String get histEffectDelete => 'حذف جلوه';
 
   @override
-  String get histEffectReorder => 'جابه‌جایی افکت';
+  String get histEffectReorder => 'جابه‌جایی جلوه';
 
   @override
-  String get histEffectRestore => 'بازگردانی افکت';
+  String get histEffectRestore => 'بازگردانی جلوه';
 
   @override
-  String get histEffectToggle => 'روشن/خاموش‌کردن افکت';
+  String get histEffectToggle => 'روشن/خاموش‌کردن جلوه';
 
   @override
   String get histBasePhotoSet => 'تعیین عکس پایه';

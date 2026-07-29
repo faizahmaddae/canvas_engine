@@ -828,21 +828,11 @@ abstract final class AppIcons {
     fontPackage: _package,
   );
 
-  /// Sibling-panel paging chip in dock_sheet_chrome
-  /// (previousPageTooltip). Pure reading-direction paging, so it must
-  /// keep flipping under RTL exactly as the Material rounded chevron
-  /// did.
-  static const navPrevious = IconData(
-    0xe138,
-    fontFamily: _family,
-    fontPackage: _package,
-    matchTextDirection: true,
-  );
-
-  /// 'No templates found' empty state. Phosphor has no search-off
-  /// glyph; magnifyingGlassMinus would misread as zoom-out, so `empty`
-  /// (the literal nothing-here mark) is the honest pick. Flag for
-  /// design review.
+  /// Empty-search / no-results mark.
+  ///
+  /// `empty` rather than `magnifyingGlassMinus`: the minus-glass reads
+  /// as "zoom out", not "nothing here", and at 24dp its minus stroke
+  /// is indistinguishable from the handle. Flagged for design review.
   static const noResults = IconData(
     0xedbc,
     fontFamily: _family,

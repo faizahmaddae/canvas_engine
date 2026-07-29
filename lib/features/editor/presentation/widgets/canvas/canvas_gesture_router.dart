@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../settings/application/settings_controller.dart';
 import '../../../application/editing_controller.dart';
+import '../../../application/document_controller.dart';
 import '../../../application/editor_lifecycle.dart';
 import '../../../application/interaction_controller.dart';
 import '../../../application/mask_edit_controller.dart';
@@ -507,6 +508,39 @@ class CanvasGestureRouter {
 
     // Single mode (legacy / default behaviour).
     if (hits.isEmpty) {
+      // Before treating this as empty canvas: a photo project's base
+      // photo is imported LOCKED, so `hitTestAllLayers` skips it and a
+      // tap on the user's own photo used to fall through to "dismiss"
+      // — the first thing anyone tries after importing answered with
+      // nothing at all. Selecting it here is the affordance the rest
+      // of the code already assumes exists: `canvas_chrome` renders
+      // the "Base photo" badge and the outline-only frame for exactly
+      // this state, and the dock swaps to the Image tools, so Crop and
+      // Look land on-screen instead of behind the strip's scroll.
+      // Move/scale/rotate stay suppressed — `buildSelectionOverlay`
+      // passes `showHandles: !locked` and `onBody: null` — so this
+      // grants reachability, not mutability.
+      final base = _protectedBaseHitAt(local, layers);
+      if (base != null) {
+        // Tapping it again deselects. A base photo usually fills the
+        // whole viewport, so once it became selectable there was often
+        // no empty canvas left to tap and no Done pill (the protected
+        // selection suppresses the HUD) — the user could reach Image
+        // mode and not get back out of it. The photo has no handles
+        // and no body drag, so a second tap has nothing else to mean,
+        // and this is the same "re-tap the active thing to close it"
+        // grammar the dock tiles already use (contract §4, E1/E3).
+        if (_ref.read(selectionControllerProvider).selectedId == base.id) {
+          dismissActiveEditing(_ref);
+          _resetTapCycle();
+          _disarmDoubleTapWindow();
+          return;
+        }
+        selectionCtl.select(base.id);
+        _resetTapCycle();
+        _armDoubleTapWindow(base.id, globalPosition);
+        return;
+      }
       // Centralised dismiss: clears selection + collapses every
       // tool's transient sheet/panel + drops keyboard focus.
       // Saved layer data is untouched.
@@ -567,6 +601,30 @@ class CanvasGestureRouter {
     // Every completed single tap arms the double-tap window on the
     // layer it just selected.
     _armDoubleTapWindow(hits[index].id, globalPosition);
+  }
+
+  /// The document's protected base photo when [local] (canvas space)
+  /// lands inside it, else `null`.
+  ///
+  /// Deliberately NOT folded into `hitTestAllLayers`: that function
+  /// feeds the select-and-move claim surface and the tap-cycling set,
+  /// where a locked layer must stay POINTER-ineligible (contract §5
+  /// row 5). Target-eligibility is the other axis and does not
+  /// exclude locked — §10.2 — which is why the base photo can be
+  /// cropped while staying undraggable.
+  /// Only the no-other-hit tap branch consults this, so the base photo
+  /// is reachable without ever becoming draggable or entering the
+  /// cycle ahead of a real layer above it.
+  EditorLayer? _protectedBaseHitAt(Offset local, List<EditorLayer> layers) {
+    final doc = _ref.read(documentControllerProvider);
+    final baseId = doc.basePhotoLayerId;
+    if (baseId == null || !doc.isProtectedBasePhoto(baseId)) return null;
+    for (final l in layers) {
+      if (l.id != baseId) continue;
+      if (!l.visible) return null;
+      return geom.pointInLayerBbox(l, local) ? l : null;
+    }
+    return null;
   }
 
   /// Second tap of a double (see the window check in [handleTap]).

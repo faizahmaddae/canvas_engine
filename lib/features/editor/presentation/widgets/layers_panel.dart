@@ -8,10 +8,8 @@ import '../../application/document_controller.dart';
 import '../../application/editor_mode_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/layer_state_commands.dart';
-import '../../engine/core/editor_document.dart';
 import '../../engine/core/editor_layer.dart';
-import '../../engine/modules/text/text_layer.dart';
-import 'layer_actions.dart';
+import 'layer_kind_label.dart';
 import 'layer_opacity_control.dart';
 import 'layer_thumbnail.dart';
 import '../../../../app/theme/app_icons.dart';
@@ -86,8 +84,8 @@ class LayersPanel extends ConsumerWidget {
                         // silently refuses moves into/below the base,
                         // which read as a broken drag. Say why instead.
                         final baseId = doc.basePhotoLayerId;
-                        if (doc.projectKind == ProjectKind.photo &&
-                            baseId != null) {
+                        if (baseId != null &&
+                            doc.isProtectedBasePhoto(baseId)) {
                           final baseIndex = doc.layers.indexWhere(
                             (l) => l.id == baseId,
                           );
@@ -241,7 +239,6 @@ class _LayerTile extends ConsumerWidget {
         (d) => d.isProtectedBasePhoto(layer.id),
       ),
     );
-    final canDelete = layer.capabilities.deletable && !protected;
     final bg = isSelected
         ? AppTokens.of(context).accent.withValues(alpha: 0.12)
         : Colors.transparent;
@@ -255,6 +252,12 @@ class _LayerTile extends ConsumerWidget {
     return Semantics(
       container: true,
       selected: isSelected,
+      // `explicitChildNodes` so this container's composed label is the
+      // ONLY thing spoken for the row's own text. Without it the
+      // visual title and subtitle merged in underneath and TalkBack
+      // read «عکس ۲ / عکس ۲ / عکس» — the name twice, then the subtitle
+      // again. The action buttons inside keep their own nodes.
+      explicitChildNodes: true,
       label: _rowSemanticLabel(
         context,
         layer,
@@ -312,27 +315,37 @@ class _LayerTile extends ConsumerWidget {
                     // affordance so the tile doesn't visually jump and snap
                     // back). The handle shows dimmed rather than vanishing so
                     // the row layout stays stable.
+                    // Token, not `Colors.grey`: the literal measured
+                    // 1.27:1 on the cream drawer, far under the 3:1
+                    // floor for a control. The locked variant keeps its
+                    // dimming — it is genuinely inert — but starts from
+                    // a colour that was legible to begin with.
                     if (layer.locked)
                       Opacity(
-                        opacity: 0.35,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4),
+                        // 0.35 over the old grey was 1.27:1; over the
+                        // token it is still only 1.58:1. The handle is
+                        // inert here, but it is the affordance that
+                        // says "this row does not reorder", so it has
+                        // to be seen to say it.
+                        opacity: 0.6,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Icon(
                             AppIcons.dragHandle,
                             size: 18,
-                            color: Colors.grey,
+                            color: AppTokens.of(context).textSecondary,
                           ),
                         ),
                       )
                     else
                       ReorderableDragStartListener(
                         index: displayIndex,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Icon(
                             AppIcons.dragHandle,
                             size: 18,
-                            color: Colors.grey,
+                            color: AppTokens.of(context).textSecondary,
                           ),
                         ),
                       ),
@@ -351,18 +364,21 @@ class _LayerTile extends ConsumerWidget {
                           key: ValueKey('layers-multi-check-${layer.id}'),
                           size: 18,
                           color: isSelected
-                              ? AppTokens.of(context).accent
+                              ? AppTokens.of(context).accentText
                               : Theme.of(context).hintColor,
                         ),
                       ),
-                    LayerThumbnail(layer: layer),
+                    // The thumbnail renders the layer's own text, which
+                    // merged into the row node and made it announce the
+                    // name a second (and for text layers a third) time.
+                    ExcludeSemantics(child: LayerThumbnail(layer: layer)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _displayName(layer, modelIndex),
+                            layerDisplayName(context, layer, modelIndex),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodyMedium?.copyWith(
@@ -370,8 +386,16 @@ class _LayerTile extends ConsumerWidget {
                               color: layer.visible ? null : theme.disabledColor,
                             ),
                           ),
+                          // Subtitle carries the states the row can't
+                          // show any other way. The bare engine type was
+                          // both untranslated and redundant with the
+                          // thumbnail; "Photo · Base photo · Locked" is
+                          // the sentence the user actually needs when a
+                          // tap on the canvas does nothing.
                           Text(
-                            layer.type,
+                            _subtitle(context, layer, protected: protected),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.hintColor,
                             ),
@@ -379,12 +403,12 @@ class _LayerTile extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    if (isPrimary)
-                      _IconAction(
-                        icon: AppIcons.rename,
-                        tooltip: context.l10n.renameAction,
-                        onTap: () => LayerActions.rename(context, ref, layer),
-                      ),
+                    // Rename is NOT an inline icon. Four 48dp actions plus
+                    // the handle and thumbnail leave ~38dp for the name in a
+                    // 320dp drawer, which ellipsised «عکس ۱» to «عک…» — the
+                    // row's whole job. It stays one tap away in the layer's
+                    // overflow sheet («More» → Rename), where it already
+                    // lived, so nothing is lost but the duplicate.
                     _IconAction(
                       icon: layer.locked
                           ? AppIcons.layerLocked
@@ -421,22 +445,14 @@ class _LayerTile extends ConsumerWidget {
                             );
                       },
                     ),
-                    _IconAction(
-                      icon: AppIcons.deleteLayer,
-                      tooltip: protected
-                          ? context.l10n.protectedBasePhotoTooltip
-                          : context.l10n.deleteAction,
-                      enabled: canDelete,
-                      onTap: () {
-                        // Route through the shared facade so confirm /
-                        // selection-promotion / project-kind flip stay
-                        // in one place. Direct `RemoveLayerCommand`
-                        // dispatch from here would bypass the
-                        // base-photo protection in `LayerActions.delete`
-                        // (the previous bug).
-                        LayerActions.delete(context, ref, layer);
-                      },
-                    ),
+                    // Delete is NOT inline either. Three 48dp actions left
+                    // the name column at 74dp — «عکس ۱» just fit, "Photo 1"
+                    // did not, and the subtitle never did. It also sat
+                    // immediately beside the visibility toggle with no
+                    // separation and no destructive treatment, so a
+                    // mis-tap on "hide" deleted the layer instead. It
+                    // keeps its own red row in the layer's overflow sheet,
+                    // behind the same confirm.
                   ],
                 ),
                 // Opacity slider — only shown for the selected layer to
@@ -468,21 +484,30 @@ class _LayerTile extends ConsumerWidget {
     final l10n = context.l10n;
     // Same name the row shows — an unnamed layer's "#3" has to match
     // between what is read and what is seen.
-    final parts = <String>[_displayName(layer, modelIndex)];
+    final parts = <String>[layerDisplayName(context, layer, modelIndex)];
     if (protected) parts.add(l10n.basePhotoLabel);
     if (layer.locked) parts.add(l10n.lockedLabel);
     if (!layer.visible) parts.add(l10n.hiddenLabel);
     return parts.join(' · ');
   }
 
-  String _displayName(EditorLayer layer, int modelIndex) {
-    if (layer.name != null && layer.name!.isNotEmpty) return layer.name!;
-    if (layer is TextLayer) {
-      final t = layer.content.trim();
-      if (t.isNotEmpty) return t.length > 28 ? '${t.substring(0, 28)}…' : t;
-    }
-    return '${layer.type[0].toUpperCase()}${layer.type.substring(1)} '
-        '#${modelIndex + 1}';
+  /// Kind, then only the states that are actually true — the same rule
+  /// the semantics label follows, so what is seen and what is spoken
+  /// stay in step.
+  String _subtitle(
+    BuildContext context,
+    EditorLayer layer, {
+    required bool protected,
+  }) {
+    final l10n = context.l10n;
+    // "Base photo" already says which kind it is, and the column is
+    // narrow — repeating «عکس» in front of it only bought an ellipsis.
+    final parts = <String>[
+      if (protected) l10n.basePhotoLabel else layerKindLabel(context, layer),
+    ];
+    if (layer.locked) parts.add(l10n.lockedLabel);
+    if (!layer.visible) parts.add(l10n.hiddenLabel);
+    return parts.join(' · ');
   }
 }
 
@@ -491,28 +516,32 @@ class _IconAction extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.onTap,
-    this.enabled = true,
     this.highlighted = false,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onTap;
-  final bool enabled;
   final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
-    final color = !enabled
-        ? Theme.of(context).disabledColor
-        : highlighted
-        ? AppTokens.of(context).accent
+    final color = highlighted
+        // Glyph stop: the fill saffron reads at ~2.9:1 on this
+        // surface, and the lock's colour is the ONLY thing that says
+        // the layer is locked.
+        ? AppTokens.of(context).accentText
         : null;
+    // `VisualDensity.compact` pulled these to a measured 40dp pitch —
+    // under the repo's own 44dp floor and Material's 48. The row has
+    // an Expanded name column absorbing the width, so the larger box
+    // costs no layout. The glyph stays 18dp; only the hit area grows.
     return IconButton(
       tooltip: tooltip,
       iconSize: 18,
-      visualDensity: VisualDensity.compact,
-      onPressed: enabled ? onTap : null,
+      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+      padding: EdgeInsets.zero,
+      onPressed: onTap,
       icon: Icon(icon, color: color),
     );
   }

@@ -121,8 +121,10 @@ void main() {
     // mirrored an already-mirroring glyph and the drill-in arrow came
     // out pointing at the screen edge. Assert the mechanism, not a
     // glyph identity — the identity is what let the bug through.
+    // (The old `navPrevious` back-chevron assertion is gone with the
+    // icon itself: the sibling-nav chip that owned it was deleted, so
+    // asserting its absence no longer pins anything.)
     expect(find.byIcon(AppIcons.drillIn), findsWidgets);
-    expect(find.byIcon(AppIcons.navPrevious), findsNothing);
 
     final icon = tester.widget<Icon>(find.byIcon(AppIcons.drillIn).first);
     expect(
@@ -137,7 +139,6 @@ void main() {
   ) async {
     await pumpAndOpen(tester, locale: const Locale('en'));
     expect(find.byIcon(AppIcons.drillIn), findsWidgets);
-    expect(find.byIcon(AppIcons.navPrevious), findsNothing);
   });
 
   testWidgets('dark mode: ink surface + cream CTA', (tester) async {

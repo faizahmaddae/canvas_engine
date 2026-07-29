@@ -130,7 +130,8 @@ void main() {
           ),
         ),
       );
-      // v2 tokens: muted text while closed, saffron accent when open.
+      // v2 tokens: muted text while closed, saffron when open — the
+      // glyph stop (accentText), since this is rendered type.
       final tokens = AppTokens.of(
         tester.element(find.text('Adjust precisely')),
       );
@@ -140,7 +141,7 @@ void main() {
       await tester.tap(find.text('Adjust precisely'));
       await tester.pumpAndSettle();
       value = tester.widget<Text>(find.text('24px'));
-      expect(value.style?.color, tokens.accent);
+      expect(value.style?.color, tokens.accentText);
     });
   });
 }

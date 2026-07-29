@@ -159,11 +159,16 @@ class RotateLayerCommand extends SetLayerTransformCommand {
     : super(labelOverride: 'Rotate');
 }
 
-/// Sets [EditorDocument.basePhotoLayerId] \u2014 the marker the
-/// image-target resolver uses to keep Crop / Filters / Adjust
-/// pointed at the imported "main" photo even after the user has
-/// added stickers, text, or secondary images on top. Pass `null`
+/// Sets [EditorDocument.basePhotoLayerId] \u2014 the marker naming a
+/// photo project's subject, which is what keeps Crop and Look pointed
+/// at the imported "main" photo however many stickers, text layers or
+/// secondary images sit on top, and whatever is selected. Pass `null`
 /// to clear (e.g. when the photo is removed).
+///
+/// Issued only by the photo-project import flows and by
+/// `RemoveLayerCommand.invert`. It is deliberately NOT a user-facing
+/// command: the role is fixed by the project kind, so nothing reads
+/// the marker as a preference the user could re-aim (contract \u00a710).
 class SetBasePhotoCommand extends EditorCommand {
   const SetBasePhotoCommand(this.layerId);
   final String? layerId;

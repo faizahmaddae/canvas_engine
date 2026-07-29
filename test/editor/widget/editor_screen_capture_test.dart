@@ -855,7 +855,7 @@ void main() {
         interact: (t) async {
           // Open the زمینه effect section, enable via the کپسولی
           // (Pill) preset chip — swatch row + precision disclosure.
-          await t.tap(effectChip('زمینه'));
+          await t.tap(effectChip('پس‌زمینه'));
           await t.pumpAndSettle();
           await t.tap(effectChip('کپسولی'));
           await t.pumpAndSettle();

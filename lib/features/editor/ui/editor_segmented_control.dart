@@ -96,9 +96,11 @@ class _SegmentTile extends StatelessWidget {
           // vocabulary across the whole panel.
           borderRadius: BorderRadius.circular(99),
           border: Border.all(
-            color: selected
-                ? tokens.accent
-                : tokens.border.withValues(alpha: 0.9),
+            // Same vocabulary as PresetChip, which this widget's own
+            // doc claims to share: accentText for the selected edge,
+            // borderStrong for the unselected one. The old pair
+            // measured 2.92:1 and 1.27:1.
+            color: selected ? tokens.accentText : tokens.borderStrong,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -109,7 +111,7 @@ class _SegmentTile extends StatelessWidget {
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.2,
-            color: selected ? tokens.accentDeep : tokens.textSecondary,
+            color: selected ? tokens.accentText : tokens.textSecondary,
           ),
         ),
       ),

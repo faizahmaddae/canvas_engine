@@ -84,7 +84,9 @@ void main() {
     await pump(tester);
 
     final activeIcon = tester.widget<Icon>(find.byIcon(AppIcons.homeTab));
-    expect(activeIcon.color, AppTokens.light.accent);
+    // accentText, not accent: the fill saffron measured 2.69:1 on the
+    // tab bar and this glyph is the only cue for which tab is active.
+    expect(activeIcon.color, AppTokens.light.accentText);
 
     final inactiveIcon = tester.widget<Icon>(find.byIcon(AppIcons.projectsTab));
     expect(inactiveIcon.color, AppTokens.light.textMuted);

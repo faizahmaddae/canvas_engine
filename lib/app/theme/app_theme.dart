@@ -133,7 +133,9 @@ abstract final class AppTheme {
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: tokens.accentDeep),
+        // Glyph stop: dialog actions are text. accentDeep is 3.88:1
+        // on cream — under AA for the button that cancels a delete.
+        style: TextButton.styleFrom(foregroundColor: tokens.accentText),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -192,8 +194,10 @@ abstract final class AppTheme {
                 : Colors.transparent,
           ),
           foregroundColor: WidgetStateProperty.resolveWith(
+            // Foreground = glyph stop. accentDeep on the 16% accent
+            // tint under it measures 3.88:1 — under AA for a label.
             (states) => states.contains(WidgetState.selected)
-                ? tokens.accentDeep
+                ? tokens.accentText
                 : tokens.textSecondary,
           ),
           side: WidgetStatePropertyAll(BorderSide(color: tokens.border)),
@@ -244,13 +248,13 @@ abstract final class AppTheme {
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
             fontSize: 11,
             letterSpacing: 0,
-            color: selected ? tokens.accentDeep : tokens.textSecondary,
+            color: selected ? tokens.accentText : tokens.textSecondary,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? tokens.accentDeep : tokens.textSecondary,
+            color: selected ? tokens.accentText : tokens.textSecondary,
             size: 24,
           );
         }),

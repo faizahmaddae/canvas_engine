@@ -143,7 +143,12 @@ class ImageModeToolbar extends ConsumerWidget {
         icon: AppIcons.cropTool,
         label: l10n.cropTool,
         semanticLabel: l10n.cropImageAction,
-        tier: SlotTier.tier2,
+        // No tier: Crop sits SECOND in kImageStripOrder, among the
+        // core editing slots. It kept a tier2 mark from when it sat
+        // seventh, next to the trailing group, so the strip drew a
+        // hairline on both sides of it — three dividers where the
+        // grammar calls for one, before shape/effects/selective.
+        // Tier is group membership, not decoration.
         // Crop is a full-screen mode — it does NOT toggle the
         // dock's expanded slot. Instead we open the centralised
         // [CropModeOverlay] which is the same surface launched

@@ -84,13 +84,32 @@ class _InlineFontBodyState extends State<InlineFontBody> {
     return defaultFontFamilyForContent(widget.content);
   }
 
-  /// Auto-detected tab. Driven ONLY by the layer's text content so
-  /// the tab can never disagree with what the user actually typed
-  /// (e.g. English text in a Persian face must still open English).
-  /// Empty / punctuation-only content falls through to Latin via
-  /// `textIsArabicScript`.
-  FontScript get _autoTab =>
-      textIsArabicScript(widget.content) ? FontScript.arabic : FontScript.latin;
+  /// Auto-detected tab: the CURRENT FONT's script first, then the
+  /// content's.
+  ///
+  /// Content alone was wrong in the commonest case. Every new layer
+  /// gets `Vazir_Regular` (`defaultFontFamilyForContent` returns it
+  /// unconditionally), so a layer typed in English opened the Latin
+  /// tab — whose entries can never include Vazir — and the picker
+  /// showed no selected tile at all. The tab a picker opens on must be
+  /// the one that can show you where you are; the content script is
+  /// still the answer when there is no font set yet.
+  FontScript get _autoTab {
+    // `_effectiveFamily`, not `widget.current`: a brand-new layer has
+    // no explicit family but still RENDERS in Vazir, and it is the
+    // rendered font the grid marks as selected (see the `current:`
+    // argument it is passed below). Keying the tab off the explicit
+    // value would leave exactly the default case unhighlighted.
+    final family = _effectiveFamily;
+    if (family != null) {
+      for (final e in kFontCatalog) {
+        if (e.family == family) return e.script;
+      }
+    }
+    return textIsArabicScript(widget.content)
+        ? FontScript.arabic
+        : FontScript.latin;
+  }
 
   @override
   void initState() {

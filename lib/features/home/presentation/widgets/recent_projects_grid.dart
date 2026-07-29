@@ -96,7 +96,7 @@ class RecentProjectsGrid extends ConsumerWidget {
                       horizontal: 8,
                       vertical: 4,
                     ),
-                    foregroundColor: tokens.accent,
+                    foregroundColor: tokens.accentText,
                     textStyle: AppTypeScale.caption.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -675,7 +675,7 @@ class _CompactEmpty extends StatelessWidget {
           TextButton(
             onPressed: onCreate,
             style: TextButton.styleFrom(
-              foregroundColor: tokens.accent,
+              foregroundColor: tokens.accentText,
               textStyle: AppTypeScale.caption.copyWith(
                 fontWeight: FontWeight.w700,
               ),

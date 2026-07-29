@@ -140,7 +140,7 @@ void main() {
   // consolidation, so they carry those panels' compactness contract.
   for (final (chipLabel, name) in [
     ('سایه', 'styles + shadow section'),
-    ('زمینه', 'styles + background section'),
+    ('پس‌زمینه', 'styles + background section'),
     ('خط دور', 'styles + border section'),
   ]) {
     testWidgets('"$name" stays compact at worst-case style', (tester) async {

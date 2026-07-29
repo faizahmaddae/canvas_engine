@@ -10,6 +10,7 @@ import '../../../core/utils/haptics.dart';
 import '../../../l10n/l10n.dart';
 import '../../editor/application/canvas_capture.dart';
 import '../../editor/application/recent_colors_controller.dart';
+import '../../editor/presentation/widgets/editor_breakpoints.dart';
 import '../../editor/presentation/widgets/editor_modal_sheet.dart';
 import 'eyedropper_overlay.dart';
 import '../../../app/theme/app_icons.dart';
@@ -117,6 +118,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
   late bool _custom;
   late final TextEditingController _hexCtrl;
   late final FocusNode _hexFocus;
+  final GlobalKey _hexFieldKey = GlobalKey();
   bool _hexInvalid = false;
 
   /// Whether this session earned a recents-MRU write: only custom
@@ -149,6 +151,26 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
     _initialArgb = widget.initial.toARGB32();
     _hexCtrl = TextEditingController(text: formatColorHex(widget.initial));
     _hexFocus = FocusNode();
+    // Bring the field above the IME once the keyboard has actually
+    // taken its space. The panel now reserves `viewInsets.bottom`
+    // (dock_sheet_chrome), so there IS somewhere to scroll to; without
+    // this the field could still start below the fold in a tall panel.
+    // Two frames: one for the focus, one for the inset to land.
+    _hexFocus.addListener(() {
+      if (!_hexFocus.hasFocus || !mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = _hexFieldKey.currentContext;
+          if (ctx == null || !mounted) return;
+          Scrollable.ensureVisible(
+            ctx,
+            alignment: 0.5,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+          );
+        });
+      });
+    });
     _recentsStore = ref.read(recentColorsControllerProvider.notifier);
     // Eyedropper availability keys off the canvas boundary being
     // mounted; when the panel and the canvas mount in the same
@@ -343,6 +365,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
             ],
             Expanded(
               child: _HexField(
+                key: _hexFieldKey,
                 controller: _hexCtrl,
                 focusNode: _hexFocus,
                 invalid: _hexInvalid,
@@ -583,7 +606,7 @@ class ColorEntryButton extends StatelessWidget {
             padding: const EdgeInsetsDirectional.fromSTEB(10, 0, 10, 0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: tokens.border.withValues(alpha: 0.6)),
+              border: Border.all(color: tokens.borderStrong),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -675,7 +698,7 @@ class _RoundIconButton extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: tokens.border.withValues(alpha: 0.6)),
+              border: Border.all(color: tokens.borderStrong),
             ),
             child: Icon(icon, size: 18, color: tokens.textPrimary),
           ),
@@ -706,7 +729,7 @@ class _CustomLevelPill extends StatelessWidget {
           padding: const EdgeInsetsDirectional.fromSTEB(10, 0, 12, 0),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: tokens.border.withValues(alpha: 0.6)),
+            border: Border.all(color: tokens.borderStrong),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -774,6 +797,7 @@ class _RainbowRing extends StatelessWidget {
 
 class _HexField extends StatelessWidget {
   const _HexField({
+    super.key,
     required this.controller,
     required this.focusNode,
     required this.invalid,
@@ -800,7 +824,11 @@ class _HexField extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: invalid ? scheme.error : tokens.border.withValues(alpha: 0.6),
+          // `borderStrong`: this hairline is the field's ONLY outline
+          // and measured 1.17:1 light / 1.10:1 dark — below both the
+          // boundaries that got earlier rounds rejected, on a text
+          // input.
+          color: invalid ? scheme.error : tokens.borderStrong,
           width: invalid ? 1.5 : 1,
         ),
       ),
@@ -809,37 +837,51 @@ class _HexField extends StatelessWidget {
           _SwatchPreviewDot(color: swatch, size: 18),
           const SizedBox(width: 8),
           Expanded(
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              textInputAction: TextInputAction.done,
-              textCapitalization: TextCapitalization.characters,
-              // Hex codes are LTR content even under an RTL locale.
-              textDirection: TextDirection.ltr,
-              textAlign: TextAlign.left,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
-                color: tokens.textPrimary,
-                fontFeatures: const [ui.FontFeature.tabularFigures()],
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9A-Fa-f#]')),
-                LengthLimitingTextInputFormatter(9),
-              ],
-              decoration: InputDecoration(
-                isCollapsed: true,
-                border: InputBorder.none,
-                hintText: '#RRGGBB',
-                hintStyle: TextStyle(
-                  color: tokens.textPrimary.withValues(alpha: 0.25),
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.6,
+            // The field had no accessible name at all — an EditText
+            // with content-desc="" reading only its own hex value.
+            child: MergeSemantics(
+              // `EditableText` is its own semantics boundary, so a bare
+              // Semantics wrapper produced a SECOND, empty,
+              // non-clickable EditText carrying the name while the real
+              // field stayed unnamed — two edit boxes at identical
+              // bounds. Merging collapses the subtree onto the field's
+              // own node.
+              child: Semantics(
+                label: context.l10n.hexColorFieldLabel,
+                textField: true,
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  textInputAction: TextInputAction.done,
+                  textCapitalization: TextCapitalization.characters,
+                  // Hex codes are LTR content even under an RTL locale.
+                  textDirection: TextDirection.ltr,
+                  textAlign: TextAlign.left,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color: tokens.textPrimary,
+                    fontFeatures: const [ui.FontFeature.tabularFigures()],
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9A-Fa-f#]')),
+                    LengthLimitingTextInputFormatter(9),
+                  ],
+                  decoration: InputDecoration(
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    hintText: '#RRGGBB',
+                    hintStyle: TextStyle(
+                      color: tokens.textPrimary.withValues(alpha: 0.25),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  onChanged: onChanged,
+                  onSubmitted: onSubmitted,
                 ),
               ),
-              onChanged: onChanged,
-              onSubmitted: onSubmitted,
             ),
           ),
         ],
@@ -898,7 +940,11 @@ class _RecentsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
     return SizedBox(
-      height: 28,
+      // kMinHitTarget, not 28: a horizontal ListView hands its children
+      // a TIGHT cross-axis constraint, so the swatch's 44dp touch box
+      // was being clamped to the row's height. The swatch still PAINTS
+      // at 28dp — only the target grows.
+      height: kMinHitTarget,
       child: Row(
         children: [
           Padding(
@@ -906,21 +952,32 @@ class _RecentsRow extends StatelessWidget {
             child: Text(
               context.l10n.recentLabel,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: tokens.textSecondary.withValues(alpha: 0.75),
+                // Full strength: at 75% this caption measured 3.32:1 light
+                // and 4.32:1 dark — normal text, so 4.5:1 applies. It
+                // was the one label in the section below the bar.
+                color: tokens.textSecondary,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0,
               ),
             ),
           ),
           Expanded(
+            // The row is as tall as the touch floor, and the painted
+            // 28dp swatch is centred in it. `clipBehavior: Clip.none`
+            // alone did NOT fix this — it affects painting, not layout
+            // or hit-testing, so the ListView kept handing children a
+            // tight 28dp cross-axis and the 44dp box stayed clamped to
+            // 44x28. The height has to change for the box to exist.
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
               padding: const EdgeInsets.symmetric(horizontal: 2),
               itemCount: recents.length,
               separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (_, i) => _Swatch(
                 key: ValueKey('color-picker-recent-${_hex6(recents[i])}'),
                 color: recents[i],
+                semanticLabel: colorSwatchName(context, recents[i]),
                 size: 28,
                 selected: (recents[i].toARGB32() & 0x00FFFFFF) == currentRgb,
                 onTap: () => onPick(recents[i]),
@@ -940,27 +997,45 @@ class _PresetGrid extends StatelessWidget {
   final int currentRgb;
   final ValueChanged<Color> onPick;
 
+  static const int _perRow = 6;
+
   @override
   Widget build(BuildContext context) {
-    const perRow = 6;
-    Widget row(List<Color> colors) => Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        for (final c in colors)
-          _Swatch(
-            key: ValueKey('color-picker-swatch-${_hex6(c)}'),
-            color: c,
-            selected: (c.toARGB32() & 0x00FFFFFF) == currentRgb,
-            onTap: () => onPick(c),
-          ),
-      ],
-    );
-    return Column(
-      children: [
-        row(kColorPickerPalette.sublist(0, perRow)),
-        const SizedBox(height: 10),
-        row(kColorPickerPalette.sublist(perRow)),
-      ],
+    // ONE gutter, both axes — DERIVED, not assumed. `spaceBetween` /
+    // `spaceEvenly` on a Row take the column gap from the sheet width
+    // while the run gap stays a fixed constant; that measured 28dp
+    // across against 10dp down, so the block read as two unrelated
+    // rows of dots rather than one grid. A bare `Wrap` equalises them
+    // but then reflows to 8+4 on a wide sheet, losing the 2×6 shape
+    // the palette is sized for. So: solve the horizontal gutter from
+    // the real width at six-per-row, and spend the same number
+    // vertically.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final gutter =
+            ((constraints.maxWidth - _perRow * kMinHitTarget) / (_perRow - 1))
+                .clamp(4.0, 24.0);
+        Widget row(List<Color> colors) => Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            for (final c in colors)
+              _Swatch(
+                key: ValueKey('color-picker-swatch-${_hex6(c)}'),
+                color: c,
+                semanticLabel: colorSwatchName(context, c),
+                selected: (c.toARGB32() & 0x00FFFFFF) == currentRgb,
+                onTap: () => onPick(c),
+              ),
+          ],
+        );
+        return Column(
+          children: [
+            row(kColorPickerPalette.sublist(0, _perRow)),
+            SizedBox(height: gutter),
+            row(kColorPickerPalette.sublist(_perRow)),
+          ],
+        );
+      },
     );
   }
 }
@@ -977,12 +1052,17 @@ class _Swatch extends StatefulWidget {
     required this.color,
     required this.selected,
     required this.onTap,
+    this.semanticLabel,
     this.size = 36,
   });
 
   final Color color;
   final bool selected;
   final VoidCallback onTap;
+
+  /// Spoken name. Without it a screen reader reads twelve unnamed
+  /// "button"s in a row — the swatch's only identity is its fill.
+  final String? semanticLabel;
   final double size;
 
   @override
@@ -999,7 +1079,11 @@ class _SwatchState extends State<_Swatch> {
         ThemeData.estimateBrightnessForColor(widget.color) == Brightness.dark
         ? Colors.white
         : Colors.black;
-    return GestureDetector(
+    // Painted at [size]; the TOUCH box is the 48dp Material floor.
+    // The grid runs on a ~73dp pitch and the recents row has 8dp
+    // separators, so neither layout changes — the 28dp recents
+    // swatches and 36dp presets simply stop being 28/36dp targets.
+    final swatch = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => setState(() => _down = true),
       onTapCancel: () => setState(() => _down = false),
@@ -1023,9 +1107,21 @@ class _SwatchState extends State<_Swatch> {
                 shape: BoxShape.circle,
                 color: widget.color,
                 border: Border.all(
+                  // Every swatch gets a real boundary. Whichever end
+                  // of the ramp matches the sheet disappears into it —
+                  // white on cream in light mode, black on ink in dark
+                  // — so a brightness-conditional ring only ever fixes
+                  // one of the two. `textSecondary` is a mid-tone in
+                  // BOTH themes. 0.70 computed to 3.23:1 against white
+                  // but MEASURED 2.95:1 once rendered (the 1dp ring
+                  // antialiases against the fill it encloses), so it is
+                  // 0.85: 4.34:1 against white and 4.06:1 against the
+                  // light sheet, 6.31:1 against black and 5.20:1
+                  // against the dark sheet. The old 55%-of-`border`
+                  // hairline was 1.31:1.
                   color: widget.selected
-                      ? tokens.accent
-                      : tokens.border.withValues(alpha: 0.55),
+                      ? tokens.accentText
+                      : tokens.textSecondary.withValues(alpha: 0.85),
                   width: widget.selected ? 2.0 : 1,
                 ),
               ),
@@ -1038,6 +1134,24 @@ class _SwatchState extends State<_Swatch> {
                   : null,
             ),
           ),
+        ),
+      ),
+    );
+    return Semantics(
+      label: widget.semanticLabel,
+      button: true,
+      selected: widget.selected,
+      // The node must carry the ACTION too. Naming it while excluding
+      // the subtree's own semantics left the accessibility tree with a
+      // Button that had `clickable=false` and no click action, so every
+      // swatch was announced and then unusable — worse than the
+      // unnamed-but-tappable state it replaced.
+      onTap: widget.onTap,
+      child: ExcludeSemantics(
+        child: SizedBox(
+          width: kMinHitTarget,
+          height: kMinHitTarget,
+          child: Center(child: swatch),
         ),
       ),
     );
@@ -1524,4 +1638,30 @@ class _ImmediatePanAreaState extends State<_ImmediatePanArea> {
       ),
     );
   }
+}
+
+/// Spoken name for a swatch in [kColorPickerPalette].
+///
+/// The grid's twelve entries carry no text, so a screen reader read
+/// twelve bare "button"s in a row — the fill was the only identity
+/// and it is exactly the channel a blind user does not have. Colours
+/// outside the fixed palette (recents, eyedropper picks) fall back to
+/// their hex.
+String colorSwatchName(BuildContext context, Color c) {
+  final l10n = context.l10n;
+  return switch (c.toARGB32() & 0x00FFFFFF) {
+    0x000000 => l10n.colorBlack,
+    0xFFFFFF => l10n.colorWhite,
+    0x6B7280 => l10n.colorSlate,
+    0xEF4444 => l10n.colorRed,
+    0xF59E0B => l10n.colorAmber,
+    0xFACC15 => l10n.colorYellow,
+    0x22C55E => l10n.colorGreen,
+    0x06B6D4 => l10n.colorCyan,
+    0x3B82F6 => l10n.colorBlue,
+    0x8B5CF6 => l10n.colorPurple,
+    0xEC4899 => l10n.colorPink,
+    0x14B8A6 => l10n.colorTeal,
+    _ => l10n.colorCustomSwatch('#${_hex6(c)}'),
+  };
 }

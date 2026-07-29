@@ -351,7 +351,7 @@ Suggestion: For the redesign: introduce real placeholder image layers in templat
 - SiblingSwipeStrategy with const panel orders + drift tests (kImagePanelSlotOrder etc.) — data-driven order with test-pinned consistency.
 - Data-driven tier dividers in SlotStrip (derived from SlotTier of adjacent slots, can't drift on reorder) and the three-tier Add/Photo/Document grouping of the main strip.
 - Crop and mask-edit as true full-screen/owned modes with PopScope back=cancel and (crop) priorSelectionId restoration — clean modal semantics, draft-first, cancel is a true no-op.
-- resolveImageTarget UX: selected → only-image → base-photo → chooser sheet → snackbar-with-CTA; no dead ends when tapping Crop/Adjust/Filters without a photo.
+- ~~resolveImageTarget UX: selected → only-image → base-photo → chooser sheet → snackbar-with-CTA~~ — SUPERSEDED by contract §10. The ladder is deleted: main-strip Crop/Look are P scope and target the protected base photo or nothing. The keep-worthy half, the recovery-with-CTA instead of a dead end, survives as §10.3. See docs/command-scope-diagnosis-2026-07.md.
 - Canvas tap-cycling through overlapping layers + long-press multi-select entry with the visible mode chip — a solid mobile selection model.
 - CanvasFraming: screen-space shadow/dim/border painter with proper shouldRepaint, export-safe (never in the saved bitmap), photo-vs-design border emphasis.
 ### toolbar-framework
@@ -386,7 +386,7 @@ Suggestion: For the redesign: introduce real placeholder image layers in templat
 ### image-tool
 - Draft-first modal session pattern shared by crop and mask edit (CropSession/MaskEditSession): gestures mutate only a draft, Done = exactly one undoable command, Cancel = true no-op, priorSelectionId restore, clear-state-before-execute to avoid listener recursion (crop_controller.dart, mask_edit_controller.dart). This is the template any redesigned tool mode should reuse.
 - Pure, unit-tested static geometry helpers: CropController.sanitise/fitAspect/translate/resize and MaskEditController.translate/resize/boundsOf — UI and tests share identical math.
-- resolveImageTarget priority chain (selected → only image → base photo → chooser) plus the recovery snackbar with an 'Add photo' action instead of a dead end (image_target_resolver.dart, editor_screen.dart:1025-1043).
+- ~~resolveImageTarget priority chain (selected → only image → base photo → chooser)~~ — SUPERSEDED by contract §10; see the entry above. The recovery snackbar survives and now branches on WHICH precondition failed (missing photo vs hidden photo).
 - Idempotent aspect presets always computed against the full image (no accumulated shrink; same tap = same rect) — crop_controller.dart:200-226.
 - ImagePanelShell / EditorToolPanelShell single-chrome discipline: bodies declare title+icon only; controller wiring lives in one wrapper; heights/padding centralized (min(34%, 380dp)).
 - live-flag command merging with a history merge window (one undo entry per slider drag, discrete taps stay separate) and field-set matching so parallel drags never swallow each other (image_commands.dart, history_stack.dart).
@@ -464,7 +464,7 @@ Suggestion: For the redesign: introduce real placeholder image layers in templat
 - Draft-first modal sessions (CropSession, MaskEditSession): document untouched until one composite commit, cancel restores entry state, priorSelectionId restores the toolbar context the user came from (crop_controller.dart:105-343, mask_edit_controller.dart:59-215).
 - EditJournal WAL: 750ms debounce, atomic tmp+rename writes, per-project files plus reserved 'draft' slot for never-saved sessions, inline flush on app pause, journal cleared when autosave lands (edit_journal.dart, autosave_controller.dart:84-238).
 - Centralized dismiss seams: dismissActiveEditing (empty-tap) and closeObjectSubPanels (selection change) as the single contract every tool enrolls in (editor_lifecycle.dart:79-163).
-- Pure image-target resolver with sealed result types (image_target_resolver.dart) — testable, UI-free disambiguation policy.
+- Pure, UI-free image-target policy, kept as a principle and re-landed as `resolveRoleTarget` (image_target.dart). The sealed result types went with the ladder — with no disambiguation to express, the outcome is a layer or null.
 - CompositeCommand invert threading (each child inverse computed against the document state just before that child applied, then reversed — transform_commands.dart:196-208) and UpdateTextCommand's touched-field-shape symmetry between forward and inverse (text_commands.dart:52-63).
 - EditorSliderRow's commit-strategy-agnostic API with onDragStart/onDragEnd that covers pointer-cancel (editor_slider_row.dart:40-124) — the hooks needed to fix the grouping problems already exist.
 - Two-finger-tap undo / three-finger-tap redo with phantom-session cancel (editor_canvas.dart:354-380).
@@ -516,10 +516,10 @@ Suggestion: For the redesign: introduce real placeholder image layers in templat
 - Crash-recovery journal architecture: reserved draft slot for never-saved sessions, per-project journals, resolved-canonical comparison that avoids false resume prompts after container relocation (project_recovery_service.dart:31-71), Home resume banner shown once per mount.
 - Export render-once contract: preview screen receives the exact bytes that will be saved/shared, drives its AspectRatio from the decoded image, checkerboard sits behind the exact image rect (export_preview_screen.dart:26-35, 107-137) — no preview/file mismatch possible.
 - documentCommitVersionProvider seam: autosave, undo/redo buttons, and the screen-level rebuild subscribe to commit ticks only, keeping 60fps overlay previews off the rebuild path (document_controller.dart:140-157, editor_screen.dart:87-94).
-- Image-target resolution with recovery: Crop/Adjust/Filters on an empty canvas show a snackbar with a one-tap 'Add photo' action instead of dead-ending (editor_screen.dart:1025-1043), and ambiguity opens a chooser sheet.
+- Image-target resolution with recovery: Crop/Look with no qualifying target show a snackbar with a one-tap recovery instead of dead-ending. Still true; the '...and ambiguity opens a chooser sheet' half is gone with §10 — there is no ambiguity to open one for.
 - Crop prior-selection snapshot: opening Crop from the main toolbar restores the pre-crop selection on Done/Cancel so the user lands back on the toolbar they came from (editor_screen.dart:1110-1131).
 - Autosave stamps thumbnailVersion:0 so the Home grid live-renders stale thumbnails instead of showing outdated PNGs (autosave_controller.dart:210-218); manual save regenerates with copy-on-write cleanup of the old file.
-- Base-photo claim logic consistent between Home importPhoto and in-editor _addImage (first image in a photo project becomes the locked base; design projects claim the pointer without locking) — editor_screen.dart:772-801.
+- Base-photo claim logic consistent between Home importPhoto and in-editor _addImage: the first image in a PHOTO project becomes the locked base. The 'design projects claim the pointer without locking' half was the root cause of the §10 targeting defect and is removed — a design import claims nothing.
 
 ## P2 inventory (titles)
 - shell:canvas-panel-resurrects: Canvas panel silently reappears after Done-pill deselect
@@ -666,7 +666,7 @@ Suggestion: For the redesign: introduce real placeholder image layers in templat
 - image-tool:dead-crop-code: Dead code: SetImageFitCommand (with stale 'Crop tab' comment) and CropController.selectOriginal
 - image-tool:source-widget-mapping-quadruplicated: ImageSource → widget/provider mapping duplicated four times in image presentation
 - image-tool:mask-strip-covers-handles: Mask-edit bottom card can cover region handles with no mitigation
-- image-tool:chooser-sheet-no-thumbnails: Multi-image chooser identifies layers only as 'Image N' + dimensions
+- image-tool:chooser-sheet-no-thumbnails: RESOLVED-BY-DELETION (contract §10) — the multi-image chooser no longer exists; nothing resolves a target by asking.
 - image-tool:docs-stale-vs-code: Design docs are stale versus shipped mask/effects code
 - image-tool:replace-keeps-old-box: Replace image keeps the old layer box, silently cover-cropping the new photo
 - paint-tool:auto-open-picker-unreachable: The auto-open Tool-picker flow can never fire

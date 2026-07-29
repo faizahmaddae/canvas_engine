@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_tokens.dart';
@@ -179,229 +181,256 @@ class _DockSheetChromeState extends State<DockSheetChrome> {
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
     final media = MediaQuery.of(context);
-    // Effective max height: fraction of screen, clamped by the dp
-    // ceiling so landscape phones / tablets stay sane.
-    final maxHeight = (media.size.height * widget.maxHeightFraction).clamp(
+    // Effective max height: a fraction of the VISIBLE area, clamped by
+    // the dp ceiling so landscape phones / tablets stay sane.
+    //
+    // `size.height - viewInsets.bottom`, NOT `size.height` then minus
+    // the inset. Subtracting the keyboard from the BUDGET is what the
+    // previous attempt did, and on a 952dp screen that is
+    // 952*0.34 = 323.7 against a 336dp IME — a negative height,
+    // floored to zero, which deleted the entire panel the moment the
+    // keyboard opened. Every phone keyboard is taller than 34% of the
+    // screen, so it failed on all of them. Taking the fraction OF the
+    // visible area cannot go negative, and pairing it with the bottom
+    // pad below (the pattern `editor_modal_sheet` already uses) is
+    // what actually lifts the field clear of the IME.
+    final insetBottom = media.viewInsets.bottom;
+    final visibleHeight = math.max(0.0, media.size.height - insetBottom);
+    final maxHeight = (visibleHeight * widget.maxHeightFraction).clamp(
       0.0,
       widget.maxHeightDp,
     );
     final hasLateral = widget.onPrev != null || widget.onNext != null;
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxHeight),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          // The panel sits on the same elevated chrome surface as
-          // the dock bar (a step lighter than the workspace) so bar
-          // + panel read as ONE floating chrome layer. Combined with
-          // the soft top shadow below this gives the canonical
-          // "sheet just landed" event without animation.
-          color: tokens.surface,
-          // Bottom hairline only — the panel's top edge IS the
-          // dock's top edge, which already draws the sheet's 1px
-          // outline; a second line here doubled it.
-          border: Border(
-            bottom: BorderSide(
-              color: tokens.border.withValues(alpha: 0.5),
-              width: 0.5,
-            ),
-          ),
-          boxShadow: [
-            // Inverted shadow that bleeds *up* over the canvas —
-            // 4dp lift signals the sheet sits above the surface.
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 18,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: GestureDetector(
-          // Lateral swipe anywhere on the sheet navigates to the
-          // sibling tool. `behavior: deferToChild` so buttons and
-          // sliders inside keep winning the gesture arena for
-          // taps / vertical drags.
-          behavior: HitTestBehavior.deferToChild,
-          onHorizontalDragUpdate: hasLateral ? _onHDragUpdate : null,
-          onHorizontalDragEnd: hasLateral ? _onHDragEnd : null,
-          // Layout column + overlay hit zones (tb2 a11y pass). The
-          // painted chrome is unchanged; the DISMISS gestures now
-          // live on transparent overlay boxes sized to
-          // [kMinHitTarget] so they meet the 44dp floor without
-          // moving a single visible pixel (the flex column has no
-          // vertical slack: 14dp handle + 34dp header = 48dp above
-          // the body, so in-flow 44dp boxes would push the body
-          // down — the byte-gated captures forbid that).
-          child: Stack(
-            children: [
-              // ── 44dp dismiss zone (swipe-down / tap) ────────────
-              // FIRST child = beneath the column, so header
-              // interactives (confirm pill, undo, value chips) win
-              // the hit test outright; the handle band and header
-              // gaps decline hits and fall through here, giving the
-              // dismiss gesture its 44dp floor without occluding a
-              // single control. A tap on the empty title band
-              // dismisses — deliberate, it reads as sheet chrome.
-              // Horizontal drags still fall through to the outer
-              // lateral detector (this zone claims vertical + tap).
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                height: kMinHitTarget,
-                child: Semantics(
-                  label: context.l10n.dismissPanelSemantics,
-                  button: true,
-                  child: GestureDetector(
-                    key: const ValueKey('dock-sheet-handle-hit'),
-                    behavior: HitTestBehavior.opaque,
-                    onVerticalDragUpdate: _onDragUpdate,
-                    onVerticalDragEnd: _onDragEnd,
-                    onTap: () {
-                      EditorHaptics.sheet();
-                      widget.onClose();
-                    },
-                  ),
-                ),
+    // Lift the whole panel clear of the keyboard. Constraining the
+    // height alone only makes it shorter — it stays anchored at the
+    // bottom of the scaffold, i.e. behind the IME. Same pattern as
+    // `editor_modal_sheet`'s keyboardAware branch.
+    return Padding(
+      padding: EdgeInsets.only(bottom: insetBottom),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            // The panel sits on the same elevated chrome surface as
+            // the dock bar (a step lighter than the workspace) so bar
+            // + panel read as ONE floating chrome layer. Combined with
+            // the soft top shadow below this gives the canonical
+            // "sheet just landed" event without animation.
+            color: tokens.surface,
+            // Bottom hairline only — the panel's top edge IS the
+            // dock's top edge, which already draws the sheet's 1px
+            // outline; a second line here doubled it.
+            border: Border(
+              bottom: BorderSide(
+                color: tokens.border.withValues(alpha: 0.5),
+                width: 0.5,
               ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ── Drag handle (visual only — the tap/swipe zone
-                  // is the 44dp under-layer). Slimmed 18→14dp; the
-                  // pill signals the canonical dismiss gesture
-                  // (swipe down OR tap the strip tile again).
-                  // IgnorePointer: the painted pill's decoration
-                  // would otherwise absorb hits aimed dead-centre at
-                  // the handle and starve the dismiss zone beneath.
-                  IgnorePointer(
-                    child: SizedBox(
-                      height: 14,
-                      child: Center(
-                        child: Container(
-                          width: 36,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: tokens.border.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // ── Header ─────────────────────────────────────
-                  // Compact: inline 20dp icon (no chip), tight title,
-                  // undo chip when applicable. The previous 32dp
-                  // gradient chip + ✕ stole ~25 % of the panel's
-                  // vertical budget on small phones; pros want
-                  // density.
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 12, 6),
-                    child: Row(
-                      children: [
-                        Icon(widget.icon, size: 20, color: tokens.accent),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            widget.title,
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0,
-                                ),
-                          ),
-                        ),
-                        if (widget.headerValue != null) ...[
-                          _HeaderValueChip(value: widget.headerValue!),
-                          const SizedBox(width: 8),
-                        ],
-                        // Sibling navigation, made VISIBLE (tb7 2/7).
-                        // onPrev/onNext were swipe-only: the feature
-                        // existed and nothing on screen said so, which
-                        // is the definition of undiscoverable. The
-                        // approved prototype put ‹ › next to the ✕ in
-                        // every panel that has siblings. Directional
-                        // icons — Material's *_rounded chevrons carry
-                        // matchTextDirection, so they mirror under RTL
-                        // on their own.
-                        if (widget.onPrev != null || widget.onNext != null) ...[
-                          _NavChip(
-                            icon: AppIcons.navPrevious,
-                            semanticLabel: MaterialLocalizations.of(
-                              context,
-                            ).previousPageTooltip,
-                            onTap: widget.onPrev,
-                          ),
-                          _NavChip(
-                            icon: AppIcons.drillIn,
-                            semanticLabel: MaterialLocalizations.of(
-                              context,
-                            ).nextPageTooltip,
-                            onTap: widget.onNext,
-                          ),
-                          const SizedBox(width: 4),
-                        ],
-                        if (widget.onUndo != null)
-                          _UndoChip(onUndo: widget.onUndo!),
-                        if (widget.headerAction != null) ...[
-                          if (widget.onUndo != null) const SizedBox(width: 8),
-                          if (widget.confirmLabel != null)
-                            _ConfirmChip(
-                              label: widget.confirmLabel!,
-                              onConfirm: widget.headerAction!,
-                            )
-                          else
-                            // Visual only — its 44dp tap overlay is
-                            // stacked above (bottom of this Stack's
-                            // child list = top of the hit order).
-                            const _CloseChipVisual(),
-                        ],
-                      ],
-                    ),
-                  ),
-                  // ── Body ───────────────────────────────────────
-                  // No padding here: the owning shell
-                  // (`EditorToolPanelShell`) is the single source of
-                  // truth for body padding. Adding any here would
-                  // stack additively with the shell's bodyPadding.
-                  Flexible(child: SingleChildScrollView(child: widget.child)),
-                ],
+            ),
+            boxShadow: [
+              // Inverted shadow that bleeds *up* over the canvas —
+              // 4dp lift signals the sheet sits above the surface.
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 18,
+                offset: const Offset(0, -4),
               ),
-              // ── 44dp close hit box over the painted ✕ chip ──────
-              // Geometry derives from the header constants: the
-              // painted 28dp chip sits 12dp from the end and centred
-              // at y=28 (14dp handle + 28dp row / 2), so the 44dp
-              // box is inset (28−22)=6 from the top and
-              // (12+14−22)=4 from the end. Undo/confirm chips keep
-              // their inline 28dp hit — they have no production
-              // consumer today (both call sites pass null) and their
-              // width is content-dependent, which a fixed overlay
-              // cannot cover; revive them through this overlay
-              // pattern when a consumer lands.
-              if (widget.headerAction != null && widget.confirmLabel == null)
-                PositionedDirectional(
-                  top: 6,
-                  end: 4,
-                  width: kMinHitTarget,
-                  height: kMinHitTarget,
-                  child: Semantics(
-                    label: context.l10n.closePanelSemantics,
-                    button: true,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        key: const ValueKey('dock-sheet-close-hit'),
-                        borderRadius: BorderRadius.circular(14),
-                        onTap: () {
-                          EditorHaptics.sheet();
-                          widget.headerAction!();
-                        },
-                      ),
-                    ),
-                  ),
-                ),
             ],
+          ),
+          child: GestureDetector(
+            // Lateral swipe anywhere on the sheet navigates to the
+            // sibling tool. `behavior: deferToChild` so buttons and
+            // sliders inside keep winning the gesture arena for
+            // taps / vertical drags.
+            behavior: HitTestBehavior.deferToChild,
+            onHorizontalDragUpdate: hasLateral ? _onHDragUpdate : null,
+            onHorizontalDragEnd: hasLateral ? _onHDragEnd : null,
+            // Layout column + overlay hit zones (tb2 a11y pass). The
+            // painted chrome is unchanged; the DISMISS gestures now
+            // live on transparent overlay boxes sized to
+            // [kMinHitTarget] so they meet the 44dp floor without
+            // moving a single visible pixel (the flex column has no
+            // vertical slack: 14dp handle + 34dp header = 48dp above
+            // the body, so in-flow 44dp boxes would push the body
+            // down — the byte-gated captures forbid that).
+            child: Stack(
+              children: [
+                // ── 44dp dismiss zone (swipe-down / tap) ────────────
+                // FIRST child = beneath the column, so header
+                // interactives (confirm pill, undo, value chips) win
+                // the hit test outright; the handle band and header
+                // gaps decline hits and fall through here, giving the
+                // dismiss gesture its 44dp floor without occluding a
+                // single control. A tap on the empty title band
+                // dismisses — deliberate, it reads as sheet chrome.
+                // Horizontal drags still fall through to the outer
+                // lateral detector (this zone claims vertical + tap).
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: kMinHitTarget,
+                  // NOT a semantics node. This full-width strip and the
+                  // ✕ below it both closed the panel and both announced
+                  // «بستن پنل», so every panel offered a screen-reader
+                  // user the same action twice — and this one is a
+                  // 427dp-wide band that geometrically swallows the
+                  // title and the first row beneath it. The ✕ is the
+                  // one that gets a name; this stays a pointer-only
+                  // convenience (tap-to-close, drag-to-dismiss).
+                  child: ExcludeSemantics(
+                    child: GestureDetector(
+                      key: const ValueKey('dock-sheet-handle-hit'),
+                      behavior: HitTestBehavior.opaque,
+                      onVerticalDragUpdate: _onDragUpdate,
+                      onVerticalDragEnd: _onDragEnd,
+                      onTap: () {
+                        EditorHaptics.sheet();
+                        widget.onClose();
+                      },
+                    ),
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Drag handle (visual only — the tap/swipe zone
+                    // is the 44dp under-layer). Slimmed 18→14dp; the
+                    // pill signals the canonical dismiss gesture
+                    // (swipe down OR tap the strip tile again).
+                    // IgnorePointer: the painted pill's decoration
+                    // would otherwise absorb hits aimed dead-centre at
+                    // the handle and starve the dismiss zone beneath.
+                    IgnorePointer(
+                      child: SizedBox(
+                        height: 14,
+                        child: Center(
+                          child: Container(
+                            width: 36,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: tokens.border.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // ── Header ─────────────────────────────────────
+                    // Compact: inline 20dp icon (no chip), tight title,
+                    // undo chip when applicable. The previous 32dp
+                    // gradient chip + ✕ stole ~25 % of the panel's
+                    // vertical budget on small phones; pros want
+                    // density.
+                    Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        16,
+                        0,
+                        12,
+                        6,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(widget.icon, size: 20, color: tokens.accentText),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              widget.title,
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0,
+                                  ),
+                            ),
+                          ),
+                          if (widget.headerValue != null) ...[
+                            _HeaderValueChip(value: widget.headerValue!),
+                            const SizedBox(width: 8),
+                          ],
+                          // No sibling-nav chevrons here. tb7 2/7 added
+                          // them to make the swipe discoverable, but that
+                          // put a SECOND navigation model in the header,
+                          // competing with the one directly below: the
+                          // sub-tool strip already lists every sibling as
+                          // a named, iconned, auto-scrolled tile. Two
+                          // unlabelled 30x28 glyphs beside the ✕ read as
+                          // prev/next PRESET (or undo) rather than
+                          // "replace this whole panel", they sat under
+                          // the 44dp floor, and they announced Material's
+                          // "Previous page" / "Next page" — which is not
+                          // what they do. The swipe survives as an
+                          // accelerator; the strip is the affordance.
+                          if (widget.onUndo != null)
+                            _UndoChip(onUndo: widget.onUndo!),
+                          if (widget.headerAction != null) ...[
+                            if (widget.onUndo != null) const SizedBox(width: 8),
+                            if (widget.confirmLabel != null)
+                              _ConfirmChip(
+                                label: widget.confirmLabel!,
+                                onConfirm: widget.headerAction!,
+                              )
+                            else
+                              // Visual only — its 44dp tap overlay is
+                              // stacked above (bottom of this Stack's
+                              // child list = top of the hit order).
+                              const _CloseChipVisual(),
+                          ],
+                        ],
+                      ),
+                    ),
+                    // ── Body ───────────────────────────────────────
+                    // No padding here: the owning shell
+                    // (`EditorToolPanelShell`) is the single source of
+                    // truth for body padding. Adding any here would
+                    // stack additively with the shell's bodyPadding.
+                    Flexible(child: SingleChildScrollView(child: widget.child)),
+                  ],
+                ),
+                // ── 44dp close hit box over the painted ✕ chip ──────
+                // Geometry derives from the header constants: the
+                // painted 28dp chip sits 12dp from the end and centred
+                // at y=28 (14dp handle + 28dp row / 2), so the 44dp
+                // box is inset (28−22)=6 from the top and
+                // (12+14−22)=4 from the end. Undo/confirm chips keep
+                // their inline 28dp hit — they have no production
+                // consumer today (both call sites pass null) and their
+                // width is content-dependent, which a fixed overlay
+                // cannot cover; revive them through this overlay
+                // pattern when a consumer lands.
+                if (widget.headerAction != null && widget.confirmLabel == null)
+                  PositionedDirectional(
+                    top: 6,
+                    end: 4,
+                    width: kMinHitTarget,
+                    height: kMinHitTarget,
+                    child: Semantics(
+                      // `container` so the ✕ keeps its OWN node. Without
+                      // it, it merged into the panel-spanning ancestor,
+                      // which announced «کادر، بستن پنل» across the
+                      // whole sheet and, when activated, dispatched a
+                      // click at the panel centre — onto a swatch or a
+                      // slider, never onto close. The شفافیت panel does
+                      // not take this path and was already correct.
+                      container: true,
+                      explicitChildNodes: true,
+                      label: context.l10n.closePanelSemantics,
+                      button: true,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          key: const ValueKey('dock-sheet-close-hit'),
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () {
+                            EditorHaptics.sheet();
+                            widget.headerAction!();
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -568,55 +597,6 @@ class _HeaderValueChip extends StatelessWidget {
           color: tokens.textSecondary,
           fontWeight: FontWeight.w700,
           fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-      ),
-    );
-  }
-}
-
-/// A small ‹ / › sibling-navigation button in the panel header.
-///
-/// Deliberately sized NOT to grow the header: the dense header is the
-/// point of the prototype's layout, and the 44dp chrome floor is
-/// specified for primary dismiss/commit affordances (see
-/// `chrome_hit_targets_test`) — these are secondary accelerators for a
-/// gesture that still works. `InkResponse.radius` gives the finger a
-/// circular target wider than the painted glyph.
-class _NavChip extends StatelessWidget {
-  const _NavChip({
-    required this.icon,
-    required this.semanticLabel,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String semanticLabel;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = AppTokens.of(context);
-    return Semantics(
-      button: true,
-      label: semanticLabel,
-      child: InkResponse(
-        onTap: onTap == null
-            ? null
-            : () {
-                EditorHaptics.tap();
-                onTap!();
-              },
-        radius: 22,
-        child: SizedBox(
-          width: 30,
-          height: 28,
-          child: Icon(
-            icon,
-            size: 24,
-            color: onTap == null
-                ? tokens.textMuted.withValues(alpha: 0.4)
-                : tokens.textSecondary,
-          ),
         ),
       ),
     );

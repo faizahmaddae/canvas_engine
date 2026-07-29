@@ -61,6 +61,22 @@ void main() {
       expect(back, spec);
     });
 
+    // The v2 corpus fixture that carried `"fontWeight": 600` was
+    // regenerated when the constructor default moved to w400, so the
+    // suite briefly had no record that a project saved by a SHIPPED
+    // build still decodes to w600. `toJson` has always written the key
+    // unconditionally, so every real document on disk carries it.
+    test('an explicit legacy weight survives decode', () {
+      final back = TextStyleSpec.fromJson(<String, dynamic>{'fontWeight': 600});
+      expect(
+        back.fontWeight,
+        FontWeight.w600,
+        reason:
+            'documents written before the default moved must not '
+            'silently re-weight when reopened',
+      );
+    });
+
     test('defaults are restored when optional fields missing', () {
       // An effectively-empty JSON should hydrate every field from the
       // unnamed constructor's defaults — the codec promises that
