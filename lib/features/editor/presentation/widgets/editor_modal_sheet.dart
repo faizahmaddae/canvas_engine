@@ -25,10 +25,30 @@ const double kEditorSheetWhisperAlpha = 0.06;
 const double kEditorSheetHandleZoneHeight = 44.0;
 
 /// THE single modal-sheet host for the editor (tb2 8/16, contract
-/// §1-M): one chrome grammar — floating card (radius 24, 12dp
-/// gutter), a 36×4 handle inside a ≥44dp dismiss zone, an optional
-/// title row — plus the §9 three-value [EditorSheetBarrier] policy
-/// and keyboard awareness for text-entry content.
+/// §1-M): one chrome grammar — a sheet ANCHORED to the bottom edge
+/// (full width, rounded top corners only), a 36×4 handle inside a
+/// ≥44dp dismiss zone, an optional title row — plus the §9
+/// three-value [EditorSheetBarrier] policy and keyboard awareness for
+/// text-entry content.
+///
+/// Anchored, not floating. The host used to render a card inset by a
+/// 12dp gutter on both sides and 12dp from the bottom, ON TOP of the
+/// route's `useSafeArea`, so on a device with a home indicator the
+/// sheet sat ~46dp clear of the bottom edge with workspace visible
+/// down both flanks. At sheet sizes that reads as a dialogue; at the
+/// sizes this app actually uses it did not — the sticker and shape
+/// pickers are 85% of the screen, and a near-full-height slab
+/// floating in a gutter is neither a sheet nor a page. It also made
+/// the open animation read badly: a detached card flying up past its
+/// own shadow, rather than a surface rising from the edge it is
+/// attached to.
+///
+/// So: no side gutters, no bottom gap, square bottom corners, and the
+/// surface paints THROUGH the bottom safe area while content stays
+/// padded clear of the home indicator. `maxWidth` still applies, so
+/// on a tablet the sheet is a centred column — the one case where
+/// side gutters are correct, because there the sheet really is a
+/// dialogue.
 ///
 /// Content contract: [builder]'s widget owns its OWN scrolling
 /// (the scroll-guard pattern from 8a612ec) — the host never wraps
@@ -63,7 +83,13 @@ Future<T?> showEditorSheet<T>(
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
-    useSafeArea: true,
+    // FALSE deliberately: `useSafeArea` insets the whole route, which
+    // is what lifted the sheet off the bottom edge. The card caps its
+    // own height against the top inset instead, and pads its content
+    // clear of the home indicator from the inside — so the surface
+    // reaches the edge and the content still never sits under system
+    // chrome.
+    useSafeArea: false,
     backgroundColor: Colors.transparent,
     barrierColor: barrierColor,
     builder: (sheetCtx) => _EditorSheetCard(
@@ -98,18 +124,25 @@ class _EditorSheetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
     final media = MediaQuery.of(context);
+    // When the keyboard is up it covers the home indicator, so the
+    // sheet rides the keyboard instead and owes the inset nothing.
+    final keyboard = media.viewInsets.bottom;
+    final safeBottom = keyboard > 0 ? 0.0 : media.padding.bottom;
 
     Widget card = Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: tokens.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
+          // Cast UPWARD only. The old (0, 8) shadow fell downward into
+          // the gutter this sheet no longer has, which is nowhere —
+          // the sheet's bottom edge is the screen's. What has to read
+          // as lifted is its top edge against the canvas.
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withValues(alpha: 0.10),
             blurRadius: 24,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, -6),
           ),
         ],
       ),
@@ -173,32 +206,43 @@ class _EditorSheetCard extends StatelessWidget {
                     ],
                   ),
                 ),
-              Flexible(child: child),
+              // The safe-area inset lives HERE, not around the card:
+              // the surface has to paint through to the screen edge
+              // while the content it holds clears the home indicator.
+              Flexible(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: safeBottom),
+                  child: child,
+                ),
+              ),
             ],
           ),
         ],
       ),
     );
 
+    // Cap against the TOP inset, which is the job `useSafeArea` used
+    // to do for us: a sheet may fill the screen but must never slide
+    // under the status bar or the notch.
+    final ceiling = media.size.height - media.padding.top;
     card = Align(
       alignment: Alignment.bottomCenter,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: maxWidth,
           maxHeight: maxHeightFraction == null
-              ? double.infinity
-              : media.size.height * maxHeightFraction!,
+              ? ceiling
+              : (media.size.height * maxHeightFraction!).clamp(0.0, ceiling),
         ),
         child: card,
       ),
     );
 
     if (keyboardAware) {
-      // Keep text-entry content above the keyboard. viewInsets, not
-      // viewPadding: the route's useSafeArea already handles the
-      // static system chrome.
+      // Keep text-entry content above the keyboard: the sheet's bottom
+      // edge sits ON the keyboard rather than under it.
       card = Padding(
-        padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+        padding: EdgeInsets.only(bottom: keyboard),
         child: card,
       );
     }
