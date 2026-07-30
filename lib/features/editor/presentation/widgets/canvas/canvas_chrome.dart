@@ -79,13 +79,14 @@ List<Widget> buildCanvasChrome({
     // [buildSelectionOverlay] (it passes
     // `showHandles: !locked` and `onBody: null` for
     // locked layers).
-    // Select-and-move claim surface (contract §5
-    // row 5) — BELOW the selection overlays so the
-    // selected layer's chrome quad, handles and
-    // group quad always outrank it, and mounted
-    // unconditionally so the mid-gesture selection
-    // switch never disposes its recogniser. Mode
-    // gating lives in its claim predicate.
+    // Select-and-move + drag-anywhere claim surface
+    // (contract §5 rows 5 and 7) — BELOW the
+    // selection overlays so the selected layer's
+    // chrome quad, handles and group quad always
+    // outrank it, and mounted unconditionally so
+    // the mid-gesture selection switch never
+    // disposes its recogniser. Mode gating lives
+    // in its claim predicate.
     router.buildSelectAndMoveSurface(doc.layers),
     if (selection.count == 1 && !addTextComposerOpen && !maskEditActive)
       buildSelectionOverlay(
@@ -284,8 +285,12 @@ Widget buildSelectionOverlay({
         //   * 2 fingers, first ON the quad → pinch + rotate the
         //     layer (the second finger may land anywhere — pinching
         //     a small object never requires both fingers inside it)
-        //   * 1 finger OFF the quad → viewport pan; the selection
-        //     stays (row 7 — 3.2 adds select-and-move)
+        //   * 1 finger OFF the quad → falls through to the
+        //     select-and-move surface below: another eligible
+        //     layer's bbox select-and-moves that layer (row 5);
+        //     empty canvas translates the current selection
+        //     (row 7's drag-anywhere amendment); otherwise the
+        //     viewport pans
         //   * 2 fingers, first OFF the quad → viewport pinch, even
         //     with a selection (row 6 — two-finger gestures ALWAYS
         //     navigate)

@@ -103,7 +103,26 @@ Pointer-owner resolution, in order, per FIRST pointer landing:
 | 4 | selected layer's chrome quad (outset) | single | any | transform session (eager) |
 | 5 | another **pointer-eligible** layer's bbox | any | not paint | select-then-move that layer (start deferred to slop) |
 | 6 | anywhere, 2nd finger joins, not started on chrome quad | any | any | viewport pinch |
-| 7 | empty canvas | any | any | tap→E3; drag→viewport pan |
+| 7 | empty canvas | any | any | tap→E3; drag→ movable single selection: translate it (start deferred to slop); otherwise viewport pan |
+
+Row 7 amendment (2026-07-30, drag-anywhere): a one-finger drag from
+empty canvas or pasteboard moves the current selection when that
+selection is a single, visible, unlocked, movable layer — precise
+grabs fail exactly when the object is small, hidden under the
+finger, or the canvas is zoomed out. The claim lives on the row-5
+surface (same lazy arena): a sub-slop tap still deselects (E3), a
+hold still long-presses, and a pre-slop second finger still abandons
+to the viewport pinch (row 6). A locked or hidden layer's area is
+pointer-INeligible and therefore counts as empty canvas — in a photo
+project the whole base photo is a valid drag-anywhere start. The
+retired active-transform-surface model's three failure modes stay
+solved: zoom-while-selected (row 6), drag-another-layer (row 5); the
+third — a habitual one-finger pan relocating the selection — is the
+accepted trade: pan remains one gesture away (two fingers, or
+deselect first), and multi-selections, locked/hidden selections and
+the no-selection state keep the one-finger pan. Multi-select mode is
+excluded deliberately: its tap-to-toggle grammar makes stray drags
+costlier, and a group quad is rarely hard to hit.
 
 Long-press (multi entry) requires deferred start — row 4 switches
 to defer-at-slop in Stage 3 (3.3) so the timer can fire on-layer.
