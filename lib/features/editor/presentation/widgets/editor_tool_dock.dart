@@ -77,9 +77,17 @@ class EditorToolDock extends StatelessWidget {
     return DecoratedBox(
       decoration: ShapeDecoration(
         color: tokens.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.vertical(top: topRadius),
-          side: BorderSide(color: tokens.border),
+        // No `side`: a BorderSide on RoundedRectangleBorder strokes the
+        // WHOLE outline, so the dock was drawing a hairline down both
+        // sides and across the bottom as well as the top it wanted.
+        // Those three edges sit against the display bezel, where the
+        // stray line reads as an outline hugging the screen's own
+        // rounded corner — the dock's bottom corners are square and
+        // should meet the edge with nothing between them. The top
+        // hairline it actually wants is drawn inside the clip below,
+        // so it follows the rounded top instead of boxing the dock.
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: topRadius),
         ),
         shadows: [
           BoxShadow(
@@ -100,6 +108,11 @@ class EditorToolDock extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // The separating hairline, and only where the dock
+                // actually meets the workspace. Inside the ClipRRect
+                // so it is clipped by the rounded top rather than
+                // running past the curve.
+                Container(height: 1, color: tokens.border),
                 // ── Expanded zone ──────────────────────────────────
                 // AnimatedSize collapses to 0 when [expanded] is
                 // null and grows to the panel's intrinsic height
