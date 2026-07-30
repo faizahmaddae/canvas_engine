@@ -72,9 +72,9 @@ class EditorToolDock extends StatelessWidget {
     // from it by a top hairline and a soft upward shadow, so bar +
     // expanded panel read as ONE surface under the workspace.
     //
-    // SQUARE, deliberately. This departs from the AppContentSheet
-    // grammar the rest of the app uses for floating surfaces, and the
-    // reason is that the dock is not floating: it is pinned chrome
+    // SQUARE, deliberately. This departs from the rising-sheet
+    // grammar the app uses for surfaces that arrive over content, and
+    // the reason is that the dock does not arrive: it is pinned chrome
     // filling the full width down to the bottom of the display. A
     // rounded top left two wedges of workspace sitting in the corners
     // above a bar that visibly touches every other edge — the shape

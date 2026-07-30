@@ -33,6 +33,8 @@ abstract final class AppRadii {
   /// allowed to diverge independently later.
   static const double primaryButton = 14;
 
-  /// `AppContentSheet`'s top-corner radius (the "rising sheet" look).
+  /// Top-corner radius for a sheet rising off the surface behind it
+  /// (design doc §4). Bottom corners stay square — a sheet is
+  /// anchored to the edge it rises from.
   static const double sheetTop = 26;
 }
