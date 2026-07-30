@@ -362,7 +362,6 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
   // ─── Level 1 — swatches ────────────────────────────────────────
 
   Widget _buildSwatchLevel(BuildContext context) {
-    final recents = _visibleRecents(ref.watch(recentColorsControllerProvider));
     return Column(
       key: const ValueKey('color-picker-level-swatches'),
       mainAxisSize: MainAxisSize.min,
@@ -422,34 +421,10 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
           ],
         ),
         const SizedBox(height: 12),
-        _ColorShelf(
-          mine: recents,
-          currentRgb: _rgb(_current),
-          onPick: _pickSwatch,
-        ),
+        ColorShelf(current: _current, onPick: _pickSwatch),
       ],
     );
   }
-
-  /// Recents de-duped against the palette rows and themselves, so a
-  /// colour can never appear twice in one grid.
-  ///
-  /// Palette wins every collision. With the two groups sharing one
-  /// grid that rule stops being arbitrary: the same red in two cells
-  /// of one surface would read as a bug. Capped at
-  /// [_ColorShelf.slots] — the store cap matches, so the cap is a
-  /// belt-and-braces guard rather than a truncation the user could
-  /// notice.
-  List<Color> _visibleRecents(List<Color> recents) {
-    final paletteRgb = kColorPickerPalette.map(_rgb).toSet();
-    final seen = <int>{};
-    return <Color>[
-      for (final c in recents)
-        if (!paletteRgb.contains(_rgb(c)) && seen.add(_rgb(c))) c,
-    ].take(_ColorShelf.slots).toList(growable: false);
-  }
-
-  static int _rgb(Color c) => c.toARGB32() & 0x00FFFFFF;
 
   // ─── Level 2 — custom ──────────────────────────────────────────
 
@@ -967,18 +942,15 @@ class _SwatchPreviewDot extends StatelessWidget {
 ///
 /// Height is constant in every state, so the section can no longer
 /// appear, disappear, or resize under an `AnimatedSize`.
-class _ColorShelf extends StatelessWidget {
-  const _ColorShelf({
-    required this.mine,
-    required this.currentRgb,
-    required this.onPick,
-  });
+class ColorShelf extends ConsumerWidget {
+  const ColorShelf({super.key, required this.current, required this.onPick});
 
-  /// Colours the user mixed, most-recent-first, already de-duped
-  /// against the palette. Renders leading-aligned; the remainder of
-  /// the row is empty slots.
-  final List<Color> mine;
-  final int currentRgb;
+  /// The colour the shelf should mark as selected.
+  final Color current;
+
+  /// Fired with the tapped colour. Hosts apply their own alpha
+  /// policy; [ColorPickerBody] preserves the working alpha, which is
+  /// the behaviour every other host wants too.
   final ValueChanged<Color> onPick;
 
   /// Columns, and therefore also the number of reserved slots in
@@ -986,9 +958,31 @@ class _ColorShelf extends StatelessWidget {
   /// equals truth: nothing the user made is ever hidden.
   static const int slots = 6;
 
+  /// Recents de-duped against the palette rows and themselves, so a
+  /// colour can never appear twice in one grid.
+  ///
+  /// Palette wins every collision. With the two groups sharing one
+  /// grid that rule stops being arbitrary: the same red in two cells
+  /// of one surface would read as a bug. Owned here rather than by a
+  /// host so the two surfaces that render a shelf cannot disagree —
+  /// the composer's tray used to apply the OPPOSITE rule.
+  static List<Color> visibleRecents(List<Color> recents) {
+    final paletteRgb = kColorPickerPalette.map(_rgbOf).toSet();
+    final seen = <int>{};
+    return <Color>[
+      for (final c in recents)
+        if (!paletteRgb.contains(_rgbOf(c)) && seen.add(_rgbOf(c))) c,
+    ].take(slots).toList(growable: false);
+  }
+
+  static int _rgbOf(Color c) => c.toARGB32() & 0x00FFFFFF;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tokens = AppTokens.of(context);
+    final mine = visibleRecents(ref.watch(recentColorsControllerProvider));
+    final currentRgb = _rgbOf(current);
+    final currentArgb = current.toARGB32();
     // ONE gutter, both axes, DERIVED — and spent through explicit
     // separators rather than `spaceBetween`. The old grid clamped the
     // gutter for its vertical gap but let `spaceBetween` distribute
@@ -1032,7 +1026,7 @@ class _ColorShelf extends StatelessWidget {
                 // preserve alpha, so those compare RGB-masked. One
                 // documented rule, two correct answers. The row
                 // self-dedupes on RGB, so the HEX6 keys stay unique.
-                selected: mine[i].toARGB32() == currentRgb,
+                selected: mine[i].toARGB32() == currentArgb,
                 onTap: () => onPick(mine[i]),
               )
             else

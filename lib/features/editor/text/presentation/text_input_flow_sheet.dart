@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
+import '../../../color_picker/presentation/color_picker_body.dart';
 import '../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../presentation/widgets/editor_breakpoints.dart';
 import '../../presentation/widgets/editor_modal_sheet.dart';
-import '../../application/recent_colors_controller.dart';
 import '../application/text_color_resolver.dart';
 import '../application/text_tool_controller.dart';
 import '../../../../app/theme/app_icons.dart';
@@ -365,27 +365,12 @@ class _AddTextQuickStyleBar extends ConsumerStatefulWidget {
 
 class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
   bool _paletteOpen = false;
-  // Snapshot of `recents` taken when the tray opens. Selecting a
-  // swatch updates the live recents list (so it persists across
-  // sessions) but we keep rendering this frozen order while the
-  // tray is open — otherwise the just-picked colour would jump to
-  // the front of the row, shifting every other swatch and making
-  // the strip appear to scroll back to the start.
-  List<Color>? _recentsAtOpen;
-  // Stable controller so swatch taps that *do* trigger a list
-  // rebuild keep the user's current scroll offset instead of
-  // resetting to the start.
-  final ScrollController _trayScroll = ScrollController();
 
-  @override
-  void dispose() {
-    _trayScroll.dispose();
-    super.dispose();
-  }
-
-  // The picker's own preset palette so the inline tray and the
-  // shared picker feel like the same surface.
-  static const List<Color> _palette = kColorPickerPalette;
+  // No frozen recents snapshot and no retained ScrollController: the
+  // shared [ColorShelf] is a fixed 3x6 grid on reserved slots, so
+  // nothing reflows under the finger and there is nothing to scroll.
+  // Both existed only to compensate for the hand-rolled strip this
+  // tray used to render.
 
   Future<void> _openCustomPicker() async {
     final ctrl = ref.read(textToolControllerProvider.notifier);
@@ -404,8 +389,6 @@ class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
   Widget build(BuildContext context) {
     final ctrl = ref.read(textToolControllerProvider.notifier);
     final style = stagedComposerStyle(ref);
-    final currentArgb = style.color.toARGB32();
-    final recents = ref.watch(recentColorsControllerProvider);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -428,22 +411,14 @@ class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
             ),
             const SizedBox(width: 10),
             _QuickPill(
+              key: const ValueKey('add-text-color-pill'),
               tooltip: context.l10n.colorLabel,
               active: _paletteOpen,
               leading: _ColorDot(color: style.color),
               label: context.l10n.colorLabel,
               onTap: () {
                 EditorHaptics.tap();
-                setState(() {
-                  _paletteOpen = !_paletteOpen;
-                  if (_paletteOpen) {
-                    // Freeze the recents order shown in the tray
-                    // for this open session.
-                    _recentsAtOpen = List<Color>.unmodifiable(recents);
-                  } else {
-                    _recentsAtOpen = null;
-                  }
-                });
+                setState(() => _paletteOpen = !_paletteOpen);
               },
             ),
           ],
@@ -470,24 +445,30 @@ class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
                 : Padding(
                     key: const ValueKey('palette-open'),
                     padding: const EdgeInsets.only(top: 10),
-                    child: _ColorTray(
-                      palette: _palette,
-                      recents: _recentsAtOpen ?? recents,
-                      currentArgb: currentArgb,
-                      scrollController: _trayScroll,
-                      onPick: (c) {
-                        EditorHaptics.tap();
-                        // Preserve current alpha so a quick swatch
-                        // tap doesn't wipe a previously-dialed-in
-                        // opacity. Custom picker remains the
-                        // authoritative entry for alpha changes.
-                        // Palette taps are deliberately NOT
-                        // remembered — presets never earn a recents
-                        // slot (they're always one tap away), same
-                        // policy as the shared picker.
-                        ctrl.setColor(c.withValues(alpha: style.color.a));
-                      },
-                      onCustom: _openCustomPicker,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // THE shared shelf — the same widget, cells,
+                        // dedupe rule, selection grammar and
+                        // semantics the picker renders. What used to
+                        // live here was a second implementation that
+                        // disagreed with the picker on six points,
+                        // including which of a colliding pair wins
+                        // the slot.
+                        ColorShelf(
+                          current: style.color,
+                          // Preserve the working alpha: a swatch tap
+                          // is a hue choice, and the custom picker
+                          // stays the authoritative entry for alpha.
+                          // Alpha handling used to be restated here;
+                          // it is the shelf host's one job now.
+                          onPick: (c) =>
+                              ctrl.setColor(c.withValues(alpha: style.color.a)),
+                        ),
+                        const SizedBox(height: 10),
+                        _MoreColorButton(onTap: _openCustomPicker),
+                      ],
                     ),
                   ),
           ),
@@ -497,200 +478,13 @@ class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
   }
 }
 
-/// Compact color tray rendered below the Add Text quick controls
-/// when the Color pill is active. A small "Colors" label sits above
-/// a single horizontally-scrollable row of generously-sized swatches:
-/// recents (if any) lead, then a curated 12-colour palette, then a
-/// "More" button that opens the full custom colour picker. The tray
-/// owns its own glass card so it reads as a separate surface from
-/// the controls row above it.
-class _ColorTray extends StatelessWidget {
-  const _ColorTray({
-    required this.palette,
-    required this.recents,
-    required this.currentArgb,
-    required this.onPick,
-    required this.onCustom,
-    required this.scrollController,
-  });
-
-  final List<Color> palette;
-  final List<Color> recents;
-  final int currentArgb;
-  final ValueChanged<Color> onPick;
-  final VoidCallback onCustom;
-  final ScrollController scrollController;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = AppTokens.of(context);
-    // De-dupe palette against recents so the same swatch doesn't
-    // appear twice. Recents win the slot.
-    final recentArgbs = recents.map((c) => c.toARGB32()).toSet();
-    final dedupedPalette = palette
-        .where((c) => !recentArgbs.contains(c.toARGB32()))
-        .toList();
-    return Container(
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
-      decoration: BoxDecoration(
-        color: tokens.surfaceMuted.withValues(alpha: 0.28),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: 12),
-            child: Text(
-              context.l10n.colorsLabel,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: tokens.textSecondary,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 44,
-            child: ListView.separated(
-              controller: scrollController,
-              scrollDirection: Axis.horizontal,
-              physics: const ClampingScrollPhysics(),
-              // Generous internal inset so the first/last swatches
-              // (and their selected halos) never kiss the tray
-              // edges, even when the row doesn't overflow.
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: recents.length + dedupedPalette.length + 1,
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
-              itemBuilder: (_, i) {
-                if (i < recents.length) {
-                  final c = recents[i];
-                  return _PaletteDot(
-                    color: c,
-                    selected: c.toARGB32() == currentArgb,
-                    onTap: () => onPick(c),
-                  );
-                }
-                final j = i - recents.length;
-                if (j < dedupedPalette.length) {
-                  final c = dedupedPalette[j];
-                  return _PaletteDot(
-                    color: c,
-                    selected: c.toARGB32() == currentArgb,
-                    onTap: () => onPick(c),
-                  );
-                }
-                return _MoreColorButton(onTap: onCustom);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Single colour dot used inside the inline swatch strip. Press-scales,
-/// shows a primary ring + check when selected.
-class _PaletteDot extends StatefulWidget {
-  const _PaletteDot({
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final Color color;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  State<_PaletteDot> createState() => _PaletteDotState();
-}
-
-class _PaletteDotState extends State<_PaletteDot> {
-  bool _down = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = AppTokens.of(context);
-    // Compute a checkmark colour with sufficient contrast against
-    // the swatch — black on light, white on dark.
-    final luminance = widget.color.computeLuminance();
-    final tickColor = luminance > 0.55 ? Colors.black87 : Colors.white;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => setState(() => _down = true),
-      onTapCancel: () => setState(() => _down = false),
-      onTapUp: (_) => setState(() => _down = false),
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _down ? 0.92 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
-        // Outer halo: an independent ring rendered *around* the
-        // swatch when selected. Keeps the swatch's own subtle edge
-        // intact (critical for white/very-light colours where the
-        // swatch outline is the only thing separating it from the
-        // tray background).
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          curve: Curves.easeOut,
-          width: 40,
-          height: 40,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: widget.selected ? tokens.accent : Colors.transparent,
-              width: widget.selected ? 2 : 0,
-            ),
-            boxShadow: widget.selected
-                ? [
-                    BoxShadow(
-                      color: tokens.accent.withValues(alpha: 0.20),
-                      blurRadius: 8,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Container(
-            width: 32,
-            height: 32,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: widget.color,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: tokens.border.withValues(alpha: 0.55),
-                width: 1,
-              ),
-            ),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 140),
-              transitionBuilder: (child, anim) =>
-                  ScaleTransition(scale: anim, child: child),
-              child: widget.selected
-                  ? Icon(
-                      AppIcons.confirm,
-                      key: const ValueKey('check'),
-                      size: 18,
-                      color: tickColor,
-                    )
-                  : const SizedBox.shrink(key: ValueKey('empty')),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Trailing "+" button in the inline palette that opens the full
-/// custom colour picker (existing `showColorPickerSheet`). Visually
-/// distinct from a swatch so users read it as an action, not a colour.
+/// Entry to the full custom picker, below the shelf.
+///
+/// Labelled rather than a bare "+" in a circle: a plus reads as
+/// "add a colour to the palette", which is not what it does, and an
+/// unlabelled glyph next to twelve colours is the one control on the
+/// surface a screen reader could not name. The label is the existing
+/// `moreColorsTooltip` string, now visible instead of hover-only.
 class _MoreColorButton extends StatelessWidget {
   const _MoreColorButton({required this.onTap});
 
@@ -699,21 +493,15 @@ class _MoreColorButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    return Tooltip(
-      message: context.l10n.moreColorsTooltip,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Container(
-          width: 36,
-          height: 36,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: tokens.border, width: 1.2),
-          ),
-          child: Icon(AppIcons.add, size: 20, color: tokens.textSecondary),
-        ),
+    return TextButton.icon(
+      key: const ValueKey('add-text-more-colors'),
+      onPressed: onTap,
+      icon: Icon(AppIcons.colorTool, size: 18, color: tokens.accentText),
+      label: Text(context.l10n.moreColorsTooltip),
+      style: TextButton.styleFrom(
+        foregroundColor: tokens.accentText,
+        minimumSize: const Size(0, kMinHitTarget),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
   }
@@ -727,6 +515,7 @@ class _MoreColorButton extends StatelessWidget {
 /// palette are linked.
 class _QuickPill extends StatefulWidget {
   const _QuickPill({
+    super.key,
     required this.tooltip,
     required this.leading,
     required this.label,
