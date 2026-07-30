@@ -185,11 +185,16 @@ class HomeActions {
   /// a decode/store failure leaves the slot untouched so the resume
   /// banner still gets a chance at it.
   Future<void> preserveOrphanDraft() async {
-    final draftName = context.l10n.recoveredDraftName;
+    final fallbackName = context.l10n.recoveredDraftName;
     final recovery = ref.read(projectRecoveryServiceProvider);
     try {
       final draftJson = await recovery.pendingDraftJson();
       if (draftJson == null) return;
+      // Promote under the draft's OWN name. Every rescue used to land
+      // as «Recovered draft», so a user who backed out of three
+      // sessions got three projects with one identical title,
+      // distinguishable only by dimensions and timestamp.
+      final draftName = await recovery.pendingDraftName() ?? fallbackName;
       final doc = DocumentCodec.decode(draftJson);
       final now = DateTime.now();
       await ref
@@ -347,10 +352,19 @@ class HomeActions {
       );
       return;
     }
+    // Restore the draft's own name. Hardcoding `newDesignName` here
+    // renamed every resumed draft: a photo session came back as "New
+    // design", and the eventual save carried that wrong name to disk.
+    // The sidecar is best-effort, so a draft written before it existed
+    // (or one whose meta write lost the race with the crash) still
+    // falls back to the generic name.
+    final recoveredName = await ref
+        .read(projectRecoveryServiceProvider)
+        .pendingDraftName();
     if (!context.mounted) return;
     ref.read(selectionControllerProvider.notifier).clear();
     ref.read(editorSessionProvider.notifier).state = EditorSession(
-      name: context.l10n.newDesignName,
+      name: recoveredName ?? context.l10n.newDesignName,
     );
     _push();
   }

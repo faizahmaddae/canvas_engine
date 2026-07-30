@@ -59,6 +59,15 @@ class AutosaveController extends Notifier<void> {
   EditJournal? _journal;
   String? _journalProjectId;
 
+  /// Name last recorded in the journal's identity sidecar. The
+  /// journal handle is keyed on project id, and every never-saved
+  /// session shares the reserved 'draft' id — so binding alone is not
+  /// a reliable moment to write identity: a second unsaved session
+  /// reuses the same handle and would inherit the first one's name.
+  /// Tracking the value written lets the sidecar follow the session
+  /// without paying a file write on every commit.
+  String? _journalName;
+
   @override
   void build() {
     // Subscribe once; the listener fires on every commit.
@@ -109,12 +118,14 @@ class AutosaveController extends Notifier<void> {
       }
       _journal = null;
       _journalProjectId = journalId;
+      _journalName = null;
       EditJournal.open(journalId)
           .then((j) {
             if (!ref.mounted) return;
             if (_journalProjectId != journalId) return;
             _journal = j;
             j.onWriteFailure = _reportJournalFailure;
+            _syncJournalName(j, session.name);
             _journal!.scheduleWrite(ref.read(documentControllerProvider));
           })
           .catchError((_) {
@@ -124,7 +135,16 @@ class AutosaveController extends Notifier<void> {
     }
     final journal = _journal;
     if (journal == null) return;
+    _syncJournalName(journal, session.name);
     journal.scheduleWrite(ref.read(documentControllerProvider));
+  }
+
+  /// Write the identity sidecar when — and only when — the name it
+  /// holds is out of date.
+  void _syncJournalName(EditJournal journal, String name) {
+    if (_journalName == name) return;
+    _journalName = name;
+    unawaited(journal.writeMeta(name: name));
   }
 
   /// Force any pending autosave to run immediately. Intended for
@@ -195,7 +215,17 @@ class AutosaveController extends Notifier<void> {
           journal = null;
         }
       }
-      await journal?.flushNow(doc);
+      if (journal != null) {
+        // Identity travels with this flush too. `_scheduleJournal` is
+        // driven by document COMMITS, and a session can reach the exit
+        // without one — a photo import loads its document rather than
+        // executing a command — so relying on the commit path alone
+        // left exactly those sessions with a journal and no name, i.e.
+        // resuming a photo as an untitled design.
+        final name = ref.read(editorSessionProvider)?.name;
+        if (name != null) await journal.writeMeta(name: name);
+        await journal.flushNow(doc);
+      }
     }
     await _flush();
   }

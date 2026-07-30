@@ -54,6 +54,14 @@ class MaskEditSession {
   /// Selection to replay on exit (null clears), captured at open —
   /// same rationale as CropSession.priorSelectionId.
   final String? priorSelectionId;
+
+  /// Whether the draft has moved away from what the layer had at
+  /// open — i.e. whether leaving now would throw work away.
+  ///
+  /// Same comparison [MaskEditController.commit] uses to decide
+  /// whether to emit a command, so "Done would write something" and
+  /// "Cancel would lose something" can never disagree.
+  bool get isDirty => active && draft != entryMask;
 }
 
 class MaskEditController extends Notifier<MaskEditSession> {
@@ -193,6 +201,27 @@ class MaskEditController extends Notifier<MaskEditSession> {
     final s = state;
     if (!s.active) return;
     _reset(s, restoreSelection: restoreSelection);
+  }
+
+  /// Drop any session at a PROJECT boundary, unconditionally.
+  ///
+  /// Separate from [cancel] because it is the one discard that cannot
+  /// ask. It runs in `resetEditorEphemeralState`, before a different
+  /// document is pushed into the editor: by then the draft points at a
+  /// layer in a document the user has already left, so there is
+  /// nothing coherent to keep and no surface on which to prompt.
+  ///
+  /// It is named rather than folded into [cancel] so that a grep for
+  /// `cancel(` finds only paths that either belong to the session's own
+  /// confirmed exits or are the controller's own invalidation
+  /// listener. Reaching this method with a MODIFIED draft would mean an
+  /// editor exit bypassed `confirmAbandonMaskEdit`; today the only exit
+  /// while a session is open is the guarded `PopScope` (the app bar,
+  /// and its back button with it, is unmounted for the duration).
+  void resetForNewProject() {
+    final s = state;
+    if (!s.active) return;
+    _reset(s, restoreSelection: false);
   }
 
   void _reset(MaskEditSession s, {required bool restoreSelection}) {

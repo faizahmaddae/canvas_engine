@@ -1777,7 +1777,30 @@ class AppLocalizationsFa extends AppLocalizations {
   String get resumeAction => 'ادامه';
 
   @override
-  String get discardAction => 'حذف';
+  String get discardAction => 'نادیده گرفتن';
+
+  @override
+  String get notNowAction => 'الان نه';
+
+  @override
+  String get deleteDraftAction => 'حذف پیش‌نویس';
+
+  @override
+  String get deleteDraftTitle => 'این پیش‌نویس حذف شود؟';
+
+  @override
+  String get deleteDraftBody =>
+      'طرح ذخیره‌نشده برای همیشه حذف می‌شود. این کار برگشت‌پذیر نیست.';
+
+  @override
+  String get discardMaskChangesTitle => 'تغییرات ماسک نادیده گرفته شود؟';
+
+  @override
+  String get discardMaskChangesBody =>
+      'ویرایش‌های شما روی این ماسک از بین می‌رود. بازگردانی آن‌ها را برنمی‌گرداند.';
+
+  @override
+  String get keepEditingAction => 'ادامه ویرایش';
 
   @override
   String unknownEffectLabel(String type) {

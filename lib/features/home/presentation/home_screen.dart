@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,18 +45,69 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _offerDraftResume());
   }
 
+  /// True once the user has said "not now" this session. Keeps the
+  /// offer down until the next cold start WITHOUT touching the
+  /// journal — dismissing an offer is not the same act as deleting
+  /// the work behind it.
+  bool _draftOfferDismissed = false;
+
   Future<void> _offerDraftResume() async {
     if (_draftOfferShown || !mounted) return;
     _draftOfferShown = true;
     final draftJson = await ref
         .read(projectRecoveryServiceProvider)
         .pendingDraftJson();
-    if (draftJson == null || !mounted) return;
+    if (!mounted) return;
+    // The empty case has to clear, not just return. `preserveOrphanDraft`
+    // empties the slot whenever a new unsaved session starts, and the
+    // card used to stay on screen holding the now-promoted JSON in
+    // memory — so Resume re-opened, as a fresh unsaved session, work
+    // that already existed as a project. Two copies of one drawing.
+    if (draftJson == null) {
+      if (_pendingDraftJson != null) {
+        setState(() => _pendingDraftJson = null);
+      }
+      return;
+    }
+    if (_draftOfferDismissed) return;
     setState(() => _pendingDraftJson = draftJson);
   }
 
-  void _discardDraft() {
-    ref.read(projectRecoveryServiceProvider).clearDraft();
+  /// "Not now" — hide the offer, keep the draft. It will be waiting
+  /// at the next launch, and `preserveOrphanDraft` still promotes it
+  /// to a real project if a new session claims the slot first.
+  void _dismissDraftOffer() {
+    _draftOfferDismissed = true;
+    setState(() => _pendingDraftJson = null);
+  }
+
+  /// The only path that destroys the draft. Confirmed, because this
+  /// is the single copy of work that was never saved anywhere.
+  Future<void> _deleteDraft() async {
+    final l10n = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteDraftTitle),
+        content: Text(l10n.deleteDraftBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancelAction),
+          ),
+          FilledButton.tonal(
+            style: FilledButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.deleteAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await ref.read(projectRecoveryServiceProvider).clearDraft();
+    if (!mounted) return;
     setState(() => _pendingDraftJson = null);
   }
 
@@ -101,7 +154,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: ResumeDraftCard(
                   key: const ValueKey('home-resume-draft'),
                   onResume: () => _resumeDraft(draftJson),
-                  onDiscard: _discardDraft,
+                  onNotNow: _dismissDraftOffer,
+                  onDeleteDraft: () => unawaited(_deleteDraft()),
                 ),
               ),
             // Create row (redesign doc §3): two equal cards, the

@@ -3410,6 +3410,48 @@ abstract class AppLocalizations {
   /// **'Discard'**
   String get discardAction;
 
+  /// No description provided for @notNowAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNowAction;
+
+  /// No description provided for @deleteDraftAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete draft'**
+  String get deleteDraftAction;
+
+  /// No description provided for @deleteDraftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this draft?'**
+  String get deleteDraftTitle;
+
+  /// No description provided for @deleteDraftBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The unsaved design will be permanently deleted. This cannot be undone.'**
+  String get deleteDraftBody;
+
+  /// No description provided for @discardMaskChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard mask changes?'**
+  String get discardMaskChangesTitle;
+
+  /// No description provided for @discardMaskChangesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your edits to this mask will be lost. Undo cannot bring them back.'**
+  String get discardMaskChangesBody;
+
+  /// No description provided for @keepEditingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditingAction;
+
   /// No description provided for @unknownEffectLabel.
   ///
   /// In en, this message translates to:

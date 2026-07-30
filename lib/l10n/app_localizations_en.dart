@@ -1779,6 +1779,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discardAction => 'Discard';
 
   @override
+  String get notNowAction => 'Not now';
+
+  @override
+  String get deleteDraftAction => 'Delete draft';
+
+  @override
+  String get deleteDraftTitle => 'Delete this draft?';
+
+  @override
+  String get deleteDraftBody =>
+      'The unsaved design will be permanently deleted. This cannot be undone.';
+
+  @override
+  String get discardMaskChangesTitle => 'Discard mask changes?';
+
+  @override
+  String get discardMaskChangesBody =>
+      'Your edits to this mask will be lost. Undo cannot bring them back.';
+
+  @override
+  String get keepEditingAction => 'Keep editing';
+
+  @override
   String unknownEffectLabel(String type) {
     return 'Unknown effect ($type)';
   }

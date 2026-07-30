@@ -70,6 +70,7 @@ import '../text/presentation/text_input_flow_sheet.dart';
 import '../text/presentation/text_mode_toolbar.dart';
 import '../toolbar/presentation/mode_done_button.dart';
 import 'widgets/editor_canvas.dart';
+import 'widgets/mask_edit_overlay.dart' show confirmAbandonMaskEdit;
 import 'widgets/image_source_sheet.dart';
 import 'widgets/editor_tool_dock.dart';
 import '../toolbar/domain/toolbar_slot.dart';
@@ -222,10 +223,17 @@ class EditorScreen extends ConsumerWidget {
           canPop: !cropActive && !maskEditActive,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop && maskEditActive) {
-              // Back = Cancel, restoring the pre-mode toolbar context.
-              ref
-                  .read(maskEditControllerProvider.notifier)
-                  .cancel(restoreSelection: true);
+              // Back = Cancel, restoring the pre-mode toolbar context
+              // — but a modified draft is confirmed first, because
+              // cancel() discards with zero commands and undo cannot
+              // reach it. Same gate as the overlay's Cancel button so
+              // the two exits cannot diverge.
+              unawaited(() async {
+                if (!await confirmAbandonMaskEdit(context, ref)) return;
+                ref
+                    .read(maskEditControllerProvider.notifier)
+                    .cancel(restoreSelection: true);
+              }());
               return;
             }
             if (!didPop && cropActive) {

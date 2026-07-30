@@ -28,9 +28,12 @@ import 'selection_overlay.dart' show DragPhase;
 ///
 /// Draft-first: every drag mutates only the controller's draft;
 /// [DragPhase.end] triggers the single per-gesture preview staging.
-/// The scrim + outline are painted inside an [IgnorePointer] so they
-/// never eat hits (crop's `_CropMaskPainter` convention); gestures
-/// live on the rotated body surface + eight handles.
+///
+/// The scrim + outline sit inside an [AbsorbPointer], so the session
+/// owns every pointer that the handles and body surface above it do
+/// not claim (contract §5 row 1). Leaving is therefore always an
+/// explicit act — Cancel, Done, or system back — and a modified draft
+/// is confirmed first via [confirmAbandonMaskEdit].
 class MaskEditOverlay extends ConsumerStatefulWidget {
   const MaskEditOverlay({super.key, required this.viewport});
 
@@ -88,9 +91,20 @@ class _MaskEditOverlayState extends ConsumerState<MaskEditOverlay> {
     return Positioned.fill(
       child: Stack(
         children: [
-          // Scrim + region outline. Never eats hits.
+          // Scrim + region outline. ABSORBS hits.
+          //
+          // Contract §5 row 1: while a crop/mask session is open the
+          // session overlay owns the pointer, wherever it lands. This
+          // used to be IgnorePointer, so a tap on the pasteboard fell
+          // through to the always-mounted canvas detector, read as an
+          // empty-canvas tap, and cancelled the session — discarding a
+          // tuned mask with zero commands, i.e. with no undo. Crop is
+          // immune only because its overlay happens to be an opaque
+          // full-screen Material. Absorbing here makes the two
+          // sessions of the same class behave the same way: the only
+          // ways out are Cancel, Done, and system back.
           Positioned.fill(
-            child: IgnorePointer(
+            child: AbsorbPointer(
               child: CustomPaint(
                 painter: _MaskScrimPainter(
                   draft: draft,
@@ -380,8 +394,11 @@ class _BottomStrip extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () {
+                      onPressed: () async {
                         EditorHaptics.tap();
+                        if (!await confirmAbandonMaskEdit(context, ref)) {
+                          return;
+                        }
                         ctl.cancel(restoreSelection: true);
                       },
                       // Glyph stop. `accent` is the FILL stop and
@@ -414,4 +431,39 @@ class _BottomStrip extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Gate every path that would abandon a mask session.
+///
+/// Returns true when the caller may proceed to `cancel()`. A clean
+/// session (draft still equals what the layer had at open) leaves
+/// silently — there is nothing to lose and a dialog would be noise.
+/// A modified one asks first, because `cancel()` restores the entry
+/// mask with ZERO commands: once it runs, undo cannot bring the work
+/// back. Shared by the overlay's Cancel button and the editor's
+/// system-back handler so the two exits cannot diverge.
+Future<bool> confirmAbandonMaskEdit(BuildContext context, WidgetRef ref) async {
+  if (!ref.read(maskEditControllerProvider).isDirty) return true;
+  final l10n = context.l10n;
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l10n.discardMaskChangesTitle),
+      content: Text(l10n.discardMaskChangesBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: Text(l10n.keepEditingAction),
+        ),
+        FilledButton.tonal(
+          style: FilledButton.styleFrom(
+            foregroundColor: Theme.of(ctx).colorScheme.error,
+          ),
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: Text(l10n.discardAction),
+        ),
+      ],
+    ),
+  );
+  return confirmed ?? false;
 }

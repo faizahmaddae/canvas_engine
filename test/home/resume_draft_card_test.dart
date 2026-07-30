@@ -37,11 +37,15 @@ void main() {
     );
   }
 
-  ResumeDraftCard card({VoidCallback? onResume, VoidCallback? onDiscard}) =>
-      ResumeDraftCard(
-        onResume: onResume ?? () {},
-        onDiscard: onDiscard ?? () {},
-      );
+  ResumeDraftCard card({
+    VoidCallback? onResume,
+    VoidCallback? onNotNow,
+    VoidCallback? onDeleteDraft,
+  }) => ResumeDraftCard(
+    onResume: onResume ?? () {},
+    onNotNow: onNotNow ?? () {},
+    onDeleteDraft: onDeleteDraft ?? () {},
+  );
 
   for (final locale in const [Locale('fa'), Locale('en')]) {
     for (final width in const [320.0, 360.0, 426.0]) {
@@ -58,7 +62,8 @@ void main() {
           expect(tester.takeException(), isNull);
 
           for (final key in const [
-            ValueKey('resume-draft-discard'),
+            ValueKey('resume-draft-delete'),
+            ValueKey('resume-draft-not-now'),
             ValueKey('resume-draft-resume'),
           ]) {
             final rect = tester.getRect(find.byKey(key));
@@ -79,12 +84,12 @@ void main() {
           // own run of the `Wrap` and doubled the card's height.
           expect(
             tester
-                .getRect(find.byKey(const ValueKey('resume-draft-discard')))
+                .getRect(find.byKey(const ValueKey('resume-draft-not-now')))
                 .top,
             tester
                 .getRect(find.byKey(const ValueKey('resume-draft-resume')))
                 .top,
-            reason: 'the two actions should share a single run',
+            reason: 'the safe pair should share a single run',
           );
         },
       );
@@ -94,7 +99,8 @@ void main() {
   testWidgets('actions meet the 44dp touch floor', (tester) async {
     await tester.pumpWidget(host(card()));
     for (final key in const [
-      ValueKey('resume-draft-discard'),
+      ValueKey('resume-draft-delete'),
+      ValueKey('resume-draft-not-now'),
       ValueKey('resume-draft-resume'),
     ]) {
       expect(tester.getSize(find.byKey(key)).height, greaterThanOrEqualTo(44));
@@ -113,13 +119,15 @@ void main() {
     );
     expect(resume.color, AppTokens.light.brand);
 
-    final discard = tester.widget<Material>(
-      find.descendant(
-        of: find.byKey(const ValueKey('resume-draft-discard')),
-        matching: find.byType(Material),
-      ),
-    );
-    expect(discard.color, Colors.transparent);
+    for (final key in const [
+      ValueKey('resume-draft-not-now'),
+      ValueKey('resume-draft-delete'),
+    ]) {
+      final secondary = tester.widget<Material>(
+        find.descendant(of: find.byKey(key), matching: find.byType(Material)),
+      );
+      expect(secondary.color, Colors.transparent);
+    }
   });
 
   testWidgets('brand fill flips with the theme', (tester) async {
@@ -136,19 +144,58 @@ void main() {
 
   testWidgets('each action dispatches its own callback', (tester) async {
     var resumed = 0;
-    var discarded = 0;
+    var notNow = 0;
+    var deleted = 0;
     await tester.pumpWidget(
-      host(card(onResume: () => resumed++, onDiscard: () => discarded++)),
+      host(
+        card(
+          onResume: () => resumed++,
+          onNotNow: () => notNow++,
+          onDeleteDraft: () => deleted++,
+        ),
+      ),
     );
 
     await tester.tap(find.byKey(const ValueKey('resume-draft-resume')));
     await tester.pump();
-    expect(resumed, 1);
-    expect(discarded, 0);
+    expect([resumed, notNow, deleted], [1, 0, 0]);
 
-    await tester.tap(find.byKey(const ValueKey('resume-draft-discard')));
+    await tester.tap(find.byKey(const ValueKey('resume-draft-not-now')));
     await tester.pump();
-    expect(resumed, 1);
-    expect(discarded, 1);
+    expect([resumed, notNow, deleted], [1, 1, 0]);
+
+    await tester.tap(find.byKey(const ValueKey('resume-draft-delete')));
+    await tester.pump();
+    expect([resumed, notNow, deleted], [1, 1, 1]);
+  });
+
+  // The point of the redesign: the one action that destroys work must
+  // not read as a peer of the two that don't. It is held on the
+  // opposite end of the row and painted in the error colour, so
+  // reaching for Resume cannot land on it.
+  testWidgets('the destructive action is separated and error-coloured', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(card(), locale: const Locale('en')));
+    final delete = tester.getRect(
+      find.byKey(const ValueKey('resume-draft-delete')),
+    );
+    final resume = tester.getRect(
+      find.byKey(const ValueKey('resume-draft-resume')),
+    );
+    expect(
+      delete.top,
+      greaterThanOrEqualTo(resume.bottom),
+      reason: 'Delete draft must sit on its own row, below the safe pair',
+    );
+
+    final label = tester.widget<Text>(
+      find.descendant(
+        of: find.byKey(const ValueKey('resume-draft-delete')),
+        matching: find.byType(Text),
+      ),
+    );
+    final scheme = AppTheme.light().colorScheme;
+    expect(label.style?.color, scheme.error);
   });
 }

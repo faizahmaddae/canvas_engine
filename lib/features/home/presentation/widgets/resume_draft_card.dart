@@ -20,15 +20,26 @@ import '../../../../app/theme/app_icons.dart';
 /// line before it overflows), it reads as part of Home rather than as
 /// system chrome, and it costs ~half the vertical space the banner did
 /// so the launcher underneath stays where the user expects it.
+/// Three actions, deliberately not two. "Discard" used to sit beside
+/// "Resume" as a peer and delete the journal on one tap — the only
+/// copy of that work, with no confirm, while deleting an already-SAVED
+/// project required a dialog. The destructive option was the cheap one.
+///
+/// Now: [onNotNow] dismisses the offer and keeps the draft, [onResume]
+/// opens it, and [onDeleteDraft] is the only path that destroys
+/// anything — separated from the pair, labelled for what it deletes,
+/// and confirmed by its caller.
 class ResumeDraftCard extends StatelessWidget {
   const ResumeDraftCard({
     super.key,
     required this.onResume,
-    required this.onDiscard,
+    required this.onNotNow,
+    required this.onDeleteDraft,
   });
 
   final VoidCallback onResume;
-  final VoidCallback onDiscard;
+  final VoidCallback onNotNow;
+  final VoidCallback onDeleteDraft;
 
   @override
   Widget build(BuildContext context) {
@@ -87,15 +98,19 @@ class ResumeDraftCard extends StatelessWidget {
             // their English counterparts and the narrowest supported
             // width is ~320dp, so the pair has to be able to stack
             // instead of clipping the way the banner did.
+            // `Wrap` rather than `Row`: Persian labels run longer than
+            // their English counterparts and the narrowest supported
+            // width is ~320dp, so the pair has to be able to stack
+            // instead of clipping the way the banner did.
             Wrap(
               alignment: WrapAlignment.end,
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
               children: [
                 _DraftAction(
-                  key: const ValueKey('resume-draft-discard'),
-                  label: l10n.discardAction,
-                  onPressed: onDiscard,
+                  key: const ValueKey('resume-draft-not-now'),
+                  label: l10n.notNowAction,
+                  onPressed: onNotNow,
                   filled: false,
                 ),
                 _DraftAction(
@@ -105,6 +120,24 @@ class ResumeDraftCard extends StatelessWidget {
                   filled: true,
                 ),
               ],
+            ),
+            // Its own row, under a divider, on the opposite alignment
+            // from the safe pair. Three actions do not fit one line at
+            // 320dp once «حذف پیش‌نویس» is in the mix, and crowding the
+            // destructive one against Resume is exactly what this
+            // redesign exists to undo.
+            const SizedBox(height: AppSpacing.sm),
+            Divider(height: 1, color: tokens.border),
+            const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: _DraftAction(
+                key: const ValueKey('resume-draft-delete'),
+                label: l10n.deleteDraftAction,
+                onPressed: onDeleteDraft,
+                filled: false,
+                destructive: true,
+              ),
             ),
           ],
         ),
@@ -119,11 +152,16 @@ class _DraftAction extends StatelessWidget {
     required this.label,
     required this.onPressed,
     required this.filled,
+    this.destructive = false,
   });
 
   final String label;
   final VoidCallback onPressed;
   final bool filled;
+
+  /// Paints the label in the error colour. The destructive action is
+  /// never `filled` — weight belongs to Resume.
+  final bool destructive;
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +188,11 @@ class _DraftAction extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: filled ? tokens.onBrand : tokens.accentText,
+                  color: filled
+                      ? tokens.onBrand
+                      : destructive
+                      ? Theme.of(context).colorScheme.error
+                      : tokens.accentText,
                 ),
               ),
             ),

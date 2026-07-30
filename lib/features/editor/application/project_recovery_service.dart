@@ -121,6 +121,18 @@ class ProjectRecoveryService {
     }
   }
 
+  /// The draft's recorded display name, or `null` when it has none
+  /// (journal written before the sidecar existed, or the write lost a
+  /// race with the crash). Callers fall back to a generic name.
+  Future<String?> pendingDraftName() async {
+    try {
+      final journal = await EditJournal.open(AutosaveController.draftJournalId);
+      return journal.readMeta();
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Discard a saved project's pending journal (user chose the
   /// persisted version).
   Future<void> clearForProject(String projectId) async {

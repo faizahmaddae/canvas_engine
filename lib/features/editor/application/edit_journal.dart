@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
@@ -76,6 +77,20 @@ class EditJournal {
 
   File get _file => File('${directory.path}/$projectId.json');
 
+  /// Sidecar holding the session's IDENTITY — everything about the
+  /// in-flight work that is NOT part of the document.
+  ///
+  /// Deliberately a separate file rather than an envelope around the
+  /// document JSON: the journal's content has to stay byte-comparable
+  /// against the persisted project (`pendingJsonForProject` diffs
+  /// them), and the serialization fixtures gate that encoding. A
+  /// sidecar adds identity without touching the codec.
+  ///
+  /// Its absence is normal — journals written before this existed,
+  /// and any write that lost the race with a crash, simply have no
+  /// name to restore.
+  File get _metaFile => File('${directory.path}/$projectId.meta.json');
+
   /// Sibling imported-images directory (`<docs>/imported_images`),
   /// derived from this journal's `<docs>/journal` directory. The journal
   /// stores the SAME canonical representation as the persisted project so
@@ -147,6 +162,36 @@ class EditJournal {
     }
   }
 
+  /// Record the session's display name beside the journal so a
+  /// recovered draft can come back as itself rather than as a fresh
+  /// untitled document. Best-effort and swallowed like every other
+  /// journal write — losing the name costs a title, not the work.
+  Future<void> writeMeta({required String name}) async {
+    try {
+      final tmp = File('${_metaFile.path}.tmp');
+      await tmp.writeAsString(jsonEncode({'name': name}), flush: true);
+      await tmp.rename(_metaFile.path);
+    } catch (e) {
+      onWriteFailure?.call(e);
+    }
+  }
+
+  /// The recorded display name, or `null` when this journal predates
+  /// the sidecar, the write never landed, or the file is unreadable.
+  Future<String?> readMeta() async {
+    try {
+      if (!await _metaFile.exists()) return null;
+      final raw = await _metaFile.readAsString();
+      if (raw.isEmpty) return null;
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      final name = decoded['name'];
+      return (name is String && name.isNotEmpty) ? name : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Drop the journal file. Call when the session ends cleanly
   /// (autosave flushed, editor closed) so the next launch sees no
   /// stale recovery offer.
@@ -156,6 +201,15 @@ class EditJournal {
     try {
       if (await _file.exists()) {
         await _file.delete();
+      }
+    } catch (_) {
+      /* swallow */
+    }
+    // The sidecar is cleared separately so a failure to delete one
+    // never leaves the other behind as a phantom offer.
+    try {
+      if (await _metaFile.exists()) {
+        await _metaFile.delete();
       }
     } catch (_) {
       /* swallow */
