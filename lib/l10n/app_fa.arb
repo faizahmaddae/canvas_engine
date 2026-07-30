@@ -396,6 +396,7 @@
   "textDirectionLtrTitle": "چپ به راست",
   "typeSomethingHint": "چیزی بنویسید…",
   "colorsLabel": "رنگ‌ها",
+  "colorsMixedHint": "رنگ‌هایی که می‌سازید اینجا می‌مانند",
   "moreColorsTooltip": "رنگ‌های بیشتر",
   "hueLabel": "فام",
   "opacityLabel": "شفافیت",

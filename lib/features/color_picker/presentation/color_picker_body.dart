@@ -42,9 +42,11 @@ const List<Color> kColorPickerPalette = <Color>[
 /// the design — no canvas dim, no confirm step):
 ///
 ///   * **Level 1 — swatches** (the 90 % case): an action row
-///     (eyedropper · editable hex · «Custom»), a recents row fed by
-///     the app-wide [recentColorsControllerProvider], and a 2×6
-///     preset grid.
+///     (eyedropper · editable hex · «Custom») above THE SHELF — one
+///     3×6 grid of identical cells whose first row is reserved for
+///     the colours the user mixed (fed by the app-wide
+///     [recentColorsControllerProvider]) and whose remaining two
+///     rows are [kColorPickerPalette].
 ///   * **Level 2 — custom** (tap «Custom»): HSV square, hue +
 ///     opacity sliders, editable hex, eyedropper, copy — with a
 ///     back arrow returning to level 1.
@@ -69,11 +71,16 @@ const List<Color> kColorPickerPalette = <Color>[
 ///   * Swatch/recent/eyedropper picks preserve the current alpha —
 ///     they are hue choices; opacity is owned by the level-2 slider
 ///     (and an explicit 8-char #AARRGGBB hex).
-///   * The final colour is recorded into the app-wide recents store
-///     on dispose (panel close / sheet dismiss) when it changed AND
-///     the session was recents-worthy: custom wheel drags, hex
-///     entries, and eyedropper picks qualify; preset-palette and
-///     recents-row taps do not (tb2 5/16).
+///   * A colour is recorded into the app-wide recents store at the
+///     COMMIT FENCE ([_seal]) — not on dispose — so a mixed colour
+///     lands in the shelf's leading slot the moment it settles.
+///     Only mixing earns a slot: wheel settle, a complete hex entry,
+///     an eyedropper release. Palette and shelf taps do not, because
+///     the palette is one tap away in the same grid and echoing it
+///     would only evict genuinely custom colours (tb2 5/16).
+///   * The shelf shows exactly what the store holds — visible
+///     capacity and [RecentColorsController] cap are both 6, so no
+///     colour the user made is ever hidden.
 class ColorPickerBody extends ConsumerStatefulWidget {
   const ColorPickerBody({
     super.key,
@@ -121,16 +128,9 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
   final GlobalKey _hexFieldKey = GlobalKey();
   bool _hexInvalid = false;
 
-  /// Whether this session earned a recents-MRU write: only custom
-  /// wheel drags, eyedropper picks, and explicit hex entries do.
-  /// Preset-palette and recents-row taps deliberately do NOT — the
-  /// palette is already one tap away, so echoing it into recents
-  /// only evicts genuinely custom colours (tb2 5/16).
-  bool _recentsWorthy = false;
-
   /// The colour at mount time — NOT `widget.initial`, which hosts
   /// rebuild to the latest emitted value, making it useless for the
-  /// "did the user actually change anything" check on dispose.
+  /// "did the user actually change anything" check in [_seal].
   late final int _initialArgb;
 
   /// Last ARGB this widget emitted, so [didUpdateWidget] can tell
@@ -193,13 +193,6 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
 
   @override
   void dispose() {
-    final current = _current;
-    if (_recentsWorthy && current.toARGB32() != _initialArgb) {
-      // Deferred: mutating the store synchronously here notifies
-      // this very widget's recents-row watcher mid-unmount.
-      final store = _recentsStore;
-      Future<void>.microtask(() => store.remember(current));
-    }
     _hexCtrl.dispose();
     _hexFocus.dispose();
     super.dispose();
@@ -230,10 +223,37 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
     });
     if (syncHex) _syncHex();
     final color = _current;
-    if (recentsWorthy) _recentsWorthy = true;
     _lastEmittedArgb = color.toARGB32();
     widget.onChanged(color);
-    if (committed) widget.onCommitted?.call(color);
+    if (committed) _seal(recentsWorthy: recentsWorthy);
+  }
+
+  /// The single commit fence: seals the host's undo step and, when
+  /// this particular commit earned it, records the colour in the
+  /// app-wide MRU.
+  ///
+  /// The store write used to happen once in [dispose] — which meant
+  /// nothing the user did in front of the shelf could ever fill it,
+  /// and the row they were meant to populate was already gone by the
+  /// time it was written. Writing here instead puts a mixed colour in
+  /// the leading slot the moment it settles.
+  ///
+  /// Worthiness is per-COMMIT, deliberately not a sticky session
+  /// flag: a wheel drag followed by a palette tap must not launder
+  /// the preset into the MRU. Only mixing earns a slot — wheel
+  /// settle, a complete hex entry, an eyedropper release — because
+  /// the palette is one tap away in the same grid, so echoing it
+  /// would evict genuinely custom colours (tb2 5/16).
+  ///
+  /// No shift-under-finger hazard: the wheel commits on level 2 with
+  /// the shelf unmounted, the eyedropper commits under a full-screen
+  /// overlay, and hex commits while the keyboard owns focus.
+  void _seal({required bool recentsWorthy}) {
+    final color = _current;
+    widget.onCommitted?.call(color);
+    if (recentsWorthy && color.toARGB32() != _initialArgb) {
+      _recentsStore.remember(color);
+    }
   }
 
   /// Preserves the current alpha — a swatch tap is a hue choice,
@@ -401,29 +421,32 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
             ),
           ],
         ),
-        if (recents.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          _RecentsRow(
-            recents: recents,
-            currentRgb: _rgb(_current),
-            onPick: _pickSwatch,
-          ),
-        ],
         const SizedBox(height: 12),
-        _PresetGrid(currentRgb: _rgb(_current), onPick: _pickSwatch),
+        _ColorShelf(
+          mine: recents,
+          currentRgb: _rgb(_current),
+          onPick: _pickSwatch,
+        ),
       ],
     );
   }
 
-  /// Recents de-duped against the preset grid and themselves so
-  /// the row only ever shows colours the grid can't offer.
+  /// Recents de-duped against the palette rows and themselves, so a
+  /// colour can never appear twice in one grid.
+  ///
+  /// Palette wins every collision. With the two groups sharing one
+  /// grid that rule stops being arbitrary: the same red in two cells
+  /// of one surface would read as a bug. Capped at
+  /// [_ColorShelf.slots] — the store cap matches, so the cap is a
+  /// belt-and-braces guard rather than a truncation the user could
+  /// notice.
   List<Color> _visibleRecents(List<Color> recents) {
     final paletteRgb = kColorPickerPalette.map(_rgb).toSet();
     final seen = <int>{};
     return <Color>[
       for (final c in recents)
         if (!paletteRgb.contains(_rgb(c)) && seen.add(_rgb(c))) c,
-    ];
+    ].take(_ColorShelf.slots).toList(growable: false);
   }
 
   static int _rgb(Color c) => c.toARGB32() & 0x00FFFFFF;
@@ -488,7 +511,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
                 _hsv.withSaturation(s).withValue(v),
                 recentsWorthy: true,
               ),
-              onChangeEnd: () => widget.onCommitted?.call(_current),
+              onChangeEnd: () => _seal(recentsWorthy: true),
             ),
           ),
         ),
@@ -512,7 +535,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
             _hsv.withHue((v * 360).clamp(0, 359.999)),
             recentsWorthy: true,
           ),
-          onChangeEnd: () => widget.onCommitted?.call(_current),
+          onChangeEnd: () => _seal(recentsWorthy: true),
         ),
         const SizedBox(height: 8),
         _GradientTrack(
@@ -528,7 +551,7 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
           thumbColor: _current,
           onChanged: (v) =>
               _emit(_hsv.withAlpha(v.clamp(0, 1)), recentsWorthy: true),
-          onChangeEnd: () => widget.onCommitted?.call(_current),
+          onChangeEnd: () => _seal(recentsWorthy: true),
         ),
         const SizedBox(height: 10),
         Row(
@@ -925,117 +948,227 @@ class _SwatchPreviewDot extends StatelessWidget {
 //  Recents + preset grid
 // ─────────────────────────────────────────────────────────────────
 
-class _RecentsRow extends StatelessWidget {
-  const _RecentsRow({
-    required this.recents,
+/// THE SHELF — one 3×6 grid of identical cells, and the whole of the
+/// picker's level-1 lower section.
+///
+/// Recents and the palette used to be two objects: a 28dp
+/// horizontally-scrolling row inside an `Expanded` (so two entries
+/// stretched across the full width, leaving the gap that reads as
+/// broken), above an unlabelled 2×6 of 36dp circles on a different
+/// pitch, with the whole recents block vanishing when the store was
+/// empty. Three sizes, two layout engines, and a section whose
+/// height changed between openings of the same panel.
+///
+/// They are one grid now. Group identity rides on POSITION (the
+/// user's own colours always lead), on the only structural asymmetry
+/// left (only row 1 can hold empty slots — the palette is always
+/// full), on a hairline plus the extra group gutter, and on an
+/// explicit semantics container. Never on a second visual language.
+///
+/// Height is constant in every state, so the section can no longer
+/// appear, disappear, or resize under an `AnimatedSize`.
+class _ColorShelf extends StatelessWidget {
+  const _ColorShelf({
+    required this.mine,
     required this.currentRgb,
     required this.onPick,
   });
 
-  final List<Color> recents;
+  /// Colours the user mixed, most-recent-first, already de-duped
+  /// against the palette. Renders leading-aligned; the remainder of
+  /// the row is empty slots.
+  final List<Color> mine;
   final int currentRgb;
   final ValueChanged<Color> onPick;
+
+  /// Columns, and therefore also the number of reserved slots in
+  /// row 1. Matches [RecentColorsController] capacity so display
+  /// equals truth: nothing the user made is ever hidden.
+  static const int slots = 6;
 
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    return SizedBox(
-      // kMinHitTarget, not 28: a horizontal ListView hands its children
-      // a TIGHT cross-axis constraint, so the swatch's 44dp touch box
-      // was being clamped to the row's height. The swatch still PAINTS
-      // at 28dp — only the target grows.
-      height: kMinHitTarget,
+    // ONE gutter, both axes, DERIVED — and spent through explicit
+    // separators rather than `spaceBetween`. The old grid clamped the
+    // gutter for its vertical gap but let `spaceBetween` distribute
+    // the UNCLAMPED value horizontally, so above ~384dp of content
+    // width the two silently diverged. Centring the intrinsic-width
+    // grid splits any leftover evenly instead.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // The ceiling is 12, not the old grid's 24: a two-row grid
+        // spent the gutter once vertically, this one spends it three
+        // times (row 1 → seam → palette → palette), and the colour
+        // panel must fit its dock cap without internal scroll —
+        // drag controls inside a scrollable is the pattern this
+        // picker exists to avoid. At phone widths the DERIVED value
+        // is ~14 anyway, so the clamp only bites on wide panels,
+        // where it reads as a deliberate compact block rather than
+        // scattered dots.
+        final gutter =
+            ((constraints.maxWidth - slots * kMinHitTarget) / (slots - 1))
+                .clamp(2.0, 12.0);
+
+        Widget row(List<Widget> cells) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < cells.length; i++) ...[
+              if (i > 0) SizedBox(width: gutter),
+              cells[i],
+            ],
+          ],
+        );
+
+        final mineCells = <Widget>[
+          for (var i = 0; i < slots; i++)
+            if (i < mine.length)
+              _Swatch(
+                key: ValueKey('color-picker-recent-${_hex6(mine[i])}'),
+                color: mine[i],
+                semanticLabel: colorSwatchName(context, mine[i]),
+                // A mixed colour is an EXACT colour, so it compares on
+                // full ARGB; a palette entry is a hue, and taps
+                // preserve alpha, so those compare RGB-masked. One
+                // documented rule, two correct answers. The row
+                // self-dedupes on RGB, so the HEX6 keys stay unique.
+                selected: mine[i].toARGB32() == currentRgb,
+                onTap: () => onPick(mine[i]),
+              )
+            else
+              _EmptySlot(key: ValueKey('color-picker-slot-$i')),
+        ];
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _ShelfHeading(
+              // Shown ONLY at zero, and in the heading's trailing slot
+              // rather than where the swatches go: the empty state is
+              // the shape of the full state, pre-drawn, plus one line
+              // saying what fills it. Six empty rings would be honest
+              // about capacity and say nothing about why it is empty.
+              hint: mine.isEmpty ? context.l10n.colorsMixedHint : null,
+            ),
+            Semantics(
+              container: true,
+              label: context.l10n.recentLabel,
+              child: Center(child: row(mineCells)),
+            ),
+            SizedBox(height: gutter),
+            // The group seam: a hairline spanning the grid, with the
+            // gutter above and below doing the Gestalt work.
+            // Direction-agnostic, and it costs one token.
+            Container(height: 1, color: tokens.border),
+            SizedBox(height: gutter),
+            Semantics(
+              container: true,
+              label: context.l10n.colorsLabel,
+              child: Column(
+                children: [
+                  for (
+                    var start = 0;
+                    start < kColorPickerPalette.length;
+                    start += slots
+                  ) ...[
+                    if (start > 0) SizedBox(height: gutter),
+                    Center(
+                      child: row([
+                        for (final c
+                            in kColorPickerPalette.skip(start).take(slots))
+                          _Swatch(
+                            key: ValueKey('color-picker-swatch-${_hex6(c)}'),
+                            color: c,
+                            semanticLabel: colorSwatchName(context, c),
+                            selected: (c.toARGB32() & 0x00FFFFFF) == currentRgb,
+                            onTap: () => onPick(c),
+                          ),
+                      ]),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// The shelf's single heading. One heading for the whole grid — a
+/// second one is what made the old section read as two objects.
+class _ShelfHeading extends StatelessWidget {
+  const _ShelfHeading({this.hint});
+
+  final String? hint;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    final label = Theme.of(context).textTheme.labelSmall?.copyWith(
+      // Full strength: at 75% this caption measured 3.32:1 light and
+      // 4.32:1 dark — normal text, so 4.5:1 applies.
+      color: tokens.textSecondary,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0,
+    );
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(4, 0, 4, 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
         children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: 4, end: 10),
-            child: Text(
-              context.l10n.recentLabel,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                // Full strength: at 75% this caption measured 3.32:1 light
-                // and 4.32:1 dark — normal text, so 4.5:1 applies. It
-                // was the one label in the section below the bar.
-                color: tokens.textSecondary,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0,
+          Text(context.l10n.colorsLabel, style: label),
+          if (hint != null) ...[
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                hint!,
+                style: label?.copyWith(fontWeight: FontWeight.w400),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
               ),
             ),
-          ),
-          Expanded(
-            // The row is as tall as the touch floor, and the painted
-            // 28dp swatch is centred in it. `clipBehavior: Clip.none`
-            // alone did NOT fix this — it affects painting, not layout
-            // or hit-testing, so the ListView kept handing children a
-            // tight 28dp cross-axis and the 44dp box stayed clamped to
-            // 44x28. The height has to change for the box to exist.
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              itemCount: recents.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (_, i) => _Swatch(
-                key: ValueKey('color-picker-recent-${_hex6(recents[i])}'),
-                color: recents[i],
-                semanticLabel: colorSwatchName(context, recents[i]),
-                size: 28,
-                selected: (recents[i].toARGB32() & 0x00FFFFFF) == currentRgb,
-                onTap: () => onPick(recents[i]),
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-/// Exactly two rows of six — the compact quick-pick grid.
-class _PresetGrid extends StatelessWidget {
-  const _PresetGrid({required this.currentRgb, required this.onPick});
-
-  final int currentRgb;
-  final ValueChanged<Color> onPick;
-
-  static const int _perRow = 6;
+/// A reserved, un-filled slot in the shelf's first row.
+///
+/// Inert by construction: no ink, no press state, and excluded from
+/// semantics so a screen reader hears six colours and not six
+/// nothings. Its whole job is to make "two of six filled" read as a
+/// state rather than an accident.
+class _EmptySlot extends StatelessWidget {
+  const _EmptySlot({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // ONE gutter, both axes — DERIVED, not assumed. `spaceBetween` /
-    // `spaceEvenly` on a Row take the column gap from the sheet width
-    // while the run gap stays a fixed constant; that measured 28dp
-    // across against 10dp down, so the block read as two unrelated
-    // rows of dots rather than one grid. A bare `Wrap` equalises them
-    // but then reflows to 8+4 on a wide sheet, losing the 2×6 shape
-    // the palette is sized for. So: solve the horizontal gutter from
-    // the real width at six-per-row, and spend the same number
-    // vertically.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final gutter =
-            ((constraints.maxWidth - _perRow * kMinHitTarget) / (_perRow - 1))
-                .clamp(4.0, 24.0);
-        Widget row(List<Color> colors) => Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            for (final c in colors)
-              _Swatch(
-                key: ValueKey('color-picker-swatch-${_hex6(c)}'),
-                color: c,
-                semanticLabel: colorSwatchName(context, c),
-                selected: (c.toARGB32() & 0x00FFFFFF) == currentRgb,
-                onTap: () => onPick(c),
+    final tokens = AppTokens.of(context);
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: kMinHitTarget,
+        height: kMinHitTarget,
+        child: Center(
+          child: Container(
+            width: _Swatch.discSize,
+            height: _Swatch.discSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              // Clearly perceivable, unmistakably inert beside the
+              // 4.06:1 live swatch ring.
+              border: Border.all(
+                color: tokens.textSecondary.withValues(alpha: 0.30),
               ),
-          ],
-        );
-        return Column(
-          children: [
-            row(kColorPickerPalette.sublist(0, _perRow)),
-            SizedBox(height: gutter),
-            row(kColorPickerPalette.sublist(_perRow)),
-          ],
-        );
-      },
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1053,7 +1186,6 @@ class _Swatch extends StatefulWidget {
     required this.selected,
     required this.onTap,
     this.semanticLabel,
-    this.size = 36,
   });
 
   final Color color;
@@ -1063,7 +1195,16 @@ class _Swatch extends StatefulWidget {
   /// Spoken name. Without it a screen reader reads twelve unnamed
   /// "button"s in a row — the swatch's only identity is its fill.
   final String? semanticLabel;
-  final double size;
+
+  /// The painted disc. ONE size for every cell in the shelf — the
+  /// old 28dp-recents / 36dp-preset split is most of why the two
+  /// groups read as unrelated objects.
+  static const double discSize = 32;
+
+  /// Outer diameter of the selection halo: the disc plus a 3dp
+  /// transparent gap and a 2dp stroke, leaving 1dp of clearance
+  /// inside the [kMinHitTarget] cell.
+  static const double haloSize = discSize + 2 * 3 + 2 * 2;
 
   @override
   State<_Swatch> createState() => _SwatchState();
@@ -1079,59 +1220,87 @@ class _SwatchState extends State<_Swatch> {
         ThemeData.estimateBrightnessForColor(widget.color) == Brightness.dark
         ? Colors.white
         : Colors.black;
-    // Painted at [size]; the TOUCH box is the 48dp Material floor.
-    // The grid runs on a ~73dp pitch and the recents row has 8dp
-    // separators, so neither layout changes — the 28dp recents
-    // swatches and 36dp presets simply stop being 28/36dp targets.
+    // Painted at [_Swatch.discSize]; the TOUCH box is the
+    // [kMinHitTarget] floor, which is also the grid's cell pitch.
+    final disc = Container(
+      width: _Swatch.discSize,
+      height: _Swatch.discSize,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: widget.color,
+        border: Border.all(
+          // Every swatch gets a real boundary, selected or not.
+          // Whichever end of the ramp matches the sheet disappears
+          // into it — white on cream in light mode, black on ink in
+          // dark — so a brightness-conditional ring only ever fixes
+          // one of the two. `textSecondary` is a mid-tone in BOTH
+          // themes. 0.70 computed to 3.23:1 against white but
+          // MEASURED 2.95:1 once rendered (the 1dp ring antialiases
+          // against the fill it encloses), so it is 0.85: 4.34:1
+          // against white and 4.06:1 against the light sheet, 6.31:1
+          // against black and 5.20:1 against the dark sheet. The old
+          // 55%-of-`border` hairline was 1.31:1.
+          color: tokens.textSecondary.withValues(alpha: 0.85),
+        ),
+      ),
+      child: widget.selected
+          ? Icon(
+              AppIcons.confirm,
+              size: _Swatch.discSize * 0.4,
+              color: checkColor,
+            )
+          : null,
+    );
+
     final swatch = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapDown: (_) => setState(() => _down = true),
       onTapCancel: () => setState(() => _down = false),
       onTapUp: (_) => setState(() => _down = false),
-      child: AnimatedScale(
-        scale: _down ? 0.94 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: widget.onTap,
-            child: AnimatedContainer(
-              duration: AppMotion.state,
-              curve: AppMotion.curve,
-              width: widget.size,
-              height: widget.size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: widget.color,
-                border: Border.all(
-                  // Every swatch gets a real boundary. Whichever end
-                  // of the ramp matches the sheet disappears into it —
-                  // white on cream in light mode, black on ink in dark
-                  // — so a brightness-conditional ring only ever fixes
-                  // one of the two. `textSecondary` is a mid-tone in
-                  // BOTH themes. 0.70 computed to 3.23:1 against white
-                  // but MEASURED 2.95:1 once rendered (the 1dp ring
-                  // antialiases against the fill it encloses), so it is
-                  // 0.85: 4.34:1 against white and 4.06:1 against the
-                  // light sheet, 6.31:1 against black and 5.20:1
-                  // against the dark sheet. The old 55%-of-`border`
-                  // hairline was 1.31:1.
-                  color: widget.selected
-                      ? tokens.accentText
-                      : tokens.textSecondary.withValues(alpha: 0.85),
-                  width: widget.selected ? 2.0 : 1,
-                ),
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: widget.onTap,
+          child: SizedBox(
+            width: kMinHitTarget,
+            height: kMinHitTarget,
+            child: Center(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Selection is an OUTER halo, separated from the
+                  // disc — never a thicker edge ON it. Drawn on the
+                  // swatch edge it had to contrast against arbitrary
+                  // user colour and measured 1.49:1 against the grey
+                  // preset in light and 1.02:1 against green in dark:
+                  // invisible exactly where it matters. Out here it
+                  // only ever has to clear the sheet — accentText is
+                  // 6.73:1 light / 7.47:1 dark on `surface`.
+                  AnimatedOpacity(
+                    duration: AppMotion.state,
+                    curve: AppMotion.curve,
+                    opacity: widget.selected ? 1 : 0,
+                    child: Container(
+                      width: _Swatch.haloSize,
+                      height: _Swatch.haloSize,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: tokens.accentText, width: 2),
+                      ),
+                    ),
+                  ),
+                  // Only the DISC scales under the finger — a selected
+                  // swatch's halo stays put instead of pumping.
+                  AnimatedScale(
+                    scale: _down ? 0.94 : 1.0,
+                    duration: const Duration(milliseconds: 120),
+                    curve: Curves.easeOut,
+                    child: disc,
+                  ),
+                ],
               ),
-              child: widget.selected
-                  ? Icon(
-                      AppIcons.confirm,
-                      size: widget.size * 0.4,
-                      color: checkColor,
-                    )
-                  : null,
             ),
           ),
         ),
@@ -1147,13 +1316,7 @@ class _SwatchState extends State<_Swatch> {
       // swatch was announced and then unusable — worse than the
       // unnamed-but-tappable state it replaced.
       onTap: widget.onTap,
-      child: ExcludeSemantics(
-        child: SizedBox(
-          width: kMinHitTarget,
-          height: kMinHitTarget,
-          child: Center(child: swatch),
-        ),
-      ),
+      child: ExcludeSemantics(child: swatch),
     );
   }
 }

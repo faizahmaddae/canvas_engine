@@ -414,6 +414,7 @@
   "textDirectionLtrTitle": "Left to right",
   "typeSomethingHint": "Type something…",
   "colorsLabel": "Colors",
+  "colorsMixedHint": "Colors you mix land here",
   "moreColorsTooltip": "More colors",
   "hueLabel": "Hue",
   "opacityLabel": "Opacity",

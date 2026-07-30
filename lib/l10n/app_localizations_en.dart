@@ -1298,6 +1298,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get colorsLabel => 'Colors';
 
   @override
+  String get colorsMixedHint => 'Colors you mix land here';
+
+  @override
   String get moreColorsTooltip => 'More colors';
 
   @override

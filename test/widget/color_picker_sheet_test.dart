@@ -171,6 +171,82 @@ void main() {
       }
     });
 
+    testWidgets('the shelf reserves six slots whatever the store holds', (
+      tester,
+    ) async {
+      final container = await _openSheet(
+        tester,
+        initial: const Color(0xFF000000),
+      );
+
+      // Empty store: six reserved slots, all of them, plus the one
+      // line explaining what fills them. The section must not
+      // collapse — its height is the same in every state.
+      for (var i = 0; i < 6; i++) {
+        expect(
+          find.byKey(ValueKey('color-picker-slot-$i')),
+          findsOneWidget,
+          reason: 'slot $i must be reserved even with an empty store',
+        );
+      }
+      expect(find.text('Colors you mix land here'), findsOneWidget);
+
+      // Two mixed colours: they take the LEADING slots and exactly
+      // four reserved slots remain. This is the state the redesign
+      // exists for — two swatches must read as "two of six", not as
+      // two dots adrift in a full-width track.
+      final store = container.read(recentColorsControllerProvider.notifier);
+      store.remember(const Color(0xFF123456));
+      store.remember(const Color(0xFF654321));
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('color-picker-recent-123456')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('color-picker-recent-654321')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('color-picker-slot-0')), findsNothing);
+      expect(find.byKey(const ValueKey('color-picker-slot-1')), findsNothing);
+      for (var i = 2; i < 6; i++) {
+        expect(find.byKey(ValueKey('color-picker-slot-$i')), findsOneWidget);
+      }
+      expect(
+        find.text('Colors you mix land here'),
+        findsNothing,
+        reason: 'the hint belongs to the empty state only',
+      );
+    });
+
+    testWidgets('a mixed colour reaches the shelf without closing the sheet', (
+      tester,
+    ) async {
+      // The defect this redesign targets: the store used to be
+      // written only in dispose(), so nothing the user did in front
+      // of the shelf could ever fill it — the row they were meant to
+      // populate was already gone by the time it was written.
+      final container = await _openSheet(
+        tester,
+        initial: const Color(0xFFFF0000),
+      );
+
+      await tester.enterText(find.byType(TextField), '#123456');
+      await tester.pump();
+
+      expect(
+        container.read(recentColorsControllerProvider).map((c) => c.toARGB32()),
+        contains(0xFF123456),
+        reason: 'a hex entry lands in the MRU at its commit fence',
+      );
+      expect(
+        find.byKey(const ValueKey('color-picker-recent-123456')),
+        findsOneWidget,
+        reason: 'and is visible in the shelf while the sheet is still open',
+      );
+    });
+
     testWidgets('recent colour from the store is offered and tappable', (
       tester,
     ) async {

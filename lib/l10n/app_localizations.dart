@@ -2468,6 +2468,12 @@ abstract class AppLocalizations {
   /// **'Colors'**
   String get colorsLabel;
 
+  /// No description provided for @colorsMixedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors you mix land here'**
+  String get colorsMixedHint;
+
   /// No description provided for @moreColorsTooltip.
   ///
   /// In en, this message translates to:

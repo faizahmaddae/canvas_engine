@@ -1299,6 +1299,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get colorsLabel => 'رنگ‌ها';
 
   @override
+  String get colorsMixedHint => 'رنگ‌هایی که می‌سازید اینجا می‌مانند';
+
+  @override
   String get moreColorsTooltip => 'رنگ‌های بیشتر';
 
   @override

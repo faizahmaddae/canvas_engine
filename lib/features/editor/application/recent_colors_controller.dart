@@ -16,14 +16,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///   * Dedupe by full ARGB (alpha matters — a faded red and an
 ///     opaque red are intentionally different recents).
 ///   * Most-recent-first, hard cap of [_cap] entries.
-///   * The picker records the final colour itself when it closes;
-///     preset swatches never reach the store because the picker
-///     hides recents that duplicate its preset grid anyway.
+///   * The picker records a colour at its commit fence, not on
+///     close; preset swatches never reach the store because only
+///     MIXING earns a slot (wheel settle, complete hex, eyedropper
+///     release) and the picker hides recents that duplicate its
+///     palette rows anyway.
 ///   * Storage is best-effort: malformed entries are dropped on
 ///     load, write failures are swallowed — losing a recent colour
 ///     is better than surfacing a prefs error mid-edit.
 class RecentColorsController extends Notifier<List<Color>> {
-  static const int _cap = 8;
+  /// Matches the picker shelf's reserved first row exactly. A store
+  /// that holds more than the one surface rendering it can ever show
+  /// is a list the user cannot see — display equals truth instead.
+  static const int _cap = 6;
   static const String prefsKey = 'editor.recent_colors.v1';
 
   @override
