@@ -11,7 +11,7 @@ import '../../../l10n/l10n.dart';
 import '../../editor/application/canvas_capture.dart';
 import '../../editor/application/recent_colors_controller.dart';
 import '../../editor/presentation/widgets/editor_breakpoints.dart';
-import '../../editor/presentation/widgets/editor_modal_sheet.dart';
+import '../../../app/ui/app_modal_sheet.dart';
 import 'eyedropper_overlay.dart';
 import '../../../app/theme/app_icons.dart';
 
@@ -1669,9 +1669,9 @@ Future<Color?> showColorPickerSheet(
   // Barrier NONE (contract §9): live colour — never dim the canvas
   // behind the picker. Card + handle come from the shared modal
   // host; keyboard-aware so the hex field stays above the IME.
-  await showEditorSheet<void>(
+  await showAppSheet<void>(
     context,
-    barrier: EditorSheetBarrier.none,
+    barrier: AppSheetBarrier.none,
     keyboardAware: true,
     builder: (ctx) => _ColorPickerSheet(
       initial: initial,

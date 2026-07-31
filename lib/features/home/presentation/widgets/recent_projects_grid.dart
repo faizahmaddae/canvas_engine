@@ -8,6 +8,7 @@ import '../../../../core/utils/editor_value_format.dart';
 import '../../../../core/utils/text_measure.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../app/ui/app_modal_sheet.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/project_delete_service.dart';
 import '../../application/project_store.dart';
@@ -343,42 +344,46 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
     // (e.g. delete, or the user navigating away mid-sheet).
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
-    final action = await showModalBottomSheet<_CardAction>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(AppIcons.openProject),
-              title: Text(l10n.openAction),
-              onTap: () => Navigator.pop(ctx, _CardAction.open),
+    // The shared host, not a stock Material sheet: this was the one
+    // surface in the app still rendering its own grammar (framework
+    // drag handle, framework radius, framework insets), so a card
+    // menu here looked like a different product from every sheet in
+    // the editor. `full` barrier per contract §9 — a list sheet has
+    // nothing to preview behind it. The host owns the handle and the
+    // safe-area inset now, so both come off this body.
+    final action = await showAppSheet<_CardAction>(
+      context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(AppIcons.openProject),
+            title: Text(l10n.openAction),
+            onTap: () => Navigator.pop(ctx, _CardAction.open),
+          ),
+          ListTile(
+            leading: const Icon(AppIcons.rename),
+            title: Text(l10n.renameAction),
+            onTap: () => Navigator.pop(ctx, _CardAction.rename),
+          ),
+          ListTile(
+            leading: const Icon(AppIcons.duplicate),
+            title: Text(l10n.duplicateAction),
+            onTap: () => Navigator.pop(ctx, _CardAction.duplicate),
+          ),
+          ListTile(
+            leading: Icon(
+              AppIcons.delete,
+              color: Theme.of(ctx).colorScheme.error,
             ),
-            ListTile(
-              leading: const Icon(AppIcons.rename),
-              title: Text(l10n.renameAction),
-              onTap: () => Navigator.pop(ctx, _CardAction.rename),
+            title: Text(
+              l10n.deleteAction,
+              style: TextStyle(color: Theme.of(ctx).colorScheme.error),
             ),
-            ListTile(
-              leading: const Icon(AppIcons.duplicate),
-              title: Text(l10n.duplicateAction),
-              onTap: () => Navigator.pop(ctx, _CardAction.duplicate),
-            ),
-            ListTile(
-              leading: Icon(
-                AppIcons.delete,
-                color: Theme.of(ctx).colorScheme.error,
-              ),
-              title: Text(
-                l10n.deleteAction,
-                style: TextStyle(color: Theme.of(ctx).colorScheme.error),
-              ),
-              onTap: () => Navigator.pop(ctx, _CardAction.delete),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
+            onTap: () => Navigator.pop(ctx, _CardAction.delete),
+          ),
+          const SizedBox(height: 8),
+        ],
       ),
     );
     if (action == null || !mounted) return;

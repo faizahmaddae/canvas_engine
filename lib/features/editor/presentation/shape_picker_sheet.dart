@@ -7,7 +7,7 @@ import '../../../l10n/l10n.dart';
 import '../engine/modules/shape/shape_catalogue.dart';
 import '../engine/modules/shape/shape_layer.dart';
 import '../engine/modules/shape/shape_paths.dart';
-import 'widgets/editor_modal_sheet.dart';
+import '../../../app/ui/app_modal_sheet.dart';
 
 /// Bottom sheet for picking a [ShapeKind] — shared by the editor's
 /// "Add shape" and "Replace shape" flows (Phase 4 plan §5.2, split
@@ -26,7 +26,7 @@ Future<ShapeKind?> pickShapeKind(
   final l10n = context.l10n;
   // FULL barrier (contract §9: pickers). Card + handle + the 0.75
   // height cap come from the shared modal host (tb2 8/16).
-  return showEditorSheet<ShapeKind>(
+  return showAppSheet<ShapeKind>(
     context,
     maxHeightFraction: 0.75,
     builder: (ctx) {

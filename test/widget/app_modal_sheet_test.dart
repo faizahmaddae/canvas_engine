@@ -3,7 +3,7 @@
 // the ≥44dp handle dismiss zone (0563102's hit floor), and
 // keyboard-aware placement for text-entry content.
 
-import 'package:canvas_engine/features/editor/presentation/widgets/editor_modal_sheet.dart';
+import 'package:canvas_engine/app/ui/app_modal_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:canvas_engine/app/theme/app_icons.dart';
@@ -38,9 +38,9 @@ void main() {
 
   testWidgets('barrier mapping: none → fully transparent', (tester) async {
     final ctx = await pumpHostApp(tester);
-    showEditorSheet<void>(
+    showAppSheet<void>(
       ctx,
-      barrier: EditorSheetBarrier.none,
+      barrier: AppSheetBarrier.none,
       builder: (_) => const SizedBox(height: 120),
     );
     await tester.pumpAndSettle();
@@ -52,21 +52,21 @@ void main() {
 
   testWidgets('barrier mapping: whisper → 6% scrim', (tester) async {
     final ctx = await pumpHostApp(tester);
-    showEditorSheet<void>(
+    showAppSheet<void>(
       ctx,
-      barrier: EditorSheetBarrier.whisper,
+      barrier: AppSheetBarrier.whisper,
       builder: (_) => const SizedBox(height: 120),
     );
     await tester.pumpAndSettle();
     final color = barrierColorOf(tester)!;
-    expect(color.a, closeTo(kEditorSheetWhisperAlpha, 0.005));
+    expect(color.a, closeTo(kAppSheetWhisperAlpha, 0.005));
   });
 
   testWidgets('barrier mapping: full → the framework default scrim', (
     tester,
   ) async {
     final ctx = await pumpHostApp(tester);
-    showEditorSheet<void>(
+    showAppSheet<void>(
       ctx,
       // full is the default.
       builder: (_) => const SizedBox(height: 120),
@@ -85,13 +85,13 @@ void main() {
   ) async {
     final ctx = await pumpHostApp(tester);
     Object? result = 'sentinel';
-    showEditorSheet<String>(
+    showAppSheet<String>(
       ctx,
       builder: (_) => const SizedBox(height: 120),
     ).then((v) => result = v);
     await tester.pumpAndSettle();
 
-    final zone = find.byKey(const ValueKey('editor-sheet-handle-zone'));
+    final zone = find.byKey(const ValueKey('app-sheet-handle-zone'));
     expect(zone, findsOneWidget);
     expect(
       tester.getSize(zone).height,
@@ -101,16 +101,13 @@ void main() {
 
     await tester.tap(zone);
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('editor-sheet-handle-zone')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('app-sheet-handle-zone')), findsNothing);
     expect(result, isNull, reason: 'handle dismiss resolves like any dismiss');
   });
 
   testWidgets('optional title row renders title + icon', (tester) async {
     final ctx = await pumpHostApp(tester);
-    showEditorSheet<void>(
+    showAppSheet<void>(
       ctx,
       title: 'Sheet title',
       titleIcon: AppIcons.precisionAdjust,
@@ -126,7 +123,7 @@ void main() {
   ) async {
     final ctx = await pumpHostApp(tester);
     const contentKey = ValueKey('sheet-content');
-    showEditorSheet<void>(
+    showAppSheet<void>(
       ctx,
       keyboardAware: true,
       builder: (_) => const SizedBox(key: contentKey, height: 120),

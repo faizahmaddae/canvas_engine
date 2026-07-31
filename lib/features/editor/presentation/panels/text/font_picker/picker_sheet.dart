@@ -18,7 +18,7 @@ import '../../../../../../app/theme/app_tokens.dart';
 import '../../../../../../core/utils/haptics.dart';
 import '../../../../../../l10n/l10n.dart';
 import '../../../../text/domain/font_catalog.dart';
-import '../../../widgets/editor_modal_sheet.dart';
+import '../../../../../../app/ui/app_modal_sheet.dart';
 import 'tabs.dart';
 import '../../../../../../app/theme/app_icons.dart';
 
@@ -70,9 +70,9 @@ Future<FontPickResult> showFontPickerSheet(
   // canvas must stay visible. Card + handle come from the shared
   // modal host (tb2 8/16) — the preview semantics (tb2 12/16) are
   // untouched.
-  final result = await showEditorSheet<FontPickResult>(
+  final result = await showAppSheet<FontPickResult>(
     context,
-    barrier: EditorSheetBarrier.whisper,
+    barrier: AppSheetBarrier.whisper,
     maxHeightFraction: 0.7,
     maxWidth: 520,
     builder: (sheetCtx) => Padding(

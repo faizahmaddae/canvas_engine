@@ -13,7 +13,7 @@ import '../../application/document_controller.dart';
 import '../../application/export_controller.dart';
 import '../../application/export_format.dart';
 import '../../application/export_intent.dart';
-import 'editor_modal_sheet.dart';
+import '../../../../app/ui/app_modal_sheet.dart';
 import '../../application/export_session.dart';
 import '../../application/export_quality.dart';
 import '../../application/export_size.dart';
@@ -45,7 +45,7 @@ class ExportActionSheet extends ConsumerStatefulWidget {
     // stay dimmed while bytes are produced). The render+persist
     // session registration (tb2 13/16) lives inside the sheet state
     // and is unchanged by the chrome swap.
-    return showEditorSheet<void>(
+    return showAppSheet<void>(
       context,
       builder: (_) => const ExportActionSheet(),
     );

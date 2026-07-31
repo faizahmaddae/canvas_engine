@@ -6,7 +6,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
-import 'editor_modal_sheet.dart';
+import '../../../../app/ui/app_modal_sheet.dart';
 import 'history_labels.dart';
 import '../../../../app/theme/app_icons.dart';
 
@@ -20,14 +20,14 @@ import '../../../../app/theme/app_icons.dart';
 /// to disturb — and the prototype's browser was itself a display, not
 /// a navigator. Undo/redo stay the top bar's two buttons.
 Future<void> showHistoryBrowser(BuildContext context, WidgetRef ref) {
-  return showEditorSheet<void>(
+  return showAppSheet<void>(
     context,
     title: context.l10n.historyTitle,
     titleIcon: AppIcons.history,
     // Whisper, not full: the browser reflects the canvas, so keeping
     // the canvas dimly visible behind it reinforces "this is a view
     // of what you see", and it never mutates the document.
-    barrier: EditorSheetBarrier.whisper,
+    barrier: AppSheetBarrier.whisper,
     maxHeightFraction: 0.7,
     builder: (context) => const HistoryBrowserView(),
   );

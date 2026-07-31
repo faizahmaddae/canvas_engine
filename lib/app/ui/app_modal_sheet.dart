@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_tokens.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_tokens.dart';
 
-/// Barrier policy for [showEditorSheet] (interaction contract §9).
+/// Barrier policy for [showAppSheet] (interaction contract §9).
 ///
 /// | value    | scrim | use                                            |
 /// |----------|-------|------------------------------------------------|
@@ -11,24 +12,24 @@ import '../../../../app/theme/app_tokens.dart';
 /// |          |       | preview                                        |
 /// | whisper  | 6%    | keep context visible (font browser, composer)  |
 /// | full     | default scrim | list/overflow sheets, pickers, export  |
-enum EditorSheetBarrier { none, whisper, full }
+enum AppSheetBarrier { none, whisper, full }
 
 /// Whisper scrim opacity — light enough that live canvas previews
 /// stay legible behind the sheet, present enough to signal a modal.
-const double kEditorSheetWhisperAlpha = 0.06;
+const double kAppSheetWhisperAlpha = 0.06;
 
 /// Height of the drag-handle dismiss zone at the top of every
-/// editor sheet. ≥44dp per the chrome hit floor (tb2 14/16,
+/// app sheet. ≥44dp per the chrome hit floor (tb2 14/16,
 /// 0563102): the painted 36×4 pill is purely visual; this whole
 /// band is tappable (dismiss) and draggable (the modal route's own
 /// swipe-down).
-const double kEditorSheetHandleZoneHeight = 44.0;
+const double kAppSheetHandleZoneHeight = 44.0;
 
-/// THE single modal-sheet host for the editor (tb2 8/16, contract
+/// THE single modal-sheet host for the whole app (tb2 8/16, contract
 /// §1-M): one chrome grammar — a sheet ANCHORED to the bottom edge
 /// (full width, rounded top corners only), a 36×4 handle inside a
 /// ≥44dp dismiss zone, an optional title row — plus the §9
-/// three-value [EditorSheetBarrier] policy and keyboard awareness for
+/// three-value [AppSheetBarrier] policy and keyboard awareness for
 /// text-entry content.
 ///
 /// Anchored, not floating. The host used to render a card inset by a
@@ -60,10 +61,10 @@ const double kEditorSheetHandleZoneHeight = 44.0;
 /// Dismiss semantics are the modal route's own: swipe-down, barrier
 /// tap and system back all pop with `null`; content pops with a
 /// value. The host adds tap-on-handle as an explicit dismiss.
-Future<T?> showEditorSheet<T>(
+Future<T?> showAppSheet<T>(
   BuildContext context, {
   required WidgetBuilder builder,
-  EditorSheetBarrier barrier = EditorSheetBarrier.full,
+  AppSheetBarrier barrier = AppSheetBarrier.full,
   String? title,
   IconData? titleIcon,
   double? maxHeightFraction,
@@ -73,12 +74,12 @@ Future<T?> showEditorSheet<T>(
   bool keyboardAware = false,
 }) {
   final Color? barrierColor = switch (barrier) {
-    EditorSheetBarrier.none => Colors.transparent,
-    EditorSheetBarrier.whisper => Theme.of(
+    AppSheetBarrier.none => Colors.transparent,
+    AppSheetBarrier.whisper => Theme.of(
       context,
-    ).colorScheme.scrim.withValues(alpha: kEditorSheetWhisperAlpha),
+    ).colorScheme.scrim.withValues(alpha: kAppSheetWhisperAlpha),
     // null → the framework's default scrim.
-    EditorSheetBarrier.full => null,
+    AppSheetBarrier.full => null,
   };
   return showModalBottomSheet<T>(
     context: context,
@@ -92,7 +93,7 @@ Future<T?> showEditorSheet<T>(
     useSafeArea: false,
     backgroundColor: Colors.transparent,
     barrierColor: barrierColor,
-    builder: (sheetCtx) => _EditorSheetCard(
+    builder: (sheetCtx) => _AppSheetCard(
       title: title,
       titleIcon: titleIcon,
       maxHeightFraction: maxHeightFraction,
@@ -103,8 +104,8 @@ Future<T?> showEditorSheet<T>(
   );
 }
 
-class _EditorSheetCard extends StatelessWidget {
-  const _EditorSheetCard({
+class _AppSheetCard extends StatelessWidget {
+  const _AppSheetCard({
     required this.title,
     required this.titleIcon,
     required this.maxHeightFraction,
@@ -133,7 +134,9 @@ class _EditorSheetCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: tokens.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadii.sheetTop),
+        ),
         boxShadow: [
           // Cast UPWARD only. The old (0, 8) shadow fell downward into
           // the gutter this sheet no longer has, which is nowhere —
@@ -146,78 +149,90 @@ class _EditorSheetCard extends StatelessWidget {
           ),
         ],
       ),
-      // The 44dp dismiss zone UNDERLAYS the chrome (0563102's dock
-      // pattern): interactive content wins its own hits; the pill is
-      // IgnorePointer'd and empty strip space falls through to the
-      // zone, so a tap aimed anywhere at the handle band dismisses.
-      child: Stack(
-        children: [
-          PositionedDirectional(
-            top: 0,
-            start: 0,
-            end: 0,
-            height: kEditorSheetHandleZoneHeight,
-            child: Semantics(
-              key: const ValueKey('editor-sheet-handle-zone'),
-              button: true,
-              label: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => Navigator.of(context).maybePop(),
+      // A transparent Material under the content, the same way the
+      // tool dock does it. The card is a bare DecoratedBox, so any
+      // Material widget placed in a sheet body — a ListTile, an
+      // InkWell — had no Material ancestor to paint its ink on and
+      // rendered its splashes invisibly (Flutter asserts on exactly
+      // this in debug). Bodies that bring their own Material are
+      // unaffected; this only supplies one where there was none.
+      child: Material(
+        color: Colors.transparent,
+        // The 44dp dismiss zone UNDERLAYS the chrome (0563102's dock
+        // pattern): interactive content wins its own hits; the pill is
+        // IgnorePointer'd and empty strip space falls through to the
+        // zone, so a tap aimed anywhere at the handle band dismisses.
+        child: Stack(
+          children: [
+            PositionedDirectional(
+              top: 0,
+              start: 0,
+              end: 0,
+              height: kAppSheetHandleZoneHeight,
+              child: Semantics(
+                key: const ValueKey('app-sheet-handle-zone'),
+                button: true,
+                label: MaterialLocalizations.of(
+                  context,
+                ).modalBarrierDismissLabel,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => Navigator.of(context).maybePop(),
+                ),
               ),
             ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              IgnorePointer(
-                child: SizedBox(
-                  height: 14,
-                  child: Center(
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      margin: const EdgeInsets.only(top: 6),
-                      decoration: BoxDecoration(
-                        color: tokens.border.withValues(alpha: 0.8),
-                        borderRadius: BorderRadius.circular(2),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                IgnorePointer(
+                  child: SizedBox(
+                    height: 14,
+                    child: Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        margin: const EdgeInsets.only(top: 6),
+                        decoration: BoxDecoration(
+                          color: tokens.border.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              if (title != null)
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(16, 2, 16, 6),
-                  child: Row(
-                    children: [
-                      if (titleIcon != null) ...[
-                        Icon(titleIcon, size: 18, color: tokens.accent),
-                        const SizedBox(width: 8),
-                      ],
-                      Expanded(
-                        child: Text(
-                          title!,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                if (title != null)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(16, 2, 16, 6),
+                    child: Row(
+                      children: [
+                        if (titleIcon != null) ...[
+                          Icon(titleIcon, size: 18, color: tokens.accent),
+                          const SizedBox(width: 8),
+                        ],
+                        Expanded(
+                          child: Text(
+                            title!,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                // The safe-area inset lives HERE, not around the card:
+                // the surface has to paint through to the screen edge
+                // while the content it holds clears the home indicator.
+                Flexible(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: safeBottom),
+                    child: child,
                   ),
                 ),
-              // The safe-area inset lives HERE, not around the card:
-              // the surface has to paint through to the screen edge
-              // while the content it holds clears the home indicator.
-              Flexible(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: safeBottom),
-                  child: child,
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
 

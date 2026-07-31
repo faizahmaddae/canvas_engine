@@ -12,7 +12,7 @@ import '../../paint/application/paint_tool_controller.dart';
 import '../../shape/application/shape_tool_controller.dart';
 import '../../text/application/text_tool_controller.dart';
 import '../../text/presentation/text_direction_mode_picker.dart';
-import 'editor_modal_sheet.dart';
+import '../../../../app/ui/app_modal_sheet.dart';
 import '../../text/presentation/text_edit_flow.dart';
 import '../../text/presentation/text_resize_mode_picker.dart';
 import 'controls/toggle_segment.dart';
@@ -40,7 +40,7 @@ import '../../../../app/theme/app_icons.dart';
 /// undo entry) + Layers.
 ///
 /// Interaction-contract class M, full barrier — hosted by the
-/// shared editor modal host ([showEditorSheet], tb2 8/16).
+/// shared editor modal host ([showAppSheet], tb2 8/16).
 /// Delete runs the ONE canonical sequence for every entry point:
 /// confirm (protected/base cases) BEFORE the sheet pops, then
 /// dismiss, then execute.
@@ -58,7 +58,7 @@ Future<void> showLayerOverflowSheet(
   // from the shared modal host (tb2 8/16); the 9/16 height clamp the
   // old non-isScrollControlled route provided is preserved
   // explicitly so short devices keep every row reachable by scroll.
-  return showEditorSheet<void>(
+  return showAppSheet<void>(
     context,
     maxHeightFraction: 9 / 16,
     builder: (ctx) => _LayerOverflowSheet(

@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart' as picker;
 
 import '../../../../core/constants/engine_constants.dart';
 import '../../../../core/utils/haptics.dart';
-import '../../presentation/widgets/editor_modal_sheet.dart';
+import '../../../../app/ui/app_modal_sheet.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/document_controller.dart';
@@ -104,7 +104,7 @@ Future<picker.ImageSource?> _pickImageSource(
   final title = imageReplacementActionLabel(context, layer);
   // FULL barrier (contract §9: list sheets). Card + handle come
   // from the shared modal host (tb2 8/16).
-  return showEditorSheet<picker.ImageSource>(
+  return showAppSheet<picker.ImageSource>(
     context,
     builder: (ctx) {
       return Column(

@@ -10,7 +10,7 @@ import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../presentation/widgets/editor_breakpoints.dart';
-import '../../presentation/widgets/editor_modal_sheet.dart';
+import '../../../../app/ui/app_modal_sheet.dart';
 import '../application/text_color_resolver.dart';
 import '../application/text_tool_controller.dart';
 import '../../../../app/theme/app_icons.dart';
@@ -37,9 +37,9 @@ Future<String?> showTextInputFlowSheet(
   // 20% to the canonical 6%): typing live-previews on the canvas
   // behind the composer, so the dim must stay a whisper. Keyboard-
   // aware: the input row rides above the IME.
-  return showEditorSheet<String>(
+  return showAppSheet<String>(
     context,
-    barrier: EditorSheetBarrier.whisper,
+    barrier: AppSheetBarrier.whisper,
     keyboardAware: true,
     builder: (_) => _TextInputFlowSheet(
       initial: initial,
