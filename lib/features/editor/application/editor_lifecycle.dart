@@ -37,6 +37,26 @@ void resetEditorEphemeralState(WidgetRef ref) {
   ref.read(textToolControllerProvider.notifier).resetSession();
   ref.read(contextToolbarControllerProvider.notifier).closePanel();
   ref.read(paintToolControllerProvider.notifier).resetSession();
+  // The other four dock tools. Text and paint reset their whole
+  // session above, but Canvas / Image / Shape / Sticker only ever got
+  // closed by an in-editor gesture (tap-empty, selection change), and
+  // neither of those happens on the way out to Home — so an open
+  // sub-tool panel rode the route boundary into the next project.
+  // Open the Canvas panel, back out, create a new canvas, and the
+  // fresh editor mounted with that panel still expanded over a
+  // document it had nothing to do with.
+  //
+  // NOT routed through [closeObjectSubPanels] on purpose: that helper
+  // defers to an open mask session (it is a mid-editing seam, and the
+  // panels it collapses are what the session's Done/Cancel returns the
+  // user to). At a project boundary there is nothing to return to —
+  // the mask session is being discarded outright a few lines below —
+  // so the guard would make the reset silently incomplete in exactly
+  // the case it matters most.
+  ref.read(canvasToolControllerProvider.notifier).closePanel();
+  ref.read(imageToolControllerProvider.notifier).closePanel();
+  ref.read(shapeToolControllerProvider.notifier).closePanel();
+  ref.read(stickerToolControllerProvider.notifier).closePanel();
   ref.read(editingControllerProvider.notifier).stop();
   ref.read(selectionModeProvider.notifier).exitMulti();
   ref.read(viewportControllerProvider.notifier).reset();
