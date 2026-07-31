@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/l10n.dart';
-import 'widgets/editor_modal_sheet.dart';
+import '../../../app/ui/app_modal_sheet.dart';
 import '../../../app/theme/app_icons.dart';
 
 /// Bottom-sheet emoji picker used by the Sticker tool.
@@ -20,7 +20,7 @@ import '../../../app/theme/app_icons.dart';
 Future<String?> showStickerPickerSheet(BuildContext context) {
   // FULL barrier (contract §9: pickers). Card + handle come from
   // the shared modal host (tb2 8/16).
-  return showEditorSheet<String>(
+  return showAppSheet<String>(
     context,
     builder: (ctx) => const _StickerPickerSheet(),
   );

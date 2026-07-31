@@ -19,7 +19,7 @@ import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
-import 'package:canvas_engine/features/editor/image/application/image_target_resolver.dart';
+import 'package:canvas_engine/features/editor/image/application/image_target.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -113,8 +113,8 @@ void main() {
       expect(doc.isProtectedBasePhoto('p1'), isTrue);
     });
 
-    test('Crop / Filters / Adjust resolve to the base photo even when '
-        'a sticker is the current selection', () {
+    test('Crop / Look resolve to the base photo even when a sticker is '
+        'the current selection — the role names the target (§10)', () {
       final c = makePhotoProject();
       importPhoto(c, makeBasePhoto('photo'));
       c
@@ -122,12 +122,10 @@ void main() {
           .execute(AddLayerCommand(makeShape('sticker')));
       c.read(selectionControllerProvider.notifier).select('sticker');
 
-      final outcome = resolveImageTarget(
-        c.read(documentControllerProvider),
-        selectedId: 'sticker',
+      expect(
+        resolveRoleTarget(c.read(documentControllerProvider))?.id,
+        'photo',
       );
-      expect(outcome, isA<ImageTargetAutoSelect>());
-      expect((outcome as ImageTargetAutoSelect).layer.id, 'photo');
     });
   });
 
@@ -190,8 +188,11 @@ void main() {
       c
           .read(documentControllerProvider.notifier)
           .newDocument(width: 1080, height: 1080);
-      // Mirror editor _addImage in design mode: claim base photo
-      // pointer (for resolver) but do NOT lock the layer.
+      // Mirror editor _addImage in design mode: a plain AddLayer. No
+      // lock, and — since §10.1 — no base-photo claim either. The
+      // claim used to happen here "so the resolver resolves cleanly",
+      // which is exactly how a design document ended up steering Crop
+      // at an unmarked layer.
       final layer = ImageLayer(
         id: 'i1',
         transform: LayerTransform(
@@ -202,17 +203,14 @@ void main() {
       );
       c
           .read(documentControllerProvider.notifier)
-          .execute(
-            CompositeCommand([
-              AddLayerCommand(layer),
-              SetBasePhotoCommand('i1'),
-            ], labelOverride: 'Add image'),
-          );
+          .execute(AddLayerCommand(layer));
 
       final doc = c.read(documentControllerProvider);
       expect(doc.projectKind, ProjectKind.design);
       expect(doc.layerById('i1')!.locked, isFalse);
       expect(doc.isProtectedBasePhoto('i1'), isFalse);
+      expect(doc.basePhotoLayerId, isNull);
+      expect(resolveRoleTarget(doc), isNull);
     });
 
     test('design-mode RemoveLayer of base photo does NOT need confirm-flip '

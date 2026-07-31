@@ -102,4 +102,67 @@ void main() {
       expect(container.read(projectStoreProvider).value, hasLength(1));
     });
   });
+
+  // Audit P2-15: every rescue landed as «Recovered draft», so backing
+  // out of three sessions produced three projects sharing one title,
+  // separable only by dimensions and timestamp. Promotion now carries
+  // the draft's own name; the generic label is the fallback for a
+  // draft that never recorded one.
+  testWidgets('promotion uses the draft\'s own name when it has one', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues(const {});
+    installFakeDocumentsDir();
+    final dir = tempProjectsDir();
+    final container = ProviderContainer(
+      overrides: [projectsDirectoryProvider.overrideWith((ref) async => dir)],
+    );
+    addTearDown(container.dispose);
+
+    await tester.runAsync(() async {
+      await container.read(projectStoreProvider.future);
+      final doc = EditorDocument(
+        layers: [
+          ShapeLayer(
+            id: 'orphan',
+            transform: LayerTransform(
+              position: Offset.zero,
+              size: const Size(80, 80),
+            ),
+            kind: ShapeKind.rectangle,
+            fillColor: const Color(0xFF112233),
+          ),
+        ],
+        width: 720,
+        height: 900,
+      );
+      final journal = await EditJournal.open(AutosaveController.draftJournalId);
+      await journal.flushNow(doc);
+      await journal.writeMeta(name: 'Imported image');
+    });
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: Locale('en'),
+          home: _Probe(),
+        ),
+      ),
+    );
+
+    final actions = HomeActions(_Probe.ctx!, _Probe.ref!);
+    await tester.runAsync(() async {
+      await actions.preserveOrphanDraft();
+      final projects = container.read(projectStoreProvider).value!;
+      expect(projects.single.name, 'Imported image');
+      expect(
+        projects.single.name,
+        isNot('Recovered draft'),
+        reason: 'identically-named rescues are what this replaces',
+      );
+    });
+  });
 }

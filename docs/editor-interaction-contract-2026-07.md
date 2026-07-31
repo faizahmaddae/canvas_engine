@@ -101,9 +101,28 @@ Pointer-owner resolution, in order, per FIRST pointer landing:
 | 2 | anywhere, 2nd finger joins | — | paint | viewport (cancel in-flight stroke) |
 | 3 | on canvas | — | paint | stroke (tap = dot; freestyle only) |
 | 4 | selected layer's chrome quad (outset) | single | any | transform session (eager) |
-| 5 | another eligible layer's bbox | any | not paint | select-then-move that layer (start deferred to slop) |
+| 5 | another **pointer-eligible** layer's bbox | any | not paint | select-then-move that layer (start deferred to slop) |
 | 6 | anywhere, 2nd finger joins, not started on chrome quad | any | any | viewport pinch |
-| 7 | empty canvas | any | any | tap→E3; drag→viewport pan |
+| 7 | empty canvas | any | any | tap→E3; drag→ movable single selection: translate it (start deferred to slop); otherwise viewport pan |
+
+Row 7 amendment (2026-07-30, drag-anywhere): a one-finger drag from
+empty canvas or pasteboard moves the current selection when that
+selection is a single, visible, unlocked, movable layer — precise
+grabs fail exactly when the object is small, hidden under the
+finger, or the canvas is zoomed out. The claim lives on the row-5
+surface (same lazy arena): a sub-slop tap still deselects (E3), a
+hold still long-presses, and a pre-slop second finger still abandons
+to the viewport pinch (row 6). A locked or hidden layer's area is
+pointer-INeligible and therefore counts as empty canvas — in a photo
+project the whole base photo is a valid drag-anywhere start. The
+retired active-transform-surface model's three failure modes stay
+solved: zoom-while-selected (row 6), drag-another-layer (row 5); the
+third — a habitual one-finger pan relocating the selection — is the
+accepted trade: pan remains one gesture away (two fingers, or
+deselect first), and multi-selections, locked/hidden selections and
+the no-selection state keep the one-finger pan. Multi-select mode is
+excluded deliberately: its tap-to-toggle grammar makes stray drags
+costlier, and a group quad is rarely hard to hit.
 
 Long-press (multi entry) requires deferred start — row 4 switches
 to defer-at-slop in Stage 3 (3.3) so the timer can fire on-layer.
@@ -147,3 +166,109 @@ is a named constant with this rationale.
 | Composer (text add/edit) | D | whisper (20% today, unify at 2.8) |
 | Export sheet + preview | M + D(session) | full |
 | List/overflow sheets, pickers, dialogs | M | full |
+
+## 10. Command scope and target selection
+
+§1 classifies a surface by WHEN its command lands. §10 classifies it
+by WHAT the command lands on. §4's `priorSelectionId` clause
+presumes an answer to that and never states one; this is it.
+
+**No command searches for a target.** There is no priority ladder,
+no fallback chain and no chooser: a control whose target is not
+named by one of the four scopes below has no target, and says so
+(10.3). Adding a fifth scope — or resolving a target from document
+contents — requires amending this section first.
+
+**W — world.** Targets the `EditorDocument`; no layer target.
+Clears the selection on entry.
+
+**A — author.** Targets a layer the command creates. Ends with that
+layer selected.
+
+**B — bound.** Targets the layer the current selection names.
+Requires a selection and is unreachable without one.
+
+**P — project role.** Targets the one layer the project kind
+defines as its subject: the protected base photo. Exists only in
+`ProjectKind.photo`.
+
+| Control | Scope |
+|---|---|
+| `image`, `text`, `sticker`, `shape`, `paint` | A |
+| `canvas` | W |
+| every mode-strip slot, action chips included | B |
+| main-strip `crop`, `look` | P |
+
+Undo/redo, save, export and the zoom readout target no document
+object and fall outside §10. The Layers drawer and the list sheets
+name their target by direct manipulation — the row IS the
+selection — so they are B.
+
+## 10.1 P exists only where the role is visible
+
+A P command discloses its target through the chrome the project
+kind already renders for that role — the base-photo pill, the
+layers-panel label, the delete confirm — every one of which routes
+through `isProtectedBasePhoto`. P is admissible only where that
+predicate can be true.
+
+`ProjectKind.design` renders none of it. **A design project
+therefore has no P controls**: `crop` and `look` are absent from its
+main strip, and are reachable only as B slots on `ImageModeToolbar`
+once the user selects a visible image. A design document does not
+claim `basePhotoLayerId` either — state that no surface can render
+and no command can re-aim does not get to exist because a reader
+might want it.
+
+## 10.2 A missing or hidden role target makes the command unavailable
+
+The role target qualifies when it exists and is `visible`. `locked`
+does not disqualify: the protected base photo is locked by
+construction and is the intended Crop target. A hidden layer never
+qualifies for any scope — a command whose result cannot be seen has
+no honest preview.
+
+When the role target is missing or hidden, the P control is
+unavailable per 10.3. It does not fall back to another image and it
+does not ask: in a photo project a second image is an overlay, not
+a candidate.
+
+This is deliberately not §5's "eligible", which excludes locked so
+that a locked layer cannot be dragged. §5 row 5 is renamed
+**pointer-eligible** in the commit that ratifies §10, so the two
+definitions cannot drift.
+
+## 10.3 Absence and unavailability mean different things
+
+- **Absent** — the scope is inadmissible on this surface. A design
+  project's main strip does not render `crop` or `look` at all.
+- **Unavailable** — the scope is admissible but its target does not
+  qualify. The control renders dimmed and STAYS tappable, so the tap
+  can explain the precondition and offer to satisfy it.
+
+Never the third thing: a control that is present, inert and silent.
+Requirements on the unavailable state:
+
+- Its dim treatment is distinguishable from disabled and clears the
+  3:1 non-text contrast floor. An unavailable control is live and
+  has to stay findable.
+- Its accessibility node announces the unavailable state and names
+  the precondition. A control that looks unavailable and reads as
+  ordinary lies to exactly the users who cannot see the dim.
+- The recovery its tap offers satisfies the stated precondition.
+
+## 10.4 Availability and placement are separate questions
+
+Availability is a scope property — does this control's named target
+exist and qualify. Placement is a project-kind property:
+`_isPhotoProject` orders the groups, defended because keying order
+on layer contents reshuffles the strip as a side effect of
+unrelated edits. Both are legitimate; they are not one predicate,
+and a slot answers each once from its scope instead of each call
+site re-deciding.
+
+Pinning suites: `toolbar_group_order_test.dart` (placement),
+`photo_tool_availability_test.dart` (availability and 10.3),
+`image_target_test.dart` (10.1, 10.2). The evidence behind this
+section, and the state of the code before it, are recorded in
+`docs/command-scope-diagnosis-2026-07.md`.

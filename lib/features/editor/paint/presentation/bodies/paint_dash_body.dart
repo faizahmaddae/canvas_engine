@@ -107,7 +107,7 @@ class _DashChoice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    final fg = selected ? tokens.accent : tokens.textPrimary;
+    final fg = selected ? tokens.accentText : tokens.textPrimary;
     // Flat: same grammar as `_FillChoice` and Text `_StyleTile` —
     // soft tint on select, faint surface at rest, no border or
     // shadow. Preview line + label remain the affordance.

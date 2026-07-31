@@ -88,7 +88,7 @@ class _TabButton extends StatelessWidget {
             Icon(
               active ? item.activeIcon : item.icon,
               size: 22,
-              color: active ? tokens.accent : tokens.textMuted,
+              color: active ? tokens.accentText : tokens.textMuted,
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(

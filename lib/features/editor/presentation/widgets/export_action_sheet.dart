@@ -13,7 +13,7 @@ import '../../application/document_controller.dart';
 import '../../application/export_controller.dart';
 import '../../application/export_format.dart';
 import '../../application/export_intent.dart';
-import 'editor_modal_sheet.dart';
+import '../../../../app/ui/app_modal_sheet.dart';
 import '../../application/export_session.dart';
 import '../../application/export_quality.dart';
 import '../../application/export_size.dart';
@@ -45,7 +45,7 @@ class ExportActionSheet extends ConsumerStatefulWidget {
     // stay dimmed while bytes are produced). The render+persist
     // session registration (tb2 13/16) lives inside the sheet state
     // and is unchanged by the chrome swap.
-    return showEditorSheet<void>(
+    return showAppSheet<void>(
       context,
       builder: (_) => const ExportActionSheet(),
     );
@@ -452,7 +452,7 @@ class _QualityCard extends StatelessWidget {
                   // Locale digits over the model's ASCII getter.
                   EditorValueFormat.of(context).mapDigits(quality.multiplier),
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: selected ? tokens.accentDeep : tokens.textSecondary,
+                    color: selected ? tokens.accentText : tokens.textSecondary,
                     fontWeight: FontWeight.w700,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
@@ -470,11 +470,17 @@ class _QualityCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      '${EditorValueFormat.of(context).dimensions(outW, outH)} px',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: tokens.textSecondary,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                    // Explicit LTR subtree + the plain formatter:
+                    // see the note in size_picker_dialog — the bare
+                    // 'px' was landing to the LEFT of the numbers.
+                    Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        '${EditorValueFormat.of(context).dimensionsPlain(outW, outH)} px',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: tokens.textSecondary,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
                       ),
                     ),
                   ],
@@ -545,7 +551,7 @@ class _FormatSegmented extends StatelessWidget {
         child: Text(
           f.label,
           style: theme.textTheme.labelLarge?.copyWith(
-            color: selected ? tokens.accentDeep : tokens.textSecondary,
+            color: selected ? tokens.accentText : tokens.textSecondary,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -693,7 +699,7 @@ class _SizeChip extends StatelessWidget {
     final bg = selected
         ? tokens.accent.withValues(alpha: 0.16)
         : tokens.surfaceMuted.withValues(alpha: 0.5);
-    final fg = selected ? tokens.accentDeep : tokens.textSecondary;
+    final fg = selected ? tokens.accentText : tokens.textSecondary;
     return Material(
       color: bg,
       shape: RoundedRectangleBorder(

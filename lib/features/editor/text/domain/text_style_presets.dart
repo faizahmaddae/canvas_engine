@@ -238,8 +238,13 @@ const List<TextStylePreset> kTextStylePresets = <TextStylePreset>[
     name: 'Hashtag',
     category: TextStylePresetCategory.social,
     spec: TextStyleSpec(
-      color: Color(0xFF6D28D9),
-      backgroundColor: Color(0xFFEDE9FE),
+      // Teal, not violet. `#6D28D9` was violet-700 — the retired brand
+      // accent the design direction calls a bug wherever it appears —
+      // and unlike the colour PICKER's palette (user content) this is a
+      // look the app itself authors and ships. `tealOnText` on a tinted
+      // teal plate is the same idea in the system's own category accent.
+      color: Color(0xFF0C3D34),
+      backgroundColor: Color(0xFFD7F2EC),
       backgroundRadius: 1.0,
       backgroundPaddingX: 12,
       backgroundPaddingY: 6,

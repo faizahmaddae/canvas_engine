@@ -73,9 +73,16 @@ void main() {
       expect(c.read(editingControllerProvider), isNull);
     });
 
-    test('setBold(true) maps to FontWeight.w700, setBold(false) to w400', () {
+    // The pair straddles the w600 synthesis threshold on purpose — a
+    // toggle drawn from two weights above it would be invisible on the
+    // single-face families most of the catalogue ships.
+    test('setBold round-trips between the default weight and w700', () {
       final c = makeContainer();
       final ctrl = c.read(textToolControllerProvider.notifier);
+      final initial = c
+          .read(textToolControllerProvider)
+          .defaultStyle
+          .fontWeight;
       ctrl.setBold(true);
       expect(
         c.read(textToolControllerProvider).defaultStyle.fontWeight,
@@ -84,7 +91,7 @@ void main() {
       ctrl.setBold(false);
       expect(
         c.read(textToolControllerProvider).defaultStyle.fontWeight,
-        FontWeight.w400,
+        initial,
       );
     });
 

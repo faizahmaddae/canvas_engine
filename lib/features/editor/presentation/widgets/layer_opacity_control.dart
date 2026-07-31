@@ -19,7 +19,11 @@ class LayerOpacityControl extends ConsumerStatefulWidget {
   const LayerOpacityControl({
     super.key,
     required this.layer,
-    this.padding = const EdgeInsets.only(left: 36, right: 8, bottom: 4),
+    this.padding = const EdgeInsetsDirectional.only(
+      start: 36,
+      end: 8,
+      bottom: 4,
+    ),
     this.showLabel = false,
   });
 
@@ -36,7 +40,11 @@ class MultiLayerOpacityControl extends ConsumerStatefulWidget {
   const MultiLayerOpacityControl({
     super.key,
     required this.layers,
-    this.padding = const EdgeInsets.only(left: 36, right: 8, bottom: 4),
+    this.padding = const EdgeInsetsDirectional.only(
+      start: 36,
+      end: 8,
+      bottom: 4,
+    ),
     this.showLabel = false,
   });
 
@@ -74,97 +82,113 @@ class _MultiLayerOpacityControlState
     final f = EditorValueFormat.of(context);
     final percent = f.percent((value * 100).round());
 
+    final opacityLabel = context.l10n.opacityLabel;
     final slider = SliderTheme(
       data: SliderTheme.of(context).copyWith(
         trackHeight: 2,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
       ),
-      child: Slider(
-        value: value,
-        min: 0,
-        max: 1,
-        semanticFormatterCallback: (v) => f.percent((v * 100).round()),
-        onChanged: layers.isEmpty
-            ? null
-            : (v) {
-                setState(() => _dragValue = v);
-                final doc = ref.read(documentControllerProvider);
-                for (final id in ids) {
-                  final currentLayer = doc.layerById(id);
-                  if (currentLayer == null) continue;
-                  ref
-                      .read(liveOverlayProvider.notifier)
-                      .replaceLayer(currentLayer.withOpacity(v));
-                }
-              },
-        onChangeEnd: layers.isEmpty
-            ? null
-            : (v) {
-                setState(() => _dragValue = null);
-                ref.read(liveOverlayProvider.notifier).clear();
-                final doc = ref.read(documentControllerProvider);
-                final commands = <SetLayerOpacityCommand>[
-                  for (final id in ids)
-                    if (doc.layerById(id) != null)
-                      SetLayerOpacityCommand(layerId: id, opacity: v),
-                ];
-                if (commands.isEmpty) return;
-                ref
-                    .read(documentControllerProvider.notifier)
-                    .execute(
-                      commands.length == 1
-                          ? commands.single
-                          : CompositeCommand(
-                              commands,
-                              labelOverride: 'Set layer opacity',
-                            ),
-                    );
-              },
+      // MergeSemantics: a plain Semantics wrapper sits ABOVE the
+      // Slider's own node, so the SeekBar — the node TalkBack focuses
+      // and the one that owns increase/decrease — kept announcing a
+      // bare «۱۰۰٪». Merging puts the name on that node. The ancestor
+      // label that used to wrap the whole row is gone; with both in
+      // place the parameter was spoken twice.
+      child: MergeSemantics(
+        child: Semantics(
+          label: opacityLabel,
+          child: Slider(
+            value: value,
+            min: 0,
+            max: 1,
+            semanticFormatterCallback: (v) => f.percent((v * 100).round()),
+            onChanged: layers.isEmpty
+                ? null
+                : (v) {
+                    setState(() => _dragValue = v);
+                    final doc = ref.read(documentControllerProvider);
+                    for (final id in ids) {
+                      final currentLayer = doc.layerById(id);
+                      if (currentLayer == null) continue;
+                      ref
+                          .read(liveOverlayProvider.notifier)
+                          .replaceLayer(currentLayer.withOpacity(v));
+                    }
+                  },
+            onChangeEnd: layers.isEmpty
+                ? null
+                : (v) {
+                    setState(() => _dragValue = null);
+                    ref.read(liveOverlayProvider.notifier).clear();
+                    final doc = ref.read(documentControllerProvider);
+                    final commands = <SetLayerOpacityCommand>[
+                      for (final id in ids)
+                        if (doc.layerById(id) != null)
+                          SetLayerOpacityCommand(layerId: id, opacity: v),
+                    ];
+                    if (commands.isEmpty) return;
+                    ref
+                        .read(documentControllerProvider.notifier)
+                        .execute(
+                          commands.length == 1
+                              ? commands.single
+                              : CompositeCommand(
+                                  commands,
+                                  labelOverride: 'Set layer opacity',
+                                ),
+                        );
+                  },
+          ),
+        ),
       ),
     );
 
     return Padding(
       padding: widget.padding,
-      child: Semantics(
-        label: context.l10n.opacityLabel,
-        child: widget.showLabel
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Icon(AppIcons.opacity, size: 20, color: theme.hintColor),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          context.l10n.opacityLabel,
-                          style: theme.textTheme.titleSmall,
-                        ),
+      child: widget.showLabel
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Icon(AppIcons.opacity, size: 20, color: theme.hintColor),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        context.l10n.opacityLabel,
+                        style: theme.textTheme.titleSmall,
                       ),
-                      Text(percent, style: theme.textTheme.bodySmall),
-                    ],
-                  ),
-                  slider,
-                ],
-              )
-            : Row(
-                children: [
-                  Icon(AppIcons.opacity, size: 16, color: theme.hintColor),
-                  const SizedBox(width: 8),
-                  Expanded(child: slider),
-                  SizedBox(
-                    width: 36,
+                    ),
+                    // Excluded: the slider node already carries this
+                    // number as its `value`, so leaving it in the tree
+                    // adds a focus stop that announces a bare figure.
+                    ExcludeSemantics(
+                      child: Text(percent, style: theme.textTheme.bodySmall),
+                    ),
+                  ],
+                ),
+                slider,
+              ],
+            )
+          : Row(
+              children: [
+                Icon(AppIcons.opacity, size: 16, color: theme.hintColor),
+                const SizedBox(width: 8),
+                Expanded(child: slider),
+                SizedBox(
+                  width: 36,
+                  child: ExcludeSemantics(
                     child: Text(
                       percent,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.end,
                       style: theme.textTheme.bodySmall,
                     ),
                   ),
-                ],
-              ),
-      ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -198,79 +222,98 @@ class _LayerOpacityControlState extends ConsumerState<LayerOpacityControl> {
     final f = EditorValueFormat.of(context);
     final percent = f.percent((value * 100).round());
 
+    final opacityLabel = context.l10n.opacityLabel;
     final slider = SliderTheme(
       data: SliderTheme.of(context).copyWith(
         trackHeight: 2,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
       ),
-      child: Slider(
-        value: value,
-        min: 0,
-        max: 1,
-        semanticFormatterCallback: (v) => f.percent((v * 100).round()),
-        onChanged: (v) {
-          setState(() => _dragValue = v);
-          final doc = ref.read(documentControllerProvider);
-          final currentLayer = doc.layerById(widget.layer.id);
-          if (currentLayer == null) return;
-          ref
-              .read(liveOverlayProvider.notifier)
-              .replaceLayer(currentLayer.withOpacity(v));
-        },
-        onChangeEnd: (v) {
-          setState(() => _dragValue = null);
-          ref.read(liveOverlayProvider.notifier).clear();
-          ref
-              .read(documentControllerProvider.notifier)
-              .execute(
-                SetLayerOpacityCommand(layerId: widget.layer.id, opacity: v),
-              );
-        },
+      // MergeSemantics: a plain Semantics wrapper sits ABOVE the
+      // Slider's own node, so the SeekBar — the node TalkBack focuses
+      // and the one that owns increase/decrease — kept announcing a
+      // bare «۱۰۰٪». Merging puts the name on that node. The ancestor
+      // label that used to wrap the whole row is gone; with both in
+      // place the parameter was spoken twice.
+      child: MergeSemantics(
+        child: Semantics(
+          label: opacityLabel,
+          child: Slider(
+            value: value,
+            min: 0,
+            max: 1,
+            semanticFormatterCallback: (v) => f.percent((v * 100).round()),
+            onChanged: (v) {
+              setState(() => _dragValue = v);
+              final doc = ref.read(documentControllerProvider);
+              final currentLayer = doc.layerById(widget.layer.id);
+              if (currentLayer == null) return;
+              ref
+                  .read(liveOverlayProvider.notifier)
+                  .replaceLayer(currentLayer.withOpacity(v));
+            },
+            onChangeEnd: (v) {
+              setState(() => _dragValue = null);
+              ref.read(liveOverlayProvider.notifier).clear();
+              ref
+                  .read(documentControllerProvider.notifier)
+                  .execute(
+                    SetLayerOpacityCommand(
+                      layerId: widget.layer.id,
+                      opacity: v,
+                    ),
+                  );
+            },
+          ),
+        ),
       ),
     );
 
     return Padding(
       padding: widget.padding,
-      child: Semantics(
-        label: context.l10n.opacityLabel,
-        child: widget.showLabel
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Icon(AppIcons.opacity, size: 20, color: theme.hintColor),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          context.l10n.opacityLabel,
-                          style: theme.textTheme.titleSmall,
-                        ),
+      child: widget.showLabel
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Icon(AppIcons.opacity, size: 20, color: theme.hintColor),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        context.l10n.opacityLabel,
+                        style: theme.textTheme.titleSmall,
                       ),
-                      Text(percent, style: theme.textTheme.bodySmall),
-                    ],
-                  ),
-                  slider,
-                ],
-              )
-            : Row(
-                children: [
-                  Icon(AppIcons.opacity, size: 16, color: theme.hintColor),
-                  const SizedBox(width: 8),
-                  Expanded(child: slider),
-                  SizedBox(
-                    width: 36,
+                    ),
+                    // Excluded: the slider node already carries this
+                    // number as its `value`, so leaving it in the tree
+                    // adds a focus stop that announces a bare figure.
+                    ExcludeSemantics(
+                      child: Text(percent, style: theme.textTheme.bodySmall),
+                    ),
+                  ],
+                ),
+                slider,
+              ],
+            )
+          : Row(
+              children: [
+                Icon(AppIcons.opacity, size: 16, color: theme.hintColor),
+                const SizedBox(width: 8),
+                Expanded(child: slider),
+                SizedBox(
+                  width: 36,
+                  child: ExcludeSemantics(
                     child: Text(
                       percent,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.end,
                       style: theme.textTheme.bodySmall,
                     ),
                   ),
-                ],
-              ),
-      ),
+                ),
+              ],
+            ),
     );
   }
 }

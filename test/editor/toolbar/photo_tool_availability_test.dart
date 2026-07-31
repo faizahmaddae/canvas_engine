@@ -1,19 +1,20 @@
-// Crop and Look act on an ImageLayer, so in a document with no photo
-// neither can do anything. They used to look exactly as available as
-// Shape or Draw, and only admitted otherwise once you tapped them —
-// which is what made a user ask whether the app was broken.
+// Contract §10.3 — the three states a P-scope control can be in, and
+// the two that are easy to confuse.
 //
-// Disabling them outright would have been worse: a disabled slot does
-// not fire `onTap`, so it can neither explain itself nor offer a way
-// out, and the one-tap "Add photo" recovery would have gone with it.
+// Crop and Look target the protected base photo. In a PHOTO project
+// with no qualifying target (deleted, or hidden from the layers
+// drawer) they are UNAVAILABLE: dimmed but live, because a disabled
+// slot does not fire `onTap` and would take the recovery with it.
+// In a DESIGN project they are ABSENT — the scope itself does not
+// apply there, which `toolbar_group_order_test.dart` pins.
 //
-// Hence a third state. `availableBuilder` renders the tile dimmed —
-// honest before it is pressed — while leaving it tappable, so the tap
-// still reaches the handler that offers to import a photo.
+// Unavailable therefore has to be legible and announceable: it is a
+// state the user is expected to find and press, not a dead control.
 
 import 'package:canvas_engine/features/editor/presentation/widgets/dock_tool_tile.dart';
 import 'package:canvas_engine/features/editor/toolbar/domain/toolbar_slot.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -121,19 +122,103 @@ void main() {
       expect(taps, 0);
     });
 
-    testWidgets('unavailable reads as dimmed as disabled', (tester) async {
+    // Previously this asserted the two states looked IDENTICAL, on the
+    // reasoning that "both mean not-now". They do not mean the same
+    // thing, and the identical treatment was an accessibility defect:
+    // at the shared 35% alpha the unavailable tile's icon measured
+    // 1.65:1 and its label 2.16:1 against the dock surface — under the
+    // 3:1 floor for non-text UI, let alone AA — on a control that is
+    // deliberately live and that the user is expected to find and
+    // press (the two tests above pin exactly that distinction). WCAG's
+    // inactive-component exemption covers `enabled: false`; it does
+    // not cover this. So the contract is now: recessed, but plainly
+    // more legible than truly disabled.
+    testWidgets('unavailable is dimmed — but readably more than disabled', (
+      tester,
+    ) async {
       await pump(tester, enabled: true, unavailable: true, onTap: () {});
-      final dimmed = labelColour(tester);
+      final unavailable = labelColour(tester)!;
 
       await pump(tester, enabled: false, unavailable: false, onTap: () {});
-      expect(
-        labelColour(tester),
-        dimmed,
-        reason: 'both mean "not now", so both must look the same',
-      );
+      final disabled = labelColour(tester)!;
 
       await pump(tester, enabled: true, unavailable: false, onTap: () {});
-      expect(labelColour(tester), isNot(dimmed));
+      final normal = labelColour(tester)!;
+
+      expect(
+        unavailable,
+        isNot(normal),
+        reason: 'unavailable must still read as recessed',
+      );
+      expect(
+        unavailable,
+        isNot(disabled),
+        reason: 'a tappable tile must not look inert',
+      );
+      expect(
+        unavailable.a,
+        greaterThan(disabled.a),
+        reason: 'the tappable state carries the higher contrast',
+      );
+    });
+
+    // §10.3: the dim is invisible to a screen reader. Without a hint
+    // the node said "Look, button" on a blank canvas exactly as it
+    // did on a full one — the tile was honest to sighted users and
+    // silent to everyone else.
+    testWidgets('unavailable announces its precondition, and still reports '
+        'itself enabled so the recovery stays reachable', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: DockToolTile(
+                icon: Icons.abc,
+                label: 'Look',
+                unavailable: true,
+                unavailableHint: 'Needs a visible photo',
+                onTap: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final node = tester.getSemantics(find.byType(DockToolTile));
+      expect(node.label, 'Look');
+      expect(
+        node.hint,
+        'Needs a visible photo',
+        reason: 'the unmet precondition must reach assistive tech',
+      );
+      expect(
+        node.getSemanticsData().hasAction(SemanticsAction.tap),
+        isTrue,
+        reason: 'announcing it inert would hide the recovery (§10.3)',
+      );
+      handle.dispose();
+    });
+
+    testWidgets('an available tile carries no hint', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: DockToolTile(
+                icon: Icons.abc,
+                label: 'Look',
+                unavailableHint: 'Needs a visible photo',
+                onTap: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      final node = tester.getSemantics(find.byType(DockToolTile));
+      expect(node.hint, isEmpty);
+      handle.dispose();
     });
   });
 }

@@ -191,6 +191,39 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'text input composer with the colour shelf open — no overflow @ short + keyboard',
+    (tester) async {
+      // The composer's colour tray now renders the shared 3x6 shelf
+      // instead of a single 44dp scrolling strip, so it is roughly
+      // three times taller — and it opens on the shortest surface the
+      // app supports, with the keyboard up. The sheet's scroll guard
+      // has to absorb that rather than overflow.
+      applyView(tester, shortLandscape, keyboard: landscapeKeyboard);
+      final c = docContainer();
+      addTearDown(c.dispose);
+      await pumpAndOpen(
+        tester,
+        c,
+        (ctx, ref) => showTextInputFlowSheet(ctx, initial: 'نمونه'),
+      );
+      final pill = find.byKey(const ValueKey('add-text-color-pill'));
+      // The composer's own scroll guard is doing its job at this
+      // surface size, so the pill starts below the fold.
+      await tester.ensureVisible(pill);
+      await tester.pump();
+      await tester.tap(pill);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        find.byKey(const ValueKey('add-text-more-colors')),
+        findsOneWidget,
+        reason: 'the tray must actually be open for this to prove anything',
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('color picker custom sheet — no overflow @ short + keyboard', (
     tester,
   ) async {

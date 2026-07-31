@@ -13,9 +13,16 @@ void main() {
       expect(s.lineHeight, 1.2);
     });
 
-    test('isBold reflects fontWeight w600+', () {
-      // The default constructor uses w600, which is already bold.
-      expect(const TextStyleSpec().isBold, isTrue);
+    // w600 is the synthesis threshold, so it stays the isBold cut. What
+    // changed is the DEFAULT: it used to sit ON that threshold, which
+    // made every fresh layer render faux-bold and report bold.
+    test('isBold is w600+, and the default weight sits below it', () {
+      expect(
+        const TextStyleSpec().isBold,
+        isFalse,
+        reason: 'a fresh layer must not render bold or claim to be',
+      );
+      expect(const TextStyleSpec().fontWeight, FontWeight.w400);
       expect(const TextStyleSpec(fontWeight: FontWeight.w400).isBold, isFalse);
       expect(const TextStyleSpec(fontWeight: FontWeight.w500).isBold, isFalse);
       expect(const TextStyleSpec(fontWeight: FontWeight.w600).isBold, isTrue);

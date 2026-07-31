@@ -206,7 +206,7 @@ class _StyleTile extends StatelessWidget {
         ? tokens.accent.withValues(alpha: 0.14)
         : tokens.surfaceMuted;
     final border = selected ? tokens.accent : tokens.border;
-    final fg = selected ? tokens.accent : tokens.textPrimary;
+    final fg = selected ? tokens.accentText : tokens.textPrimary;
     return Material(
       color: bg,
       borderRadius: BorderRadius.circular(14),

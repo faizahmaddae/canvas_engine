@@ -36,9 +36,13 @@ const BackgroundFill kDefaultCanvasBackgroundFill = SolidBackground(
 ///
 /// Photo-mode behaviour is enforced cooperatively across:
 ///   * [DocumentController.newDocument] (entry-point selects kind)
-///   * `_addImage` / Home import (creates the base photo locked)
+///   * `_addImage` / Home import (creates the base photo locked, and
+///     claims [EditorDocument.basePhotoLayerId] ONLY here — a design
+///     import claims nothing, contract §10.1)
 ///   * `LayerActions.delete` (asks for confirm + flips kind on yes)
-///   * The image-target resolver (already prefers basePhotoLayerId)
+///   * `resolveRoleTarget`, which is the sole targeting reader and
+///     goes through [EditorDocument.isProtectedBasePhoto] so the
+///     `photo` gate applies
 enum ProjectKind { design, photo }
 
 const ProjectKind kDefaultProjectKind = ProjectKind.design;
@@ -138,14 +142,19 @@ class EditorDocument {
   final CanvasBackgroundMode backgroundMode;
 
   /// Id of the document's *base photo* — the imported gallery image
-  /// that defines the project. The image-target resolver falls back
-  /// to this layer when the user invokes a photo-action (Crop /
-  /// Filters / Adjust) without an image selection, even if the
-  /// document also contains stickers, text, or secondary images on
-  /// top. `null` for projects that were never seeded from a photo
-  /// (blank canvas, all-shape compositions). Set automatically by
-  /// the import flow on the first added image and cleared whenever
-  /// the referenced layer is removed.
+  /// that defines the project. It is the subject a photo project's
+  /// Crop and Look act on, whatever else the document holds and
+  /// whatever is selected (contract §10).
+  ///
+  /// `null` for projects never seeded from a photo. Set by the import
+  /// flow on the first added image OF A PHOTO PROJECT — a design
+  /// import leaves it null — and cleared whenever the referenced
+  /// layer is removed.
+  ///
+  /// Read it for targeting ONLY through [isProtectedBasePhoto]. The
+  /// raw field carries no project-kind gate, and a design document
+  /// that had somehow acquired a pointer would silently steer those
+  /// tools at a layer nothing in the app ever marks as special.
   final String? basePhotoLayerId;
 
   /// What kind of project this is. See [ProjectKind] for behaviour

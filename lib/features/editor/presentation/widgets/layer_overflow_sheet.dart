@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/l10n.dart';
 import '../../application/context_toolbar_controller.dart';
+import '../../application/document_controller.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../engine/modules/paint/paint_layer.dart';
 import '../../engine/modules/shape/shape_layer.dart';
@@ -11,7 +12,7 @@ import '../../paint/application/paint_tool_controller.dart';
 import '../../shape/application/shape_tool_controller.dart';
 import '../../text/application/text_tool_controller.dart';
 import '../../text/presentation/text_direction_mode_picker.dart';
-import 'editor_modal_sheet.dart';
+import '../../../../app/ui/app_modal_sheet.dart';
 import '../../text/presentation/text_edit_flow.dart';
 import '../../text/presentation/text_resize_mode_picker.dart';
 import 'controls/toggle_segment.dart';
@@ -39,7 +40,7 @@ import '../../../../app/theme/app_icons.dart';
 /// undo entry) + Layers.
 ///
 /// Interaction-contract class M, full barrier — hosted by the
-/// shared editor modal host ([showEditorSheet], tb2 8/16).
+/// shared editor modal host ([showAppSheet], tb2 8/16).
 /// Delete runs the ONE canonical sequence for every entry point:
 /// confirm (protected/base cases) BEFORE the sheet pops, then
 /// dismiss, then execute.
@@ -57,7 +58,7 @@ Future<void> showLayerOverflowSheet(
   // from the shared modal host (tb2 8/16); the 9/16 height clamp the
   // old non-isScrollControlled route provided is preserved
   // explicitly so short devices keep every row reachable by scroll.
-  return showEditorSheet<void>(
+  return showAppSheet<void>(
     context,
     maxHeightFraction: 9 / 16,
     builder: (ctx) => _LayerOverflowSheet(
@@ -145,6 +146,17 @@ class _LayerOverflowSheet extends StatelessWidget {
     final paintLayer = layer is PaintLayer ? layer as PaintLayer : null;
     final canForward = LayerActions.canBringForward(parentRef, layer);
     final canBackward = LayerActions.canSendBackward(parentRef, layer);
+    // Align moves a layer, and the protected base photo does not move:
+    // it IS the canvas, so "align to canvas" is meaningless for it by
+    // construction, and every other surface already refuses to shift it
+    // (hit-testing skips it, InteractionController declines drag/resize/
+    // rotate, AlignmentController bails on `locked`). Rendering the row
+    // live gave the user six buttons that silently did nothing — worse
+    // than an unavailable row, because it looks like it worked. Greyed
+    // out, the same treatment the reorder rows above already use.
+    final canAlign = !parentRef
+        .read(documentControllerProvider)
+        .isProtectedBasePhoto(layer.id);
 
     return [
       // 1 — Edit text
@@ -158,14 +170,17 @@ class _LayerOverflowSheet extends StatelessWidget {
         ),
       // 2 — Align (context panel link)
       ListTile(
+        enabled: canAlign,
         leading: const Icon(AppIcons.alignLeft),
         title: Text(l10n.alignAction),
-        trailing: const Icon(AppIcons.drillIn),
-        onTap: () => _popThen(context, () {
-          parentRef
-              .read(contextToolbarControllerProvider.notifier)
-              .open(ContextToolPanel.align);
-        }),
+        trailing: canAlign ? const Icon(AppIcons.drillIn) : null,
+        onTap: !canAlign
+            ? null
+            : () => _popThen(context, () {
+                parentRef
+                    .read(contextToolbarControllerProvider.notifier)
+                    .open(ContextToolPanel.align);
+              }),
       ),
       // 3 — Opacity (context panel link)
       ListTile(

@@ -5,14 +5,14 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
-import 'editor_modal_sheet.dart';
+import '../../../../app/ui/app_modal_sheet.dart';
 import '../../../../app/theme/app_icons.dart';
 
 /// "Where should this photo come from?" — gallery or camera.
 ///
 /// This used to live in `application/image_import_service.dart` and,
 /// because the import-direction gate rightly forbids an application
-/// file reaching into presentation, it could not use [showEditorSheet]
+/// file reaching into presentation, it could not use [showAppSheet]
 /// and shipped as a bare stock `showModalBottomSheet` with two
 /// unstyled `ListTile`s: no title, no token colours, no rhythm. tb2
 /// 8/16 recorded the relocation as the real fix rather than papering
@@ -22,7 +22,7 @@ import '../../../../app/theme/app_icons.dart';
 /// cards rather than a list where the first reads as the default.
 Future<picker.ImageSource?> pickImageSource(BuildContext context) {
   final l10n = context.l10n;
-  return showEditorSheet<picker.ImageSource>(
+  return showAppSheet<picker.ImageSource>(
     context,
     title: l10n.addImageTitle,
     titleIcon: AppIcons.photoTool,

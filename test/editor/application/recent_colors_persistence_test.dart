@@ -99,7 +99,7 @@ void main() {
     ]);
   });
 
-  test('dedupes by full ARGB and caps at 8, persisted too', () async {
+  test('dedupes by full ARGB and caps at 6, persisted too', () async {
     SharedPreferences.setMockInitialValues({});
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -113,9 +113,11 @@ void main() {
     await _settleHydration();
 
     final state = container.read(recentColorsControllerProvider);
-    expect(state, hasLength(8));
+    // 6, not 8: the cap matches the picker shelf's reserved first
+    // row, so the store can never hold a colour the user cannot see.
+    expect(state, hasLength(6));
     expect(state.first, const Color(0xFF000009));
-    expect(state.map((c) => c.toARGB32()).toSet(), hasLength(8));
+    expect(state.map((c) => c.toARGB32()).toSet(), hasLength(6));
 
     final prefs = await SharedPreferences.getInstance();
     expect(

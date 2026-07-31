@@ -621,10 +621,12 @@ class _RotateGlyph extends StatelessWidget {
   }
 }
 
-/// Chrome-less, full-screen claim surface for contract §5 row 5
-/// (select-and-move): a 1-finger drag STARTING on an eligible,
-/// un-selected layer's bbox selects that layer and translates it in
-/// the same gesture.
+/// Chrome-less, full-screen claim surface for contract §5 rows 5 and
+/// 7: a 1-finger drag STARTING on an eligible, un-selected layer's
+/// bbox selects that layer and translates it in the same gesture
+/// (row 5, select-and-move), and a 1-finger drag STARTING on empty
+/// canvas or pasteboard while a movable single selection exists
+/// translates that selection (row 7's drag-anywhere amendment).
 ///
 /// This is the same multi-touch recogniser the selection overlay's
 /// body surface uses, but in LAZY arena mode
@@ -660,7 +662,9 @@ class SelectAndMoveSurface extends StatelessWidget {
   /// Consulted on the first pointer-down; returning `false` leaves
   /// the pointer entirely alone (not even tracked). The host returns
   /// `true` only for pointers landing on an eligible, movable,
-  /// un-selected layer's bbox while no other finger is down.
+  /// un-selected layer's bbox (row 5) or on empty canvas while a
+  /// movable single selection exists (row 7), while no other finger
+  /// is down.
   final bool Function(Offset globalPosition)? shouldClaimBody;
 
   @override

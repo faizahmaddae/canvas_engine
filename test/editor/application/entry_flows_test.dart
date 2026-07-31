@@ -12,7 +12,7 @@ import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
-import 'package:canvas_engine/features/editor/image/application/image_target_resolver.dart';
+import 'package:canvas_engine/features/editor/image/application/image_target.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -111,14 +111,12 @@ void main() {
       expect(doc.basePhotoLayerId, 'photo');
     });
 
-    test('Crop/Filters/Adjust resolve the base photo with NO selection', () {
+    test('Crop/Look resolve the base photo with NO selection', () {
       final c = ProviderContainer();
       addTearDown(c.dispose);
       importPhotoFlow(c);
       final doc = c.read(documentControllerProvider);
-      final outcome = resolveImageTarget(doc, selectedId: null);
-      expect(outcome, isA<ImageTargetAutoSelect>());
-      expect((outcome as ImageTargetAutoSelect).layer.id, 'photo');
+      expect(resolveRoleTarget(doc)?.id, 'photo');
     });
   });
 

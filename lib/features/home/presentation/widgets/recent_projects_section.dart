@@ -80,7 +80,7 @@ class RecentProjectsSection extends ConsumerWidget {
                   key: const ValueKey('home-recent-see-all'),
                   onPressed: onSeeAll,
                   style: TextButton.styleFrom(
-                    foregroundColor: tokens.accent,
+                    foregroundColor: tokens.accentText,
                     textStyle: AppTypeScale.caption.copyWith(
                       fontWeight: FontWeight.w700,
                     ),

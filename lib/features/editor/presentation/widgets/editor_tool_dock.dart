@@ -68,19 +68,26 @@ class EditorToolDock extends StatelessWidget {
     final stripHeight = height ?? EditorBreakpoints.stripHeight(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Elevated chrome: the dock sits on tokens.surface (a step
-    // lighter than the tokens.workspace behind the canvas), with
-    // rounded top corners, a top hairline and a soft upward shadow —
-    // the AppContentSheet grammar — so bar + expanded panel read as
-    // ONE floating sheet above the workspace instead of camouflaging
-    // into it.
-    const topRadius = Radius.circular(18);
+    // lighter than the tokens.workspace behind the canvas), separated
+    // from it by a top hairline and a soft upward shadow, so bar +
+    // expanded panel read as ONE surface under the workspace.
+    //
+    // SQUARE, deliberately. This departs from the rising-sheet
+    // grammar the app uses for surfaces that arrive over content, and
+    // the reason is that the dock does not arrive: it is pinned chrome
+    // filling the full width down to the bottom of the display. A
+    // rounded top left two wedges of workspace sitting in the corners
+    // above a bar that visibly touches every other edge — the shape
+    // claimed a card, the position said otherwise. Squaring it lets
+    // the hairline read as the seam it is. (No `side` on the shape
+    // either: a BorderSide strokes the WHOLE outline, so the dock was
+    // also drawing a line down both edges and across the bottom,
+    // against the display bezel, where it traced the screen's own
+    // corner. The hairline it actually wants is one child below.)
     return DecoratedBox(
       decoration: ShapeDecoration(
         color: tokens.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.vertical(top: topRadius),
-          side: BorderSide(color: tokens.border),
-        ),
+        shape: const RoundedRectangleBorder(),
         shadows: [
           BoxShadow(
             color: Theme.of(
@@ -91,8 +98,7 @@ class EditorToolDock extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: topRadius),
+      child: ClipRect(
         child: Material(
           color: Colors.transparent,
           child: SafeArea(
@@ -100,6 +106,9 @@ class EditorToolDock extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // The separating hairline, and only on the one edge
+                // that meets the workspace.
+                Container(height: 1, color: tokens.border),
                 // ── Expanded zone ──────────────────────────────────
                 // AnimatedSize collapses to 0 when [expanded] is
                 // null and grows to the panel's intrinsic height

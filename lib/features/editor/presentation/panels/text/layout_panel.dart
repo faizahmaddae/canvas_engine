@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/utils/editor_value_format.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../../engine/modules/text/text_layer.dart';
 import '../../../text/application/text_tool_controller.dart';
@@ -56,7 +57,8 @@ class LayoutPanel extends ConsumerWidget {
           value: style.lineHeight,
           min: 0.8,
           max: 3.0,
-          format: (v) => v.toStringAsFixed(2),
+          format: (v) =>
+              EditorValueFormat.of(context).mapDigits(v.toStringAsFixed(2)),
           onChanged: ctrl.setLineHeight,
           onDragStart: ctrl.beginStyleDrag,
           onDragEnd: ctrl.endStyleDrag,
@@ -70,7 +72,8 @@ class LayoutPanel extends ConsumerWidget {
           value: style.letterSpacing,
           min: -5,
           max: 20,
-          format: (v) => v.toStringAsFixed(1),
+          format: (v) =>
+              EditorValueFormat.of(context).mapDigits(v.toStringAsFixed(1)),
           onChanged: ctrl.setLetterSpacing,
           onDragStart: ctrl.beginStyleDrag,
           onDragEnd: ctrl.endStyleDrag,
@@ -106,22 +109,41 @@ class _AlignmentSegmentedControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Kit group wrapper — the pill styling used to be re-rolled here.
+    final l10n = context.l10n;
     return ToggleSegmentGroup(
+      // Spatially literal: the buttons mean the screen's left, centre
+      // and right, so the row must not mirror with the paragraph.
+      spatial: true,
       children: [
-        ToggleSegment(
-          icon: AppIcons.textAlignLeft,
+        Semantics(
+          label: l10n.alignLeftAction,
+          button: true,
           selected: isLeft,
-          onTap: onLeft,
+          child: ToggleSegment(
+            icon: AppIcons.textAlignLeft,
+            selected: isLeft,
+            onTap: onLeft,
+          ),
         ),
-        ToggleSegment(
-          icon: AppIcons.textAlignCenter,
+        Semantics(
+          label: l10n.alignCenterAction,
+          button: true,
           selected: isCenter,
-          onTap: onCenter,
+          child: ToggleSegment(
+            icon: AppIcons.textAlignCenter,
+            selected: isCenter,
+            onTap: onCenter,
+          ),
         ),
-        ToggleSegment(
-          icon: AppIcons.textAlignRight,
+        Semantics(
+          label: l10n.alignRightAction,
+          button: true,
           selected: isRight,
-          onTap: onRight,
+          child: ToggleSegment(
+            icon: AppIcons.textAlignRight,
+            selected: isRight,
+            onTap: onRight,
+          ),
         ),
       ],
     );

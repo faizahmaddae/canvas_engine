@@ -66,6 +66,7 @@ class ToolbarSlot {
     this.enabled = true,
     this.enabledBuilder,
     this.availableBuilder,
+    this.unavailableHint,
     this.semanticLabel,
     this.valueLabel,
     this.swatchColor,
@@ -118,6 +119,12 @@ class ToolbarSlot {
   /// precondition. Honesty and recovery, rather than one or the
   /// other.
   final SlotEnabledBuilder? availableBuilder;
+
+  /// Spoken precondition, announced while [availableBuilder] reports
+  /// false. Contract §10.3 requires the unavailable state to reach
+  /// assistive tech: the dim alone is invisible to it, so a slot that
+  /// can be unavailable owes this string.
+  final String? unavailableHint;
 
   /// Resolves the dynamic value text shown under the icon (e.g.
   /// "24pt"). Phase 1 doesn't use this; the field exists so future

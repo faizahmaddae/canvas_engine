@@ -145,6 +145,24 @@ EditorDocument _flippedLayer() => EditorDocument(
   ],
 );
 
+/// Set `REGEN_FIXTURES=1` to rewrite the committed corpus.
+///
+/// These generators live inside `test/engine/fixtures/` — the exact path
+/// CI runs as the serialization byte-identity gate — and they WRITE the
+/// files that gate reads. Left ungated, any codec- or default-visible
+/// change silently rewrote the baseline in the same step that was
+/// supposed to reject it, so `v2_corpus_byte_identity_test` could only
+/// ever compare new bytes to new bytes. Worse, separate test files run
+/// in separate isolates, so which bytes the gate read was a race, and a
+/// plain `flutter test` mutated tracked files as a side effect.
+///
+/// Regenerate deliberately:  REGEN_FIXTURES=1 flutter test test/engine/fixtures/v3/_generate_v3_fixtures_test.dart
+/// `bool.fromEnvironment` would read a COMPILE-TIME define, not the
+/// shell variable the command above sets — the guard would silently
+/// write nothing and still print "All tests passed!", which is the
+/// same silent-success failure this guard exists to remove.
+final bool _regen = Platform.environment['REGEN_FIXTURES'] == '1';
+
 void main() {
   final fixtures = <String, EditorDocument>{
     '01_image_with_effects.json': _imageWithEffects(),
@@ -186,6 +204,12 @@ void main() {
 }
 
 void _writeFixtureAtomically(String path, String contents) {
+  // Read-only unless explicitly regenerating — see `_regen` above. A
+  // no-op here keeps the surrounding decode/round-trip assertions
+  // running (they are real coverage) while leaving the committed bytes
+  // untouched, so the byte-identity gate reads a baseline it cannot
+  // have written in the same run.
+  if (!_regen) return;
   final temp = File('$path.tmp');
   temp.writeAsStringSync(contents, flush: true);
   temp.renameSync(path);

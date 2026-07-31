@@ -148,7 +148,7 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: onPreset ? tokens.accent : tokens.textPrimary,
+                  color: onPreset ? tokens.accentText : tokens.textPrimary,
                   letterSpacing: -0.4,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),

@@ -218,6 +218,9 @@ class TextToolController extends Notifier<TextSession> {
   /// Bold is exposed as a boolean toggle in Phase-1; mapped to the
   /// nearest standard weight (w400 / w700) so the change is visually
   /// crisp regardless of the font's available weights.
+  /// w700 / w400 — deliberately straddling the w600 synthesis
+  /// threshold (see [TextStyleSpec.isBold]) so the toggle is visible
+  /// on single-face families, which is most of the catalogue.
   void setBold(bool bold) => _writer.applyStyle(
     (s) => s.copyWith(fontWeight: bold ? FontWeight.w700 : FontWeight.w400),
   );
@@ -439,7 +442,130 @@ class TextToolController extends Notifier<TextSession> {
     if (state.selectedSizePreset != null) {
       state = state.copyWith(clearSelectedSizePreset: true);
     }
-    _writer.applyStylePreset(preset);
+    _writer.applyStylePreset(readableOnCanvas(preset));
+  }
+
+  /// [preset] with its text colour checked against what is actually
+  /// behind the layer.
+  ///
+  /// Several presets are authored light-on-dark — `outline`, `neon`,
+  /// `pop_3d`, `shadow_soft` all specify white with no plate — which
+  /// on the default white canvas applied white text to white paper and
+  /// made the layer vanish. `addCenteredText` has always run new text
+  /// through [TextColorResolver]; picking a preset skipped it, so the
+  /// one path where the user does NOT choose the colour was the one
+  /// path with no guard.
+  ///
+  /// A preset that paints its own [TextStyleSpec.backgroundColor]
+  /// plate is legible by construction and is left exactly as authored
+  /// — the resolver samples the DOCUMENT behind the layer, which is
+  /// not what such a preset sits on.
+  /// Whether [preset] supplies its own contrast and must not be
+  /// repainted.
+  ///
+  /// Three kinds of self-supplied contrast: a PLATE behind the glyphs,
+  /// a STROKE around them, or a SHADOW that delineates them.
+  ///
+  /// Each arm asks whether the protective paint actually CONTRASTS with
+  /// the fill — not merely whether it exists. Testing existence was the
+  /// bug: `neon` is a near-white fill inside an opaque cyan glow, which
+  /// satisfies "has a shadow, alpha high, blur > 0" and delineates
+  /// nothing. Measured on the default white canvas its glyphs were
+  /// 1.01:1 against the paper and 1.79:1 against their own glow — the
+  /// word was only inferable from colour bleeding around letterforms
+  /// with literally zero contrast. Geometry was the wrong axis.
+  ///
+  /// The shadow arm still needs the geometry check as well, because a
+  /// zero-blur zero-offset shadow paints exactly under the glyphs and
+  /// delineates nothing however dark it is.
+  ///
+  /// The resolver samples the DOCUMENT behind the layer, which is not
+  /// what any of these three sit on.
+  static bool _carriesOwnContrast(TextStyleSpec s) {
+    // The plate arm has to composite. `glass` is `0x66000000` — 40%
+    // black — which is opaque-vs-fill 21:1 but only 2.85:1 once it is
+    // actually painted over white paper, below this module's own
+    // kMinContrast. Measuring the authored colour and ignoring alpha
+    // was the same existence-not-luminance mistake the shadow arm made.
+    final plate = s.backgroundColor;
+    if (plate != null) {
+      final composited = Color.alphaBlend(plate, TextColorResolver.kCanvasFill);
+      return TextColorResolver.contrastRatio(s.color, composited) >=
+          TextColorResolver.kMinContrast;
+    }
+
+    const minContrast = TextColorResolver.kMinContrast;
+    final outline = s.outlineColor;
+    if (outline != null &&
+        s.outlineWidth > 0 &&
+        TextColorResolver.contrastRatio(s.color, outline) >= minContrast) {
+      return true;
+    }
+
+    final shadow = s.shadowColor;
+    if (shadow == null || shadow.a <= 0.25) return false;
+    if (TextColorResolver.contrastRatio(s.color, shadow) < minContrast) {
+      return false;
+    }
+    return s.shadowBlur > 0 || s.shadowOffset != Offset.zero;
+  }
+
+  /// [preset] with its text colour checked against what is actually
+  /// behind the layer, so a preset can never be applied invisible.
+  ///
+  /// Presets that supply their own contrast are returned verbatim —
+  /// see [_carriesOwnContrast]. Everything else goes through
+  /// [TextColorResolver], the same guard `addCenteredText` has always
+  /// run new text through; applying a preset used to skip it, so the
+  /// one path where the USER does not choose the colour was the one
+  /// path with no guard.
+  /// [preset] with its fill re-resolved when nothing in the preset
+  /// itself keeps the glyphs legible.
+  ///
+  /// A preset whose own paint carries the contrast (see
+  /// [_carriesOwnContrast]) is returned exactly as authored — the
+  /// resolver samples the DOCUMENT behind the layer, which is not what
+  /// such a preset sits on. `outline` is the worked example: white fill
+  /// inside a 3dp black stroke, and resolving it against white paper
+  /// turned the fill near-black INSIDE that black stroke.
+  ///
+  /// When the preset DOES paint a plate but the plate is too weak to
+  /// protect the fill, the resolve must run against the plate as
+  /// painted, not against the document — the glyphs never touch the
+  /// document. Resolving against the document instead made `glass`
+  /// (40% black) actively worse across mid-greys: on a `#999999`
+  /// backdrop it repainted white→near-black, and the near-black then
+  /// landed on the plate's own `#5C5C5C`, ~4x worse than leaving it
+  /// alone.
+  TextStyleSpec readableOnCanvas(TextStyleSpec preset) {
+    if (_carriesOwnContrast(preset)) return preset;
+    final layer = selectedTextLayer();
+    if (layer == null) return preset;
+    final doc = ref.read(documentControllerProvider);
+    final targetRect = layer.transform.position & layer.transform.size;
+    final plate = preset.backgroundColor;
+    final Color resolved;
+    if (plate != null) {
+      // The surface the glyphs actually land on: the plate composited
+      // over whatever the document shows through it.
+      final behind =
+          TextColorResolver.sampleBackground(
+            doc: doc,
+            targetRect: targetRect,
+          ) ??
+          TextColorResolver.kCanvasFill;
+      resolved = TextColorResolver.resolveAgainst(
+        requested: preset.color,
+        background: Color.alphaBlend(plate, behind),
+      );
+    } else {
+      resolved = TextColorResolver.resolve(
+        requested: preset.color,
+        doc: doc,
+        targetRect: targetRect,
+      );
+    }
+    return resolved == preset.color ? preset : preset.copyWith(color: resolved);
   }
 
   /// Edit content of currently-selected text layer in one undoable step.

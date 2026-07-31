@@ -4,26 +4,32 @@
 // editor screen wires together, but skip image-picker plumbing by
 // constructing the ImageLayer directly the way `_addImage` does
 // (AddLayer + SetBasePhoto in one undoable composite + selection).
+//
+// Contract §10: main-strip Crop is P scope. It targets the protected
+// base photo and nothing else, so every container here is a PHOTO
+// project — in a design project the tile does not exist at all, which
+// `toolbar_group_order_test.dart` pins instead.
 
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
 import 'package:canvas_engine/features/editor/crop/application/crop_controller.dart';
+import 'package:canvas_engine/features/editor/engine/commands/layer_state_commands.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
-import 'package:canvas_engine/features/editor/image/application/image_target_resolver.dart';
+import 'package:canvas_engine/features/editor/image/application/image_target.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  ProviderContainer makeContainer() {
+  ProviderContainer makeContainer({ProjectKind kind = ProjectKind.photo}) {
     final c = ProviderContainer();
     c
         .read(documentControllerProvider.notifier)
-        .newDocument(width: 1080, height: 1080);
+        .newDocument(width: 1080, height: 1080, kind: kind);
     addTearDown(c.dispose);
     return c;
   }
@@ -45,12 +51,13 @@ void main() {
     fillColor: const Color(0xFFFFFFFF),
   );
 
-  /// Mirror of `_addImage` import semantics: AddLayer + (when
-  /// document has no base) SetBasePhoto in one composite, then
-  /// auto-select.
+  /// Mirror of `_addImage` import semantics: AddLayer + (when the
+  /// document is a PHOTO project with no base yet) SetBasePhoto in
+  /// one composite, then auto-select. The project-kind gate is §10.1
+  /// — a design import claims nothing.
   void importPhoto(ProviderContainer c, ImageLayer layer) {
     final doc = c.read(documentControllerProvider);
-    if (doc.basePhotoLayerId == null) {
+    if (doc.basePhotoLayerId == null && doc.projectKind == ProjectKind.photo) {
       c
           .read(documentControllerProvider.notifier)
           .execute(
@@ -67,21 +74,14 @@ void main() {
     c.read(selectionControllerProvider.notifier).select(layer.id);
   }
 
-  /// Mirror of `EditorScreen._openCrop` minus snackbar/chooser UI.
+  /// Mirror of `EditorScreen._openCrop` minus the recovery snackbar.
   /// Returns true iff Crop opened.
   bool openCrop(ProviderContainer c) {
     final doc = c.read(documentControllerProvider);
     final priorSelectionId = c.read(selectionControllerProvider).selectedId;
-    final outcome = resolveImageTarget(doc, selectedId: priorSelectionId);
-    final ImageLayer? target = switch (outcome) {
-      ImageTargetSelected(:final layer) => layer,
-      ImageTargetAutoSelect(:final layer) => layer,
-      _ => null,
-    };
+    final target = resolveRoleTarget(doc);
     if (target == null) return false;
-    if (outcome is ImageTargetAutoSelect) {
-      c.read(selectionControllerProvider.notifier).select(target.id);
-    }
+    c.read(selectionControllerProvider.notifier).select(target.id);
     c
         .read(cropControllerProvider.notifier)
         .openCrop(target.id, priorSelectionId: priorSelectionId);
@@ -134,7 +134,7 @@ void main() {
       expect(c.read(cropControllerProvider).layerId, 'p1');
     });
 
-    test('one image, no selection -> Crop opens for it', () {
+    test('base photo, no selection -> Crop opens for it and selects it', () {
       final c = makeContainer();
       importPhoto(c, makeImage('p1'));
       c.read(selectionControllerProvider.notifier).clear();
@@ -144,7 +144,8 @@ void main() {
       expect(c.read(selectionControllerProvider).selectedId, 'p1');
     });
 
-    test('one image + shape selected -> Crop auto-selects the image', () {
+    test('a shape is selected -> Crop still targets the base photo: the '
+        'role names the target, not the selection (§10)', () {
       final c = makeContainer();
       importPhoto(c, makeImage('p1'));
       c
@@ -158,23 +159,20 @@ void main() {
       expect(c.read(cropControllerProvider).layerId, 'p1');
     });
 
-    test('multiple images + shape selected, base set -> Crop targets '
-        'the base photo (no chooser needed)', () {
+    test('a second image is an overlay, never a candidate: Crop targets '
+        'the base photo even when the overlay is selected (§10.2)', () {
       final c = makeContainer();
       importPhoto(c, makeImage('photo'));
       importPhoto(c, makeImage('overlay'));
-      c
-          .read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(makeShape('s1')));
-      c.read(selectionControllerProvider.notifier).select('s1');
+      expect(c.read(selectionControllerProvider).selectedId, 'overlay');
 
       final opened = openCrop(c);
       expect(opened, isTrue);
       expect(c.read(cropControllerProvider).layerId, 'photo');
     });
 
-    test('multiple images, no base, no selection -> openCrop bails '
-        '(Ambiguous; screen shows a chooser sheet)', () {
+    test('images with no base pointer -> Crop bails; there is no ladder '
+        'down to "the first one" and no chooser (§10)', () {
       final c = makeContainer();
       // Add two images directly so neither becomes base.
       c
@@ -186,6 +184,31 @@ void main() {
       final opened = openCrop(c);
       expect(opened, isFalse);
       expect(c.read(cropControllerProvider).active, isFalse);
+    });
+
+    test('a hidden base photo does not qualify -> Crop bails rather than '
+        'falling back to the visible overlay (§10.2)', () {
+      final c = makeContainer();
+      importPhoto(c, makeImage('photo'));
+      importPhoto(c, makeImage('overlay'));
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(
+            const SetLayerVisibilityCommand(layerId: 'photo', visible: false),
+          );
+
+      final opened = openCrop(c);
+      expect(opened, isFalse);
+      expect(c.read(cropControllerProvider).active, isFalse);
+    });
+
+    test('a design project never resolves a role target, however many '
+        'images it holds (§10.1)', () {
+      final c = makeContainer(kind: ProjectKind.design);
+      importPhoto(c, makeImage('a'));
+      importPhoto(c, makeImage('b'));
+      expect(c.read(documentControllerProvider).basePhotoLayerId, isNull);
+      expect(openCrop(c), isFalse);
     });
 
     test('no images at all -> openCrop bails', () {
@@ -327,9 +350,11 @@ void main() {
     });
 
     test('design-mode crop does NOT resize the canvas', () {
-      final c = makeContainer();
+      final c = makeContainer(kind: ProjectKind.design);
       importPhoto(c, makeImage('p1', size: const Size(400, 300)));
-      // Design project (default), not photo.
+      // Reached the way a design user reaches Crop: select the image
+      // and use the image-mode strip (§10.1). openCrop is the same
+      // surface either way.
       c.read(cropControllerProvider.notifier).openCrop('p1');
       c
           .read(cropControllerProvider.notifier)

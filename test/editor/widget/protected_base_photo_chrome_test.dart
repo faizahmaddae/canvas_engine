@@ -1,8 +1,8 @@
 // Selection chrome behaviour for the protected base photo.
 //
 // The user-visible decision (see commit notes): when the protected
-// base photo is selected (typically via the Layers panel, since the
-// canvas hit-test skips locked layers), we render
+// base photo is selected — by tapping it on the canvas, or from the
+// Layers panel — we render
 //   * the selection FRAME (so "what is selected" is obvious),
 //   * a small "Base photo" badge label,
 // and we do NOT render
@@ -199,8 +199,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(LayersPanel), findsOneWidget);
 
-      // Tap the (only) layer row.
-      await tester.tap(find.text('Image #1'));
+      // Tap the (only) layer row. Located by the tile's ValueKey, not
+      // its rendered name — the auto-name is localized copy now.
+      await tester.tap(find.byKey(const ValueKey('photo')));
       await tester.pumpAndSettle();
 
       expect(c.read(selectionControllerProvider).selectedId, 'photo');
@@ -234,12 +235,84 @@ void main() {
       scaffoldKey.currentState!.openEndDrawer();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Image #1'));
+      await tester.tap(find.byKey(const ValueKey('n')));
       await tester.pumpAndSettle();
 
       expect(c.read(selectionControllerProvider).selectedId, 'n');
       // Drawer stays open for normal layers (panel curation flow).
       expect(find.byType(LayersPanel), findsOneWidget);
+    });
+  });
+
+  // Tapping the photo used to do NOTHING: it is imported locked, and
+  // `hitTestAllLayers` skips locked layers, so the tap fell through to
+  // the empty-canvas dismiss branch. The first thing anyone tries after
+  // importing a photo answered with no selection, no handles, no
+  // message. It is now reachable — and only reachable: it still cannot
+  // be dragged, and it still never joins the tap-cycle ahead of a real
+  // layer above it.
+  group('protected base photo canvas tap', () {
+    testWidgets('a tap on the photo selects it', (tester) async {
+      final c = _setup(tester);
+      await _photoProject(tester, c);
+      await _pumpCanvas(tester, c);
+      expect(c.read(selectionControllerProvider).selectedId, isNull);
+
+      await tester.tapAt(const Offset(400, 400));
+      await tester.pump();
+
+      expect(c.read(selectionControllerProvider).selectedId, 'photo');
+    });
+
+    testWidgets('a second tap deselects — the way back out', (tester) async {
+      // A base photo usually fills the viewport, so there is often no
+      // empty canvas left to tap, and the protected selection suppresses
+      // the Done pill. Without this the user could enter Image mode and
+      // have no way back to the main dock.
+      final c = _setup(tester);
+      await _photoProject(tester, c);
+      c.read(selectionControllerProvider.notifier).select('photo');
+      await _pumpCanvas(tester, c);
+
+      await tester.tapAt(const Offset(400, 400));
+      await tester.pump();
+
+      expect(c.read(selectionControllerProvider).selectedId, isNull);
+    });
+
+    testWidgets('a layer above the photo still wins the tap', (tester) async {
+      final c = _setup(tester);
+      await _photoProject(tester, c);
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(AddLayerCommand(_img('overlay', pos: const Offset(20, 20))));
+      await _pumpCanvas(tester, c);
+
+      // (200,150) is inside BOTH the overlay and the base photo.
+      await tester.tapAt(const Offset(400, 400));
+      await tester.pump();
+
+      expect(
+        c.read(selectionControllerProvider).selectedId,
+        'overlay',
+        reason: 'the base photo is a fallback, never a competitor',
+      );
+    });
+
+    testWidgets('a design project has no protected base to fall back to', (
+      tester,
+    ) async {
+      final c = _setup(tester);
+      final ctrl = c.read(documentControllerProvider.notifier);
+      ctrl.newDocument(width: 400, height: 300);
+      ctrl.execute(AddLayerCommand(_img('img', locked: true)));
+      ctrl.clearHistory();
+      await _pumpCanvas(tester, c);
+
+      await tester.tapAt(const Offset(400, 400));
+      await tester.pump();
+
+      expect(c.read(selectionControllerProvider).selectedId, isNull);
     });
   });
 }

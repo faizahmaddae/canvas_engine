@@ -106,7 +106,7 @@ class _PresetChipState extends State<PresetChip> {
 
     // ── the ONE selected contract ───────────────────────────────
     final fg = selected
-        ? tokens.accentDeep
+        ? tokens.accentText
         : (tile ? tokens.textSecondary : tokens.textPrimary);
     Color fill;
     if (selected) {
@@ -123,15 +123,26 @@ class _PresetChipState extends State<PresetChip> {
       // filled unselected chip competes with the selected one.
       fill = Colors.transparent;
     }
-    // Pills carry a hairline; selected swaps it to the accent.
-    final border = tile
-        ? null
-        : Border.all(
-            color: selected
-                ? tokens.accent
-                : tokens.border.withValues(alpha: 0.9),
-            width: selected ? 1.5 : 1,
-          );
+    // Both modes carry a hairline now. An unselected TILE was a
+    // `surfaceMuted @35%` fill and nothing else, which measured
+    // 1.05:1 against the light panel and 1.02:1 against the dark one —
+    // the tile rectangles were invisible, so a row of options read as
+    // floating glyphs with one highlighted box among them. WCAG 1.4.11
+    // wants 3:1 for a component boundary, and `border` does NOT reach
+    // it: at full strength it is 1.31:1 light / 1.19:1 dark, so the
+    // first attempt swapped one invisible edge for another. Hence
+    // `borderStrong` below, which is the token that clears the bar.
+    final border = Border.all(
+      // `borderStrong`, not `border`: the decorative hairline measured
+      // 1.31:1 light / 1.19:1 dark against the panel, so swapping one
+      // invisible edge for another invisible edge fixed nothing. This
+      // stop clears 3:1 on both the panel surface and the tile fill.
+      // `accentText` for the selected edge too: `accent` measured
+      // 2.92:1 on light `surface` — a 0.08 miss on the one boundary
+      // that carries the selected state. The FILL stays `accent`.
+      color: selected ? tokens.accentText : tokens.borderStrong,
+      width: selected ? 1.5 : 1,
+    );
     final shadow = selected && tile
         ? [
             BoxShadow(
@@ -185,9 +196,12 @@ class _PresetChipState extends State<PresetChip> {
       decoration: BoxDecoration(
         color: fill,
         borderRadius: radius,
-        border: border,
         boxShadow: shadow,
       ),
+      // FOREGROUND, so the hairline paints over the tile instead of
+      // insetting it. As a `decoration` border it added 2dp of height
+      // and overflowed every fixed-height host by exactly that.
+      foregroundDecoration: BoxDecoration(borderRadius: radius, border: border),
       child: tile ? Center(child: content) : content,
     );
 

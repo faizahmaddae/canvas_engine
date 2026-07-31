@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../settings/application/settings_controller.dart';
 import '../../../application/editing_controller.dart';
+import '../../../application/document_controller.dart';
 import '../../../application/editor_lifecycle.dart';
 import '../../../application/interaction_controller.dart';
 import '../../../application/mask_edit_controller.dart';
@@ -76,14 +77,18 @@ class CanvasGestureRouter {
   /// the pair belongs to the viewport pinch, not the layer.
   final Set<int> _rawPointersDown = <int>{};
 
-  /// Row-5 candidate: the eligible, movable, un-selected layer the
-  /// current select-and-move pointer went down on. Stashed by the
+  /// Claim candidate for the select-and-move surface: either the
+  /// eligible, movable, un-selected layer the pointer went down on
+  /// (row 5) or — when the pointer landed on empty canvas while a
+  /// movable single selection exists — the selected layer itself
+  /// (row 7's drag-anywhere amendment). Stashed by the
   /// [SelectAndMoveSurface] claim predicate at pointer-down and
   /// consumed exactly once at [DragPhase.start] (the slop claim),
-  /// which is the moment the layer becomes selected and its translate
-  /// session begins. A sub-slop release never consumes it — the
-  /// pointer is handed back to the canvas tap recognisers and the
-  /// stale value is simply overwritten by the next claim.
+  /// which is the moment the layer becomes selected (a no-op for the
+  /// row-7 case) and its translate session begins. A sub-slop release
+  /// never consumes it — the pointer is handed back to the canvas tap
+  /// recognisers and the stale value is simply overwritten by the
+  /// next claim.
   EditorLayer? _selectAndMoveCandidate;
 
   /// True while the live interaction session was started by the
@@ -347,14 +352,14 @@ class CanvasGestureRouter {
   }
 
   // ------------------------------------------------------------------
-  // Select-and-move (contract §5 row 5).
+  // Select-and-move + drag-anywhere (contract §5 rows 5 and 7).
   // ------------------------------------------------------------------
 
   /// Build the always-mounted select-and-move surface (contract §5
-  /// row 5). Mounted UNCONDITIONALLY below the selection overlays so
-  /// the mid-gesture selection switch (which remounts the overlay)
-  /// never disposes the recogniser owning the in-flight pointers;
-  /// every mode gate lives in the claim predicate instead.
+  /// rows 5 and 7). Mounted UNCONDITIONALLY below the selection
+  /// overlays so the mid-gesture selection switch (which remounts the
+  /// overlay) never disposes the recogniser owning the in-flight
+  /// pointers; every mode gate lives in the claim predicate instead.
   Widget buildSelectAndMoveSurface(List<EditorLayer> layers) {
     return SelectAndMoveSurface(
       shouldClaimBody: (globalPosition) =>
@@ -368,7 +373,8 @@ class CanvasGestureRouter {
             // translate session in the same gesture. Selection is a
             // provider write, not a document command, so the whole
             // select-and-move lands as ONE undo entry (the transform
-            // commit).
+            // commit). In the row-7 drag-anywhere case the candidate
+            // IS the current selection and `select` is a no-op.
             final candidate = _selectAndMoveCandidate;
             _selectAndMoveCandidate = null;
             if (candidate == null) return;
@@ -392,11 +398,19 @@ class CanvasGestureRouter {
     );
   }
 
-  /// Claim predicate for the select-and-move surface. `true` only for
-  /// a first finger landing on an eligible, movable, un-selected
-  /// layer's RAW bbox (no outset — the outset ring is selection
-  /// chrome and belongs to the selected layer's overlay) while the
-  /// editor is in plain single-select interaction state.
+  /// Claim predicate for the select-and-move surface. `true` for a
+  /// first finger landing either
+  ///
+  ///   * on an eligible, movable, un-selected layer's RAW bbox
+  ///     (row 5 — no outset: the outset ring is selection chrome and
+  ///     belongs to the selected layer's overlay), or
+  ///   * on EMPTY canvas / pasteboard while a movable single
+  ///     selection exists (row 7's drag-anywhere amendment — the
+  ///     drag translates the selection, so a small or
+  ///     finger-occluded object can be repositioned without hitting
+  ///     it precisely),
+  ///
+  /// while the editor is in plain single-select interaction state.
   bool _shouldClaimSelectAndMove(
     List<EditorLayer> layers,
     Offset globalPosition,
@@ -441,10 +455,46 @@ class CanvasGestureRouter {
       return false;
     }
     final hits = geom.hitTestAllLayers(layers, local);
-    if (hits.isEmpty) return false;
+    if (hits.isEmpty) {
+      // Row 7, amended (drag-anywhere): no pointer-eligible layer
+      // under the finger — empty canvas, the pasteboard, or a
+      // locked/hidden layer's area (pointer-INeligible, so its
+      // surface reads as background; in a photo project that is the
+      // whole base photo). While a movable single selection exists,
+      // a drag here translates THAT selection instead of panning the
+      // viewport: precise grabs fail exactly when the object is
+      // small, under the finger, or the canvas is zoomed out, and
+      // deselect-then-pan / two-finger navigation both remain one
+      // gesture away. The claim is lazy (start defers to slop), so a
+      // tap here still deselects (E3) and a hold still enters
+      // multi-select — only real movement takes the pointer.
+      //
+      // The old active-transform-surface model died for three
+      // reasons (toolbar-redesign-audit §gestures); none returns
+      // here: zooming while selected stays possible (row 6 —
+      // a pre-slop second finger abandons this claim to the
+      // viewport pinch), dragging another layer still moves THAT
+      // layer (row 5 outranks this fallback), and only the
+      // remaining case — empty-space drags, where the viewport pan
+      // was the sole competitor — trades pan for selection drag.
+      // Locked (protected base photo) and hidden selections decline,
+      // so photo navigation while the base is selected keeps
+      // today's pan.
+      final sel = selectedLayer;
+      if (sel == null) return false;
+      if (sel.locked || !sel.visible || !sel.capabilities.movable) {
+        return false;
+      }
+      _selectAndMoveCandidate = sel;
+      return true;
+    }
     // Topmost eligible layer only — the same layer a tap here would
     // select. Deliberately NOT drilling further down: dragging must
     // never move a layer the equivalent tap would not have picked.
+    // An eligible-but-unmovable top hit also declines the row-7
+    // fallback for the same reason: the finger is on a real object a
+    // tap would pick; moving a DIFFERENT layer under it would be a
+    // surprise.
     final top = hits.first;
     if (top.id == selection.selectedId) return false;
     if (!top.capabilities.movable) return false;
@@ -507,6 +557,39 @@ class CanvasGestureRouter {
 
     // Single mode (legacy / default behaviour).
     if (hits.isEmpty) {
+      // Before treating this as empty canvas: a photo project's base
+      // photo is imported LOCKED, so `hitTestAllLayers` skips it and a
+      // tap on the user's own photo used to fall through to "dismiss"
+      // — the first thing anyone tries after importing answered with
+      // nothing at all. Selecting it here is the affordance the rest
+      // of the code already assumes exists: `canvas_chrome` renders
+      // the "Base photo" badge and the outline-only frame for exactly
+      // this state, and the dock swaps to the Image tools, so Crop and
+      // Look land on-screen instead of behind the strip's scroll.
+      // Move/scale/rotate stay suppressed — `buildSelectionOverlay`
+      // passes `showHandles: !locked` and `onBody: null` — so this
+      // grants reachability, not mutability.
+      final base = _protectedBaseHitAt(local, layers);
+      if (base != null) {
+        // Tapping it again deselects. A base photo usually fills the
+        // whole viewport, so once it became selectable there was often
+        // no empty canvas left to tap and no Done pill (the protected
+        // selection suppresses the HUD) — the user could reach Image
+        // mode and not get back out of it. The photo has no handles
+        // and no body drag, so a second tap has nothing else to mean,
+        // and this is the same "re-tap the active thing to close it"
+        // grammar the dock tiles already use (contract §4, E1/E3).
+        if (_ref.read(selectionControllerProvider).selectedId == base.id) {
+          dismissActiveEditing(_ref);
+          _resetTapCycle();
+          _disarmDoubleTapWindow();
+          return;
+        }
+        selectionCtl.select(base.id);
+        _resetTapCycle();
+        _armDoubleTapWindow(base.id, globalPosition);
+        return;
+      }
       // Centralised dismiss: clears selection + collapses every
       // tool's transient sheet/panel + drops keyboard focus.
       // Saved layer data is untouched.
@@ -567,6 +650,30 @@ class CanvasGestureRouter {
     // Every completed single tap arms the double-tap window on the
     // layer it just selected.
     _armDoubleTapWindow(hits[index].id, globalPosition);
+  }
+
+  /// The document's protected base photo when [local] (canvas space)
+  /// lands inside it, else `null`.
+  ///
+  /// Deliberately NOT folded into `hitTestAllLayers`: that function
+  /// feeds the select-and-move claim surface and the tap-cycling set,
+  /// where a locked layer must stay POINTER-ineligible (contract §5
+  /// row 5). Target-eligibility is the other axis and does not
+  /// exclude locked — §10.2 — which is why the base photo can be
+  /// cropped while staying undraggable.
+  /// Only the no-other-hit tap branch consults this, so the base photo
+  /// is reachable without ever becoming draggable or entering the
+  /// cycle ahead of a real layer above it.
+  EditorLayer? _protectedBaseHitAt(Offset local, List<EditorLayer> layers) {
+    final doc = _ref.read(documentControllerProvider);
+    final baseId = doc.basePhotoLayerId;
+    if (baseId == null || !doc.isProtectedBasePhoto(baseId)) return null;
+    for (final l in layers) {
+      if (l.id != baseId) continue;
+      if (!l.visible) return null;
+      return geom.pointInLayerBbox(l, local) ? l : null;
+    }
+    return null;
   }
 
   /// Second tap of a double (see the window check in [handleTap]).

@@ -172,10 +172,65 @@ class EditorValueFormat {
   /// the far side of the digits and `+12` paints as `12+`. Negative
   /// values carry U+2212 MINUS rather than a hyphen so the glyph reads
   /// as arithmetic and matches the `+`'s weight.
+  ///
+  /// For a value that stands alone in a direction-pinned subtree,
+  /// prefer [signedPlain] — see its doc for why the isolate is not
+  /// free.
   String signed(num value) {
     final r = value.round();
     if (r == 0) return digits(0);
     final sign = r > 0 ? '+' : '\u2212';
     return '\u2066$sign${digits(r.abs())}\u2069';
+  }
+
+  /// [signed] with NO bidi controls, for callers that render it in an
+  /// explicitly left-to-right subtree.
+  ///
+  /// Exactly the [dimensions] / [dimensionsPlain] split, for exactly
+  /// the same reason: no bundled family carries a glyph for
+  /// U+2066/U+2069, so those codepoints force a font-fallback run that
+  /// has been observed dropping a digit. `signed`'s two consumer kinds
+  /// genuinely differ — `EffectDisplay.summary` is embedded in a
+  /// Persian row and needs the isolate; `EditorSliderRow`'s readout is
+  /// already pinned LTR at the widget and does not.
+  String signedPlain(num value) {
+    final r = value.round();
+    if (r == 0) return digits(0);
+    final sign = r > 0 ? '+' : '\u2212';
+    return '$sign${digits(r.abs())}';
+  }
+
+  /// [signed] with the percent unit \u2014 `+\u06f2\u06f5\u066a` / `\u2212\u06f1\u06f0\u066a` / `\u06f0`.
+  ///
+  /// For parameters whose neutral is a multiplier (contrast 1.0 =
+  /// "unchanged"): reporting the absolute `\u06f1\u06f0\u06f0\u066a` next to a bipolar
+  /// sibling reporting `\u06f0` made two identical thumb positions look
+  /// like two different states. Both now read `\u06f0` at rest. The unit
+  /// stays inside the isolate so it can't drift across the sign.
+  /// `+۲۵٪` / `−۱۰٪` / `۰` — a signed delta with its unit, and NO
+  /// bidi control characters.
+  ///
+  /// For parameters whose neutral is a multiplier (contrast 1.0 =
+  /// "unchanged"): reporting the absolute `۱۰۰٪` next to a bipolar
+  /// sibling reporting `۰` made two identical thumb positions look
+  /// like two different states.
+  ///
+  /// Both the leading sign and the trailing unit are bidi-neutral, so
+  /// this string is only correct inside a subtree whose direction is
+  /// pinned LTR — `EditorSliderRow`'s readout and the effects list row
+  /// both do that. Dropped in an unpinned RTL row it paints as
+  /// «۵۰٪+», with the sign on the far side of the digits. Use
+  /// [percent] where the value must sit in running Persian text.
+  String signedPercent(num value) {
+    final r = value.round();
+    if (r == 0) return digits(0);
+    final sign = r > 0 ? '+' : '\u2212';
+    final unit = _fa ? '\u066a' : '%';
+    // No bidi controls. Every consumer renders inside a readout
+    // whose direction is already pinned at the widget (see
+    // `EditorSliderRow`), so U+2066/U+2069 would only re-introduce
+    // the font-fallback digit-drop [dimensionsPlain] warns about —
+    // no bundled family, Vazir included, has glyphs for them.
+    return '$sign${digits(r.abs())}$unit';
   }
 }

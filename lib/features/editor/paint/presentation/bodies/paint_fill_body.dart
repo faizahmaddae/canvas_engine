@@ -125,7 +125,7 @@ class _FillChoice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    final fg = selected ? tokens.accent : tokens.textPrimary;
+    final fg = selected ? tokens.accentText : tokens.textPrimary;
     // Flat: soft tint when selected, faint surface when resting.
     // No border, no elevation — same grammar as Text `_StyleTile`.
     final bg = selected

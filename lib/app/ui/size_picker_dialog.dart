@@ -408,14 +408,23 @@ class _PresetTile extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        // Through the shared formatter so the pair
-                        // keeps its order under RTL — a bare
-                        // 'W × H' renders as 'H × W' in Persian.
-                        '${EditorValueFormat.of(context).dimensions(preset.width.toInt(), preset.height.toInt())} px',
-                        style: AppTypeScale.caption.copyWith(
-                          fontSize: 11,
-                          color: tokens.textMuted,
+                      // The value stands alone in its own Text, so
+                      // per EditorValueFormat.dimensionsPlain's own
+                      // guidance it takes an explicit LTR subtree
+                      // rather than the isolate: 'px' is a Latin run
+                      // after Persian-digit (AN) numbers, which the
+                      // bidi algorithm resolved to the paragraph side
+                      // and painted as «px ۱۰۸۰ × ۱۰۸۰». Setting the
+                      // direction on the widget also avoids the
+                      // isolate's font-fallback digit-drop.
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          '${EditorValueFormat.of(context).dimensionsPlain(preset.width.toInt(), preset.height.toInt())} px',
+                          style: AppTypeScale.caption.copyWith(
+                            fontSize: 11,
+                            color: tokens.textMuted,
+                          ),
                         ),
                       ),
                     ],

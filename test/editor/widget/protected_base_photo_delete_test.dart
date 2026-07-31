@@ -7,7 +7,7 @@ import 'package:canvas_engine/features/editor/engine/commands/transform_commands
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
-import 'package:canvas_engine/features/editor/image/application/image_target_resolver.dart';
+import 'package:canvas_engine/features/editor/image/application/image_target.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/layer_actions.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/layers_panel.dart';
 import 'package:flutter/material.dart';
@@ -63,8 +63,16 @@ Future<void> _withRef(
 }
 
 void main() {
+  // Delete is no longer an inline icon on the layer row — three 48dp
+  // actions starved the name column, and a destructive control sitting
+  // flush against the visibility toggle is a mis-tap away from data
+  // loss. It lives in the layer's overflow sheet, which is the one
+  // surface every entry point already funnels through. What must not
+  // change is the protection itself: reaching the row is allowed,
+  // executing it on the base photo still has to go through the confirm
+  // (pinned by the programmatic group below).
   group('Layers panel delete', () {
-    testWidgets('delete is DISABLED for protected base photo', (tester) async {
+    testWidgets('the layer row carries no inline delete', (tester) async {
       final c = _photoProject();
       addTearDown(c.dispose);
       await tester.pumpWidget(
@@ -73,56 +81,30 @@ void main() {
           child: const MaterialApp(home: Scaffold(body: LayersPanel())),
         ),
       );
-      final delete = find.widgetWithIcon(IconButton, AppIcons.deleteLayer);
-      expect(delete, findsOneWidget);
-      expect(tester.widget<IconButton>(delete).onPressed, isNull);
+      expect(
+        find.widgetWithIcon(IconButton, AppIcons.deleteLayer),
+        findsNothing,
+        reason: 'destructive action must not sit beside the hide toggle',
+      );
     });
 
-    testWidgets('delete is ENABLED for normal design-project layer', (
+    testWidgets('lock and visibility stay inline, at the 48dp floor', (
       tester,
     ) async {
-      final c = ProviderContainer();
-      addTearDown(c.dispose);
-      c
-          .read(documentControllerProvider.notifier)
-          .newDocument(width: 1080, height: 1080);
-      c
-          .read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(_img('i')));
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: c,
-          child: const MaterialApp(home: Scaffold(body: LayersPanel())),
-        ),
-      );
-      final delete = find.widgetWithIcon(IconButton, AppIcons.deleteLayer);
-      expect(delete, findsOneWidget);
-      expect(tester.widget<IconButton>(delete).onPressed, isNotNull);
-    });
-
-    testWidgets('overlay row deletable; base-photo row not', (tester) async {
       final c = _photoProject();
       addTearDown(c.dispose);
-      c
-          .read(documentControllerProvider.notifier)
-          .execute(AddLayerCommand(_img('overlay')));
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: c,
           child: const MaterialApp(home: Scaffold(body: LayersPanel())),
         ),
       );
-      final buttons = tester
-          .widgetList<IconButton>(
-            find.widgetWithIcon(IconButton, AppIcons.deleteLayer),
-          )
-          .toList();
-      expect(buttons, hasLength(2));
-      expect(
-        buttons.where((b) => b.onPressed != null),
-        hasLength(1),
-        reason: 'only the overlay row should have delete enabled',
-      );
+      final buttons = find.byType(IconButton);
+      expect(buttons, findsNWidgets(2));
+      for (final size in tester.widgetList<IconButton>(buttons)) {
+        expect(size.constraints?.minWidth, 48);
+        expect(size.constraints?.minHeight, 48);
+      }
     });
   });
 
@@ -190,15 +172,10 @@ void main() {
     });
   });
 
-  test('protected base photo still resolves for Crop/Filters/Adjust', () {
+  test('protected base photo still resolves for Crop/Look', () {
     final c = _photoProject();
     addTearDown(c.dispose);
     c.read(selectionControllerProvider.notifier).clear();
-    final outcome = resolveImageTarget(
-      c.read(documentControllerProvider),
-      selectedId: null,
-    );
-    expect(outcome, isA<ImageTargetAutoSelect>());
-    expect((outcome as ImageTargetAutoSelect).layer.id, 'photo');
+    expect(resolveRoleTarget(c.read(documentControllerProvider))?.id, 'photo');
   });
 }

@@ -37,6 +37,26 @@ void resetEditorEphemeralState(WidgetRef ref) {
   ref.read(textToolControllerProvider.notifier).resetSession();
   ref.read(contextToolbarControllerProvider.notifier).closePanel();
   ref.read(paintToolControllerProvider.notifier).resetSession();
+  // The other four dock tools. Text and paint reset their whole
+  // session above, but Canvas / Image / Shape / Sticker only ever got
+  // closed by an in-editor gesture (tap-empty, selection change), and
+  // neither of those happens on the way out to Home — so an open
+  // sub-tool panel rode the route boundary into the next project.
+  // Open the Canvas panel, back out, create a new canvas, and the
+  // fresh editor mounted with that panel still expanded over a
+  // document it had nothing to do with.
+  //
+  // NOT routed through [closeObjectSubPanels] on purpose: that helper
+  // defers to an open mask session (it is a mid-editing seam, and the
+  // panels it collapses are what the session's Done/Cancel returns the
+  // user to). At a project boundary there is nothing to return to —
+  // the mask session is being discarded outright a few lines below —
+  // so the guard would make the reset silently incomplete in exactly
+  // the case it matters most.
+  ref.read(canvasToolControllerProvider.notifier).closePanel();
+  ref.read(imageToolControllerProvider.notifier).closePanel();
+  ref.read(shapeToolControllerProvider.notifier).closePanel();
+  ref.read(stickerToolControllerProvider.notifier).closePanel();
   ref.read(editingControllerProvider.notifier).stop();
   ref.read(selectionModeProvider.notifier).exitMulti();
   ref.read(viewportControllerProvider.notifier).reset();
@@ -48,9 +68,30 @@ void resetEditorEphemeralState(WidgetRef ref) {
   ref.read(cropControllerProvider.notifier).cancelCrop();
   // Mask-edit is the same class of global non-autoDispose modal
   // session as crop — reset it at the project boundary for the same
-  // reason.
-  ref.read(maskEditControllerProvider.notifier).cancel();
+  // reason. Uses the explicitly-named project-boundary discard, not
+  // `cancel()`, so this stays distinguishable from a user-facing
+  // abandon: see [MaskEditController.resetForNewProject].
+  ref.read(maskEditControllerProvider.notifier).resetForNewProject();
 }
+
+/// Whether an open mask-edit session owns dismissal, making every
+/// dismiss seam in this file a no-op.
+///
+/// The shared boundary for BOTH seams — `dismissActiveEditing`
+/// (tap-on-empty) and `closeObjectSubPanels` (selection change) —
+/// because both used to end a mask session by calling `cancel()`, and
+/// `cancel()` restores the entry mask with ZERO commands: once it runs
+/// the work is gone and undo cannot reach it. A seam is a side effect
+/// of some other gesture, so it can neither ask the user nor offer a
+/// way back. Only the session's own exits may end it, and they confirm
+/// a modified draft first (`confirmAbandonMaskEdit`).
+///
+/// Keeping this as one named predicate rather than two inline reads is
+/// deliberate: a third seam added later gets the guard by using it, and
+/// a grep for this name enumerates every place that defers to a
+/// session.
+bool maskSessionOwnsDismissal(WidgetRef ref) =>
+    ref.read(maskEditControllerProvider).active;
 
 /// Single dismiss seam for "user tapped empty workspace / pasteboard".
 ///
@@ -77,6 +118,7 @@ void resetEditorEphemeralState(WidgetRef ref) {
 /// equivalent) on its controller and append a single call below.
 /// Do NOT scatter dismiss logic across UI widgets.
 void dismissActiveEditing(WidgetRef ref) {
+  if (maskSessionOwnsDismissal(ref)) return;
   // Selection: clear list + exit multi-mode together so the dock's
   // "I have a selection" branch (which keeps the contextual
   // toolbar mounted) collapses cleanly.
@@ -108,9 +150,14 @@ void dismissActiveEditing(WidgetRef ref) {
   // but a tap on the pasteboard while its panel is open is still
   // a clear "I'm done" signal — collapse it for symmetry.
   ref.read(canvasToolControllerProvider.notifier).closePanel();
-  // Mask-edit mode: an off-canvas tap is an explicit "I'm done" —
-  // cancel (draft-first, so this discards cleanly with no command).
-  ref.read(maskEditControllerProvider.notifier).cancel();
+  // Mask-edit is NOT dismissed here. It used to be, on the reading
+  // that an off-canvas tap is an explicit "I'm done" — but the call
+  // it made was cancel(), which discards the draft with no command,
+  // so the gesture meaning "I'm done" threw the work away and undo
+  // could not retrieve it. A mask session owns its pointers now
+  // (contract §5 row 1, AbsorbPointer in MaskEditOverlay), so this
+  // seam is unreachable while one is open; the guard at the top of
+  // this function keeps that true for any non-canvas caller.
   // Keyboard: tapping the pasteboard reads as a true "I'm done"
   // gesture, even if the user was mid-typing inside an inline
   // field hosted by a sheet that just closed.
@@ -141,6 +188,12 @@ void dismissActiveEditing(WidgetRef ref) {
 ///     having to re-enter it. Only the per-selection sheet/slot
 ///     state is cleared.
 void closeObjectSubPanels(WidgetRef ref) {
+  // An open mask session outranks every panel this collapses — see
+  // [maskSessionOwnsDismissal]. Returning early rather than skipping
+  // just the mask line is the point: the panels below are the chrome
+  // the session's own exit restores the user to, so collapsing them
+  // mid-session would strand Done/Cancel with nothing to return to.
+  if (maskSessionOwnsDismissal(ref)) return;
   ref.read(contextToolbarControllerProvider.notifier).closePanel();
   ref.read(imageToolControllerProvider.notifier).closePanel();
   ref.read(shapeToolControllerProvider.notifier).closePanel();
@@ -157,7 +210,13 @@ void closeObjectSubPanels(WidgetRef ref) {
   // its target id pointing at the previously-selected layer would
   // re-enter edit mode the next time that layer is reselected.
   ref.read(editingControllerProvider.notifier).stop();
-  // Mask-edit is scoped to the layer it opened on — any selection
-  // change ends the session (cancel is idempotent and draft-first).
-  ref.read(maskEditControllerProvider.notifier).cancel();
+  // Mask-edit is deliberately NOT ended here. It used to be, on the
+  // reading that a session is scoped to the layer it opened on — but
+  // the call was `cancel()`, so a selection change (including a
+  // programmatic one from the layers panel) destroyed a tuned mask
+  // with no command to undo. A session that outlives its selection is
+  // harmless: the controller's own document listener still cancels
+  // when the target layer is deleted, stops being an image, or has its
+  // stack mask changed from outside, which are the cases where the
+  // draft has genuinely lost its meaning.
 }

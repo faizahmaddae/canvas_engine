@@ -66,7 +66,9 @@ class ToggleSegment extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 18,
-                color: selected ? tokens.accent : tokens.textSecondary,
+                // Glyph stop: this icon is the selected segment's ONLY
+                // content, and `accent` on its own tint measured 2.55:1.
+                color: selected ? tokens.accentText : tokens.textSecondary,
               ),
             ),
           ),
@@ -82,20 +84,41 @@ class ToggleSegment extends StatelessWidget {
 /// in the editor shares one wrapper instead of re-rolling the
 /// Container styling per panel.
 class ToggleSegmentGroup extends StatelessWidget {
-  const ToggleSegmentGroup({super.key, required this.children});
+  const ToggleSegmentGroup({
+    super.key,
+    required this.children,
+    this.spatial = false,
+  });
 
   final List<Widget> children;
+
+  /// True when the segments' ORDER encodes a physical direction — the
+  /// align triad, whose left/centre/right buttons mean the screen's
+  /// left, centre and right.
+  ///
+  /// Such a group must not mirror. `AppIcons.textAlignLeft/Right` are
+  /// already pinned `matchTextDirection: false` so the glyphs tell the
+  /// truth, but the Row around them still laid out right-to-left under
+  /// RTL, so the button that applied LEFT alignment sat on the RIGHT —
+  /// icons saying one thing and position saying the opposite. Bold /
+  /// italic / underline carry no spatial meaning and stay directional,
+  /// hence the opt-in rather than a blanket LTR.
+  final bool spatial;
 
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
+    Widget row = Row(mainAxisSize: MainAxisSize.min, children: children);
+    if (spatial) {
+      row = Directionality(textDirection: TextDirection.ltr, child: row);
+    }
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: tokens.surfaceMuted.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: children),
+      child: row,
     );
   }
 }

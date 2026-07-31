@@ -8,6 +8,7 @@ import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/editor_canvas.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/layers_panel.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
+import 'package:canvas_engine/features/editor/presentation/widgets/layer_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -108,9 +109,17 @@ void main() {
     // Tap the row's HEADER line (thumbnail/name row): the primary row
     // grows an opacity slider below it, so tapping the tile's centre
     // could land on the slider instead of the row InkWell.
+    // Tap the row's thumbnail rather than a magic pixel offset: the
+    // offset used to sit just clear of the trailing icon buttons, so
+    // widening those to the 48dp hit floor pushed them under it and
+    // the "tap the row" gesture silently became "tap an icon".
     Future<void> tapRow(WidgetTester tester, String id) async {
-      final rect = tester.getRect(find.byKey(ValueKey(id)));
-      await tester.tapAt(rect.topLeft + const Offset(120, 24));
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(ValueKey(id)),
+          matching: find.byType(LayerThumbnail),
+        ),
+      );
       await tester.pump();
     }
 

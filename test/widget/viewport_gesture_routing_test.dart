@@ -19,7 +19,12 @@ import 'package:flutter_test/flutter_test.dart';
 ///   * 1 finger ON the quad         → translates the selected layer
 ///   * 2 fingers, first ON the quad → pinch/rotate the layer (the
 ///                                    second finger may land anywhere)
-///   * 1 finger OFF the quad        → pans the viewport; selection stays
+///   * 1 finger OFF the quad        → translates the selection too
+///                                    (row 7 as amended: drag-anywhere;
+///                                    the viewport stays put — one-finger
+///                                    pan requires no selection, a
+///                                    multi-selection, or a locked/hidden
+///                                    selection)
 ///   * 2 fingers OFF the quad       → viewport pinch, even with a
 ///                                    selection (row 6)
 ///   * 2nd finger ON the quad joining a sequence whose 1st finger
@@ -261,8 +266,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
   });
 
-  testWidgets('one-finger drag off the layer pans the viewport; the layer '
-      'and the selection stay (contract §5 row 7)', (tester) async {
+  testWidgets('one-finger drag off the layer translates the selection — '
+      'drag-anywhere — and the viewport stays put (contract §5 row 7 as '
+      'amended)', (tester) async {
     final container = _setup(tester);
     await _pumpEditorWithLayer(tester, container);
 
@@ -270,21 +276,29 @@ void main() {
 
     final gesture = await tester.startGesture(const Offset(80, 80));
     await tester.pump();
+    // Sub-slop: the claim is lazy, so nothing has started yet — a
+    // release here would still be the E3 deselect tap.
+    expect(container.read(interactionControllerProvider).session, isNull);
+
     await gesture.moveBy(const Offset(60, 40));
     await tester.pump();
     await gesture.moveBy(const Offset(60, 40));
     await tester.pump();
 
+    final session = container.read(interactionControllerProvider).session;
     expect(
-      container.read(interactionControllerProvider).session,
-      isNull,
-      reason: 'Off-quad drag must NOT start a layer session.',
+      session,
+      isNotNull,
+      reason: 'Off-quad drag with a movable selection must move it.',
     );
+    expect(session!.layerId, 'shape');
+    final live = container.read(interactionControllerProvider).liveTransform;
+    expect(live!.position, isNot(const Offset(370, 370)));
     final viewportDuring = container.read(viewportControllerProvider);
     expect(
       viewportDuring.translation,
-      isNot(viewportBefore.translation),
-      reason: 'Off-quad drag must pan the viewport.',
+      viewportBefore.translation,
+      reason: 'Drag-anywhere must NOT pan the viewport alongside.',
     );
 
     await gesture.up();
@@ -294,11 +308,11 @@ void main() {
     final layer = container
         .read(documentControllerProvider)
         .layerById('shape')!;
-    expect(layer.transform.position, const Offset(370, 370));
+    expect(layer.transform.position, isNot(const Offset(370, 370)));
     expect(
       container.read(selectionControllerProvider).selectedId,
       'shape',
-      reason: 'Panning must not clear the selection.',
+      reason: 'Drag-anywhere must not change the selection.',
     );
   });
 

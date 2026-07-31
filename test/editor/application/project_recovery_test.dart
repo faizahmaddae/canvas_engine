@@ -633,4 +633,111 @@ void main() {
       );
     });
   });
+
+  // Draft IDENTITY. Audit P3-5: resuming a draft hardcoded
+  // `newDesignName`, so "Imported image" came back as "New design" and
+  // the eventual save carried the wrong name to disk. And P2-15: every
+  // rescue landed as «Recovered draft», so three backed-out sessions
+  // produced three projects with one identical title. Both read the
+  // same sidecar.
+  group('draft identity sidecar', () {
+    File metaFile(Directory docs, String id) => File(
+      '${docs.path}${Platform.pathSeparator}journal'
+      '${Platform.pathSeparator}$id.meta.json',
+    );
+
+    test('a name written beside the journal survives a read', () async {
+      installFakeDocumentsDir();
+      final journal = await EditJournal.open('draft');
+      await journal.writeMeta(name: 'Imported image');
+      expect(await journal.readMeta(), 'Imported image');
+    });
+
+    test('pendingDraftName reads the draft slot specifically', () async {
+      installFakeDocumentsDir();
+      final journal = await EditJournal.open(AutosaveController.draftJournalId);
+      await journal.writeMeta(name: 'Poster');
+      expect(await const ProjectRecoveryService().pendingDraftName(), 'Poster');
+    });
+
+    test(
+      'a journal with no sidecar reports no name — callers fall back',
+      () async {
+        installFakeDocumentsDir();
+        final c = await _editorContainer();
+        final journal = await EditJournal.open('draft');
+        await journal.flushNow(c.read(documentControllerProvider));
+        expect(
+          await journal.readMeta(),
+          isNull,
+          reason: 'journals written before the sidecar existed must still load',
+        );
+        expect(await journal.recover(), isNotNull);
+      },
+    );
+
+    test('clear() removes the sidecar too, so no phantom name outlives '
+        'the draft', () async {
+      final docs = installFakeDocumentsDir();
+      final c = await _editorContainer();
+      final journal = await EditJournal.open('draft');
+      await journal.flushNow(c.read(documentControllerProvider));
+      await journal.writeMeta(name: 'Poster');
+      expect(metaFile(docs, 'draft').existsSync(), isTrue);
+
+      await journal.clear();
+      expect(metaFile(docs, 'draft').existsSync(), isFalse);
+      expect(await journal.readMeta(), isNull);
+    });
+
+    test(
+      'the sidecar is not mistaken for a journal — recover() ignores it',
+      () async {
+        installFakeDocumentsDir();
+        final journal = await EditJournal.open('draft');
+        await journal.writeMeta(name: 'Poster');
+        expect(
+          await journal.recover(),
+          isNull,
+          reason: 'a name without a document is not a recoverable draft',
+        );
+        expect(await const ProjectRecoveryService().pendingDraftJson(), isNull);
+      },
+    );
+
+    test('a SECOND unsaved session overwrites the name rather than '
+        'inheriting the first one', () async {
+      // The journal handle is keyed on project id, and every unsaved
+      // session shares the reserved 'draft' slot — so the handle is
+      // NOT rebound between them. Writing identity only on bind left
+      // the second session wearing the first session's name.
+      installFakeDocumentsDir();
+      final c = await _editorContainer();
+      final journal = await EditJournal.open(AutosaveController.draftJournalId);
+
+      c.read(editorSessionProvider.notifier).state = const EditorSession(
+        name: 'First design',
+      );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(AddLayerCommand(_shape('a')));
+      await c.read(autosaveControllerProvider.notifier).flushNow();
+      expect(await journal.readMeta(), 'First design');
+
+      // Same slot, new session — no rebind happens.
+      c.read(editorSessionProvider.notifier).state = const EditorSession(
+        name: 'Imported image',
+      );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(AddLayerCommand(_shape('b')));
+      await c.read(autosaveControllerProvider.notifier).flushNow();
+
+      expect(
+        await journal.readMeta(),
+        'Imported image',
+        reason: 'the sidecar must follow the session, not the binding',
+      );
+    });
+  });
 }

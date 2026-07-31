@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_tokens.dart';
+import '../../../l10n/l10n.dart';
 import '../../../app/theme/app_icons.dart';
 
 /// 3×3 grid of direction cells for offset-based controls (shadow
@@ -120,32 +121,72 @@ class _DirectionPadCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
     final isCenter = dx == 0 && dy == 0;
-    return Material(
-      color: selected
-          ? tokens.accent.withValues(alpha: 0.16)
-          : tokens.surfaceMuted.withValues(alpha: 0.4),
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Center(
-          child: isCenter
-              ? Icon(
-                  AppIcons.offsetCenter,
-                  size: 16,
-                  color: selected ? tokens.accent : tokens.textSecondary,
-                )
-              : Transform.rotate(
-                  angle: _arrowAngle(dx, dy),
-                  child: Icon(
-                    AppIcons.offsetDirection,
-                    size: 16,
-                    color: selected ? tokens.accent : tokens.textSecondary,
-                  ),
-                ),
+    // Nine cells that were focusable, clickable and completely
+    // unlabeled: a screen reader heard "unlabeled, button" nine times
+    // and could tell neither which direction each one was nor which
+    // was active, while the disclosure above promised «… جهت …».
+    // Named and state-carrying now, matching the ضخامت and سبک chips.
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: _directionLabel(context, dx, dy),
+      onTap: onTap,
+      child: ExcludeSemantics(
+        child: Material(
+          color: selected
+              ? tokens.accent.withValues(alpha: 0.16)
+              : tokens.surfaceMuted.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(8),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: onTap,
+            child: Center(
+              child: isCenter
+                  ? Icon(
+                      AppIcons.offsetCenter,
+                      size: 16,
+                      color: selected
+                          ? tokens.accentText
+                          : tokens.textSecondary,
+                    )
+                  : Transform.rotate(
+                      angle: _arrowAngle(dx, dy),
+                      child: Icon(
+                        AppIcons.offsetDirection,
+                        size: 16,
+                        color: selected
+                            ? tokens.accentText
+                            : tokens.textSecondary,
+                      ),
+                    ),
+            ),
+          ),
         ),
       ),
     );
+  }
+
+  /// Spoken name for a cell, by offset direction. The pad is spatially
+  /// literal — the arrow points where the shadow lands on screen — so
+  /// these are left/right, not start/end.
+  static String _directionLabel(BuildContext context, int dx, int dy) {
+    final l10n = context.l10n;
+    if (dx == 0 && dy == 0) return l10n.dirCenter;
+    if (dy < 0) {
+      return dx < 0
+          ? l10n.dirTopStart
+          : dx > 0
+          ? l10n.dirTopEnd
+          : l10n.dirTop;
+    }
+    if (dy > 0) {
+      return dx < 0
+          ? l10n.dirBottomStart
+          : dx > 0
+          ? l10n.dirBottomEnd
+          : l10n.dirBottom;
+    }
+    return dx < 0 ? l10n.dirStart : l10n.dirEnd;
   }
 
   double _arrowAngle(int dx, int dy) {

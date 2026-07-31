@@ -168,6 +168,7 @@ class _SlotStripState extends State<SlotStrip> {
             fontFamily: slot.fontFamily?.call(),
             enabled: slot.isEnabled,
             unavailable: !slot.isAvailable,
+            unavailableHint: slot.unavailableHint,
             semanticLabel: slot.semanticLabel,
             active: slot.id == widget.activeId,
             compact: compact,

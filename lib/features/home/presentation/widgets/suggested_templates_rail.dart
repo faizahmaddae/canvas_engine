@@ -100,7 +100,7 @@ class SuggestedTemplatesRail extends StatelessWidget {
                 key: const ValueKey('home-templates-see-all'),
                 onPressed: onSeeAll,
                 style: TextButton.styleFrom(
-                  foregroundColor: tokens.accent,
+                  foregroundColor: tokens.accentText,
                   textStyle: AppTypeScale.caption.copyWith(
                     fontWeight: FontWeight.w700,
                   ),

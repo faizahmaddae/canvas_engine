@@ -10,9 +10,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Select-and-move under the interaction contract, §5 row 5 (tb3 2/7):
-/// a 1-finger drag STARTING on an eligible, un-selected layer's bbox
-/// selects that layer and translates it in the same gesture.
+/// Select-and-move + drag-anywhere under the interaction contract,
+/// §5 rows 5 and 7 (tb3 2/7; row-7 amendment 2026-07-30): a 1-finger
+/// drag STARTING on an eligible, un-selected layer's bbox selects
+/// that layer and translates it in the same gesture, and a 1-finger
+/// drag STARTING on empty canvas while a movable single selection
+/// exists translates that selection.
 ///
 ///   * drag on an un-selected layer  → it becomes selected + moves;
 ///     the whole gesture lands as ONE undo entry (the transform
@@ -20,17 +23,23 @@ import 'package:flutter_test/flutter_test.dart';
 ///   * sub-slop tap on it            → today's tap-select, NO move,
 ///     NO history entry (the lazy arena claim resolves at slop, so
 ///     taps keep their native canvas-recogniser timing)
-///   * drag on locked / hidden bbox  → viewport pan (not eligible)
+///   * drag on empty canvas, single movable selection → translates
+///     the SELECTION (drag-anywhere), one undo entry, viewport still;
+///     a locked / hidden layer's bbox reads as empty canvas here
+///     (pointer-ineligible), so those drags also move the selection
+///   * locked / hidden SELECTION     → drag-anywhere declines;
+///     empty-canvas drag pans (the protected base photo keeps
+///     photo-project navigation)
 ///   * empty selection               → same select-and-move; empty
-///     canvas still pans (row 7)
-///   * multi-select mode             → row 5 disabled, today's
-///     behaviour exactly
+///     canvas still pans (row 7's fallback)
+///   * multi-select mode             → rows 5 + 7-drag disabled,
+///     today's behaviour exactly
 ///   * 2nd finger before the slop claim → the sequence is abandoned
 ///     to the viewport pinch (row 6 stays strict)
 ///
 /// These tests guard `SelectAndMoveSurface` + the lazy arena mode of
 /// `_BodyMultiTouchRecognizer` (selection_overlay.dart) and the
-/// `_shouldClaimSelectAndMove` predicate (editor_canvas.dart).
+/// `_shouldClaimSelectAndMove` predicate (canvas_gesture_router.dart).
 
 ProviderContainer _setup(WidgetTester tester) {
   tester.view.physicalSize = const Size(800, 800);
@@ -203,8 +212,10 @@ void main() {
     );
   });
 
-  testWidgets('drag starting on a LOCKED layer bbox pans the viewport and '
-      'leaves the selection alone', (tester) async {
+  testWidgets('drag starting on a LOCKED layer bbox is not a row-5 claim: '
+      'it drag-anywhere-moves the SELECTION instead (row 7 as amended)', (
+    tester,
+  ) async {
     final container = _setup(tester);
     container
         .read(documentControllerProvider.notifier)
@@ -230,12 +241,19 @@ void main() {
     await gesture.moveBy(const Offset(60, 40));
     await tester.pump();
 
-    expect(container.read(interactionControllerProvider).session, isNull);
+    // A locked layer stays pointer-ineligible (it must never be
+    // selected or moved by a drag), so its area reads as background —
+    // and background drags now translate the selection. This is the
+    // photo-project core case: the base photo is a locked layer
+    // covering the whole canvas.
+    final session = container.read(interactionControllerProvider).session;
+    expect(session, isNotNull);
+    expect(session!.layerId, 'sel');
     expect(container.read(selectionControllerProvider).selectedId, 'sel');
     expect(
       container.read(viewportControllerProvider).translation,
-      isNot(viewportBefore.translation),
-      reason: 'A locked layer is not an eligible row-5 target — pan.',
+      viewportBefore.translation,
+      reason: 'Drag-anywhere must not pan the viewport alongside.',
     );
 
     await gesture.up();
@@ -243,10 +261,17 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
 
     final lock = container.read(documentControllerProvider).layerById('lock')!;
-    expect(lock.transform.position, const Offset(370, 370));
+    expect(
+      lock.transform.position,
+      const Offset(370, 370),
+      reason: 'The locked layer itself must never move.',
+    );
+    final sel = container.read(documentControllerProvider).layerById('sel')!;
+    expect(sel.transform.position, isNot(const Offset(100, 100)));
   });
 
-  testWidgets('drag starting on a HIDDEN layer bbox pans the viewport', (
+  testWidgets('drag starting on a HIDDEN layer bbox reads as empty canvas: '
+      'the selection drag-anywhere-moves, the hidden layer stays', (
     tester,
   ) async {
     final container = _setup(tester);
@@ -274,16 +299,21 @@ void main() {
     await gesture.moveBy(const Offset(60, 40));
     await tester.pump();
 
-    expect(container.read(interactionControllerProvider).session, isNull);
+    final session = container.read(interactionControllerProvider).session;
+    expect(session, isNotNull);
+    expect(session!.layerId, 'sel');
     expect(container.read(selectionControllerProvider).selectedId, 'sel');
     expect(
       container.read(viewportControllerProvider).translation,
-      isNot(viewportBefore.translation),
+      viewportBefore.translation,
     );
 
     await gesture.up();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
+
+    final hid = container.read(documentControllerProvider).layerById('hid')!;
+    expect(hid.transform.position, const Offset(370, 370));
   });
 
   testWidgets('with NO selection, drag on a layer selects and moves it; '
@@ -484,6 +514,265 @@ void main() {
       greaterThan(60 * 1.1),
       reason: 'The joined finger must pinch the layer, not the viewport.',
     );
+    final viewportAfter = container.read(viewportControllerProvider);
+    expect(viewportAfter.scale, viewportBefore.scale);
+    expect(viewportAfter.translation, viewportBefore.translation);
+
+    await f1.up();
+    await f2.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+  });
+
+  testWidgets('drag-anywhere: a drag starting on empty canvas translates the '
+      'single movable selection, committing ONE undo entry (row 7 as '
+      'amended)', (tester) async {
+    final container = _setup(tester);
+    container
+        .read(documentControllerProvider.notifier)
+        .newDocument(width: 800, height: 800);
+    _addRect(container, id: 'sel', position: const Offset(100, 100));
+    container.read(selectionControllerProvider.notifier).select('sel');
+    await _pumpEditor(tester, container);
+
+    final viewportBefore = container.read(viewportControllerProvider);
+
+    final gesture = await tester.startGesture(
+      _toScreen(container, const Offset(500, 500)),
+    );
+    await tester.pump();
+    // Sub-slop: lazy claim — no session yet, so a release here would
+    // still resolve as the E3 deselect tap.
+    expect(container.read(interactionControllerProvider).session, isNull);
+
+    await gesture.moveBy(const Offset(60, 40));
+    await tester.pump();
+    await gesture.moveBy(const Offset(60, 40));
+    await tester.pump();
+
+    final session = container.read(interactionControllerProvider).session;
+    expect(session, isNotNull);
+    expect(session!.layerId, 'sel');
+    expect(container.read(selectionControllerProvider).selectedId, 'sel');
+    expect(
+      container.read(viewportControllerProvider).translation,
+      viewportBefore.translation,
+      reason: 'Drag-anywhere must not pan the viewport alongside.',
+    );
+
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    final moved = container.read(documentControllerProvider).layerById('sel')!;
+    expect(moved.transform.position, isNot(const Offset(100, 100)));
+
+    // ONE undo entry for the whole gesture — the first undo restores
+    // the position, the second pops the AddLayerCommand.
+    final docCtl = container.read(documentControllerProvider.notifier);
+    docCtl.undo();
+    expect(
+      container
+          .read(documentControllerProvider)
+          .layerById('sel')!
+          .transform
+          .position,
+      const Offset(100, 100),
+    );
+    docCtl.undo();
+    expect(container.read(documentControllerProvider).layerById('sel'), isNull);
+  });
+
+  testWidgets('drag-anywhere declines a LOCKED selection: empty-canvas drag '
+      'keeps panning (protected base photo keeps photo navigation)', (
+    tester,
+  ) async {
+    final container = _setup(tester);
+    container
+        .read(documentControllerProvider.notifier)
+        .newDocument(width: 800, height: 800);
+    _addRect(
+      container,
+      id: 'lockSel',
+      position: const Offset(100, 100),
+      locked: true,
+    );
+    // Mimics the base-photo reachability selection: locked layers can
+    // be selected (Layers panel, base-photo tap) but never dragged.
+    container.read(selectionControllerProvider.notifier).select('lockSel');
+    await _pumpEditor(tester, container);
+
+    final viewportBefore = container.read(viewportControllerProvider);
+
+    final gesture = await tester.startGesture(
+      _toScreen(container, const Offset(500, 500)),
+    );
+    await tester.pump();
+    await gesture.moveBy(const Offset(60, 40));
+    await tester.pump();
+    await gesture.moveBy(const Offset(60, 40));
+    await tester.pump();
+
+    expect(container.read(interactionControllerProvider).session, isNull);
+    expect(
+      container.read(viewportControllerProvider).translation,
+      isNot(viewportBefore.translation),
+      reason: 'A locked selection cannot be dragged — the viewport pans.',
+    );
+
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    final lock = container
+        .read(documentControllerProvider)
+        .layerById('lockSel')!;
+    expect(lock.transform.position, const Offset(100, 100));
+  });
+
+  testWidgets('drag-anywhere declines a HIDDEN selection: empty-canvas drag '
+      'keeps panning', (tester) async {
+    final container = _setup(tester);
+    container
+        .read(documentControllerProvider.notifier)
+        .newDocument(width: 800, height: 800);
+    _addRect(
+      container,
+      id: 'hidSel',
+      position: const Offset(100, 100),
+      visible: false,
+    );
+    container.read(selectionControllerProvider.notifier).select('hidSel');
+    await _pumpEditor(tester, container);
+
+    final viewportBefore = container.read(viewportControllerProvider);
+
+    final gesture = await tester.startGesture(
+      _toScreen(container, const Offset(500, 500)),
+    );
+    await tester.pump();
+    await gesture.moveBy(const Offset(60, 40));
+    await tester.pump();
+    await gesture.moveBy(const Offset(60, 40));
+    await tester.pump();
+
+    expect(container.read(interactionControllerProvider).session, isNull);
+    expect(
+      container.read(viewportControllerProvider).translation,
+      isNot(viewportBefore.translation),
+      reason: 'A hidden selection has no honest drag — the viewport pans.',
+    );
+
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+  });
+
+  testWidgets('drag-anywhere continues naturally past the canvas bounds: the '
+      'session survives the pointer leaving the board and commits where it '
+      'ends', (tester) async {
+    final container = _setup(tester);
+    container
+        .read(documentControllerProvider.notifier)
+        .newDocument(width: 800, height: 800);
+    _addRect(container, id: 'sel', position: const Offset(100, 100));
+    container.read(selectionControllerProvider.notifier).select('sel');
+    await _pumpEditor(tester, container);
+
+    final gesture = await tester.startGesture(
+      _toScreen(container, const Offset(500, 500)),
+    );
+    await tester.pump();
+    await gesture.moveBy(const Offset(100, 80));
+    await tester.pump();
+    await gesture.moveBy(const Offset(100, 80));
+    await tester.pump();
+    final liveInside = container
+        .read(interactionControllerProvider)
+        .liveTransform!;
+
+    // Carry the pointer well beyond the 800×800 viewport in several
+    // steps (the single-finger path is EMA-smoothed, so magnitude
+    // builds over events, not per jump). The recogniser owns the
+    // pointer globally after the slop claim, so the session must keep
+    // tracking out there.
+    for (var i = 0; i < 4; i++) {
+      await gesture.moveBy(const Offset(120, 80));
+      await tester.pump();
+    }
+
+    final session = container.read(interactionControllerProvider).session;
+    expect(
+      session,
+      isNotNull,
+      reason: 'Leaving the canvas bounds must not end the session.',
+    );
+    expect(session!.layerId, 'sel');
+    final liveBeyond = container
+        .read(interactionControllerProvider)
+        .liveTransform!;
+    expect(
+      liveBeyond.position.dx,
+      greaterThan(liveInside.position.dx + 20),
+      reason: 'The layer must keep following the pointer past the bounds.',
+    );
+
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    final moved = container.read(documentControllerProvider).layerById('sel')!;
+    expect(moved.transform.position.dx, greaterThan(liveInside.position.dx));
+  });
+
+  testWidgets('a second finger joining a drag-anywhere session pinches the '
+      'selection about its own centre — no orbit around the remote focal', (
+    tester,
+  ) async {
+    final container = _setup(tester);
+    container
+        .read(documentControllerProvider.notifier)
+        .newDocument(width: 800, height: 800);
+    _addRect(container, id: 'sel', position: const Offset(100, 100));
+    container.read(selectionControllerProvider.notifier).select('sel');
+    await _pumpEditor(tester, container);
+
+    final viewportBefore = container.read(viewportControllerProvider);
+
+    final f1 = await tester.startGesture(
+      _toScreen(container, const Offset(500, 500)),
+      pointer: 71,
+    );
+    await tester.pump();
+    await f1.moveBy(const Offset(40, 0));
+    await tester.pump();
+    expect(
+      container.read(interactionControllerProvider).session?.layerId,
+      'sel',
+    );
+    final liveBefore = container
+        .read(interactionControllerProvider)
+        .liveTransform!;
+    final centreBefore = liveBefore.center;
+
+    final f2 = await tester.startGesture(
+      _toScreen(container, const Offset(700, 500)),
+      pointer: 72,
+    );
+    await tester.pump();
+    // Symmetric spread: net focal delta is zero, so the layer must
+    // scale in place — its centre stays put even though both fingers
+    // are far away from it.
+    await f1.moveBy(const Offset(-80, 0));
+    await f2.moveBy(const Offset(80, 0));
+    await tester.pump();
+
+    final liveAfter = container
+        .read(interactionControllerProvider)
+        .liveTransform!;
+    expect(liveAfter.size.width, greaterThan(60 * 1.1));
+    expect(liveAfter.center.dx, moreOrLessEquals(centreBefore.dx, epsilon: 1));
+    expect(liveAfter.center.dy, moreOrLessEquals(centreBefore.dy, epsilon: 1));
     final viewportAfter = container.read(viewportControllerProvider);
     expect(viewportAfter.scale, viewportBefore.scale);
     expect(viewportAfter.translation, viewportBefore.translation);

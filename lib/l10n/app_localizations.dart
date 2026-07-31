@@ -788,12 +788,6 @@ abstract class AppLocalizations {
   /// **'Collapse'**
   String get collapseTooltip;
 
-  /// No description provided for @dismissPanelSemantics.
-  ///
-  /// In en, this message translates to:
-  /// **'Dismiss panel'**
-  String get dismissPanelSemantics;
-
   /// No description provided for @undoLastChangeSemantics.
   ///
   /// In en, this message translates to:
@@ -854,12 +848,6 @@ abstract class AppLocalizations {
   /// **'Show'**
   String get showAction;
 
-  /// No description provided for @protectedBasePhotoTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Protected base photo'**
-  String get protectedBasePhotoTooltip;
-
   /// No description provided for @basePhotoLabel.
   ///
   /// In en, this message translates to:
@@ -877,6 +865,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hidden'**
   String get hiddenLabel;
+
+  /// No description provided for @borderColorEnablesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Picking a colour turns the border on.'**
+  String get borderColorEnablesHint;
+
+  /// No description provided for @hexColorFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex colour code'**
+  String get hexColorFieldLabel;
+
+  /// No description provided for @colorBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get colorBlack;
+
+  /// No description provided for @colorWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get colorWhite;
+
+  /// No description provided for @colorSlate.
+  ///
+  /// In en, this message translates to:
+  /// **'Grey'**
+  String get colorSlate;
+
+  /// No description provided for @colorRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get colorRed;
+
+  /// No description provided for @colorAmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get colorAmber;
+
+  /// No description provided for @colorYellow.
+  ///
+  /// In en, this message translates to:
+  /// **'Yellow'**
+  String get colorYellow;
+
+  /// No description provided for @colorGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get colorGreen;
+
+  /// No description provided for @colorCyan.
+  ///
+  /// In en, this message translates to:
+  /// **'Cyan'**
+  String get colorCyan;
+
+  /// No description provided for @colorBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get colorBlue;
+
+  /// No description provided for @colorPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get colorPurple;
+
+  /// No description provided for @colorPink.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink'**
+  String get colorPink;
+
+  /// No description provided for @colorTeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get colorTeal;
+
+  /// No description provided for @colorCustomSwatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour {hex}'**
+  String colorCustomSwatch(String hex);
+
+  /// No description provided for @layerKindImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get layerKindImage;
+
+  /// No description provided for @layerKindText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get layerKindText;
+
+  /// No description provided for @layerKindShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Shape'**
+  String get layerKindShape;
+
+  /// No description provided for @layerKindSticker.
+  ///
+  /// In en, this message translates to:
+  /// **'Sticker'**
+  String get layerKindSticker;
+
+  /// No description provided for @layerKindPaint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing'**
+  String get layerKindPaint;
+
+  /// No description provided for @layerKindGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Layer'**
+  String get layerKindGeneric;
+
+  /// No description provided for @layerAutoName.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} {index}'**
+  String layerAutoName(String kind, int index);
 
   /// No description provided for @multiSelectCount.
   ///
@@ -991,6 +1111,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Vertical'**
   String get verticalOption;
+
+  /// No description provided for @dirTopStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Up and left'**
+  String get dirTopStart;
+
+  /// No description provided for @dirTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Up'**
+  String get dirTop;
+
+  /// No description provided for @dirTopEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Up and right'**
+  String get dirTopEnd;
+
+  /// No description provided for @dirStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get dirStart;
+
+  /// No description provided for @dirCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'No offset'**
+  String get dirCenter;
+
+  /// No description provided for @dirEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Right'**
+  String get dirEnd;
+
+  /// No description provided for @dirBottomStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Down and left'**
+  String get dirBottomStart;
+
+  /// No description provided for @dirBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Down'**
+  String get dirBottom;
+
+  /// No description provided for @dirBottomEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Down and right'**
+  String get dirBottomEnd;
 
   /// No description provided for @alignLeftAction.
   ///
@@ -1952,11 +2126,17 @@ abstract class AppLocalizations {
   /// **'Import a photo to {action}.'**
   String importPhotoToAction(String action);
 
-  /// No description provided for @pickImageToAction.
+  /// No description provided for @showPhotoToAction.
   ///
   /// In en, this message translates to:
-  /// **'Pick an image to {action}'**
-  String pickImageToAction(String action);
+  /// **'Show the photo to {action}.'**
+  String showPhotoToAction(String action);
+
+  /// No description provided for @toolNeedsPhotoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a visible photo'**
+  String get toolNeedsPhotoHint;
 
   /// No description provided for @cropActionVerb.
   ///
@@ -1969,12 +2149,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved “{name}”'**
   String savedProject(String name);
-
-  /// No description provided for @imageLayerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Image {index}'**
-  String imageLayerTitle(int index);
 
   /// No description provided for @shareUnavailableMessage.
   ///
@@ -2293,6 +2467,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Colors'**
   String get colorsLabel;
+
+  /// No description provided for @colorsMixedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors you mix land here'**
+  String get colorsMixedHint;
 
   /// No description provided for @moreColorsTooltip.
   ///
@@ -3235,6 +3415,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discard'**
   String get discardAction;
+
+  /// No description provided for @notNowAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNowAction;
+
+  /// No description provided for @deleteDraftAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete draft'**
+  String get deleteDraftAction;
+
+  /// No description provided for @deleteDraftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this draft?'**
+  String get deleteDraftTitle;
+
+  /// No description provided for @deleteDraftBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The unsaved design will be permanently deleted. This cannot be undone.'**
+  String get deleteDraftBody;
+
+  /// No description provided for @discardMaskChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard mask changes?'**
+  String get discardMaskChangesTitle;
+
+  /// No description provided for @discardMaskChangesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your edits to this mask will be lost. Undo cannot bring them back.'**
+  String get discardMaskChangesBody;
+
+  /// No description provided for @keepEditingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditingAction;
 
   /// No description provided for @unknownEffectLabel.
   ///

@@ -160,6 +160,12 @@ void main() {
     final container = makeContainer(layer);
     await pumpBody(tester, container, ImageBorderBody(layer: layer));
 
+    // The colour grid above this disclosure is tall and its run gap is
+    // now derived from the available width, so its height is not a
+    // constant the test can assume. Scroll the header into view before
+    // tapping it rather than trusting it to land on-screen.
+    await tester.ensureVisible(find.text('Adjust precisely'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Adjust precisely'));
     await tester.pumpAndSettle();
 

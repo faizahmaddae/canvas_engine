@@ -311,9 +311,16 @@ void main() {
         );
 
         final v0 = container.read(documentCommitVersionProvider);
-        await tester.tap(
-          find.byKey(const ValueKey('color-picker-swatch-3B82F6')),
-        );
+        // The shelf is a 3×6 grid, so the palette rows sit lower in
+        // this host than the old 2×6 did — far enough to fall outside
+        // the scroll viewport at this surface size. Scroll the target
+        // into view rather than tapping a coordinate that is merely
+        // laid out: a widget below the fold is painted but not
+        // hit-testable, and `tap` does not scroll.
+        final swatch = find.byKey(const ValueKey('color-picker-swatch-3B82F6'));
+        await tester.ensureVisible(swatch);
+        await tester.pump();
+        await tester.tap(swatch);
         await tester.pump();
 
         expect(container.read(documentCommitVersionProvider), v0 + 1);
