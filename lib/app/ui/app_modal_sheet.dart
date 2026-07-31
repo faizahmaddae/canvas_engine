@@ -99,6 +99,13 @@ Future<T?> showAppSheet<T>(
       maxHeightFraction: maxHeightFraction,
       maxWidth: maxWidth,
       keyboardAware: keyboardAware,
+      // Captured OUT here, where it still exists. `ModalBottomSheetRoute`
+      // applies `MediaQuery.removePadding(removeTop: true)` to its child
+      // unconditionally — not as part of `useSafeArea` — so inside the
+      // builder both `padding.top` and `viewPadding.top` read 0 and a
+      // cap computed in there silently lets a full-height sheet run up
+      // under the notch.
+      topInset: MediaQuery.of(context).padding.top,
       child: Builder(builder: builder),
     ),
   );
@@ -111,6 +118,7 @@ class _AppSheetCard extends StatelessWidget {
     required this.maxHeightFraction,
     required this.maxWidth,
     required this.keyboardAware,
+    required this.topInset,
     required this.child,
   });
 
@@ -119,12 +127,17 @@ class _AppSheetCard extends StatelessWidget {
   final double? maxHeightFraction;
   final double maxWidth;
   final bool keyboardAware;
+
+  /// Top system inset, read outside the route (see the call site).
+  final double topInset;
+
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
     final media = MediaQuery.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // When the keyboard is up it covers the home indicator, so the
     // sheet rides the keyboard instead and owes the inset nothing.
     final keyboard = media.viewInsets.bottom;
@@ -142,8 +155,18 @@ class _AppSheetCard extends StatelessWidget {
           // the gutter this sheet no longer has, which is nowhere —
           // the sheet's bottom edge is the screen's. What has to read
           // as lifted is its top edge against the canvas.
+          //
+          // Theme-driven and mode-tuned, matching the dock. A
+          // hardcoded `Colors.black @ 0.10` is both a tokens-rule
+          // violation and useless in dark mode: black over the dark
+          // workspace measured 1.07:1, against a sheet surface that is
+          // itself only 1.05:1 against that workspace — so with
+          // `barrier: none` the sheet had no discernible top edge at
+          // all.
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
+            color: Theme.of(
+              context,
+            ).colorScheme.shadow.withValues(alpha: isDark ? 0.44 : 0.10),
             blurRadius: 24,
             offset: const Offset(0, -6),
           ),
@@ -185,16 +208,31 @@ class _AppSheetCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // A hairline the shadow cannot substitute for. In dark
+                // mode `surface` sits 1.05:1 against the workspace, so
+                // on a `barrier: none` sheet the top edge needs a line,
+                // not just a glow — the dock reaches for the same token
+                // one pixel below.
+                Container(height: 1, color: tokens.border),
                 IgnorePointer(
                   child: SizedBox(
-                    height: 14,
+                    height: 13,
                     child: Center(
                       child: Container(
                         width: 36,
                         height: 4,
                         margin: const EdgeInsets.only(top: 6),
                         decoration: BoxDecoration(
-                          color: tokens.border.withValues(alpha: 0.8),
+                          // Was `border @ 0.8`: measured 1.25:1 light
+                          // and 1.14:1 dark against `surface` — the one
+                          // affordance saying "drag me down", and the
+                          // faintest thing on the sheet. `textSecondary`
+                          // is the mid-tone that survives both ends of
+                          // the ramp (the colour swatches make the same
+                          // call), and 0.70 is the lowest alpha that
+                          // clears the 3:1 non-text floor in BOTH
+                          // themes: 3.03:1 light, 3.96:1 dark.
+                          color: tokens.textSecondary.withValues(alpha: 0.70),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -238,10 +276,17 @@ class _AppSheetCard extends StatelessWidget {
 
     // Cap against the TOP inset, which is the job `useSafeArea` used
     // to do for us: a sheet may fill the screen but must never slide
-    // under the status bar or the notch.
-    final ceiling = media.size.height - media.padding.top;
+    // under the status bar or the notch. [topInset], not
+    // `media.padding.top` — the latter is zero in here.
+    final ceiling = media.size.height - topInset;
     card = Align(
       alignment: Alignment.bottomCenter,
+      // Size to the CHILD's height, do not expand to fill. Flutter's
+      // `BottomSheet` divides drag distance by its child's height to
+      // decide a dismiss, so an Align that stretched to the full
+      // screen made a 234dp sheet demand ~478dp of downward drag —
+      // i.e. drag-to-dismiss was unreachable on every short sheet.
+      heightFactor: 1,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: maxWidth,
