@@ -40,14 +40,37 @@ final class LayerSpaceMapper {
   }
 
   /// canvas → layer-local: inverse rotation about the layer centre.
-  Offset canvasToLayer(Offset canvas) {
+  Offset canvasToLayer(Offset canvas) => canvasToLayerLocal(transform, canvas);
+
+  /// Canvas → layer-local without requiring a viewport. Hit testers
+  /// and application controllers use this static boundary instead of
+  /// copying inverse-rotation math into presentation or model classes.
+  static Offset canvasToLayerLocal(LayerTransform transform, Offset canvas) {
     final v = canvas - transform.center;
     final cosR = math.cos(-transform.rotation);
     final sinR = math.sin(-transform.rotation);
-    return _mirror(
-          Offset(v.dx * cosR - v.dy * sinR, v.dx * sinR + v.dy * cosR),
-        ) +
+    var centred = Offset(v.dx * cosR - v.dy * sinR, v.dx * sinR + v.dy * cosR);
+    if (transform.isMirrored) {
+      centred = Offset(
+        transform.flipH ? -centred.dx : centred.dx,
+        transform.flipV ? -centred.dy : centred.dy,
+      );
+    }
+    return centred +
         Offset(transform.size.width / 2, transform.size.height / 2);
+  }
+
+  /// Inclusive oriented-bounds hit test. [canvasPoint] is in canvas
+  /// space; flips are respected by [canvasToLayerLocal].
+  static bool containsCanvasPoint(
+    LayerTransform transform,
+    Offset canvasPoint,
+  ) {
+    final local = canvasToLayerLocal(transform, canvasPoint);
+    return local.dx >= 0 &&
+        local.dy >= 0 &&
+        local.dx <= transform.size.width &&
+        local.dy <= transform.size.height;
   }
 
   /// Mirror a centre-relative offset across the flipped axes. Its own

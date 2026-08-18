@@ -32,6 +32,7 @@ class SliderSubTool extends SubTool {
     required this.readValue,
     required this.writeValue,
     required this.format,
+    this.previewValue,
     this.leadingBuilder,
     bool supportsSiblingSwipe = true,
     this.presetLabels,
@@ -67,6 +68,10 @@ class SliderSubTool extends SubTool {
   /// stays in one place.
   final void Function(WidgetRef ref, double value) writeValue;
 
+  /// Optional per-tick preview writer for document-backed live panels.
+  /// The final [writeValue] still fires exactly once on settle.
+  final void Function(WidgetRef ref, double value)? previewValue;
+
   /// Formats the live readout (e.g. `(v) => '${v.round()}'`).
   final String Function(double value) format;
 
@@ -84,7 +89,8 @@ class SliderSubTool extends SubTool {
       presets: presets,
       presetLabels: presetLabels,
       formatValue: format,
-      leading: leadingBuilder?.call(context, value),
+      onPreview: previewValue == null ? null : (v) => previewValue!(ref, v),
+      liveLeadingBuilder: leadingBuilder,
       onCommit: (v) => writeValue(ref, v),
     );
   }

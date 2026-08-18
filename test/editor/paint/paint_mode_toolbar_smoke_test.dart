@@ -4,7 +4,7 @@
 // behaviour before the 1.3-1.5 paint split: the strip renders one
 // DockToolTile per slot the per-tool capability matrix
 // (`_allowedSlotsFor`) allows — freestyle = tool/color/size/opacity,
-// blur = tool/blur only, mirrored by the public
+// blur = tool/eraser/blur, mirrored by the public
 // `PaintModeToolbar.toolIdsFor` — and tapping a tile toggles its
 // sheet body in the dock's expanded zone through
 // `PaintSession.openSlot` (tap opens, re-tap closes). Later refactors
@@ -106,12 +106,21 @@ void main() {
     ]);
 
     // The sibling-swipe id list is filtered by the same matrix.
-    expect(PaintModeToolbar.toolIdsFor(PaintToolType.freestyle), [
+    expect(PaintModeToolbar.toolIdsFor(tool: PaintToolType.freestyle), [
       'tool',
       'color',
       'size',
       'opacity',
     ]);
+
+    final armedTool = tester.widget<DockToolTile>(
+      stripTile(AppIcons.freehandTool),
+    );
+    expect(
+      armedTool.active,
+      isTrue,
+      reason: 'the armed drawing tool must remain visibly selected',
+    );
   });
 
   testWidgets('color tile toggles the color body in the expanded zone', (
@@ -151,7 +160,7 @@ void main() {
     expect(find.byType(PaintSizeBody), findsOneWidget);
   });
 
-  testWidgets('blur tool strips the surface down to tool + blur slots', (
+  testWidgets('blur keeps the global eraser beside its blur control', (
     tester,
   ) async {
     final container = await pumpPaintMode(tester, tool: PaintToolType.blur);
@@ -160,11 +169,17 @@ void main() {
       PaintToolType.blur,
     );
 
-    // Capability matrix for blur: {tool, blur} — nothing else. Both
-    // tiles render the blur glyph today (the tool tile mirrors the
-    // active tool's icon, the blur slot has the same icon in its
-    // spec); this doubling is deliberate current behaviour.
-    expect(stripTileIcons(tester), [AppIcons.blur, AppIcons.blur]);
-    expect(PaintModeToolbar.toolIdsFor(PaintToolType.blur), ['tool', 'blur']);
+    // Erase remains a global canvas action even while painting blur.
+    // Both blur entries render the same glyph: the first is tool
+    // identity, the last is blur strength.
+    expect(stripTileIcons(tester), [
+      AppIcons.blur,
+      AppIcons.eraserTool,
+      AppIcons.blur,
+    ]);
+    expect(PaintModeToolbar.toolIdsFor(tool: PaintToolType.blur), [
+      'tool',
+      'blur',
+    ]);
   });
 }

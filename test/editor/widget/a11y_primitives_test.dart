@@ -115,6 +115,8 @@ void main() {
           isButton: true,
           hasSelectedState: true,
           isSelected: true,
+          hasEnabledState: true,
+          isEnabled: true,
           hasTapAction: true,
         ),
       );
@@ -141,6 +143,8 @@ void main() {
           isButton: true,
           hasSelectedState: true,
           isSelected: true,
+          hasEnabledState: true,
+          isEnabled: true,
           hasTapAction: true,
         ),
       );
@@ -165,7 +169,37 @@ void main() {
           isButton: true,
           hasSelectedState: true,
           isSelected: false,
+          hasEnabledState: true,
+          isEnabled: true,
           hasTapAction: true,
+        ),
+      );
+    });
+
+    testWidgets('disabled option reports enabled false and has no action', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          PresetChip.option(
+            selected: false,
+            enabled: false,
+            icon: Icons.crop_square,
+            label: 'Unavailable',
+            onTap: () {},
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.byType(PresetChip)),
+        matchesSemantics(
+          label: 'Unavailable',
+          isButton: true,
+          hasSelectedState: true,
+          isSelected: false,
+          hasEnabledState: true,
+          isEnabled: false,
         ),
       );
     });

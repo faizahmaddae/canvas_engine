@@ -39,11 +39,13 @@ class PresetChip extends StatefulWidget {
     required String this.label,
     required this.selected,
     required this.onTap,
+    this.enabled = true,
     this.minWidth = 56,
   }) : icon = null,
        preview = null,
        iconSize = 18,
        width = null,
+       maxLabelLines = 1,
        _tile = false;
 
   /// Glyph-above-label option tile (the old `PanelOptionTile`
@@ -53,11 +55,13 @@ class PresetChip extends StatefulWidget {
     super.key,
     required this.selected,
     required this.onTap,
+    this.enabled = true,
     this.icon,
     this.iconSize = 18,
     this.preview,
     this.label,
     this.width,
+    this.maxLabelLines = 1,
   }) : assert(
          icon == null || preview == null,
          'Provide either icon or preview, not both.',
@@ -68,6 +72,7 @@ class PresetChip extends StatefulWidget {
   final String? label;
   final bool selected;
   final VoidCallback onTap;
+  final bool enabled;
 
   /// Pill mode: minimum chip width so a scroller's chips share one
   /// width and the eye doesn't track variable widths while
@@ -88,6 +93,11 @@ class PresetChip extends StatefulWidget {
   /// tiles via `Expanded`.
   final double? width;
 
+  /// Option tiles default to one compact line. Visual catalogues such
+  /// as Paint tools may opt into two so localized names remain whole
+  /// under RTL and text scaling instead of collapsing to ellipses.
+  final int maxLabelLines;
+
   final bool _tile;
 
   @override
@@ -103,9 +113,16 @@ class _PresetChipState extends State<PresetChip> {
     final tokens = AppTokens.of(context);
     final selected = widget.selected;
     final tile = widget._tile;
+    final pillHeight =
+        (MediaQuery.textScalerOf(context).scale(12.5) * 1.25 + 12).clamp(
+          36.0,
+          double.infinity,
+        );
 
     // ── the ONE selected contract ───────────────────────────────
-    final fg = selected
+    final fg = !widget.enabled
+        ? tokens.textSecondary.withValues(alpha: 0.38)
+        : selected
         ? tokens.accentText
         : (tile ? tokens.textSecondary : tokens.textPrimary);
     Color fill;
@@ -113,7 +130,7 @@ class _PresetChipState extends State<PresetChip> {
       fill = tokens.accent.withValues(alpha: 0.16);
     } else if (tile && _down) {
       fill = tokens.accent.withValues(alpha: 0.10);
-    } else if (tile && _hover) {
+    } else if (tile && _hover && widget.enabled) {
       fill = tokens.textPrimary.withValues(alpha: 0.06);
     } else if (tile) {
       fill = tokens.surfaceMuted.withValues(alpha: 0.35);
@@ -157,6 +174,7 @@ class _PresetChipState extends State<PresetChip> {
     final radius = BorderRadius.circular(tile ? 10 : 99);
 
     void handleTap() {
+      if (!widget.enabled) return;
       // Pill chips self-fire; option tiles keep caller-owned
       // haptics (see class doc).
       if (!tile) EditorHaptics.snap();
@@ -187,10 +205,10 @@ class _PresetChipState extends State<PresetChip> {
       ),
       // Painted 36 like the prototype; the 44dp hit floor is restored
       // by the outer padding below, the ModeDoneButton split.
-      height: tile ? null : 36,
+      height: tile ? null : pillHeight,
       width: widget.width,
       padding: tile
-          ? const EdgeInsets.symmetric(vertical: 8)
+          ? const EdgeInsets.symmetric(horizontal: 8, vertical: 8)
           : const EdgeInsets.symmetric(horizontal: 14),
       alignment: tile ? null : Alignment.center,
       decoration: BoxDecoration(
@@ -209,7 +227,9 @@ class _PresetChipState extends State<PresetChip> {
       body = MouseRegion(
         onEnter: (_) => setState(() => _hover = true),
         onExit: (_) => setState(() => _hover = false),
-        cursor: SystemMouseCursors.click,
+        cursor: widget.enabled
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
         child: body,
       );
     } else {
@@ -217,7 +237,10 @@ class _PresetChipState extends State<PresetChip> {
       // the GestureDetector below is `opaque`, so the padding is live
       // hit area, not dead space.
       body = Padding(
-        padding: const EdgeInsets.symmetric(vertical: (kMinHitTarget - 36) / 2),
+        padding: EdgeInsets.symmetric(
+          vertical:
+              ((kMinHitTarget - pillHeight).clamp(0.0, double.infinity)) / 2,
+        ),
         child: body,
       );
     }
@@ -225,15 +248,20 @@ class _PresetChipState extends State<PresetChip> {
     return Semantics(
       label: widget.label,
       button: true,
+      enabled: widget.enabled,
       selected: selected,
-      onTap: handleTap,
+      onTap: widget.enabled ? handleTap : null,
       child: ExcludeSemantics(
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTapDown: (_) => setState(() => _down = true),
-          onTapCancel: () => setState(() => _down = false),
-          onTapUp: (_) => setState(() => _down = false),
-          onTap: handleTap,
+          onTapDown: widget.enabled
+              ? (_) => setState(() => _down = true)
+              : null,
+          onTapCancel: widget.enabled
+              ? () => setState(() => _down = false)
+              : null,
+          onTapUp: widget.enabled ? (_) => setState(() => _down = false) : null,
+          onTap: widget.enabled ? handleTap : null,
           child: AnimatedScale(
             scale: _down ? 0.96 : 1.0,
             duration: const Duration(milliseconds: 90),
@@ -265,7 +293,7 @@ class _PresetChipState extends State<PresetChip> {
 
     Widget labelText(String text) => Text(
       text,
-      maxLines: 1,
+      maxLines: widget.maxLabelLines,
       overflow: TextOverflow.ellipsis,
       textAlign: TextAlign.center,
       style: TextStyle(

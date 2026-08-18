@@ -60,8 +60,17 @@ Future<void> _drain(WidgetTester tester) async {
 }
 
 const _card = ValueKey('home-resume-draft');
+const _overflow = ValueKey('resume-draft-overflow');
 const _notNow = ValueKey('resume-draft-not-now');
 const _delete = ValueKey('resume-draft-delete');
+
+/// Neither of the two actions that are not Resume sits on the card any
+/// more — both live behind «⋯», one deliberate tap further away than
+/// the button that opens the draft.
+Future<void> _openMenu(WidgetTester tester) async {
+  await tester.tap(find.byKey(_overflow));
+  await tester.pumpAndSettle();
+}
 
 void main() {
   late ProviderContainer container;
@@ -119,12 +128,23 @@ void main() {
     expect(find.byKey(_card), findsOneWidget);
   });
 
+  testWidgets('the offer names the draft it is offering', (tester) async {
+    await seedDraft(tester, name: 'پوستر نوروز');
+    await pumpHome(tester);
+    expect(
+      find.text('پوستر نوروز'),
+      findsOneWidget,
+      reason: 'the card should answer "resume WHAT?", not just "resume"',
+    );
+  });
+
   testWidgets('"Not now" hides the offer and KEEPS the draft', (tester) async {
     await seedDraft(tester);
     await pumpHome(tester);
 
+    await _openMenu(tester);
     await tester.tap(find.byKey(_notNow));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.byKey(_card), findsNothing);
     await tester.runAsync(() async {
@@ -142,6 +162,7 @@ void main() {
     await seedDraft(tester);
     await pumpHome(tester);
 
+    await _openMenu(tester);
     await tester.tap(find.byKey(_delete));
     await tester.pumpAndSettle();
     expect(find.text('Delete this draft?'), findsOneWidget);
@@ -164,6 +185,7 @@ void main() {
     await seedDraft(tester);
     await pumpHome(tester);
 
+    await _openMenu(tester);
     await tester.tap(find.byKey(_delete));
     await tester.pumpAndSettle();
     await tester.runAsync(() async {

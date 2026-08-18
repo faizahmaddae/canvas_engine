@@ -3098,6 +3098,36 @@ abstract class AppLocalizations {
   /// **'Eraser'**
   String get eraserTool;
 
+  /// No description provided for @eraseStrokesTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase strokes'**
+  String get eraseStrokesTool;
+
+  /// No description provided for @newShortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get newShortLabel;
+
+  /// No description provided for @newStrokeTool.
+  ///
+  /// In en, this message translates to:
+  /// **'New stroke'**
+  String get newStrokeTool;
+
+  /// No description provided for @nextStrokeScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Next stroke'**
+  String get nextStrokeScope;
+
+  /// No description provided for @editingStrokeScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing this stroke'**
+  String get editingStrokeScope;
+
   /// No description provided for @squareLabel.
   ///
   /// In en, this message translates to:
@@ -3143,7 +3173,7 @@ abstract class AppLocalizations {
   /// No description provided for @sameColorOption.
   ///
   /// In en, this message translates to:
-  /// **'Same color'**
+  /// **'Use stroke color'**
   String get sameColorOption;
 
   /// No description provided for @polygonSidesLabel.
@@ -3397,12 +3427,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This design closed before its latest changes were saved.'**
   String get resumeEditsBody;
-
-  /// No description provided for @resumeDraftBanner.
-  ///
-  /// In en, this message translates to:
-  /// **'You have an unsaved design from a previous session.'**
-  String get resumeDraftBanner;
 
   /// No description provided for @resumeAction.
   ///

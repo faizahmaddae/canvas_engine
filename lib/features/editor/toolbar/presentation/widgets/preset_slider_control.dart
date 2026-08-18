@@ -9,11 +9,11 @@ import 'preset_chip.dart';
 /// numeric sub-tool. Layout, weights, spacing and selection logic
 /// are fixed here so every numeric tool feels identical.
 ///
-/// Drag is preview-only against a *local* in-flight value; the
-/// canonical commit (and any undo entry) only fires on drag-end.
-/// Preset chips commit immediately. Tap-on-preset-while-dragging
-/// is impossible because the slider owns the gesture arena during
-/// drag.
+/// Drag always previews against a local in-flight value and may also
+/// stream through [onPreview] to a document LiveOverlay. The canonical
+/// commit (and any undo entry) only fires on drag-end. Preset chips
+/// commit immediately. Tap-on-preset-while-dragging is impossible
+/// because the slider owns the gesture arena during drag.
 class PresetSliderControl extends StatefulWidget {
   const PresetSliderControl({
     super.key,
@@ -23,10 +23,12 @@ class PresetSliderControl extends StatefulWidget {
     required this.onCommit,
     required this.presets,
     required this.formatValue,
+    this.onPreview,
     this.label,
     this.fineTuneLabel = '',
     this.presetEpsilon = 0.01,
     this.leading,
+    this.liveLeadingBuilder,
     this.presetLabels,
   }) : assert(
          presetLabels == null || presetLabels.length == presets.length,
@@ -41,6 +43,11 @@ class PresetSliderControl extends StatefulWidget {
   /// Final commit handler. Fires on chip tap and on slider
   /// drag-end (once per drag, not per tick).
   final ValueChanged<double> onCommit;
+
+  /// Optional per-tick preview channel. When absent, the control keeps
+  /// its historical local-only drag preview. Document-backed live panels
+  /// use this to stage the value on LiveOverlay without committing it.
+  final ValueChanged<double>? onPreview;
 
   /// Curated values surfaced as chips above the slider.
   final List<double> presets;
@@ -60,6 +67,10 @@ class PresetSliderControl extends StatefulWidget {
 
   /// Optional leading widget rendered to the left of the slider.
   final Widget? leading;
+
+  /// Leading preview that follows the local in-flight value. Takes
+  /// precedence over [leading] when supplied.
+  final Widget Function(BuildContext context, double value)? liveLeadingBuilder;
 
   /// Optional human-friendly chip labels (e.g. 'Thin', 'Medium').
   /// When provided, chips display these instead of numeric
@@ -87,7 +98,9 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
   }
 
   void _onChanged(double v) {
-    setState(() => _dragValue = v);
+    final preview = v.clamp(widget.min, widget.max);
+    setState(() => _dragValue = preview);
+    widget.onPreview?.call(preview);
   }
 
   void _onChangeEnd(double v) {
@@ -202,7 +215,12 @@ class _PresetSliderControlState extends State<PresetSliderControl> {
           children: [
             SizedBox(
               width: 32,
-              child: Center(child: widget.leading ?? const SizedBox.shrink()),
+              child: Center(
+                child:
+                    widget.liveLeadingBuilder?.call(context, live) ??
+                    widget.leading ??
+                    const SizedBox.shrink(),
+              ),
             ),
             Expanded(
               child: SliderTheme(

@@ -462,7 +462,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get layerKindSticker => 'استیکر';
 
   @override
-  String get layerKindPaint => 'طراحی';
+  String get layerKindPaint => 'نقاشی';
 
   @override
   String get layerKindGeneric => 'لایه';
@@ -1013,7 +1013,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get shapeTool => 'شکل';
 
   @override
-  String get drawTool => 'طراحی';
+  String get drawTool => 'نقاشی';
 
   @override
   String get cropTool => 'برش';
@@ -1217,7 +1217,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get colorLabel => 'رنگ';
 
   @override
-  String get fillLabel => 'رنگ';
+  String get fillLabel => 'پرکردن';
 
   @override
   String get fontTool => 'قلم';
@@ -1591,7 +1591,7 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get drawGroup => 'طراحی';
+  String get drawGroup => 'نقاشی';
 
   @override
   String get shapesGroup => 'شکل‌ها';
@@ -1621,6 +1621,21 @@ class AppLocalizationsFa extends AppLocalizations {
   String get eraserTool => 'پاک‌کن';
 
   @override
+  String get eraseStrokesTool => 'پاک‌کردن خط‌ها';
+
+  @override
+  String get newShortLabel => 'جدید';
+
+  @override
+  String get newStrokeTool => 'خط جدید';
+
+  @override
+  String get nextStrokeScope => 'خط بعدی';
+
+  @override
+  String get editingStrokeScope => 'ویرایش این خط';
+
+  @override
   String get squareLabel => 'مربع';
 
   @override
@@ -1642,7 +1657,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get noFillOption => 'بدون پرکردن';
 
   @override
-  String get sameColorOption => 'هم‌رنگ خط';
+  String get sameColorOption => 'استفاده از رنگ خط';
 
   @override
   String get polygonSidesLabel => 'تعداد ضلع‌های چندضلعی';
@@ -1772,9 +1787,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get resumeEditsBody =>
       'این طرح پیش از ذخیره شدن آخرین تغییرات بسته شده است.';
-
-  @override
-  String get resumeDraftBanner => 'یک طرح ذخیره‌نشده از جلسه قبلی دارید.';
 
   @override
   String get resumeAction => 'ادامه';
@@ -1999,7 +2011,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get histAddShape => 'افزودن شکل';
 
   @override
-  String get histAddPaint => 'افزودن طراحی';
+  String get histAddPaint => 'افزودن نقاشی';
 
   @override
   String get histAddLayer => 'افزودن لایه';
@@ -2092,10 +2104,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get histRestoreImage => 'بازگردانی تصویر';
 
   @override
-  String get histPaintStyle => 'سبک طراحی';
+  String get histPaintStyle => 'سبک نقاشی';
 
   @override
-  String get histPaintResize => 'حالت تغییر اندازهٔ طراحی';
+  String get histPaintResize => 'حالت تغییر اندازهٔ نقاشی';
 
   @override
   String get histShapeFill => 'پرکردن شکل';

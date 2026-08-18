@@ -3,13 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../app/theme/app_motion.dart';
 import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../application/paint_tool_controller.dart';
 import '../../../engine/modules/paint/paint_layer.dart';
+import '../../../toolbar/presentation/widgets/preset_chip.dart';
 import '../../domain/paint_tool_type.dart';
 
 String _dashPresetLabel(AppLocalizations l10n, String label) {
@@ -107,53 +107,24 @@ class _DashChoice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    final fg = selected ? tokens.accentText : tokens.textPrimary;
-    // Flat: same grammar as `_FillChoice` and Text `_StyleTile` —
-    // soft tint on select, faint surface at rest, no border or
-    // shadow. Preview line + label remain the affordance.
-    final bg = selected
-        ? tokens.accent.withValues(alpha: 0.12)
-        : tokens.surfaceMuted.withValues(alpha: 0.35);
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          EditorHaptics.snap();
-          onTap();
-        },
-        child: AnimatedContainer(
-          duration: AppMotion.standard,
-          curve: AppMotion.curve,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                height: 18,
-                child: CustomPaint(
-                  size: const Size(double.infinity, 18),
-                  painter: _DashPreviewPainter(pattern: pattern, color: fg),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  color: fg,
-                ),
-              ),
-            ],
+    return PresetChip.option(
+      label: label,
+      selected: selected,
+      maxLabelLines: 2,
+      preview: SizedBox(
+        height: 18,
+        child: CustomPaint(
+          size: const Size(double.infinity, 18),
+          painter: _DashPreviewPainter(
+            pattern: pattern,
+            color: selected ? tokens.accentText : tokens.textSecondary,
           ),
         ),
       ),
+      onTap: () {
+        EditorHaptics.snap();
+        onTap();
+      },
     );
   }
 }

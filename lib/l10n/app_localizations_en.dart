@@ -1619,6 +1619,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eraserTool => 'Eraser';
 
   @override
+  String get eraseStrokesTool => 'Erase strokes';
+
+  @override
+  String get newShortLabel => 'New';
+
+  @override
+  String get newStrokeTool => 'New stroke';
+
+  @override
+  String get nextStrokeScope => 'Next stroke';
+
+  @override
+  String get editingStrokeScope => 'Editing this stroke';
+
+  @override
   String get squareLabel => 'Square';
 
   @override
@@ -1640,7 +1655,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noFillOption => 'No fill';
 
   @override
-  String get sameColorOption => 'Same color';
+  String get sameColorOption => 'Use stroke color';
 
   @override
   String get polygonSidesLabel => 'Polygon sides';
@@ -1770,10 +1785,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get resumeEditsBody =>
       'This design closed before its latest changes were saved.';
-
-  @override
-  String get resumeDraftBanner =>
-      'You have an unsaved design from a previous session.';
 
   @override
   String get resumeAction => 'Resume';

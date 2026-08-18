@@ -1,50 +1,114 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/ui/app_modal_sheet.dart';
 import '../../../../l10n/l10n.dart';
-import '../../../../app/theme/app_icons.dart';
+
+/// What the overflow sheet resolved to. `null` (swipe-down, barrier
+/// tap, back) means the offer stands untouched — neither dismissing
+/// the card nor destroying the draft is something a stray tap should
+/// be able to do.
+enum _DraftMenuAction { notNow, delete }
 
 /// The "you have an unsaved design" offer, shown at the top of Home
 /// when the recovery journal still holds a draft.
 ///
-/// This used to be a raw Material `MaterialBanner`, which failed on
-/// two counts: it painted default Material chrome into a screen whose
-/// entire visual identity is the paper/ink/saffron token set, and its
-/// `OverflowBar` pushed the primary action off the left edge under
+/// Two earlier shapes failed here. A raw `MaterialBanner` painted
+/// framework chrome into a paper/ink/saffron screen and let its
+/// `OverflowBar` push the primary action off the leading edge under
 /// RTL — a Persian user saw «ادام» and could not read, let alone
-/// trust, the button they were being asked to press.
+/// trust, the button they were being asked to press. The card that
+/// replaced it fixed the clipping and demoted the destructive action,
+/// but it spent three stacked rows (message, safe pair, delete) doing
+/// it: ~185dp of a launcher whose whole invariant is that its height
+/// does not grow with content, for an offer most launches dismiss.
 ///
-/// The replacement is a plain card on the page's own gutter: it can't
-/// clip (both actions are laid out by a `Wrap` that falls to a second
-/// line before it overflows), it reads as part of Home rather than as
-/// system chrome, and it costs ~half the vertical space the banner did
-/// so the launcher underneath stays where the user expects it.
-/// Three actions, deliberately not two. "Discard" used to sit beside
-/// "Resume" as a peer and delete the journal on one tap — the only
-/// copy of that work, with no confirm, while deleting an already-SAVED
-/// project required a dialog. The destructive option was the cheap one.
+/// This is one row, ~68dp. The gain comes from saying less and
+/// showing more: the draft's own name replaces the sentence that
+/// described it, so the offer answers "resume WHAT?" instead of
+/// announcing that something exists.
 ///
-/// Now: [onNotNow] dismisses the offer and keeps the draft, [onResume]
-/// opens it, and [onDeleteDraft] is the only path that destroys
-/// anything — separated from the pair, labelled for what it deletes,
-/// and confirmed by its caller.
+/// The three paths survive the compression, with their weights
+/// further apart than before rather than closer:
+///
+///   * [onResume] is the filled button — the only action with weight.
+///   * [onNotNow] hides the offer and keeps the draft. It is not a
+///     peer of Resume; it lives behind «⋯».
+///   * [onDeleteDraft] is the only path that destroys anything, now
+///     one level deeper than it used to be and still confirmed by its
+///     caller. It used to sit beside Resume as a peer and clear the
+///     journal on a single tap — the only copy of that work, with no
+///     dialog, while deleting an already-SAVED project required one.
 class ResumeDraftCard extends StatelessWidget {
   const ResumeDraftCard({
     super.key,
     required this.onResume,
     required this.onNotNow,
     required this.onDeleteDraft,
+    this.draftName,
   });
 
   final VoidCallback onResume;
   final VoidCallback onNotNow;
   final VoidCallback onDeleteDraft;
 
+  /// The draft's recorded display name. Null when the journal predates
+  /// the name sidecar or the write lost its race with the crash, in
+  /// which case the generic recovered-draft name stands in — the row
+  /// must never render a blank title.
+  final String? draftName;
+
+  Future<void> _showMenu(BuildContext context) async {
+    final l10n = context.l10n;
+    // Same host and same grammar as the project card's menu two
+    // sliders down this screen: a list sheet has nothing to preview
+    // behind it, so the barrier is `full` per interaction contract §9.
+    final action = await showAppSheet<_DraftMenuAction>(
+      context,
+      title: draftName ?? l10n.recoveredDraftName,
+      titleIcon: AppIcons.resumeDraft,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            key: const ValueKey('resume-draft-not-now'),
+            leading: const Icon(AppIcons.close),
+            title: Text(l10n.notNowAction),
+            onTap: () => Navigator.pop(ctx, _DraftMenuAction.notNow),
+          ),
+          ListTile(
+            key: const ValueKey('resume-draft-delete'),
+            leading: Icon(
+              AppIcons.delete,
+              color: Theme.of(ctx).colorScheme.error,
+            ),
+            title: Text(
+              l10n.deleteDraftAction,
+              style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+            ),
+            onTap: () => Navigator.pop(ctx, _DraftMenuAction.delete),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+      ),
+    );
+    switch (action) {
+      case null:
+        return;
+      case _DraftMenuAction.notNow:
+        onNotNow();
+      case _DraftMenuAction.delete:
+        onDeleteDraft();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
     final l10n = context.l10n;
+    final textTheme = Theme.of(context).textTheme;
 
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(
@@ -59,85 +123,75 @@ class ResumeDraftCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadii.card),
           border: Border.all(color: tokens.border),
         ),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
+        padding: const EdgeInsetsDirectional.fromSTEB(
+          AppSpacing.md,
+          AppSpacing.sm,
+          AppSpacing.sm,
+          AppSpacing.sm,
+        ),
+        child: Row(
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: tokens.brandSoft,
-                    borderRadius: BorderRadius.circular(AppRadii.button),
-                  ),
-                  child: Icon(
-                    AppIcons.resumeDraft,
-                    size: 18,
-                    color: tokens.accentText,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    l10n.resumeDraftBanner,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: tokens.brandSoft,
+                borderRadius: BorderRadius.circular(AppRadii.button),
+              ),
+              child: Icon(
+                AppIcons.resumeDraft,
+                size: 18,
+                color: tokens.accentText,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            // The title has to be free to shrink: Persian project names
+            // run long, and the two trailing controls are fixed-width.
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    draftName ?? l10n.recoveredDraftName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodyMedium?.copyWith(
                       color: tokens.textPrimary,
                       fontWeight: FontWeight.w600,
-                      height: 1.35,
+                      height: 1.2,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            // `Wrap` rather than `Row`: Persian labels run longer than
-            // their English counterparts and the narrowest supported
-            // width is ~320dp, so the pair has to be able to stack
-            // instead of clipping the way the banner did.
-            // `Wrap` rather than `Row`: Persian labels run longer than
-            // their English counterparts and the narrowest supported
-            // width is ~320dp, so the pair has to be able to stack
-            // instead of clipping the way the banner did.
-            Wrap(
-              alignment: WrapAlignment.end,
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                _DraftAction(
-                  key: const ValueKey('resume-draft-not-now'),
-                  label: l10n.notNowAction,
-                  onPressed: onNotNow,
-                  filled: false,
-                ),
-                _DraftAction(
-                  key: const ValueKey('resume-draft-resume'),
-                  label: l10n.resumeAction,
-                  onPressed: onResume,
-                  filled: true,
-                ),
-              ],
-            ),
-            // Its own row, under a divider, on the opposite alignment
-            // from the safe pair. Three actions do not fit one line at
-            // 320dp once «حذف پیش‌نویس» is in the mix, and crowding the
-            // destructive one against Resume is exactly what this
-            // redesign exists to undo.
-            const SizedBox(height: AppSpacing.sm),
-            Divider(height: 1, color: tokens.border),
-            const SizedBox(height: AppSpacing.sm),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: _DraftAction(
-                key: const ValueKey('resume-draft-delete'),
-                label: l10n.deleteDraftAction,
-                onPressed: onDeleteDraft,
-                filled: false,
-                destructive: true,
+                  Text(
+                    l10n.unsavedBadge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: tokens.textSecondary,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            _ResumeButton(
+              key: const ValueKey('resume-draft-resume'),
+              label: l10n.resumeAction,
+              onPressed: onResume,
+            ),
+            IconButton(
+              key: const ValueKey('resume-draft-overflow'),
+              iconSize: 18,
+              // Explicit box, not `VisualDensity.compact`: compact
+              // trims 8dp off both axes and lands the menu trigger at
+              // 40dp, under the touch floor the rest of the app holds.
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              tooltip: l10n.moreTooltip,
+              color: tokens.textSecondary,
+              icon: const Icon(AppIcons.moreActions),
+              onPressed: () => _showMenu(context),
             ),
           ],
         ),
@@ -146,38 +200,34 @@ class ResumeDraftCard extends StatelessWidget {
   }
 }
 
-class _DraftAction extends StatelessWidget {
-  const _DraftAction({
+/// The one action carrying weight. Kept local rather than reaching for
+/// `AppPrimaryButton`, which is a full-width page CTA — this one has to
+/// shrink-wrap its label so the title beside it keeps the remaining
+/// width.
+class _ResumeButton extends StatelessWidget {
+  const _ResumeButton({
     super.key,
     required this.label,
     required this.onPressed,
-    required this.filled,
-    this.destructive = false,
   });
 
   final String label;
   final VoidCallback onPressed;
-  final bool filled;
-
-  /// Paints the label in the error colour. The destructive action is
-  /// never `filled` — weight belongs to Resume.
-  final bool destructive;
 
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
     return Material(
-      color: filled ? tokens.brand : Colors.transparent,
+      color: tokens.brand,
       borderRadius: BorderRadius.circular(AppRadii.button),
       child: InkWell(
         onTap: onPressed,
         borderRadius: BorderRadius.circular(AppRadii.button),
         // `Align` with both factors set (rather than a `Container` with
         // an `alignment`, which expands to fill whatever it is given)
-        // so each action shrink-wraps its label and the pair shares one
-        // line instead of each claiming a full run of the `Wrap`.
+        // so the button shrink-wraps its label.
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 44, minWidth: 88),
+          constraints: const BoxConstraints(minHeight: 44, minWidth: 76),
           child: Align(
             widthFactor: 1,
             heightFactor: 1,
@@ -188,11 +238,7 @@ class _DraftAction extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: filled
-                      ? tokens.onBrand
-                      : destructive
-                      ? Theme.of(context).colorScheme.error
-                      : tokens.accentText,
+                  color: tokens.onBrand,
                 ),
               ),
             ),

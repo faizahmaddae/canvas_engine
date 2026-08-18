@@ -87,7 +87,6 @@ void main() {
     test('the eraser is reachable from every drawing tool', () {
       for (final tool in PaintToolType.values) {
         final allowed = allowedPaintSlotsFor(tool);
-        if (tool == PaintToolType.blur) continue; // its own mode
         expect(
           allowed,
           contains('eraser'),
@@ -100,7 +99,10 @@ void main() {
       // It has no sheet. Paging onto it would open nothing and swap
       // the user's tool mid-swipe.
       for (final tool in PaintToolType.values) {
-        expect(PaintModeToolbar.toolIdsFor(tool), isNot(contains('eraser')));
+        expect(
+          PaintModeToolbar.toolIdsFor(tool: tool),
+          isNot(contains('eraser')),
+        );
       }
     });
   });

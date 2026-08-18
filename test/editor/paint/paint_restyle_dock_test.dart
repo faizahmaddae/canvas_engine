@@ -8,12 +8,15 @@ import 'package:canvas_engine/features/editor/application/document_controller.da
 import 'package:canvas_engine/features/editor/application/editor_mode_controller.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
+import 'package:canvas_engine/features/editor/engine/core/canvas_sizing.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
 import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
 import 'package:canvas_engine/features/editor/paint/domain/paint_tool_type.dart';
 import 'package:canvas_engine/features/editor/paint/presentation/paint_mode_toolbar.dart';
+import 'package:canvas_engine/features/editor/paint/presentation/bodies/paint_fill_body.dart';
 import 'package:canvas_engine/features/editor/paint/presentation/paint_tool_specs.dart';
+import 'package:canvas_engine/features/editor/presentation/widgets/dock_tool_tile.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -85,7 +88,11 @@ void main() {
       expect(view.strokeColor, const Color(0xFF00AA55));
       expect(view.strokeWidth, 18);
       expect(view.sides, 5);
-      expect(view.blurRadius, 24);
+      final doc = c.read(documentControllerProvider);
+      expect(
+        view.blurRadius,
+        closeTo(24 / CanvasSizing.scaleFactor(doc), 0.0001),
+      );
       expect(view.layerKind, PaintKind.polygon);
     });
 
@@ -96,6 +103,21 @@ void main() {
       final session = c.read(paintToolControllerProvider);
       expect(view.strokeWidth, session.strokeWidth);
       expect(view.layerKind, isNull);
+    });
+
+    test('an armed tool wins over a later paint-layer selection', () {
+      final c = makeContainer(PaintKind.rectangle);
+      final ctrl = c.read(paintToolControllerProvider.notifier);
+      ctrl.selectTool(PaintToolType.freestyle);
+      c.read(selectionControllerProvider.notifier).select('p1');
+      final defaults = c.read(paintToolControllerProvider);
+
+      expect(c.read(paintStyleViewProvider).layerKind, isNull);
+      ctrl.setStrokeWidth(31);
+
+      expect(c.read(paintToolControllerProvider).strokeWidth, 31);
+      expect(committed(c).strokeWidth, 18);
+      expect(defaults.activeTool, PaintToolType.freestyle);
     });
   });
 
@@ -111,6 +133,18 @@ void main() {
       expect(
         allowedPaintSlotsForKind(PaintKind.rectangle),
         isNot(contains('dash')),
+      );
+      for (final kind in PaintKind.values) {
+        expect(
+          allowedPaintSlotsForKind(kind),
+          isNot(contains('eraser')),
+          reason: 'eraser changes interaction mode; it cannot restyle $kind',
+        );
+      }
+      expect(
+        PaintModeToolbar.toolIdsFor(layerKind: PaintKind.rectangle),
+        isNot(contains('tool')),
+        reason: 'New stroke is an instant action, not a swipeable sheet',
       );
     });
 
@@ -139,9 +173,51 @@ void main() {
             'question',
       );
     });
+
+    testWidgets('selected stroke offers an explicit New stroke escape', (
+      tester,
+    ) async {
+      final c = makeContainer(PaintKind.rectangle);
+      await pumpStrip(tester, c);
+
+      final tile = tester.widget<DockToolTile>(
+        find.byWidgetPredicate(
+          (widget) => widget is DockToolTile && widget.label == 'New',
+        ),
+      );
+      expect(tile.active, isFalse);
+      expect(tile.semanticLabel, 'New stroke');
+      expect(find.byIcon(AppIcons.eraserTool), findsNothing);
+    });
   });
 
   group('the previously-hidden setters now edit the layer', () {
+    testWidgets('fill choices display and copy the selected stroke style', (
+      tester,
+    ) async {
+      final c = makeContainer(PaintKind.rectangle);
+      final defaults = c.read(paintToolControllerProvider);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: c,
+          child: MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: PaintFillBody(view: c.read(paintStyleViewProvider)),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Use stroke color'));
+      await tester.pump();
+
+      expect(committed(c).fillColor, const Color(0xFF00AA55));
+      expect(c.read(paintToolControllerProvider).fillColor, defaults.fillColor);
+    });
+
     test('sides', () {
       final c = makeContainer(PaintKind.polygon);
       c.read(paintToolControllerProvider.notifier).setPolygonSides(9);
@@ -152,8 +228,16 @@ void main() {
 
     test('blur sigma, but only on a blur patch', () {
       final blurDoc = makeContainer(PaintKind.blur);
+      final doc = blurDoc.read(documentControllerProvider);
       blurDoc.read(paintToolControllerProvider.notifier).setBlurRadius(48);
-      expect(committed(blurDoc).blurSigma, 48);
+      expect(
+        committed(blurDoc).blurSigma,
+        closeTo(CanvasSizing.scaleDimension(48, doc), 0.0001),
+      );
+      expect(
+        blurDoc.read(paintStyleViewProvider).blurRadius,
+        closeTo(48, 0.0001),
+      );
 
       final rectDoc = makeContainer(PaintKind.rectangle);
       rectDoc.read(paintToolControllerProvider.notifier).setBlurRadius(48);
@@ -202,6 +286,41 @@ void main() {
         PaintToolType.dashLine,
         reason: 'a non-peer pick falls back to arming the tool',
       );
+    });
+
+    test('restyling never changes the next-stroke defaults', () {
+      final c = makeContainer(PaintKind.polygon);
+      final ctrl = c.read(paintToolControllerProvider.notifier);
+      final defaults = c.read(paintToolControllerProvider);
+
+      ctrl.setStrokeColor(const Color(0xFF123456));
+      ctrl.setStrokeWidth(32);
+      ctrl.setFillColor(const Color(0xFF654321));
+      ctrl.setPolygonSides(9);
+
+      final after = c.read(paintToolControllerProvider);
+      expect(after.strokeColor, defaults.strokeColor);
+      expect(after.strokeWidth, defaults.strokeWidth);
+      expect(after.fillColor, defaults.fillColor);
+      expect(after.polygonSides, defaults.polygonSides);
+    });
+
+    test('preview restyles also leave next-stroke defaults alone', () {
+      final c = makeContainer(PaintKind.rectangle);
+      final ctrl = c.read(paintToolControllerProvider.notifier);
+      final defaults = c.read(paintToolControllerProvider);
+
+      ctrl.previewStrokeColor(const Color(0xFF123456));
+      ctrl.commitStrokeColor();
+      ctrl.previewStrokeWidth(32);
+      ctrl.commitStrokeWidth();
+      ctrl.previewFillColor(const Color(0xFF654321));
+      ctrl.commitFillColor();
+
+      final after = c.read(paintToolControllerProvider);
+      expect(after.strokeColor, defaults.strokeColor);
+      expect(after.strokeWidth, defaults.strokeWidth);
+      expect(after.fillColor, defaults.fillColor);
     });
   });
 }
