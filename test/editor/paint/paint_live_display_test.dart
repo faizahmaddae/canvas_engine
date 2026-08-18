@@ -169,7 +169,7 @@ void main() {
       final before = version(c);
 
       writer(c).previewStrokeWidth(31);
-      writer(c).commitStrokeWidth();
+      writer(c).commitStrokeWidth(31);
 
       expect(version(c), before + 1);
       expect(c.read(liveOverlayProvider).isEmpty, isTrue);
@@ -204,8 +204,6 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.text('Adjust precisely'));
-    await tester.pumpAndSettle();
   }
 
   double thumb(WidgetTester tester) =>
@@ -309,7 +307,7 @@ void main() {
     expect(find.text('24px'), findsOneWidget);
     expect(version(c), before);
 
-    writer(c).commitStrokeWidth();
+    writer(c).commitStrokeWidth(24);
     await tester.pump();
 
     expect(find.text('24px'), findsOneWidget);

@@ -397,12 +397,15 @@ class PaintToolController extends Notifier<PaintSession> {
   // ─── Contract §2 preview channel: stroke width (tb2 3/16) ──────
   //
   // Slider drags call [previewStrokeWidth] per tick and
-  // [commitStrokeWidth] once on release / pointer-cancel / preset
-  // tap. Author mode updates only the session default; bound restyle
-  // mode stages only the selected layer on the live overlay. The
-  // pending command is the exact command commit executes; each tick
-  // APPLIES it to the committed doc and stages the result, so preview
-  // == commit by construction.
+  // [commitStrokeWidth] once on release / pointer-cancel. Author mode
+  // updates only the session default; bound restyle mode stages only
+  // the selected layer on the live overlay. The pending command is
+  // the exact command commit executes; each tick APPLIES it to the
+  // committed doc and stages the result, so preview == commit by
+  // construction. [commitStrokeWidth] takes the value and previews it
+  // first (mirrors [commitBlurRadius]/[commitStrokeOpacity]) because
+  // PresetSliderControl's chip taps call onCommit directly with no
+  // preceding preview tick.
   UpdatePaintStyleCommand? _pendingWidthCommit;
 
   void previewStrokeWidth(double width) => _previewStyle(
@@ -417,8 +420,10 @@ class PaintToolController extends Notifier<PaintSession> {
     },
   );
 
-  void commitStrokeWidth() =>
-      _commitStyle(_pendingWidthCommit, (cmd) => _pendingWidthCommit = cmd);
+  void commitStrokeWidth(double width) {
+    previewStrokeWidth(width);
+    _commitStyle(_pendingWidthCommit, (cmd) => _pendingWidthCommit = cmd);
+  }
 
   void setFillColor(Color? color) => _writeStyle(
     onLayer: (layer) => layer.fillColor == color

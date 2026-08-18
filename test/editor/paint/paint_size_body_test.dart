@@ -1,16 +1,16 @@
-// Pins the redesigned Paint Size body (tb8):
+// Pins the Size body after its redesign onto the shared
+// PresetSliderControl (the same control Blur/Opacity already use):
+// a live readout lives in the control's own header, presets are
+// chips, and the slider is always visible — no more floating
+// readout badge, reflowing weight grid, or a disclosure hiding the
+// fine-tune slider behind an extra tap.
 //
-//   * the px readout lives INSIDE the preview card and is the only
-//     place the width is spelled out;
-//   * a width between presets is explained ("Custom") instead of
-//     leaving every weight tile dark for no stated reason;
-//   * the chosen weight carries a non-colour cue (the tick glyph);
-//   * the weight grid reflows — no horizontal overflow at 320dp
-//     with Persian copy at textScale 2.5, two label lines allowed;
-//   * the live channel is untouched: slider ticks stream through
-//     onChange, and release OR pointer-cancel commits exactly once.
+// Generic preset/slider mechanics (drag streams onPreview, release
+// or pointer-cancel commits exactly once) are pinned ONCE for every
+// numeric tool by slider_preview_contract_test.dart's
+// "PresetSliderControl commits once per drag..." — this file only
+// pins how PaintSizeBody composes into that shared control.
 
-import 'package:canvas_engine/app/theme/app_icons.dart';
 import 'package:canvas_engine/features/editor/paint/presentation/paint_size_body.dart';
 import 'package:canvas_engine/features/editor/toolbar/presentation/widgets/preset_chip.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
@@ -21,8 +21,8 @@ void main() {
   Future<void> pumpSize(
     WidgetTester tester, {
     required double value,
-    ValueChanged<double>? onChange,
-    VoidCallback? onChangeEnd,
+    ValueChanged<double>? onPreview,
+    ValueChanged<double>? onCommit,
     Locale locale = const Locale('en'),
     Size size = const Size(400, 800),
     double textScale = 1.0,
@@ -48,8 +48,8 @@ void main() {
               child: PaintSizeBody(
                 value: value,
                 color: const Color(0xFF112233),
-                onChange: onChange ?? (_) {},
-                onChangeEnd: onChangeEnd,
+                onPreview: onPreview ?? (_) {},
+                onCommit: onCommit ?? (_) {},
               ),
             ),
           ),
@@ -59,53 +59,40 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('a width between presets reads as Custom next to the px badge', (
+  testWidgets('the hero previews the value and the slider needs no extra tap', (
     tester,
   ) async {
     await pumpSize(tester, value: 20);
 
-    // ONE readout, and it sits inside the preview card.
-    expect(find.text('20px'), findsOneWidget);
     expect(
-      find.descendant(
-        of: find.byKey(PaintSizeBody.readoutKey),
-        matching: find.text('20px'),
-      ),
-      findsOneWidget,
+      tester.widget<StrokeHero>(find.byType(StrokeHero)).width,
+      20,
+      reason:
+          'the stroke preview is unique to Size and stays above '
+          'the control',
     );
     expect(
-      find.descendant(
-        of: find.byKey(PaintSizeBody.readoutKey),
-        matching: find.text('· Custom'),
-      ),
+      find.byType(Slider),
       findsOneWidget,
-      reason: 'an unlit preset row must say WHY it is unlit',
+      reason: 'no disclosure tap stands between the user and the slider',
     );
     expect(
-      find.bySemanticsLabel('20px · Custom'),
+      find.text('20px'),
       findsOneWidget,
-      reason: 'the spoken readout carries the same status as the visible one',
+      reason: 'the live readout now lives in the control\'s own header',
     );
+  });
 
-    // No weight is claimed, and no tick is painted.
+  testWidgets('a width between presets lights no chip', (tester) async {
+    await pumpSize(tester, value: 20);
     final chips = tester.widgetList<PresetChip>(find.byType(PresetChip));
     expect(chips.length, 4);
     expect(chips.every((c) => !c.selected), isTrue);
-    expect(find.byIcon(AppIcons.confirm), findsNothing);
   });
 
-  testWidgets('landing on a preset lights exactly that weight, tick and all', (
-    tester,
-  ) async {
+  testWidgets('landing on a preset lights exactly that weight', (tester) async {
     await pumpSize(tester, value: 8);
-
     expect(find.text('8px'), findsOneWidget);
-    expect(find.text('· Custom'), findsNothing);
-    expect(
-      find.bySemanticsLabel('8px · Medium'),
-      findsOneWidget,
-      reason: 'the badge names the active weight to screen readers',
-    );
 
     final selected = tester
         .widgetList<PresetChip>(find.byType(PresetChip))
@@ -113,121 +100,89 @@ void main() {
         .toList();
     expect(selected.length, 1);
     expect(selected.single.label, 'Medium');
-    expect(
-      find.byIcon(AppIcons.confirm),
-      findsOneWidget,
-      reason: 'selection needs a cue that survives without colour',
-    );
   });
 
-  testWidgets('a weight tap is one preview + one commit, and clears Custom', (
+  testWidgets('a weight tap previews then commits the same value once', (
     tester,
   ) async {
     final previews = <double>[];
-    var commits = 0;
+    final commits = <double>[];
     await pumpSize(
       tester,
       value: 20,
-      onChange: previews.add,
-      onChangeEnd: () => commits++,
+      onPreview: previews.add,
+      onCommit: commits.add,
     );
 
     await tester.tap(find.text('Thick'));
     await tester.pump();
 
-    expect(previews, [18]);
-    expect(commits, 1, reason: 'a tap is a single discrete commit (§3)');
+    expect(
+      previews,
+      isEmpty,
+      reason: 'PresetSliderControl chips commit directly, no preview tick',
+    );
+    expect(commits, [18], reason: 'a tap is a single discrete commit (§3)');
   });
 
-  testWidgets('320dp Persian at textScale 2.5: the weight grid reflows instead '
-      'of overflowing, and labels keep two lines', (tester) async {
-    await pumpSize(
-      tester,
-      value: 20,
-      locale: const Locale('fa'),
-      size: const Size(320, 700),
-      textScale: 2.5,
-    );
+  testWidgets(
+    '320dp Persian at textScale 2.5: no overflow, and every weight is '
+    'reachable by scroll',
+    (tester) async {
+      await pumpSize(
+        tester,
+        value: 20,
+        locale: const Locale('fa'),
+        size: const Size(320, 700),
+        textScale: 2.5,
+      );
 
-    expect(
-      tester.takeException(),
-      isNull,
-      reason: 'no RenderFlex overflow at the narrowest supported dock',
-    );
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: 'no RenderFlex overflow at the narrowest supported dock',
+      );
 
-    // Every weight is on-screen — the old horizontal scroller pushed
-    // «خیلی ضخیم» past the edge.
-    for (final label in const ['نازک', 'متوسط', 'ضخیم', 'خیلی ضخیم']) {
-      expect(find.text(label), findsOneWidget);
-      final box = tester.getRect(find.text(label));
-      expect(box.left, greaterThanOrEqualTo(-0.5));
-      expect(box.right, lessThanOrEqualTo(320.5));
-    }
-    expect(
-      tester.widget<Text>(find.text('خیلی ضخیم')).maxLines,
-      2,
-      reason: 'two-word Persian weights wrap rather than ellipsize',
-    );
+      // The chip row is a horizontal scroller (the same shape Blur and
+      // Opacity already use), not the old reflowing grid — at this
+      // extreme width+scale «خیلی ضخیم» (two Persian words, unlike
+      // Blur/Opacity's single-word presets) genuinely doesn't fit
+      // beside its siblings. The live readout in the control's own
+      // header always names the exact value regardless, so nothing is
+      // silently lost — but every weight must still be reachable.
+      expect(find.text('نازک'), findsOneWidget);
+      expect(find.text('متوسط'), findsOneWidget);
 
-    // The tiles share ONE width (an equal-weight grid, not organically
-    // sized pills) and clear the 44dp floor.
-    final tiles = tester
-        .widgetList<PresetChip>(find.byType(PresetChip))
-        .map((c) => c.width)
-        .toSet();
-    expect(tiles.length, 1);
-    for (var i = 0; i < 4; i++) {
-      final size = tester.getSize(find.byType(PresetChip).at(i));
-      expect(size.height, greaterThanOrEqualTo(44));
-    }
+      await tester.drag(find.byType(ListView), const Offset(1000, 0));
+      await tester.pumpAndSettle();
 
-    // The fine-tune drawer opens without overflowing either.
-    await tester.tap(find.text('تنظیم دقیق'));
-    await tester.pumpAndSettle();
-    expect(find.byType(Slider), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+      expect(find.text('ضخیم'), findsOneWidget);
+      expect(find.text('خیلی ضخیم'), findsOneWidget);
+    },
+  );
 
-  testWidgets('the fine-tune slider still streams live and commits once — on '
-      'release and on pointer-cancel', (tester) async {
+  testWidgets('a full drag previews live and commits once on release', (
+    tester,
+  ) async {
     final previews = <double>[];
-    var commits = 0;
+    final commits = <double>[];
     await pumpSize(
       tester,
       value: 20,
-      onChange: previews.add,
-      onChangeEnd: () => commits++,
+      onPreview: previews.add,
+      onCommit: commits.add,
     );
-
-    await tester.tap(find.text('Adjust precisely'));
-    await tester.pumpAndSettle();
 
     final slider = find.byType(Slider);
-    expect(slider, findsOneWidget);
-    expect(tester.widget<Slider>(slider).value, 20);
-    expect(tester.widget<StrokeHero>(find.byType(StrokeHero)).width, 20);
-
     final gesture = await tester.startGesture(tester.getCenter(slider));
     await gesture.moveBy(const Offset(40, 0));
     await tester.pump();
-    await gesture.moveBy(const Offset(20, 0));
-    await tester.pump();
     expect(previews, isNotEmpty, reason: 'ticks stream while dragging (§2)');
-    expect(commits, 0, reason: 'a drag is preview-only until it ends');
+    expect(commits, isEmpty, reason: 'a drag is preview-only until it ends');
+
     await gesture.up();
     await tester.pump();
-    expect(commits, 1);
-
-    final cancelled = await tester.startGesture(tester.getCenter(slider));
-    await cancelled.moveBy(const Offset(-30, 0));
-    await tester.pump();
-    await cancelled.cancel();
-    await tester.pump();
-    expect(
-      commits,
-      2,
-      reason: 'pointer-cancel commits the last previewed value (§7)',
-    );
+    expect(commits.length, 1);
   });
 
   testWidgets('the body no longer repeats the panel title', (tester) async {

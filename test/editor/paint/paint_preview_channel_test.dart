@@ -227,7 +227,7 @@ void main() {
     expect(committed(container, 'stroke').strokeWidth, 6);
     expect(container.read(documentCommitVersionProvider), version);
 
-    controller.commitStrokeWidth();
+    controller.commitStrokeWidth(23);
 
     expect(container.read(paintStyleViewProvider).strokeWidth, 23);
     expect(committed(container, 'stroke').strokeWidth, 23);

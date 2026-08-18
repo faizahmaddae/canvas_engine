@@ -325,7 +325,7 @@ void main() {
       ctrl.previewStrokeColor(const Color(0xFF123456));
       ctrl.commitStrokeColor();
       ctrl.previewStrokeWidth(32);
-      ctrl.commitStrokeWidth();
+      ctrl.commitStrokeWidth(32);
       ctrl.previewFillColor(const Color(0xFF654321));
       ctrl.commitFillColor();
 

@@ -167,9 +167,9 @@ void main() {
       final ctrl = c.read(paintToolControllerProvider.notifier);
 
       ctrl.previewStrokeWidth(20);
-      ctrl.commitStrokeWidth();
+      ctrl.commitStrokeWidth(20);
       ctrl.previewStrokeWidth(40);
-      ctrl.commitStrokeWidth();
+      ctrl.commitStrokeWidth(40);
 
       c.read(documentControllerProvider.notifier).undo();
       var layer =

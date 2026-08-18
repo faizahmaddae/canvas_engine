@@ -11,6 +11,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:canvas_engine/app/theme/app_icons.dart';
 import 'package:canvas_engine/app/theme/app_theme.dart';
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/editor_session.dart';
@@ -540,6 +541,39 @@ void main() {
       brightness: Brightness.dark,
       fileName: 'editor_paint_restyle_dark.png',
       withPaintSelected: true,
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — paint size panel, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_paint_size_light.png',
+      withPaintSelected: true,
+      interact: (t) async {
+        // Opens the Size sheet on the selected stroke — the redesign
+        // onto PresetSliderControl: StrokeHero above a live readout +
+        // preset chips + the always-visible fine-tune slider.
+        await t.tap(find.byIcon(AppIcons.strokeWeight));
+        await t.pumpAndSettle();
+      },
+    );
+  });
+
+  testWidgets('EditorScreen visual capture — paint size panel, dark', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'editor_paint_size_dark.png',
+      withPaintSelected: true,
+      interact: (t) async {
+        await t.tap(find.byIcon(AppIcons.strokeWeight));
+        await t.pumpAndSettle();
+      },
     );
   });
 
