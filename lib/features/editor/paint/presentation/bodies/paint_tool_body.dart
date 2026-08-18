@@ -5,13 +5,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../app/theme/app_motion.dart';
-import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../application/paint_tool_controller.dart';
 import '../../domain/paint_tool_type.dart';
+import '../../../toolbar/presentation/widgets/preset_chip.dart';
 
 String? paintToolLabel(AppLocalizations l10n, PaintToolType? tool) {
   return switch (tool) {
@@ -47,7 +46,7 @@ String _paintGroupLabel(AppLocalizations l10n, _ToolGroup group) {
 /// Each tile renders a **live mini-preview** of the tool's stroke
 /// in the user's current paint colour, so the picker reads as a
 /// visual catalogue, not a row of generic icons.
-class PaintToolBody extends ConsumerWidget {
+class PaintToolBody extends ConsumerStatefulWidget {
   const PaintToolBody({super.key});
 
   // ─── Group definitions ──────────────────────────────────────
@@ -82,45 +81,100 @@ class PaintToolBody extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PaintToolBody> createState() => _PaintToolBodyState();
+}
+
+class _PaintToolBodyState extends ConsumerState<PaintToolBody> {
+  int? _activeGroup;
+
+  @override
+  Widget build(BuildContext context) {
     final session = ref.watch(paintToolControllerProvider);
+    final style = ref.watch(paintStyleViewProvider);
     final ctrl = ref.read(paintToolControllerProvider.notifier);
-    final width = MediaQuery.of(context).size.width;
-    final cols = width >= 360 ? 5 : 4;
+    final groupIndex =
+        _activeGroup ??
+        PaintToolBody._groups.indexWhere(
+          (group) => group.tools.any((entry) => entry.$1 == session.activeTool),
+        );
+    final resolvedGroup = groupIndex < 0 ? 0 : groupIndex;
+    final group = PaintToolBody._groups[resolvedGroup];
+    final scaledLabelLine = MediaQuery.textScalerOf(context).scale(13);
+    final categoryHeight = math.max(
+      44.0,
+      MediaQuery.textScalerOf(context).scale(12.5) * 1.25 + 12,
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (var g = 0; g < _groups.length; g++) ...[
-          if (g > 0) const SizedBox(height: 14),
-          _GroupHeader(title: _paintGroupLabel(context.l10n, _groups[g])),
-          const SizedBox(height: 8),
-          GridView.count(
-            crossAxisCount: cols,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: 0.92,
-            padding: EdgeInsets.zero,
-            children: [
-              for (final (tool, label) in _groups[g].tools)
-                _PaintToolGridTile(
-                  tool: tool,
-                  label: paintToolLabel(context.l10n, tool) ?? label,
-                  paintColor: session.strokeColor,
-                  selected: session.activeTool == tool,
-                  onTap: tool.available
-                      ? () {
-                          EditorHaptics.tap();
-                          ctrl.selectTool(tool);
-                        }
-                      : null,
-                ),
-            ],
+        SizedBox(
+          height: categoryHeight,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: PaintToolBody._groups.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, index) => PresetChip(
+              label: _paintGroupLabel(
+                context.l10n,
+                PaintToolBody._groups[index],
+              ),
+              selected: resolvedGroup == index,
+              onTap: () => setState(() => _activeGroup = index),
+            ),
           ),
-        ],
+        ),
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final cols = constraints.maxWidth >= 520
+                ? 5
+                : constraints.maxWidth < 300
+                ? 3
+                : 4;
+            // Two localized lines plus glyph and padding. Do not cap
+            // this: large accessibility text must grow the cell rather
+            // than overflow a tight grid extent.
+            final tileHeight = math.max(82.0, 46 + scaledLabelLine * 2.4);
+            return GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: cols,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                mainAxisExtent: tileHeight,
+              ),
+              itemCount: group.tools.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              itemBuilder: (context, index) {
+                final (tool, fallbackLabel) = group.tools[index];
+                return PresetChip.option(
+                  label: paintToolLabel(context.l10n, tool) ?? fallbackLabel,
+                  selected: session.activeTool == tool,
+                  enabled: tool.available,
+                  maxLabelLines: 2,
+                  preview: SizedBox(
+                    width: 38,
+                    height: 26,
+                    child: CustomPaint(
+                      painter: _ToolPreviewPainter(
+                        tool: tool,
+                        color: style.strokeColor,
+                      ),
+                    ),
+                  ),
+                  onTap: () {
+                    EditorHaptics.tap();
+                    ctrl.selectTool(tool);
+                  },
+                );
+              },
+            );
+          },
+        ),
       ],
     );
   }
@@ -130,125 +184,6 @@ class _ToolGroup {
   const _ToolGroup({required this.title, required this.tools});
   final String title;
   final List<(PaintToolType, String)> tools;
-}
-
-/// Section label above each tool group. Aligned with Text's
-/// `_PanelSectionLabel` (11sp, w700, letterSpacing 0.8, muted) for
-/// a single editor-wide section-heading style. Caller still owns
-/// outer spacing (this builder leaves the parent's vertical gaps
-/// untouched and only adds a hairline left inset to match the
-/// tool-grid alignment).
-class _GroupHeader extends StatelessWidget {
-  const _GroupHeader({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
-          color: AppTokens.of(context).textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-class _PaintToolGridTile extends StatelessWidget {
-  const _PaintToolGridTile({
-    required this.tool,
-    required this.label,
-    required this.paintColor,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final PaintToolType tool;
-  final String label;
-  final Color paintColor;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = AppTokens.of(context);
-    final theme = Theme.of(context);
-    final enabled = onTap != null;
-
-    final bgColor = selected
-        ? tokens.accent.withValues(alpha: 0.14)
-        : tokens.surfaceMuted.withValues(alpha: 0.40);
-    final borderColor = selected
-        ? tokens.accent.withValues(alpha: 0.85)
-        : tokens.border.withValues(alpha: 0.35);
-    final labelColor = !enabled
-        ? tokens.textPrimary.withValues(alpha: 0.32)
-        : selected
-        ? tokens.accent
-        : tokens.textPrimary.withValues(alpha: 0.88);
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: AppMotion.standard,
-          curve: AppMotion.curve,
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: borderColor, width: selected ? 1.4 : 1),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: tokens.accent.withValues(alpha: 0.20),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : const <BoxShadow>[],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 38,
-                height: 26,
-                child: CustomPaint(
-                  painter: _ToolPreviewPainter(
-                    tool: tool,
-                    color: enabled
-                        ? paintColor
-                        : tokens.textPrimary.withValues(alpha: 0.25),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  fontSize: 10.5,
-                  color: labelColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// Renders a 1:1 mini-preview of each paint tool's stroke / shape

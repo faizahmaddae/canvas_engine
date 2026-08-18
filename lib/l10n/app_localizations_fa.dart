@@ -1217,7 +1217,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get colorLabel => 'رنگ';
 
   @override
-  String get fillLabel => 'رنگ';
+  String get fillLabel => 'پرکردن';
 
   @override
   String get fontTool => 'قلم';
@@ -1621,6 +1621,21 @@ class AppLocalizationsFa extends AppLocalizations {
   String get eraserTool => 'پاک‌کن';
 
   @override
+  String get eraseStrokesTool => 'پاک‌کردن خط‌ها';
+
+  @override
+  String get newShortLabel => 'جدید';
+
+  @override
+  String get newStrokeTool => 'خط جدید';
+
+  @override
+  String get nextStrokeScope => 'خط بعدی';
+
+  @override
+  String get editingStrokeScope => 'ویرایش این خط';
+
+  @override
   String get squareLabel => 'مربع';
 
   @override
@@ -1642,7 +1657,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get noFillOption => 'بدون پرکردن';
 
   @override
-  String get sameColorOption => 'هم‌رنگ خط';
+  String get sameColorOption => 'استفاده از رنگ خط';
 
   @override
   String get polygonSidesLabel => 'تعداد ضلع‌های چندضلعی';

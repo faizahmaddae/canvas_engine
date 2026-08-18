@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../settings/application/settings_controller.dart';
+import '../../engine/modules/paint/paint_layer.dart';
 import '../../presentation/widgets/editor_breakpoints.dart';
 import '../../toolbar/domain/toolbar_slot.dart';
 import '../../toolbar/presentation/slot_strip.dart';
@@ -47,24 +48,23 @@ class PaintModeToolbar extends ConsumerStatefulWidget {
   /// Excludes `eraser`, which is on the strip but has no sheet: it is
   /// a mode toggle, not a sub-tool. Paging onto it would open nothing
   /// and silently swap the user's tool mid-swipe.
-  static List<String> toolIdsFor(PaintToolType? tool) {
-    final allowed = allowedPaintSlotsFor(tool);
-    return paintToolSpecs
-        .map((s) => s.id)
-        .where(allowed.contains)
-        .where((id) => id != 'eraser')
+  static List<String> toolIdsFor({PaintToolType? tool, PaintKind? layerKind}) {
+    return paintStripSlotIds(tool: tool, layerKind: layerKind)
+        .where((id) {
+          if (id == 'eraser') return false;
+          // In restyle mode Tool is an instant "New stroke" escape, not
+          // a sheet. Sibling swipes must stay among actual style panels.
+          if (layerKind != null && id == 'tool') return false;
+          return true;
+        })
         .toList(growable: false);
   }
 }
 
 class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
-  // External controller kept (instead of SlotStrip's own) so the
-  // one-time discovery peek below can animate the strip.
+  // External controller lets the shared strip auto-scroll the open
+  // slot without owning another controller lifecycle.
   final _scroll = ScrollController();
-
-  // Session-scoped guard so the discovery peek fires at most once
-  // per app run.
-  static bool _peekedThisSession = false;
 
   // Per-mount guard: auto-open the Tool picker exactly once when
   // paint mode is freshly entered with no active tool. After the
@@ -76,10 +76,6 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
   @override
   void initState() {
     super.initState();
-    if (!_peekedThisSession) {
-      _peekedThisSession = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _runPeek());
-    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoOpenPicker());
   }
 
@@ -98,23 +94,6 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
     }
     _autoOpenedPicker = true;
     ref.read(paintToolControllerProvider.notifier).openSlot('tool');
-  }
-
-  Future<void> _runPeek() async {
-    if (!mounted || !_scroll.hasClients) return;
-    final pos = _scroll.position;
-    if (pos.maxScrollExtent <= 0) return;
-    await _scroll.animateTo(
-      48,
-      duration: const Duration(milliseconds: 360),
-      curve: Curves.easeOutCubic,
-    );
-    if (!mounted || !_scroll.hasClients) return;
-    await _scroll.animateTo(
-      0,
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeOutCubic,
-    );
   }
 
   @override
@@ -147,16 +126,13 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
     // defaults. They mirror onto the layer now — tb4 3/14 — so the
     // matrix can be honest instead of defensive.)
     final layerKind = view.layerKind;
-    final allowed = session.activeTool == null && layerKind != null
-        ? allowedPaintSlotsForKind(layerKind)
-        : allowedPaintSlotsFor(session.activeTool);
+    final restyling = session.activeTool == null && layerKind != null;
+    final visibleIds = paintStripSlotIds(
+      tool: session.activeTool,
+      layerKind: session.activeTool == null ? layerKind : null,
+    );
+    final allowed = visibleIds.toSet();
 
-    // Tier boundary sits before spec index 4 ('opacity') — but ONLY
-    // when the opacity slot is actually visible, exactly like the
-    // old EditorTierGap insertion (blur mode renders tool+blur with
-    // NO divider). SlotStrip draws its divider on tier changes, so
-    // tier2 membership is gated on opacity's visibility.
-    final showTier2 = allowed.contains('opacity');
     final slots = <ToolbarSlot>[
       for (var i = 0; i < paintToolSpecs.length; i++)
         if (allowed.contains(paintToolSpecs[i].id))
@@ -171,9 +147,16 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
                 ? drawTool.icon
                 : paintToolSpecs[i].icon,
             label: paintToolSpecs[i].id == 'tool'
-                ? paintToolLabel(context.l10n, drawTool) ??
-                      context.l10n.toolLabel
+                ? restyling
+                      ? context.l10n.newShortLabel
+                      : paintToolLabel(context.l10n, drawTool) ??
+                            context.l10n.toolLabel
                 : paintSpecLabel(context.l10n, paintToolSpecs[i]),
+            semanticLabel: switch (paintToolSpecs[i].id) {
+              'eraser' => context.l10n.eraseStrokesTool,
+              'tool' when restyling => context.l10n.newStrokeTool,
+              _ => null,
+            },
             valueLabel: paintToolSpecs[i].id == 'tool'
                 ? null
                 : () => _paintValueText(
@@ -188,7 +171,11 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
                 : paintToolSpecs[i].id == 'fill' && fillEnabled
                 ? () => view.fillColor
                 : null,
-            tier: showTier2 && i >= 4 ? SlotTier.tier2 : SlotTier.tier1,
+            tier:
+                paintToolSpecs[i].id == 'tool' ||
+                    paintToolSpecs[i].id == 'eraser'
+                ? SlotTier.tier1
+                : SlotTier.tier2,
             onTap: () {
               // The eraser is a MODE, not a panel: it flips straight
               // to erasing and back, with no sheet in between. Every
@@ -205,6 +192,15 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
               if (paintToolSpecs[i].id == 'tool' && erasing) {
                 EditorHaptics.toggle();
                 ctrl.toggleEraser();
+                return;
+              }
+              // In restyle context this is an explicit escape hatch,
+              // not a misleading tool picker that still edits the
+              // selected stroke. Arm the last drawing tool and clear
+              // selection in one tap; a second tap opens the picker.
+              if (paintToolSpecs[i].id == 'tool' && restyling) {
+                EditorHaptics.toggle();
+                ctrl.selectTool(drawTool);
                 return;
               }
               // Toggling: re-tap of active tile dismisses the
@@ -227,7 +223,13 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
         // The eraser tile lights from the armed TOOL; every other
         // tile lights from its open sheet. Without this the eraser
         // would look unselected the whole time it was erasing.
-        activeId: erasing ? 'eraser' : session.openSlot,
+        activeId:
+            session.openSlot ??
+            (erasing
+                ? 'eraser'
+                : session.activeTool != null
+                ? 'tool'
+                : null),
         controller: _scroll,
         // Unified strip grammar (tb2 16/16): the default 70dp tile
         // extent + 12dp strip padding every other mode uses — the

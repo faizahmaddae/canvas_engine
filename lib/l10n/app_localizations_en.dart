@@ -1619,6 +1619,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eraserTool => 'Eraser';
 
   @override
+  String get eraseStrokesTool => 'Erase strokes';
+
+  @override
+  String get newShortLabel => 'New';
+
+  @override
+  String get newStrokeTool => 'New stroke';
+
+  @override
+  String get nextStrokeScope => 'Next stroke';
+
+  @override
+  String get editingStrokeScope => 'Editing this stroke';
+
+  @override
   String get squareLabel => 'Square';
 
   @override
@@ -1640,7 +1655,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noFillOption => 'No fill';
 
   @override
-  String get sameColorOption => 'Same color';
+  String get sameColorOption => 'Use stroke color';
 
   @override
   String get polygonSidesLabel => 'Polygon sides';

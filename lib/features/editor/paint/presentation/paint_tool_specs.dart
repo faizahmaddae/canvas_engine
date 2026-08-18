@@ -42,9 +42,12 @@ Set<String> allowedPaintSlotsFor(PaintToolType? tool) {
         'polygon',
       };
     case PaintToolType.eraser:
-      return const {'tool', 'eraser', 'size'};
+      // Phase-1 erasing removes whole paint strokes. Until a real
+      // radius-aware eraser exists, Size would be a present-but-inert
+      // control that only reconfigured the next drawing tool.
+      return const {'tool', 'eraser'};
     case PaintToolType.blur:
-      return const {'tool', 'blur'};
+      return const {'tool', 'eraser', 'blur'};
   }
 }
 
@@ -59,31 +62,25 @@ Set<String> allowedPaintSlotsFor(PaintToolType? tool) {
 ///
 /// The line family shows `dash` because a committed line kind can be
 /// restyled into its peers; box shapes show `fill`; only a blur patch
-/// shows `blur`. Nothing here is a control that does nothing, which
-/// is what the old selected-layer slot-hiding guard was papering over.
+/// shows `blur`. Eraser is intentionally absent: it changes the canvas
+/// interaction mode; it does not restyle the selected stroke. Nothing
+/// here is a control that does nothing, which is what the old
+/// selected-layer slot-hiding guard was papering over.
 Set<String> allowedPaintSlotsForKind(PaintKind kind) {
   switch (kind) {
     case PaintKind.freestyle:
     case PaintKind.arrow:
-      return const {'tool', 'eraser', 'color', 'size', 'opacity'};
+      return const {'tool', 'color', 'size', 'opacity'};
     case PaintKind.line:
     case PaintKind.dashLine:
     case PaintKind.dashDotLine:
-      return const {'tool', 'eraser', 'color', 'size', 'opacity', 'dash'};
+      return const {'tool', 'color', 'size', 'opacity', 'dash'};
     case PaintKind.rectangle:
     case PaintKind.circle:
     case PaintKind.hexagon:
-      return const {'tool', 'eraser', 'color', 'size', 'fill', 'opacity'};
+      return const {'tool', 'color', 'size', 'fill', 'opacity'};
     case PaintKind.polygon:
-      return const {
-        'tool',
-        'eraser',
-        'color',
-        'size',
-        'fill',
-        'opacity',
-        'polygon',
-      };
+      return const {'tool', 'color', 'size', 'fill', 'opacity', 'polygon'};
     case PaintKind.blur:
       return const {'tool', 'blur'};
   }
@@ -179,3 +176,22 @@ final List<PaintSpec> paintToolSpecs = <PaintSpec>[
   PaintSpec(id: 'polygon', icon: AppIcons.polygonTool, label: 'Sides'),
   PaintSpec(id: 'dash', icon: AppIcons.dashStyle, label: 'Style'),
 ];
+
+/// Visible paint slots in their single canonical render order.
+///
+/// Exactly one context supplies capabilities: an armed authoring tool
+/// or a selected committed layer. The toolbar and sibling-swipe logic
+/// both consume this list so the sheet pager cannot drift from the strip.
+List<String> paintStripSlotIds({PaintToolType? tool, PaintKind? layerKind}) {
+  assert(
+    tool == null || layerKind == null,
+    'paint strip cannot author and restyle at the same time',
+  );
+  final allowed = layerKind == null
+      ? allowedPaintSlotsFor(tool)
+      : allowedPaintSlotsForKind(layerKind);
+  return [
+    for (final spec in paintToolSpecs)
+      if (allowed.contains(spec.id)) spec.id,
+  ];
+}

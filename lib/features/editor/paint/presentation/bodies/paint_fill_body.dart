@@ -3,12 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../app/theme/app_motion.dart';
 import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/l10n.dart';
 import '../../../../color_picker/presentation/color_picker_sheet.dart';
 import '../../application/paint_tool_controller.dart';
+import '../../../toolbar/presentation/widgets/preset_chip.dart';
 
 /// Fill body — three large choice cards (No fill / Same color /
 /// Custom). The grid + toggle from the old design was removed;
@@ -16,26 +16,20 @@ import '../../application/paint_tool_controller.dart';
 ///
 /// Behavior:
 /// - **No fill**: `setFillColor(null)` (matches `setFillEnabled(false)`).
-/// - **Same color**: `setFillColor(strokeColor)` so fill mirrors
-///   the current stroke. Live; updates if stroke colour changes.
+/// - **Use stroke color**: copies the current stroke colour into fill.
+///   It is a discrete choice, not a persistent colour binding.
 /// - **Custom**: opens the shared color picker. Selecting a colour
 ///   becomes the active fill; cancel restores the prior value.
 class PaintFillBody extends ConsumerWidget {
-  const PaintFillBody({
-    super.key,
-    required this.enabled,
-    required this.current,
-  });
+  const PaintFillBody({super.key, required this.view});
 
-  final bool enabled;
-  final Color current;
+  final PaintStyleView view;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(paintToolControllerProvider);
     final ctrl = ref.read(paintToolControllerProvider.notifier);
-    final stroke = session.strokeColor;
-    final fill = session.fillColor;
+    final stroke = view.strokeColor;
+    final fill = view.fillColor;
 
     final isNone = fill == null;
     final isSameAsStroke = fill != null && fill.toARGB32() == stroke.toARGB32();
@@ -47,7 +41,7 @@ class PaintFillBody extends ConsumerWidget {
       children: [
         const SizedBox(height: 6),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _FillChoice(
@@ -124,44 +118,12 @@ class _FillChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = AppTokens.of(context);
-    final fg = selected ? tokens.accentText : tokens.textPrimary;
-    // Flat: soft tint when selected, faint surface when resting.
-    // No border, no elevation — same grammar as Text `_StyleTile`.
-    final bg = selected
-        ? tokens.accent.withValues(alpha: 0.12)
-        : tokens.surfaceMuted.withValues(alpha: 0.35);
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: AppMotion.standard,
-          curve: AppMotion.curve,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(width: 32, height: 32, child: preview),
-              const SizedBox(height: 10),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                  color: fg,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return PresetChip.option(
+      label: label,
+      selected: selected,
+      maxLabelLines: 2,
+      preview: SizedBox(width: 32, height: 32, child: preview),
+      onTap: onTap,
     );
   }
 }

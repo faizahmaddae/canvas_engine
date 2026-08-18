@@ -27,6 +27,7 @@ import 'package:canvas_engine/features/editor/paint/application/paint_tool_contr
 import 'package:canvas_engine/features/editor/paint/domain/paint_tool_type.dart';
 import 'package:canvas_engine/features/editor/paint/presentation/bodies/paint_size_entry.dart';
 import 'package:canvas_engine/features/editor/paint/presentation/paint_gesture_surface.dart';
+import 'package:canvas_engine/features/editor/paint/presentation/paint_size_body.dart';
 import 'package:canvas_engine/features/editor/shape/presentation/shape_style_body.dart';
 import 'package:canvas_engine/features/editor/toolbar/presentation/widgets/preset_slider_control.dart';
 import 'package:flutter/material.dart';
@@ -397,8 +398,8 @@ void main() {
     expect(container.read(liveOverlayProvider).isEmpty, isTrue);
     expect(
       container.read(paintToolControllerProvider).strokeWidth,
-      staged.strokeWidth,
-      reason: 'session default tracks the drag',
+      6,
+      reason: 'restyling a layer must not reconfigure the next stroke',
     );
 
     // No selection → session-only: zero document writes.
@@ -422,9 +423,104 @@ void main() {
     );
   });
 
+  // The other half of §2: the dock is a CONSUMER of the preview. A
+  // host that reads the style view once (a snapshot) renders a Size
+  // panel whose slider thumb and stroke hero stay parked at the
+  // pre-gesture width while the canvas underneath already moved. Wire
+  // the body the way the real dock does — reactively — and pin that
+  // both follow the staged value before any commit.
+  testWidgets('paint Size tracks the STAGED width live: slider thumb and '
+      'stroke hero move before the commit', (tester) async {
+    final layer = PaintLayer(
+      id: 'p1',
+      transform: const LayerTransform(
+        position: Offset(40, 40),
+        size: Size(200, 100),
+      ),
+      kind: PaintKind.line,
+      normalizedPoints: const [Offset(0, 0.5), Offset(1, 0.5)],
+    );
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container
+        .read(documentControllerProvider.notifier)
+        .newDocument(width: 800, height: 800);
+    container
+        .read(documentControllerProvider.notifier)
+        .execute(AddLayerCommand(layer));
+    container.read(selectionControllerProvider.notifier).select('p1');
+
+    // Deliberately NOT `container.read(paintStyleViewProvider)` — the
+    // snapshot is exactly the bug this test exists to catch.
+    await pumpBody(
+      tester,
+      container,
+      Consumer(
+        builder: (context, ref, _) =>
+            PaintSizeEntryBody(view: ref.watch(paintStyleViewProvider)),
+      ),
+    );
+
+    PaintLayer committed() =>
+        container.read(documentControllerProvider).layerById('p1')
+            as PaintLayer;
+    double stagedWidth() =>
+        (container.read(liveOverlayProvider).replacements['p1'] as PaintLayer)
+            .strokeWidth;
+
+    await tester.tap(find.text('Adjust precisely'));
+    await tester.pumpAndSettle();
+
+    final versionBefore = container.read(documentCommitVersionProvider);
+    final slider = find.byType(Slider);
+    expect(slider, findsOneWidget);
+    expect(tester.widget<Slider>(slider).value, 6);
+    expect(tester.widget<StrokeHero>(find.byType(StrokeHero)).width, 6);
+
+    final gesture = await tester.startGesture(tester.getCenter(slider));
+    await gesture.moveBy(const Offset(60, 0));
+    await tester.pump();
+
+    final staged = stagedWidth();
+    expect(staged, greaterThan(6), reason: 'the drag must have moved');
+    expect(
+      tester.widget<Slider>(slider).value,
+      closeTo(staged, 0.001),
+      reason: 'the thumb reads the staged layer, not the committed one',
+    );
+    expect(
+      tester.widget<StrokeHero>(find.byType(StrokeHero)).width,
+      closeTo(staged, 0.001),
+      reason: 'the hero previews the width the canvas is already drawing',
+    );
+    expect(committed().strokeWidth, 6, reason: 'committed frozen mid-drag');
+    expect(container.read(documentCommitVersionProvider), versionBefore);
+
+    // A second tick keeps tracking — one frozen frame would be enough
+    // to make the panel feel dead.
+    await gesture.moveBy(const Offset(40, 0));
+    await tester.pump();
+    final staged2 = stagedWidth();
+    expect(staged2, greaterThan(staged));
+    expect(tester.widget<Slider>(slider).value, closeTo(staged2, 0.001));
+    expect(container.read(documentCommitVersionProvider), versionBefore);
+
+    await gesture.up();
+    await tester.pump();
+    expect(container.read(documentCommitVersionProvider), versionBefore + 1);
+    expect(committed().strokeWidth, closeTo(staged2, 0.001));
+    expect(container.read(liveOverlayProvider).isEmpty, isTrue);
+    expect(
+      tester.widget<Slider>(slider).value,
+      closeTo(staged2, 0.001),
+      reason: 'no flash-back frame between overlay clear and commit',
+    );
+  });
+
   testWidgets('PresetSliderControl commits once per drag, including on '
       'pointer-cancel', (tester) async {
     final commits = <double>[];
+    final previews = <double>[];
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -434,6 +530,7 @@ void main() {
             max: 100,
             presets: const [10, 50],
             formatValue: (v) => '${v.round()}',
+            onPreview: previews.add,
             onCommit: commits.add,
           ),
         ),
@@ -446,6 +543,7 @@ void main() {
     await tester.pump();
     await gesture.moveBy(const Offset(20, 0));
     await tester.pump();
+    expect(previews, isNotEmpty, reason: 'live panels receive drag ticks');
     expect(commits, isEmpty, reason: 'drag is preview-only until release');
     await gesture.up();
     await tester.pump();

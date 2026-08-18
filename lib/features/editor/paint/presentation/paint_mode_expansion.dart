@@ -57,8 +57,17 @@ class PaintModeInlineExpansion extends ConsumerWidget {
           headerIcon: isPicker ? AppIcons.drawTool : spec.icon,
           builder: (ctx, _) => _buildPaintBody(ctx, openId, view),
         );
+    final scopedSubTool = _PaintScopedSubTool(
+      delegate: subTool,
+      scopeLabel: openId == 'tool' || view.layerKind == null
+          ? context.l10n.nextStrokeScope
+          : context.l10n.editingStrokeScope,
+    );
 
-    final ids = PaintModeToolbar.toolIdsFor(session.activeTool);
+    final ids = PaintModeToolbar.toolIdsFor(
+      tool: session.activeTool,
+      layerKind: session.activeTool == null ? view.layerKind : null,
+    );
     // Single-list, no exclusions — [SiblingSwipeStrategy] handles
     // wrap-around and the single-slot "swipe is a no-op" case so
     // we don't have to special-case it here.
@@ -67,7 +76,7 @@ class PaintModeInlineExpansion extends ConsumerWidget {
     final nextId = swipe.next(openId);
 
     return SubToolSheet(
-      subTool: subTool,
+      subTool: scopedSubTool,
       onClose: ctrl.closeSlot,
       // Undo lives on the persistent floating action in the editor
       // chrome — single source of history navigation.
@@ -95,10 +104,7 @@ class PaintModeInlineExpansion extends ConsumerWidget {
       case 'color':
         return PaintColorBody(current: view.strokeColor);
       case 'fill':
-        return PaintFillBody(
-          enabled: view.fillColor != null,
-          current: view.fillColor ?? view.strokeColor,
-        );
+        return PaintFillBody(view: view);
       case 'polygon':
         return PaintPolygonBody(value: view.sides);
       case 'dash':
@@ -111,78 +117,145 @@ class PaintModeInlineExpansion extends ConsumerWidget {
   }
 }
 
+/// Paint controls have two honest destinations: defaults for the next
+/// stroke, or the selected stroke itself. Keeping that scope visible in
+/// every body prevents a colour/size edit from feeling global when it
+/// is actually a restyle (and vice versa).
+class _PaintScopedSubTool extends SubTool {
+  const _PaintScopedSubTool({required this.delegate, required this.scopeLabel});
+
+  final SubTool delegate;
+  final String scopeLabel;
+
+  @override
+  String get headerTitle => delegate.headerTitle;
+
+  @override
+  IconData get headerIcon => delegate.headerIcon;
+
+  @override
+  String? get headerValue => delegate.headerValue;
+
+  @override
+  double get maxHeightFraction => delegate.maxHeightFraction;
+
+  @override
+  bool get supportsSiblingSwipe => delegate.supportsSiblingSwipe;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = AppTokens.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Semantics(
+            container: true,
+            label: scopeLabel,
+            child: ExcludeSemantics(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: tokens.accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  child: Text(
+                    scopeLabel,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: tokens.accentText,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        delegate.build(context, ref),
+      ],
+    );
+  }
+}
+
 /// Stroke-width body. Preset chips above a "Fine tune" slider with
 /// a dot preview that grows/shrinks live.
 /// Phase 2 registry: paint slots whose body is a generic
 /// preset+slider. New numeric tools should be added here, not as
 /// new private body widgets.
-Map<String, SubTool> _paintSliderSubTools(BuildContext context) =>
-    <String, SubTool>{
-      'blur': SliderSubTool(
-        headerTitle: context.l10n.blurLabel,
-        headerIcon: AppIcons.blur,
-        min: 0,
-        max: 64,
-        // Preset-first: 3 human choices users actually pick. Slider
-        // covers everything in between for power users.
-        presets: const [0, 10, 32],
-        presetLabels: [
-          context.l10n.noneOption,
-          context.l10n.softOption,
-          context.l10n.strongOption,
-        ],
-        readValue: (ref) => ref.watch(paintStyleViewProvider).blurRadius,
-        writeValue: (ref, v) =>
-            ref.read(paintToolControllerProvider.notifier).setBlurRadius(v),
-        format: (v) => EditorValueFormat.of(context).digits(v.round()),
-      ),
-      // Opacity drives the alpha channel of the active stroke colour.
-      // Re-uses the colour-picker pathway ([setStrokeColor]) so undo,
-      // recents, and layer-mirroring all keep working unchanged — the
-      // slider is a faster surface for the same setter the picker calls.
-      'opacity': SliderSubTool(
-        headerTitle: context.l10n.strokeOpacityLabel,
-        headerIcon: AppIcons.opacity,
-        min: 0,
-        max: 100,
-        // Three plain-language steps cover ≥95% of intents.
-        presets: const [25, 60, 100],
-        presetLabels: [
-          context.l10n.lightOption,
-          context.l10n.normalOption,
-          context.l10n.strongOption,
-        ],
-        readValue: (ref) {
-          final c = ref.watch(paintStyleViewProvider).strokeColor;
-          return (c.a * 100).clamp(0.0, 100.0);
-        },
-        writeValue: (ref, v) {
-          final next = ref
-              .read(paintStyleViewProvider)
-              .strokeColor
-              .withValues(alpha: (v / 100).clamp(0.0, 1.0));
-          ref.read(paintToolControllerProvider.notifier).setStrokeColor(next);
-        },
-        format: (v) => EditorValueFormat.of(context).percent(v.round()),
-        leadingBuilder: (context, value) {
-          // Mini swatch preview at the live opacity — instant proof
-          // of what the stroke will look like before release.
-          final c = ProviderScope.containerOf(context)
-              .read(paintStyleViewProvider)
-              .strokeColor
-              .withValues(alpha: (value / 100).clamp(0.0, 1.0));
-          return Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: c,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppTokens.of(context).border.withValues(alpha: 0.6),
-                width: 1,
-              ),
-            ),
-          );
-        },
-      ),
-    };
+Map<String, SubTool> _paintSliderSubTools(
+  BuildContext context,
+) => <String, SubTool>{
+  'blur': SliderSubTool(
+    headerTitle: context.l10n.blurLabel,
+    headerIcon: AppIcons.blur,
+    min: 0,
+    max: 64,
+    // Preset-first: 3 human choices users actually pick. Slider
+    // covers everything in between for power users.
+    presets: const [0, 10, 32],
+    presetLabels: [
+      context.l10n.noneOption,
+      context.l10n.softOption,
+      context.l10n.strongOption,
+    ],
+    readValue: (ref) => ref.watch(paintStyleViewProvider).blurRadius,
+    previewValue: (ref, v) =>
+        ref.read(paintToolControllerProvider.notifier).previewBlurRadius(v),
+    writeValue: (ref, v) =>
+        ref.read(paintToolControllerProvider.notifier).commitBlurRadius(v),
+    format: (v) => EditorValueFormat.of(context).digits(v.round()),
+  ),
+  // Opacity drives the alpha channel of the active stroke colour.
+  // Re-uses the colour-picker pathway ([setStrokeColor]) so undo,
+  // recents, and layer-mirroring all keep working unchanged — the
+  // slider is a faster surface for the same setter the picker calls.
+  'opacity': SliderSubTool(
+    headerTitle: context.l10n.strokeOpacityLabel,
+    headerIcon: AppIcons.opacity,
+    min: 0,
+    max: 100,
+    // Three plain-language steps cover ≥95% of intents.
+    presets: const [25, 60, 100],
+    presetLabels: [
+      context.l10n.lightOption,
+      context.l10n.normalOption,
+      context.l10n.strongOption,
+    ],
+    readValue: (ref) {
+      final c = ref.watch(paintStyleViewProvider).strokeColor;
+      return (c.a * 100).clamp(0.0, 100.0);
+    },
+    previewValue: (ref, v) =>
+        ref.read(paintToolControllerProvider.notifier).previewStrokeOpacity(v),
+    writeValue: (ref, v) =>
+        ref.read(paintToolControllerProvider.notifier).commitStrokeOpacity(v),
+    format: (v) => EditorValueFormat.of(context).percent(v.round()),
+    leadingBuilder: (context, value) {
+      // Mini swatch preview at the live opacity — instant proof
+      // of what the stroke will look like before release.
+      final c = ProviderScope.containerOf(context)
+          .read(paintStyleViewProvider)
+          .strokeColor
+          .withValues(alpha: (value / 100).clamp(0.0, 1.0));
+      return Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          color: c,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: AppTokens.of(context).border.withValues(alpha: 0.6),
+            width: 1,
+          ),
+        ),
+      );
+    },
+  ),
+};

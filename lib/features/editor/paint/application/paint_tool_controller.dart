@@ -5,6 +5,7 @@ import '../../application/document_controller.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
 import '../../engine/commands/paint_commands.dart';
+import '../../engine/core/canvas_sizing.dart';
 import '../../engine/modules/paint/paint_layer.dart';
 import '../domain/paint_tool_type.dart';
 
@@ -235,59 +236,65 @@ class PaintToolController extends Notifier<PaintSession> {
     state = state.copyWith(activeTool: null);
   }
 
-  // Future-facing setters. Kept here so all paint-state mutation flows
-  // through this single controller, regardless of which UI surface
-  // (panel, color picker, slider) initiated the change.
-  //
-  // Each setter also mirrors to the currently-selected paint layer
-  // (if any) as a single undoable command, so the floating quick
-  // toolbar can edit a committed layer's style without duplicating
-  // any logic. Mirrors the pattern used by [TextToolController].
+  // A paint control has exactly one target. With a selected PaintLayer
+  // it restyles that bound layer; otherwise it changes the author's
+  // defaults for the next stroke. Writing both targets made a harmless
+  // restyle silently reconfigure the next drawing gesture.
   void setStrokeColor(Color color) {
+    final layer = selectedPaintLayer();
+    if (layer != null) {
+      if (layer.strokeColor != color) {
+        ref
+            .read(documentControllerProvider.notifier)
+            .execute(
+              UpdatePaintStyleCommand(layerId: layer.id, strokeColor: color),
+            );
+      }
+      return;
+    }
     if (state.strokeColor != color) {
       state = state.copyWith(strokeColor: color);
-    }
-    final layer = selectedPaintLayer();
-    if (layer != null && layer.strokeColor != color) {
-      ref
-          .read(documentControllerProvider.notifier)
-          .execute(
-            UpdatePaintStyleCommand(layerId: layer.id, strokeColor: color),
-          );
     }
   }
 
   void setStrokeWidth(double width) {
+    final layer = selectedPaintLayer();
+    if (layer != null) {
+      if (layer.strokeWidth != width) {
+        ref
+            .read(documentControllerProvider.notifier)
+            .execute(
+              UpdatePaintStyleCommand(layerId: layer.id, strokeWidth: width),
+            );
+      }
+      return;
+    }
     if (state.strokeWidth != width) {
       state = state.copyWith(strokeWidth: width);
-    }
-    final layer = selectedPaintLayer();
-    if (layer != null && layer.strokeWidth != width) {
-      ref
-          .read(documentControllerProvider.notifier)
-          .execute(
-            UpdatePaintStyleCommand(layerId: layer.id, strokeWidth: width),
-          );
     }
   }
 
   // ─── Contract §2 preview channel: stroke colour (tb2 4/16) ─────
   //
-  // Mirrors the width channel below: the session default tracks
-  // every preview tick (readouts + next stroke), and when a paint
-  // layer is selected the mirrored edit stages on the live overlay
-  // and commits as ONE UpdatePaintStyleCommand on settle. The
+  // Mirrors the width channel below: author-mode ticks update the
+  // next-stroke default, while a selected layer stages the exact
+  // command on the live overlay and never touches that default. The
   // colour picker's onCommitted also fires for a cancelled eyedrop
   // at the original colour — the pending command then applies to
   // an identical doc and execute() drops it (§3 no net-zero).
   UpdatePaintStyleCommand? _pendingStrokeColorCommit;
 
   void previewStrokeColor(Color color) {
-    if (state.strokeColor != color) {
-      state = state.copyWith(strokeColor: color);
-    }
+    final hadPending = _pendingStrokeColorCommit != null;
+    _pendingStrokeColorCommit = null;
     final layer = selectedPaintLayer();
-    if (layer == null) return;
+    if (layer == null) {
+      if (hadPending) ref.read(liveOverlayProvider.notifier).clear();
+      if (state.strokeColor != color) {
+        state = state.copyWith(strokeColor: color);
+      }
+      return;
+    }
     final cmd = UpdatePaintStyleCommand(layerId: layer.id, strokeColor: color);
     _pendingStrokeColorCommit = cmd;
     final doc = ref.read(documentControllerProvider);
@@ -305,6 +312,23 @@ class PaintToolController extends Notifier<PaintSession> {
     ref.read(documentControllerProvider.notifier).execute(cmd);
   }
 
+  /// Opacity is the alpha component of stroke colour, but owns its own
+  /// slider surface. Route it through the colour preview channel so a
+  /// drag changes the canvas immediately and still commits once.
+  void previewStrokeOpacity(double percent) {
+    final source = selectedPaintLayer()?.strokeColor ?? state.strokeColor;
+    previewStrokeColor(
+      source.withValues(alpha: (percent / 100).clamp(0.0, 1.0)),
+    );
+  }
+
+  void commitStrokeOpacity(double percent) {
+    // Preset taps have no preview ticks; staging here makes taps and
+    // drags share the exact same commit path.
+    previewStrokeOpacity(percent);
+    commitStrokeColor();
+  }
+
   // ─── Contract §2 preview channel: fill colour (tb2 4/16) ───────
   //
   // Same channel for the Fill panel's custom-picker drags. The
@@ -313,11 +337,16 @@ class PaintToolController extends Notifier<PaintSession> {
   UpdatePaintStyleCommand? _pendingFillColorCommit;
 
   void previewFillColor(Color? color) {
-    if (state.fillColor != color) {
-      state = state.copyWith(fillColor: color);
-    }
+    final hadPending = _pendingFillColorCommit != null;
+    _pendingFillColorCommit = null;
     final layer = selectedPaintLayer();
-    if (layer == null) return;
+    if (layer == null) {
+      if (hadPending) ref.read(liveOverlayProvider.notifier).clear();
+      if (state.fillColor != color) {
+        state = state.copyWith(fillColor: color);
+      }
+      return;
+    }
     final cmd = UpdatePaintStyleCommand(
       layerId: layer.id,
       setFillColor: true,
@@ -343,19 +372,21 @@ class PaintToolController extends Notifier<PaintSession> {
   //
   // Slider drags call [previewStrokeWidth] per tick and
   // [commitStrokeWidth] once on release / pointer-cancel / preset
-  // tap. The session default updates per tick (it drives readouts
-  // and the next stroke and is NOT a document write); when a paint
-  // layer is selected, the layer edit stages on the live overlay
-  // and commits as ONE undoable command. When nothing is selected
-  // the drag is session-only — exactly the historical split.
+  // tap. Author mode updates only the session default; bound restyle
+  // mode stages only the selected layer on the live overlay.
   UpdatePaintStyleCommand? _pendingWidthCommit;
 
   void previewStrokeWidth(double width) {
-    if (state.strokeWidth != width) {
-      state = state.copyWith(strokeWidth: width);
-    }
+    final hadPending = _pendingWidthCommit != null;
+    _pendingWidthCommit = null;
     final layer = selectedPaintLayer();
-    if (layer == null) return;
+    if (layer == null) {
+      if (hadPending) ref.read(liveOverlayProvider.notifier).clear();
+      if (state.strokeWidth != width) {
+        state = state.copyWith(strokeWidth: width);
+      }
+      return;
+    }
     final cmd = UpdatePaintStyleCommand(layerId: layer.id, strokeWidth: width);
     // The pending command is the exact command commit executes;
     // each tick APPLIES it to the committed doc and stages the
@@ -381,20 +412,23 @@ class PaintToolController extends Notifier<PaintSession> {
   }
 
   void setFillColor(Color? color) {
+    final layer = selectedPaintLayer();
+    if (layer != null) {
+      if (layer.fillColor != color) {
+        ref
+            .read(documentControllerProvider.notifier)
+            .execute(
+              UpdatePaintStyleCommand(
+                layerId: layer.id,
+                setFillColor: true,
+                fillColor: color,
+              ),
+            );
+      }
+      return;
+    }
     if (state.fillColor != color) {
       state = state.copyWith(fillColor: color);
-    }
-    final layer = selectedPaintLayer();
-    if (layer != null && layer.fillColor != color) {
-      ref
-          .read(documentControllerProvider.notifier)
-          .execute(
-            UpdatePaintStyleCommand(
-              layerId: layer.id,
-              setFillColor: true,
-              fillColor: color,
-            ),
-          );
     }
   }
 
@@ -404,9 +438,22 @@ class PaintToolController extends Notifier<PaintSession> {
   /// result. Stroke editing or fill-colour overrides remain free to
   /// change either independently afterwards.
   ///
-  /// Mirrors the same enable/disable to a selected paint layer (if
-  /// any) as one undoable command.
   void setFillEnabled(bool enabled) {
+    final layer = selectedPaintLayer();
+    if (layer != null) {
+      final next = enabled ? (layer.fillColor ?? layer.strokeColor) : null;
+      if (layer.fillColor == next) return;
+      ref
+          .read(documentControllerProvider.notifier)
+          .execute(
+            UpdatePaintStyleCommand(
+              layerId: layer.id,
+              setFillColor: true,
+              fillColor: next,
+            ),
+          );
+      return;
+    }
     Color? next;
     if (enabled) {
       next = state.fillColor ?? state.strokeColor;
@@ -416,48 +463,88 @@ class PaintToolController extends Notifier<PaintSession> {
     if (state.fillColor != next) {
       state = state.copyWith(fillColor: next);
     }
-    final layer = selectedPaintLayer();
-    if (layer == null) return;
-    final layerNext = enabled ? (layer.fillColor ?? layer.strokeColor) : null;
-    if (layer.fillColor == layerNext) return;
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(
-          UpdatePaintStyleCommand(
-            layerId: layer.id,
-            setFillColor: true,
-            fillColor: layerNext,
-          ),
-        );
   }
 
-  /// Blur sigma. Mirrors onto a selected blur layer so the control
-  /// edits what the user is looking at (tb4 3/14) — before this, the
-  /// slot was hidden whenever a paint layer was selected because it
-  /// only moved a session default.
+  /// Blur controls speak reference-canvas pixels in both modes. Stored
+  /// layers keep canvas pixels, so bound writes scale at the command
+  /// boundary and [paintStyleViewProvider] performs the inverse read.
   void setBlurRadius(double radius) {
+    final layer = selectedPaintLayer();
+    if (layer != null) {
+      if (layer.kind != PaintKind.blur) return;
+      final canvasRadius = CanvasSizing.scaleDimension(
+        radius,
+        ref.read(documentControllerProvider),
+      );
+      if (layer.blurSigma == canvasRadius) return;
+      ref
+          .read(documentControllerProvider.notifier)
+          .execute(
+            UpdatePaintStyleCommand(layerId: layer.id, blurSigma: canvasRadius),
+          );
+      return;
+    }
     if (state.blurRadius != radius) {
       state = state.copyWith(blurRadius: radius);
     }
-    final layer = selectedPaintLayer();
-    if (layer == null || layer.kind != PaintKind.blur) return;
-    if (layer.blurSigma == radius) return;
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(UpdatePaintStyleCommand(layerId: layer.id, blurSigma: radius));
   }
 
-  /// Polygon side count. Mirrors onto a selected polygon layer.
+  UpdatePaintStyleCommand? _pendingBlurCommit;
+
+  void previewBlurRadius(double radius) {
+    final hadPending = _pendingBlurCommit != null;
+    _pendingBlurCommit = null;
+    final layer = selectedPaintLayer();
+    if (layer == null) {
+      if (hadPending) ref.read(liveOverlayProvider.notifier).clear();
+      if (state.blurRadius != radius) {
+        state = state.copyWith(blurRadius: radius);
+      }
+      return;
+    }
+    if (layer.kind != PaintKind.blur) {
+      if (hadPending) ref.read(liveOverlayProvider.notifier).clear();
+      return;
+    }
+    final canvasRadius = CanvasSizing.scaleDimension(
+      radius,
+      ref.read(documentControllerProvider),
+    );
+    final cmd = UpdatePaintStyleCommand(
+      layerId: layer.id,
+      blurSigma: canvasRadius,
+    );
+    _pendingBlurCommit = cmd;
+    final doc = ref.read(documentControllerProvider);
+    final preview = cmd.apply(doc).layerById(layer.id);
+    if (preview != null) {
+      ref.read(liveOverlayProvider.notifier).replaceLayer(preview);
+    }
+  }
+
+  void commitBlurRadius(double radius) {
+    // Preset taps do not emit preview ticks.
+    previewBlurRadius(radius);
+    final cmd = _pendingBlurCommit;
+    _pendingBlurCommit = null;
+    if (cmd == null) return;
+    ref.read(liveOverlayProvider.notifier).clear();
+    ref.read(documentControllerProvider.notifier).execute(cmd);
+  }
+
+  /// Polygon side count for the bound layer or the next stroke.
   void setPolygonSides(int sides) {
+    final layer = selectedPaintLayer();
+    if (layer != null) {
+      if (layer.kind != PaintKind.polygon || layer.sides == sides) return;
+      ref
+          .read(documentControllerProvider.notifier)
+          .execute(UpdatePaintStyleCommand(layerId: layer.id, sides: sides));
+      return;
+    }
     if (state.polygonSides != sides) {
       state = state.copyWith(polygonSides: sides);
     }
-    final layer = selectedPaintLayer();
-    if (layer == null || layer.kind != PaintKind.polygon) return;
-    if (layer.sides == sides) return;
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(UpdatePaintStyleCommand(layerId: layer.id, sides: sides));
   }
 
   /// Pick a line style (solid / dashed / dotted).
@@ -494,10 +581,12 @@ class PaintToolController extends Notifier<PaintSession> {
         .execute(SetPaintResizeModeCommand(layerId: layer.id, mode: mode));
   }
 
-  /// Read the currently-selected paint layer (if any). Used by the
-  /// dock to render against the selected layer's style instead of
-  /// the session default.
+  /// Read the layer bound for restyling. An armed tool always targets
+  /// next-stroke defaults, even if another surface happens to leave a
+  /// paint layer selected; this is the single author/restyle predicate
+  /// shared by every writer.
   PaintLayer? selectedPaintLayer() {
+    if (state.activeTool != null) return null;
     final selection = ref.read(selectionControllerProvider);
     if (!selection.hasSelection) return null;
     final layer = ref
@@ -515,14 +604,23 @@ final paintToolControllerProvider =
 /// What the paint dock DISPLAYS.
 ///
 /// With a paint layer selected the strip, its value labels and every
-/// body read that layer's committed style; with nothing selected they
-/// read the session's next-stroke defaults. Before tb4 3/14 the dock
-/// only ever showed session state, so selecting an old stroke and
-/// opening Color showed the colour of the *next* stroke rather than
-/// the one on screen.
+/// body read that layer's style; with nothing selected they read the
+/// session's next-stroke defaults. Before tb4 3/14 the dock only ever
+/// showed session state, so selecting an old stroke and opening Color
+/// showed the colour of the *next* stroke rather than the one on screen.
 ///
-/// Writers are unchanged: every setter already mirrors to the
-/// selected layer, so what you see is what you edit.
+/// Writers use the same target rule: selected layer OR session defaults,
+/// never both, so a restyle cannot leak into the next authored stroke.
+///
+/// The layer it reads is the RENDERED one — committed document plus the
+/// in-flight [LiveOverlay] — i.e. exactly what the canvas is drawing.
+/// Reading the committed layer alone froze every paint consumer (strip
+/// value labels and swatches, the Size hero + precision thumb, the
+/// Polygon/Fill previews) at the pre-gesture value until release, while
+/// the canvas underneath them already showed the preview. Writers keep
+/// reading the committed document ([selectedPaintLayer]) so the staged
+/// command is still built against it — preview == commit by
+/// construction, and this provider stays display-only.
 @immutable
 class PaintStyleView {
   const PaintStyleView({
@@ -548,17 +646,28 @@ class PaintStyleView {
 final paintStyleViewProvider = Provider<PaintStyleView>((ref) {
   final session = ref.watch(paintToolControllerProvider);
   final selection = ref.watch(selectionControllerProvider);
-  final id = selection.selectedId;
+  final id = session.activeTool == null ? selection.selectedId : null;
+  // Contract §2: property edits stage on the live overlay and commit
+  // one command on release. The dock is a consumer of that preview,
+  // not of the commit, so it reads the merged view. `.select` keeps
+  // the subscription pinned to the ONE layer this view describes —
+  // an unrelated layer's preview must not rebuild the paint dock.
   final layer = id == null
       ? null
-      : ref.watch(documentControllerProvider).layerById(id);
+      : ref.watch(renderedDocumentProvider.select((doc) => doc.layerById(id)));
   if (layer is PaintLayer) {
+    // Canvas dimensions are a document property no overlay can
+    // express, so the reference-pixel factor stays on the committed
+    // document.
+    final factor = ref.watch(
+      documentControllerProvider.select(CanvasSizing.scaleFactor),
+    );
     return PaintStyleView(
       strokeColor: layer.strokeColor,
       strokeWidth: layer.strokeWidth,
       fillColor: layer.fillColor,
       sides: layer.sides,
-      blurRadius: layer.blurSigma,
+      blurRadius: layer.blurSigma / factor,
       layerKind: layer.kind,
     );
   }

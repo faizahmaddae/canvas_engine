@@ -134,10 +134,11 @@ void main() {
       return layer;
     }
 
-    test('drag = one entry; session tracks; overlay stages', () {
+    test('drag = one entry; defaults stay isolated; overlay stages', () {
       final c = makeContainer();
       addStroke(c);
       final ctrl = c.read(paintToolControllerProvider.notifier);
+      final defaultColor = c.read(paintToolControllerProvider).strokeColor;
       final v0 = c.read(documentCommitVersionProvider);
 
       ctrl.previewStrokeColor(const Color(0xFF111111));
@@ -149,8 +150,8 @@ void main() {
       );
       expect(
         c.read(paintToolControllerProvider).strokeColor,
-        const Color(0xFF222222),
-        reason: 'session default tracks the preview',
+        defaultColor,
+        reason: 'restyling a bound stroke must not change the next stroke',
       );
 
       ctrl.commitStrokeColor();
