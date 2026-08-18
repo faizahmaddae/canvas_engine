@@ -581,12 +581,15 @@ class PaintToolController extends Notifier<PaintSession> {
         .execute(SetPaintResizeModeCommand(layerId: layer.id, mode: mode));
   }
 
-  /// Read the layer bound for restyling. An armed tool always targets
-  /// next-stroke defaults, even if another surface happens to leave a
-  /// paint layer selected; this is the single author/restyle predicate
-  /// shared by every writer.
+  /// Read the layer bound for restyling. A selected paint layer always
+  /// wins over an armed tool — this is the single author/restyle
+  /// predicate shared by every writer. Every path that ARMS a tool
+  /// (selectTool, toggleEraser) clears the selection first, so the only
+  /// way a tool stays armed with a layer selected is the one this rule
+  /// exists to serve: [PaintStrokeController.commitDraft] selects the
+  /// stroke it just added so the dock can restyle it immediately,
+  /// without forcing the user to leave the tool armed for the next one.
   PaintLayer? selectedPaintLayer() {
-    if (state.activeTool != null) return null;
     final selection = ref.read(selectionControllerProvider);
     if (!selection.hasSelection) return null;
     final layer = ref
@@ -609,8 +612,15 @@ final paintToolControllerProvider =
 /// showed session state, so selecting an old stroke and opening Color
 /// showed the colour of the *next* stroke rather than the one on screen.
 ///
-/// Writers use the same target rule: selected layer OR session defaults,
-/// never both, so a restyle cannot leak into the next authored stroke.
+/// Writers use the same target rule ([isRestyling]): selected layer OR
+/// session defaults, for any one write, so a restyle cannot leak into
+/// the next authored stroke. That does not mean the two targets are
+/// mutually exclusive over TIME — a tool can stay armed for continuous
+/// drawing while the stroke just committed is selected for restyling,
+/// and each new commit reselects to the newest stroke (see
+/// [PaintStrokeController.commitDraft]). A fresh draft's own styling
+/// always comes from the session defaults directly, never from this
+/// view, so a stale selection mid-drag cannot leak into it either.
 ///
 /// The layer it reads is the RENDERED one — committed document plus the
 /// in-flight [LiveOverlay] — i.e. exactly what the canvas is drawing.
@@ -641,12 +651,20 @@ class PaintStyleView {
   /// The selected layer's kind, or `null` when the view is showing
   /// session defaults.
   final PaintKind? layerKind;
+
+  /// Whether this view describes a bound layer (restyle) rather than
+  /// the next-stroke session defaults. The one predicate every reader
+  /// of "which target am I displaying" should use instead of
+  /// re-deriving it — mirrors [PaintToolController.selectedPaintLayer]
+  /// on the write side.
+  bool get isRestyling => layerKind != null;
 }
 
 final paintStyleViewProvider = Provider<PaintStyleView>((ref) {
   final session = ref.watch(paintToolControllerProvider);
   final selection = ref.watch(selectionControllerProvider);
-  final id = session.activeTool == null ? selection.selectedId : null;
+  // Selection wins over an armed tool — see selectedPaintLayer's doc.
+  final id = selection.selectedId;
   // Contract §2: property edits stage on the live overlay and commit
   // one command on release. The dock is a consumer of that preview,
   // not of the commit, so it reads the merged view. `.select` keeps

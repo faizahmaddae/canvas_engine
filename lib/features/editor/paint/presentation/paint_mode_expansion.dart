@@ -59,14 +59,14 @@ class PaintModeInlineExpansion extends ConsumerWidget {
         );
     final scopedSubTool = _PaintScopedSubTool(
       delegate: subTool,
-      scopeLabel: openId == 'tool' || view.layerKind == null
+      scopeLabel: openId == 'tool' || !view.isRestyling
           ? context.l10n.nextStrokeScope
           : context.l10n.editingStrokeScope,
     );
 
     final ids = PaintModeToolbar.toolIdsFor(
-      tool: session.activeTool,
-      layerKind: session.activeTool == null ? view.layerKind : null,
+      tool: view.isRestyling ? null : session.activeTool,
+      layerKind: view.layerKind,
     );
     // Single-list, no exclusions — [SiblingSwipeStrategy] handles
     // wrap-around and the single-slot "swipe is a no-op" case so

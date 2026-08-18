@@ -46,6 +46,29 @@ void main() {
     expect(container.read(documentCommitVersionProvider), version + 1);
   });
 
+  test('commitDot selects the layer it just added, tool stays armed', () {
+    final container = harness();
+    container
+        .read(paintToolControllerProvider.notifier)
+        .selectTool(PaintToolType.freestyle);
+
+    container
+        .read(paintStrokeControllerProvider.notifier)
+        .commitDot(const Offset(120, 160), docSize: const Size(800, 800));
+
+    final doc = container.read(documentControllerProvider);
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      doc.layers.single.id,
+      reason: 'contract §10: an A-scope command ends with its layer selected',
+    );
+    expect(
+      container.read(paintToolControllerProvider).activeTool,
+      PaintToolType.freestyle,
+      reason: 'selecting the new stroke must not disarm continuous drawing',
+    );
+  });
+
   test('sweep stages removals, commits once, and one undo restores order', () {
     final container = harness();
     final documents = container.read(documentControllerProvider.notifier);
