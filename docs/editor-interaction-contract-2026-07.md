@@ -175,8 +175,8 @@ presumes an answer to that and never states one; this is it.
 
 **No command searches for a target.** There is no priority ladder,
 no fallback chain and no chooser: a control whose target is not
-named by one of the four scopes below has no target, and says so
-(10.3). Adding a fifth scope — or resolving a target from document
+named by one of the five scopes below has no target, and says so
+(10.3). Adding a sixth scope — or resolving a target from document
 contents — requires amending this section first.
 
 **W — world.** Targets the `EditorDocument`; no layer target.
@@ -188,15 +188,32 @@ layer selected.
 **B — bound.** Targets the layer the current selection names.
 Requires a selection and is unreachable without one.
 
+**N — next-authored.** Targets the layer the current selection
+names, exactly like B, whenever one exists. Absent a selection,
+targets the author's own defaults for the next A command of the
+same kind instead — session state, not a document object, so
+writing it commits nothing and produces no undo entry. This is not
+the fallback chain the opening rule forbids: both targets are named
+in advance by this paragraph, neither is found by searching document
+contents, and a control never chooses among more than one candidate
+layer. Exists only where a single control set both authors new
+layers (A) and restyles already-committed ones — currently only
+`paint`, whose mode-strip slots (Color, Size, Fill, Opacity, Blur,
+Sides, Style) read and write through
+`PaintToolController.selectedPaintLayer()` /
+`PaintStyleView.isRestyling`, the shared predicate every one of them
+must resolve through rather than re-deriving. See 10.5.
+
 **P — project role.** Targets the one layer the project kind
 defines as its subject: the protected base photo. Exists only in
 `ProjectKind.photo`.
 
 | Control | Scope |
 |---|---|
-| `image`, `text`, `sticker`, `shape`, `paint` | A |
+| `image`, `text`, `sticker`, `shape`, `paint` (draw) | A |
 | `canvas` | W |
-| every mode-strip slot, action chips included | B |
+| every mode-strip slot, action chips included, EXCEPT paint's | B |
+| `paint`'s mode-strip slots (Color, Size, Fill, Opacity, Blur, Sides, Style) | N |
 | main-strip `crop`, `look` | P |
 
 Undo/redo, save, export and the zoom readout target no document
@@ -272,3 +289,33 @@ Pinning suites: `toolbar_group_order_test.dart` (placement),
 `image_target_test.dart` (10.1, 10.2). The evidence behind this
 section, and the state of the code before it, are recorded in
 `docs/command-scope-diagnosis-2026-07.md`.
+
+## 10.5 N never lacks a target, but must disclose which one it has
+
+Unlike P, an N control has no absent or unavailable state (10.3):
+one of its two named targets always exists, so N controls are
+always present and always live — there is nothing to dim and no
+precondition to explain. The requirement N carries instead is
+disclosure: because the same tile, sheet and value can mean either
+"defaults for the stroke you're about to draw" or "the stroke you
+already drew," a control must state at the surface which one is
+live right now. `PaintModeInlineExpansion`'s scope chip does this —
+«خط بعدی» (next-authored) versus «ویرایش این خط» (bound) — and the
+strip's own tiles follow the same predicate for their label/value/
+capability set (`PaintStyleView.isRestyling`), so the sheet and the
+strip that opened it never disagree about which target is live.
+
+Resolution order is static, not searched: the bound target wins
+whenever a selection exists, full stop — an armed tool does not
+override it. This is what lets a tool stay armed for continuous
+authoring while the layer just authored is immediately restylable:
+every path that ARMS a tool clears the selection first, so a
+selection can only coexist with an armed tool in the one case this
+scope exists to serve. A fresh A command's OWN content is still
+drawn from the author defaults directly, never through the bound
+target, so a stale selection can never leak into what gets authored
+next.
+
+Pinning suites: `paint_restyle_dock_test.dart` ("a paint-layer
+selection wins over an armed tool"), `paint_stroke_controller_test.dart`
+("commitDot selects the layer it just added, tool stays armed").
