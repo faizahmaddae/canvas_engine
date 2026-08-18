@@ -5,14 +5,26 @@ import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// The draft-resume offer used to be a raw `MaterialBanner` whose
-/// `OverflowBar` pushed the primary action off the left edge under
-/// RTL — a Persian user saw a clipped «ادام» where «ادامه» belonged.
-/// These tests pin the two properties that failure violated: both
-/// actions stay fully on screen at the narrowest supported width in
-/// both directions, and the card paints from tokens rather than
-/// Material defaults.
+/// The offer has failed twice in the same two ways, and these tests
+/// pin both.
+///
+/// Layout: a `MaterialBanner`'s `OverflowBar` once pushed the primary
+/// action off the leading edge under RTL, so a Persian user saw a
+/// clipped «ادام». Every control still has to sit fully on screen at
+/// the narrowest supported width, in both directions.
+///
+/// Height: the card that fixed the clipping spent three stacked rows
+/// doing it — ~185dp on a launcher whose stated invariant is that its
+/// height does not grow with content. The row form is pinned under a
+/// ceiling here so the next well-meaning addition has to argue with a
+/// failing test.
+///
+/// Weight: the action that destroys the only copy of unsaved work must
+/// never be reachable in the same tap-distance as the one that opens
+/// it. It is not on the card at all.
 void main() {
+  const kCardHeightCeiling = 84.0;
+
   Widget host(
     Widget child, {
     Brightness brightness = Brightness.light,
@@ -41,108 +53,103 @@ void main() {
     VoidCallback? onResume,
     VoidCallback? onNotNow,
     VoidCallback? onDeleteDraft,
+    String? draftName,
   }) => ResumeDraftCard(
     onResume: onResume ?? () {},
     onNotNow: onNotNow ?? () {},
     onDeleteDraft: onDeleteDraft ?? () {},
+    draftName: draftName,
   );
 
   for (final locale in const [Locale('fa'), Locale('en')]) {
     for (final width in const [320.0, 360.0, 426.0]) {
-      testWidgets(
-        'both actions stay fully on screen — ${locale.languageCode} @ ${width.toInt()}dp',
-        (tester) async {
-          tester.view.physicalSize = Size(width, 640);
-          tester.view.devicePixelRatio = 1;
-          addTearDown(tester.view.reset);
+      testWidgets('controls stay on screen and the row stays short — '
+          '${locale.languageCode} @ ${width.toInt()}dp', (tester) async {
+        tester.view.physicalSize = Size(width, 640);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
 
-          await tester.pumpWidget(
-            host(card(), locale: locale, size: Size(width, 640)),
-          );
-          expect(tester.takeException(), isNull);
+        await tester.pumpWidget(
+          host(
+            card(draftName: 'یک نام پروژهٔ بلند برای آزمودن سرریز'),
+            locale: locale,
+            size: Size(width, 640),
+          ),
+        );
+        expect(tester.takeException(), isNull);
 
-          for (final key in const [
-            ValueKey('resume-draft-delete'),
-            ValueKey('resume-draft-not-now'),
-            ValueKey('resume-draft-resume'),
-          ]) {
-            final rect = tester.getRect(find.byKey(key));
-            expect(
-              rect.left,
-              greaterThanOrEqualTo(0),
-              reason: '$key runs off the leading edge at ${width}dp',
-            );
-            expect(
-              rect.right,
-              lessThanOrEqualTo(width),
-              reason: '$key runs off the trailing edge at ${width}dp',
-            );
-          }
-
-          // Both fit on ONE line: a `Container` with an `alignment`
-          // expands to fill, which silently pushed each action onto its
-          // own run of the `Wrap` and doubled the card's height.
+        for (final key in const [
+          ValueKey('resume-draft-resume'),
+          ValueKey('resume-draft-overflow'),
+        ]) {
+          final rect = tester.getRect(find.byKey(key));
           expect(
-            tester
-                .getRect(find.byKey(const ValueKey('resume-draft-not-now')))
-                .top,
-            tester
-                .getRect(find.byKey(const ValueKey('resume-draft-resume')))
-                .top,
-            reason: 'the safe pair should share a single run',
+            rect.left,
+            greaterThanOrEqualTo(0),
+            reason: '$key runs off the leading edge at ${width}dp',
           );
-        },
-      );
+          expect(
+            rect.right,
+            lessThanOrEqualTo(width),
+            reason: '$key runs off the trailing edge at ${width}dp',
+          );
+        }
+
+        // One row, not three. A long name has to ellipsise rather
+        // than wrap the card taller.
+        expect(
+          tester.getSize(find.byType(ResumeDraftCard)).height,
+          lessThanOrEqualTo(kCardHeightCeiling),
+          reason: 'the offer must not grow the launcher',
+        );
+      });
     }
   }
 
-  testWidgets('actions meet the 44dp touch floor', (tester) async {
+  testWidgets('both controls meet the 44dp touch floor', (tester) async {
     await tester.pumpWidget(host(card()));
     for (final key in const [
-      ValueKey('resume-draft-delete'),
-      ValueKey('resume-draft-not-now'),
       ValueKey('resume-draft-resume'),
+      ValueKey('resume-draft-overflow'),
     ]) {
       expect(tester.getSize(find.byKey(key)).height, greaterThanOrEqualTo(44));
     }
   });
 
-  testWidgets('the primary action is a brand fill, the secondary is not', (
+  testWidgets('names the draft, and falls back when it has no name', (
     tester,
   ) async {
-    await tester.pumpWidget(host(card()));
-    final resume = tester.widget<Material>(
-      find.descendant(
-        of: find.byKey(const ValueKey('resume-draft-resume')),
-        matching: find.byType(Material),
-      ),
-    );
-    expect(resume.color, AppTokens.light.brand);
+    await tester.pumpWidget(host(card(draftName: 'پوستر نوروز')));
+    expect(find.text('پوستر نوروز'), findsOneWidget);
 
-    for (final key in const [
-      ValueKey('resume-draft-not-now'),
-      ValueKey('resume-draft-delete'),
-    ]) {
-      final secondary = tester.widget<Material>(
-        find.descendant(of: find.byKey(key), matching: find.byType(Material)),
-      );
-      expect(secondary.color, Colors.transparent);
-    }
+    await tester.pumpWidget(host(card(), locale: const Locale('en')));
+    expect(find.text('Recovered draft'), findsOneWidget);
   });
 
-  testWidgets('brand fill flips with the theme', (tester) async {
-    await tester.pumpWidget(host(card(), brightness: Brightness.dark));
-    final resume = tester.widget<Material>(
-      find.descendant(
-        of: find.byKey(const ValueKey('resume-draft-resume')),
-        matching: find.byType(Material),
-      ),
-    );
-    expect(resume.color, AppTokens.dark.brand);
+  // Each brightness gets a FRESH tree. Re-pumping a new `themeMode`
+  // into a live one lands mid-`AnimatedTheme` lerp, and the assertion
+  // reads a colour that is neither token.
+  for (final (brightness, expected) in [
+    (Brightness.light, AppTokens.light.brand),
+    (Brightness.dark, AppTokens.dark.brand),
+  ]) {
+    testWidgets('resume is a brand fill — ${brightness.name}', (tester) async {
+      await tester.pumpWidget(host(card(), brightness: brightness));
+      final fill = tester.widget<Material>(
+        find.descendant(
+          of: find.byKey(const ValueKey('resume-draft-resume')),
+          matching: find.byType(Material),
+        ),
+      );
+      expect(fill.color, expected);
+    });
+  }
+
+  test('the brand token actually differs across modes', () {
     expect(AppTokens.dark.brand, isNot(AppTokens.light.brand));
   });
 
-  testWidgets('each action dispatches its own callback', (tester) async {
+  testWidgets('resume dispatches without opening anything', (tester) async {
     var resumed = 0;
     var notNow = 0;
     var deleted = 0;
@@ -155,47 +162,72 @@ void main() {
         ),
       ),
     );
-
     await tester.tap(find.byKey(const ValueKey('resume-draft-resume')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect([resumed, notNow, deleted], [1, 0, 0]);
-
-    await tester.tap(find.byKey(const ValueKey('resume-draft-not-now')));
-    await tester.pump();
-    expect([resumed, notNow, deleted], [1, 1, 0]);
-
-    await tester.tap(find.byKey(const ValueKey('resume-draft-delete')));
-    await tester.pump();
-    expect([resumed, notNow, deleted], [1, 1, 1]);
   });
 
-  // The point of the redesign: the one action that destroys work must
-  // not read as a peer of the two that don't. It is held on the
-  // opposite end of the row and painted in the error colour, so
-  // reaching for Resume cannot land on it.
-  testWidgets('the destructive action is separated and error-coloured', (
+  // The compression's whole claim: neither of the two actions that are
+  // not Resume can be reached without deliberately opening the menu.
+  testWidgets('neither menu action is reachable from the card itself', (
     tester,
   ) async {
     await tester.pumpWidget(host(card(), locale: const Locale('en')));
-    final delete = tester.getRect(
-      find.byKey(const ValueKey('resume-draft-delete')),
+    expect(find.byKey(const ValueKey('resume-draft-not-now')), findsNothing);
+    expect(find.byKey(const ValueKey('resume-draft-delete')), findsNothing);
+  });
+
+  testWidgets('the menu dispatches Not now', (tester) async {
+    var notNow = 0;
+    var deleted = 0;
+    await tester.pumpWidget(
+      host(card(onNotNow: () => notNow++, onDeleteDraft: () => deleted++)),
     );
-    final resume = tester.getRect(
-      find.byKey(const ValueKey('resume-draft-resume')),
+    await tester.tap(find.byKey(const ValueKey('resume-draft-overflow')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('resume-draft-not-now')));
+    await tester.pumpAndSettle();
+    expect([notNow, deleted], [1, 0]);
+  });
+
+  testWidgets('the menu dispatches Delete, painted in the error colour', (
+    tester,
+  ) async {
+    var notNow = 0;
+    var deleted = 0;
+    await tester.pumpWidget(
+      host(
+        card(onNotNow: () => notNow++, onDeleteDraft: () => deleted++),
+        locale: const Locale('en'),
+      ),
     );
-    expect(
-      delete.top,
-      greaterThanOrEqualTo(resume.bottom),
-      reason: 'Delete draft must sit on its own row, below the safe pair',
-    );
+    await tester.tap(find.byKey(const ValueKey('resume-draft-overflow')));
+    await tester.pumpAndSettle();
 
     final label = tester.widget<Text>(
       find.descendant(
         of: find.byKey(const ValueKey('resume-draft-delete')),
-        matching: find.byType(Text),
+        matching: find.text('Delete draft'),
       ),
     );
-    final scheme = AppTheme.light().colorScheme;
-    expect(label.style?.color, scheme.error);
+    expect(label.style?.color, AppTheme.light().colorScheme.error);
+
+    await tester.tap(find.byKey(const ValueKey('resume-draft-delete')));
+    await tester.pumpAndSettle();
+    expect([notNow, deleted], [0, 1]);
+  });
+
+  // Dismissing the menu is not a decision. Neither callback may fire.
+  testWidgets('dismissing the menu leaves the offer untouched', (tester) async {
+    var notNow = 0;
+    var deleted = 0;
+    await tester.pumpWidget(
+      host(card(onNotNow: () => notNow++, onDeleteDraft: () => deleted++)),
+    );
+    await tester.tap(find.byKey(const ValueKey('resume-draft-overflow')));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(160, 40));
+    await tester.pumpAndSettle();
+    expect([notNow, deleted], [0, 0]);
   });
 }

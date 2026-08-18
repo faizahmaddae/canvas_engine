@@ -39,6 +39,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// what puts [ResumeDraftCard] on screen.
   String? _pendingDraftJson;
 
+  /// The draft's recorded display name, read alongside the JSON so the
+  /// offer can name the work instead of describing it. Null is normal
+  /// (journal predates the sidecar, or the meta write lost its race
+  /// with the crash) and the card falls back on its own.
+  String? _pendingDraftName;
+
   @override
   void initState() {
     super.initState();
@@ -54,9 +60,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _offerDraftResume() async {
     if (_draftOfferShown || !mounted) return;
     _draftOfferShown = true;
-    final draftJson = await ref
-        .read(projectRecoveryServiceProvider)
-        .pendingDraftJson();
+    final recovery = ref.read(projectRecoveryServiceProvider);
+    final draftJson = await recovery.pendingDraftJson();
+    // Only worth a second journal open once we know there IS an offer.
+    final draftName = draftJson == null
+        ? null
+        : await recovery.pendingDraftName();
     if (!mounted) return;
     // The empty case has to clear, not just return. `preserveOrphanDraft`
     // empties the slot whenever a new unsaved session starts, and the
@@ -65,12 +74,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // that already existed as a project. Two copies of one drawing.
     if (draftJson == null) {
       if (_pendingDraftJson != null) {
-        setState(() => _pendingDraftJson = null);
+        setState(() {
+          _pendingDraftJson = null;
+          _pendingDraftName = null;
+        });
       }
       return;
     }
     if (_draftOfferDismissed) return;
-    setState(() => _pendingDraftJson = draftJson);
+    setState(() {
+      _pendingDraftJson = draftJson;
+      _pendingDraftName = draftName;
+    });
   }
 
   /// "Not now" — hide the offer, keep the draft. It will be waiting
@@ -78,7 +93,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// to a real project if a new session claims the slot first.
   void _dismissDraftOffer() {
     _draftOfferDismissed = true;
-    setState(() => _pendingDraftJson = null);
+    setState(() {
+      _pendingDraftJson = null;
+      _pendingDraftName = null;
+    });
   }
 
   /// The only path that destroys the draft. Confirmed, because this
@@ -108,11 +126,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (confirmed != true || !mounted) return;
     await ref.read(projectRecoveryServiceProvider).clearDraft();
     if (!mounted) return;
-    setState(() => _pendingDraftJson = null);
+    setState(() {
+      _pendingDraftJson = null;
+      _pendingDraftName = null;
+    });
   }
 
   void _resumeDraft(String draftJson) {
-    setState(() => _pendingDraftJson = null);
+    setState(() {
+      _pendingDraftJson = null;
+      _pendingDraftName = null;
+    });
     // Journal survives until the resumed session either saves
     // (rebinds + clears) or is deliberately closed (sessionEnding
     // flush clears) — so a crash *during* the resumed session is
@@ -153,6 +177,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               SliverToBoxAdapter(
                 child: ResumeDraftCard(
                   key: const ValueKey('home-resume-draft'),
+                  draftName: _pendingDraftName,
                   onResume: () => _resumeDraft(draftJson),
                   onNotNow: _dismissDraftOffer,
                   onDeleteDraft: () => unawaited(_deleteDraft()),

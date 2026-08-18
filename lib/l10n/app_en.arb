@@ -574,7 +574,6 @@
   "maskInvertLabel": "Invert",
   "resumeEditsTitle": "Resume unsaved changes?",
   "resumeEditsBody": "This design closed before its latest changes were saved.",
-  "resumeDraftBanner": "You have an unsaved design from a previous session.",
   "resumeAction": "Resume",
   "discardAction": "Discard",
   "notNowAction": "Not now",

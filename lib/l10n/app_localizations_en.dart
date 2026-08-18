@@ -1772,10 +1772,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This design closed before its latest changes were saved.';
 
   @override
-  String get resumeDraftBanner =>
-      'You have an unsaved design from a previous session.';
-
-  @override
   String get resumeAction => 'Resume';
 
   @override

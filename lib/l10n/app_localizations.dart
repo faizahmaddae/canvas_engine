@@ -3398,12 +3398,6 @@ abstract class AppLocalizations {
   /// **'This design closed before its latest changes were saved.'**
   String get resumeEditsBody;
 
-  /// No description provided for @resumeDraftBanner.
-  ///
-  /// In en, this message translates to:
-  /// **'You have an unsaved design from a previous session.'**
-  String get resumeDraftBanner;
-
   /// No description provided for @resumeAction.
   ///
   /// In en, this message translates to:
