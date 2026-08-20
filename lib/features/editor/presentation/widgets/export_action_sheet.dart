@@ -90,160 +90,169 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
     // *file* format this sheet also talks about.
     final values = EditorValueFormat.of(context);
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-        // Scroll guard: opened with isScrollControlled (which only
-        // lifts the height cap, it adds no scrolling), this Column of
-        // size/quality/format controls overflows on short or small
-        // screens (320-wide devices, landscape) — especially with the
-        // three Original-size quality cards plus the JPG slider.
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header — title + canvas dimensions so the user always
-              // sees what "Original" means in concrete numbers.
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 4, top: 4),
-                child: Row(
+    // While bytes are rendering, the sheet refuses to pop — same
+    // guard the preview screen already has. Without it a barrier tap
+    // or drag-dismiss mid-render silently abandoned the export (the
+    // rendered bytes arrived to an unmounted sheet and vanished; the
+    // audit flagged the asymmetry as an undecided path).
+    return PopScope(
+      canPop: !_busy,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+          // Scroll guard: opened with isScrollControlled (which only
+          // lifts the height cap, it adds no scrolling), this Column of
+          // size/quality/format controls overflows on short or small
+          // screens (320-wide devices, landscape) — especially with the
+          // three Original-size quality cards plus the JPG slider.
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header — title + canvas dimensions so the user always
+                // sees what "Original" means in concrete numbers.
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 4, top: 4),
+                  child: Row(
+                    children: [
+                      Text(
+                        l10n.exportDesignTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: tokens.surfaceMuted.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          // Locale digits: the fa header reads
+                          // «بوم ۱۰۸۰ × ۱۰۸۰», not a Latin-digit island.
+                          l10n.canvasDimensions(
+                            values.dimensions(canvasW, canvasH),
+                          ),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: tokens.textSecondary,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SectionLabel(l10n.sizeTool),
+                const SizedBox(height: 8),
+                _SizePickerRow(
+                  value: _size,
+                  enabled: !_busy,
+                  onChanged: _onSizeChanged,
+                ),
+                const SizedBox(height: 14),
+                if (_size == ExportSize.original) ...[
+                  for (final q in ExportQuality.values) ...[
+                    _QualityCard(
+                      quality: q,
+                      canvasWidth: canvasW,
+                      canvasHeight: canvasH,
+                      // The card advertises what the exporter will
+                      // actually produce under the device cap, not the
+                      // multiplier's arithmetic (§10.3 — the number on
+                      // the card is a promise).
+                      effectiveRatio: ref
+                          .read(exportControllerProvider)
+                          .effectivePixelRatio(
+                            document: doc,
+                            requested: q.pixelRatio,
+                          ),
+                      selected: _quality == q,
+                      enabled: !_busy,
+                      onTap: () => setState(() => _quality = q),
+                    ),
+                    if (q != ExportQuality.values.last)
+                      const SizedBox(height: 8),
+                  ],
+                ] else
+                  _PresetOutputSummary(
+                    size: _size,
+                    canvasWidth: canvasW,
+                    canvasHeight: canvasH,
+                  ),
+                const SizedBox(height: 18),
+                // Format section. Compact segmented row keeps both the
+                // current selection and the alternative visible at a
+                // glance — no hidden state.
+                SectionLabel(l10n.formatLabel),
+                const SizedBox(height: 8),
+                _FormatSegmented(
+                  value: _format,
+                  enabled: !_busy,
+                  onChanged: (f) => setState(() => _format = f),
+                ),
+                // Quality slider only appears when JPG is selected (PNG is
+                // lossless, so a quality knob would be misleading).
+                if (_format.supportsQuality) ...[
+                  const SizedBox(height: 14),
+                  _JpgQualitySlider(
+                    value: _jpgQuality,
+                    enabled: !_busy,
+                    onChanged: (v) => setState(() => _jpgQuality = v),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                // Two exit intents. Each carries its own [ExportIntent]
+                // into the preview so the confirmation button there IS
+                // the action the user asked for here.
+                Row(
                   children: [
-                    Text(
-                      l10n.exportDesignTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        key: const ValueKey('export-sheet-share'),
+                        onPressed: _busy
+                            ? null
+                            : () => _openPreview(ExportIntent.share),
+                        icon: const Icon(AppIcons.visible),
+                        label: Text(l10n.previewShareAction),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: tokens.surfaceMuted.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        // Locale digits: the fa header reads
-                        // «بوم ۱۰۸۰ × ۱۰۸۰», not a Latin-digit island.
-                        l10n.canvasDimensions(
-                          values.dimensions(canvasW, canvasH),
-                        ),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: tokens.textSecondary,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton.icon(
+                        key: const ValueKey('export-sheet-save'),
+                        onPressed: _busy
+                            ? null
+                            : () => _openPreview(ExportIntent.save),
+                        icon: const Icon(AppIcons.exportSave),
+                        label: Text(l10n.previewSaveAction),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              SectionLabel(l10n.sizeTool),
-              const SizedBox(height: 8),
-              _SizePickerRow(
-                value: _size,
-                enabled: !_busy,
-                onChanged: _onSizeChanged,
-              ),
-              const SizedBox(height: 14),
-              if (_size == ExportSize.original) ...[
-                for (final q in ExportQuality.values) ...[
-                  _QualityCard(
-                    quality: q,
-                    canvasWidth: canvasW,
-                    canvasHeight: canvasH,
-                    // The card advertises what the exporter will
-                    // actually produce under the device cap, not the
-                    // multiplier's arithmetic (§10.3 — the number on
-                    // the card is a promise).
-                    effectiveRatio: ref
-                        .read(exportControllerProvider)
-                        .effectivePixelRatio(
-                          document: doc,
-                          requested: q.pixelRatio,
-                        ),
-                    selected: _quality == q,
-                    enabled: !_busy,
-                    onTap: () => setState(() => _quality = q),
-                  ),
-                  if (q != ExportQuality.values.last) const SizedBox(height: 8),
+                if (_busy) ...[
+                  const SizedBox(height: 12),
+                  const LinearProgressIndicator(minHeight: 2),
                 ],
-              ] else
-                _PresetOutputSummary(
-                  size: _size,
-                  canvasWidth: canvasW,
-                  canvasHeight: canvasH,
-                ),
-              const SizedBox(height: 18),
-              // Format section. Compact segmented row keeps both the
-              // current selection and the alternative visible at a
-              // glance — no hidden state.
-              SectionLabel(l10n.formatLabel),
-              const SizedBox(height: 8),
-              _FormatSegmented(
-                value: _format,
-                enabled: !_busy,
-                onChanged: (f) => setState(() => _format = f),
-              ),
-              // Quality slider only appears when JPG is selected (PNG is
-              // lossless, so a quality knob would be misleading).
-              if (_format.supportsQuality) ...[
-                const SizedBox(height: 14),
-                _JpgQualitySlider(
-                  value: _jpgQuality,
-                  enabled: !_busy,
-                  onChanged: (v) => setState(() => _jpgQuality = v),
-                ),
               ],
-              const SizedBox(height: 16),
-              // Two exit intents. Each carries its own [ExportIntent]
-              // into the preview so the confirmation button there IS
-              // the action the user asked for here.
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      key: const ValueKey('export-sheet-share'),
-                      onPressed: _busy
-                          ? null
-                          : () => _openPreview(ExportIntent.share),
-                      icon: const Icon(AppIcons.visible),
-                      label: Text(l10n.previewShareAction),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton.icon(
-                      key: const ValueKey('export-sheet-save'),
-                      onPressed: _busy
-                          ? null
-                          : () => _openPreview(ExportIntent.save),
-                      icon: const Icon(AppIcons.exportSave),
-                      label: Text(l10n.previewSaveAction),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (_busy) ...[
-                const SizedBox(height: 12),
-                const LinearProgressIndicator(minHeight: 2),
-              ],
-            ],
+            ),
           ),
         ),
       ),
