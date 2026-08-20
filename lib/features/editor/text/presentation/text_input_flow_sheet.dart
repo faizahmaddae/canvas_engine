@@ -806,25 +806,33 @@ class _ComposerInkDot extends StatelessWidget {
           EditorHaptics.tap();
           onTap();
         },
+        // The paint bench's sweep-ring grammar (mirrored on the
+        // studio bench's ink dot): the rainbow ring says "colour"
+        // and keeps a black ink visible on the dark sheet, where an
+        // accent hairline used to vanish.
         child: Container(
           width: 30,
           height: 30,
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
+          padding: const EdgeInsets.all(2.5),
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: tokens.accent.withValues(alpha: 0.6),
-              width: 1.5,
+            gradient: SweepGradient(
+              colors: [
+                Color(0xFFEF4444),
+                Color(0xFFF59E0B),
+                Color(0xFF22C55E),
+                Color(0xFF06B6D4),
+                Color(0xFF8B5CF6),
+                Color(0xFFEC4899),
+                Color(0xFFEF4444),
+              ],
             ),
           ),
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: tokens.border.withValues(alpha: 0.7),
-                width: 1,
-              ),
+              border: Border.all(color: tokens.surface, width: 2),
             ),
           ),
         ),

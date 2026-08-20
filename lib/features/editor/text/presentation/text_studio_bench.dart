@@ -507,29 +507,40 @@ class _InkDot extends StatelessWidget {
           width: kMinHitTarget,
           height: kMinHitTarget,
           child: Center(
-            // Resting: one crisp swatch. Active: the accent ring
-            // appears around it — the double-ring-at-rest read is
-            // gone.
+            // The paint bench's sweep-ring grammar: the rainbow ring
+            // both SAYS "colour lives here" and guarantees the dot
+            // reads on any dock ground — a black ink on the dark
+            // bench used to vanish behind a border-token hairline.
+            // The tokens.surface separator keeps any ink from
+            // blending into the ring; active swaps the sweep for the
+            // accent ring, matching every other open-sheet tint.
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 140),
               width: 34,
               height: 34,
-              padding: EdgeInsets.all(active ? 3 : 0),
+              padding: const EdgeInsets.all(2.5),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: active ? tokens.accent : Colors.transparent,
-                  width: active ? 2 : 0,
-                ),
+                gradient: active
+                    ? null
+                    : const SweepGradient(
+                        colors: [
+                          Color(0xFFEF4444),
+                          Color(0xFFF59E0B),
+                          Color(0xFF22C55E),
+                          Color(0xFF06B6D4),
+                          Color(0xFF8B5CF6),
+                          Color(0xFFEC4899),
+                          Color(0xFFEF4444),
+                        ],
+                      ),
+                color: active ? tokens.accent : null,
               ),
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: color,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: tokens.border.withValues(alpha: 0.8),
-                    width: 1.2,
-                  ),
+                  border: Border.all(color: tokens.surface, width: 2),
                 ),
               ),
             ),
