@@ -81,7 +81,9 @@ class TextStudioBench extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            height: compact ? 40 : 44,
+            // 46 keeps the cluster's tap zones at the 44dp floor once
+            // its 1px border is spent on each edge.
+            height: compact ? 42 : 46,
             child: _IdentityRow(layer: layer, session: session),
           ),
           SizedBox(height: compact ? 4 : 8),
@@ -499,27 +501,36 @@ class _InkDot extends StatelessWidget {
           EditorHaptics.tap();
           onTap();
         },
-        // Resting: one crisp swatch. Active: the accent ring appears
-        // around it — the double-ring-at-rest read is gone.
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          width: 34,
-          height: 34,
-          padding: EdgeInsets.all(active ? 3 : 0),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: active ? tokens.accent : Colors.transparent,
-              width: active ? 2 : 0,
-            ),
-          ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: tokens.border.withValues(alpha: 0.8),
-                width: 1.2,
+        // The visual is a 34dp swatch; the tap target is the full
+        // 44dp hit-floor box around it.
+        child: SizedBox(
+          width: kMinHitTarget,
+          height: kMinHitTarget,
+          child: Center(
+            // Resting: one crisp swatch. Active: the accent ring
+            // appears around it — the double-ring-at-rest read is
+            // gone.
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 140),
+              width: 34,
+              height: 34,
+              padding: EdgeInsets.all(active ? 3 : 0),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: active ? tokens.accent : Colors.transparent,
+                  width: active ? 2 : 0,
+                ),
+              ),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: tokens.border.withValues(alpha: 0.8),
+                    width: 1.2,
+                  ),
+                ),
               ),
             ),
           ),
@@ -573,6 +584,10 @@ class _AspectRow extends ConsumerWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: Row(
+        // Stretch, not center: a segment's tap target is the track's
+        // full height, never the 18dp its icon+label happen to need
+        // (the thin-chip bug the first bench shipped).
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             child: _AspectSegment(

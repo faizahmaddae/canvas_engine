@@ -120,6 +120,23 @@ void main() {
       expect(find.byKey(const ValueKey('text-pill-font')), findsOneWidget);
       expect(find.byKey(const ValueKey('text-pill-size')), findsOneWidget);
       expect(find.byKey(const ValueKey('text-ink-dot')), findsOneWidget);
+      // Touch floors: every bench tap target meets the 44dp rule.
+      // The aspect segments must STRETCH to the track height — the
+      // first bench let them collapse to their 18dp intrinsic row
+      // and shipped chips too thin to touch.
+      for (final k in const [
+        'text-aspect-look',
+        'text-aspect-layout',
+        'text-aspect-more',
+        'text-ink-dot',
+        'text-specimen',
+      ]) {
+        expect(
+          tester.getSize(find.byKey(ValueKey(k))).height,
+          greaterThanOrEqualTo(44),
+          reason: '$k must meet the 44dp touch floor',
+        );
+      }
       expect(tester.takeException(), isNull);
     },
   );
