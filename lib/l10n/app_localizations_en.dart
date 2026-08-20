@@ -1888,6 +1888,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sharing isn\'t available on this device';
 
   @override
+  String get deviceMaxExportNote => 'Capped at this device\'s export limit';
+
+  @override
   String get reducedResolutionWarning =>
       'Exporting at reduced resolution to fit device memory.';
 

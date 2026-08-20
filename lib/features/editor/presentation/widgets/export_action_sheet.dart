@@ -154,6 +154,16 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                     quality: q,
                     canvasWidth: canvasW,
                     canvasHeight: canvasH,
+                    // The card advertises what the exporter will
+                    // actually produce under the device cap, not the
+                    // multiplier's arithmetic (§10.3 — the number on
+                    // the card is a promise).
+                    effectiveRatio: ref
+                        .read(exportControllerProvider)
+                        .effectivePixelRatio(
+                          document: doc,
+                          requested: q.pixelRatio,
+                        ),
                     selected: _quality == q,
                     enabled: !_busy,
                     onTap: () => setState(() => _quality = q),
@@ -404,6 +414,7 @@ class _QualityCard extends StatelessWidget {
     required this.quality,
     required this.canvasWidth,
     required this.canvasHeight,
+    required this.effectiveRatio,
     required this.selected,
     required this.enabled,
     required this.onTap,
@@ -412,6 +423,13 @@ class _QualityCard extends StatelessWidget {
   final ExportQuality quality;
   final int canvasWidth;
   final int canvasHeight;
+
+  /// The ratio the exporter will really use — the requested multiplier
+  /// after the device-aware pixel cap. The dimensions printed on the
+  /// card come from this, so the card can never promise an output the
+  /// device won't produce.
+  final double effectiveRatio;
+
   final bool selected;
   final bool enabled;
   final VoidCallback onTap;
@@ -420,8 +438,9 @@ class _QualityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = AppTokens.of(context);
-    final outW = (canvasWidth * quality.pixelRatio).round();
-    final outH = (canvasHeight * quality.pixelRatio).round();
+    final outW = (canvasWidth * effectiveRatio).round();
+    final outH = (canvasHeight * effectiveRatio).round();
+    final capped = (quality.pixelRatio - effectiveRatio) > 1e-6;
 
     final bg = selected
         ? tokens.accent.withValues(alpha: 0.10)
@@ -490,6 +509,15 @@ class _QualityCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (capped) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        context.l10n.deviceMaxExportNote,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: tokens.accentText,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -758,7 +786,11 @@ class _PresetOutputSummary extends StatelessWidget {
     final theme = Theme.of(context);
     final tokens = AppTokens.of(context);
     final values = EditorValueFormat.of(context);
-    final target = size.target!;
+    // Same honesty rule as the quality cards: print what the exporter
+    // will produce under the device cap, not the preset's arithmetic.
+    final requested = size.target!;
+    final target = ExportController.clampTargetSizeForExport(target: requested);
+    final capped = (requested.width - target.width) > 0.5;
     final tw = target.width.round();
     final th = target.height.round();
     final canvasAspect = canvasWidth / canvasHeight;
@@ -798,6 +830,15 @@ class _PresetOutputSummary extends StatelessWidget {
                     color: tokens.textSecondary,
                   ),
                 ),
+                if (capped) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    context.l10n.deviceMaxExportNote,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: tokens.accentText,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

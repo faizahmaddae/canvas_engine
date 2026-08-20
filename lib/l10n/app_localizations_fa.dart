@@ -1890,6 +1890,9 @@ class AppLocalizationsFa extends AppLocalizations {
       'هم‌رسانی روی این دستگاه در دسترس نیست';
 
   @override
+  String get deviceMaxExportNote => 'به سقف خروجی این دستگاه محدود شد';
+
+  @override
   String get reducedResolutionWarning =>
       'برای سازگاری با حافظه دستگاه، خروجی با وضوح کمتر ساخته می‌شود.';
 

@@ -3614,6 +3614,12 @@ abstract class AppLocalizations {
   /// **'Sharing isn\'t available on this device'**
   String get sharingUnavailableMessage;
 
+  /// No description provided for @deviceMaxExportNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Capped at this device\'s export limit'**
+  String get deviceMaxExportNote;
+
   /// No description provided for @reducedResolutionWarning.
   ///
   /// In en, this message translates to:

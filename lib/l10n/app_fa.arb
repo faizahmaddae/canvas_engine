@@ -587,6 +587,7 @@
   "savedToPhotoLibrary": "در گالری عکس ذخیره شد",
   "sharedMessage": "اشتراک‌گذاری شد",
   "sharingUnavailableMessage": "هم‌رسانی روی این دستگاه در دسترس نیست",
+  "deviceMaxExportNote": "به سقف خروجی این دستگاه محدود شد",
   "reducedResolutionWarning": "برای سازگاری با حافظه دستگاه، خروجی با وضوح کمتر ساخته می‌شود.",
   "qualityLabel": "کیفیت",
   "qualityPercent": "کیفیت {percent}٪",
