@@ -5,10 +5,11 @@ import '../../../../l10n/l10n.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../toolbar/presentation/widgets/preset_slider_control.dart';
 
-/// Shared Paint Size UI rendered in BOTH the inline dock panel and
-/// the floating-toolbar modal sheet. One source of truth so a
-/// "Thick" stroke means the same thing in both surfaces and any
-/// future tweak lands once.
+/// The Paint Size body, rendered in the inline dock panel. (Its
+/// second host — the floating-toolbar modal sheet — died with
+/// PaintFloatingToolbar when the unified quick capsule replaced the
+/// per-type floating bars; the capsule's Size pill routes back to
+/// this same dock slot.)
 ///
 /// The widget is intentionally source-agnostic: it takes the
 /// current [value] and [color] explicitly and streams ticks through

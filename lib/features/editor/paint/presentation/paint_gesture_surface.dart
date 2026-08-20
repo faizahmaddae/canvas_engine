@@ -216,6 +216,12 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
           _mode = _PaintSequenceMode.sweeping;
           final strokes = ref.read(paintStrokeControllerProvider.notifier);
           strokes.beginEraserSweep();
+          // Two staged hits in one tick, deliberately: the buffered
+          // touch-down point first (the sweep must erase what the
+          // finger LANDED on, not only where it went after slop) and
+          // the current point second. The sweep's per-stroke
+          // exclusion set makes the pair idempotent when both land
+          // on the same stroke.
           strokes.sweepEraseAt(_bufferedLocal ?? local);
           strokes.sweepEraseAt(local);
         } else {

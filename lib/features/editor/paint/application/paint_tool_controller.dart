@@ -118,17 +118,6 @@ class PaintToolController extends Notifier<PaintSession> {
   @override
   PaintSession build() => PaintSession.initial;
 
-  /// Toggle the panel open/closed. Used by the bottom toolbar's Paint
-  /// item. Closing the panel also clears the active tool so paint mode
-  /// doesn't silently linger after the user dismisses the panel.
-  void togglePanel() {
-    if (state.panelOpen) {
-      state = state.copyWith(panelOpen: false, activeTool: null);
-    } else {
-      state = state.copyWith(panelOpen: true);
-    }
-  }
-
   /// Force the panel open without changing tool selection. Useful for
   /// programmatic entry points (e.g. context menus) that want to reveal
   /// paint UI without committing to a tool yet.
