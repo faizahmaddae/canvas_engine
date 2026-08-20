@@ -257,6 +257,7 @@ String _categoryLabel(AppLocalizations l10n, TemplateCategory category) =>
       TemplateCategory.youtubeThumbnail => l10n.onboardingGoalYoutube,
       TemplateCategory.poetryPost => l10n.onboardingGoalPoetry,
       TemplateCategory.promotionalPoster => l10n.onboardingGoalPoster,
+      TemplateCategory.quote => l10n.categoryQuote,
       _ => l10n.categorySocial,
     };
 

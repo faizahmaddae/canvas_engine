@@ -150,7 +150,11 @@ String _goalLabel(AppLocalizations l10n, TemplateCategory category) =>
       TemplateCategory.poetryPost => l10n.onboardingGoalPoetry,
       TemplateCategory.youtubeThumbnail => l10n.onboardingGoalYoutube,
       TemplateCategory.quote => l10n.onboardingGoalTextOnPhoto,
-      TemplateCategory.social => l10n.onboardingGoalBlankCanvas,
+      // The card enables the SOCIAL template category, so it says so.
+      // It used to read «بوم خالی» / "Blank canvas" — a goal that
+      // implies enabling nothing — while silently persisting social
+      // (ux-audit P3-15).
+      TemplateCategory.social => l10n.categorySocial,
       _ => l10n.categorySocial,
     };
 
