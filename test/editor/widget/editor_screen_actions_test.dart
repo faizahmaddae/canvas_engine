@@ -157,16 +157,16 @@ void main() {
     await pumpEditor(tester, container);
 
     expectMinimalAppBar();
-    // The redesigned quick-capsule floats over the selection and
-    // carries the 'Edit text' pill again (fast in-place access; the
-    // bottom bar stays the full surface). Its own contracts live in
-    // text_quick_capsule_test.dart — here we only pin that the
-    // APP BAR stays minimal while it shows.
+    // Two 'Edit text' doors while a text layer is selected: the
+    // quick-capsule pill floating over the selection, and the Studio
+    // Bench's specimen chip in the dock. Their own contracts live in
+    // their tests — here we only pin that the APP BAR stays minimal
+    // while they show.
     expect(
       find.byWidgetPredicate(
         (w) => w is Semantics && w.properties.label == 'Edit text',
       ),
-      findsOneWidget,
+      findsNWidgets(2),
     );
   });
 

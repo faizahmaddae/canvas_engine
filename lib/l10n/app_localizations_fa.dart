@@ -1244,7 +1244,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get stylesTool => 'سبک';
 
   @override
-  String get layoutTool => 'تراز';
+  String get layoutTool => 'چیدمان';
 
   @override
   String get resizeTool => 'تغییر اندازه';

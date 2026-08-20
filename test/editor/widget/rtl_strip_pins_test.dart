@@ -10,8 +10,6 @@
 // land a different behaviour. The final test pins that the LTR
 // behaviour of the same surfaces survived the RTL fix unchanged.
 
-import 'dart:math' as math;
-
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
@@ -176,44 +174,11 @@ void main() {
         );
       });
 
-      testWidgets(
-        'right-handed setting is PHYSICAL: text strip hugs the physical '
-        'right edge under RTL',
-        (tester) async {
-          // 520dp wide so the 6 text tiles (~420dp) leave ~80dp of
-          // slack for the alignment to act on.
-          await pumpEditor(
-            tester,
-            viewport: const Size(520, 956),
-            settings: const AppSettings(rightHandedToolbar: true),
-            seed: seedSelectedTextLayer,
-          );
-
-          final stripRect = tester.getRect(find.byType(DockToolStrip));
-          final tiles = stripTiles(tester);
-          expect(tiles, isNotEmpty);
-          final groupRight = tiles.map((t) => t.rect.right).reduce(math.max);
-          final groupLeft = tiles.map((t) => t.rect.left).reduce(math.min);
-
-          // Right-handed means the user's PHYSICAL right thumb,
-          // regardless of text direction: the tile group must sit
-          // flush against the right content edge (strip padding is
-          // 10dp) with all the slack accumulating on the left.
-          expect(
-            stripRect.right - groupRight,
-            lessThan(24),
-            reason:
-                'right-handed tiles must hug the PHYSICAL right edge '
-                'under RTL (logical MainAxisAlignment.end resolves to '
-                'physical left — the pre-fix bug)',
-          );
-          expect(
-            groupLeft - stripRect.left,
-            greaterThan(40),
-            reason: 'the free slack must sit on the physical left',
-          );
-        },
-      );
+      // (The text strip's handedness pin died with the strip: the
+      // Studio Bench's identity and aspect rows span the full dock
+      // width, so there is no tile group for the right-handed
+      // alignment to act on. The setting still governs the main
+      // strip, pinned above.)
 
       testWidgets(
         'main strip fade sits on the CLIPPED side under RTL: physical '

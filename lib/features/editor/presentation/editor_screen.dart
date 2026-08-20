@@ -68,7 +68,7 @@ import '../sticker/presentation/sticker_mode_toolbar.dart';
 import '../text/application/text_tool_controller.dart';
 import '../text/application/add_text_composer_state.dart';
 import '../text/presentation/text_input_flow_sheet.dart';
-import '../text/presentation/text_mode_toolbar.dart';
+import '../text/presentation/text_studio_bench.dart';
 import '../toolbar/presentation/mode_done_button.dart';
 import 'widgets/editor_canvas.dart';
 import 'widgets/mask_edit_overlay.dart' show confirmAbandonMaskEdit;
@@ -387,15 +387,18 @@ class EditorScreen extends ConsumerWidget {
                   modeKey: dock.modeKey,
                   expanded: dock.expanded,
                   expandedKey: dock.expandedKey,
-                  // The bench is two rows (style + rack); every other
-                  // mode keeps the standard strip height.
+                  // The paint and text benches are two rows (style/
+                  // identity + rack/aspects); every other mode keeps
+                  // the standard strip height.
                   height: dock.paintOpen
                       ? PaintBench.dockHeight(dockContext)
+                      : dock.textMode
+                      ? TextStudioBench.dockHeight(dockContext)
                       : null,
                   child: dock.paintOpen
                       ? const PaintBench()
                       : dock.textMode
-                      ? const TextModeToolbar()
+                      ? const TextStudioBench()
                       : dock.multiSelected
                       ? MultiSelectModeToolbar(
                           layers: dock.selectedLayersForActions,
@@ -657,7 +660,7 @@ class EditorScreen extends ConsumerWidget {
           'context:${contextPanel.name}:'
           '${contextPanelLayers.map((l) => l.id).join(',')}';
     } else if (textSelected && textOpenSheet != null) {
-      expanded = const TextModeSheetPanel();
+      expanded = const TextStudioSheetPanel();
       expandedKey = 'text-sheet:$textOpenSheet';
     } else if (paintOpen && paintOpenSlot != null) {
       expanded = const PaintModeInlineExpansion();
@@ -860,7 +863,7 @@ class EditorScreen extends ConsumerWidget {
 
   /// Selected layer when it's an emoji-sticker [TextLayer], else
   /// `null`. Drives the Sticker mode toolbar; normal text layers are
-  /// excluded so they continue to route to [TextModeToolbar].
+  /// excluded so they continue to route to [TextStudioBench].
   TextLayer? _selectedStickerLayer(WidgetRef ref) {
     final layer = _selectedMergedLayer(ref);
     return (layer is TextLayer && layer.isSticker) ? layer : null;

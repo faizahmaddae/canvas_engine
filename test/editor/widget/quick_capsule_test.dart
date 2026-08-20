@@ -20,7 +20,6 @@ import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/quick_capsule.dart';
 import 'package:canvas_engine/features/editor/shape/application/shape_tool_controller.dart';
 import 'package:canvas_engine/features/editor/sticker/application/sticker_tool_controller.dart';
-import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -113,28 +112,16 @@ void main() {
   );
 
   group('content matrix', () {
-    testWidgets('text: edit · colour · visual-px size · More', (tester) async {
-      final c = await pumpWithLayer(tester, text());
+    testWidgets('text: edit · More only — colour and size moved to the '
+        'bench identity row (Text Studio redesign)', (tester) async {
+      await pumpWithLayer(tester, text());
       expect(find.byType(QuickCapsule), findsOneWidget);
       expect(pill('Edit text'), findsOneWidget);
-      expect(pill('Color'), findsOneWidget);
-      expect(pill('Size'), findsOneWidget);
       expect(pill('More actions'), findsOneWidget);
-      // Visual px readout (tb2 12/16) — the harness box up-scales
-      // the 96px metrics, so raw would be a lie.
-      final layer =
-          c.read(documentControllerProvider).layerById('layer-1')! as TextLayer;
-      final visual = c
-          .read(textToolControllerProvider.notifier)
-          .visualFontSizeOf(layer);
-      expect(visual, greaterThan(96));
-      expect(
-        find.descendant(
-          of: find.byType(QuickCapsule),
-          matching: find.text('${visual.round()}px'),
-        ),
-        findsOneWidget,
-      );
+      // The colour dot and px readout duplicated the Studio Bench's
+      // identity row one gesture away — gone from the capsule.
+      expect(pill('Color'), findsNothing);
+      expect(pill('Size'), findsNothing);
     });
 
     testWidgets('image: look · crop · More', (tester) async {
@@ -187,17 +174,9 @@ void main() {
   });
 
   group('routes to the same surface as the dock (divergence-impossible)', () {
-    testWidgets('text colour pill toggles the color sheet and the capsule '
-        'yields', (tester) async {
-      final c = await pumpWithLayer(tester, text());
-      await tapPill(tester, 'Color');
-      expect(c.read(textToolControllerProvider).openSheet, 'color');
-      expect(
-        find.byType(QuickCapsule),
-        findsNothing,
-        reason: 'capsule never stacks on the panel it just opened',
-      );
-    });
+    // (The text colour pill died with the capsule slim-down — colour
+    // now routes through the bench identity row's ink dot, whose
+    // contract lives in the bench tests.)
 
     testWidgets('image look pill opens the look dock slot', (tester) async {
       final c = await pumpWithLayer(tester, image());

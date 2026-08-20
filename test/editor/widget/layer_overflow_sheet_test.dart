@@ -148,8 +148,6 @@ void main() {
       find.text('Bring forward'),
       find.text('Send backward'),
       find.text('Lock layer'),
-      find.text('Resize behavior'),
-      find.text('Text direction'),
       find.text('Delete'),
     ];
     double? prevY;
@@ -171,8 +169,11 @@ void main() {
     // استایل dock panel where the canvas is visible (audit P3-2) —
     // every row left in this sheet pops-then-acts.
     expect(find.byIcon(AppIcons.bold), findsNothing);
-    // Direction subtitle reflects the layer's current mode.
-    expect(find.text('Right to left'), findsOneWidget);
+    // No resize-behaviour or direction rows for text: both moved
+    // into the bench's چیدمان sheet (Text Studio redesign) — live
+    // controls belong on a live panel, not behind a scrim.
+    expect(find.text('Resize behavior'), findsNothing);
+    expect(find.text('Text direction'), findsNothing);
   });
 
   testWidgets('shape layer: text rows hidden, resize row is a live toggle', (

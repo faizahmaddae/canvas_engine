@@ -188,7 +188,9 @@ void main() {
 
       // Redesigned panel: the gradient chip discloses the presets and
       // a preset tap installs the gradient (docs/canvas-tool-redesign).
-      await tester.ensureVisible(find.byKey(const ValueKey('canvas-bg-gradient')));
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('canvas-bg-gradient')),
+      );
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('canvas-bg-gradient')));
       await tester.pumpAndSettle();
