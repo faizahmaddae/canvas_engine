@@ -3524,6 +3524,24 @@ abstract class AppLocalizations {
   /// **'Background only shows behind transparent or uncovered areas of your photo.'**
   String get photoBackgroundHint;
 
+  /// No description provided for @rotateCanvasAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate canvas'**
+  String get rotateCanvasAction;
+
+  /// No description provided for @layersOutsideCanvasNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Some layers are outside the canvas now — drag them back in.'**
+  String get layersOutsideCanvasNote;
+
+  /// No description provided for @gradientPickHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a gradient to use it as the background.'**
+  String get gradientPickHint;
+
   /// No description provided for @resetCropAction.
   ///
   /// In en, this message translates to:

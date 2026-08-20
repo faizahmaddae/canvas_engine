@@ -701,6 +701,25 @@ void main() {
     );
   });
 
+  testWidgets('EditorScreen visual capture — canvas gradient, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_canvas_gradient_light.png',
+      withCanvasPanel: true,
+      interact: (t) async {
+        await t.ensureVisible(find.byKey(const ValueKey('canvas-bg-gradient')));
+        await t.pump();
+        await t.tap(find.byKey(const ValueKey('canvas-bg-gradient')));
+        await t.pumpAndSettle();
+        await t.tap(find.byKey(const ValueKey('canvas-gradient-preset-0')));
+        await t.pumpAndSettle();
+      },
+    );
+  });
+
   testWidgets('EditorScreen visual capture — canvas panel, dark', (
     tester,
   ) async {

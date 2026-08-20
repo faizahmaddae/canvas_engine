@@ -523,10 +523,20 @@ void main() {
       BackgroundFill bg() =>
           container.read(documentControllerProvider).background;
 
-      await tapSwatch(tester, 'EF4444');
-      await tapSwatch(tester, '3B82F6');
+      // The redesigned panel's ground chips (the embedded picker died;
+      // the custom wheel lives in the shared sheet now).
+      Future<void> tapGround(String hex8) async {
+        final chip = find.byKey(ValueKey('canvas-bg-solid-$hex8'));
+        await tester.ensureVisible(chip);
+        await tester.pump();
+        await tester.tap(chip);
+        await tester.pump();
+      }
 
-      expect((bg() as SolidBackground).color.toARGB32(), 0xFF3B82F6);
+      await tapGround('fff5b942');
+      await tapGround('ff6b7280');
+
+      expect((bg() as SolidBackground).color.toARGB32(), 0xFF6B7280);
       expect(
         docCtrl.historyTimeline.length,
         entries0 + 2,
@@ -537,7 +547,7 @@ void main() {
       expect(container.read(liveOverlayProvider).isEmpty, isTrue);
 
       docCtrl.undo();
-      expect((bg() as SolidBackground).color.toARGB32(), 0xFFEF4444);
+      expect((bg() as SolidBackground).color.toARGB32(), 0xFFF5B942);
       docCtrl.undo();
       expect(bg(), original);
     });
@@ -548,6 +558,13 @@ void main() {
       final docCtrl = container.read(documentControllerProvider.notifier);
       final original = container.read(documentControllerProvider).background;
       final entries0 = docCtrl.historyTimeline.length;
+
+      // The panel hands custom colour off to the shared picker sheet.
+      final customDot = find.byKey(const ValueKey('canvas-bg-custom'));
+      await tester.ensureVisible(customDot);
+      await tester.pump();
+      await tester.tap(customDot);
+      await tester.pumpAndSettle();
 
       await dragWheel(
         tester,

@@ -1843,6 +1843,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Background only shows behind transparent or uncovered areas of your photo.';
 
   @override
+  String get rotateCanvasAction => 'Rotate canvas';
+
+  @override
+  String get layersOutsideCanvasNote =>
+      'Some layers are outside the canvas now — drag them back in.';
+
+  @override
+  String get gradientPickHint => 'Pick a gradient to use it as the background.';
+
+  @override
   String get resetCropAction => 'Reset crop';
 
   @override

@@ -1845,6 +1845,17 @@ class AppLocalizationsFa extends AppLocalizations {
       'پس‌زمینه فقط پشت بخش‌های شفاف یا پوشانده‌نشده عکس دیده می‌شود.';
 
   @override
+  String get rotateCanvasAction => 'چرخش بوم';
+
+  @override
+  String get layersOutsideCanvasNote =>
+      'برخی لایه‌ها اکنون بیرون بوم هستند؛ با کشیدن برشان گردانید.';
+
+  @override
+  String get gradientPickHint =>
+      'برای استفاده به‌عنوان پس‌زمینه، یک طیف را انتخاب کنید.';
+
+  @override
   String get resetCropAction => 'بازنشانی برش';
 
   @override
