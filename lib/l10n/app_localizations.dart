@@ -2492,6 +2492,18 @@ abstract class AppLocalizations {
   /// **'Type something…'**
   String get typeSomethingHint;
 
+  /// No description provided for @colorTonesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tones'**
+  String get colorTonesLabel;
+
+  /// No description provided for @restoreOriginalColorTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore original color'**
+  String get restoreOriginalColorTooltip;
+
   /// No description provided for @colorsLabel.
   ///
   /// In en, this message translates to:

@@ -401,6 +401,8 @@
   "textDirectionRtlTitle": "راست به چپ",
   "textDirectionLtrTitle": "چپ به راست",
   "typeSomethingHint": "چیزی بنویسید…",
+  "colorTonesLabel": "سایه‌روشن",
+  "restoreOriginalColorTooltip": "بازگشت به رنگ اولیه",
   "colorsLabel": "رنگ‌ها",
   "colorsMixedHint": "رنگ‌هایی که می‌سازید اینجا می‌مانند",
   "moreColorsTooltip": "رنگ‌های بیشتر",

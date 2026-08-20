@@ -419,6 +419,8 @@
   "textDirectionRtlTitle": "Right to left",
   "textDirectionLtrTitle": "Left to right",
   "typeSomethingHint": "Type something…",
+  "colorTonesLabel": "Tones",
+  "restoreOriginalColorTooltip": "Restore original color",
   "colorsLabel": "Colors",
   "colorsMixedHint": "Colors you mix land here",
   "moreColorsTooltip": "More colors",

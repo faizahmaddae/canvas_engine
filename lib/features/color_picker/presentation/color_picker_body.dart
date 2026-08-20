@@ -538,8 +538,31 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
           onChangeEnd: () => _seal(recentsWorthy: true),
         ),
         const SizedBox(height: 10),
+        // Tonal ramp — one-tap tints and shades of the CURRENT hue.
+        // The SV square answers "any colour"; the ramp answers the
+        // far more common "this colour, but lighter / darker"
+        // without asking the finger to find the right corner.
+        _TonalRampRow(
+          hsv: _hsv,
+          onPick: (next) => _emit(next, committed: true, recentsWorthy: true),
+        ),
+        const SizedBox(height: 10),
         Row(
           children: [
+            // Before | after: the colour this session opened on
+            // beside the live mix. Tapping the original half
+            // restores it — the escape hatch a long wheel session
+            // never had short of undoing the whole edit.
+            _ComparePill(
+              initial: Color(_initialArgb),
+              current: _current,
+              onRestore: () {
+                EditorHaptics.tap();
+                // Not recents-worthy: restoring is un-mixing.
+                _emit(HSVColor.fromColor(Color(_initialArgb)), committed: true);
+              },
+            ),
+            const SizedBox(width: 8),
             if (_eyedropperAvailable) ...[
               _RoundIconButton(
                 key: const ValueKey('color-picker-eyedropper'),
@@ -569,6 +592,150 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
           ],
         ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  Tonal ramp + before/after compare (custom level)
+// ─────────────────────────────────────────────────────────────────
+
+/// The ramp's (saturation, value) stops, light tint → deep shade.
+/// Six steps: enough to be useful, few enough that each is a
+/// meaningfully different tone. Hue and alpha always come from the
+/// live colour, so the ramp follows every hue-track drag.
+const List<(double, double)> _kTonalStops = <(double, double)>[
+  (0.12, 1.00),
+  (0.35, 1.00),
+  (0.60, 0.97),
+  (0.85, 0.88),
+  (0.95, 0.62),
+  (0.95, 0.38),
+];
+
+/// One-tap tints and shades of the current hue.
+class _TonalRampRow extends StatelessWidget {
+  const _TonalRampRow({required this.hsv, required this.onPick});
+
+  final HSVColor hsv;
+  final ValueChanged<HSVColor> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Semantics(
+      container: true,
+      label: context.l10n.colorTonesLabel,
+      child: SizedBox(
+        height: 36,
+        child: Row(
+          children: [
+            for (var i = 0; i < _kTonalStops.length; i++) ...[
+              if (i > 0) const SizedBox(width: 6),
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    final (s, v) = _kTonalStops[i];
+                    final tone = HSVColor.fromAHSV(hsv.alpha, hsv.hue, s, v);
+                    final toneColor = tone.toColor();
+                    return Semantics(
+                      button: true,
+                      label: colorSwatchName(context, toneColor),
+                      child: Material(
+                        color: toneColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(9),
+                          side: BorderSide(
+                            // The swatch-grammar boundary: a mid-tone
+                            // in both themes, so the white tint and
+                            // the near-black shade both keep an edge.
+                            color: tokens.textSecondary.withValues(alpha: 0.55),
+                          ),
+                        ),
+                        child: InkWell(
+                          key: ValueKey('color-picker-tone-$i'),
+                          borderRadius: BorderRadius.circular(9),
+                          onTap: () {
+                            EditorHaptics.tap();
+                            onPick(tone);
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Before | after split pill: the session's original colour beside
+/// the live mix. The original half is a button — tapping it restores
+/// the colour the picker opened on.
+class _ComparePill extends StatelessWidget {
+  const _ComparePill({
+    required this.initial,
+    required this.current,
+    required this.onRestore,
+  });
+
+  final Color initial;
+  final Color current;
+  final VoidCallback onRestore;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Semantics(
+      button: true,
+      label: context.l10n.restoreOriginalColorTooltip,
+      child: Tooltip(
+        message: context.l10n.restoreOriginalColorTooltip,
+        child: Container(
+          width: 64,
+          height: 40,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(
+              color: tokens.textSecondary.withValues(alpha: 0.55),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          // Checker under both halves so translucent colours read as
+          // translucent, same as the opacity track.
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const _CheckerPattern(),
+              Row(
+                // Stretch: both halves are paint-only boxes with no
+                // intrinsic height — centered, they collapse to zero
+                // and show bare checker.
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Material(
+                      color: initial,
+                      child: InkWell(
+                        key: const ValueKey('color-picker-compare-restore'),
+                        onTap: onRestore,
+                      ),
+                    ),
+                  ),
+                  Container(width: 1, color: tokens.surface),
+                  Expanded(
+                    child: ExcludeSemantics(child: ColoredBox(color: current)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

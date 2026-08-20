@@ -1314,6 +1314,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get typeSomethingHint => 'چیزی بنویسید…';
 
   @override
+  String get colorTonesLabel => 'سایه‌روشن';
+
+  @override
+  String get restoreOriginalColorTooltip => 'بازگشت به رنگ اولیه';
+
+  @override
   String get colorsLabel => 'رنگ‌ها';
 
   @override

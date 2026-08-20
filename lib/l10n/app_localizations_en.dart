@@ -1313,6 +1313,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get typeSomethingHint => 'Type something…';
 
   @override
+  String get colorTonesLabel => 'Tones';
+
+  @override
+  String get restoreOriginalColorTooltip => 'Restore original color';
+
+  @override
   String get colorsLabel => 'Colors';
 
   @override
