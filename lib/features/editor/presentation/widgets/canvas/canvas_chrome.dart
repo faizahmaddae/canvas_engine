@@ -235,7 +235,13 @@ Widget buildSelectionOverlay({
       break;
     }
   }
-  if (layer == null) return const SizedBox.shrink();
+  // A hidden layer keeps its selection (the Layers drawer can hide the
+  // selected row) but gets NO canvas chrome. Handles and a draggable
+  // frame would promise a transform the commit path refuses for hidden
+  // layers — the drag would track the finger, then silently snap back
+  // (ux-audit P2-6; contract §10.3 forbids present-but-inert chrome).
+  // Its area reads as empty canvas instead, per §5's pointer-eligibility.
+  if (layer == null || !layer.visible) return const SizedBox.shrink();
   final selectedLayer = layer;
   return Consumer(
     builder: (context, ref, _) {
@@ -456,6 +462,20 @@ Widget buildGroupSelectionOverlay({
       if (selectedSet.contains(l.id)) l,
   ];
   if (selectedLayers.length < 2) return const SizedBox.shrink();
+  // Hidden members are cut from the chrome's working set so the frame
+  // and every gesture start describe exactly the participants a group
+  // drag will commit — the controller's `_eligibleInitials` and
+  // `_endGroup` both skip hidden layers, and a frame stretched around
+  // a ghost rect would jump on release when that ghost snaps back
+  // (ux-audit P2-6). The per-member outlines in canvas_board.dart
+  // already filter the same way; this aligns the shared frame with
+  // them. A selection whose members are ALL hidden draws no
+  // interactive chrome at all (contract §10.3).
+  final visibleLayers = <EditorLayer>[
+    for (final l in selectedLayers)
+      if (l.visible) l,
+  ];
+  if (visibleLayers.isEmpty) return const SizedBox.shrink();
 
   return Consumer(
     builder: (context, ref, _) {
@@ -469,7 +489,7 @@ Widget buildGroupSelectionOverlay({
         bounds = ui.groupLiveBounds ?? Rect.zero;
       } else {
         bounds = const GroupEngine().computeBounds(
-          selectedLayers.map((l) => l.transform),
+          visibleLayers.map((l) => l.transform),
         );
       }
       final activeHandle = ui.groupSession?.handle;
@@ -533,7 +553,7 @@ Widget buildGroupSelectionOverlay({
           switch (update.phase) {
             case DragPhase.start:
               controller.startGroupGesture(
-                layers: selectedLayers,
+                layers: visibleLayers,
                 focalPoint: focalCanvas,
               );
             case DragPhase.update:
@@ -557,12 +577,12 @@ Widget buildGroupSelectionOverlay({
               router.clearSelectAndMoveOwnership();
               if (handle == InteractionHandle.rotate) {
                 controller.startGroupRotate(
-                  layers: selectedLayers,
+                  layers: visibleLayers,
                   pointer: pointer,
                 );
               } else {
                 controller.startGroupResize(
-                  layers: selectedLayers,
+                  layers: visibleLayers,
                   handle: handle,
                   pointer: pointer,
                 );
@@ -643,7 +663,10 @@ Widget buildQuickCapsule({
       break;
     }
   }
-  if (layer == null) return const SizedBox.shrink();
+  // Same hidden-layer gate as [buildSelectionOverlay]: a capsule of
+  // live accelerators floating over empty space is lying chrome
+  // (ux-audit P2-6, contract §10.3).
+  if (layer == null || !layer.visible) return const SizedBox.shrink();
   final selectedLayer = layer;
   return Consumer(
     builder: (context, ref, _) {

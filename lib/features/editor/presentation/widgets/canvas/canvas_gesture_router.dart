@@ -450,8 +450,13 @@ class CanvasGestureRouter {
     // The selected layer's chrome quad (bbox + outset ring) belongs
     // to the selection overlay above — including where another layer
     // overlaps it. Declining here keeps the two surfaces' claims
-    // mutually exclusive.
-    if (selectedLayer != null && pointInChromeQuad(selectedLayer, local)) {
+    // mutually exclusive. A HIDDEN selection renders no overlay
+    // (buildSelectionOverlay's gate, ux-audit P2-6), so there is no
+    // quad to reserve: its area must read like any other point —
+    // row 5 for an eligible layer underneath, else row 7 / viewport.
+    if (selectedLayer != null &&
+        selectedLayer.visible &&
+        pointInChromeQuad(selectedLayer, local)) {
       return false;
     }
     final hits = geom.hitTestAllLayers(layers, local);
