@@ -98,4 +98,48 @@ void main() {
     final json = Map<String, Object?>.from(jsonDecode(raw!) as Map);
     expect(json['localePreference'], 'persian');
   });
+
+  testWidgets('Reset onboarding confirms first and leaves Settings on '
+      'confirm — never a silent flag flip', (tester) async {
+    // ux-audit P2-17: the bare button flipped the flag with zero
+    // feedback; the root swapped underneath the pushed Settings route
+    // and Back later "teleported" to Welcome.
+    SharedPreferences.setMockInitialValues({'onboarding.complete': true});
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          navigatorKey: navKey,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: SizedBox.expand()),
+        ),
+      ),
+    );
+    navKey.currentState!.push(
+      MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Reset onboarding'), 200);
+    await tester.tap(find.text('Reset onboarding'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reset onboarding?'), findsOneWidget);
+
+    // Cancel: nothing changes, Settings stays.
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SettingsScreen), findsOneWidget);
+    var prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('onboarding.complete'), isTrue);
+
+    // Confirm: the flag flips AND Settings pops onto the new root.
+    await tester.tap(find.text('Reset onboarding'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reset'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SettingsScreen), findsNothing);
+    prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('onboarding.complete'), isFalse);
+  });
 }

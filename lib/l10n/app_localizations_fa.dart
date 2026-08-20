@@ -151,6 +151,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsResetOnboarding => 'بازنشانی شروع اولیه';
 
   @override
+  String get resetOnboardingConfirmTitle => 'شروع اولیه بازنشانی شود؟';
+
+  @override
+  String get resetOnboardingConfirmBody =>
+      'صفحه خوش‌آمد دوباره نمایش داده می‌شود و انتخاب قالب‌های خانه از نو پرسیده می‌شود.';
+
+  @override
+  String get resetAction => 'بازنشانی';
+
+  @override
   String get canvasInteractionSection => 'تعامل با بوم';
 
   @override

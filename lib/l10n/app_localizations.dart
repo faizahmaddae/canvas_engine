@@ -374,6 +374,24 @@ abstract class AppLocalizations {
   /// **'Reset onboarding'**
   String get settingsResetOnboarding;
 
+  /// No description provided for @resetOnboardingConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset onboarding?'**
+  String get resetOnboardingConfirmTitle;
+
+  /// No description provided for @resetOnboardingConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll go through the welcome flow again, and your template picks for Home will be re-asked.'**
+  String get resetOnboardingConfirmBody;
+
+  /// No description provided for @resetAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetAction;
+
   /// No description provided for @canvasInteractionSection.
   ///
   /// In en, this message translates to:

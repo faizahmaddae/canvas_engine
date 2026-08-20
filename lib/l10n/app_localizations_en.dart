@@ -151,6 +151,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsResetOnboarding => 'Reset onboarding';
 
   @override
+  String get resetOnboardingConfirmTitle => 'Reset onboarding?';
+
+  @override
+  String get resetOnboardingConfirmBody =>
+      'You\'ll go through the welcome flow again, and your template picks for Home will be re-asked.';
+
+  @override
+  String get resetAction => 'Reset';
+
+  @override
   String get canvasInteractionSection => 'Canvas Interaction';
 
   @override
