@@ -17,6 +17,7 @@ import '../../../../app/ui/app_modal_sheet.dart';
 import '../../text/presentation/text_edit_flow.dart';
 import '../../text/presentation/text_resize_mode_picker.dart';
 import 'layer_actions.dart';
+import 'layer_opacity_control.dart';
 import '../../../../app/theme/app_icons.dart';
 
 /// THE layer overflow sheet — the single «⋯ / بیشتر» destination for
@@ -150,6 +151,7 @@ class _LayerOverflowSheet extends StatelessWidget {
     final paintLayer = layer is PaintLayer ? layer as PaintLayer : null;
     final canForward = LayerActions.canBringForward(parentRef, layer);
     final canBackward = LayerActions.canSendBackward(parentRef, layer);
+    final doc = parentRef.read(documentControllerProvider);
     // Align moves a layer, and AlignmentController refuses layers that
     // cannot move: locked ones, and the protected base photo (it IS
     // the canvas, so "align to canvas" is meaningless for it by
@@ -160,10 +162,14 @@ class _LayerOverflowSheet extends StatelessWidget {
     // (audit P2-7). Greyed out instead, the same treatment the reorder
     // rows above already use — and gated by THE eligibility rule the
     // controller commits through, so row and command cannot drift.
-    final canAlign = AlignmentEligibility.of(
-      parentRef.read(documentControllerProvider),
-      [layer],
-    ).canAlign;
+    final canAlign = AlignmentEligibility.of(doc, [layer]).canAlign;
+    // Opacity and flip edit the layer's frozen content, so the lock
+    // rule (EditorLayer.locked, audit P3-1) refuses them exactly like
+    // Align — same greyed grammar, each gated by the SAME predicate
+    // its write path refuses through. (The base photo stays opacity-
+    // editable: LayerOpacityControl.canEdit carries that carve-out.)
+    final canEditOpacity = LayerOpacityControl.canEdit(doc, layer);
+    final canFlip = LayerActions.canFlip(layer);
 
     return [
       // 1 — Edit text
@@ -191,14 +197,17 @@ class _LayerOverflowSheet extends StatelessWidget {
       ),
       // 3 — Opacity (context panel link)
       ListTile(
+        enabled: canEditOpacity,
         leading: const Icon(AppIcons.opacity),
         title: Text(l10n.opacityLabel),
-        trailing: const Icon(AppIcons.drillIn),
-        onTap: () => _popThen(context, () {
-          parentRef
-              .read(contextToolbarControllerProvider.notifier)
-              .open(ContextToolPanel.opacity);
-        }),
+        trailing: canEditOpacity ? const Icon(AppIcons.drillIn) : null,
+        onTap: !canEditOpacity
+            ? null
+            : () => _popThen(context, () {
+                parentRef
+                    .read(contextToolbarControllerProvider.notifier)
+                    .open(ContextToolPanel.opacity);
+              }),
       ),
       // (B/I/U moved to the استایل panel — a dock panel is a live
       // surface with the canvas visible, which is what document-
@@ -221,20 +230,28 @@ class _LayerOverflowSheet extends StatelessWidget {
         }),
       ),
       // 6b — Flip. Whole-layer and decisive rather than tunable,
-      // which is why it lives here and not on a strip.
+      // which is why it lives here and not on a strip. Disabled for a
+      // locked layer — flip is a content transform (LayerActions.flip
+      // refuses it too; the row must say so, not silently no-op).
       ListTile(
+        enabled: canFlip,
         leading: const Icon(AppIcons.flipHorizontal),
         title: Text(l10n.flipHorizontalAction),
-        onTap: () => _popThen(context, () {
-          LayerActions.flip(parentRef, layer, horizontal: true);
-        }),
+        onTap: !canFlip
+            ? null
+            : () => _popThen(context, () {
+                LayerActions.flip(parentRef, layer, horizontal: true);
+              }),
       ),
       ListTile(
+        enabled: canFlip,
         leading: const Icon(AppIcons.flipVertical),
         title: Text(l10n.flipVerticalAction),
-        onTap: () => _popThen(context, () {
-          LayerActions.flip(parentRef, layer, horizontal: false);
-        }),
+        onTap: !canFlip
+            ? null
+            : () => _popThen(context, () {
+                LayerActions.flip(parentRef, layer, horizontal: false);
+              }),
       ),
       // 7 — Reorder
       ListTile(
@@ -382,6 +399,10 @@ class _LayerOverflowSheet extends StatelessWidget {
       parentRef.read(documentControllerProvider),
       selectedLayers,
     ).canAlign;
+    // Batch flip drops locked members (LayerActions.flipMany), so the
+    // rows go grey only when NO member can flip — a mixed batch stays
+    // live and flips just the unlocked layers, one composite.
+    final canFlipAny = selectedLayers.any(LayerActions.canFlip);
 
     return [
       // Count header — identifies the batch the rows below act on.
@@ -417,34 +438,40 @@ class _LayerOverflowSheet extends StatelessWidget {
       ),
       // Batch flip — each layer about its OWN centre, one composite.
       ListTile(
+        enabled: canFlipAny,
         leading: const Icon(AppIcons.flipHorizontal),
         title: Text(l10n.flipHorizontalAction),
-        onTap: () {
-          final label = l10n.flipHorizontalAction;
-          _popThen(context, () {
-            LayerActions.flipMany(
-              parentRef,
-              selectedLayers,
-              horizontal: true,
-              label: label,
-            );
-          });
-        },
+        onTap: !canFlipAny
+            ? null
+            : () {
+                final label = l10n.flipHorizontalAction;
+                _popThen(context, () {
+                  LayerActions.flipMany(
+                    parentRef,
+                    selectedLayers,
+                    horizontal: true,
+                    label: label,
+                  );
+                });
+              },
       ),
       ListTile(
+        enabled: canFlipAny,
         leading: const Icon(AppIcons.flipVertical),
         title: Text(l10n.flipVerticalAction),
-        onTap: () {
-          final label = l10n.flipVerticalAction;
-          _popThen(context, () {
-            LayerActions.flipMany(
-              parentRef,
-              selectedLayers,
-              horizontal: false,
-              label: label,
-            );
-          });
-        },
+        onTap: !canFlipAny
+            ? null
+            : () {
+                final label = l10n.flipVerticalAction;
+                _popThen(context, () {
+                  LayerActions.flipMany(
+                    parentRef,
+                    selectedLayers,
+                    horizontal: false,
+                    label: label,
+                  );
+                });
+              },
       ),
       // Batch lock/unlock (canonical row 8, ACTION icon) — one
       // composite; unlocks only when EVERY member is locked.

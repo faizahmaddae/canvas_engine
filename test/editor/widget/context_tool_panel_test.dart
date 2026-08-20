@@ -247,6 +247,102 @@ void main() {
     expect(doc.layerById('b')!.opacity, closeTo(0.35, 1e-6));
   });
 
+  // Lock rule (EditorLayer.locked, audit P3-1): opacity is frozen
+  // content. The panel body must never sit live over a layer the
+  // write path refuses — the slider renders disabled, from the same
+  // predicate the commit goes through (LayerOpacityControl.canEdit),
+  // whatever entry point opened the panel.
+  testWidgets('locked layer: opacity slider disabled, commits nothing', (
+    tester,
+  ) async {
+    final layer = _shape(
+      'frozen',
+      const Offset(20, 30),
+      opacity: 0.7,
+      locked: true,
+    );
+    final container = _containerWith([layer], selectedIds: [layer.id]);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      _host(container, ContextToolPanel.opacity, [layer]),
+    );
+    await tester.pumpAndSettle();
+
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.onChanged, isNull, reason: 'slider must render disabled');
+    expect(slider.onChangeEnd, isNull);
+    expect(
+      container.read(documentControllerProvider).layerById('frozen')!.opacity,
+      closeTo(0.7, 1e-6),
+    );
+  });
+
+  testWidgets('mixed multi opacity: locked member excluded from the average '
+      'and from the write, one history entry', (tester) async {
+    final a = _shape('a', const Offset(20, 20), opacity: 1);
+    final frozen = _shape(
+      'frozen',
+      const Offset(140, 20),
+      opacity: 0.5,
+      locked: true,
+    );
+    final container = _containerWith([a, frozen], selectedIds: ['a', 'frozen']);
+    addTearDown(container.dispose);
+    container.read(documentControllerProvider.notifier).clearHistory();
+
+    await tester.pumpWidget(
+      _host(container, ContextToolPanel.opacity, [a, frozen]),
+    );
+    await tester.pumpAndSettle();
+
+    // The readout describes the set the drag will write: the eligible
+    // member's 1.0, never the 0.75 average that counts the frozen one.
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.value, closeTo(1.0, 1e-6));
+
+    slider.onChanged!(0.35);
+    slider.onChangeEnd!(0.35);
+    await tester.pump();
+
+    final doc = container.read(documentControllerProvider);
+    expect(doc.layerById('a')!.opacity, closeTo(0.35, 1e-6));
+    expect(
+      doc.layerById('frozen')!.opacity,
+      closeTo(0.5, 1e-6),
+      reason: 'locked member is never part of the write',
+    );
+
+    container.read(documentControllerProvider.notifier).undo();
+    expect(
+      container.read(documentControllerProvider).layerById('a')!.opacity,
+      closeTo(1.0, 1e-6),
+    );
+    expect(
+      container.read(documentControllerProvider.notifier).canUndo,
+      isFalse,
+      reason: 'the eligible-only write was exactly one history entry',
+    );
+  });
+
+  testWidgets('all-locked multi selection: opacity slider disabled', (
+    tester,
+  ) async {
+    final a = _shape('a', const Offset(20, 20), locked: true);
+    final b = _shape('b', const Offset(140, 20), opacity: 0.5, locked: true);
+    final container = _containerWith([a, b], selectedIds: ['a', 'b']);
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_host(container, ContextToolPanel.opacity, [a, b]));
+    await tester.pumpAndSettle();
+
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.onChanged, isNull);
+    expect(slider.onChangeEnd, isNull);
+    // Disabled, it still reports the group's honest average.
+    expect(slider.value, closeTo(0.75, 1e-6));
+  });
+
   testWidgets('Persian opacity panel uses compact localized chrome', (
     tester,
   ) async {

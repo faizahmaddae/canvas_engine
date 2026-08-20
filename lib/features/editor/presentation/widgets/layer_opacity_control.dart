@@ -6,6 +6,7 @@ import '../../application/document_controller.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../engine/commands/layer_state_commands.dart';
 import '../../engine/commands/transform_commands.dart';
+import '../../engine/core/editor_document.dart';
 import '../../engine/core/editor_layer.dart';
 import '../../../../core/utils/editor_value_format.dart';
 import '../../../../app/theme/app_icons.dart';
@@ -15,6 +16,16 @@ import '../../../../app/theme/app_icons.dart';
 /// Drag previews are staged in [liveOverlayProvider] so canvas feedback is
 /// immediate without creating undo entries. The final drag value commits via
 /// [SetLayerOpacityCommand], matching the layers drawer behaviour.
+///
+/// Lock rule ([EditorLayer.locked]): opacity is part of the layer's
+/// frozen content, so both controls gate on [canEdit] — the single
+/// slider renders disabled for a locked layer, and the multi variant
+/// drops locked members from its average, its preview and its commit
+/// (same silent-drop grammar as batch align). Gating INSIDE the
+/// shared control makes every mounting point — the opacity context
+/// panel and the layers drawer row — obey at once (ux-audit P3-1:
+/// this slider used to stay live for layers the canvas refused to
+/// touch).
 class LayerOpacityControl extends ConsumerStatefulWidget {
   const LayerOpacityControl({
     super.key,
@@ -26,6 +37,19 @@ class LayerOpacityControl extends ConsumerStatefulWidget {
     ),
     this.showLabel = false,
   });
+
+  /// THE per-layer rule for whether opacity may change — consumed by
+  /// both slider variants here and by the overflow sheet's Opacity
+  /// row, so the entry point and the write cannot drift.
+  ///
+  /// The protected base photo is the rule's one carve-out: it imports
+  /// `locked` purely as structural pinning against canvas gestures,
+  /// and fading it toward the canvas background is the Image strip's
+  /// deliberate, chrome-named offer (tb15, pinned by
+  /// context_panel_target_test) — refusing it here would resurrect
+  /// that strip's شفافیت dead-end.
+  static bool canEdit(EditorDocument doc, EditorLayer layer) =>
+      !layer.locked || doc.isProtectedBasePhoto(layer.id);
 
   final EditorLayer layer;
   final EdgeInsetsGeometry padding;
@@ -72,12 +96,25 @@ class _MultiLayerOpacityControlState
   @override
   Widget build(BuildContext context) {
     final ids = widget.layers.map((layer) => layer.id).toList(growable: false);
-    final layers = ref.watch(
-      documentControllerProvider.select(
-        (doc) => ids.map(doc.layerById).nonNulls.toList(growable: false),
-      ),
-    );
-    final value = (_dragValue ?? _averageOpacity(layers)).clamp(0.0, 1.0);
+    // Whole-document watch: the old `.select` produced a fresh List
+    // every evaluation, so it never suppressed a rebuild anyway, and
+    // the eligibility gate below needs the document for the
+    // base-photo clause of [LayerOpacityControl.canEdit].
+    final doc = ref.watch(documentControllerProvider);
+    final layers = ids.map(doc.layerById).nonNulls.toList(growable: false);
+    // Locked members are excluded from the average, the live preview
+    // AND the commit — a mixed selection edits only the layers whose
+    // content can change, and the readout must describe exactly the
+    // set the drag will write (never a silently-skipped member's
+    // value). All-ineligible → the slider renders disabled, showing
+    // the group's actual average.
+    final eligible = [
+      for (final layer in layers)
+        if (LayerOpacityControl.canEdit(doc, layer)) layer,
+    ];
+    final value =
+        (_dragValue ?? _averageOpacity(eligible.isEmpty ? layers : eligible))
+            .clamp(0.0, 1.0);
     final theme = Theme.of(context);
     final f = EditorValueFormat.of(context);
     final percent = f.percent((value * 100).round());
@@ -103,20 +140,27 @@ class _MultiLayerOpacityControlState
             min: 0,
             max: 1,
             semanticFormatterCallback: (v) => f.percent((v * 100).round()),
-            onChanged: layers.isEmpty
+            // Both callbacks re-read the document and re-apply
+            // [LayerOpacityControl.canEdit] at write time, so a lock
+            // flipped mid-gesture (undo, another surface) is honoured
+            // by the very next preview frame and by the commit.
+            onChanged: eligible.isEmpty
                 ? null
                 : (v) {
                     setState(() => _dragValue = v);
                     final doc = ref.read(documentControllerProvider);
                     for (final id in ids) {
                       final currentLayer = doc.layerById(id);
-                      if (currentLayer == null) continue;
+                      if (currentLayer == null ||
+                          !LayerOpacityControl.canEdit(doc, currentLayer)) {
+                        continue;
+                      }
                       ref
                           .read(liveOverlayProvider.notifier)
                           .replaceLayer(currentLayer.withOpacity(v));
                     }
                   },
-            onChangeEnd: layers.isEmpty
+            onChangeEnd: eligible.isEmpty
                 ? null
                 : (v) {
                     setState(() => _dragValue = null);
@@ -124,7 +168,8 @@ class _MultiLayerOpacityControlState
                     final doc = ref.read(documentControllerProvider);
                     final commands = <SetLayerOpacityCommand>[
                       for (final id in ids)
-                        if (doc.layerById(id) != null)
+                        if (doc.layerById(id) case final layer?
+                            when LayerOpacityControl.canEdit(doc, layer))
                           SetLayerOpacityCommand(layerId: id, opacity: v),
                     ];
                     if (commands.isEmpty) return;
@@ -218,6 +263,17 @@ class _LayerOpacityControlState extends ConsumerState<LayerOpacityControl> {
         (doc) => doc.layerById(widget.layer.id) ?? widget.layer,
       ),
     );
+    // Live-document eligibility ([LayerOpacityControl.canEdit]) so a
+    // lock flipped while the slider is on screen (undo, the drawer's
+    // lock toggle) disables it in place. A layer missing from the
+    // document keeps the slider enabled — that transient state
+    // (mid-delete teardown) predates this gate and commits nothing.
+    final canEdit = ref.watch(
+      documentControllerProvider.select((doc) {
+        final live = doc.layerById(widget.layer.id);
+        return live == null || LayerOpacityControl.canEdit(doc, live);
+      }),
+    );
     final value = (_dragValue ?? layer.opacity).clamp(0.0, 1.0);
     final f = EditorValueFormat.of(context);
     final percent = f.percent((value * 100).round());
@@ -243,27 +299,31 @@ class _LayerOpacityControlState extends ConsumerState<LayerOpacityControl> {
             min: 0,
             max: 1,
             semanticFormatterCallback: (v) => f.percent((v * 100).round()),
-            onChanged: (v) {
-              setState(() => _dragValue = v);
-              final doc = ref.read(documentControllerProvider);
-              final currentLayer = doc.layerById(widget.layer.id);
-              if (currentLayer == null) return;
-              ref
-                  .read(liveOverlayProvider.notifier)
-                  .replaceLayer(currentLayer.withOpacity(v));
-            },
-            onChangeEnd: (v) {
-              setState(() => _dragValue = null);
-              ref.read(liveOverlayProvider.notifier).clear();
-              ref
-                  .read(documentControllerProvider.notifier)
-                  .execute(
-                    SetLayerOpacityCommand(
-                      layerId: widget.layer.id,
-                      opacity: v,
-                    ),
-                  );
-            },
+            onChanged: !canEdit
+                ? null
+                : (v) {
+                    setState(() => _dragValue = v);
+                    final doc = ref.read(documentControllerProvider);
+                    final currentLayer = doc.layerById(widget.layer.id);
+                    if (currentLayer == null) return;
+                    ref
+                        .read(liveOverlayProvider.notifier)
+                        .replaceLayer(currentLayer.withOpacity(v));
+                  },
+            onChangeEnd: !canEdit
+                ? null
+                : (v) {
+                    setState(() => _dragValue = null);
+                    ref.read(liveOverlayProvider.notifier).clear();
+                    ref
+                        .read(documentControllerProvider.notifier)
+                        .execute(
+                          SetLayerOpacityCommand(
+                            layerId: widget.layer.id,
+                            opacity: v,
+                          ),
+                        );
+                  },
           ),
         ),
       ),

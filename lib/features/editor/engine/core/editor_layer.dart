@@ -35,9 +35,28 @@ abstract class EditorLayer {
   /// hit-testing but remain in the document so the user can unhide them.
   final bool visible;
 
-  /// Runtime lock flag. Locked layers cannot be moved, resized, rotated,
-  /// or hit-tested by pointer gestures. They can still be selected from
-  /// the layers panel and unlocked from there.
+  /// Runtime lock flag. THE lock rule (ux-audit P3-1 — one statement,
+  /// stated once, every surface renders and refuses from it):
+  ///
+  /// **Locked freezes the layer's own content: transform (move /
+  /// resize / rotate / flip), style, opacity and align are refused;
+  /// structural operations (select via the layers drawer, reorder,
+  /// duplicate, delete, lock/unlock, show/hide) remain available.**
+  ///
+  /// The content half is not enforced here — commands stay pure and
+  /// policy-free — but in the gates in front of the command stack:
+  /// pointer eligibility in `InteractionController`, align in
+  /// `AlignmentController.canMoveLayer`, flip in `LayerActions.canFlip`,
+  /// opacity in `LayerOpacityControl.canEdit`. Structural operations
+  /// stay lock-agnostic because they act on the layer's PLACE in the
+  /// document, not on its content — which is also why a locked layer
+  /// can still be selected (from the drawer; canvas hit-testing skips
+  /// it) and unlocked again.
+  ///
+  /// One deliberate carve-out: the protected base photo imports
+  /// `locked` purely as structural pinning against canvas gestures
+  /// (`EditorDocument.isProtectedBasePhoto`); its opacity and look
+  /// stay editable from the Image strip (tb15, c2860db).
   final bool locked;
 
   /// Layer-level opacity, `0..1`. `1.0` is fully opaque (default) and

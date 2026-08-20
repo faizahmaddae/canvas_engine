@@ -39,6 +39,13 @@ class ContextToolPanelBody extends ConsumerWidget {
         maxHeightDp: 280,
         child: _AlignPanel(layers: layers),
       ),
+      // Lock gating lives INSIDE the two controls (the same live-
+      // document eligibility grammar as the align tiles below): the
+      // single slider renders disabled for a locked layer, the multi
+      // variant drops locked members from its average and its write —
+      // see LayerOpacityControl.canEdit. So this panel never sits
+      // live-looking over a layer the write path would refuse, from
+      // ANY entry point (the mode strips' شفافیت tiles included).
       ContextToolPanel.opacity => EditorToolPanelShell(
         title: context.l10n.opacityLabel,
         icon: AppIcons.opacity,
