@@ -123,9 +123,11 @@ class _FontCard extends StatelessWidget {
     final bg = selected
         ? tokens.accent.withValues(alpha: 0.12)
         : tokens.surfaceMuted.withValues(alpha: 0.35);
+    // Resting cards carry a hairline too — on the paper dock the
+    // borderless fill read as a smudge, not an instrument.
     final border = selected
         ? tokens.accent.withValues(alpha: 0.5)
-        : Colors.transparent;
+        : tokens.border.withValues(alpha: 0.35);
     return Material(
       type: MaterialType.transparency,
       child: InkWell(

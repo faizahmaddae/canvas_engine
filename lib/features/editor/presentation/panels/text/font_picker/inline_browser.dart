@@ -178,7 +178,10 @@ class _InlineFontBodyState extends State<InlineFontBody> {
         // into a single 32dp band, leaving the entire strip below
         // for the typeface specimens themselves.
         SizedBox(
-          height: 32,
+          // 40 (was 32): the filter band's chips and the script
+          // switch both grow toward the touch floor — they were the
+          // sheet's thinnest targets.
+          height: 40,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -371,9 +374,9 @@ class _FontCategoryFilter extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 140),
           curve: Curves.easeOutCubic,
-          height: 26,
+          height: 34,
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: selected
                 ? tokens.accent.withValues(alpha: 0.12)
@@ -392,7 +395,7 @@ class _FontCategoryFilter extends StatelessWidget {
             softWrap: false,
             overflow: TextOverflow.visible,
             style: TextStyle(
-              fontSize: 11.5,
+              fontSize: 12,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               color: selected ? tokens.accent : tokens.textSecondary,
               letterSpacing: 0.1,
