@@ -3860,6 +3860,12 @@ abstract class AppLocalizations {
   /// **'undone'**
   String get historyUndoneSemantic;
 
+  /// No description provided for @historyJumpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a step to jump to it'**
+  String get historyJumpHint;
+
   /// No description provided for @histAddText.
   ///
   /// In en, this message translates to:

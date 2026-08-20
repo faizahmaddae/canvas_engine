@@ -629,6 +629,7 @@
   "historyStartLabel": "سند باز شد",
   "historyCurrentSemantic": "مرحلهٔ کنونی",
   "historyUndoneSemantic": "واگردشده",
+  "historyJumpHint": "برای پرش به هر مرحله روی آن بزنید",
   "histAddText": "افزودن متن",
   "histAddImage": "افزودن عکس",
   "histAddShape": "افزودن شکل",

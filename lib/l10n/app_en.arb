@@ -658,6 +658,7 @@
   "historyStartLabel": "Document opened",
   "historyCurrentSemantic": "current step",
   "historyUndoneSemantic": "undone",
+  "historyJumpHint": "Tap a step to jump to it",
   "histAddText": "Add text",
   "histAddImage": "Add image",
   "histAddShape": "Add shape",

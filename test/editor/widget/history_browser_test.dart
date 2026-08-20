@@ -1,5 +1,7 @@
 // The history browser sheet: localized labels, current-position
-// indication, undone styling, RTL/fa, and read-only behavior
+// indication, undone styling, RTL/fa, no mutation on open, and the
+// tap-to-jump navigation (audit P3-4) — tapping a row drives the
+// document to that point via looped single-step undo/redo
 // (tb5 follow-up — the prototype's history popover, shipped).
 
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
@@ -177,6 +179,154 @@ void main() {
       find.bySemanticsLabel(RegExp('Document opened.*current step')),
       findsOneWidget,
     );
+  });
+
+  group('jump-to-state (audit P3-4)', () {
+    testWidgets('tapping an older applied row undoes down to it', (
+      tester,
+    ) async {
+      final container = await pump(
+        tester,
+        edits: (c) {
+          c.execute(AddLayerCommand(shape('s1')));
+          c.execute(AddLayerCommand(text('t1')));
+        },
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Add shape'));
+      await tester.pumpAndSettle();
+
+      // The document rewound to just after AddLayer(s1)…
+      final doc = container.read(documentControllerProvider);
+      expect(doc.layers.map((l) => l.id), ['s1']);
+      // …the tapped row became the current position…
+      expect(
+        find.bySemanticsLabel(RegExp('Add shape.*current step')),
+        findsOneWidget,
+      );
+      // …and the later step stays listed, struck through as undone.
+      expect(
+        tester.widget<Text>(find.text('Add text')).style?.decoration,
+        TextDecoration.lineThrough,
+      );
+    });
+
+    testWidgets('tapping an undone row redoes up to it, inclusively', (
+      tester,
+    ) async {
+      final container = await pump(
+        tester,
+        edits: (c) {
+          c.execute(AddLayerCommand(shape('s1')));
+          c.execute(AddLayerCommand(text('t1')));
+          c.undo();
+          c.undo(); // back at the opened document; both steps undone
+        },
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Add text'));
+      await tester.pumpAndSettle();
+
+      // BOTH steps replayed — the tapped one included.
+      final doc = container.read(documentControllerProvider);
+      expect(doc.layers.map((l) => l.id), ['s1', 't1']);
+      expect(
+        find.bySemanticsLabel(RegExp('Add text.*current step')),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<Text>(find.text('Add shape')).style?.decoration,
+        isNot(TextDecoration.lineThrough),
+      );
+    });
+
+    testWidgets('tapping the start row rewinds to the opened document', (
+      tester,
+    ) async {
+      final container = await pump(
+        tester,
+        edits: (c) {
+          c.execute(AddLayerCommand(shape('s1')));
+          c.execute(AddLayerCommand(text('t1')));
+        },
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Document opened'));
+      await tester.pumpAndSettle();
+
+      expect(container.read(documentControllerProvider).layers, isEmpty);
+      expect(
+        find.bySemanticsLabel(RegExp('Document opened.*current step')),
+        findsOneWidget,
+      );
+      // Both steps stay on the timeline, struck through — a jump is
+      // undo, never deletion.
+      for (final label in ['Add shape', 'Add text']) {
+        expect(
+          tester.widget<Text>(find.text(label)).style?.decoration,
+          TextDecoration.lineThrough,
+        );
+      }
+    });
+
+    testWidgets('tapping the current row changes nothing', (tester) async {
+      final container = await pump(
+        tester,
+        edits: (c) => c.execute(AddLayerCommand(shape('s1'))),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      final before = container.read(documentControllerProvider);
+      final versionBefore = container.read(documentCommitVersionProvider);
+
+      await tester.tap(find.text('Add shape')); // already the current step
+      await tester.pumpAndSettle();
+
+      expect(
+        identical(container.read(documentControllerProvider), before),
+        isTrue,
+        reason: 'tapping the current position must be a no-op',
+      );
+      expect(container.read(documentCommitVersionProvider), versionBefore);
+    });
+
+    testWidgets('the sheet stays open across jumps, so the user can scrub', (
+      tester,
+    ) async {
+      final container = await pump(
+        tester,
+        edits: (c) {
+          c.execute(AddLayerCommand(shape('s1')));
+          c.execute(AddLayerCommand(text('t1')));
+        },
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Add shape'));
+      await tester.pumpAndSettle();
+      expect(find.byType(HistoryBrowserView), findsOneWidget);
+
+      // Scrub forward again from the SAME open sheet.
+      await tester.tap(find.text('Add text'));
+      await tester.pumpAndSettle();
+      expect(find.byType(HistoryBrowserView), findsOneWidget);
+      expect(
+        container.read(documentControllerProvider).layers.map((l) => l.id),
+        ['s1', 't1'],
+      );
+      expect(
+        find.bySemanticsLabel(RegExp('Add text.*current step')),
+        findsOneWidget,
+      );
+    });
   });
 
   group('label map exhaustiveness (audit P3-3)', () {

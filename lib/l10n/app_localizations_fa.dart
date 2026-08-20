@@ -2030,6 +2030,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get historyUndoneSemantic => 'واگردشده';
 
   @override
+  String get historyJumpHint => 'برای پرش به هر مرحله روی آن بزنید';
+
+  @override
   String get histAddText => 'افزودن متن';
 
   @override

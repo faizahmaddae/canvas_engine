@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/editor_value_format.dart';
+import '../../../../core/utils/haptics.dart';
 import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -11,23 +12,24 @@ import '../../../../app/ui/app_modal_sheet.dart';
 import 'history_labels.dart';
 import '../../../../app/theme/app_icons.dart';
 
-/// Opens the read-only history browser — the shipped counterpart of
-/// the approved prototype's top-bar history popover.
+/// Opens the history browser — the shipped counterpart of the
+/// approved prototype's top-bar history popover.
 ///
-/// Read-only by design: it visualises the timeline `HistoryStack`
-/// already holds (grouped-undo entries and all), without a jump-to-
-/// state affordance. Jumping would drive multi-step undo/redo, which
-/// is exactly the grouped-undo interaction this change is required NOT
-/// to disturb — and the prototype's browser was itself a display, not
-/// a navigator. Undo/redo stay the top bar's two buttons.
+/// The timeline is navigable (audit P3-4): tapping a row jumps the
+/// document to that point. A jump is nothing but a replayed run of
+/// the existing single-step undo/redo — one step per timeline entry,
+/// so grouped-undo entries stay grouped and nothing is ever discarded;
+/// every jump is itself reversible by jumping (or undo/redoing) back.
+/// The sheet stays open across jumps so the user can scrub the
+/// timeline and watch the canvas change behind the whisper barrier.
 Future<void> showHistoryBrowser(BuildContext context, WidgetRef ref) {
   return showAppSheet<void>(
     context,
     title: context.l10n.historyTitle,
     titleIcon: AppIcons.history,
-    // Whisper, not full: the browser reflects the canvas, so keeping
-    // the canvas dimly visible behind it reinforces "this is a view
-    // of what you see", and it never mutates the document.
+    // Whisper, not full: jumping repaints the canvas behind the sheet,
+    // so keeping it visible is the whole point — the browser is a
+    // scrubber over what you see, not a form over it.
     barrier: AppSheetBarrier.whisper,
     maxHeightFraction: 0.7,
     builder: (context) => const HistoryBrowserView(),
@@ -74,6 +76,31 @@ class _HistoryBrowserViewState extends ConsumerState<HistoryBrowserView> {
     super.dispose();
   }
 
+  /// Jump the document to the tapped row.
+  ///
+  /// Row → history index mapping (must mirror [build]'s itemBuilder,
+  /// which renders row 0 as the start anchor and timeline[i] at row
+  /// i + 1):
+  ///
+  ///   row 0      = "Document opened"  → historyCurrentIndex -1
+  ///   row r ≥ 1  = timeline[r - 1]    → historyCurrentIndex r - 1
+  ///
+  /// So the jump target is always `row - 1`. The start row is the
+  /// state BEFORE timeline[0] — the classic off-by-one is treating it
+  /// as timeline[0], which would leave the oldest step applied when
+  /// the user asked for the opened document.
+  ///
+  /// Tapping an applied row undoes down to it, an undone row redoes
+  /// up to it inclusively, and the current row is a no-op (checked
+  /// here so a no-op tap gives no haptic and bumps nothing).
+  void _jumpToRow(int row) {
+    final doc = ref.read(documentControllerProvider.notifier);
+    final target = row - 1;
+    if (doc.historyCurrentIndex == target) return;
+    EditorHaptics.tap();
+    doc.jumpToHistoryIndex(target);
+  }
+
   @override
   Widget build(BuildContext context) {
     // Rebuild on committed changes only — the browser tracks history,
@@ -99,6 +126,7 @@ class _HistoryBrowserViewState extends ConsumerState<HistoryBrowserView> {
             tokens: tokens,
             l10n: l10n,
             isStart: true,
+            onTap: () => _jumpToRow(row),
           );
         }
         final i = row - 1;
@@ -123,6 +151,7 @@ class _HistoryBrowserViewState extends ConsumerState<HistoryBrowserView> {
           tokens: tokens,
           l10n: l10n,
           isStart: false,
+          onTap: () => _jumpToRow(row),
         );
       },
     );
@@ -150,6 +179,7 @@ class _HistoryRow extends StatelessWidget {
     required this.tokens,
     required this.l10n,
     required this.isStart,
+    required this.onTap,
   });
 
   final String label;
@@ -157,6 +187,11 @@ class _HistoryRow extends StatelessWidget {
   final AppTokens tokens;
   final AppLocalizations l10n;
   final bool isStart;
+
+  /// Jumps the document to this row's point in history. Wired for
+  /// every row — the current row's handler no-ops upstream, so the
+  /// tap grammar stays uniform while a redundant tap costs nothing.
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -180,46 +215,74 @@ class _HistoryRow extends StatelessWidget {
     return Semantics(
       container: true,
       selected: isCurrent,
+      button: true,
+      onTap: onTap,
       label: stateSemantic == null ? label : '$label · $stateSemantic',
+      // No hint on the current row: promising a jump that no-ops
+      // would mislead a screen-reader user about what a double-tap
+      // does. Every other row announces the jump affordance.
+      hint: isCurrent ? null : l10n.historyJumpHint,
       child: AnimatedContainer(
         duration: AppMotion.of(context, AppMotion.state),
         height: _kRowExtent,
         margin: const EdgeInsets.symmetric(vertical: 1),
-        padding: const EdgeInsetsDirectional.only(start: 8, end: 12),
         decoration: BoxDecoration(
           color: isCurrent
               ? tokens.accent.withValues(alpha: 0.12)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Row(
-          children: [
-            _Marker(state: state, tokens: tokens, isStart: isStart),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-                  color: textColor,
-                  // Undone steps read as "not applied" — the strike
-                  // makes that unmistakable without relying on the
-                  // dim alone (which colour-blind users can miss).
-                  decoration: isUndone ? TextDecoration.lineThrough : null,
-                  decorationColor: tokens.textMuted,
-                ),
+        // Material INSIDE the tinted container, not the sheet's own
+        // transparent Material underneath it: ink must paint above the
+        // current row's accent wash, or the splash vanishes behind it.
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            // The Semantics above already carries the label, state and
+            // tap action as ONE node; letting the InkWell add its own
+            // would give screen readers two stops per row.
+            excludeFromSemantics: true,
+            child: Padding(
+              // Was the AnimatedContainer's padding — moved inside the
+              // InkWell so the whole 48dp row extent is tappable.
+              padding: const EdgeInsetsDirectional.only(start: 8, end: 12),
+              child: Row(
+                children: [
+                  _Marker(state: state, tokens: tokens, isStart: isStart),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isCurrent
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: textColor,
+                        // Undone steps read as "not applied" — the strike
+                        // makes that unmistakable without relying on the
+                        // dim alone (which colour-blind users can miss).
+                        decoration: isUndone
+                            ? TextDecoration.lineThrough
+                            : null,
+                        decorationColor: tokens.textMuted,
+                      ),
+                    ),
+                  ),
+                  if (isCurrent)
+                    Icon(
+                      AppIcons.historyCurrentStep,
+                      size: 16,
+                      color: tokens.accentText,
+                    ),
+                ],
               ),
             ),
-            if (isCurrent)
-              Icon(
-                AppIcons.historyCurrentStep,
-                size: 16,
-                color: tokens.accentText,
-              ),
-          ],
+          ),
         ),
       ),
     );

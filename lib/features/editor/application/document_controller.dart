@@ -51,6 +51,40 @@ class DocumentController extends Notifier<EditorDocument> {
     }
   }
 
+  /// Jump the document to position [targetIndex] in [historyTimeline]:
+  /// after the call the entry at [targetIndex] is the newest applied
+  /// step (`historyCurrentIndex == targetIndex`). `-1` rewinds to the
+  /// initial document state. Jumping to an undone entry redoes it
+  /// INCLUSIVELY; jumping to an applied entry undoes everything after
+  /// it; jumping to the current position does nothing. Never
+  /// destructive — a jump is only a replayed run of undo/redo, so the
+  /// user can jump straight back.
+  ///
+  /// Deliberately a loop over the single-step [undo]/[redo] rather
+  /// than a new [HistoryStack] operation: each step traverses one
+  /// whole history entry, so grouped-undo entries stay grouped, and
+  /// redo's merge-window backdating applies to every replayed step
+  /// exactly as it would to manual taps.
+  ///
+  /// The loop trusts the stack, not the requested index: each
+  /// iteration must move [historyCurrentIndex] one step toward the
+  /// target, and the loop stops the moment a step reports no progress
+  /// (empty stack, or byte-budget eviction shifting indices under
+  /// us). A jump can therefore stop short, but can never spin or
+  /// drift out of sync with the stack.
+  void jumpToHistoryIndex(int targetIndex) {
+    while (historyCurrentIndex > targetIndex) {
+      final before = historyCurrentIndex;
+      undo();
+      if (historyCurrentIndex >= before) return; // no-op → stop
+    }
+    while (historyCurrentIndex < targetIndex) {
+      final before = historyCurrentIndex;
+      redo();
+      if (historyCurrentIndex <= before) return; // no-op → stop
+    }
+  }
+
   /// Bumps [documentCommitVersionProvider] so listeners (autosave,
   /// dirty-state indicators) can react only to *committed* document
   /// changes — not 60fps previews staged on `liveOverlayProvider`.

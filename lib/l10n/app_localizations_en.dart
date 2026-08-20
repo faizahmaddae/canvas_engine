@@ -2028,6 +2028,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get historyUndoneSemantic => 'undone';
 
   @override
+  String get historyJumpHint => 'Tap a step to jump to it';
+
+  @override
   String get histAddText => 'Add text';
 
   @override
