@@ -646,9 +646,21 @@ class CanvasGestureRouter {
     _lastTapGlobal = globalPosition;
     _lastTapHitIds = hitIds;
     _tapCycleIndex = index;
-    // Every completed single tap arms the double-tap window on the
-    // layer it just selected.
-    _armDoubleTapWindow(hits[index].id, globalPosition);
+    // Arm the double-tap window ONLY for layers that actually have a
+    // double-tap action ([_handleDoubleTap]'s live branches). Arming
+    // for every kind consumed one dead tap per cycle step on shapes,
+    // images, stickers and paint — the app's only on-canvas route to
+    // a buried layer read as unresponsive (ux-audit P3-8). The
+    // deterministic-double trade-off stays where a double exists.
+    final selected = hits[index];
+    final hasDoubleTapAction =
+        (selected is TextLayer && !selected.isSticker) ||
+        selected.capabilities.editable;
+    if (hasDoubleTapAction) {
+      _armDoubleTapWindow(selected.id, globalPosition);
+    } else {
+      _disarmDoubleTapWindow();
+    }
   }
 
   /// The document's protected base photo when [local] (canvas space)

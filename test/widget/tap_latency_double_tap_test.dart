@@ -164,15 +164,15 @@ void main() {
     );
   });
 
-  testWidgets('second tap inside the window is consumed — no tap-cycling '
-      'to the layer beneath; cycling resumes once the window expires', (
-    tester,
-  ) async {
+  testWidgets('shapes never arm the double-tap window — a fast second tap '
+      'cycles to the layer beneath immediately', (tester) async {
+    // ux-audit P3-8: arming on every kind consumed one dead tap per
+    // cycle step for layers with no double-tap action. The window is
+    // now armed only where a double exists (editable text).
     final container = _setupCanvas(tester);
     container
         .read(documentControllerProvider.notifier)
         .newDocument(width: 800, height: 800);
-    // Two overlapping rectangles, both containing canvas (400, 400).
     _addRect(
       container,
       id: 'below',
@@ -188,32 +188,17 @@ void main() {
     await _pumpCanvas(tester, container);
 
     final spot = _toScreen(container, const Offset(400, 400));
-
-    // First tap: selects the topmost and arms the window.
     await tester.tapAt(spot);
     await tester.pump(const Duration(milliseconds: 50));
     expect(container.read(selectionControllerProvider).selectedId, 'top');
 
-    // Second tap inside the window: consumed by the double-tap
-    // bookkeeping (a shape has no edit flow) — it must NOT cycle to
-    // 'below'. This is the documented 400ms trade-off: making
-    // double-tap deterministic costs cycling a window-expiry wait.
-    await tester.tapAt(spot);
-    await tester.pump(const Duration(milliseconds: 50));
-    expect(
-      container.read(selectionControllerProvider).selectedId,
-      'top',
-      reason: 'The second tap of a double must never cycle beneath.',
-    );
-
-    // Let the window expire; the next tap cycles normally.
-    await tester.pump(const Duration(milliseconds: 500));
+    // Fast second tap: no window to consume it — cycles immediately.
     await tester.tapAt(spot);
     await tester.pump(const Duration(milliseconds: 50));
     expect(
       container.read(selectionControllerProvider).selectedId,
       'below',
-      reason: 'Cycling must resume once the window has expired.',
+      reason: 'no double-tap action → no dead tap between cycle steps',
     );
     await tester.pump(const Duration(milliseconds: 500));
   });
