@@ -121,7 +121,10 @@ required reading before touching effects),
 `mask-edit-mode-design-2026-07.md`, and
 `paint-redesign-2026-08.md` (the paint bench: rack/style-row grammar,
 drawing vs adjust postures, the §10.5 write rule — required reading
-before touching anything under `lib/features/editor/paint/`).
+before touching anything under `lib/features/editor/paint/`), and
+`text-studio-redesign-2026-08.md` (the Text Studio: composer style
+rail, identity-row bench, font room — required reading before
+touching anything under `lib/features/editor/text/`).
 
 The editor's toolbar and tool-interaction system was rebuilt in July
 2026: `editor-interaction-contract-2026-07.md` is **binding** for any
