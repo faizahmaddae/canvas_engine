@@ -78,18 +78,17 @@ void main() {
   TextLayer layerOf(ProviderContainer c) =>
       c.read(documentControllerProvider).layerById('text-1')! as TextLayer;
 
-  testWidgets('effect chips render; glow/gradient stay inert', (tester) async {
+  testWidgets('every effect chip opens a real section — no disabled '
+      'vocabulary', (tester) async {
+    // Glow/gradient shipped as permanently-dimmed chips and stayed
+    // inert for a month (ux-audit P2-19) — a chip that can never do
+    // anything is a lying control (§10.3). They return WITH their
+    // sections, not before.
     await pumpStyles(tester);
     expect(effectChip('Stroke'), findsOneWidget);
     expect(effectChip('Shadow'), findsOneWidget);
-    expect(effectChip('Glow'), findsOneWidget);
-    expect(effectChip('Gradient'), findsOneWidget);
-
-    // Disabled chip: tapping Glow opens nothing (no preset row).
-    await tester.tap(effectChip('Glow'), warnIfMissed: false);
-    await tester.pumpAndSettle();
-    expect(find.text('Soft'), findsNothing);
-    expect(find.byType(PanelOffsetPad), findsNothing);
+    expect(effectChip('Glow'), findsNothing);
+    expect(effectChip('Gradient'), findsNothing);
   });
 
   testWidgets('Shadow chip opens the section; preset enables a shadow', (

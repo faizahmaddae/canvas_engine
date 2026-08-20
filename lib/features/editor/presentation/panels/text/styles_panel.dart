@@ -50,9 +50,12 @@ class StylesBody extends ConsumerStatefulWidget {
 /// redesign §3, "Style & Effects"). Stroke (کادر), shadow and
 /// background are wired — they are THE home for text decoration now
 /// that the bar consolidation removed their standalone dock tiles.
-/// Glow and gradient render as visibly disabled chips so the grammar
-/// (and the user's mental map) is already in place when they land.
-enum _EffectCategory { stroke, shadow, glow, background, gradient }
+///
+/// Glow and gradient chips shipped as "visibly disabled vocabulary"
+/// in July and stayed inert for a month — a permanent promise is a
+/// lying control (§10.3; ux-audit P2-19). Removed until the features
+/// land; the categories return WITH their sections, not before.
+enum _EffectCategory { stroke, shadow, background }
 
 class _StylesBodyState extends ConsumerState<StylesBody> {
   /// Open effect sub-section. Panel-local by design: closing the
@@ -196,10 +199,9 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
   }
 }
 
-/// Category chips: خط دور · سایه · درخشش · زمینه · گرادیان. Stroke,
-/// Shadow and Background are interactive; glow / gradient render at
-/// reduced opacity behind an [IgnorePointer] so the vocabulary is
-/// visible but honestly inert until each lands.
+/// Category chips: خط دور · سایه · زمینه — every chip opens a real
+/// section (§10.3: no permanent disabled vocabulary; glow/gradient
+/// return with their sections).
 class _EffectChipsRow extends StatelessWidget {
   const _EffectChipsRow({required this.open, required this.onToggle});
 
@@ -209,14 +211,12 @@ class _EffectChipsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    Widget chip(_EffectCategory c, String label, {bool enabled = false}) {
-      final child = PresetChip(
+    Widget chip(_EffectCategory c, String label) {
+      return PresetChip(
         label: label,
         selected: open == c,
         onTap: () => onToggle(c),
       );
-      if (enabled) return child;
-      return Opacity(opacity: 0.38, child: IgnorePointer(child: child));
     }
 
     return SizedBox(
@@ -227,17 +227,13 @@ class _EffectChipsRow extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.zero,
         children: [
-          chip(_EffectCategory.stroke, l10n.effectStrokeLabel, enabled: true),
+          chip(_EffectCategory.stroke, l10n.effectStrokeLabel),
           const SizedBox(width: 6),
-          chip(_EffectCategory.shadow, l10n.shadowTool, enabled: true),
-          const SizedBox(width: 6),
-          chip(_EffectCategory.glow, l10n.glowOption),
+          chip(_EffectCategory.shadow, l10n.shadowTool),
           const SizedBox(width: 6),
           // Short label (زمینه) — chip row real estate; the full
           // word (پس‌زمینه) stays on titles like the colour sheet.
-          chip(_EffectCategory.background, l10n.bgShortLabel, enabled: true),
-          const SizedBox(width: 6),
-          chip(_EffectCategory.gradient, l10n.effectGradientLabel),
+          chip(_EffectCategory.background, l10n.bgShortLabel),
         ],
       ),
     );
