@@ -3,6 +3,7 @@ import 'package:canvas_engine/app/theme/app_tokens.dart';
 import 'package:canvas_engine/app/ui/app_filter_chip.dart';
 import 'package:canvas_engine/app/ui/template_thumb.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
+import 'package:canvas_engine/features/settings/application/settings_controller.dart';
 import 'package:canvas_engine/features/templates/domain/template.dart';
 import 'package:canvas_engine/features/templates/presentation/templates_browse_screen.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
@@ -46,14 +47,19 @@ void main() {
   Future<void> pump(
     WidgetTester tester, {
     List<Template>? templates,
-    TemplateLanguage initialLanguage = TemplateLanguage.persian,
+    TemplateLanguage? initialLanguage = TemplateLanguage.persian,
     void Function(Template)? onOpen,
     Brightness brightness = Brightness.light,
+    Set<TemplateLanguage>? contentLanguages,
   }) async {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          if (contentLanguages != null)
+            contentLanguagesProvider.overrideWithValue(contentLanguages),
+        ],
         child: MaterialApp(
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
@@ -233,5 +239,45 @@ void main() {
       AppTokens.dark.brand,
     );
     expect(find.byType(AppFilterChip), findsAtLeastNWidgets(4));
+  });
+
+  // ── default language derivation (ux-audit P2-14) ──
+  //
+  // "See all" must be a superset of the Home rail: with no explicit
+  // initialLanguage the browser follows the Content-languages setting
+  // instead of hard-defaulting to Persian.
+
+  testWidgets('default mount with both content languages starts on All — '
+      'every template visible', (tester) async {
+    await pump(tester, initialLanguage: null);
+
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-fa')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-en')),
+      findsOneWidget,
+      reason: 'English content must not start hidden behind a filter',
+    );
+  });
+
+  testWidgets('an English-only content preference preselects the English '
+      'chip', (tester) async {
+    await pump(
+      tester,
+      initialLanguage: null,
+      contentLanguages: {TemplateLanguage.english},
+    );
+
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-en')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('browse-template-tile-story-fa')),
+      findsNothing,
+      reason: 'a single enabled language becomes the starting filter',
+    );
   });
 }

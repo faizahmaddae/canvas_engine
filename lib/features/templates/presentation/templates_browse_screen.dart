@@ -8,6 +8,7 @@ import '../../../app/ui/app_filter_chip.dart';
 import '../../../app/ui/template_thumb.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/l10n.dart';
+import '../../settings/application/settings_controller.dart';
 import '../application/template_repository_provider.dart';
 import '../domain/template.dart';
 import 'template_presentation_order.dart';
@@ -31,7 +32,7 @@ class TemplatesBrowseScreen extends ConsumerStatefulWidget {
   const TemplatesBrowseScreen({
     super.key,
     required this.onOpen,
-    this.initialLanguage = TemplateLanguage.persian,
+    this.initialLanguage,
     this.initialCategory,
     this.templates,
   });
@@ -40,7 +41,15 @@ class TemplatesBrowseScreen extends ConsumerStatefulWidget {
 
   /// Pre-selected content language. This only filters templates; it
   /// never changes the app locale.
-  final TemplateLanguage initialLanguage;
+  ///
+  /// `null` (the default) follows the user's Content-languages
+  /// setting: a single enabled language preselects its chip, anything
+  /// else starts on «همه»/All. The tab used to hard-default to
+  /// Persian, which made "See all" show FEWER templates than the Home
+  /// rail it came from and left the setting inert here — an
+  /// English-preference user landed with 100% of English content
+  /// hidden behind an unindicated filter (ux-audit P2-14).
+  final TemplateLanguage? initialLanguage;
 
   /// Optional pre-selected category (per-category entry points).
   final TemplateCategory? initialCategory;
@@ -55,9 +64,25 @@ class TemplatesBrowseScreen extends ConsumerStatefulWidget {
 }
 
 class _TemplatesBrowseScreenState extends ConsumerState<TemplatesBrowseScreen> {
-  late _BrowseLanguageFilter _languageFilter = _initialLanguageFilter(
-    widget.initialLanguage,
-  );
+  late _BrowseLanguageFilter _languageFilter;
+
+  @override
+  void initState() {
+    super.initState();
+    final explicit = widget.initialLanguage;
+    if (explicit != null) {
+      _languageFilter = _initialLanguageFilter(explicit);
+      return;
+    }
+    // Follow the Content-languages setting (read once at mount — the
+    // chips stay the user's live control): exactly one enabled
+    // language preselects its chip; both (or the pre-load default)
+    // starts on All, which is always a superset of the Home rail.
+    final enabled = ref.read(contentLanguagesProvider);
+    _languageFilter = enabled.length == 1
+        ? _initialLanguageFilter(enabled.single)
+        : _BrowseLanguageFilter.all;
+  }
 
   /// `null` = "All". Always stored CANONICAL (see
   /// [_canonicalChipCategory]): selecting the one «استوری» chip
