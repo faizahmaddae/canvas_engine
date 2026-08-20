@@ -757,29 +757,47 @@ class EditorScreen extends ConsumerWidget {
   ///
   /// Splits on the panel because the base-photo protection is not
   /// uniform across them: Align moves a layer, which the base photo
-  /// must never do, so it keeps the filtered list. Opacity only fades
-  /// the photo toward the canvas background — meaningful, reversible
-  /// and non-destructive — so excluding the base photo there produced
-  /// a tile that highlighted itself and then rendered no panel at all
-  /// (the Image dock's `شفافیت` dead-end).
+  /// must never do, so it only ever sees the actionable list. (Align
+  /// was briefly given the base to stop the «تراز» row swallowing its
+  /// tap — but that made the panel MOUNT for a layer whose every
+  /// align button `AlignmentController` refuses (it bails on
+  /// `locked`), turning a vanishing sheet into six buttons that
+  /// silently did nothing, which reads as working and is harder to
+  /// diagnose. The row is gated off at its source instead
+  /// (`layer_overflow_sheet`): the base photo IS the canvas, so
+  /// aligning it to the canvas has no meaning.)
+  ///
+  /// Opacity, by contrast, genuinely applies to the base photo —
+  /// fading it toward the canvas background is meaningful, reversible
+  /// and non-destructive — but only when the base is what the chrome
+  /// claims to target: selected ALONE, where the dock shows the Image
+  /// strip with the «عکس پایه» badge (tb15's fix for that strip's
+  /// شفافیت dead-end). In a mixed base+layer selection every piece of
+  /// chrome counts WITHOUT the base (`_actionableCount` drives the
+  /// dock mode and the multi chip; the multi strip's own layer list is
+  /// the filtered one), so unconditionally including it handed the
+  /// panel one MORE layer than the chrome named and the slider
+  /// silently faded the user's photo too (audit P2-4). The rule now:
+  /// the panel targets exactly the actionable selection, and falls
+  /// back to the base photo only when it is the selection's sole
+  /// member — the one state whose chrome names it (contract §10: a
+  /// bound control's target is what the surface discloses, never a
+  /// silent extra member).
   List<EditorLayer> _layersForContextPanel(
     WidgetRef ref,
     SelectionState selection,
     ContextToolPanel panel,
-  ) => _selectedLayersForActions(
-    ref,
-    selection,
-    // Opacity only. Align was briefly added here to stop the «تراز»
-    // row swallowing its tap — but that made the panel MOUNT for a
-    // layer whose every align button `AlignmentController` refuses
-    // (it bails on `locked`), turning a vanishing sheet into six
-    // buttons that silently did nothing, which reads as working and is
-    // harder to diagnose. The row is gated off at its source instead
-    // (`layer_overflow_sheet`): the base photo IS the canvas, so
-    // aligning it to the canvas has no meaning. Opacity, by contrast,
-    // genuinely applies to it.
-    includeProtectedBase: panel == ContextToolPanel.opacity,
-  );
+  ) {
+    final actionable = _selectedLayersForActions(ref, selection);
+    if (panel != ContextToolPanel.opacity || actionable.isNotEmpty) {
+      return actionable;
+    }
+    return _selectedLayersForActions(
+      ref,
+      selection,
+      includeProtectedBase: true,
+    );
+  }
 
   /// Merged-view layer for the selected id, narrowed to the ONE
   /// layer object (tb1 16/17). The old full renderedDocumentProvider
