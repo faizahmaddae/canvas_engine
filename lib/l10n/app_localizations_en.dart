@@ -781,7 +781,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get a4Landscape300Preset => 'A4 Landscape (300 dpi)';
 
   @override
-  String get customSizeValidation => 'Width & height must be 16–16384.';
+  String get customSizeValidation => 'Width & height must be 16–8000.';
 
   @override
   String get enterImageUrlValidation => 'Enter an image URL.';

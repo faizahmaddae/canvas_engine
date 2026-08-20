@@ -250,7 +250,7 @@
   "instagramStory916Preset": "Instagram Story (9:16)",
   "a4Portrait300Preset": "A4 Portrait (300 dpi)",
   "a4Landscape300Preset": "A4 Landscape (300 dpi)",
-  "customSizeValidation": "Width & height must be 16–16384.",
+  "customSizeValidation": "Width & height must be 16–8000.",
   "enterImageUrlValidation": "Enter an image URL.",
   "imageUrlLabel": "Image URL",
   "imageSizingHint": "Canvas will be sized to the image’s intrinsic dimensions and the image will be added as a layer.",

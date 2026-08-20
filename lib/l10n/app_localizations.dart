@@ -1535,7 +1535,7 @@ abstract class AppLocalizations {
   /// No description provided for @customSizeValidation.
   ///
   /// In en, this message translates to:
-  /// **'Width & height must be 16–16384.'**
+  /// **'Width & height must be 16–8000.'**
   String get customSizeValidation;
 
   /// No description provided for @enterImageUrlValidation.

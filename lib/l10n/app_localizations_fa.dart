@@ -780,7 +780,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get a4Landscape300Preset => 'A4 افقی (۳۰۰ dpi)';
 
   @override
-  String get customSizeValidation => 'عرض و ارتفاع باید بین ۱۶ تا ۱۶۳۸۴ باشد.';
+  String get customSizeValidation => 'عرض و ارتفاع باید بین ۱۶ تا ۸۰۰۰ باشد.';
 
   @override
   String get enterImageUrlValidation => 'نشانی تصویر را وارد کنید.';

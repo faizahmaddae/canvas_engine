@@ -1,3 +1,4 @@
+import '../../core/constants/engine_constants.dart';
 import '../../core/utils/editor_value_format.dart';
 import 'package:flutter/material.dart';
 
@@ -98,7 +99,7 @@ const double _kDefaultCustomSide = 1080;
 /// "Use size", pre-filled with the document's current dimensions).
 /// Only the words and the seed differ — the presets, validation and
 /// return type are identical, so forking the widget would be two
-/// copies of the same 16..16384 rules. Every override defaults to
+/// copies of the same 16..8000 rules. Every override defaults to
 /// the Home wording, which is why `show(context)` still renders the
 /// original dialog byte-for-byte.
 class SizePickerDialog extends StatefulWidget {
@@ -198,7 +199,19 @@ class _SizePickerDialogState extends State<SizePickerDialog> {
     final h = double.tryParse(
       EditorValueFormat.toAsciiDigits(_heightCtrl.text.trim()),
     );
-    if (w == null || h == null || w < 16 || h < 16 || w > 16384 || h > 16384) {
+    // One agreed ceiling for every document-size entry point (create,
+    // in-editor resize, export custom) — see
+    // [EngineConstants.maxDocumentDimension]. 16384 used to be
+    // accepted here while layers capped at 8000 and export at ~24 Mpx,
+    // so the biggest canvases the dialog sold could never be filled
+    // or exported at size (ux-audit P2-20).
+    const maxSide = EngineConstants.maxDocumentDimension;
+    if (w == null ||
+        h == null ||
+        w < 16 ||
+        h < 16 ||
+        w > maxSide ||
+        h > maxSide) {
       setState(() => _customError = context.l10n.customSizeValidation);
       return;
     }

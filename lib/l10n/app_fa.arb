@@ -240,7 +240,7 @@
   "instagramStory916Preset": "استوری اینستاگرام (۹:۱۶)",
   "a4Portrait300Preset": "A4 عمودی (۳۰۰ dpi)",
   "a4Landscape300Preset": "A4 افقی (۳۰۰ dpi)",
-  "customSizeValidation": "عرض و ارتفاع باید بین ۱۶ تا ۱۶۳۸۴ باشد.",
+  "customSizeValidation": "عرض و ارتفاع باید بین ۱۶ تا ۸۰۰۰ باشد.",
   "enterImageUrlValidation": "نشانی تصویر را وارد کنید.",
   "imageUrlLabel": "نشانی تصویر",
   "imageSizingHint": "اندازه بوم بر اساس ابعاد واقعی تصویر تنظیم می‌شود و تصویر به‌عنوان یک لایه افزوده خواهد شد.",

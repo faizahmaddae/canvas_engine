@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/constants/engine_constants.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
@@ -881,10 +882,10 @@ class _CustomSizeDialogState extends State<_CustomSizeDialog> {
   /// safe to read from a field initialiser.
   bool _seeded = false;
 
-  // Hard upper bound — Skia surface allocations beyond ~8K square
-  // start to fail on mid-tier devices. 8000 leaves comfortable
-  // headroom for the composite step.
-  static const int _maxDimension = 8000;
+  // THE document ceiling — shared with the create dialog and the
+  // in-editor canvas resize so every surface quotes the same number
+  // (ux-audit P2-20); the constant's doc carries the full rationale.
+  static const int _maxDimension = EngineConstants.maxDocumentDimension;
 
   @override
   void didChangeDependencies() {
