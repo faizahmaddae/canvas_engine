@@ -5,15 +5,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/utils/user_error.dart';
 
-class OnboardingCompleteNotifier extends Notifier<bool> {
+/// Tri-state on purpose: `null` = the stored flag hasn't loaded yet.
+/// The old `bool` model defaulted to `false` during the async load,
+/// so every cold launch rendered the onboarding Welcome for the first
+/// frame(s) and then swapped to Home under a returning user's finger
+/// (ux-audit P2-16). The app shell shows a neutral surface for the
+/// null frame instead of guessing wrong.
+class OnboardingCompleteNotifier extends Notifier<bool?> {
   static const String storageKey = 'onboarding.complete';
 
   SharedPreferences? _prefs;
 
   @override
-  bool build() {
+  bool? build() {
     unawaited(_load());
-    return false;
+    return null;
   }
 
   Future<void> complete() => _setComplete(true);
@@ -51,6 +57,6 @@ class OnboardingCompleteNotifier extends Notifier<bool> {
 }
 
 final onboardingCompleteProvider =
-    NotifierProvider<OnboardingCompleteNotifier, bool>(
+    NotifierProvider<OnboardingCompleteNotifier, bool?>(
       OnboardingCompleteNotifier.new,
     );

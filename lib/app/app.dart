@@ -28,7 +28,28 @@ class CanvasEngineApp extends ConsumerWidget {
       theme: AppTheme.light(locale: themeLocale),
       darkTheme: AppTheme.dark(locale: themeLocale),
       themeMode: ref.watch(themeModeProvider),
-      home: onboardingComplete ? const NavShell() : const OnboardingFlow(),
+      // Tri-state gate: while the stored flag loads (null) render a
+      // plain themed surface — one quiet frame — instead of guessing
+      // "new user" and flashing the onboarding Welcome at every cold
+      // launch for returning users (ux-audit P2-16).
+      home: switch (onboardingComplete) {
+        null => const _LaunchHold(),
+        true => const NavShell(),
+        false => const OnboardingFlow(),
+      },
     );
+  }
+}
+
+/// The frame(s) between process start and the onboarding flag's read:
+/// a bare themed surface, no text, no logo — indistinguishable from
+/// the OS launch screen, so the app appears to open directly into the
+/// right destination.
+class _LaunchHold extends StatelessWidget {
+  const _LaunchHold();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(body: SizedBox.expand());
   }
 }
