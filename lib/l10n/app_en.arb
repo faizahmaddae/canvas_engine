@@ -611,6 +611,7 @@
   "previewSaveAction": "Preview & Save",
   "savedToPhotoLibrary": "Saved to your photo library",
   "sharedMessage": "Shared",
+  "sharingUnavailableMessage": "Sharing isn't available on this device",
   "reducedResolutionWarning": "Exporting at reduced resolution to fit device memory.",
   "qualityLabel": "Quality",
   "qualityPercent": "Quality {percent}%",

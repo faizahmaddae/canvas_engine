@@ -1884,6 +1884,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedMessage => 'Shared';
 
   @override
+  String get sharingUnavailableMessage =>
+      'Sharing isn\'t available on this device';
+
+  @override
   String get reducedResolutionWarning =>
       'Exporting at reduced resolution to fit device memory.';
 

@@ -586,6 +586,7 @@
   "previewSaveAction": "پیش‌نمایش و ذخیره",
   "savedToPhotoLibrary": "در گالری عکس ذخیره شد",
   "sharedMessage": "اشتراک‌گذاری شد",
+  "sharingUnavailableMessage": "هم‌رسانی روی این دستگاه در دسترس نیست",
   "reducedResolutionWarning": "برای سازگاری با حافظه دستگاه، خروجی با وضوح کمتر ساخته می‌شود.",
   "qualityLabel": "کیفیت",
   "qualityPercent": "کیفیت {percent}٪",

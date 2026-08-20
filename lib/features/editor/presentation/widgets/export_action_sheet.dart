@@ -365,8 +365,15 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
     switch (result.outcome) {
       case ImageExportOutcome.success:
         text = successMsg;
+      case ImageExportOutcome.cancelled:
+        // A dismissed system sheet never pops the preview, so this is
+        // unreachable from the current flow — kept exhaustive so a
+        // future caller can't accidentally toast "Shared!" for it.
+        return;
       case ImageExportOutcome.permissionDenied:
         text = context.l10n.allowPhotoAccessSettings;
+      case ImageExportOutcome.unavailable:
+        text = context.l10n.sharingUnavailableMessage;
       case ImageExportOutcome.failed:
         text = context.l10n.somethingWentWrong;
     }

@@ -3608,6 +3608,12 @@ abstract class AppLocalizations {
   /// **'Shared'**
   String get sharedMessage;
 
+  /// No description provided for @sharingUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing isn\'t available on this device'**
+  String get sharingUnavailableMessage;
+
   /// No description provided for @reducedResolutionWarning.
   ///
   /// In en, this message translates to:

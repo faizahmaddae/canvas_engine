@@ -1886,6 +1886,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sharedMessage => 'اشتراک‌گذاری شد';
 
   @override
+  String get sharingUnavailableMessage =>
+      'هم‌رسانی روی این دستگاه در دسترس نیست';
+
+  @override
   String get reducedResolutionWarning =>
       'برای سازگاری با حافظه دستگاه، خروجی با وضوح کمتر ساخته می‌شود.';
 
