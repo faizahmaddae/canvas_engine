@@ -203,6 +203,9 @@ class EditorScreen extends ConsumerWidget {
     final maskEditActive = ref.watch(
       maskEditControllerProvider.select((s) => s.active),
     );
+    // System Back unwinds editing chrome one level per press (§4)
+    // before the route may pop — see [editorBackStepProvider].
+    final backOwned = ref.watch(editorBackStepProvider) != EditorBackStep.none;
     // Single resolution of the dock's mode/expanded panel, shared by
     // the bottomNavigationBar builder below.
     final dock = _resolveDock(ref, selection);
@@ -220,7 +223,7 @@ class EditorScreen extends ConsumerWidget {
       maxScaleFactor: 1.3,
       child: _AutosaveLifecycleScope(
         child: PopScope(
-          canPop: !cropActive && !maskEditActive,
+          canPop: !cropActive && !maskEditActive && !backOwned,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop && maskEditActive) {
               // Back = Cancel, restoring the pre-mode toolbar context
@@ -238,6 +241,15 @@ class EditorScreen extends ConsumerWidget {
             }
             if (!didPop && cropActive) {
               ref.read(cropControllerProvider.notifier).cancelCrop();
+              return;
+            }
+            if (!didPop) {
+              // Contract §4 ladder: one Back press unwinds one level
+              // (E1 close the open sheet, then E2 exit the armed
+              // mode/session) before the route may pop. Re-read the
+              // step at fire time — the build-time value may be a
+              // frame stale.
+              performEditorBackStep(ref, ref.read(editorBackStepProvider));
               return;
             }
             if (didPop) {
