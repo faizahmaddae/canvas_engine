@@ -4135,6 +4135,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Combined edit'**
   String get histCombinedEdit;
+
+  /// No description provided for @histCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop'**
+  String get histCrop;
+
+  /// No description provided for @histMaskEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Selective mask'**
+  String get histMaskEdit;
+
+  /// No description provided for @histMaskClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove mask'**
+  String get histMaskClear;
+
+  /// No description provided for @histAlignLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Align left'**
+  String get histAlignLeft;
+
+  /// No description provided for @histAlignCenterX.
+  ///
+  /// In en, this message translates to:
+  /// **'Align center'**
+  String get histAlignCenterX;
+
+  /// No description provided for @histAlignRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Align right'**
+  String get histAlignRight;
+
+  /// No description provided for @histAlignTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Align top'**
+  String get histAlignTop;
+
+  /// No description provided for @histAlignCenterY.
+  ///
+  /// In en, this message translates to:
+  /// **'Align middle'**
+  String get histAlignCenterY;
+
+  /// No description provided for @histAlignBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Align bottom'**
+  String get histAlignBottom;
+
+  /// No description provided for @histDistributeH.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute horizontally'**
+  String get histDistributeH;
+
+  /// No description provided for @histDistributeV.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute vertically'**
+  String get histDistributeV;
+
+  /// No description provided for @histMultiLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'{base} · {count} layers'**
+  String histMultiLayer(String base, String count);
 }
 
 class _AppLocalizationsDelegate

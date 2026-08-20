@@ -8,6 +8,7 @@ import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/history_browser_sheet.dart';
+import 'package:canvas_engine/features/editor/presentation/widgets/history_labels.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -176,5 +177,113 @@ void main() {
       find.bySemanticsLabel(RegExp('Document opened.*current step')),
       findsOneWidget,
     );
+  });
+
+  group('label map exhaustiveness (audit P3-3)', () {
+    // Every English raw label the engine and application layers can
+    // emit into history. Sources: `String get label` across
+    // engine/commands/*.dart, plus every English `labelOverride` site
+    // (crop composite, gesture-batch bases, align/distribute, eraser
+    // sweep). Presentation-authored overrides that arrive ALREADY
+    // localized (e.g. removeBasePhotoCommand) are exempt by design —
+    // they fall through the map unchanged. A new engine label added
+    // without a map case fails here, in English, before a Persian
+    // user ever sees it.
+    const raws = <String>[
+      'Add text',
+      'Add image',
+      'Add shape',
+      'Add paint',
+      'Add sticker',
+      'Composite (3)',
+      'Delete layer',
+      'Remove layer',
+      'Rename layer',
+      'Reorder layer',
+      'Set layer opacity',
+      'Lock layer',
+      'Unlock layer',
+      'Show layer',
+      'Hide layer',
+      'Move',
+      'Resize',
+      'Rotate',
+      'Transform',
+      'Transform layer',
+      'Flip horizontally',
+      'Flip vertically',
+      'Canvas background',
+      'Canvas background mode',
+      'Resize canvas',
+      'Edit text',
+      'Text direction',
+      'Text resize mode',
+      'Image adjustments',
+      'Image border',
+      'Image crop',
+      'Image filter',
+      'Image fit',
+      'Image shadow',
+      'Image shape',
+      'Replace image',
+      'Restore image',
+      'Paint style',
+      'Paint resize behavior',
+      'Shape fill',
+      'Shape stroke',
+      'Shape radius',
+      'Shape shadow',
+      'Shape resize mode',
+      'Replace shape',
+      'Vignette',
+      'Delete effect',
+      'Reorder effect',
+      'Restore effect',
+      'Toggle effect',
+      'Set base photo',
+      'Clear base photo',
+      'Photo project',
+      'Design project',
+      'Crop',
+      'Stack mask',
+      'Clear stack mask',
+      'Align left',
+      'Align center horizontally',
+      'Align right',
+      'Align top',
+      'Align center vertically',
+      'Align bottom',
+      'Distribute horizontally',
+      'Distribute vertically',
+      'Align left 3 layers',
+      'Move 2 layers',
+      'Resize 4 layers',
+      'Rotate 2 layers',
+      'Transform 5 layers',
+      'Distribute vertically 3 layers',
+    ];
+
+    test('every raw label localizes under fa — no English leaks', () {
+      final fa = lookupAppLocalizations(const Locale('fa'));
+      for (final raw in raws) {
+        final out = localizedHistoryLabel(fa, raw);
+        expect(
+          out,
+          isNot(raw),
+          reason: '"$raw" fell through the map to raw English',
+        );
+        expect(out, isNotEmpty);
+      }
+    });
+
+    test('batch labels compose the localized base with locale digits', () {
+      final fa = lookupAppLocalizations(const Locale('fa'));
+      final out = localizedHistoryLabel(
+        fa,
+        'Align left 3 layers',
+        formatCount: (n) => const ['۰', '۱', '۲', '۳'][n],
+      );
+      expect(out, 'تراز چپ · ۳ لایه');
+    });
   });
 }

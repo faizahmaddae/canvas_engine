@@ -2163,4 +2163,42 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get histCombinedEdit => 'ویرایش ترکیبی';
+
+  @override
+  String get histCrop => 'برش';
+
+  @override
+  String get histMaskEdit => 'ماسک انتخابی';
+
+  @override
+  String get histMaskClear => 'حذف ماسک';
+
+  @override
+  String get histAlignLeft => 'تراز چپ';
+
+  @override
+  String get histAlignCenterX => 'تراز مرکز';
+
+  @override
+  String get histAlignRight => 'تراز راست';
+
+  @override
+  String get histAlignTop => 'تراز بالا';
+
+  @override
+  String get histAlignCenterY => 'تراز میانه';
+
+  @override
+  String get histAlignBottom => 'تراز پایین';
+
+  @override
+  String get histDistributeH => 'توزیع افقی';
+
+  @override
+  String get histDistributeV => 'توزیع عمودی';
+
+  @override
+  String histMultiLayer(String base, String count) {
+    return '$base · $count لایه';
+  }
 }

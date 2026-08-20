@@ -2161,4 +2161,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get histCombinedEdit => 'Combined edit';
+
+  @override
+  String get histCrop => 'Crop';
+
+  @override
+  String get histMaskEdit => 'Selective mask';
+
+  @override
+  String get histMaskClear => 'Remove mask';
+
+  @override
+  String get histAlignLeft => 'Align left';
+
+  @override
+  String get histAlignCenterX => 'Align center';
+
+  @override
+  String get histAlignRight => 'Align right';
+
+  @override
+  String get histAlignTop => 'Align top';
+
+  @override
+  String get histAlignCenterY => 'Align middle';
+
+  @override
+  String get histAlignBottom => 'Align bottom';
+
+  @override
+  String get histDistributeH => 'Distribute horizontally';
+
+  @override
+  String get histDistributeV => 'Distribute vertically';
+
+  @override
+  String histMultiLayer(String base, String count) {
+    return '$base · $count layers';
+  }
 }

@@ -702,5 +702,18 @@
   "histBasePhotoClear": "Clear base photo",
   "histProjectPhoto": "Photo project",
   "histProjectDesign": "Design project",
-  "histCombinedEdit": "Combined edit"
+  "histCombinedEdit": "Combined edit",
+  "histCrop": "Crop",
+  "histMaskEdit": "Selective mask",
+  "histMaskClear": "Remove mask",
+  "histAlignLeft": "Align left",
+  "histAlignCenterX": "Align center",
+  "histAlignRight": "Align right",
+  "histAlignTop": "Align top",
+  "histAlignCenterY": "Align middle",
+  "histAlignBottom": "Align bottom",
+  "histDistributeH": "Distribute horizontally",
+  "histDistributeV": "Distribute vertically",
+  "histMultiLayer": "{base} · {count} layers",
+  "@histMultiLayer": {"placeholders": {"base": {"type": "String"}, "count": {"type": "String"}}}
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/editor_value_format.dart';
 import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -111,7 +112,13 @@ class _HistoryBrowserViewState extends ConsumerState<HistoryBrowserView> {
           state = _RowState.applied;
         }
         return _HistoryRow(
-          label: localizedHistoryLabel(l10n, entry.label),
+          label: localizedHistoryLabel(
+            l10n,
+            entry.label,
+            // Batch labels carry a member count — render it in locale
+            // digits so fa rows don't get a Latin-digit island.
+            formatCount: (n) => EditorValueFormat.of(context).digits(n),
+          ),
           state: state,
           tokens: tokens,
           l10n: l10n,
