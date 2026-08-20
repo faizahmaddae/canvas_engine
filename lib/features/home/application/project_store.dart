@@ -179,14 +179,17 @@ class ProjectStore extends AsyncNotifier<List<Project>> {
     state = AsyncData(_sorted(next));
   }
 
+  /// Rename never touches [Project.lastModified]: the grid sorts
+  /// Recents by that stamp, and bumping it for a metadata edit
+  /// reshuffled the user's projects — renaming an old project
+  /// teleported it to the front as if its content had changed
+  /// (ux-audit P3-7). "Modified" means the design changed; the name
+  /// is a label on it.
   Future<void> rename(String projectId, String name) async {
     final current = await _current();
     final idx = current.indexWhere((p) => p.id == projectId);
     if (idx < 0) return;
-    final updated = current[idx].copyWith(
-      name: name,
-      lastModified: DateTime.now(),
-    );
+    final updated = current[idx].copyWith(name: name);
     await _writeProjectFile(updated);
     final next = [...current]..[idx] = updated;
     state = AsyncData(_sorted(next));
