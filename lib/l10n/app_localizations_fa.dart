@@ -1124,6 +1124,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get toolNeedsPhotoHint => 'به یک عکس قابل‌مشاهده نیاز دارد';
 
   @override
+  String get toolNeedsEffectHint => 'به دست‌کم یک جلوه نیاز دارد';
+
+  @override
   String get cropActionVerb => 'برش';
 
   @override
@@ -1750,6 +1753,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get selectiveMaskHint => 'محدود کردن جلوه‌ها به بخشی از لایه';
+
+  @override
+  String get addEffectToMaskHint => 'برای ماسک انتخابی یک جلوه اضافه کنید.';
 
   @override
   String get maskPresetOff => 'خاموش';

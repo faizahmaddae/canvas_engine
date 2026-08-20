@@ -1123,6 +1123,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toolNeedsPhotoHint => 'Needs a visible photo';
 
   @override
+  String get toolNeedsEffectHint => 'Needs at least one effect';
+
+  @override
   String get cropActionVerb => 'crop';
 
   @override
@@ -1748,6 +1751,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectiveMaskHint => 'Limit the stack to a region of the layer';
+
+  @override
+  String get addEffectToMaskHint => 'Add an effect to mask selectively.';
 
   @override
   String get maskPresetOff => 'Off';
