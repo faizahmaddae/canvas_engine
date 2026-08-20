@@ -117,8 +117,11 @@ surfaces look the way they do. Most relevant for current work:
 `app-navigation-home-ia-2026-07.md` (launcher/browser split),
 `home-screen-redesign-2026-07.md`, `editor-redesign-2026-07.md`,
 `effects.md` + `effects-a3-scoped-plan-2026-07.md` (effect system,
-required reading before touching effects), and
-`mask-edit-mode-design-2026-07.md`.
+required reading before touching effects),
+`mask-edit-mode-design-2026-07.md`, and
+`paint-redesign-2026-08.md` (the paint bench: rack/style-row grammar,
+drawing vs adjust postures, the §10.5 write rule — required reading
+before touching anything under `lib/features/editor/paint/`).
 
 The editor's toolbar and tool-interaction system was rebuilt in July
 2026: `editor-interaction-contract-2026-07.md` is **binding** for any

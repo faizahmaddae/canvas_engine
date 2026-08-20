@@ -123,12 +123,16 @@ commits (bound stroke) or settles the pen default. A width bubble
 follows the thumb. This is standard drawing-app furniture
 (Procreate) and removes the last sheet-trip from the core loop.
 
-The rail is floating canvas chrome: it hides with
-`canvasChromeSuppressedProvider` — with one paint-local exception:
-the *paint* dock sheets do not suppress it (they don't overlap it,
-and live width feedback next to an open pen sheet is the point).
-Pointer-wise it sits above the paint gesture surface and owns its
-own pointers (same standing as the Done pill — §5 untouched).
+The rail is floating canvas chrome with its own visibility rule
+(inking tool armed; hidden with crop/mask/text-flow like the exit
+pill) — it deliberately does NOT ride `canvasChromeSuppressedProvider`,
+which is now TRUE whenever a paint tool is armed (that signal hides
+the selection accelerators while drawing; the rail exists precisely
+then). Pointer-wise it sits above the paint gesture surface and owns
+its own pointers (same standing as the Done pill — §5 untouched).
+Placement: physical left (the right-handed majority's non-drawing
+side); not keyed to `rightHandedToolbar`, which aligns the dock for
+the drawing thumb and carries no left-handed signal.
 
 ## 3. Sheets (dock expanded zone, `DockSheetChrome` unchanged)
 
@@ -140,17 +144,19 @@ bespoke `paint_size_body/paint_size_entry/paint_dash_body/
 paint_polygon_body/paint_fill_body/paint_tool_body` widgets die.
 
 - **color** — `ColorPickerBody` (unchanged channel).
-- **pen** — Size (`PresetSliderControl`, presets 2⁄6⁄12⁄24, live dot
+- **pen** — Size (`PresetSliderControl`, presets 3⁄8⁄18⁄36, live dot
   preview) + Opacity (presets 25⁄60⁄100). Opened by size pill or
-  tap-again on pen/arrow.
-- **line** — style segmented (solid ⁄ dashed ⁄ dash-dot) above the
-  same size+opacity stack.
-- **shape** — kind row (4 preview tiles) + Sides slider (3–24,
-  polygon only) + fill toggle & fill color + size+opacity.
+  tap-again on pen/arrow. No hero: the size pill's dot, the rack
+  glyph weight and the rail all preview width live already.
+- **line** — the three style choice cards (solid ⁄ dashed ⁄
+  dash-dot; the existing `PaintDashBody`). Width/opacity stay one
+  tap away on the size pill.
+- **shape** — kind row (4 engine-painter preview cards) + Sides
+  slider (3–24, polygon only) + the fill cards (`PaintFillBody`).
 - **blur** — radius `PresetSliderControl` (0⁄10⁄32 presets, 0–64).
 
-Sibling swipe pages between the sheets reachable from the current
-context (existing `SiblingSwipeStrategy`).
+Sibling-swipe paging retires with the property strip: the sheets are
+per-tool options now, not a flat sibling list.
 
 ## 4. Write rule (one sentence per posture)
 
@@ -176,12 +182,19 @@ next stroke came out "wrong"). Contract §10.5 is amended to match
 - `paint_tool_specs.dart` capability matrices + value-word helpers →
   per-slot logic in the bench/sheets.
 - `bodies/paint_tool_body.dart` (grouped catalogue picker).
-- `paint_size_body.dart`, `bodies/paint_size_entry.dart` (hand-rolled
-  slider — audit P1).
-- `bodies/paint_dash_body.dart`, `bodies/paint_polygon_body.dart`,
-  `bodies/paint_fill_body.dart` (folded into line/shape sheets).
+- `paint_size_body.dart`, `bodies/paint_size_entry.dart` (the size
+  stack, including the StrokeHero — the pill/rack/rail preview width
+  live now).
+- `bodies/paint_polygon_body.dart` (its slider folded into the shape
+  sheet; the hero died with it).
 - `_PaintScopedSubTool` scope chips (structural disclosure now).
-- The `nextStrokeScope`/`editingStrokeScope` l10n keys.
+- l10n: `nextStrokeScope`/`editingStrokeScope`, `toolLabel`,
+  `chooseToolTitle`, the three picker group labels, `dashDotOption`,
+  `newShortLabel`/`newStrokeTool`/`eraseStrokesTool`.
+
+Kept, against the original plan: `paint_dash_body.dart` (it already
+was the right line-style surface — it IS the line sheet) and
+`paint_fill_body.dart` (embedded as the shape sheet's fill section).
 
 ## 6. What deliberately stays
 
