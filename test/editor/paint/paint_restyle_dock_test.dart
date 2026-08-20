@@ -105,31 +105,51 @@ void main() {
       expect(view.layerKind, isNull);
     });
 
-    test('a paint-layer selection wins over an armed tool', () {
-      // Mirrors what commitDraft/commitDot do for real: the tool stays
-      // armed (continuous drawing) while the stroke just committed is
-      // selected, and the dock must restyle THAT stroke, not silently
-      // reconfigure the next one.
+    test('armed: a style write reaches the stroke AND the pen', () {
+      // §10.5 write rule as amended by the 2026-08 bench redesign
+      // (docs/paint-redesign-2026-08.md §4): while a tool is armed,
+      // the bound stroke gets the command and the author defaults
+      // take the same value — "draw, restyle, draw again" must not
+      // produce a stale second stroke.
       final c = makeContainer(PaintKind.rectangle);
       final ctrl = c.read(paintToolControllerProvider.notifier);
       ctrl.selectTool(PaintToolType.freestyle);
       c.read(selectionControllerProvider.notifier).select('p1');
-      final defaults = c.read(paintToolControllerProvider);
 
       expect(c.read(paintStyleViewProvider).layerKind, PaintKind.rectangle);
       ctrl.setStrokeWidth(31);
 
+      expect(committed(c).strokeWidth, 31);
       expect(
         c.read(paintToolControllerProvider).strokeWidth,
-        defaults.strokeWidth,
-        reason: 'next-stroke defaults must stay untouched by a restyle',
+        31,
+        reason: 'the pen keeps the ink while armed',
       );
-      expect(committed(c).strokeWidth, 31);
       expect(
         c.read(paintToolControllerProvider).activeTool,
         PaintToolType.freestyle,
         reason: 'the tool stays armed through a restyle',
       );
+    });
+
+    test('adjust posture: a style write reaches the stroke only', () {
+      // The unarmed half of the amended rule: editing an old
+      // annotation does not re-ink the pen.
+      final c = makeContainer(PaintKind.rectangle);
+      final ctrl = c.read(paintToolControllerProvider.notifier);
+      ctrl.enterAdjust();
+      c.read(selectionControllerProvider.notifier).select('p1');
+      final defaults = c.read(paintToolControllerProvider);
+
+      ctrl.setStrokeWidth(31);
+
+      expect(committed(c).strokeWidth, 31);
+      expect(
+        c.read(paintToolControllerProvider).strokeWidth,
+        defaults.strokeWidth,
+        reason: 'adjust-posture writes must not touch the pen defaults',
+      );
+      expect(c.read(paintToolControllerProvider).activeTool, isNull);
     });
   });
 
