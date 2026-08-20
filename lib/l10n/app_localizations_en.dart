@@ -650,6 +650,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String projectCopyName(String name) {
+    return '$name (copy)';
+  }
+
+  @override
   String renamedProject(String name) {
     return 'Renamed to \"$name\"';
   }

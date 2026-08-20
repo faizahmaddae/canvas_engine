@@ -200,6 +200,8 @@
   "deleteProjectTitle": "حذف پروژه؟",
   "deleteProjectBody": "«{name}» برای همیشه حذف می‌شود.",
   "duplicatedProject": "«{name}» تکثیر شد",
+  "projectCopyName": "{name} (رونوشت)",
+  "@projectCopyName": {"placeholders": {"name": {"type": "String"}}},
   "renamedProject": "به «{name}» تغییر نام داد",
   "deletedProject": "«{name}» حذف شد",
   "openProjectSemantics": "باز کردن {name}، آخرین ویرایش {time}",

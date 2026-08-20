@@ -1292,6 +1292,12 @@ abstract class AppLocalizations {
   /// **'Duplicated \"{name}\"'**
   String duplicatedProject(String name);
 
+  /// No description provided for @projectCopyName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (copy)'**
+  String projectCopyName(String name);
+
   /// No description provided for @renamedProject.
   ///
   /// In en, this message translates to:

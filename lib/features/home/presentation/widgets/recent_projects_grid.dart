@@ -395,7 +395,13 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
       case _CardAction.duplicate:
         final newId = await ref
             .read(projectStoreProvider.notifier)
-            .duplicate(widget.project.id, _uuid.v4());
+            .duplicate(
+              widget.project.id,
+              _uuid.v4(),
+              // Presentation owns the localized suffix — the store
+              // used to hardcode English " (copy)" into Persian grids.
+              copyName: l10n.projectCopyName(widget.project.name),
+            );
         if (newId != null) {
           messenger.showSnackBar(
             SnackBar(

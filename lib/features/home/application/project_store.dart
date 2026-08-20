@@ -207,7 +207,16 @@ class ProjectStore extends AsyncNotifier<List<Project>> {
   /// a shared or already-invalid file. The record is written only after the
   /// thumbnail is prepared, and a failure rolls back any copied file (and the
   /// record temp) so it leaves no metadata or partial artifact behind.
-  Future<String?> duplicate(String projectId, String newId) async {
+  /// [copyName] is the duplicate's full display name, built by the
+  /// caller — presentation owns the localized "(copy)" suffix (this
+  /// store has no l10n access; the old hardcoded English suffix
+  /// leaked into Persian grids, ux-audit P3-16). Falls back to the
+  /// English suffix for callers with no locale in hand.
+  Future<String?> duplicate(
+    String projectId,
+    String newId, {
+    String? copyName,
+  }) async {
     final current = await _current();
     final idx = current.indexWhere((p) => p.id == projectId);
     if (idx < 0) return null;
@@ -232,7 +241,7 @@ class ProjectStore extends AsyncNotifier<List<Project>> {
     final now = DateTime.now();
     final copy = Project(
       id: newId,
-      name: '${src.name} (copy)',
+      name: copyName ?? '${src.name} (copy)',
       width: src.width,
       height: src.height,
       createdAt: now,

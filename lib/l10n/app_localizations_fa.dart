@@ -649,6 +649,11 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String projectCopyName(String name) {
+    return '$name (رونوشت)';
+  }
+
+  @override
   String renamedProject(String name) {
     return 'به «$name» تغییر نام داد';
   }

@@ -206,6 +206,8 @@
   "@deleteProjectBody": {"placeholders": {"name": {"type": "String"}}},
   "duplicatedProject": "Duplicated \"{name}\"",
   "@duplicatedProject": {"placeholders": {"name": {"type": "String"}}},
+  "projectCopyName": "{name} (copy)",
+  "@projectCopyName": {"placeholders": {"name": {"type": "String"}}},
   "renamedProject": "Renamed to \"{name}\"",
   "@renamedProject": {"placeholders": {"name": {"type": "String"}}},
   "deletedProject": "Deleted \"{name}\"",
