@@ -170,6 +170,33 @@ void main() {
     );
   });
 
+  testWidgets('long-press on the pasteboard while a tool is armed does not '
+      'hijack the session into multi-select', (tester) async {
+    final container = _setup(tester);
+    container
+        .read(paintToolControllerProvider.notifier)
+        .selectTool(PaintToolType.freestyle);
+    await _pumpCanvas(tester, container);
+
+    // (4,4) is the screen corner — pasteboard, outside the document
+    // board the paint surface covers, so the press reaches the
+    // background detector's long-press recogniser.
+    final g = await tester.startGesture(const Offset(4, 4), pointer: 91);
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 100));
+    await g.up();
+    await tester.pump();
+
+    expect(
+      container.read(selectionModeProvider),
+      SelectionMode.single,
+      reason: 'an armed paint session owns its gesture space (§5)',
+    );
+    expect(
+      container.read(paintToolControllerProvider).activeTool,
+      PaintToolType.freestyle,
+    );
+  });
+
   testWidgets('eraser miss-tap is a silent no-op — no exit, no entry', (
     tester,
   ) async {

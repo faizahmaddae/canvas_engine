@@ -713,6 +713,14 @@ class CanvasGestureRouter {
   void handleLongPress(Offset globalPosition, List<EditorLayer> layers) {
     final mode = _ref.read(selectionModeProvider);
     if (mode == SelectionMode.multi) return;
+    // An armed paint session and a staged add-text composer own their
+    // gesture space (§5 rows 1-3): a long-press mid-session must not
+    // hijack the editor into multi-select. The paint surface only
+    // covers the document board, so pasteboard presses still reach
+    // this handler while a tool is armed — the same reason rows
+    // 279/298/346 gate on the armed tool.
+    if (_ref.read(paintToolControllerProvider).activeTool != null) return;
+    if (_ref.read(addTextComposerOpenProvider)) return;
 
     final selectionCtl = _ref.read(selectionControllerProvider.notifier);
     final modeCtl = _ref.read(selectionModeProvider.notifier);
