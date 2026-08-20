@@ -1231,8 +1231,14 @@ class _BodyMultiTouchRecognizer extends OneSequenceGestureRecognizer {
 }
 
 /// Selection chrome for a *group* of layers — the shared, axis-aligned
-/// bounding box plus the four corner resize handles, the rotate handle,
-/// and a body drag surface for translate / pinch.
+/// bounding box plus the same handle grammar as the single-layer frame
+/// (ux-audit P3-9): FOUR corner resize handles, a dedicated stemmed
+/// rotation knob above the top-centre, and a body drag surface for
+/// translate / pinch. The tb3 6/7 redesign (decision D-a) originally
+/// scoped that grammar to single selection only; the group frame kept
+/// a corner-rotate by deferral, not by choice — with the result that
+/// muscle memory from single-layer editing rotated the group when the
+/// user meant to resize it.
 ///
 /// Drawn in **screen space** for the same reason as
 /// [LayerSelectionOverlay]: the chrome stays a constant size in dp
@@ -1362,6 +1368,20 @@ class GroupSelectionOverlay extends StatelessWidget {
     final bl = outset[2];
     final br = outset[3];
 
+    // Rotation-knob geometry — the exact construction the single-layer
+    // overlay uses (tb3 6/7): top-edge midpoint of the OUTSET frame,
+    // pushed [EngineConstants.rotateHandleOffset] dp along the frame's
+    // local "up". Expressing "up" from the frame's own edge vector
+    // (not screen -y) keeps the knob orbiting WITH the quad while a
+    // live rotate publishes an oriented [frameQuad].
+    final topMid = Offset((tl.dx + tr.dx) / 2, (tl.dy + tr.dy) / 2);
+    final downVec = bl - tl;
+    final downLen = downVec.distance;
+    final up = downLen < 1e-6
+        ? const Offset(0, -1)
+        : Offset(-downVec.dx / downLen, -downVec.dy / downLen);
+    final rotateKnob = topMid + up * EngineConstants.rotateHandleOffset;
+
     return Positioned.fill(
       child: Stack(
         clipBehavior: Clip.none,
@@ -1400,6 +1420,20 @@ class GroupSelectionOverlay extends StatelessWidget {
             ),
           ),
 
+          // Stem connecting the frame's top edge to the rotation knob —
+          // painted below the handles so the knob glyph sits on top of
+          // it, mirroring the single-layer overlay.
+          IgnorePointer(
+            child: CustomPaint(
+              size: Size.infinite,
+              painter: _RotateStemPainter(
+                from: topMid,
+                to: rotateKnob,
+                color: color,
+                strokeWidth: EngineConstants.selectionStroke,
+              ),
+            ),
+          ),
           _PositionedHandle(
             center: tl,
             debugLabel: 'group-topLeft',
@@ -1409,13 +1443,16 @@ class GroupSelectionOverlay extends StatelessWidget {
               active: activeHandle == InteractionHandle.topLeft,
             ),
           ),
+          // Top-right is a RESIZE corner, same as the other three
+          // (ux-audit P3-9). Rotate lives on the dedicated knob below.
           _PositionedHandle(
             center: tr,
-            debugLabel: 'group-topRightRotate',
-            onDrag: (p, phase) => onHandle(InteractionHandle.rotate, p, phase),
-            child: _RotateGlyph(
+            debugLabel: 'group-topRight',
+            onDrag: (p, phase) =>
+                onHandle(InteractionHandle.topRight, p, phase),
+            child: _CornerGlyph(
               color: color,
-              active: activeHandle == InteractionHandle.rotate,
+              active: activeHandle == InteractionHandle.topRight,
             ),
           ),
           _PositionedHandle(
@@ -1436,6 +1473,18 @@ class GroupSelectionOverlay extends StatelessWidget {
             child: _CornerGlyph(
               color: color,
               active: activeHandle == InteractionHandle.bottomRight,
+            ),
+          ),
+          // Dedicated rotation knob: same glyph, same 48dp touch box,
+          // same stem offset as the single-layer frame, so the two
+          // selection grammars are interchangeable muscle memory.
+          _PositionedHandle(
+            center: rotateKnob,
+            debugLabel: 'group-rotateKnob',
+            onDrag: (p, phase) => onHandle(InteractionHandle.rotate, p, phase),
+            child: _RotateGlyph(
+              color: color,
+              active: activeHandle == InteractionHandle.rotate,
             ),
           ),
         ],

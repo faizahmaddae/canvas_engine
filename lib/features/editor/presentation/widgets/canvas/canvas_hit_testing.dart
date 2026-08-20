@@ -107,6 +107,30 @@ bool pointInChromeQuad(EditorLayer layer, Offset point, double viewportScale) {
   return distanceToSegment(local, stemBase, knobCentre) <= radius;
 }
 
+/// Group-frame analogue of [pointInChromeQuad]: true iff [point]
+/// (canvas-space) lands on the GROUP selection chrome — the shared
+/// axis-aligned [bounds] inflated by the drawn handle outset, UNION
+/// the rotation knob's stem capsule above the top-edge midpoint.
+/// Since ux-audit P3-9 the group frame draws the same stemmed knob as
+/// the single-layer frame, so it needs the same guarantee: a near-miss
+/// on the knob or its stem must read as "on the selection" and never
+/// fall through to viewport pan. Axis-aligned throughout — the claim
+/// decision happens on the FIRST pointer of a sequence, when the group
+/// is at rest and its bounds are the members' AABB.
+bool pointInGroupChromeQuad(Rect bounds, Offset point, double viewportScale) {
+  final o = chromeOutsetCanvas(viewportScale);
+  if (bounds.inflate(o).contains(point)) return true;
+  // Stem capsule: segment from the inflated bounds' top-edge midpoint
+  // to the knob centre, inflated by half the handle touch box. Same
+  // screen-dp → canvas-unit conversion as [pointInChromeQuad].
+  if (!viewportScale.isFinite || viewportScale <= 0) return false;
+  final knobOffset = EngineConstants.rotateHandleOffset / viewportScale;
+  final radius = (EngineConstants.handleTouchSize / 2) / viewportScale;
+  final stemBase = Offset(bounds.center.dx, bounds.top - o);
+  final knobCentre = Offset(bounds.center.dx, bounds.top - o - knobOffset);
+  return distanceToSegment(point, stemBase, knobCentre) <= radius;
+}
+
 /// Distance from [p] to the segment [a]→[b].
 double distanceToSegment(Offset p, Offset a, Offset b) {
   final ab = b - a;

@@ -213,12 +213,6 @@ class CanvasGestureRouter {
     return box.globalToLocal(global);
   }
 
-  /// The selection chrome's screen-space outset in canvas units at the
-  /// current zoom. Supplies `canvas_hit_testing`'s pure geometry with
-  /// the one provider read it deliberately does not make itself.
-  double chromeOutset() =>
-      geom.chromeOutsetCanvas(_ref.read(viewportControllerProvider).scale);
-
   /// Contract §5 row 4 claim test — see `pointInChromeQuad` in
   /// `canvas_hit_testing.dart`.
   bool pointInChromeQuad(EditorLayer layer, Offset point) =>

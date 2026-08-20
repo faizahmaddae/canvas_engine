@@ -25,6 +25,7 @@ import '../quick_capsule.dart';
 import '../selection_overlay.dart';
 import '../transform_hud.dart';
 import 'canvas_gesture_router.dart';
+import 'canvas_hit_testing.dart';
 import '../../../../../app/theme/app_icons.dart';
 
 /// Builds the **screen-space chrome** slice of the editor canvas' outer
@@ -510,13 +511,15 @@ Widget buildGroupSelectionOverlay({
         // Chrome-quad claim model for multi-select (contract §5
         // rows 4/6/7 — see the single-layer overlay above for the
         // full rationale). The group's chrome quad is its
-        // axis-aligned bounds inflated by the drawn handle outset:
-        // a first pointer ON that quad drives the group's
-        // rigid-body translate (a second finger anywhere then
-        // drives pinch + rotate around the gesture focal); a first
-        // pointer OFF it falls through to the viewport. A true tap
-        // ON the quad is forwarded via [onBodyTap] for selection
-        // routing (toggle-in / toggle-out / mode exit).
+        // axis-aligned bounds inflated by the drawn handle outset,
+        // UNION the rotation knob's stem capsule (the group frame
+        // draws the same stemmed knob as the single frame since
+        // ux-audit P3-9): a first pointer ON that quad drives the
+        // group's rigid-body translate (a second finger anywhere
+        // then drives pinch + rotate around the gesture focal); a
+        // first pointer OFF it falls through to the viewport. A
+        // true tap ON the quad is forwarded via [onBodyTap] for
+        // selection routing (toggle-in / toggle-out / mode exit).
         shouldClaimBody: (globalPosition) {
           if (router.viewportGestureInFlight) return false;
           final cropActive = ref.read(cropControllerProvider).active;
@@ -533,9 +536,11 @@ Widget buildGroupSelectionOverlay({
             return !router.selectAndMoveOwnsSession;
           }
           if (router.hasRawPointersDown) return false;
-          return bounds
-              .inflate(router.chromeOutset())
-              .contains(router.toCanvas(globalPosition));
+          return pointInGroupChromeQuad(
+            bounds,
+            router.toCanvas(globalPosition),
+            viewport.scale,
+          );
         },
         // Defer-start gate: claimed pointers landing in the outset
         // ring (inside the chrome quad, outside the group's
