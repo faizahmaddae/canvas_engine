@@ -56,6 +56,7 @@ import '../paint/application/paint_tool_controller.dart';
 import '../paint/domain/paint_tool_type.dart';
 import '../paint/presentation/paint_bench.dart';
 import '../paint/presentation/paint_mode_expansion.dart';
+import '../paint/presentation/paint_size_rail.dart';
 import '../shape/application/shape_tool_controller.dart';
 import '../shape/presentation/shape_border_body.dart';
 import '../shape/presentation/shape_shadow_body.dart';
@@ -360,6 +361,13 @@ class EditorScreen extends ConsumerWidget {
                     top: 4,
                     end: 8,
                     child: SafeArea(child: _ModeExitPill()),
+                  ),
+                // Canvas-side stroke-width rail — floating paint
+                // chrome; renders nothing unless an inking paint
+                // tool is armed (see PaintSizeRail.visibleFor).
+                if (!cropActive && !maskEditActive && !textFlowOpen)
+                  const Positioned.fill(
+                    child: SafeArea(child: PaintSizeRailHost()),
                   ),
                 // Centralised Crop Mode overlay — full-screen, owns the
                 // entire scaffold body when active. Mounted **last** so
