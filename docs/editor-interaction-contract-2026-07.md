@@ -48,10 +48,18 @@ canvas visible (barrier none/whisper).
   `LiveOverlay` staging + ONE non-live command on release/settle
   (`layer_opacity_control` is the canonical template; text routes
   through its style-drag session which is the same channel).
-- **Canvas background** — EXEMPT: it is a document property the
-  overlay cannot express. It keeps gesture-fenced `live:true`
-  command merging. This is the only sanctioned per-tick committed
-  write, and it must stay gesture-fenced (§3).
+- **Canvas background** — rides the SAME `LiveOverlay` channel: the
+  overlay carries a document-background override
+  (`LiveOverlayController.stageBackground`), drags stage it, and ONE
+  non-live `SetCanvasBackgroundCommand` commits on release/settle.
+  *(Amended by the ux-audit P2-8 fix, 2026-08: this bullet used to
+  exempt the background as "a document property the overlay cannot
+  express", sanctioning per-tick `live:true` committed writes. That
+  wiring made undo granularity wall-clock-dependent — two quick
+  swatch taps merged into one entry, a paused drag split — so the
+  overlay learned the override and the exemption is retired.
+  `SetCanvasBackgroundCommand.live` remains only for command-level
+  API stability; no UI host may pass it.)*
 - `DocumentController.liveReplace` is deleted; there is no fourth
   channel. Adding one requires amending this contract first.
 
@@ -68,10 +76,13 @@ entries, regardless of how close in time. Mechanics:
   breaks when a DIFFERENT control writes. After tb2 6/16,
   `UpdateTextCommand`/`UpdatePaintStyleCommand` merge ONLY with
   `live: true`; swatch taps and toggles pass `live: false`.
-- Post-Stage-2 fate of `live:true` merging (roadmap decision):
-  permitted for steppers and the canvas background only. Everything
-  else must not rely on the 1s wall-clock window, which survives
-  solely as the coalescer for those two cases.
+- Post-Stage-2 fate of `live:true` merging (roadmap decision;
+  amended by the ux-audit P2-8 fix, 2026-08): permitted for steppers
+  only. The canvas background — formerly the second sanctioned case —
+  migrated onto the overlay channel (§2). Nothing else may rely on
+  the 1s wall-clock window, which survives solely as the
+  stepper-burst coalescer. Pinned by
+  `color_commit_contract_test.dart` ("P2-8 migrated hosts").
 - No net-zero entries: an interaction that ends where it started
   commits nothing (0.25px/epsilon guards stay).
 

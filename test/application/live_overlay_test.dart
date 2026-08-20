@@ -1,6 +1,7 @@
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/live_overlay_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
+import 'package:canvas_engine/features/editor/engine/core/background_fill.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:flutter/material.dart';
@@ -111,6 +112,29 @@ void main() {
       final merged = overlay.applyTo(c.read(documentControllerProvider));
       expect(merged.layerById('a'), isNull);
     });
+
+    test('background override lands on the merged view without touching '
+        'the committed doc (P2-8)', () {
+      final c = makeContainer();
+      final doc = c.read(documentControllerProvider);
+      const preview = SolidBackground(color: Color(0xFF3B82F6));
+
+      final merged = const LiveOverlay(background: preview).applyTo(doc);
+
+      expect(merged.background, preview);
+      expect(doc.background, isNot(preview), reason: 'committed untouched');
+    });
+
+    test('null background means "keep committed", never transparent', () {
+      final c = makeContainer();
+      final doc = c.read(documentControllerProvider);
+      // Non-empty overlay with no background override: the merge must
+      // pass the committed background through unchanged.
+      final merged = LiveOverlay(
+        additions: [textLayer(id: 'staged')],
+      ).applyTo(doc);
+      expect(merged.background, doc.background);
+    });
   });
 
   group('LiveOverlayController', () {
@@ -171,6 +195,35 @@ void main() {
       c.read(liveOverlayProvider.notifier).addLayer(textLayer(id: 'a'));
       c.read(liveOverlayProvider.notifier).clear();
       expect(c.read(liveOverlayProvider).isEmpty, isTrue);
+    });
+
+    test('stageBackground publishes the override; clear drops it', () {
+      final c = makeContainer();
+      const preview = SolidBackground(color: Color(0xFFEF4444));
+      c.read(liveOverlayProvider.notifier).stageBackground(preview);
+      expect(c.read(liveOverlayProvider).background, preview);
+      expect(c.read(liveOverlayProvider).isEmpty, isFalse);
+
+      c.read(liveOverlayProvider.notifier).clear();
+      expect(c.read(liveOverlayProvider).background, isNull);
+      expect(c.read(liveOverlayProvider).isEmpty, isTrue);
+    });
+
+    test('layer mutators preserve a staged background override', () {
+      // The classic dropped-field trap: an unrelated preview tick
+      // (layer drag) must not silently erase the canvas-background
+      // preview staged by another in-flight surface.
+      final c = makeContainer();
+      final ctrl = c.read(liveOverlayProvider.notifier);
+      const preview = SolidBackground(color: Color(0xFFEF4444));
+      ctrl.stageBackground(preview);
+
+      ctrl.replaceLayer(textLayer(id: 'a'));
+      ctrl.addLayer(textLayer(id: 'b'));
+      ctrl.updateAddedLayer(textLayer(id: 'b', content: 'second'));
+      ctrl.removeLayer('c');
+
+      expect(c.read(liveOverlayProvider).background, preview);
     });
   });
 

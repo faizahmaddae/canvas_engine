@@ -3,20 +3,26 @@
 // EXACTLY one undoable commit, interactions that end where they
 // started (cancelled eyedrop) leave history untouched, hex commits
 // only on complete input, and preset-palette taps stay out of the
-// recents MRU.
+// recents MRU. The P2-8 group pins the last two migrated hosts
+// (shape style, canvas panel): two quick swatch taps are TWO undo
+// entries and one wheel drag is ONE, with no wall-clock dependence.
 
 import 'package:canvas_engine/features/color_picker/presentation/color_picker_body.dart';
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/live_overlay_controller.dart';
 import 'package:canvas_engine/features/editor/application/recent_colors_controller.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
+import 'package:canvas_engine/features/editor/canvas/presentation/canvas_panel_body.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
+import 'package:canvas_engine/features/editor/engine/core/background_fill.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
+import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/image/presentation/image_border_body.dart';
 import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
+import 'package:canvas_engine/features/editor/shape/presentation/shape_style_body.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -337,5 +343,253 @@ void main() {
         expect(container.read(liveOverlayProvider).isEmpty, isTrue);
       },
     );
+  });
+
+  // ux-audit-2026-07-29 P2-8: shape style and the canvas panel were
+  // the last two hosts routing colour through `live: true` committed
+  // commands, so undo granularity depended on the wall-clock merge
+  // window (two quick taps = one entry; a paused drag = several).
+  // These pins hold them to the same structural fencing as every
+  // other host: each discrete tap is its own entry, one drag is one
+  // entry committed on release. Taps land milliseconds apart here —
+  // well inside kLiveMergeWindow — which is exactly the adversarial
+  // case for any time-based merging.
+  group('P2-8 migrated hosts — gesture-fenced colour undo', () {
+    const shapeSeed = Color(0xFF2196F3);
+
+    Future<ProviderContainer> pumpHost(
+      WidgetTester tester,
+      Widget Function(ProviderContainer c) body,
+    ) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container
+          .read(documentControllerProvider.notifier)
+          .newDocument(width: 800, height: 800);
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(body: SingleChildScrollView(child: body(container))),
+          ),
+        ),
+      );
+      return container;
+    }
+
+    ShapeLayer addShape(ProviderContainer c) {
+      const layer = ShapeLayer(
+        id: 's1',
+        kind: ShapeKind.rectangle,
+        transform: LayerTransform(
+          position: Offset(40, 40),
+          size: Size(200, 200),
+        ),
+        fillColor: shapeSeed,
+      );
+      c
+          .read(documentControllerProvider.notifier)
+          .execute(AddLayerCommand(layer));
+      return layer;
+    }
+
+    Future<void> tapSwatch(WidgetTester tester, String hex6) async {
+      final swatch = find.byKey(ValueKey('color-picker-swatch-$hex6'));
+      await tester.ensureVisible(swatch);
+      await tester.pump();
+      await tester.tap(swatch);
+      await tester.pump();
+    }
+
+    /// Opens the custom wheel sheet (embedded panels hand off to it)
+    /// and drags the SV pad: down + two move ticks, asserting mid-drag
+    /// that nothing has committed, then releases.
+    Future<void> dragWheel(
+      WidgetTester tester,
+      ProviderContainer container, {
+      required void Function() expectMidDragStaged,
+    }) async {
+      final custom = find.byKey(const ValueKey('color-picker-custom'));
+      await tester.ensureVisible(custom);
+      await tester.pump();
+      await tester.tap(custom);
+      await tester.pumpAndSettle();
+
+      final v0 = container.read(documentCommitVersionProvider);
+      final sv = find.byKey(const ValueKey('color-picker-sv'));
+      final gesture = await tester.startGesture(tester.getCenter(sv));
+      await tester.pump();
+      await gesture.moveBy(const Offset(40, 30));
+      await tester.pump();
+      await gesture.moveBy(const Offset(-15, 10));
+      await tester.pump();
+
+      expect(
+        container.read(documentCommitVersionProvider),
+        v0,
+        reason: 'ticks stage overlay previews, never commits (§2)',
+      );
+      expectMidDragStaged();
+
+      await gesture.up();
+      await tester.pump();
+    }
+
+    testWidgets('shape fill: two quick swatch taps are two separate '
+        'undo entries', (tester) async {
+      final container = await pumpHost(
+        tester,
+        (c) => ShapeStyleBody(layer: addShape(c)),
+      );
+      final docCtrl = container.read(documentControllerProvider.notifier);
+      final entries0 = docCtrl.historyTimeline.length;
+      ShapeLayer shape() =>
+          container.read(documentControllerProvider).layerById('s1')
+              as ShapeLayer;
+
+      await tapSwatch(tester, 'EF4444');
+      await tapSwatch(tester, '3B82F6');
+
+      expect(shape().fillColor.toARGB32(), 0xFF3B82F6);
+      expect(
+        docCtrl.historyTimeline.length,
+        entries0 + 2,
+        reason:
+            'discrete taps are separate intents (§3), regardless '
+            'of how close in time',
+      );
+      expect(container.read(liveOverlayProvider).isEmpty, isTrue);
+
+      docCtrl.undo();
+      expect(
+        shape().fillColor.toARGB32(),
+        0xFFEF4444,
+        reason: 'one undo steps back exactly one tap',
+      );
+      docCtrl.undo();
+      expect(shape().fillColor.toARGB32(), shapeSeed.toARGB32());
+    });
+
+    testWidgets('shape fill: one custom-wheel drag is ONE entry '
+        'committed on release', (tester) async {
+      final container = await pumpHost(
+        tester,
+        (c) => ShapeStyleBody(layer: addShape(c)),
+      );
+      final docCtrl = container.read(documentControllerProvider.notifier);
+      final entries0 = docCtrl.historyTimeline.length;
+      ShapeLayer shape() =>
+          container.read(documentControllerProvider).layerById('s1')
+              as ShapeLayer;
+
+      await dragWheel(
+        tester,
+        container,
+        expectMidDragStaged: () => expect(
+          container.read(liveOverlayProvider).replacements.containsKey('s1'),
+          isTrue,
+          reason: 'the drag previews on the live overlay',
+        ),
+      );
+
+      expect(
+        docCtrl.historyTimeline.length,
+        entries0 + 1,
+        reason: 'fencing is structural: one gesture, one entry (§3)',
+      );
+      expect(container.read(liveOverlayProvider).isEmpty, isTrue);
+      expect(shape().fillColor.toARGB32(), isNot(shapeSeed.toARGB32()));
+
+      docCtrl.undo();
+      expect(
+        shape().fillColor.toARGB32(),
+        shapeSeed.toARGB32(),
+        reason: 'one undo unwinds the whole drag',
+      );
+    });
+
+    testWidgets('canvas background: two quick swatch taps are two '
+        'separate undo entries', (tester) async {
+      final container = await pumpHost(tester, (_) => const CanvasPanelBody());
+      final docCtrl = container.read(documentControllerProvider.notifier);
+      final original = container.read(documentControllerProvider).background;
+      final entries0 = docCtrl.historyTimeline.length;
+      BackgroundFill bg() =>
+          container.read(documentControllerProvider).background;
+
+      await tapSwatch(tester, 'EF4444');
+      await tapSwatch(tester, '3B82F6');
+
+      expect((bg() as SolidBackground).color.toARGB32(), 0xFF3B82F6);
+      expect(
+        docCtrl.historyTimeline.length,
+        entries0 + 2,
+        reason:
+            'each swatch tap is its own undoable click — the '
+            'command docstring promise the live wiring used to break',
+      );
+      expect(container.read(liveOverlayProvider).isEmpty, isTrue);
+
+      docCtrl.undo();
+      expect((bg() as SolidBackground).color.toARGB32(), 0xFFEF4444);
+      docCtrl.undo();
+      expect(bg(), original);
+    });
+
+    testWidgets('canvas background: one custom-wheel drag is ONE entry '
+        'committed on release', (tester) async {
+      final container = await pumpHost(tester, (_) => const CanvasPanelBody());
+      final docCtrl = container.read(documentControllerProvider.notifier);
+      final original = container.read(documentControllerProvider).background;
+      final entries0 = docCtrl.historyTimeline.length;
+
+      await dragWheel(
+        tester,
+        container,
+        expectMidDragStaged: () {
+          expect(
+            container.read(liveOverlayProvider).background,
+            isNotNull,
+            reason:
+                'a document property previews as the overlay '
+                'background override, not as committed live commands',
+          );
+          expect(
+            container.read(documentControllerProvider).background,
+            original,
+            reason: 'the committed doc stays untouched mid-drag',
+          );
+          expect(
+            container.read(renderedDocumentProvider).background,
+            isNot(original),
+            reason: 'the merged view shows the preview on the board',
+          );
+        },
+      );
+
+      expect(
+        docCtrl.historyTimeline.length,
+        entries0 + 1,
+        reason: 'fencing is structural: one gesture, one entry (§3)',
+      );
+      expect(container.read(liveOverlayProvider).isEmpty, isTrue);
+      expect(
+        container.read(documentControllerProvider).background,
+        isNot(original),
+      );
+
+      docCtrl.undo();
+      expect(
+        container.read(documentControllerProvider).background,
+        original,
+        reason: 'one undo unwinds the whole drag',
+      );
+    });
   });
 }

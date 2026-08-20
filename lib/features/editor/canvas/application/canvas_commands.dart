@@ -14,10 +14,13 @@ import '../../engine/core/editor_document.dart';
 /// callers (swatch taps) use the [color] convenience parameter,
 /// which wraps into a [SolidBackground].
 ///
-/// Set [live] to `true` for streaming updates from a continuous
-/// picker (e.g. a hue slider drag) so successive commands collapse
-/// into one history entry. Tapping a swatch should leave [live] at
-/// its default `false` so each tap is its own undoable click.
+/// [live] makes successive commands collapse into one history entry
+/// via the wall-clock merge window. It survives for command-level
+/// API stability, but since the ux-audit P2-8 fix no UI host passes
+/// it: the canvas panel previews drags on the live overlay's
+/// background override and commits ONE non-live command on settle,
+/// so each swatch tap is its own undoable click and a drag is one
+/// entry regardless of pauses (contract §2/§3).
 class SetCanvasBackgroundCommand extends EditorCommand {
   const SetCanvasBackgroundCommand({this.color, this.fill, this.live = false})
     : assert(
