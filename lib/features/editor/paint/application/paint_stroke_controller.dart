@@ -66,6 +66,24 @@ class PaintStrokeController extends Notifier<void> {
     );
   }
 
+  /// A tap from a two-point tool cannot draw — the geometry needs a
+  /// drag — so it selects instead: the topmost paint stroke under
+  /// [canvasPoint] binds the dock for restyling (§10.5 N), and a miss
+  /// clears the selection back to next-stroke defaults, matching the
+  /// editor-wide "tap empty deselects" grammar. The tool stays armed
+  /// either way. Returns true on a hit. [canvasPoint] is in canvas
+  /// space.
+  bool selectStrokeAt(Offset canvasPoint) {
+    final hit = _hitPaintLayer(canvasPoint);
+    final selection = ref.read(selectionControllerProvider.notifier);
+    if (hit == null) {
+      selection.clear();
+      return false;
+    }
+    selection.select(hit.id);
+    return true;
+  }
+
   /// A discrete eraser tap is one history entry. Returns false on a miss.
   /// [canvasPoint] is in canvas space.
   bool eraseAt(Offset canvasPoint) {

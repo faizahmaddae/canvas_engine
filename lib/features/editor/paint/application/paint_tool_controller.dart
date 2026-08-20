@@ -230,13 +230,6 @@ class PaintToolController extends Notifier<PaintSession> {
     }
   }
 
-  /// Deselect the current tool while keeping the panel open. Lets the
-  /// user "un-arm" without closing the panel.
-  void clearTool() {
-    if (state.activeTool == null) return;
-    state = state.copyWith(activeTool: null);
-  }
-
   /// A paint control has exactly one target (§10.5 N): with a selected
   /// PaintLayer it restyles that bound layer; otherwise it changes the
   /// author's defaults for the next stroke. Every plain setter shares

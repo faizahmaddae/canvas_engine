@@ -42,7 +42,8 @@ import '../domain/paint_tool_type.dart';
 ///     via [ViewportController.gestureUpdate] — palm/zoom rescue;
 ///   * a sub-slop single-finger release — freestyle commits a DOT,
 ///     the eraser erases a hit (a miss is a silent no-op), every
-///     other kind is a no-op. Taps NEVER exit the mode any more;
+///     other kind SELECTS the stroke under the finger for restyling
+///     (a miss deselects). Taps NEVER exit the mode any more;
 ///     exit is the Done pill + the pasteboard tap (the background
 ///     detector's paint branch — pointers on the pasteboard never
 ///     reach this surface, which only covers the document board).
@@ -319,7 +320,12 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
   ///     (PaintDraft.toLayer accepts a 1-point freestyle; the painter
   ///     draws the circle) — one AddLayer entry like any stroke;
   ///   * eraser → erase a hit; a MISS is a silent no-op;
-  ///   * every other kind needs two distinct points — no-op.
+  ///   * every other kind needs two distinct points to draw, so its
+  ///     tap SELECTS instead: the stroke under the finger binds the
+  ///     dock for restyling, a miss deselects back to next-stroke
+  ///     defaults ([PaintStrokeController.selectStrokeAt]). The tap
+  ///     used to be a dead gesture, which left no way to reach an
+  ///     older stroke without a full mode exit.
   ///
   /// Deliberately NO exit path here: stray taps used to dismiss paint
   /// mode (any-tap-exits) which made the mode feel booby-trapped.
@@ -334,7 +340,10 @@ class _PaintGestureSurfaceState extends ConsumerState<PaintGestureSurface> {
       ref.read(paintStrokeControllerProvider.notifier).eraseAt(local);
       return;
     }
-    if (tool != PaintToolType.freestyle) return;
+    if (tool != PaintToolType.freestyle) {
+      ref.read(paintStrokeControllerProvider.notifier).selectStrokeAt(local);
+      return;
+    }
     ref
         .read(paintStrokeControllerProvider.notifier)
         .commitDot(local, docSize: widget.docSize);

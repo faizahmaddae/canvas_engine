@@ -69,6 +69,41 @@ void main() {
     );
   });
 
+  test('selectStrokeAt selects the topmost hit and a miss deselects', () {
+    final container = harness();
+    final documents = container.read(documentControllerProvider.notifier);
+    documents.execute(AddLayerCommand(stroke('under', const Offset(100, 100))));
+    documents.execute(AddLayerCommand(stroke('over', const Offset(100, 100))));
+    final version = container.read(documentCommitVersionProvider);
+    final strokes = container.read(paintStrokeControllerProvider.notifier);
+
+    expect(strokes.selectStrokeAt(const Offset(150, 140)), isTrue);
+    expect(container.read(selectionControllerProvider).selectedId, 'over');
+
+    expect(strokes.selectStrokeAt(const Offset(700, 700)), isFalse);
+    expect(
+      container.read(selectionControllerProvider).hasSelection,
+      isFalse,
+      reason: 'a miss is the editor-wide tap-empty deselect',
+    );
+    expect(
+      container.read(documentCommitVersionProvider),
+      version,
+      reason: 'selection is not a document mutation',
+    );
+  });
+
+  test('selectStrokeAt skips locked and hidden strokes like the eraser', () {
+    final container = harness();
+    final documents = container.read(documentControllerProvider.notifier);
+    final base = stroke('a', const Offset(100, 100));
+    documents.execute(AddLayerCommand(base.withLocked(true)));
+    final strokes = container.read(paintStrokeControllerProvider.notifier);
+
+    expect(strokes.selectStrokeAt(const Offset(150, 140)), isFalse);
+    expect(container.read(selectionControllerProvider).hasSelection, isFalse);
+  });
+
   test('sweep stages removals, commits once, and one undo restores order', () {
     final container = harness();
     final documents = container.read(documentControllerProvider.notifier);

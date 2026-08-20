@@ -54,16 +54,6 @@ void main() {
       expect(unavailable, isEmpty);
     });
 
-    test('clearTool deselects without closing the panel', () {
-      final c = makeContainer();
-      final ctrl = c.read(paintToolControllerProvider.notifier);
-      ctrl.selectTool(PaintToolType.rectangle);
-      ctrl.clearTool();
-      final s = c.read(paintToolControllerProvider);
-      expect(s.activeTool, isNull);
-      expect(s.panelOpen, isTrue);
-    });
-
     test('full tool catalog is available', () {
       final available = PaintToolType.values.where((t) => t.available).toSet();
       expect(available, {
