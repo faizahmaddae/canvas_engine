@@ -216,6 +216,23 @@ class ExportController {
     return ui.Size(target.width * shrink, target.height * shrink);
   }
 
+  /// The pixel ratio the exporter will actually use for [document]
+  /// after the device-aware cap. The export UI must advertise sizes
+  /// derived from THIS, not from the requested multiplier — a quality
+  /// card stating dimensions the exporter cannot produce is a lying
+  /// control (contract §10.3; UX audit P3-6 measured a 4.6× gap
+  /// between the stated and delivered pixel count on a phone photo).
+  double effectivePixelRatio({
+    required EditorDocument document,
+    required double requested,
+  }) {
+    return DocumentPngExporter.clampPixelRatio(
+      width: document.width,
+      height: document.height,
+      requested: requested,
+    );
+  }
+
   /// True when the current document + a fixed export target would be
   /// downscaled by the device-aware export cap. UI uses this to
   /// surface a "saved at reduced resolution" notice.

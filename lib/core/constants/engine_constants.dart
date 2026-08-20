@@ -14,6 +14,21 @@ class EngineConstants {
   /// and detaching the selection frame from visible content.
   static const double maxLayerSize = 8000.0;
 
+  /// Maximum DOCUMENT dimension (logical px) on either axis — the one
+  /// ceiling the create dialog, the in-editor canvas resize and the
+  /// export custom-size dialog all validate against. Deliberately
+  /// equal to [maxLayerSize]: a canvas larger than the largest
+  /// possible layer would let no layer ever cover it (the UX audit
+  /// P2-20 repro was a 16384 canvas whose shapes stopped growing at
+  /// half its width), and Skia surface allocations beyond ~8K square
+  /// start to fail on mid-tier devices anyway. Imports keep their own
+  /// [kMaxImportDimension] (a GPU-texture concern, ≥ this so an
+  /// imported photo can always fill a maximal canvas). Documents
+  /// stored above this ceiling still open and render — the cap gates
+  /// dialog input only, never serialization. An int because every
+  /// consumer is a whole-pixel input validator.
+  static const int maxDocumentDimension = 8000;
+
   /// Minimum cumulative scale factor a single gesture session may apply
   /// to the initial transform. Prevents shrinking a layer to a dot.
   static const double minGestureScale = 0.2;

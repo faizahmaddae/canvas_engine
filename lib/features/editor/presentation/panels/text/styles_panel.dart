@@ -8,9 +8,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../app/theme/app_icons.dart';
 import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../l10n/l10n.dart';
+import '../../widgets/controls/toggle_segment.dart';
 import 'effect_sections.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../text/domain/text_style_presets.dart';
@@ -48,9 +50,12 @@ class StylesBody extends ConsumerStatefulWidget {
 /// redesign §3, "Style & Effects"). Stroke (کادر), shadow and
 /// background are wired — they are THE home for text decoration now
 /// that the bar consolidation removed their standalone dock tiles.
-/// Glow and gradient render as visibly disabled chips so the grammar
-/// (and the user's mental map) is already in place when they land.
-enum _EffectCategory { stroke, shadow, glow, background, gradient }
+///
+/// Glow and gradient chips shipped as "visibly disabled vocabulary"
+/// in July and stayed inert for a month — a permanent promise is a
+/// lying control (§10.3; ux-audit P2-19). Removed until the features
+/// land; the categories return WITH their sections, not before.
+enum _EffectCategory { stroke, shadow, background }
 
 class _StylesBodyState extends ConsumerState<StylesBody> {
   /// Open effect sub-section. Panel-local by design: closing the
@@ -112,7 +117,7 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!sectionOpen)
+        if (!sectionOpen) ...[
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: _StylesRow(
@@ -128,6 +133,49 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
                   .readableOnCanvas,
             ),
           ),
+          const SizedBox(height: 10),
+          // Inline B/I/U. THIS panel is their home: a dock panel is a
+          // live surface with the canvas visible, so a toggle that
+          // mutates the document reads as what it is. They used to
+          // live in the «⋯» overflow sheet, mutating live behind a
+          // full scrim in a list where every other row pops-then-acts
+          // (ux-audit P3-2) — one list, two grammars. Reads straight
+          // off the layer (no local flags): the write round-trips
+          // through the command and the rebuilt layer flips the chip.
+          Center(
+            child: ToggleSegmentGroup(
+              children: [
+                Semantics(
+                  label: context.l10n.boldAction,
+                  button: true,
+                  child: ToggleSegment(
+                    icon: AppIcons.bold,
+                    selected: layer.style.isBold,
+                    onTap: () => ctrl.setBold(!layer.style.isBold),
+                  ),
+                ),
+                Semantics(
+                  label: context.l10n.italicAction,
+                  button: true,
+                  child: ToggleSegment(
+                    icon: AppIcons.textItalic,
+                    selected: layer.style.italic,
+                    onTap: () => ctrl.setItalic(!layer.style.italic),
+                  ),
+                ),
+                Semantics(
+                  label: context.l10n.underlineAction,
+                  button: true,
+                  child: ToggleSegment(
+                    icon: AppIcons.textUnderline,
+                    selected: layer.style.underline,
+                    onTap: () => ctrl.setUnderline(!layer.style.underline),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         _EffectChipsRow(
           open: _openEffect,
@@ -151,10 +199,9 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
   }
 }
 
-/// Category chips: خط دور · سایه · درخشش · زمینه · گرادیان. Stroke,
-/// Shadow and Background are interactive; glow / gradient render at
-/// reduced opacity behind an [IgnorePointer] so the vocabulary is
-/// visible but honestly inert until each lands.
+/// Category chips: خط دور · سایه · زمینه — every chip opens a real
+/// section (§10.3: no permanent disabled vocabulary; glow/gradient
+/// return with their sections).
 class _EffectChipsRow extends StatelessWidget {
   const _EffectChipsRow({required this.open, required this.onToggle});
 
@@ -164,14 +211,12 @@ class _EffectChipsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    Widget chip(_EffectCategory c, String label, {bool enabled = false}) {
-      final child = PresetChip(
+    Widget chip(_EffectCategory c, String label) {
+      return PresetChip(
         label: label,
         selected: open == c,
         onTap: () => onToggle(c),
       );
-      if (enabled) return child;
-      return Opacity(opacity: 0.38, child: IgnorePointer(child: child));
     }
 
     return SizedBox(
@@ -182,17 +227,13 @@ class _EffectChipsRow extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.zero,
         children: [
-          chip(_EffectCategory.stroke, l10n.effectStrokeLabel, enabled: true),
+          chip(_EffectCategory.stroke, l10n.effectStrokeLabel),
           const SizedBox(width: 6),
-          chip(_EffectCategory.shadow, l10n.shadowTool, enabled: true),
-          const SizedBox(width: 6),
-          chip(_EffectCategory.glow, l10n.glowOption),
+          chip(_EffectCategory.shadow, l10n.shadowTool),
           const SizedBox(width: 6),
           // Short label (زمینه) — chip row real estate; the full
           // word (پس‌زمینه) stays on titles like the colour sheet.
-          chip(_EffectCategory.background, l10n.bgShortLabel, enabled: true),
-          const SizedBox(width: 6),
-          chip(_EffectCategory.gradient, l10n.effectGradientLabel),
+          chip(_EffectCategory.background, l10n.bgShortLabel),
         ],
       ),
     );

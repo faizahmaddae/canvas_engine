@@ -105,19 +105,31 @@ void main() {
       expect(view.layerKind, isNull);
     });
 
-    test('an armed tool wins over a later paint-layer selection', () {
+    test('a paint-layer selection wins over an armed tool', () {
+      // Mirrors what commitDraft/commitDot do for real: the tool stays
+      // armed (continuous drawing) while the stroke just committed is
+      // selected, and the dock must restyle THAT stroke, not silently
+      // reconfigure the next one.
       final c = makeContainer(PaintKind.rectangle);
       final ctrl = c.read(paintToolControllerProvider.notifier);
       ctrl.selectTool(PaintToolType.freestyle);
       c.read(selectionControllerProvider.notifier).select('p1');
       final defaults = c.read(paintToolControllerProvider);
 
-      expect(c.read(paintStyleViewProvider).layerKind, isNull);
+      expect(c.read(paintStyleViewProvider).layerKind, PaintKind.rectangle);
       ctrl.setStrokeWidth(31);
 
-      expect(c.read(paintToolControllerProvider).strokeWidth, 31);
-      expect(committed(c).strokeWidth, 18);
-      expect(defaults.activeTool, PaintToolType.freestyle);
+      expect(
+        c.read(paintToolControllerProvider).strokeWidth,
+        defaults.strokeWidth,
+        reason: 'next-stroke defaults must stay untouched by a restyle',
+      );
+      expect(committed(c).strokeWidth, 31);
+      expect(
+        c.read(paintToolControllerProvider).activeTool,
+        PaintToolType.freestyle,
+        reason: 'the tool stays armed through a restyle',
+      );
     });
   });
 
@@ -313,7 +325,7 @@ void main() {
       ctrl.previewStrokeColor(const Color(0xFF123456));
       ctrl.commitStrokeColor();
       ctrl.previewStrokeWidth(32);
-      ctrl.commitStrokeWidth();
+      ctrl.commitStrokeWidth(32);
       ctrl.previewFillColor(const Color(0xFF654321));
       ctrl.commitFillColor();
 

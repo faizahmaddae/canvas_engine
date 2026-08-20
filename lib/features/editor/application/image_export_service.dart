@@ -11,13 +11,26 @@ import 'export_format.dart';
 /// Outcome of a save-or-share request, surfaced to presentation as a
 /// flat sealed enum so the UI can render success/error/permission
 /// messaging without needing to catch typed exceptions.
-enum ImageExportOutcome { success, permissionDenied, failed }
+///
+/// [cancelled] is the user closing the system share sheet without
+/// picking a target: not a success (nothing left the device — a
+/// "Shared!" toast would be a lie) and not an error (nothing to fix
+/// or retry loudly). Presentation stays quiet and keeps the flow
+/// alive. [unavailable] is the platform reporting share is not
+/// possible at all — actionable copy, distinct from a generic
+/// failure.
+enum ImageExportOutcome {
+  success,
+  cancelled,
+  permissionDenied,
+  unavailable,
+  failed,
+}
 
 class ImageExportResult {
-  const ImageExportResult(this.outcome, [this.message]);
+  const ImageExportResult(this.outcome);
 
   final ImageExportOutcome outcome;
-  final String? message;
 
   bool get isSuccess => outcome == ImageExportOutcome.success;
 }
@@ -131,15 +144,11 @@ class ImageExportService {
       final result = await SharePlus.instance.share(params);
       switch (result.status) {
         case ShareResultStatus.success:
-        case ShareResultStatus.dismissed:
-          // Dismissed (user closed the sheet) is not an error — the
-          // operation completed without writing anywhere we control.
           return const ImageExportResult(ImageExportOutcome.success);
+        case ShareResultStatus.dismissed:
+          return const ImageExportResult(ImageExportOutcome.cancelled);
         case ShareResultStatus.unavailable:
-          return const ImageExportResult(
-            ImageExportOutcome.failed,
-            'Sharing is unavailable on this device.',
-          );
+          return const ImageExportResult(ImageExportOutcome.unavailable);
       }
     } catch (e, st) {
       debugLogError('imageExport/share', e, st);

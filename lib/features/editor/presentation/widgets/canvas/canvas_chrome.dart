@@ -25,6 +25,7 @@ import '../quick_capsule.dart';
 import '../selection_overlay.dart';
 import '../transform_hud.dart';
 import 'canvas_gesture_router.dart';
+import 'canvas_hit_testing.dart';
 import '../../../../../app/theme/app_icons.dart';
 
 /// Builds the **screen-space chrome** slice of the editor canvas' outer
@@ -148,17 +149,21 @@ List<Widget> buildCanvasChrome({
     // was removed. Cropping now happens in the
     // full-screen [CropModeOverlay] mounted by the
     // [EditorScreen] above this canvas.
-    // Minimal multi-select mode indicator. Renders only
-    // when the user has explicitly entered the mode via
-    // long-press. A tiny chip in the top-left corner
-    // tells the user "you are in multi-select" + the
-    // current count, so toggling-on-tap behaviour is
-    // never invisible.
     // Mask-edit chrome: region scrim/outline, drag
     // handles, and the bottom strip. Mounted above
     // every other chrome piece it replaces.
     if (maskEditActive) MaskEditOverlay(viewport: viewport),
-    const _MultiSelectModeChip(),
+    // Multi-select mode indicator: renders whenever the
+    // mode is armed (ux-audit P2-5) — the mode rewrites
+    // what every canvas tap means, so the chip is its
+    // presence signal at ANY member count, ۰ and ۱
+    // included. It yields only to a mask session, which
+    // absorbs every canvas pointer (contract §5 row 1):
+    // no tap can toggle while one is open, and the chip
+    // returns — mode still armed — the moment the
+    // session ends. Crop needs no gate: its full-screen
+    // overlay mounts above this whole stack.
+    if (!maskEditActive) const _MultiSelectModeChip(),
   ];
 }
 
@@ -235,7 +240,13 @@ Widget buildSelectionOverlay({
       break;
     }
   }
-  if (layer == null) return const SizedBox.shrink();
+  // A hidden layer keeps its selection (the Layers drawer can hide the
+  // selected row) but gets NO canvas chrome. Handles and a draggable
+  // frame would promise a transform the commit path refuses for hidden
+  // layers — the drag would track the finger, then silently snap back
+  // (ux-audit P2-6; contract §10.3 forbids present-but-inert chrome).
+  // Its area reads as empty canvas instead, per §5's pointer-eligibility.
+  if (layer == null || !layer.visible) return const SizedBox.shrink();
   final selectedLayer = layer;
   return Consumer(
     builder: (context, ref, _) {
@@ -456,6 +467,20 @@ Widget buildGroupSelectionOverlay({
       if (selectedSet.contains(l.id)) l,
   ];
   if (selectedLayers.length < 2) return const SizedBox.shrink();
+  // Hidden members are cut from the chrome's working set so the frame
+  // and every gesture start describe exactly the participants a group
+  // drag will commit — the controller's `_eligibleInitials` and
+  // `_endGroup` both skip hidden layers, and a frame stretched around
+  // a ghost rect would jump on release when that ghost snaps back
+  // (ux-audit P2-6). The per-member outlines in canvas_board.dart
+  // already filter the same way; this aligns the shared frame with
+  // them. A selection whose members are ALL hidden draws no
+  // interactive chrome at all (contract §10.3).
+  final visibleLayers = <EditorLayer>[
+    for (final l in selectedLayers)
+      if (l.visible) l,
+  ];
+  if (visibleLayers.isEmpty) return const SizedBox.shrink();
 
   return Consumer(
     builder: (context, ref, _) {
@@ -469,7 +494,7 @@ Widget buildGroupSelectionOverlay({
         bounds = ui.groupLiveBounds ?? Rect.zero;
       } else {
         bounds = const GroupEngine().computeBounds(
-          selectedLayers.map((l) => l.transform),
+          visibleLayers.map((l) => l.transform),
         );
       }
       final activeHandle = ui.groupSession?.handle;
@@ -490,13 +515,15 @@ Widget buildGroupSelectionOverlay({
         // Chrome-quad claim model for multi-select (contract §5
         // rows 4/6/7 — see the single-layer overlay above for the
         // full rationale). The group's chrome quad is its
-        // axis-aligned bounds inflated by the drawn handle outset:
-        // a first pointer ON that quad drives the group's
-        // rigid-body translate (a second finger anywhere then
-        // drives pinch + rotate around the gesture focal); a first
-        // pointer OFF it falls through to the viewport. A true tap
-        // ON the quad is forwarded via [onBodyTap] for selection
-        // routing (toggle-in / toggle-out / mode exit).
+        // axis-aligned bounds inflated by the drawn handle outset,
+        // UNION the rotation knob's stem capsule (the group frame
+        // draws the same stemmed knob as the single frame since
+        // ux-audit P3-9): a first pointer ON that quad drives the
+        // group's rigid-body translate (a second finger anywhere
+        // then drives pinch + rotate around the gesture focal); a
+        // first pointer OFF it falls through to the viewport. A
+        // true tap ON the quad is forwarded via [onBodyTap] for
+        // selection routing (toggle-in / toggle-out / mode exit).
         shouldClaimBody: (globalPosition) {
           if (router.viewportGestureInFlight) return false;
           final cropActive = ref.read(cropControllerProvider).active;
@@ -513,9 +540,11 @@ Widget buildGroupSelectionOverlay({
             return !router.selectAndMoveOwnsSession;
           }
           if (router.hasRawPointersDown) return false;
-          return bounds
-              .inflate(router.chromeOutset())
-              .contains(router.toCanvas(globalPosition));
+          return pointInGroupChromeQuad(
+            bounds,
+            router.toCanvas(globalPosition),
+            viewport.scale,
+          );
         },
         // Defer-start gate: claimed pointers landing in the outset
         // ring (inside the chrome quad, outside the group's
@@ -533,7 +562,7 @@ Widget buildGroupSelectionOverlay({
           switch (update.phase) {
             case DragPhase.start:
               controller.startGroupGesture(
-                layers: selectedLayers,
+                layers: visibleLayers,
                 focalPoint: focalCanvas,
               );
             case DragPhase.update:
@@ -557,12 +586,12 @@ Widget buildGroupSelectionOverlay({
               router.clearSelectAndMoveOwnership();
               if (handle == InteractionHandle.rotate) {
                 controller.startGroupRotate(
-                  layers: selectedLayers,
+                  layers: visibleLayers,
                   pointer: pointer,
                 );
               } else {
                 controller.startGroupResize(
-                  layers: selectedLayers,
+                  layers: visibleLayers,
                   handle: handle,
                   pointer: pointer,
                 );
@@ -643,7 +672,10 @@ Widget buildQuickCapsule({
       break;
     }
   }
-  if (layer == null) return const SizedBox.shrink();
+  // Same hidden-layer gate as [buildSelectionOverlay]: a capsule of
+  // live accelerators floating over empty space is lying chrome
+  // (ux-audit P2-6, contract §10.3).
+  if (layer == null || !layer.visible) return const SizedBox.shrink();
   final selectedLayer = layer;
   return Consumer(
     builder: (context, ref, _) {
@@ -658,6 +690,15 @@ Widget buildQuickCapsule({
       );
       if (inSession) return const SizedBox.shrink();
       if (ref.watch(canvasChromeSuppressedProvider)) {
+        return const SizedBox.shrink();
+      }
+      // Multi-select mode rewrites every canvas tap into membership
+      // toggling; a floating pill of single-selection accelerators
+      // hovering over the one remaining member both contradicts that
+      // grammar and STEALS the toggle tap for whatever pill it lands
+      // on — the member becomes un-removable by tap (found by the
+      // P2-5 cross-surface lifetime test).
+      if (ref.watch(selectionModeProvider) == SelectionMode.multi) {
         return const SizedBox.shrink();
       }
       return QuickCapsule(layer: selectedLayer, viewport: viewport);
@@ -678,23 +719,29 @@ Widget buildQuickCapsule({
 ///
 /// The whole capsule is one tap target (44dp floor via a transparent
 /// halo, ModeDoneButton's pattern) and the trailing ✕ is what makes
-/// it read as dismissible. Exit keeps the PRIMARY selection and drops
-/// to single mode — the same landing state the editor's own <2-member
-/// prune rule produces. Long-press-to-enter and tap-on-empty-to-exit
-/// keep working unchanged; this is the discoverable path.
+/// it read as dismissible. Exit keeps the PRIMARY selection (when one
+/// exists) and drops to single mode. Long-press-to-enter and
+/// tap-on-empty-to-exit keep working unchanged; this is the
+/// discoverable path.
 class _MultiSelectModeChip extends ConsumerWidget {
   const _MultiSelectModeChip();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Gated on the DOCK's own derivation, and labelled with the same
-    // count it uses. Watching `selectionMode` alone let the chip
-    // outlive the state it describes: a selection can name layers that
-    // no longer exist (an undo, a delete), and the chip announced
-    // «چندانتخاب · ۱۰» over a six-layer document while the dock —
-    // which has always filtered — correctly showed the single
-    // surviving layer's own tools.
-    if (ref.watch(editorToolModeProvider) != EditorToolMode.multi) {
+    // Presence gates on the MODE FLAG itself — the thing that rewrites
+    // tap semantics — not on the dock's derivation, which needs >1
+    // actionable member. Gating on the dock left the armed mode
+    // completely invisible at 0–1 members while canvas taps kept
+    // TOGGLING membership: no chip, no exit affordance (ux-audit
+    // P2-5). The ghost-count bug that motivated the dock gate is
+    // solved by the LABEL instead: [actionableSelectionCountProvider]
+    // filters dead ids and the protected base photo, so the chip can
+    // never again announce «چندانتخاب · ۱۰» over a six-layer document
+    // — at worst it shows «۰» or «۱», which are now honest, reachable
+    // states of the armed mode. The dock keeps its own derivation:
+    // single-layer tools for one member are fine; the chip, not the
+    // dock, is the mode indicator.
+    if (ref.watch(selectionModeProvider) != SelectionMode.multi) {
       return const SizedBox.shrink();
     }
     final count = ref.watch(actionableSelectionCountProvider);
@@ -714,8 +761,9 @@ class _MultiSelectModeChip extends ConsumerWidget {
             borderRadius: BorderRadius.circular(999),
             onTap: () {
               HapticFeedback.selectionClick().catchError((_) {});
-              // Keep the primary, drop the rest, leave the mode —
-              // matching what the <2-member flows land on.
+              // Keep the primary, drop the rest, leave the mode. At
+              // count 0 (armed from an empty long-press) there is no
+              // primary — the exit is just the mode ending.
               final primary = ref.read(selectionControllerProvider).selectedId;
               ref.read(selectionModeProvider.notifier).exitMulti();
               if (primary != null) {

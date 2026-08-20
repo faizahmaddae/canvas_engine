@@ -183,14 +183,47 @@ class ImageModeToolbar extends ConsumerWidget {
       // already knew the panel existed. It is the layer's second
       // spatial edit (crop being the first), so it earns a strip tile.
       // Capability guard: a mask with nothing to mask is a lying
-      // control, so the tile disables until the stack has an effect.
+      // control — but a DISABLED tile is a dead one (§10.3): it does
+      // not fire onTap, so it can neither explain itself nor offer a
+      // way out. Like Crop and Look with no photo (tb12), the tile
+      // renders dimmed while the stack is empty and STAYS tappable;
+      // the tap names the precondition and offers the Look panel,
+      // which is where effects are added.
       ImageToolSlot.selective => ToolbarSlot(
         id: ImageToolSlot.selective.name,
         icon: AppIcons.selectiveMask,
         label: l10n.selectiveMaskLabel,
         tier: SlotTier.tier2,
-        enabledBuilder: () => layer.effects.effects.isNotEmpty,
+        availableBuilder: () => layer.effects.effects.isNotEmpty,
+        unavailableHint: l10n.toolNeedsEffectHint,
         onTap: () {
+          if (layer.effects.effects.isEmpty) {
+            // Precondition unmet: explain and offer recovery instead
+            // of opening a mode that would mask nothing. Panels stay
+            // as they are — the user may be inside Look mid-recovery.
+            final messenger = ScaffoldMessenger.of(context);
+            messenger.hideCurrentSnackBar();
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(l10n.addEffectToMaskHint),
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 4),
+                action: SnackBarAction(
+                  label: l10n.lookTool,
+                  onPressed: () {
+                    contextCtrl.closePanel();
+                    // Guarded like _openLook: an unguarded toggle
+                    // would CLOSE an already-open Look panel.
+                    if (ref.read(imageToolControllerProvider).openSlot !=
+                        ImageToolSlot.look) {
+                      imageCtrl.toggleSlot(ImageToolSlot.look);
+                    }
+                  },
+                ),
+              ),
+            );
+            return;
+          }
           EditorHaptics.tap();
           contextCtrl.closePanel();
           // The mode's chrome replaces the dock; leaving openSlot set

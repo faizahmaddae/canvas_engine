@@ -318,6 +318,9 @@ void main() {
     );
     await tester.tap(resetLabel);
     await tester.pumpAndSettle();
+    // The reset confirms first (ux-audit P2-17) — accept it.
+    await tester.tap(find.text('بازنشانی'));
+    await tester.pumpAndSettle();
 
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('onboarding.complete'), isFalse);

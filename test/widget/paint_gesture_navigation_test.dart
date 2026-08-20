@@ -1,4 +1,5 @@
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
+import 'package:canvas_engine/features/editor/application/selection_controller.dart';
 import 'package:canvas_engine/features/editor/application/viewport_controller.dart';
 import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
@@ -9,6 +10,7 @@ import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/editor_canvas.dart';
 import 'package:canvas_engine/features/editor/toolbar/presentation/mode_done_button.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -102,8 +104,8 @@ void main() {
     expect(_paintLayerCount(container), 0);
   });
 
-  testWidgets('tap with a two-point tool (line) is a no-op and the mode '
-      'stays', (tester) async {
+  testWidgets('tap with a two-point tool (line) on empty canvas deselects, '
+      'commits nothing and the mode stays', (tester) async {
     final container = _setup(tester);
     container
         .read(paintToolControllerProvider.notifier)
@@ -116,10 +118,82 @@ void main() {
 
     expect(_paintLayerCount(container), 0);
     expect(container.read(documentCommitVersionProvider), versionBefore);
+    expect(container.read(selectionControllerProvider).hasSelection, isFalse);
     expect(
       container.read(paintToolControllerProvider).activeTool,
       PaintToolType.line,
       reason: 'a stray tap must NOT exit paint mode any more',
+    );
+  });
+
+  testWidgets('tap with a two-point tool on an existing stroke selects it '
+      'for restyling without leaving the mode', (tester) async {
+    final container = _setup(tester);
+    final ctrl = container.read(paintToolControllerProvider.notifier);
+    ctrl.selectTool(PaintToolType.freestyle);
+    await _pumpCanvas(tester, container);
+
+    // Draw a stroke, then switch to a two-point tool — selectTool
+    // clears the commit-time selection, so the stroke is now an
+    // ordinary older layer.
+    final f = await tester.startGesture(
+      _toScreen(container, const Offset(300, 400)),
+      pointer: 81,
+    );
+    await tester.pump();
+    await f.moveBy(const Offset(120, 0));
+    await tester.pump();
+    await f.up();
+    await tester.pump();
+    final stroke = container
+        .read(documentControllerProvider)
+        .layers
+        .whereType<PaintLayer>()
+        .single;
+    ctrl.selectTool(PaintToolType.line);
+    expect(container.read(selectionControllerProvider).hasSelection, isFalse);
+
+    final versionBefore = container.read(documentCommitVersionProvider);
+    await tester.tapAt(_toScreen(container, const Offset(360, 400)));
+    await tester.pump();
+
+    expect(
+      container.read(selectionControllerProvider).selectedId,
+      stroke.id,
+      reason: 'a tap that cannot draw selects the stroke under it',
+    );
+    expect(container.read(documentCommitVersionProvider), versionBefore);
+    expect(
+      container.read(paintToolControllerProvider).activeTool,
+      PaintToolType.line,
+      reason: 'selecting for restyle keeps the tool armed',
+    );
+  });
+
+  testWidgets('long-press on the pasteboard while a tool is armed does not '
+      'hijack the session into multi-select', (tester) async {
+    final container = _setup(tester);
+    container
+        .read(paintToolControllerProvider.notifier)
+        .selectTool(PaintToolType.freestyle);
+    await _pumpCanvas(tester, container);
+
+    // (4,4) is the screen corner — pasteboard, outside the document
+    // board the paint surface covers, so the press reaches the
+    // background detector's long-press recogniser.
+    final g = await tester.startGesture(const Offset(4, 4), pointer: 91);
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 100));
+    await g.up();
+    await tester.pump();
+
+    expect(
+      container.read(selectionModeProvider),
+      SelectionMode.single,
+      reason: 'an armed paint session owns its gesture space (§5)',
+    );
+    expect(
+      container.read(paintToolControllerProvider).activeTool,
+      PaintToolType.freestyle,
     );
   });
 

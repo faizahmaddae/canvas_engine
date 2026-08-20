@@ -179,14 +179,17 @@ class ProjectStore extends AsyncNotifier<List<Project>> {
     state = AsyncData(_sorted(next));
   }
 
+  /// Rename never touches [Project.lastModified]: the grid sorts
+  /// Recents by that stamp, and bumping it for a metadata edit
+  /// reshuffled the user's projects — renaming an old project
+  /// teleported it to the front as if its content had changed
+  /// (ux-audit P3-7). "Modified" means the design changed; the name
+  /// is a label on it.
   Future<void> rename(String projectId, String name) async {
     final current = await _current();
     final idx = current.indexWhere((p) => p.id == projectId);
     if (idx < 0) return;
-    final updated = current[idx].copyWith(
-      name: name,
-      lastModified: DateTime.now(),
-    );
+    final updated = current[idx].copyWith(name: name);
     await _writeProjectFile(updated);
     final next = [...current]..[idx] = updated;
     state = AsyncData(_sorted(next));
@@ -204,7 +207,16 @@ class ProjectStore extends AsyncNotifier<List<Project>> {
   /// a shared or already-invalid file. The record is written only after the
   /// thumbnail is prepared, and a failure rolls back any copied file (and the
   /// record temp) so it leaves no metadata or partial artifact behind.
-  Future<String?> duplicate(String projectId, String newId) async {
+  /// [copyName] is the duplicate's full display name, built by the
+  /// caller — presentation owns the localized "(copy)" suffix (this
+  /// store has no l10n access; the old hardcoded English suffix
+  /// leaked into Persian grids, ux-audit P3-16). Falls back to the
+  /// English suffix for callers with no locale in hand.
+  Future<String?> duplicate(
+    String projectId,
+    String newId, {
+    String? copyName,
+  }) async {
     final current = await _current();
     final idx = current.indexWhere((p) => p.id == projectId);
     if (idx < 0) return null;
@@ -229,7 +241,7 @@ class ProjectStore extends AsyncNotifier<List<Project>> {
     final now = DateTime.now();
     final copy = Project(
       id: newId,
-      name: '${src.name} (copy)',
+      name: copyName ?? '${src.name} (copy)',
       width: src.width,
       height: src.height,
       createdAt: now,

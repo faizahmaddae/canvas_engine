@@ -151,6 +151,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsResetOnboarding => 'Reset onboarding';
 
   @override
+  String get resetOnboardingConfirmTitle => 'Reset onboarding?';
+
+  @override
+  String get resetOnboardingConfirmBody =>
+      'You\'ll go through the welcome flow again, and your template picks for Home will be re-asked.';
+
+  @override
+  String get resetAction => 'Reset';
+
+  @override
   String get canvasInteractionSection => 'Canvas Interaction';
 
   @override
@@ -650,6 +660,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String projectCopyName(String name) {
+    return '$name (copy)';
+  }
+
+  @override
   String renamedProject(String name) {
     return 'Renamed to \"$name\"';
   }
@@ -781,7 +796,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get a4Landscape300Preset => 'A4 Landscape (300 dpi)';
 
   @override
-  String get customSizeValidation => 'Width & height must be 16–16384.';
+  String get customSizeValidation => 'Width & height must be 16–8000.';
 
   @override
   String get enterImageUrlValidation => 'Enter an image URL.';
@@ -1121,6 +1136,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolNeedsPhotoHint => 'Needs a visible photo';
+
+  @override
+  String get toolNeedsEffectHint => 'Needs at least one effect';
 
   @override
   String get cropActionVerb => 'crop';
@@ -1750,6 +1768,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectiveMaskHint => 'Limit the stack to a region of the layer';
 
   @override
+  String get addEffectToMaskHint => 'Add an effect to mask selectively.';
+
+  @override
   String get maskPresetOff => 'Off';
 
   @override
@@ -1884,6 +1905,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedMessage => 'Shared';
 
   @override
+  String get sharingUnavailableMessage =>
+      'Sharing isn\'t available on this device';
+
+  @override
+  String get deviceMaxExportNote => 'Capped at this device\'s export limit';
+
+  @override
   String get reducedResolutionWarning =>
       'Exporting at reduced resolution to fit device memory.';
 
@@ -1998,6 +2026,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historyUndoneSemantic => 'undone';
+
+  @override
+  String get historyJumpHint => 'Tap a step to jump to it';
 
   @override
   String get histAddText => 'Add text';
@@ -2154,4 +2185,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get histCombinedEdit => 'Combined edit';
+
+  @override
+  String get histCrop => 'Crop';
+
+  @override
+  String get histMaskEdit => 'Selective mask';
+
+  @override
+  String get histMaskClear => 'Remove mask';
+
+  @override
+  String get histAlignLeft => 'Align left';
+
+  @override
+  String get histAlignCenterX => 'Align center';
+
+  @override
+  String get histAlignRight => 'Align right';
+
+  @override
+  String get histAlignTop => 'Align top';
+
+  @override
+  String get histAlignCenterY => 'Align middle';
+
+  @override
+  String get histAlignBottom => 'Align bottom';
+
+  @override
+  String get histDistributeH => 'Distribute horizontally';
+
+  @override
+  String get histDistributeV => 'Distribute vertically';
+
+  @override
+  String histMultiLayer(String base, String count) {
+    return '$base · $count layers';
+  }
 }

@@ -15,9 +15,35 @@ void main() {
 
   testWidgets('first launch mounts onboarding instead of Home', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: CanvasEngineApp()));
+    await tester.pumpAndSettle();
 
     expect(find.byType(OnboardingFlow), findsOneWidget);
     expect(find.byType(HomeScreen), findsNothing);
+  });
+
+  testWidgets('a returning user NEVER sees an onboarding frame — the gate '
+      'holds a neutral surface until the flag loads', (tester) async {
+    // ux-audit P2-16: the old bool gate defaulted to "new user" during
+    // the async prefs read, so every cold launch flashed the Welcome
+    // screen before swapping to Home.
+    SharedPreferences.setMockInitialValues({'onboarding.complete': true});
+
+    await tester.pumpWidget(const ProviderScope(child: CanvasEngineApp()));
+    // THE first frame, before the flag resolves.
+    expect(find.byType(OnboardingFlow), findsNothing);
+
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeScreen), findsOneWidget);
+  });
+
+  testWidgets('a new user first frame is the same neutral hold, then '
+      'onboarding', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: CanvasEngineApp()));
+    expect(find.byType(HomeScreen), findsNothing);
+    expect(find.byType(OnboardingFlow), findsNothing);
+
+    await tester.pumpAndSettle();
+    expect(find.byType(OnboardingFlow), findsOneWidget);
   });
 
   testWidgets('second launch after onboarding mounts Home directly', (

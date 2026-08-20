@@ -266,7 +266,16 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
   void _onHexChanged(String raw) {
     final parsed = parseColorHex(raw);
     if (parsed == null) {
-      setState(() => _hexInvalid = raw.replaceAll('#', '').isNotEmpty);
+      // Mid-typing, an incomplete-but-legal prefix ('E', 'EF44') is
+      // not an error — flagging it red four times on the way to a
+      // valid 6-digit code punished ordinary typing. While the user
+      // is still typing, only input that can never BECOME valid (an
+      // illegal character, or more than 8 digits) earns the error
+      // border; incompleteness is judged at submit (_onHexSubmitted).
+      final clean = raw.trim().replaceAll('#', '').replaceAll(' ', '');
+      final canBecomeValid =
+          clean.length <= 8 && RegExp(r'^[0-9a-fA-F]*$').hasMatch(clean);
+      setState(() => _hexInvalid = clean.isNotEmpty && !canBecomeValid);
       return;
     }
     final cleanLen = raw.trim().replaceAll('#', '').replaceAll(' ', '').length;

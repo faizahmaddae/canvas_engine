@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/constants/engine_constants.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
@@ -89,150 +90,169 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
     // *file* format this sheet also talks about.
     final values = EditorValueFormat.of(context);
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-        // Scroll guard: opened with isScrollControlled (which only
-        // lifts the height cap, it adds no scrolling), this Column of
-        // size/quality/format controls overflows on short or small
-        // screens (320-wide devices, landscape) — especially with the
-        // three Original-size quality cards plus the JPG slider.
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header — title + canvas dimensions so the user always
-              // sees what "Original" means in concrete numbers.
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 4, top: 4),
-                child: Row(
+    // While bytes are rendering, the sheet refuses to pop — same
+    // guard the preview screen already has. Without it a barrier tap
+    // or drag-dismiss mid-render silently abandoned the export (the
+    // rendered bytes arrived to an unmounted sheet and vanished; the
+    // audit flagged the asymmetry as an undecided path).
+    return PopScope(
+      canPop: !_busy,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+          // Scroll guard: opened with isScrollControlled (which only
+          // lifts the height cap, it adds no scrolling), this Column of
+          // size/quality/format controls overflows on short or small
+          // screens (320-wide devices, landscape) — especially with the
+          // three Original-size quality cards plus the JPG slider.
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header — title + canvas dimensions so the user always
+                // sees what "Original" means in concrete numbers.
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 4, top: 4),
+                  child: Row(
+                    children: [
+                      Text(
+                        l10n.exportDesignTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: tokens.surfaceMuted.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          // Locale digits: the fa header reads
+                          // «بوم ۱۰۸۰ × ۱۰۸۰», not a Latin-digit island.
+                          l10n.canvasDimensions(
+                            values.dimensions(canvasW, canvasH),
+                          ),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: tokens.textSecondary,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SectionLabel(l10n.sizeTool),
+                const SizedBox(height: 8),
+                _SizePickerRow(
+                  value: _size,
+                  enabled: !_busy,
+                  onChanged: _onSizeChanged,
+                ),
+                const SizedBox(height: 14),
+                if (_size == ExportSize.original) ...[
+                  for (final q in ExportQuality.values) ...[
+                    _QualityCard(
+                      quality: q,
+                      canvasWidth: canvasW,
+                      canvasHeight: canvasH,
+                      // The card advertises what the exporter will
+                      // actually produce under the device cap, not the
+                      // multiplier's arithmetic (§10.3 — the number on
+                      // the card is a promise).
+                      effectiveRatio: ref
+                          .read(exportControllerProvider)
+                          .effectivePixelRatio(
+                            document: doc,
+                            requested: q.pixelRatio,
+                          ),
+                      selected: _quality == q,
+                      enabled: !_busy,
+                      onTap: () => setState(() => _quality = q),
+                    ),
+                    if (q != ExportQuality.values.last)
+                      const SizedBox(height: 8),
+                  ],
+                ] else
+                  _PresetOutputSummary(
+                    size: _size,
+                    canvasWidth: canvasW,
+                    canvasHeight: canvasH,
+                  ),
+                const SizedBox(height: 18),
+                // Format section. Compact segmented row keeps both the
+                // current selection and the alternative visible at a
+                // glance — no hidden state.
+                SectionLabel(l10n.formatLabel),
+                const SizedBox(height: 8),
+                _FormatSegmented(
+                  value: _format,
+                  enabled: !_busy,
+                  onChanged: (f) => setState(() => _format = f),
+                ),
+                // Quality slider only appears when JPG is selected (PNG is
+                // lossless, so a quality knob would be misleading).
+                if (_format.supportsQuality) ...[
+                  const SizedBox(height: 14),
+                  _JpgQualitySlider(
+                    value: _jpgQuality,
+                    enabled: !_busy,
+                    onChanged: (v) => setState(() => _jpgQuality = v),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                // Two exit intents. Each carries its own [ExportIntent]
+                // into the preview so the confirmation button there IS
+                // the action the user asked for here.
+                Row(
                   children: [
-                    Text(
-                      l10n.exportDesignTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        key: const ValueKey('export-sheet-share'),
+                        onPressed: _busy
+                            ? null
+                            : () => _openPreview(ExportIntent.share),
+                        icon: const Icon(AppIcons.visible),
+                        label: Text(l10n.previewShareAction),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: tokens.surfaceMuted.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        // Locale digits: the fa header reads
-                        // «بوم ۱۰۸۰ × ۱۰۸۰», not a Latin-digit island.
-                        l10n.canvasDimensions(
-                          values.dimensions(canvasW, canvasH),
-                        ),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: tokens.textSecondary,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton.icon(
+                        key: const ValueKey('export-sheet-save'),
+                        onPressed: _busy
+                            ? null
+                            : () => _openPreview(ExportIntent.save),
+                        icon: const Icon(AppIcons.exportSave),
+                        label: Text(l10n.previewSaveAction),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              SectionLabel(l10n.sizeTool),
-              const SizedBox(height: 8),
-              _SizePickerRow(
-                value: _size,
-                enabled: !_busy,
-                onChanged: _onSizeChanged,
-              ),
-              const SizedBox(height: 14),
-              if (_size == ExportSize.original) ...[
-                for (final q in ExportQuality.values) ...[
-                  _QualityCard(
-                    quality: q,
-                    canvasWidth: canvasW,
-                    canvasHeight: canvasH,
-                    selected: _quality == q,
-                    enabled: !_busy,
-                    onTap: () => setState(() => _quality = q),
-                  ),
-                  if (q != ExportQuality.values.last) const SizedBox(height: 8),
+                if (_busy) ...[
+                  const SizedBox(height: 12),
+                  const LinearProgressIndicator(minHeight: 2),
                 ],
-              ] else
-                _PresetOutputSummary(
-                  size: _size,
-                  canvasWidth: canvasW,
-                  canvasHeight: canvasH,
-                ),
-              const SizedBox(height: 18),
-              // Format section. Compact segmented row keeps both the
-              // current selection and the alternative visible at a
-              // glance — no hidden state.
-              SectionLabel(l10n.formatLabel),
-              const SizedBox(height: 8),
-              _FormatSegmented(
-                value: _format,
-                enabled: !_busy,
-                onChanged: (f) => setState(() => _format = f),
-              ),
-              // Quality slider only appears when JPG is selected (PNG is
-              // lossless, so a quality knob would be misleading).
-              if (_format.supportsQuality) ...[
-                const SizedBox(height: 14),
-                _JpgQualitySlider(
-                  value: _jpgQuality,
-                  enabled: !_busy,
-                  onChanged: (v) => setState(() => _jpgQuality = v),
-                ),
               ],
-              const SizedBox(height: 16),
-              // Two exit intents. Each carries its own [ExportIntent]
-              // into the preview so the confirmation button there IS
-              // the action the user asked for here.
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      key: const ValueKey('export-sheet-share'),
-                      onPressed: _busy
-                          ? null
-                          : () => _openPreview(ExportIntent.share),
-                      icon: const Icon(AppIcons.visible),
-                      label: Text(l10n.previewShareAction),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton.icon(
-                      key: const ValueKey('export-sheet-save'),
-                      onPressed: _busy
-                          ? null
-                          : () => _openPreview(ExportIntent.save),
-                      icon: const Icon(AppIcons.exportSave),
-                      label: Text(l10n.previewSaveAction),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (_busy) ...[
-                const SizedBox(height: 12),
-                const LinearProgressIndicator(minHeight: 2),
-              ],
-            ],
+            ),
           ),
         ),
       ),
@@ -365,8 +385,15 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
     switch (result.outcome) {
       case ImageExportOutcome.success:
         text = successMsg;
+      case ImageExportOutcome.cancelled:
+        // A dismissed system sheet never pops the preview, so this is
+        // unreachable from the current flow — kept exhaustive so a
+        // future caller can't accidentally toast "Shared!" for it.
+        return;
       case ImageExportOutcome.permissionDenied:
         text = context.l10n.allowPhotoAccessSettings;
+      case ImageExportOutcome.unavailable:
+        text = context.l10n.sharingUnavailableMessage;
       case ImageExportOutcome.failed:
         text = context.l10n.somethingWentWrong;
     }
@@ -397,6 +424,7 @@ class _QualityCard extends StatelessWidget {
     required this.quality,
     required this.canvasWidth,
     required this.canvasHeight,
+    required this.effectiveRatio,
     required this.selected,
     required this.enabled,
     required this.onTap,
@@ -405,6 +433,13 @@ class _QualityCard extends StatelessWidget {
   final ExportQuality quality;
   final int canvasWidth;
   final int canvasHeight;
+
+  /// The ratio the exporter will really use — the requested multiplier
+  /// after the device-aware pixel cap. The dimensions printed on the
+  /// card come from this, so the card can never promise an output the
+  /// device won't produce.
+  final double effectiveRatio;
+
   final bool selected;
   final bool enabled;
   final VoidCallback onTap;
@@ -413,8 +448,9 @@ class _QualityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = AppTokens.of(context);
-    final outW = (canvasWidth * quality.pixelRatio).round();
-    final outH = (canvasHeight * quality.pixelRatio).round();
+    final outW = (canvasWidth * effectiveRatio).round();
+    final outH = (canvasHeight * effectiveRatio).round();
+    final capped = (quality.pixelRatio - effectiveRatio) > 1e-6;
 
     final bg = selected
         ? tokens.accent.withValues(alpha: 0.10)
@@ -483,6 +519,15 @@ class _QualityCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (capped) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        context.l10n.deviceMaxExportNote,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: tokens.accentText,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -751,7 +796,11 @@ class _PresetOutputSummary extends StatelessWidget {
     final theme = Theme.of(context);
     final tokens = AppTokens.of(context);
     final values = EditorValueFormat.of(context);
-    final target = size.target!;
+    // Same honesty rule as the quality cards: print what the exporter
+    // will produce under the device cap, not the preset's arithmetic.
+    final requested = size.target!;
+    final target = ExportController.clampTargetSizeForExport(target: requested);
+    final capped = (requested.width - target.width) > 0.5;
     final tw = target.width.round();
     final th = target.height.round();
     final canvasAspect = canvasWidth / canvasHeight;
@@ -791,6 +840,15 @@ class _PresetOutputSummary extends StatelessWidget {
                     color: tokens.textSecondary,
                   ),
                 ),
+                if (capped) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    context.l10n.deviceMaxExportNote,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: tokens.accentText,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -833,10 +891,10 @@ class _CustomSizeDialogState extends State<_CustomSizeDialog> {
   /// safe to read from a field initialiser.
   bool _seeded = false;
 
-  // Hard upper bound — Skia surface allocations beyond ~8K square
-  // start to fail on mid-tier devices. 8000 leaves comfortable
-  // headroom for the composite step.
-  static const int _maxDimension = 8000;
+  // THE document ceiling — shared with the create dialog and the
+  // in-editor canvas resize so every surface quotes the same number
+  // (ux-audit P2-20); the constant's doc carries the full rationale.
+  static const int _maxDimension = EngineConstants.maxDocumentDimension;
 
   @override
   void didChangeDependencies() {

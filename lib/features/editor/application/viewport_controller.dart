@@ -127,6 +127,59 @@ class ViewportController extends Notifier<ViewportState> {
     return true;
   }
 
+  /// Canvas-space rect currently visible in the on-screen canvas pane,
+  /// or `null` when no [fit] has seeded the pane geometry yet (headless
+  /// unit tests, pre-first-frame). Derived from the live transform, so
+  /// it tracks every pan / zoom / restore / reflow.
+  ///
+  /// This is the source the insertion flows read so a new layer lands
+  /// where the user is actually looking instead of at the document
+  /// centre (ux-audit P2-12: zoomed into a corner, an insert used to
+  /// land off-screen and the canvas looked like nothing happened).
+  Rect? get visibleCanvasRect {
+    final ctx = _lastFitContext;
+    if (ctx == null) return null;
+    final topLeft = state.screenToCanvas(Offset.zero);
+    return Rect.fromLTWH(
+      topLeft.dx,
+      topLeft.dy,
+      ctx.screenSize.width / state.scale,
+      ctx.screenSize.height / state.scale,
+    );
+  }
+
+  /// Placement rule for newly-inserted layers (ux-audit P2-12).
+  ///
+  /// Centres a layer of [layerSize] on [visibleCentre] (canvas space),
+  /// then clamps per axis so the layer lands **fully inside** the
+  /// document whenever it fits — a visible centre out on the
+  /// pasteboard resolves to the nearest in-document placement. An axis
+  /// on which the layer is larger than the document falls back to
+  /// document-centring, which is exactly the historical doc-centred
+  /// insert, so oversized imports keep their old geometry.
+  ///
+  /// Pure and static: shared by every insert path (shape / sticker /
+  /// image in the editor screen, the text composer's live session) so
+  /// they can never disagree about where "here" is.
+  static Offset insertPositionFor({
+    required Offset visibleCentre,
+    required Size layerSize,
+    required Size docSize,
+  }) {
+    double axis(double centre, double layerExtent, double docExtent) {
+      final hi = docExtent - layerExtent;
+      // Layer larger than the document on this axis: centre it on the
+      // document (negative position), matching the pre-P2-12 rule.
+      if (hi < 0) return hi / 2;
+      return (centre - layerExtent / 2).clamp(0.0, hi).toDouble();
+    }
+
+    return Offset(
+      axis(visibleCentre.dx, layerSize.width, docSize.width),
+      axis(visibleCentre.dy, layerSize.height, docSize.height),
+    );
+  }
+
   /// Raw (un-clamped) fit scale for the given geometry — the largest
   /// scale at which the whole canvas fits inside the padded pane.
   /// Shared by [fit] and [_effectiveMinScale] so the two can never

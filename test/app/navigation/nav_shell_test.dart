@@ -112,4 +112,32 @@ void main() {
     final activeIcon = tester.widget<Icon>(find.byIcon(AppIcons.homeTab));
     expect(activeIcon.color, AppTokens.dark.accent);
   });
+
+  testWidgets('system Back on a browser tab returns to Home first, and only '
+      'Home lets the app exit', (tester) async {
+    // Android bottom-nav convention (ux-audit P3-17): Back walks to
+    // the start destination before it may leave the app.
+    await pump(tester);
+
+    await tester.tap(find.text('Templates'));
+    await tester.pump();
+    expect(find.byType(TemplatesBrowseScreen), findsOneWidget);
+
+    int stackIndex() =>
+        tester.widget<IndexedStack>(find.byType(IndexedStack)).index!;
+    expect(stackIndex(), 1);
+
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    // maybePop returns TRUE when a PopScope consumed the pop.
+    final consumed = await navigator.maybePop();
+    await tester.pump();
+    expect(consumed, isTrue, reason: 'Back consumed by the tab switch');
+    expect(stackIndex(), 0, reason: 'Back lands on Home, not out of the app');
+
+    // On Home the shell stops consuming: the root route bubbles to
+    // the OS (app exit), which maybePop reports as false.
+    final second = await navigator.maybePop();
+    expect(second, isFalse, reason: 'on Home, Back belongs to the OS');
+    expect(stackIndex(), 0);
+  });
 }

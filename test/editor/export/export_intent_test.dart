@@ -232,4 +232,77 @@ void main() {
       expect(popped!.result?.isSuccess, isTrue);
     });
   });
+
+  group('share outcome → preview behavior', () {
+    testWidgets('a dismissed system sheet keeps the preview alive with no '
+        'toast — cancelling is not "Shared"', (tester) async {
+      final svc = _OutcomeExportService(
+        const ImageExportResult(ImageExportOutcome.cancelled),
+      );
+      await _pumpPreview(tester, intent: ExportIntent.share, service: svc);
+
+      await tester.tap(find.byKey(_primary));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(
+        find.byType(ExportPreviewScreen),
+        findsOneWidget,
+        reason: 'cancelling the share must not tear the export flow down',
+      );
+      expect(
+        find.byType(SnackBar),
+        findsNothing,
+        reason: 'nothing was shared and nothing failed — stay quiet',
+      );
+      // The primary must be live again for an in-place retry.
+      final primary = tester.widget<FilledButton>(find.byKey(_primary));
+      expect(primary.onPressed, isNotNull);
+    });
+
+    testWidgets('share-unavailable keeps the preview and explains itself', (
+      tester,
+    ) async {
+      final svc = _OutcomeExportService(
+        const ImageExportResult(ImageExportOutcome.unavailable),
+      );
+      await _pumpPreview(tester, intent: ExportIntent.share, service: svc);
+
+      await tester.tap(find.byKey(_primary));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(ExportPreviewScreen), findsOneWidget);
+      expect(
+        find.text("Sharing isn't available on this device"),
+        findsOneWidget,
+        reason: 'the one actionable share failure finally has visible copy',
+      );
+    });
+  });
+}
+
+/// Returns a fixed outcome from both exits — the per-outcome contract
+/// harness.
+class _OutcomeExportService extends ImageExportService {
+  const _OutcomeExportService(this.result);
+
+  final ImageExportResult result;
+
+  @override
+  Future<ImageExportResult> saveToGallery(
+    Uint8List bytes, {
+    String? filename,
+    ExportFormat format = ExportFormat.png,
+  }) async => result;
+
+  @override
+  Future<ImageExportResult> share(
+    Uint8List bytes, {
+    String? filename,
+    String? subject,
+    String? text,
+    Rect? shareOrigin,
+    ExportFormat format = ExportFormat.png,
+  }) async => result;
 }

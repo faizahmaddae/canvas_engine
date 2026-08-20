@@ -72,14 +72,31 @@ void main() {
     expect(c.list, isEmpty);
   });
 
-  test('rename updates name + bumps lastModified', () async {
+  test('rename updates the name WITHOUT bumping lastModified', () async {
+    // Recents sort on lastModified; a rename is a metadata edit, so
+    // bumping it teleported old projects to the front of the grid
+    // (ux-audit P3-7). "Modified" means the design changed.
     final c = await container();
     final original = _make('id', 'before', when: DateTime.utc(2025, 1, 1));
     await c.notifier.upsert(original);
     await c.notifier.rename('id', 'after');
     final updated = c.list.firstWhere((p) => p.id == 'id');
     expect(updated.name, 'after');
-    expect(updated.lastModified.isAfter(original.lastModified), isTrue);
+    expect(updated.lastModified, original.lastModified);
+  });
+
+  test('rename does not reorder the Recents sort', () async {
+    final c = await container();
+    await c.notifier.upsert(_make('old', 'Old', when: DateTime.utc(2025, 1)));
+    await c.notifier.upsert(_make('new', 'New', when: DateTime.utc(2025, 6)));
+    expect(c.list.map((p) => p.id), ['new', 'old']);
+
+    await c.notifier.rename('old', 'Old renamed');
+    expect(
+      c.list.map((p) => p.id),
+      ['new', 'old'],
+      reason: 'renaming must not move a project up the grid',
+    );
   });
 
   test(

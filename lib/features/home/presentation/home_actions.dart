@@ -231,7 +231,7 @@ class HomeActions {
   /// Open the template browser from Home CTAs without changing the
   /// user's app locale or persisted content-language preferences.
   void openTemplates({
-    TemplateLanguage initialLanguage = TemplateLanguage.persian,
+    TemplateLanguage? initialLanguage,
     TemplateCategory? initialCategory,
   }) {
     Navigator.of(context).push(

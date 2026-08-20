@@ -85,7 +85,7 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
     // A selected stroke means the strip mounted to RESTYLE, not to
     // draw (tb4 3/14) — opening the tool picker over it would both
     // hide the capsule and answer a question the user didn't ask.
-    final restyling = ref.read(paintStyleViewProvider).layerKind != null;
+    final restyling = ref.read(paintStyleViewProvider).isRestyling;
     if (session.activeTool != null || session.openSlot != null || restyling) {
       // Tool already armed (e.g. coming back from another mode) or
       // some other slot is open — respect that and stay quiet.
@@ -117,19 +117,24 @@ class _PaintModeToolbarState extends ConsumerState<PaintModeToolbar> {
     // surface. Opening any slot (including 'tool') never hides the
     // others; the open slot is highlighted, siblings stay tappable
     // so users can switch panels in one tap.
-    // An armed tool describes what the NEXT stroke can be; a
-    // selected layer describes what THIS stroke can still become.
-    // Arming wins, because selectTool() clears the selection anyway.
+    // A selected layer describes what THIS stroke can still become;
+    // an armed tool (with nothing selected) describes what the NEXT
+    // stroke can be. Selection wins whenever both are true — e.g. a
+    // tool stays armed right after committing a stroke, which selects
+    // it (view.isRestyling, mirroring selectedPaintLayer on the write
+    // side) — because arming a NEW tool always clears the selection
+    // first (selectTool/toggleEraser), so a stale selection can never
+    // outlive the arming that should have superseded it.
     //
     // (The old guard here subtracted blur/polygon/dash whenever a
     // layer was selected, because those setters only moved session
     // defaults. They mirror onto the layer now — tb4 3/14 — so the
     // matrix can be honest instead of defensive.)
     final layerKind = view.layerKind;
-    final restyling = session.activeTool == null && layerKind != null;
+    final restyling = view.isRestyling;
     final visibleIds = paintStripSlotIds(
-      tool: session.activeTool,
-      layerKind: session.activeTool == null ? layerKind : null,
+      tool: restyling ? null : session.activeTool,
+      layerKind: layerKind,
     );
     final allowed = visibleIds.toSet();
 

@@ -151,6 +151,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsResetOnboarding => 'بازنشانی شروع اولیه';
 
   @override
+  String get resetOnboardingConfirmTitle => 'شروع اولیه بازنشانی شود؟';
+
+  @override
+  String get resetOnboardingConfirmBody =>
+      'صفحه خوش‌آمد دوباره نمایش داده می‌شود و انتخاب قالب‌های خانه از نو پرسیده می‌شود.';
+
+  @override
+  String get resetAction => 'بازنشانی';
+
+  @override
   String get canvasInteractionSection => 'تعامل با بوم';
 
   @override
@@ -649,6 +659,11 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String projectCopyName(String name) {
+    return '$name (رونوشت)';
+  }
+
+  @override
   String renamedProject(String name) {
     return 'به «$name» تغییر نام داد';
   }
@@ -780,7 +795,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get a4Landscape300Preset => 'A4 افقی (۳۰۰ dpi)';
 
   @override
-  String get customSizeValidation => 'عرض و ارتفاع باید بین ۱۶ تا ۱۶۳۸۴ باشد.';
+  String get customSizeValidation => 'عرض و ارتفاع باید بین ۱۶ تا ۸۰۰۰ باشد.';
 
   @override
   String get enterImageUrlValidation => 'نشانی تصویر را وارد کنید.';
@@ -1122,6 +1137,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get toolNeedsPhotoHint => 'به یک عکس قابل‌مشاهده نیاز دارد';
+
+  @override
+  String get toolNeedsEffectHint => 'به دست‌کم یک جلوه نیاز دارد';
 
   @override
   String get cropActionVerb => 'برش';
@@ -1752,6 +1770,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get selectiveMaskHint => 'محدود کردن جلوه‌ها به بخشی از لایه';
 
   @override
+  String get addEffectToMaskHint => 'برای ماسک انتخابی یک جلوه اضافه کنید.';
+
+  @override
   String get maskPresetOff => 'خاموش';
 
   @override
@@ -1886,6 +1907,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sharedMessage => 'اشتراک‌گذاری شد';
 
   @override
+  String get sharingUnavailableMessage =>
+      'هم‌رسانی روی این دستگاه در دسترس نیست';
+
+  @override
+  String get deviceMaxExportNote => 'به سقف خروجی این دستگاه محدود شد';
+
+  @override
   String get reducedResolutionWarning =>
       'برای سازگاری با حافظه دستگاه، خروجی با وضوح کمتر ساخته می‌شود.';
 
@@ -2000,6 +2028,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get historyUndoneSemantic => 'واگردشده';
+
+  @override
+  String get historyJumpHint => 'برای پرش به هر مرحله روی آن بزنید';
 
   @override
   String get histAddText => 'افزودن متن';
@@ -2156,4 +2187,42 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get histCombinedEdit => 'ویرایش ترکیبی';
+
+  @override
+  String get histCrop => 'برش';
+
+  @override
+  String get histMaskEdit => 'ماسک انتخابی';
+
+  @override
+  String get histMaskClear => 'حذف ماسک';
+
+  @override
+  String get histAlignLeft => 'تراز چپ';
+
+  @override
+  String get histAlignCenterX => 'تراز مرکز';
+
+  @override
+  String get histAlignRight => 'تراز راست';
+
+  @override
+  String get histAlignTop => 'تراز بالا';
+
+  @override
+  String get histAlignCenterY => 'تراز میانه';
+
+  @override
+  String get histAlignBottom => 'تراز پایین';
+
+  @override
+  String get histDistributeH => 'توزیع افقی';
+
+  @override
+  String get histDistributeV => 'توزیع عمودی';
+
+  @override
+  String histMultiLayer(String base, String count) {
+    return '$base · $count لایه';
+  }
 }

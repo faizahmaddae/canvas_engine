@@ -54,7 +54,20 @@ class ImageEffectsBody extends ConsumerWidget {
             const _EmptyState()
           else
             _EffectList(layer: layer),
-          _StackMaskSection(layer: layer),
+          // The mask is subordinate to the stack: over an empty stack
+          // its preset chips and "Adjust region" would open a session
+          // with nothing to mask — the same precondition the strip's
+          // «انتخابی» tile guards (P3-10), enforced here too so the
+          // two entries to one session cannot carry opposite rules.
+          // Same grammar as the effect list itself: the gated section
+          // hides and [_EmptyState] names the recovery ("Open Look…").
+          // EXCEPT while a mask still exists: [DeleteEffectCommand]
+          // deliberately keeps the stack mask when the last effect is
+          // deleted (it is user state), so the section stays visible
+          // then — hiding it would leave the mask set but sightless,
+          // with no control anywhere to see or clear it.
+          if (effects.isNotEmpty || layer.effects.stackMask != null)
+            _StackMaskSection(layer: layer),
         ],
       ),
     );

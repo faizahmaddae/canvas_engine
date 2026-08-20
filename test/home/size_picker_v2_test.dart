@@ -1,3 +1,4 @@
+import 'package:canvas_engine/core/constants/engine_constants.dart';
 import 'package:canvas_engine/app/theme/app_theme.dart';
 import 'package:canvas_engine/app/theme/app_tokens.dart';
 import 'package:canvas_engine/app/ui/app_primary_button.dart';
@@ -108,6 +109,27 @@ void main() {
     final size = await dialogResult!;
     expect(size?.width, 800);
     expect(size?.height, 900);
+  });
+
+  testWidgets('custom size enforces the ONE document ceiling (8000) shared '
+      'with layers and export', (tester) async {
+    // ux-audit P2-20: this dialog used to accept 16384 while layers
+    // capped at 8000 and the exporter at ~24 Mpx — the biggest
+    // canvases it sold could never be filled or exported at size.
+    await pumpAndOpen(tester);
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), '8001');
+    await tester.enterText(fields.at(1), '1000');
+    await tester.tap(find.byKey(const ValueKey('size-picker-create')));
+    await tester.pump();
+    expect(find.byType(Dialog), findsOneWidget, reason: '8001 is over cap');
+
+    await tester.enterText(fields.at(0), '8000');
+    await tester.tap(find.byKey(const ValueKey('size-picker-create')));
+    await tester.pumpAndSettle();
+    final size = await dialogResult!;
+    expect(size?.width, EngineConstants.maxDocumentDimension.toDouble());
   });
 
   testWidgets('RTL: the preset chevron mirrors to point start-ward', (

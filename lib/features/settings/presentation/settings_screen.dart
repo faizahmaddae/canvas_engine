@@ -120,8 +120,37 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           Center(
             child: TextButton(
-              onPressed: () =>
-                  ref.read(onboardingCompleteProvider.notifier).reset(),
+              // Confirm first, then leave immediately: reset() swaps
+              // the root under this pushed route, so without the pop
+              // the tap read as a no-op and Back later "teleported"
+              // to Welcome — and completing that run overwrites the
+              // template-category picks, which the body says out
+              // loud (ux-audit P2-17).
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(l10n.resetOnboardingConfirmTitle),
+                    content: Text(l10n.resetOnboardingConfirmBody),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(l10n.cancelAction),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(l10n.resetAction),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed != true) return;
+                await ref.read(onboardingCompleteProvider.notifier).reset();
+                // The root is the Welcome screen now — pop straight
+                // onto it so the action lands where it says.
+                if (navigator.mounted) navigator.pop();
+              },
               style: TextButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
                 textStyle: Theme.of(context).textTheme.labelSmall,
@@ -257,6 +286,7 @@ String _categoryLabel(AppLocalizations l10n, TemplateCategory category) =>
       TemplateCategory.youtubeThumbnail => l10n.onboardingGoalYoutube,
       TemplateCategory.poetryPost => l10n.onboardingGoalPoetry,
       TemplateCategory.promotionalPoster => l10n.onboardingGoalPoster,
+      TemplateCategory.quote => l10n.categoryQuote,
       _ => l10n.categorySocial,
     };
 

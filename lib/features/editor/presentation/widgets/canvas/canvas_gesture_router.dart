@@ -213,12 +213,6 @@ class CanvasGestureRouter {
     return box.globalToLocal(global);
   }
 
-  /// The selection chrome's screen-space outset in canvas units at the
-  /// current zoom. Supplies `canvas_hit_testing`'s pure geometry with
-  /// the one provider read it deliberately does not make itself.
-  double chromeOutset() =>
-      geom.chromeOutsetCanvas(_ref.read(viewportControllerProvider).scale);
-
   /// Contract §5 row 4 claim test — see `pointInChromeQuad` in
   /// `canvas_hit_testing.dart`.
   bool pointInChromeQuad(EditorLayer layer, Offset point) =>
@@ -450,8 +444,13 @@ class CanvasGestureRouter {
     // The selected layer's chrome quad (bbox + outset ring) belongs
     // to the selection overlay above — including where another layer
     // overlaps it. Declining here keeps the two surfaces' claims
-    // mutually exclusive.
-    if (selectedLayer != null && pointInChromeQuad(selectedLayer, local)) {
+    // mutually exclusive. A HIDDEN selection renders no overlay
+    // (buildSelectionOverlay's gate, ux-audit P2-6), so there is no
+    // quad to reserve: its area must read like any other point —
+    // row 5 for an eligible layer underneath, else row 7 / viewport.
+    if (selectedLayer != null &&
+        selectedLayer.visible &&
+        pointInChromeQuad(selectedLayer, local)) {
       return false;
     }
     final hits = geom.hitTestAllLayers(layers, local);
@@ -647,9 +646,21 @@ class CanvasGestureRouter {
     _lastTapGlobal = globalPosition;
     _lastTapHitIds = hitIds;
     _tapCycleIndex = index;
-    // Every completed single tap arms the double-tap window on the
-    // layer it just selected.
-    _armDoubleTapWindow(hits[index].id, globalPosition);
+    // Arm the double-tap window ONLY for layers that actually have a
+    // double-tap action ([_handleDoubleTap]'s live branches). Arming
+    // for every kind consumed one dead tap per cycle step on shapes,
+    // images, stickers and paint — the app's only on-canvas route to
+    // a buried layer read as unresponsive (ux-audit P3-8). The
+    // deterministic-double trade-off stays where a double exists.
+    final selected = hits[index];
+    final hasDoubleTapAction =
+        (selected is TextLayer && !selected.isSticker) ||
+        selected.capabilities.editable;
+    if (hasDoubleTapAction) {
+      _armDoubleTapWindow(selected.id, globalPosition);
+    } else {
+      _disarmDoubleTapWindow();
+    }
   }
 
   /// The document's protected base photo when [local] (canvas space)
@@ -713,6 +724,14 @@ class CanvasGestureRouter {
   void handleLongPress(Offset globalPosition, List<EditorLayer> layers) {
     final mode = _ref.read(selectionModeProvider);
     if (mode == SelectionMode.multi) return;
+    // An armed paint session and a staged add-text composer own their
+    // gesture space (§5 rows 1-3): a long-press mid-session must not
+    // hijack the editor into multi-select. The paint surface only
+    // covers the document board, so pasteboard presses still reach
+    // this handler while a tool is armed — the same reason rows
+    // 279/298/346 gate on the armed tool.
+    if (_ref.read(paintToolControllerProvider).activeTool != null) return;
+    if (_ref.read(addTextComposerOpenProvider)) return;
 
     final selectionCtl = _ref.read(selectionControllerProvider.notifier);
     final modeCtl = _ref.read(selectionModeProvider.notifier);

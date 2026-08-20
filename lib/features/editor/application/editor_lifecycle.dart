@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../canvas/application/canvas_tool_controller.dart';
 import '../crop/application/crop_controller.dart';
+import '../engine/modules/paint/paint_layer.dart';
 import '../image/application/image_tool_controller.dart';
 import '../paint/application/paint_tool_controller.dart';
 import '../shape/application/shape_tool_controller.dart';
 import '../sticker/application/sticker_tool_controller.dart';
 import '../text/application/text_tool_controller.dart';
 import 'context_toolbar_controller.dart';
+import 'document_controller.dart';
 import 'editing_controller.dart';
 import 'mask_edit_controller.dart';
 import 'selection_controller.dart';
@@ -164,6 +166,97 @@ void dismissActiveEditing(WidgetRef ref) {
   FocusManager.instance.primaryFocus?.unfocus();
 }
 
+/// What one system-Back press should consume before the editor route
+/// itself may pop — contract §4's exit levels, walked outward one
+/// press at a time:
+///
+///   * [closePanels] — E1: an open sub-tool sheet/panel closes; the
+///     mode and selection stay.
+///   * [exitMode] — E2: an armed mode or session ends (paint session,
+///     text mode, inline text editing, multi-select).
+///   * [none] — nothing owns Back; the route pops.
+///
+/// Selection deliberately does NOT consume Back: E3 belongs to the
+/// tap-empty gesture, and a Back that cleared selection would put an
+/// extra press between the user and leaving the editor every time
+/// anything was selected. Crop and mask sessions are handled before
+/// this ladder by their own PopScope branches (Back = the session's
+/// Cancel), so they never reach it.
+///
+/// UX audit P2-11: system Back used to pop the whole editor over an
+/// open dock panel or armed paint session — one press threw away the
+/// user's place instead of unwinding it.
+enum EditorBackStep { none, closePanels, exitMode }
+
+final editorBackStepProvider = Provider<EditorBackStep>((ref) {
+  final paint = ref.watch(paintToolControllerProvider);
+  final textSheet = ref.watch(
+    textToolControllerProvider.select((s) => s.openSheet),
+  );
+  final textPanel = ref.watch(
+    textToolControllerProvider.select((s) => s.panelOpen),
+  );
+  final imageSlot = ref.watch(
+    imageToolControllerProvider.select((s) => s.openSlot),
+  );
+  final shapeSlot = ref.watch(
+    shapeToolControllerProvider.select((s) => s.openSlot),
+  );
+  final stickerSlot = ref.watch(
+    stickerToolControllerProvider.select((s) => s.openSlot),
+  );
+  final canvasPanel = ref.watch(
+    canvasToolControllerProvider.select((s) => s.panelOpen),
+  );
+  final contextPanel = ref.watch(contextToolbarControllerProvider);
+  final editing = ref.watch(editingControllerProvider);
+  final multi = ref.watch(selectionModeProvider);
+
+  final sheetOpen =
+      textSheet != null ||
+      paint.openSlot != null ||
+      imageSlot != null ||
+      shapeSlot != null ||
+      stickerSlot != null ||
+      canvasPanel ||
+      contextPanel != null;
+  if (sheetOpen) return EditorBackStep.closePanels;
+
+  final modeArmed =
+      paint.panelOpen ||
+      paint.activeTool != null ||
+      textPanel ||
+      editing != null ||
+      multi == SelectionMode.multi;
+  if (modeArmed) return EditorBackStep.exitMode;
+
+  return EditorBackStep.none;
+});
+
+/// Execute [step]. Every underlying close is idempotent, so a stale
+/// step (state changed between the pop callback and this call) is
+/// harmless.
+void performEditorBackStep(WidgetRef ref, EditorBackStep step) {
+  switch (step) {
+    case EditorBackStep.closePanels:
+      // E1 only: sheets and panels collapse; modes and selection stay.
+      ref.read(contextToolbarControllerProvider.notifier).closePanel();
+      ref.read(imageToolControllerProvider.notifier).closePanel();
+      ref.read(shapeToolControllerProvider.notifier).closePanel();
+      ref.read(stickerToolControllerProvider.notifier).closePanel();
+      ref.read(textToolControllerProvider.notifier).closeSheet();
+      ref.read(paintToolControllerProvider.notifier).closeSlot();
+      ref.read(canvasToolControllerProvider.notifier).closePanel();
+    case EditorBackStep.exitMode:
+      ref.read(paintToolControllerProvider.notifier).closePanel();
+      ref.read(textToolControllerProvider.notifier).closePanel();
+      ref.read(editingControllerProvider.notifier).stop();
+      ref.read(selectionModeProvider.notifier).exitMulti();
+    case EditorBackStep.none:
+      break;
+  }
+}
+
 /// Collapse every object-tool's currently-open sub-panel
 /// (Image/Shape/Sticker `openSlot`, Text `openSheet`/`openSlot`/
 /// inline-edit target).
@@ -180,9 +273,16 @@ void dismissActiveEditing(WidgetRef ref) {
 /// Excluded on purpose:
 ///   * Canvas tool — it has no selection so a selection change
 ///     should not collapse it; only an explicit dismiss should.
-///   * Paint tool — it is mode-scoped (its `openSlot` configures
-///     the next stroke, not a selected layer); selection changes
-///     are unrelated to paint sheet visibility.
+///   * Paint tool, while the selection stays paint-shaped — a paint
+///     sheet FOLLOWS its target instead of closing (§10.5 N):
+///     committing a stroke selects it, so closing here would slam a
+///     sheet the user is drawing with after every stroke, and
+///     reselecting another stroke retargets the open sheet (the
+///     scope chip names the switch). Only a selection landing on a
+///     NON-paint layer exits paint — the mode derivation puts
+///     `panelOpen` above the selected layer's type, so leaving the
+///     session armed would keep the paint dock mounted over a text
+///     or image selection made from the layers drawer.
 ///   * Text mode `panelOpen` — text mode itself is preserved so
 ///     re-tapping a text layer keeps the user in text mode without
 ///     having to re-enter it. Only the per-selection sheet/slot
@@ -194,6 +294,16 @@ void closeObjectSubPanels(WidgetRef ref) {
   // the session's own exit restores the user to, so collapsing them
   // mid-session would strand Done/Cancel with nothing to return to.
   if (maskSessionOwnsDismissal(ref)) return;
+  final selection = ref.read(selectionControllerProvider);
+  if (selection.hasSelection) {
+    final ids = selection.selectedIds;
+    final single = ids.length == 1
+        ? ref.read(documentControllerProvider).layerById(ids.first)
+        : null;
+    if (single is! PaintLayer) {
+      ref.read(paintToolControllerProvider.notifier).closePanel();
+    }
+  }
   ref.read(contextToolbarControllerProvider.notifier).closePanel();
   ref.read(imageToolControllerProvider.notifier).closePanel();
   ref.read(shapeToolControllerProvider.notifier).closePanel();

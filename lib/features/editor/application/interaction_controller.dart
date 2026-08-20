@@ -230,6 +230,12 @@ const Object _kSentinel = Object();
 ///    transition, so diffing against those fields on release skips
 ///    the commit and produces the "release snaps back" bug. Compare
 ///    against the live document instead.
+/// 5. **Start rules match commit rules**: every start path refuses a
+///    hidden or locked target exactly as [end] (`stillEligible`) and
+///    [_endGroup] refuse to commit one. If the two ever diverge, a
+///    gesture can arm, render live feedback, and then be silently
+///    dropped on release — the user drags a ghost and nothing
+///    persists (ux-audit 2026-07-29, P2-6).
 class InteractionController extends Notifier<InteractionUiState> {
   static const _engine = InteractionEngine();
   static const _snapEngine = SnapEngine();
@@ -334,7 +340,10 @@ class InteractionController extends Notifier<InteractionUiState> {
   // ----- start -----
 
   void startMove({required EditorLayer layer, required Offset pointer}) {
-    if (layer.locked || !layer.capabilities.movable) return;
+    // Hidden is refused at start for commit parity (invariant 5): the
+    // commit paths drop hidden layers, so a session on one could only
+    // ever end in a silent discard. Same guard on every start below.
+    if (!layer.visible || layer.locked || !layer.capabilities.movable) return;
     final session = _engine.startMove(
       layerId: layer.id,
       transform: layer.transform,
@@ -352,7 +361,9 @@ class InteractionController extends Notifier<InteractionUiState> {
     required InteractionHandle handle,
     required Offset pointer,
   }) {
-    if (layer.locked || !layer.capabilities.resizable) return;
+    if (!layer.visible || layer.locked || !layer.capabilities.resizable) {
+      return;
+    }
     final session = _engine.startResize(
       layerId: layer.id,
       transform: layer.transform,
@@ -367,7 +378,9 @@ class InteractionController extends Notifier<InteractionUiState> {
   }
 
   void startRotate({required EditorLayer layer, required Offset pointer}) {
-    if (layer.locked || !layer.capabilities.rotatable) return;
+    if (!layer.visible || layer.locked || !layer.capabilities.rotatable) {
+      return;
+    }
     final session = _engine.startRotate(
       layerId: layer.id,
       transform: layer.transform,
@@ -388,7 +401,7 @@ class InteractionController extends Notifier<InteractionUiState> {
   /// Group multi-touch is handled by [startGroupGesture] / [updateGroupGesture];
   /// this method is single-layer only.
   void startGesture({required EditorLayer layer, required Offset focalPoint}) {
-    if (layer.locked) return;
+    if (!layer.visible || layer.locked) return;
     final caps = layer.capabilities;
     if (!caps.movable && !caps.resizable && !caps.rotatable) return;
     final session = _engine.startGesture(
@@ -683,9 +696,15 @@ class InteractionController extends Notifier<InteractionUiState> {
   static const _groupEngine = GroupEngine();
 
   /// Eligibility filter shared by every group-start path: drops any
-  /// layer that is locked or fails the capability gate, then returns
-  /// the surviving id→transform map. Returns an empty map when nothing
-  /// is eligible — start methods short-circuit on that.
+  /// layer that is hidden, locked, or fails the capability gate, then
+  /// returns the surviving id→transform map. Returns an empty map when
+  /// nothing is eligible — start methods short-circuit on that.
+  ///
+  /// Hidden is dropped for commit parity (invariant 5): [_endGroup]
+  /// skips hidden participants, so admitting one here would drive a
+  /// ghost through the whole gesture and silently discard its
+  /// transform on release, detaching it from the group it visibly
+  /// moved with (ux-audit P2-6).
   Map<String, LayerTransform> _eligibleInitials(
     Iterable<EditorLayer> layers, {
     required bool requireMovable,
@@ -694,7 +713,7 @@ class InteractionController extends Notifier<InteractionUiState> {
   }) {
     final out = <String, LayerTransform>{};
     for (final l in layers) {
-      if (l.locked) continue;
+      if (!l.visible || l.locked) continue;
       final c = l.capabilities;
       if (requireMovable && !c.movable) continue;
       if (requireResizable && !c.resizable) continue;

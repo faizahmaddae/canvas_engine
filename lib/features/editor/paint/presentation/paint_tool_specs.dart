@@ -88,22 +88,10 @@ Set<String> allowedPaintSlotsForKind(PaintKind kind) {
 
 // ─── Human-friendly value labels ──────────────────────────────────
 //
-// Tile `valueText` shows a word, not a number. Numbers stay inside
-// the sub-tool sheet for power users.
-String paintStrokeWord(AppLocalizations l10n, double w) {
-  if (w <= 4) return l10n.thinOption;
-  if (w <= 12) return l10n.mediumOption;
-  if (w <= 24) return l10n.thickOption;
-  return l10n.heavyOption;
-}
-
-String paintOpacityWord(AppLocalizations l10n, double alpha01) {
-  final p = (alpha01.clamp(0.0, 1.0) * 100).round();
-  if (p <= 35) return l10n.lightOption;
-  if (p <= 75) return l10n.normalOption;
-  return l10n.strongOption;
-}
-
+// Tile `valueText` shows a word only where a number would mislead
+// (blur radii, dash kinds); Size and Opacity tiles show real numbers
+// (tb10: «Numbers, not adjectives» — their word helpers died with
+// that change).
 String paintBlurWord(AppLocalizations l10n, double r) {
   if (r < 1) return l10n.noneOption;
   if (r <= 16) return l10n.softOption;

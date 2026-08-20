@@ -331,10 +331,10 @@ class TextMetrics {
 
   // ─── insertion policy ────────────────────────────────────────────
 
-  /// Position [size] so it sits centred on the canvas. Used during
-  /// the new-add live flow so the bounding box grows symmetrically
-  /// around the canvas centre instead of anchored to the original
-  /// (empty-content) top-left.
+  /// Position [size] so it sits centred on the canvas. Used by the
+  /// document-centred quick-add path (`addCenteredText`); the live
+  /// composer flow places around the visible-viewport anchor instead
+  /// (ux-audit P2-12 — see `ViewportController.insertPositionFor`).
   static Offset centerOnCanvas(Size size, EditorDocument doc) =>
       Offset(doc.width / 2 - size.width / 2, doc.height / 2 - size.height / 2);
 

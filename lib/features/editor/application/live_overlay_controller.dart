@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+// editor_document.dart re-exports BackgroundFill.
 import '../engine/core/editor_document.dart';
 import '../engine/core/editor_layer.dart';
 import 'document_controller.dart';
@@ -13,7 +14,7 @@ import 'document_controller.dart';
 /// watches it (layers panel, thumbnails, undo rail, …) — even though
 /// none of them actually need to react until the gesture commits.
 ///
-/// Three independent kinds of override are tracked so the overlay can
+/// Four independent kinds of override are tracked so the overlay can
 /// express every shape of in-flight edit currently in the codebase:
 ///
 /// * [replacements] — layer-id → in-flight replacement of an existing
@@ -23,6 +24,13 @@ import 'document_controller.dart';
 /// * [removals] — layer ids that the in-flight session wants hidden
 ///   from the merged view. Reserved for future "live delete preview"
 ///   flows; included now so the merge fold has a single uniform shape.
+/// * [background] — in-flight override of the DOCUMENT background.
+///   The canvas background is not a layer, so it cannot ride
+///   [replacements]; carrying it here lets the Canvas panel preview a
+///   colour drag through the same stage/commit-once channel as every
+///   layer property edit, instead of streaming `live: true` committed
+///   commands whose undo grouping depended on the wall clock
+///   (ux-audit-2026-07-29 P2-8).
 ///
 /// The overlay is in-memory only — never serialized, never crash-safe.
 /// If the app dies mid-gesture the next launch sees only the committed
@@ -33,6 +41,7 @@ class LiveOverlay {
     this.replacements = const {},
     this.additions = const [],
     this.removals = const {},
+    this.background,
   });
 
   /// Layer-id → in-flight replacement layer. Replacements only apply
@@ -52,10 +61,19 @@ class LiveOverlay {
   /// replacement of the same id within the same overlay.
   final Set<String> removals;
 
+  /// In-flight document-background override, or `null` when no canvas
+  /// background gesture is in progress. `null` means "keep the
+  /// committed background" — the merge never interprets it as
+  /// "transparent" (mode is a separate committed toggle).
+  final BackgroundFill? background;
+
   static const LiveOverlay empty = LiveOverlay();
 
   bool get isEmpty =>
-      replacements.isEmpty && additions.isEmpty && removals.isEmpty;
+      replacements.isEmpty &&
+      additions.isEmpty &&
+      removals.isEmpty &&
+      background == null;
 
   /// Apply this overlay to [doc] and return the merged document.
   /// Returns [doc] unchanged when the overlay is empty (Riverpod
@@ -68,7 +86,9 @@ class LiveOverlay {
       merged.add(replacements[layer.id] ?? layer);
     }
     if (additions.isNotEmpty) merged.addAll(additions);
-    return doc.copyWith(layers: merged);
+    // copyWith treats a null background as "keep", so the override
+    // only lands while a canvas-background gesture has one staged.
+    return doc.copyWith(layers: merged, background: background);
   }
 }
 
@@ -97,6 +117,7 @@ class LiveOverlayController extends Notifier<LiveOverlay> {
       replacements: next,
       additions: state.additions,
       removals: state.removals,
+      background: state.background,
     );
   }
 
@@ -109,6 +130,7 @@ class LiveOverlayController extends Notifier<LiveOverlay> {
       replacements: state.replacements,
       additions: [...state.additions, layer],
       removals: state.removals,
+      background: state.background,
     );
   }
 
@@ -127,6 +149,7 @@ class LiveOverlayController extends Notifier<LiveOverlay> {
       replacements: state.replacements,
       additions: next,
       removals: state.removals,
+      background: state.background,
     );
   }
 
@@ -140,6 +163,23 @@ class LiveOverlayController extends Notifier<LiveOverlay> {
       replacements: state.replacements,
       additions: state.additions,
       removals: next,
+      background: state.background,
+    );
+  }
+
+  /// Stage an in-flight override of the document background (Canvas
+  /// panel colour/gradient drag). The canvas paints the merged view,
+  /// so the preview shows up on the board without touching the
+  /// committed document; the host commits ONE non-live
+  /// `SetCanvasBackgroundCommand` on release (contract §2/§3,
+  /// ux-audit P2-8). Cleared by [clear] on commit/cancel like every
+  /// other override.
+  void stageBackground(BackgroundFill fill) {
+    state = LiveOverlay(
+      replacements: state.replacements,
+      additions: state.additions,
+      removals: state.removals,
+      background: fill,
     );
   }
 

@@ -374,6 +374,24 @@ abstract class AppLocalizations {
   /// **'Reset onboarding'**
   String get settingsResetOnboarding;
 
+  /// No description provided for @resetOnboardingConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset onboarding?'**
+  String get resetOnboardingConfirmTitle;
+
+  /// No description provided for @resetOnboardingConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll go through the welcome flow again, and your template picks for Home will be re-asked.'**
+  String get resetOnboardingConfirmBody;
+
+  /// No description provided for @resetAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get resetAction;
+
   /// No description provided for @canvasInteractionSection.
   ///
   /// In en, this message translates to:
@@ -1292,6 +1310,12 @@ abstract class AppLocalizations {
   /// **'Duplicated \"{name}\"'**
   String duplicatedProject(String name);
 
+  /// No description provided for @projectCopyName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (copy)'**
+  String projectCopyName(String name);
+
   /// No description provided for @renamedProject.
   ///
   /// In en, this message translates to:
@@ -1535,7 +1559,7 @@ abstract class AppLocalizations {
   /// No description provided for @customSizeValidation.
   ///
   /// In en, this message translates to:
-  /// **'Width & height must be 16–16384.'**
+  /// **'Width & height must be 16–8000.'**
   String get customSizeValidation;
 
   /// No description provided for @enterImageUrlValidation.
@@ -2137,6 +2161,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Needs a visible photo'**
   String get toolNeedsPhotoHint;
+
+  /// No description provided for @toolNeedsEffectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs at least one effect'**
+  String get toolNeedsEffectHint;
 
   /// No description provided for @cropActionVerb.
   ///
@@ -3356,6 +3386,12 @@ abstract class AppLocalizations {
   /// **'Limit the stack to a region of the layer'**
   String get selectiveMaskHint;
 
+  /// No description provided for @addEffectToMaskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an effect to mask selectively.'**
+  String get addEffectToMaskHint;
+
   /// No description provided for @maskPresetOff.
   ///
   /// In en, this message translates to:
@@ -3608,6 +3644,18 @@ abstract class AppLocalizations {
   /// **'Shared'**
   String get sharedMessage;
 
+  /// No description provided for @sharingUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing isn\'t available on this device'**
+  String get sharingUnavailableMessage;
+
+  /// No description provided for @deviceMaxExportNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Capped at this device\'s export limit'**
+  String get deviceMaxExportNote;
+
   /// No description provided for @reducedResolutionWarning.
   ///
   /// In en, this message translates to:
@@ -3811,6 +3859,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'undone'**
   String get historyUndoneSemantic;
+
+  /// No description provided for @historyJumpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a step to jump to it'**
+  String get historyJumpHint;
 
   /// No description provided for @histAddText.
   ///
@@ -4123,6 +4177,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Combined edit'**
   String get histCombinedEdit;
+
+  /// No description provided for @histCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop'**
+  String get histCrop;
+
+  /// No description provided for @histMaskEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Selective mask'**
+  String get histMaskEdit;
+
+  /// No description provided for @histMaskClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove mask'**
+  String get histMaskClear;
+
+  /// No description provided for @histAlignLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Align left'**
+  String get histAlignLeft;
+
+  /// No description provided for @histAlignCenterX.
+  ///
+  /// In en, this message translates to:
+  /// **'Align center'**
+  String get histAlignCenterX;
+
+  /// No description provided for @histAlignRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Align right'**
+  String get histAlignRight;
+
+  /// No description provided for @histAlignTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Align top'**
+  String get histAlignTop;
+
+  /// No description provided for @histAlignCenterY.
+  ///
+  /// In en, this message translates to:
+  /// **'Align middle'**
+  String get histAlignCenterY;
+
+  /// No description provided for @histAlignBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Align bottom'**
+  String get histAlignBottom;
+
+  /// No description provided for @histDistributeH.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute horizontally'**
+  String get histDistributeH;
+
+  /// No description provided for @histDistributeV.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute vertically'**
+  String get histDistributeV;
+
+  /// No description provided for @histMultiLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'{base} · {count} layers'**
+  String histMultiLayer(String base, String count);
 }
 
 class _AppLocalizationsDelegate

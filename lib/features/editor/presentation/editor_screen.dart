@@ -127,13 +127,16 @@ class EditorScreen extends ConsumerWidget {
     });
     ref.listen<int>(documentCommitVersionProvider, (prev, next) {
       if (prev == next) return;
-      final pruned = ref
+      // Prune only — deliberately NO multi-mode collapse here
+      // (ux-audit P2-5). The mode stays armed at any member count
+      // until an explicit exit, and the chip — gated on the mode
+      // flag, labelled with the actionable count — stays visible
+      // through the prune. The count-triggered exit this listener
+      // used to carry was one of three divergent below-2 rules, and
+      // it only ever fired on a commit tick, never on a user toggle.
+      ref
           .read(selectionControllerProvider.notifier)
           .pruneMissing(ref.read(documentControllerProvider));
-      if (!pruned) return;
-      if (ref.read(selectionControllerProvider).selectedIds.length < 2) {
-        ref.read(selectionModeProvider.notifier).exitMulti();
-      }
     });
     // Selection-change seam: when the user picks a different layer
     // (or deselects to empty), collapse every object-tool's
@@ -203,6 +206,9 @@ class EditorScreen extends ConsumerWidget {
     final maskEditActive = ref.watch(
       maskEditControllerProvider.select((s) => s.active),
     );
+    // System Back unwinds editing chrome one level per press (§4)
+    // before the route may pop — see [editorBackStepProvider].
+    final backOwned = ref.watch(editorBackStepProvider) != EditorBackStep.none;
     // Single resolution of the dock's mode/expanded panel, shared by
     // the bottomNavigationBar builder below.
     final dock = _resolveDock(ref, selection);
@@ -220,7 +226,7 @@ class EditorScreen extends ConsumerWidget {
       maxScaleFactor: 1.3,
       child: _AutosaveLifecycleScope(
         child: PopScope(
-          canPop: !cropActive && !maskEditActive,
+          canPop: !cropActive && !maskEditActive && !backOwned,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop && maskEditActive) {
               // Back = Cancel, restoring the pre-mode toolbar context
@@ -238,6 +244,15 @@ class EditorScreen extends ConsumerWidget {
             }
             if (!didPop && cropActive) {
               ref.read(cropControllerProvider.notifier).cancelCrop();
+              return;
+            }
+            if (!didPop) {
+              // Contract §4 ladder: one Back press unwinds one level
+              // (E1 close the open sheet, then E2 exit the armed
+              // mode/session) before the route may pop. Re-read the
+              // step at fire time — the build-time value may be a
+              // frame stale.
+              performEditorBackStep(ref, ref.read(editorBackStepProvider));
               return;
             }
             if (didPop) {
@@ -745,29 +760,47 @@ class EditorScreen extends ConsumerWidget {
   ///
   /// Splits on the panel because the base-photo protection is not
   /// uniform across them: Align moves a layer, which the base photo
-  /// must never do, so it keeps the filtered list. Opacity only fades
-  /// the photo toward the canvas background — meaningful, reversible
-  /// and non-destructive — so excluding the base photo there produced
-  /// a tile that highlighted itself and then rendered no panel at all
-  /// (the Image dock's `شفافیت` dead-end).
+  /// must never do, so it only ever sees the actionable list. (Align
+  /// was briefly given the base to stop the «تراز» row swallowing its
+  /// tap — but that made the panel MOUNT for a layer whose every
+  /// align button `AlignmentController` refuses (it bails on
+  /// `locked`), turning a vanishing sheet into six buttons that
+  /// silently did nothing, which reads as working and is harder to
+  /// diagnose. The row is gated off at its source instead
+  /// (`layer_overflow_sheet`): the base photo IS the canvas, so
+  /// aligning it to the canvas has no meaning.)
+  ///
+  /// Opacity, by contrast, genuinely applies to the base photo —
+  /// fading it toward the canvas background is meaningful, reversible
+  /// and non-destructive — but only when the base is what the chrome
+  /// claims to target: selected ALONE, where the dock shows the Image
+  /// strip with the «عکس پایه» badge (tb15's fix for that strip's
+  /// شفافیت dead-end). In a mixed base+layer selection every piece of
+  /// chrome counts WITHOUT the base (`_actionableCount` drives the
+  /// dock mode and the multi chip; the multi strip's own layer list is
+  /// the filtered one), so unconditionally including it handed the
+  /// panel one MORE layer than the chrome named and the slider
+  /// silently faded the user's photo too (audit P2-4). The rule now:
+  /// the panel targets exactly the actionable selection, and falls
+  /// back to the base photo only when it is the selection's sole
+  /// member — the one state whose chrome names it (contract §10: a
+  /// bound control's target is what the surface discloses, never a
+  /// silent extra member).
   List<EditorLayer> _layersForContextPanel(
     WidgetRef ref,
     SelectionState selection,
     ContextToolPanel panel,
-  ) => _selectedLayersForActions(
-    ref,
-    selection,
-    // Opacity only. Align was briefly added here to stop the «تراز»
-    // row swallowing its tap — but that made the panel MOUNT for a
-    // layer whose every align button `AlignmentController` refuses
-    // (it bails on `locked`), turning a vanishing sheet into six
-    // buttons that silently did nothing, which reads as working and is
-    // harder to diagnose. The row is gated off at its source instead
-    // (`layer_overflow_sheet`): the base photo IS the canvas, so
-    // aligning it to the canvas has no meaning. Opacity, by contrast,
-    // genuinely applies to it.
-    includeProtectedBase: panel == ContextToolPanel.opacity,
-  );
+  ) {
+    final actionable = _selectedLayersForActions(ref, selection);
+    if (panel != ContextToolPanel.opacity || actionable.isNotEmpty) {
+      return actionable;
+    }
+    return _selectedLayersForActions(
+      ref,
+      selection,
+      includeProtectedBase: true,
+    );
+  }
 
   /// Merged-view layer for the selected id, narrowed to the ONE
   /// layer object (tb1 16/17). The old full renderedDocumentProvider
@@ -823,11 +856,11 @@ class EditorScreen extends ConsumerWidget {
   Future<void> _startTextInputFlow(BuildContext context, WidgetRef ref) async {
     ref.read(paintToolControllerProvider.notifier).closePanel();
     final textCtrl = ref.read(textToolControllerProvider.notifier);
-    // Stage an empty text layer at the canvas center so the user sees
-    // the bounding box appear as soon as the sheet opens — typing then
-    // streams content into that staged layer in real time. Cancel /
-    // empty input removes it; non-empty input commits a single
-    // AddLayerCommand on apply.
+    // Stage an empty text layer at the visible-viewport centre so the
+    // user sees the bounding box appear as soon as the sheet opens —
+    // typing then streams content into that staged layer in real time.
+    // Cancel / empty input removes it; non-empty input commits a
+    // single AddLayerCommand on apply.
     textCtrl.beginAddText();
     // Flip the composer-open flag so EditorCanvas hides selection
     // handles, transform HUD, floating contextual toolbars and the
@@ -859,11 +892,26 @@ class EditorScreen extends ConsumerWidget {
     }
   }
 
-  Offset _centerInDoc(WidgetRef ref, Size size) {
+  /// Canvas-space position for a newly-inserted layer of [size]:
+  /// centred on the point of the document the user is currently
+  /// looking at — the visible-viewport centre — clamped so the layer
+  /// lands fully inside the document whenever it fits (ux-audit
+  /// P2-12: the old doc-centre insert dropped new layers off-screen
+  /// when the user was zoomed into a corner, and the unchanged canvas
+  /// invited duplicate taps). At the default fitted viewport the pane
+  /// centre IS the document centre, so untouched viewports keep the
+  /// historical geometry exactly. Falls back to the document centre
+  /// when no fit has seeded the viewport yet (first frame, tests).
+  Offset _insertPositionFor(WidgetRef ref, Size size) {
     final doc = ref.read(documentControllerProvider);
-    return Offset(
-      doc.width / 2 - size.width / 2,
-      doc.height / 2 - size.height / 2,
+    final docSize = Size(doc.width, doc.height);
+    final visible = ref
+        .read(viewportControllerProvider.notifier)
+        .visibleCanvasRect;
+    return ViewportController.insertPositionFor(
+      visibleCentre: visible?.center ?? docSize.center(Offset.zero),
+      layerSize: size,
+      docSize: docSize,
     );
   }
 
@@ -952,7 +1000,7 @@ class EditorScreen extends ConsumerWidget {
     final layer = ImageLayer(
       id: id,
       transform: LayerTransform(
-        position: _centerInDoc(ref, fitted),
+        position: _insertPositionFor(ref, fitted),
         size: fitted,
       ),
       source: ImageSource.file(stablePath),
@@ -1008,7 +1056,10 @@ class EditorScreen extends ConsumerWidget {
         : liveDoc.backgroundColor;
     final layer = ShapeLayer(
       id: id,
-      transform: LayerTransform(position: _centerInDoc(ref, size), size: size),
+      transform: LayerTransform(
+        position: _insertPositionFor(ref, size),
+        size: size,
+      ),
       kind: kind,
       fillColor: ShapeDefaults.fillColorForCanvas(canvasBackground, kind),
       // RoundedRectangle is a picker shortcut for "rectangle that
@@ -1101,7 +1152,10 @@ class EditorScreen extends ConsumerWidget {
     final size = CanvasSizing.scaleSize(const Size(240, 240), liveDoc);
     final layer = TextLayer(
       id: id,
-      transform: LayerTransform(position: _centerInDoc(ref, size), size: size),
+      transform: LayerTransform(
+        position: _insertPositionFor(ref, size),
+        size: size,
+      ),
       content: glyph,
       kind: TextLayerKind.emojiSticker,
       style: const TextStyleSpec(

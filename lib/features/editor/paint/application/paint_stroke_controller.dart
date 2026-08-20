@@ -29,14 +29,22 @@ class PaintStrokeController extends Notifier<void> {
   @override
   void build() {}
 
-  /// Finalize [draft] into one AddLayer command. [docSize] and every draft
-  /// point are in canvas space.
+  /// Finalize [draft] into one AddLayer command and select the result,
+  /// matching every other A-scope add-flow (shape/sticker/image import):
+  /// contract §10 ends an A-scope command with its layer selected. The
+  /// tool stays armed for continuous drawing; [PaintToolController.
+  /// selectedPaintLayer] targets the selection over the armed tool, so
+  /// the dock immediately offers to restyle the stroke just drawn while
+  /// the next stroke drawn still uses the session's next-stroke
+  /// defaults, unaffected by anything selected in the meantime.
+  /// [docSize] and every draft point are in canvas space.
   void commitDraft(PaintDraft draft, {required Size docSize}) {
     final layer = draft.toLayer(id: _uuid.v4(), docSize: docSize);
     if (layer == null) return;
     ref
         .read(documentControllerProvider.notifier)
         .execute(AddLayerCommand(layer));
+    ref.read(selectionControllerProvider.notifier).select(layer.id);
   }
 
   /// Commit the tap-only freestyle dot through the same draft pipeline.
@@ -56,6 +64,24 @@ class PaintStrokeController extends Notifier<void> {
       ),
       docSize: docSize,
     );
+  }
+
+  /// A tap from a two-point tool cannot draw — the geometry needs a
+  /// drag — so it selects instead: the topmost paint stroke under
+  /// [canvasPoint] binds the dock for restyling (§10.5 N), and a miss
+  /// clears the selection back to next-stroke defaults, matching the
+  /// editor-wide "tap empty deselects" grammar. The tool stays armed
+  /// either way. Returns true on a hit. [canvasPoint] is in canvas
+  /// space.
+  bool selectStrokeAt(Offset canvasPoint) {
+    final hit = _hitPaintLayer(canvasPoint);
+    final selection = ref.read(selectionControllerProvider.notifier);
+    if (hit == null) {
+      selection.clear();
+      return false;
+    }
+    selection.select(hit.id);
+    return true;
   }
 
   /// A discrete eraser tap is one history entry. Returns false on a miss.

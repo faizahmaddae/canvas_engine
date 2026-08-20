@@ -14,11 +14,18 @@ const Set<TemplateLanguage> kDefaultContentLanguages = {
   TemplateLanguage.persian,
 };
 
+// Every category a goal card can persist MUST be listed here: this
+// list drives the Settings picker, and a category missing from it is
+// an invisible preference the user can neither see nor remove
+// (ux-audit P2-18 — the quote/social goals used to persist exactly
+// that way).
 const List<TemplateCategory> kHomeTemplateGoalCategories = [
   TemplateCategory.instagramStory,
   TemplateCategory.youtubeThumbnail,
   TemplateCategory.poetryPost,
   TemplateCategory.promotionalPoster,
+  TemplateCategory.quote,
+  TemplateCategory.social,
 ];
 
 const Set<TemplateCategory> kDefaultEnabledTemplateCategories = {

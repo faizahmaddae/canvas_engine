@@ -19,20 +19,18 @@ void main() {
       expect(s.activeTool, isNull);
     });
 
-    test('togglePanel opens then closes (and clears active tool)', () {
+    test('closePanel exits the mode wholesale (panel, tool, slot)', () {
       final c = makeContainer();
       final ctrl = c.read(paintToolControllerProvider.notifier);
-      ctrl.togglePanel();
+      ctrl.openPanel();
       expect(c.read(paintToolControllerProvider).panelOpen, isTrue);
       ctrl.selectTool(PaintToolType.line);
-      expect(
-        c.read(paintToolControllerProvider).activeTool,
-        PaintToolType.line,
-      );
-      ctrl.togglePanel();
+      ctrl.toggleSlot('color');
+      ctrl.closePanel();
       final s = c.read(paintToolControllerProvider);
       expect(s.panelOpen, isFalse);
       expect(s.activeTool, isNull);
+      expect(s.openSlot, isNull);
     });
 
     test('selectTool keeps panel open and sets the tool', () {
@@ -52,16 +50,6 @@ void main() {
           .where((t) => !t.available)
           .toList();
       expect(unavailable, isEmpty);
-    });
-
-    test('clearTool deselects without closing the panel', () {
-      final c = makeContainer();
-      final ctrl = c.read(paintToolControllerProvider.notifier);
-      ctrl.selectTool(PaintToolType.rectangle);
-      ctrl.clearTool();
-      final s = c.read(paintToolControllerProvider);
-      expect(s.activeTool, isNull);
-      expect(s.panelOpen, isTrue);
     });
 
     test('full tool catalog is available', () {

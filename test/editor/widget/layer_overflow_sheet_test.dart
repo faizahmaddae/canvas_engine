@@ -27,13 +27,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:canvas_engine/app/theme/app_icons.dart';
 
-ShapeLayer _shape(String id) => ShapeLayer(
+ShapeLayer _shape(String id, {bool locked = false}) => ShapeLayer(
   id: id,
   transform: const LayerTransform(
     position: Offset(40, 40),
     size: Size(120, 80),
   ),
   kind: ShapeKind.rectangle,
+  locked: locked,
 );
 
 TextLayer _text(String id) => TextLayer(
@@ -142,7 +143,6 @@ void main() {
       find.text('Edit text'),
       find.text('Align'),
       find.text('Opacity'),
-      find.byIcon(AppIcons.bold), // B/I/U inline row
       find.text('Rename'),
       find.text('Duplicate'),
       find.text('Bring forward'),
@@ -167,6 +167,10 @@ void main() {
     }
     // No Layers row: this host passed no onOpenLayers callback.
     expect(find.text('Layers'), findsNothing);
+    // No B/I/U row: live document-mutating toggles moved to the
+    // استایل dock panel where the canvas is visible (audit P3-2) —
+    // every row left in this sheet pops-then-acts.
+    expect(find.byIcon(AppIcons.bold), findsNothing);
     // Direction subtitle reflects the layer's current mode.
     expect(find.text('Right to left'), findsOneWidget);
   });
@@ -277,6 +281,90 @@ void main() {
     expect(
       container.read(contextToolbarControllerProvider),
       ContextToolPanel.opacity,
+    );
+  });
+
+  // Audit P2-7: the Align row used to stay live for a locked layer and
+  // route to a panel whose every tile silently no-oped. The row must
+  // read from the controller's own eligibility rule — the same greyed
+  // treatment the base-photo and reorder gates already use.
+  testWidgets('locked layer: Align row disabled and routes nowhere', (
+    tester,
+  ) async {
+    final layer = _shape('frozen', locked: true);
+    final container = _containerWith([layer]);
+    addTearDown(container.dispose);
+    container.read(selectionControllerProvider.notifier).select('frozen');
+
+    await tester.pumpWidget(_host(container, layer));
+    await _open(tester);
+
+    final row = tester.widget<ListTile>(find.widgetWithText(ListTile, 'Align'));
+    expect(row.enabled, isFalse);
+
+    await tester.tap(find.text('Align'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsOneWidget, reason: 'sheet stays up');
+    expect(container.read(contextToolbarControllerProvider), isNull);
+  });
+
+  // Lock rule (EditorLayer.locked, audit P3-1): opacity is frozen
+  // content, so the row that opens its live panel must grey out for a
+  // locked layer — same treatment as the Align row above, gated by
+  // the same predicate the slider itself refuses through.
+  testWidgets('locked layer: Opacity row disabled and routes nowhere', (
+    tester,
+  ) async {
+    final layer = _shape('frozen', locked: true);
+    final container = _containerWith([layer]);
+    addTearDown(container.dispose);
+    container.read(selectionControllerProvider.notifier).select('frozen');
+
+    await tester.pumpWidget(_host(container, layer));
+    await _open(tester);
+
+    final row = tester.widget<ListTile>(
+      find.widgetWithText(ListTile, 'Opacity'),
+    );
+    expect(row.enabled, isFalse);
+
+    await tester.tap(find.text('Opacity'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsOneWidget, reason: 'sheet stays up');
+    expect(container.read(contextToolbarControllerProvider), isNull);
+  });
+
+  // Audit P3-1's exact repro: «قرینه افقی» mutated a locked layer's
+  // transform while the canvas refused every other transform. Flip is
+  // a content transform — the rows grey out and a tap commits nothing.
+  testWidgets('locked layer: flip rows disabled, no history entry', (
+    tester,
+  ) async {
+    final layer = _shape('frozen', locked: true);
+    final container = _containerWith([layer]);
+    addTearDown(container.dispose);
+    container.read(selectionControllerProvider.notifier).select('frozen');
+    container.read(documentControllerProvider.notifier).clearHistory();
+
+    await tester.pumpWidget(_host(container, layer));
+    await _open(tester);
+
+    for (final label in ['Flip horizontally', 'Flip vertically']) {
+      final row = tester.widget<ListTile>(find.widgetWithText(ListTile, label));
+      expect(row.enabled, isFalse, reason: '$label must render disabled');
+    }
+
+    await _tapRow(tester, find.text('Flip horizontally'));
+    await tester.pumpAndSettle();
+
+    final doc = container.read(documentControllerProvider);
+    expect(doc.layerById('frozen')!.transform.flipH, isFalse);
+    expect(
+      container.read(documentControllerProvider.notifier).canUndo,
+      isFalse,
+      reason: 'a refused flip must not create a history entry',
     );
   });
 
@@ -443,6 +531,167 @@ void main() {
       expect(
         container.read(documentControllerProvider).layers.map((l) => l.id),
         ['a', 'b', 'c'],
+      );
+    });
+
+    // Audit P2-7: batch Align had no gate at all — an all-locked or
+    // effectively-single batch opened six live tiles that did nothing.
+    testWidgets('all-locked batch: Align row disabled', (tester) async {
+      final a = _shape('a', locked: true);
+      final b = _shape('b', locked: true);
+      final container = _containerWith([a, b]);
+      addTearDown(container.dispose);
+      container.read(selectionControllerProvider.notifier).selectMany([
+        'a',
+        'b',
+      ]);
+
+      await tester.pumpWidget(_host(container, b, selectedLayers: [a, b]));
+      await _open(tester);
+
+      final row = tester.widget<ListTile>(
+        find.widgetWithText(ListTile, 'Align'),
+      );
+      expect(row.enabled, isFalse);
+
+      await tester.tap(find.text('Align'));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(container.read(contextToolbarControllerProvider), isNull);
+    });
+
+    testWidgets('mixed pair with one movable member: Align row disabled', (
+      tester,
+    ) async {
+      // `align()` bails below two ELIGIBLE members, so a pair with one
+      // locked layer strands the movable one — the row must say so.
+      final a = _shape('a');
+      final frozen = _shape('frozen', locked: true);
+      final container = _containerWith([a, frozen]);
+      addTearDown(container.dispose);
+      container.read(selectionControllerProvider.notifier).selectMany([
+        'a',
+        'frozen',
+      ]);
+
+      await tester.pumpWidget(
+        _host(container, frozen, selectedLayers: [a, frozen]),
+      );
+      await _open(tester);
+
+      final row = tester.widget<ListTile>(
+        find.widgetWithText(ListTile, 'Align'),
+      );
+      expect(row.enabled, isFalse);
+    });
+
+    testWidgets('mixed batch with two movable members keeps Align live', (
+      tester,
+    ) async {
+      final a = _shape('a');
+      final b = _shape('b');
+      final frozen = _shape('frozen', locked: true);
+      final container = _containerWith([a, b, frozen]);
+      addTearDown(container.dispose);
+      container.read(selectionControllerProvider.notifier).selectMany([
+        'a',
+        'b',
+        'frozen',
+      ]);
+
+      await tester.pumpWidget(
+        _host(container, frozen, selectedLayers: [a, b, frozen]),
+      );
+      await _open(tester);
+
+      final row = tester.widget<ListTile>(
+        find.widgetWithText(ListTile, 'Align'),
+      );
+      expect(row.enabled, isTrue);
+
+      await tester.tap(find.text('Align'));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(
+        container.read(contextToolbarControllerProvider),
+        ContextToolPanel.align,
+      );
+    });
+
+    // Lock rule: batch flip drops locked members (like batch align)
+    // instead of silently flipping frozen content — and the survivors
+    // stay ONE composite, so one undo restores the whole gesture.
+    testWidgets('mixed batch flip: only unlocked members flip, ONE composite', (
+      tester,
+    ) async {
+      final a = _shape('a');
+      final b = _shape('b');
+      final frozen = _shape('frozen', locked: true);
+      final container = _containerWith([a, b, frozen]);
+      addTearDown(container.dispose);
+      container.read(selectionControllerProvider.notifier).selectMany([
+        'a',
+        'b',
+        'frozen',
+      ]);
+      container.read(documentControllerProvider.notifier).clearHistory();
+
+      await tester.pumpWidget(
+        _host(container, frozen, selectedLayers: [a, b, frozen]),
+      );
+      await _open(tester);
+      await _tapRow(tester, find.text('Flip horizontally'));
+      await tester.pumpAndSettle();
+
+      final doc = container.read(documentControllerProvider);
+      expect(doc.layerById('a')!.transform.flipH, isTrue);
+      expect(doc.layerById('b')!.transform.flipH, isTrue);
+      expect(
+        doc.layerById('frozen')!.transform.flipH,
+        isFalse,
+        reason: 'locked member never flips',
+      );
+
+      // ONE undo restores both flipped members — the composite
+      // guarantee; a second entry would leave one flipped here.
+      container.read(documentControllerProvider.notifier).undo();
+      final after = container.read(documentControllerProvider);
+      expect(after.layers.every((l) => !l.transform.flipH), isTrue);
+      expect(
+        container.read(documentControllerProvider.notifier).canUndo,
+        isFalse,
+        reason: 'the whole batch flip was exactly one history entry',
+      );
+    });
+
+    testWidgets('all-locked batch: flip rows disabled, nothing committed', (
+      tester,
+    ) async {
+      final a = _shape('a', locked: true);
+      final b = _shape('b', locked: true);
+      final container = _containerWith([a, b]);
+      addTearDown(container.dispose);
+      container.read(selectionControllerProvider.notifier).selectMany([
+        'a',
+        'b',
+      ]);
+      container.read(documentControllerProvider.notifier).clearHistory();
+
+      await tester.pumpWidget(_host(container, b, selectedLayers: [a, b]));
+      await _open(tester);
+
+      for (final label in ['Flip horizontally', 'Flip vertically']) {
+        final row = tester.widget<ListTile>(
+          find.widgetWithText(ListTile, label),
+        );
+        expect(row.enabled, isFalse, reason: '$label must render disabled');
+      }
+
+      await _tapRow(tester, find.text('Flip horizontally'));
+      await tester.pumpAndSettle();
+      expect(
+        container.read(documentControllerProvider.notifier).canUndo,
+        isFalse,
       );
     });
 

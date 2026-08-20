@@ -33,6 +33,13 @@ const _uuid = Uuid();
 /// and the command-history merge protocol are preserved end-to-end.
 /// No engine, selection, or interaction logic is duplicated here —
 /// this is purely a presentation-side facade.
+///
+/// Lock rule ([EditorLayer.locked]): duplicate, reorder and delete
+/// are deliberately lock-AGNOSTIC — they act on the layer's place in
+/// the document, not on its content, so a locked layer can still be
+/// cloned, restacked and removed. [flip] is the exception in this
+/// file: it mirrors the layer's content, so it refuses locked layers
+/// ([canFlip]) exactly like move/resize/rotate do.
 class LayerActions {
   LayerActions._();
 
@@ -205,15 +212,23 @@ class LayerActions {
     ref.read(selectionControllerProvider.notifier).clear();
   }
 
-  /// Duplicate every layer in [layers] as one undoable step and make
-  /// the clones the new (multi) selection — so the user can drag the
-  /// duplicated group away immediately, mirroring [duplicate].
+  /// THE per-layer rule for whether flip may run — flip mirrors the
+  /// layer's content, so the lock rule ([EditorLayer.locked]) refuses
+  /// it exactly like move/resize/rotate. Every flip entry point
+  /// (the overflow-sheet rows) must render from this same predicate
+  /// so the control and the command cannot drift (ux-audit P3-1:
+  /// flip used to work on a locked layer while the canvas refused
+  /// every other transform).
+  static bool canFlip(EditorLayer layer) => !layer.locked;
+
   /// Mirror one layer across an axis. One tap, one undo entry.
+  /// Refuses locked layers ([canFlip]) — flip is a content transform.
   static void flip(
     WidgetRef ref,
     EditorLayer layer, {
     required bool horizontal,
   }) {
+    if (!canFlip(layer)) return;
     ref
         .read(documentControllerProvider.notifier)
         .execute(FlipLayerCommand(layerId: layer.id, horizontal: horizontal));
@@ -223,23 +238,35 @@ class LayerActions {
   /// entry. Deliberately not a mirror of the group about the group
   /// centre — that moves layers, which is a different operation
   /// (docs/flip-transform-design-2026-07.md).
+  ///
+  /// Locked members are dropped from the batch ([canFlip]) so a mixed
+  /// selection still works for the layers whose content CAN change —
+  /// the same silent-drop grammar batch align and every group-gesture
+  /// path use. The survivors stay ONE composite → one undo entry.
   static void flipMany(
     WidgetRef ref,
     List<EditorLayer> layers, {
     required bool horizontal,
     required String label,
   }) {
-    if (layers.isEmpty) return;
+    final flippable = [
+      for (final l in layers)
+        if (canFlip(l)) l,
+    ];
+    if (flippable.isEmpty) return;
     ref
         .read(documentControllerProvider.notifier)
         .execute(
           CompositeCommand([
-            for (final l in layers)
+            for (final l in flippable)
               FlipLayerCommand(layerId: l.id, horizontal: horizontal),
           ], labelOverride: label),
         );
   }
 
+  /// Duplicate every layer in [layers] as one undoable step and make
+  /// the clones the new (multi) selection — so the user can drag the
+  /// duplicated group away immediately, mirroring [duplicate].
   static void duplicateMany(
     WidgetRef ref,
     List<EditorLayer> layers, {
@@ -323,6 +350,10 @@ class LayerActions {
   /// Move [layer] one step up the z-order. Silent no-op when already
   /// topmost — callers should disable the entry-point UI in that
   /// case (see [canBringForward]).
+  ///
+  /// No lock guard, here or in [sendBackward]: reorder is structural
+  /// (the lock rule on [EditorLayer.locked]) — it changes where the
+  /// layer sits in the stack, never the frozen content itself.
   static void bringForward(WidgetRef ref, EditorLayer layer) {
     final doc = ref.read(documentControllerProvider);
     final index = doc.indexOf(layer.id);

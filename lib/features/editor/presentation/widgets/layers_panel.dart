@@ -279,13 +279,14 @@ class _LayerTile extends ConsumerWidget {
                 selectionControllerProvider.notifier,
               );
               selectionCtl.toggle(layer.id);
-              // Existing rule: the mode ends when membership can no
-              // longer form a group (mirrors the editor's commit-tick
-              // prune listener at < 2).
-              if (ref.read(selectionControllerProvider).selectedIds.length <
-                  2) {
-                ref.read(selectionModeProvider.notifier).exitMulti();
-              }
+              // Membership edits never end the mode (ux-audit P2-5).
+              // This row used to exitMulti below 2 members while the
+              // equivalent canvas toggle kept the mode armed — two
+              // surfaces, two lifetimes, and the canvas one was
+              // invisible. The unified rule: multi stays armed at ANY
+              // count until an explicit exit (chip ✕, tap-on-empty,
+              // system Back), and the chip stays on screen the whole
+              // time, so a mode that toggles taps is never a secret.
               return;
             }
             ref.read(selectionControllerProvider.notifier).select(layer.id);
@@ -306,15 +307,19 @@ class _LayerTile extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    // Locked layers are not drag-reorderable: the lock
-                    // contract (EditorLayer.locked) protects a layer from
-                    // being moved, and z-order is a move. This also pins the
-                    // base photo — imported locked — to the bottom, so a
-                    // drag can't bury content under it (the engine
-                    // `reorderLayer` clamp is the backstop; this removes the
-                    // affordance so the tile doesn't visually jump and snap
-                    // back). The handle shows dimmed rather than vanishing so
-                    // the row layout stays stable.
+                    // Locked rows withhold the DRAG affordance only. Under
+                    // the lock rule (EditorLayer.locked) reorder is
+                    // structural and stays available to locked layers —
+                    // through the overflow sheet's Bring forward / Send
+                    // backward rows — but a continuous drag is the gesture
+                    // that restacks by accident, and the inert handle is
+                    // also what pins the base photo — imported locked — to
+                    // the bottom so a drag can't bury content under it
+                    // (the engine `reorderLayer` clamp backstops only the
+                    // base photo; removing the affordance keeps the tile
+                    // from visually jumping and snapping back). The handle
+                    // shows dimmed rather than vanishing so the row layout
+                    // stays stable.
                     // Token, not `Colors.grey`: the literal measured
                     // 1.27:1 on the cream drawer, far under the 3:1
                     // floor for a control. The locked variant keeps its

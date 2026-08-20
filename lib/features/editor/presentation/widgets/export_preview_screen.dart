@@ -467,6 +467,16 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
       format: widget.format,
     );
     if (!mounted) return;
+    if (result.outcome == ImageExportOutcome.cancelled) {
+      // The user closed the system sheet without picking a target.
+      // Nothing was shared, so no "Shared!" toast — and nothing went
+      // wrong, so no error either. Keep the preview (and its rendered
+      // bytes) alive for an in-place retry, exactly like the failure
+      // path but silent.
+      ref.read(exportSessionControllerProvider.notifier).end();
+      setState(() => _busy = false);
+      return;
+    }
     if (result.outcome != ImageExportOutcome.success) {
       _showFailure(result.outcome);
       return;
@@ -496,11 +506,13 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
     setState(() => _busy = false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          outcome == ImageExportOutcome.permissionDenied
-              ? context.l10n.allowPhotoAccessSettings
-              : context.l10n.somethingWentWrong,
-        ),
+        content: Text(switch (outcome) {
+          ImageExportOutcome.permissionDenied =>
+            context.l10n.allowPhotoAccessSettings,
+          ImageExportOutcome.unavailable =>
+            context.l10n.sharingUnavailableMessage,
+          _ => context.l10n.somethingWentWrong,
+        }),
         behavior: SnackBarBehavior.floating,
       ),
     );

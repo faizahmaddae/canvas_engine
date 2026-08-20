@@ -9,6 +9,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../../app/ui/size_picker_dialog.dart';
 import '../../application/document_controller.dart';
+import '../../application/live_overlay_controller.dart';
 import '../../canvas/presentation/widgets/canvas_checkerboard.dart';
 import '../../engine/core/editor_document.dart';
 import '../../engine/rendering/background_fill_box.dart';
@@ -50,32 +51,74 @@ import '../../../../app/theme/app_icons.dart';
 /// **No prev/next** is wired here: the Canvas tool exposes only one
 /// panel (no slot concept on `CanvasToolController`), so sibling
 /// swipe would have nothing to navigate to.
-class CanvasPanelBody extends ConsumerWidget {
+class CanvasPanelBody extends ConsumerStatefulWidget {
   const CanvasPanelBody({super.key});
 
-  void _commit(WidgetRef ref, Color c, {bool live = false}) {
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(SetCanvasBackgroundCommand(color: c, live: live));
+  @override
+  ConsumerState<CanvasPanelBody> createState() => _CanvasPanelBodyState();
+}
+
+class _CanvasPanelBodyState extends ConsumerState<CanvasPanelBody> {
+  // ─── Contract §2 colour preview channel (ux-audit P2-8) ─────────
+  //
+  // The canvas background is a DOCUMENT property, so a picker drag
+  // stages its preview as the live overlay's background override
+  // (the board paints the merged view) and the settled value commits
+  // ONE non-live command. A discrete swatch tap flows preview→commit
+  // within the tap — its own undo entry every time. This replaces
+  // the old per-tick `live: true` committed stream, whose undo
+  // grouping depended on the wall-clock merge window: two quick taps
+  // collapsed into one entry, a slow drag split into several.
+  //
+  // True while a preview is staged and uncommitted, so dispose can
+  // drop an orphaned override if the panel dies mid-gesture (§7) —
+  // same guard as ShapeStyleBody's pending slider command.
+  bool _previewStaged = false;
+
+  @override
+  void dispose() {
+    if (_previewStaged) {
+      ref.read(liveOverlayProvider.notifier).clear();
+    }
+    super.dispose();
   }
 
-  void _commitFill(WidgetRef ref, BackgroundFill fill, {bool live = false}) {
-    ref
-        .read(documentControllerProvider.notifier)
-        .execute(SetCanvasBackgroundCommand(fill: fill, live: live));
+  void _preview(BackgroundFill fill) {
+    _previewStaged = true;
+    ref.read(liveOverlayProvider.notifier).stageBackground(fill);
   }
 
-  void _commitMode(WidgetRef ref, CanvasBackgroundMode mode) {
+  void _commit(Color c) => _commitFill(SolidBackground(color: c));
+
+  void _commitFill(BackgroundFill fill) {
+    _previewStaged = false;
+    // Clear-then-execute in one synchronous run — no flash-back
+    // frame. A commit at the value the gesture started on (cancelled
+    // eyedrop) no-ops inside HistoryStack, so no net-zero entries
+    // (§3).
+    ref.read(liveOverlayProvider.notifier).clear();
+    ref
+        .read(documentControllerProvider.notifier)
+        .execute(SetCanvasBackgroundCommand(fill: fill));
+  }
+
+  void _commitMode(CanvasBackgroundMode mode) {
     ref
         .read(documentControllerProvider.notifier)
         .execute(SetCanvasBackgroundModeCommand(mode));
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
     final doc = ref.watch(documentControllerProvider);
-    final currentFill = doc.background;
+    // The background reads from the MERGED view so the header swatch
+    // and the picker track a staged drag live, matching the board.
+    // select() keeps foreign preview ticks (a text drag, a slider on
+    // some layer) from rebuilding this panel at 60 fps.
+    final currentFill = ref.watch(
+      renderedDocumentProvider.select((d) => d.background),
+    );
     final mode = doc.backgroundMode;
     final isPhotoProject = doc.projectKind == ProjectKind.photo;
     final isTransparent = mode == CanvasBackgroundMode.transparent;
@@ -142,7 +185,7 @@ class CanvasPanelBody extends ConsumerWidget {
             onChanged: (next) {
               if (next == mode) return;
               EditorHaptics.toggle();
-              _commitMode(ref, next);
+              _commitMode(next);
             },
           ),
           // Collapsed, not dimmed. Solid/Gradient is a CHILD of the
@@ -157,20 +200,19 @@ class CanvasPanelBody extends ConsumerWidget {
                 : Padding(
                     padding: const EdgeInsets.only(top: 12),
                     // Solid | Gradient, with the shared two-level picker
-                    // embedded in the solid branch. Drags stream live
-                    // (transient) commits; settled changes commit for real.
-                    // Recents and alpha policy live inside the picker.
-                    //
-                    // The canvas background is the contract's §2 exemption:
-                    // it has no layer to stage on the live overlay, so it
-                    // previews through merging live commands instead.
+                    // embedded in the solid branch. Drags stage the
+                    // overlay's background override; the settled change
+                    // commits ONE undoable command (contract §2/§3,
+                    // ux-audit P2-8). Recents and alpha policy live
+                    // inside the picker.
                     child: FillModeSection(
                       fill: currentFill,
                       solidTitle: context.l10n.canvasBackgroundTitle,
-                      onSolidChanged: (c) => _commit(ref, c, live: true),
-                      onSolidCommitted: (c) => _commit(ref, c),
-                      onFillChanged: (f) => _commitFill(ref, f, live: true),
-                      onFillCommitted: (f) => _commitFill(ref, f),
+                      onSolidChanged: (c) =>
+                          _preview(SolidBackground(color: c)),
+                      onSolidCommitted: _commit,
+                      onFillChanged: _preview,
+                      onFillCommitted: _commitFill,
                     ),
                   ),
           ),

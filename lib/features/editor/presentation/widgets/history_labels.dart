@@ -14,7 +14,31 @@ import '../../../../l10n/app_localizations.dart';
 /// row — a new command with no case is legible in English until its key
 /// is added, never invisible. No-op sentinels never reach here (a
 /// no-op command produces no history entry), so they are not mapped.
-String localizedHistoryLabel(AppLocalizations l10n, String raw) {
+/// (Presentation-authored overrides that are already localized —
+/// e.g. the base-photo removal composite — take the same fall-through
+/// on purpose.)
+///
+/// [formatCount] renders the member count of batch labels ('Move 3
+/// layers'); the history browser passes its locale digit mapper so fa
+/// rows read «۳» rather than a Latin-digit island.
+String localizedHistoryLabel(
+  AppLocalizations l10n,
+  String raw, {
+  String Function(int count)? formatCount,
+}) {
+  // Batch ops interpolate their member count into the raw label
+  // ('Align left 3 layers', 'Move 2 layers'). Localize the base
+  // recursively, then re-attach the count through the arb template.
+  final multi = _kBatchLabel.firstMatch(raw);
+  if (multi != null) {
+    final base = localizedHistoryLabel(
+      l10n,
+      multi.group(1)!,
+      formatCount: formatCount,
+    );
+    final count = int.parse(multi.group(2)!);
+    return l10n.histMultiLayer(base, (formatCount ?? (c) => '$c')(count));
+  }
   // `Add ${layer.type}` is the only interpolated label; match the four
   // concrete types the modules emit, with a generic fallback.
   if (raw.startsWith('Add ')) {
@@ -43,7 +67,20 @@ String localizedHistoryLabel(AppLocalizations l10n, String raw) {
     'Move' => l10n.histMove,
     'Resize' => l10n.histResize,
     'Rotate' => l10n.histRotate,
-    'Transform layer' => l10n.histTransform,
+    // Bare 'Transform' is the gesture-handle batch base; 'Transform
+    // layer' is the raw TransformLayerCommand label. Same idea, one key.
+    'Transform' || 'Transform layer' => l10n.histTransform,
+    'Crop' => l10n.histCrop,
+    'Stack mask' => l10n.histMaskEdit,
+    'Clear stack mask' => l10n.histMaskClear,
+    'Align left' => l10n.histAlignLeft,
+    'Align center horizontally' => l10n.histAlignCenterX,
+    'Align right' => l10n.histAlignRight,
+    'Align top' => l10n.histAlignTop,
+    'Align center vertically' => l10n.histAlignCenterY,
+    'Align bottom' => l10n.histAlignBottom,
+    'Distribute horizontally' => l10n.histDistributeH,
+    'Distribute vertically' => l10n.histDistributeV,
     'Flip horizontally' => l10n.histFlipH,
     'Flip vertically' => l10n.histFlipV,
     'Canvas background' => l10n.histCanvasBg,
@@ -81,3 +118,7 @@ String localizedHistoryLabel(AppLocalizations l10n, String raw) {
     _ => raw,
   };
 }
+
+/// `'<base> <N> layers'` — the shape every batch site emits
+/// (alignment_controller, interaction_controller group gestures).
+final RegExp _kBatchLabel = RegExp(r'^(.+) (\d+) layers$');

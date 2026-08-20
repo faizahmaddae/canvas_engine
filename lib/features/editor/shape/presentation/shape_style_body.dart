@@ -77,22 +77,36 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
     super.dispose();
   }
 
-  void _commitFill({
-    Color? c,
-    double? opacity,
-    BackgroundFill? fill,
-    bool live = false,
-  }) {
+  // ─── Contract §2 colour preview channel (ux-audit P2-8) ─────────
+  //
+  // Colour edits ride the same overlay channel as the sliders above:
+  // picker ticks stage a preview, the settled value commits ONE
+  // non-live command. A discrete swatch tap flows preview→commit
+  // within the tap, so each tap is its own undo entry and nothing
+  // depends on the wall-clock live-merge window any more (the old
+  // `live: true` wiring merged two quick taps into one entry and let
+  // a slow wheel drag split into several).
+  void _previewFill({Color? c, BackgroundFill? fill}) {
+    _previewSlider(
+      SetShapeFillCommand(layerId: widget.layer.id, color: c, fill: fill),
+    );
+  }
+
+  /// Commit is rebuilt from the SETTLED callback value rather than
+  /// executing [_pendingSliderCommand]: FillModeSection's mode switch
+  /// and gradient-preset taps commit directly without a preceding
+  /// preview tick, so the pending command may not exist.
+  void _commitFill({Color? c, BackgroundFill? fill}) {
+    _pendingSliderCommand = null;
+    // Clear-then-execute in one synchronous run — no flash-back
+    // frame (same pattern as _commitSlider). A commit at the value
+    // the gesture started on (cancelled eyedrop) no-ops inside
+    // HistoryStack, so no net-zero entries (§3).
+    ref.read(liveOverlayProvider.notifier).clear();
     ref
         .read(documentControllerProvider.notifier)
         .execute(
-          SetShapeFillCommand(
-            layerId: widget.layer.id,
-            color: c,
-            opacity: opacity,
-            fill: fill,
-            live: live,
-          ),
+          SetShapeFillCommand(layerId: widget.layer.id, color: c, fill: fill),
         );
   }
 
@@ -134,23 +148,23 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
           // has nowhere to go on them, so they keep the plain
           // picker. Filled kinds get the Solid | Gradient switch.
           //
-          // Either way drags stream live (transient) commits and the
-          // settled change commits for real, so each pick is one undo
-          // step. Recents and alpha policy live inside the picker.
+          // Either way drags stage overlay previews and the settled
+          // change commits ONE undoable command (contract §2/§3).
+          // Recents and alpha policy live inside the picker.
           if (isStroked)
             ColorPickerBody(
               initial: layer.fillColor,
               title: context.l10n.colorLabel,
-              onChanged: (c) => _commitFill(c: c, live: true),
+              onChanged: (c) => _previewFill(c: c),
               onCommitted: (c) => _commitFill(c: c),
             )
           else
             FillModeSection(
               fill: layer.effectiveFill,
               solidTitle: context.l10n.fillColorTitle,
-              onSolidChanged: (c) => _commitFill(c: c, live: true),
+              onSolidChanged: (c) => _previewFill(c: c),
               onSolidCommitted: (c) => _commitFill(c: c),
-              onFillChanged: (f) => _commitFill(fill: f, live: true),
+              onFillChanged: (f) => _previewFill(fill: f),
               onFillCommitted: (f) => _commitFill(fill: f),
             ),
           const SizedBox(height: 14),

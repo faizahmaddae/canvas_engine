@@ -12,6 +12,16 @@ import '../engine/core/selection_state.dart';
 ///     exits the mode and clears the selection. Tap-cycling is
 ///     suppressed (cycling + toggle would conflict).
 ///
+/// Lifetime rule (ux-audit P2-5): once armed, the mode stays armed at
+/// ANY member count — ۰ and ۱ included — until an explicit exit: the
+/// chip ✕, tap-on-empty, system Back (E2), or the project-boundary
+/// reset. Membership edits and document mutations (toggles from any
+/// surface, undo/delete pruning) never end it. Three call sites had
+/// grown three different below-2 exit rules, and the surface without
+/// one (the canvas) kept toggling taps with no indicator; one rule,
+/// paired with the chip rendering whenever this flag is armed, makes
+/// an invisible armed mode impossible.
+///
 /// The mode is intentionally NOT part of [SelectionState] (which models
 /// only the set of selected ids) — it is a UX-modal flag and so lives
 /// alongside, exposed via [selectionModeProvider]. Every existing call
@@ -94,8 +104,10 @@ class SelectionController extends Notifier<SelectionState> {
   /// the single integrity owner: the commit-version listener in the
   /// editor calls it after every execute/undo/redo tick.
   ///
-  /// Returns true when anything was pruned (the caller decides
-  /// whether multi-select mode should collapse too).
+  /// Returns true when anything was pruned. Multi-select mode is NOT
+  /// collapsed by pruning — its lifetime is explicit-exit only (see
+  /// [SelectionMode]); the chip simply shows the reduced actionable
+  /// count.
   bool pruneMissing(EditorDocument doc) {
     final ids = state.selectedIds;
     if (ids.isEmpty) return false;

@@ -48,10 +48,18 @@ canvas visible (barrier none/whisper).
   `LiveOverlay` staging + ONE non-live command on release/settle
   (`layer_opacity_control` is the canonical template; text routes
   through its style-drag session which is the same channel).
-- **Canvas background** — EXEMPT: it is a document property the
-  overlay cannot express. It keeps gesture-fenced `live:true`
-  command merging. This is the only sanctioned per-tick committed
-  write, and it must stay gesture-fenced (§3).
+- **Canvas background** — rides the SAME `LiveOverlay` channel: the
+  overlay carries a document-background override
+  (`LiveOverlayController.stageBackground`), drags stage it, and ONE
+  non-live `SetCanvasBackgroundCommand` commits on release/settle.
+  *(Amended by the ux-audit P2-8 fix, 2026-08: this bullet used to
+  exempt the background as "a document property the overlay cannot
+  express", sanctioning per-tick `live:true` committed writes. That
+  wiring made undo granularity wall-clock-dependent — two quick
+  swatch taps merged into one entry, a paused drag split — so the
+  overlay learned the override and the exemption is retired.
+  `SetCanvasBackgroundCommand.live` remains only for command-level
+  API stability; no UI host may pass it.)*
 - `DocumentController.liveReplace` is deleted; there is no fourth
   channel. Adding one requires amending this contract first.
 
@@ -68,10 +76,13 @@ entries, regardless of how close in time. Mechanics:
   breaks when a DIFFERENT control writes. After tb2 6/16,
   `UpdateTextCommand`/`UpdatePaintStyleCommand` merge ONLY with
   `live: true`; swatch taps and toggles pass `live: false`.
-- Post-Stage-2 fate of `live:true` merging (roadmap decision):
-  permitted for steppers and the canvas background only. Everything
-  else must not rely on the 1s wall-clock window, which survives
-  solely as the coalescer for those two cases.
+- Post-Stage-2 fate of `live:true` merging (roadmap decision;
+  amended by the ux-audit P2-8 fix, 2026-08): permitted for steppers
+  only. The canvas background — formerly the second sanctioned case —
+  migrated onto the overlay channel (§2). Nothing else may rely on
+  the 1s wall-clock window, which survives solely as the
+  stepper-burst coalescer. Pinned by
+  `color_commit_contract_test.dart` ("P2-8 migrated hosts").
 - No net-zero entries: an interaction that ends where it started
   commits nothing (0.25px/epsilon guards stay).
 
@@ -175,8 +186,8 @@ presumes an answer to that and never states one; this is it.
 
 **No command searches for a target.** There is no priority ladder,
 no fallback chain and no chooser: a control whose target is not
-named by one of the four scopes below has no target, and says so
-(10.3). Adding a fifth scope — or resolving a target from document
+named by one of the five scopes below has no target, and says so
+(10.3). Adding a sixth scope — or resolving a target from document
 contents — requires amending this section first.
 
 **W — world.** Targets the `EditorDocument`; no layer target.
@@ -188,15 +199,32 @@ layer selected.
 **B — bound.** Targets the layer the current selection names.
 Requires a selection and is unreachable without one.
 
+**N — next-authored.** Targets the layer the current selection
+names, exactly like B, whenever one exists. Absent a selection,
+targets the author's own defaults for the next A command of the
+same kind instead — session state, not a document object, so
+writing it commits nothing and produces no undo entry. This is not
+the fallback chain the opening rule forbids: both targets are named
+in advance by this paragraph, neither is found by searching document
+contents, and a control never chooses among more than one candidate
+layer. Exists only where a single control set both authors new
+layers (A) and restyles already-committed ones — currently only
+`paint`, whose mode-strip slots (Color, Size, Fill, Opacity, Blur,
+Sides, Style) read and write through
+`PaintToolController.selectedPaintLayer()` /
+`PaintStyleView.isRestyling`, the shared predicate every one of them
+must resolve through rather than re-deriving. See 10.5.
+
 **P — project role.** Targets the one layer the project kind
 defines as its subject: the protected base photo. Exists only in
 `ProjectKind.photo`.
 
 | Control | Scope |
 |---|---|
-| `image`, `text`, `sticker`, `shape`, `paint` | A |
+| `image`, `text`, `sticker`, `shape`, `paint` (draw) | A |
 | `canvas` | W |
-| every mode-strip slot, action chips included | B |
+| every mode-strip slot, action chips included, EXCEPT paint's | B |
+| `paint`'s mode-strip slots (Color, Size, Fill, Opacity, Blur, Sides, Style) | N |
 | main-strip `crop`, `look` | P |
 
 Undo/redo, save, export and the zoom readout target no document
@@ -272,3 +300,33 @@ Pinning suites: `toolbar_group_order_test.dart` (placement),
 `image_target_test.dart` (10.1, 10.2). The evidence behind this
 section, and the state of the code before it, are recorded in
 `docs/command-scope-diagnosis-2026-07.md`.
+
+## 10.5 N never lacks a target, but must disclose which one it has
+
+Unlike P, an N control has no absent or unavailable state (10.3):
+one of its two named targets always exists, so N controls are
+always present and always live — there is nothing to dim and no
+precondition to explain. The requirement N carries instead is
+disclosure: because the same tile, sheet and value can mean either
+"defaults for the stroke you're about to draw" or "the stroke you
+already drew," a control must state at the surface which one is
+live right now. `PaintModeInlineExpansion`'s scope chip does this —
+«خط بعدی» (next-authored) versus «ویرایش این خط» (bound) — and the
+strip's own tiles follow the same predicate for their label/value/
+capability set (`PaintStyleView.isRestyling`), so the sheet and the
+strip that opened it never disagree about which target is live.
+
+Resolution order is static, not searched: the bound target wins
+whenever a selection exists, full stop — an armed tool does not
+override it. This is what lets a tool stay armed for continuous
+authoring while the layer just authored is immediately restylable:
+every path that ARMS a tool clears the selection first, so a
+selection can only coexist with an armed tool in the one case this
+scope exists to serve. A fresh A command's OWN content is still
+drawn from the author defaults directly, never through the bound
+target, so a stale selection can never leak into what gets authored
+next.
+
+Pinning suites: `paint_restyle_dock_test.dart` ("a paint-layer
+selection wins over an armed tool"), `paint_stroke_controller_test.dart`
+("commitDot selects the layer it just added, tool stays armed").
