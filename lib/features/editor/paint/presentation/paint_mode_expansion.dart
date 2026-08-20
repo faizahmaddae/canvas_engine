@@ -106,7 +106,7 @@ class PaintModeInlineExpansion extends ConsumerWidget {
       case 'fill':
         return PaintFillBody(view: view);
       case 'polygon':
-        return PaintPolygonBody(value: view.sides);
+        return PaintPolygonBody(view: view);
       case 'dash':
         return const PaintDashBody();
       case 'size':

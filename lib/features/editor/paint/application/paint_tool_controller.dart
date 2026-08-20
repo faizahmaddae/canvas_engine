@@ -503,6 +503,30 @@ class PaintToolController extends Notifier<PaintSession> {
     _commitStyle(_pendingBlurCommit, (cmd) => _pendingBlurCommit = cmd);
   }
 
+  UpdatePaintStyleCommand? _pendingSidesCommit;
+
+  /// Contract §2 preview channel for the Sides slider — same shape as
+  /// blur/width: ticks stage on the live overlay for a bound polygon
+  /// layer (or write the session default), commit seals ONE command.
+  void previewPolygonSides(int sides) => _previewStyle(
+    pending: _pendingSidesCommit,
+    setPending: (cmd) => _pendingSidesCommit = cmd,
+    buildCommand: (layer) => layer.kind != PaintKind.polygon
+        ? null
+        : UpdatePaintStyleCommand(layerId: layer.id, sides: sides),
+    onSessionDefault: () {
+      if (state.polygonSides != sides) {
+        state = state.copyWith(polygonSides: sides);
+      }
+    },
+  );
+
+  void commitPolygonSides(int sides) {
+    // Preset taps have no preview ticks.
+    previewPolygonSides(sides);
+    _commitStyle(_pendingSidesCommit, (cmd) => _pendingSidesCommit = cmd);
+  }
+
   /// Polygon side count for the bound layer or the next stroke.
   void setPolygonSides(int sides) => _writeStyle(
     onLayer: (layer) =>

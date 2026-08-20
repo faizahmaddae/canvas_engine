@@ -1,77 +1,78 @@
-// Extracted verbatim from paint_mode_toolbar.dart (tb1 4/17); behaviour-preserving.
-
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/utils/editor_value_format.dart';
 import '../../../../../l10n/l10n.dart';
-import '../../../presentation/widgets/section_label.dart';
-import '../../../toolbar/presentation/widgets/preset_chip.dart';
+import '../../../engine/modules/paint/paint_layer.dart';
+import '../../../toolbar/presentation/widgets/preset_slider_control.dart';
 import '../../application/paint_tool_controller.dart';
 
+/// Polygon Sides body — the same hero + [PresetSliderControl]
+/// composition Size uses, so every numeric paint tool speaks one
+/// grammar. The old body offered eight fixed chips over an engine
+/// range of 3–24: any other value was unreachable and got clobbered
+/// the moment a chip was tapped (ux-audit: preset-clobbers). The
+/// slider now covers the whole range; the presets stay as the fast
+/// picks.
+///
+/// The hero renders through the ENGINE's [PaintLayerPainter] — for
+/// polygon the bounding box IS the shape and `normalizedPoints` is
+/// unused — so the preview cannot drift from what a committed layer
+/// draws (the old `_PolygonHeroPainter` was a third hand-copy of the
+/// vertex-angle formula; ux-audit: vertex-math-triplicated).
 class PaintPolygonBody extends ConsumerWidget {
-  const PaintPolygonBody({super.key, required this.value});
+  const PaintPolygonBody({super.key, required this.view});
 
-  final int value;
+  final PaintStyleView view;
+
+  static const List<double> _presets = [3, 4, 5, 6, 8, 12];
+  static const double _min = 3;
+  static const double _max = 24;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ctrl = ref.read(paintToolControllerProvider.notifier);
-    final style = ref.watch(paintStyleViewProvider);
+    final values = EditorValueFormat.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 6),
         _PolygonHero(
-          sides: value,
-          strokeColor: style.strokeColor,
-          fillColor: style.fillColor,
+          sides: view.sides,
+          strokeColor: view.strokeColor,
+          strokeWidth: view.strokeWidth,
+          fillColor: view.fillColor,
         ),
-        const SizedBox(height: 12),
-        SectionLabel(
-          context.l10n.polygonSidesLabel,
-          uppercase: false,
-          letterSpacing: 0,
-        ),
-        // Horizontal scroll mirrors the chip strip used by every
-        // other preset surface in the editor (paint Size/Blur,
-        // text sliders) — single layout grammar across modes.
-        SizedBox(
-          height: 44,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: 8,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (_, i) {
-              const sides = <int>[3, 4, 5, 6, 7, 8, 10, 12];
-              final n = sides[i];
-              return PresetChip(
-                label: EditorValueFormat.of(context).digits(n),
-                selected: n == value,
-                onTap: () => ctrl.setPolygonSides(n),
-              );
-            },
-          ),
+        const SizedBox(height: 14),
+        PresetSliderControl(
+          value: view.sides.toDouble(),
+          min: _min,
+          max: _max,
+          presets: _presets,
+          presetLabels: [for (final p in _presets) values.digits(p.round())],
+          formatValue: (v) => context.l10n.sidesCount(v.round()),
+          onPreview: (v) => ctrl.previewPolygonSides(v.round()),
+          onCommit: (v) => ctrl.commitPolygonSides(v.round()),
         ),
       ],
     );
   }
 }
 
+/// Live preview of the polygon at the current side count, drawn by
+/// the engine painter in the user's own stroke/fill.
 class _PolygonHero extends StatelessWidget {
   const _PolygonHero({
     required this.sides,
     required this.strokeColor,
+    required this.strokeWidth,
     required this.fillColor,
   });
 
   final int sides;
   final Color strokeColor;
+  final double strokeWidth;
   final Color? fillColor;
 
   @override
@@ -85,66 +86,26 @@ class _PolygonHero extends StatelessWidget {
         border: Border.all(color: tokens.borderStrong),
       ),
       padding: const EdgeInsets.all(12),
-      child: CustomPaint(
-        painter: _PolygonHeroPainter(
-          sides: sides,
-          strokeColor: strokeColor,
-          fillColor: fillColor,
+      child: Center(
+        // Square so the polygon renders regular, exactly like a
+        // committed square-box layer.
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: CustomPaint(
+            painter: PaintLayerPainter(
+              kind: PaintKind.polygon,
+              normalizedPoints: const [],
+              strokeColor: strokeColor,
+              // The hero is a thumbnail of a canvas-scale shape:
+              // clamp the visual stroke so an 80px width doesn't
+              // swallow the 64px preview box.
+              strokeWidth: strokeWidth.clamp(1, 6),
+              fillColor: fillColor,
+              sides: sides,
+            ),
+          ),
         ),
       ),
     );
   }
-}
-
-class _PolygonHeroPainter extends CustomPainter {
-  const _PolygonHeroPainter({
-    required this.sides,
-    required this.strokeColor,
-    required this.fillColor,
-  });
-
-  final int sides;
-  final Color strokeColor;
-  final Color? fillColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final count = sides.clamp(3, 24);
-    final center = size.center(Offset.zero);
-    final radius = math.min(size.width, size.height) * 0.42;
-    final path = Path();
-    for (var index = 0; index < count; index++) {
-      final angle = -math.pi / 2 + (math.pi * 2 * index) / count;
-      final point = center + Offset(math.cos(angle), math.sin(angle)) * radius;
-      if (index == 0) {
-        path.moveTo(point.dx, point.dy);
-      } else {
-        path.lineTo(point.dx, point.dy);
-      }
-    }
-    path.close();
-    final fill = fillColor;
-    if (fill != null) {
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = fill
-          ..style = PaintingStyle.fill,
-      );
-    }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = strokeColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..strokeJoin = StrokeJoin.round,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _PolygonHeroPainter oldDelegate) =>
-      oldDelegate.sides != sides ||
-      oldDelegate.strokeColor != strokeColor ||
-      oldDelegate.fillColor != fillColor;
 }
