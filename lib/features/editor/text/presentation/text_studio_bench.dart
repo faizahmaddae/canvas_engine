@@ -129,47 +129,26 @@ class _IdentityRow extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: 8),
-        _IdentityPill(
-          key: const ValueKey('text-pill-font'),
-          semanticLabel: context.l10n.fontTool,
-          active: session.openSheet == 'font',
-          onTap: () => ctrl.toggleSheet('font'),
-          child: Text(
-            fontEntry?.labelFor(Localizations.localeOf(context).languageCode) ??
-                context.l10n.fontTool,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textScaler: _benchTextScaler(context),
-            style: TextStyle(
-              // The pill IS a specimen: the name renders in its own
-              // face, so the current font is legible at a glance.
-              fontFamily: layer.style.fontFamily,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppTokens.of(context).textPrimary,
-            ),
-          ),
+        // The type spec reads as ONE instrument — face and size are
+        // two halves of a single bordered cluster, not two more
+        // free-floating lozenges.
+        _TypeCluster(
+          fontLabel:
+              fontEntry?.labelFor(
+                Localizations.localeOf(context).languageCode,
+              ) ??
+              context.l10n.fontTool,
+          fontFamily: layer.style.fontFamily,
+          sizeLabel:
+              // VISUAL px — what the user sees after corner drags,
+              // not the raw fontSize underneath (tb2 12/16).
+              values.px(ctrl.visualFontSizeOf(layer).round()),
+          fontActive: session.openSheet == 'font',
+          sizeActive: session.openSheet == 'size',
+          onFontTap: () => ctrl.toggleSheet('font'),
+          onSizeTap: () => ctrl.toggleSheet('size'),
         ),
-        const SizedBox(width: 6),
-        _IdentityPill(
-          key: const ValueKey('text-pill-size'),
-          semanticLabel: context.l10n.sizeTool,
-          active: session.openSheet == 'size',
-          onTap: () => ctrl.toggleSheet('size'),
-          child: Text(
-            // VISUAL px — what the user sees after corner drags, not
-            // the raw fontSize underneath (tb2 12/16).
-            values.px(ctrl.visualFontSizeOf(layer).round()),
-            textScaler: _benchTextScaler(context),
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppTokens.of(context).textPrimary,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
         _InkDot(
           color: layer.style.color,
           active: session.openSheet == 'color',
@@ -222,7 +201,7 @@ class _SpecimenChip extends StatelessWidget {
 
     final fill = TextStyle(
       fontFamily: style.fontFamily,
-      fontSize: 15,
+      fontSize: 16,
       height: 1.0,
       color: style.color,
       fontWeight: style.fontWeight,
@@ -285,37 +264,76 @@ class _SpecimenChip extends StatelessWidget {
     return Semantics(
       button: true,
       label: context.l10n.editTextAction,
-      child: Material(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          key: const ValueKey('text-specimen'),
+      // The hero of the row: the only lifted surface on the bench,
+      // so the eye lands on the text itself before its controls.
+      child: DecoratedBox(
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsetsDirectional.only(start: 12, end: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Directionality(
-                      textDirection: direction,
-                      // The specimen's own semantics are noise — the
-                      // chip is announced as "edit text".
-                      child: ExcludeSemantics(child: glyphs),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Icon(
-                  AppIcons.editText,
-                  size: 15,
-                  color: backdropIsDark
-                      ? _lightCard.withValues(alpha: 0.7)
-                      : tokens.textSecondary,
-                ),
-              ],
+          border: Border.all(color: tokens.border.withValues(alpha: 0.45)),
+          boxShadow: [
+            BoxShadow(
+              color: tokens.textPrimary.withValues(alpha: 0.10),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Material(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            key: const ValueKey('text-specimen'),
+            borderRadius: BorderRadius.circular(12),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(start: 12, end: 6),
+              // On very narrow phones the identity row can squeeze the
+              // specimen down to pencil-well width; the well yields
+              // (the whole chip is already the edit door) instead of
+              // striping the bench with an overflow.
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final showPencil = constraints.maxWidth >= 76;
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Directionality(
+                            textDirection: direction,
+                            // The specimen's own semantics are noise — the
+                            // chip is announced as "edit text".
+                            child: ExcludeSemantics(child: glyphs),
+                          ),
+                        ),
+                      ),
+                      if (showPencil) ...[
+                        const SizedBox(width: 6),
+                        // The pencil sits in its own tinted well so the chip
+                        // reads as editable, not decorated.
+                        Container(
+                          width: 24,
+                          height: 24,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: backdropIsDark
+                                ? _lightCard.withValues(alpha: 0.14)
+                                : tokens.surfaceMuted.withValues(alpha: 0.9),
+                          ),
+                          child: Icon(
+                            AppIcons.editText,
+                            size: 14,
+                            color: backdropIsDark
+                                ? _lightCard.withValues(alpha: 0.85)
+                                : tokens.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -330,45 +348,126 @@ class _SpecimenChip extends StatelessWidget {
   }
 }
 
-/// Shared pill chrome for the identity row's font and size entries.
-class _IdentityPill extends StatelessWidget {
-  const _IdentityPill({
-    super.key,
-    required this.semanticLabel,
-    required this.active,
-    required this.onTap,
-    required this.child,
+/// The type-spec cluster: family name (in its own face) and visual px
+/// as two tap zones inside ONE hairline-bordered instrument, split by
+/// an internal divider. Grouping the two values that describe "the
+/// type" kills the lozenge-soup read the separate pills had.
+class _TypeCluster extends StatelessWidget {
+  const _TypeCluster({
+    required this.fontLabel,
+    required this.fontFamily,
+    required this.sizeLabel,
+    required this.fontActive,
+    required this.sizeActive,
+    required this.onFontTap,
+    required this.onSizeTap,
   });
 
-  final String semanticLabel;
-  final bool active;
-  final VoidCallback onTap;
-  final Widget child;
+  final String fontLabel;
+  final String? fontFamily;
+  final String sizeLabel;
+  final bool fontActive;
+  final bool sizeActive;
+  final VoidCallback onFontTap;
+  final VoidCallback onSizeTap;
 
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
-    return Semantics(
-      button: true,
-      label: semanticLabel,
-      child: Material(
-        color: active
-            ? tokens.accent.withValues(alpha: 0.14)
-            : tokens.surfaceMuted.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(11),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(11),
-          onTap: () {
-            EditorHaptics.tap();
-            onTap();
-          },
-          child: Container(
-            constraints: const BoxConstraints(minWidth: 52, maxWidth: 118),
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            alignment: Alignment.center,
-            child: ExcludeSemantics(child: child),
+
+    Widget zone({
+      required Key key,
+      required String semanticLabel,
+      required bool active,
+      required VoidCallback onTap,
+      required Widget child,
+      required BorderRadiusDirectional radius,
+      required BoxConstraints constraints,
+    }) {
+      return Semantics(
+        button: true,
+        label: semanticLabel,
+        child: Material(
+          color: active
+              ? tokens.accent.withValues(alpha: 0.14)
+              : Colors.transparent,
+          borderRadius: radius.resolve(Directionality.of(context)),
+          child: InkWell(
+            key: key,
+            borderRadius: radius.resolve(Directionality.of(context)),
+            onTap: () {
+              EditorHaptics.tap();
+              onTap();
+            },
+            child: Container(
+              constraints: constraints,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              alignment: Alignment.center,
+              child: ExcludeSemantics(child: child),
+            ),
           ),
         ),
+      );
+    }
+
+    // The inner radius hugs the outer 12 minus the 1px border.
+    const innerR = Radius.circular(11);
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: tokens.border.withValues(alpha: 0.7)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          zone(
+            key: const ValueKey('text-pill-font'),
+            semanticLabel: context.l10n.fontTool,
+            active: fontActive,
+            onTap: onFontTap,
+            radius: const BorderRadiusDirectional.horizontal(start: innerR),
+            constraints: const BoxConstraints(minWidth: 64, maxWidth: 118),
+            child: Text(
+              fontLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textScaler: _benchTextScaler(context),
+              style: TextStyle(
+                // The zone IS a specimen: the name renders in its
+                // own face, so the current font reads at a glance.
+                fontFamily: fontFamily,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: fontActive ? tokens.accentText : tokens.textPrimary,
+              ),
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 20,
+            color: tokens.border.withValues(alpha: 0.7),
+          ),
+          zone(
+            key: const ValueKey('text-pill-size'),
+            semanticLabel: context.l10n.sizeTool,
+            active: sizeActive,
+            onTap: onSizeTap,
+            radius: const BorderRadiusDirectional.horizontal(end: innerR),
+            constraints: const BoxConstraints(minWidth: 56, maxWidth: 84),
+            child: Text(
+              sizeLabel,
+              textScaler: _benchTextScaler(context),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: sizeActive ? tokens.accentText : tokens.textPrimary,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -400,17 +499,18 @@ class _InkDot extends StatelessWidget {
           EditorHaptics.tap();
           onTap();
         },
-        child: Container(
+        // Resting: one crisp swatch. Active: the accent ring appears
+        // around it — the double-ring-at-rest read is gone.
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
           width: 34,
           height: 34,
-          padding: const EdgeInsets.all(3),
+          padding: EdgeInsets.all(active ? 3 : 0),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: active
-                  ? tokens.accent
-                  : tokens.border.withValues(alpha: 0.8),
-              width: active ? 2 : 1.2,
+              color: active ? tokens.accent : Colors.transparent,
+              width: active ? 2 : 0,
             ),
           ),
           child: DecoratedBox(
@@ -418,8 +518,8 @@ class _InkDot extends StatelessWidget {
               color: color,
               shape: BoxShape.circle,
               border: Border.all(
-                color: tokens.border.withValues(alpha: 0.6),
-                width: 1,
+                color: tokens.border.withValues(alpha: 0.8),
+                width: 1.2,
               ),
             ),
           ),
@@ -460,57 +560,78 @@ class _AspectRow extends ConsumerWidget {
       _ => AppIcons.textAlignCenter,
     };
 
-    return Row(
-      children: [
-        Expanded(
-          child: _AspectChip(
-            key: const ValueKey('text-aspect-look'),
-            icon: AppIcons.stylePresets,
-            label: l10n.stylesTool,
-            active: session.openSheet == 'styles',
-            badges: lookBadges,
-            onTap: () => ctrl.toggleSheet('styles'),
+    final tokens = AppTokens.of(context);
+    // ONE connected bar, not three chips adrift: three equal segments
+    // split by hairlines inside a single bordered track. The row
+    // reads as one instrument with three faces — the same "connected
+    // control" weight the alignment pill and script switcher carry.
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.surfaceMuted.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: tokens.border.withValues(alpha: 0.55)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        children: [
+          Expanded(
+            child: _AspectSegment(
+              key: const ValueKey('text-aspect-look'),
+              icon: AppIcons.stylePresets,
+              label: l10n.stylesTool,
+              active: session.openSheet == 'styles',
+              badges: lookBadges,
+              onTap: () => ctrl.toggleSheet('styles'),
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _AspectChip(
-            key: const ValueKey('text-aspect-layout'),
-            icon: alignIcon,
-            label: l10n.layoutTool,
-            active: session.openSheet == 'layout',
-            onTap: () => ctrl.toggleSheet('layout'),
+          _segmentDivider(tokens),
+          Expanded(
+            child: _AspectSegment(
+              key: const ValueKey('text-aspect-layout'),
+              icon: alignIcon,
+              label: l10n.layoutTool,
+              active: session.openSheet == 'layout',
+              onTap: () => ctrl.toggleSheet('layout'),
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _AspectChip(
-            key: const ValueKey('text-aspect-more'),
-            icon: AppIcons.moreActions,
-            label: l10n.moreActionsSemantics,
-            active: false,
-            onTap: () {
-              ctrl.closeSheet();
-              final scaffold = Scaffold.maybeOf(context);
-              showLayerOverflowSheet(
-                context,
-                ref,
-                layer: layer,
-                onOpenLayers: scaffold == null
-                    ? null
-                    : () => scaffold.openEndDrawer(),
-              );
-            },
+          _segmentDivider(tokens),
+          Expanded(
+            child: _AspectSegment(
+              key: const ValueKey('text-aspect-more'),
+              icon: AppIcons.moreActions,
+              label: l10n.moreActionsSemantics,
+              active: false,
+              onTap: () {
+                ctrl.closeSheet();
+                final scaffold = Scaffold.maybeOf(context);
+                showLayerOverflowSheet(
+                  context,
+                  ref,
+                  layer: layer,
+                  onOpenLayers: scaffold == null
+                      ? null
+                      : () => scaffold.openEndDrawer(),
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+
+  static Widget _segmentDivider(AppTokens tokens) => Container(
+    width: 1,
+    margin: const EdgeInsets.symmetric(vertical: 8),
+    color: tokens.border.withValues(alpha: 0.55),
+  );
 }
 
-/// One wide aspect chip: icon + label (+ optional treatment badges).
-class _AspectChip extends StatelessWidget {
-  const _AspectChip({
+/// One segment of the aspect bar: icon + label (+ treatment badges).
+/// The active segment carries the accent tint edge-to-edge inside the
+/// shared track.
+class _AspectSegment extends StatelessWidget {
+  const _AspectSegment({
     super.key,
     required this.icon,
     required this.label,
@@ -533,24 +654,22 @@ class _AspectChip extends StatelessWidget {
       label: label,
       child: Material(
         color: active
-            ? tokens.accent.withValues(alpha: 0.14)
-            : tokens.surfaceMuted.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(14),
+            ? tokens.accent.withValues(alpha: 0.16)
+            : Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
           onTap: () {
             EditorHaptics.tap();
             onTap();
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: ExcludeSemantics(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     icon,
-                    size: 19,
+                    size: 18,
                     color: active ? tokens.accentText : tokens.textPrimary,
                   ),
                   const SizedBox(width: 7),
@@ -562,19 +681,20 @@ class _AspectChip extends StatelessWidget {
                       textScaler: _benchTextScaler(context),
                       style: TextStyle(
                         fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: active ? tokens.accentText : tokens.textPrimary,
+                        letterSpacing: 0.1,
                       ),
                     ),
                   ),
                   if (badges.isNotEmpty) ...[
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                     for (final b in badges)
                       Padding(
                         padding: const EdgeInsetsDirectional.only(start: 2),
                         child: Container(
-                          width: 6,
-                          height: 6,
+                          width: 5,
+                          height: 5,
                           decoration: BoxDecoration(
                             color: b,
                             shape: BoxShape.circle,
