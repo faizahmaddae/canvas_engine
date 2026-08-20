@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../application/document_controller.dart';
 import '../../application/live_overlay_controller.dart';
 import '../../application/selection_controller.dart';
+import '../../application/viewport_controller.dart';
 import '../../engine/commands/editor_command.dart';
 import '../../engine/commands/text_commands.dart';
 import '../../engine/commands/transform_commands.dart';
@@ -190,9 +191,10 @@ class TextStyleWriter {
     // the size slider while still typing) must NOT push extra
     // history entries — the whole session collapses to one entry on
     // commit. Mirror the change onto the staged addition in the live
-    // overlay and, because the new-add layer is centred + wrap-
-    // capped, also re-flow the bounding box and re-centre it so the
-    // live preview stays inside the canvas at the new style.
+    // overlay and, because the new-add layer is anchor-centred +
+    // wrap-capped, also re-flow the bounding box and re-place it
+    // around the session anchor so the live preview stays inside the
+    // canvas at the new style.
     final liveSession = _live;
     if (liveSession != null &&
         liveSession.isNew &&
@@ -205,7 +207,7 @@ class TextStyleWriter {
         textDirectionMode: layer.textDirectionMode,
       );
       final newTransform = layer.transform.copyWith(
-        position: TextMetrics.centerOnCanvas(newSize, doc),
+        position: _newAddPosition(liveSession, newSize, doc),
         size: newSize,
       );
       final updated =
@@ -479,11 +481,13 @@ class TextStyleWriter {
       selectionBefore: selection.selectedId,
       isNew: false,
       scaleAtBegin: TextMetrics.visualScaleOf(layer),
+      insertCentre: null,
     );
   }
 
-  /// Begin adding a new text layer. Stages an empty layer at the canvas
-  /// center sized for one line of the current default style and
+  /// Begin adding a new text layer. Stages an empty layer at the
+  /// visible-viewport centre (clamped inside the canvas; ux-audit
+  /// P2-12) sized for one line of the current default style and
   /// selects it so the user immediately sees the bounding box appear
   /// where their text will land. Returns the staged layer id.
   ///
@@ -506,7 +510,23 @@ class TextStyleWriter {
     // style. For an empty initial layer we measure a single space so
     // the box has one line worth of height to receive the caret.
     final initialSize = TextMetrics.measureForNewLayer('', scaledStyle, doc);
-    final position = TextMetrics.centerOnCanvas(initialSize, doc);
+    // Anchor of the whole live session: the canvas point at the centre
+    // of what the user can currently see (falling back to the document
+    // centre pre-fit / in headless tests). Captured ONCE here so the
+    // box grows symmetrically around a stable point while the user
+    // types — it must never jump mid-session. Every isNew re-measure
+    // below re-places around this same anchor.
+    final insertCentre =
+        _ref
+            .read(viewportControllerProvider.notifier)
+            .visibleCanvasRect
+            ?.center ??
+        Offset(doc.width / 2, doc.height / 2);
+    final position = ViewportController.insertPositionFor(
+      visibleCentre: insertCentre,
+      layerSize: initialSize,
+      docSize: Size(doc.width, doc.height),
+    );
     // Smart default colour: keep the user's chosen colour when it
     // reads against what's underneath; otherwise auto-pick black or
     // white so brand-new text is never invisible (e.g. white-on-
@@ -546,6 +566,7 @@ class TextStyleWriter {
       selectionBefore: selection.selectedId,
       isNew: true,
       scaleAtBegin: 1.0,
+      insertCentre: insertCentre,
     );
     // Stage the layer onto the live overlay (NOT the committed doc)
     // so the canvas shows the bounding box where text will appear
@@ -571,11 +592,11 @@ class TextStyleWriter {
     // For brand-new layers being live-typed: cap the natural width
     // at canvas-width × _newLayerWrapFraction so the box wraps
     // inside the canvas instead of running off the right edge, and
-    // re-centre on every keystroke so growth stays symmetric around
-    // the canvas centre. For existing layers the user is editing,
-    // honour their resize mode + current width and never move the
-    // layer — yanking placed text around on every keystroke would
-    // be jarring.
+    // re-place on every keystroke so growth stays symmetric around
+    // the session's insertion anchor. For existing layers the user
+    // is editing, honour their resize mode + current width and never
+    // move the layer — yanking placed text around on every keystroke
+    // would be jarring.
     final newSize = s.isNew
         ? TextMetrics.measureForNewLayer(
             content,
@@ -596,7 +617,7 @@ class TextStyleWriter {
           );
     final newTransform = s.isNew
         ? current.transform.copyWith(
-            position: TextMetrics.centerOnCanvas(newSize, doc),
+            position: _newAddPosition(s, newSize, doc),
             size: newSize,
           )
         : (newSize == current.transform.size
@@ -663,11 +684,11 @@ class TextStyleWriter {
       // the layer that lands in history matches what the user saw
       // during the live preview (which used the staged scaled
       // style on the layerBefore record). Honour the same wrap cap
-      // + re-centre the committed layer so it lands exactly where
-      // the live preview showed it, fully inside the canvas. Also
-      // promote to resizeBox when content wrapped, so corner-drag
-      // afterwards re-wraps the paragraph instead of scaling a
-      // frozen wrapped layout.
+      // + re-place the committed layer around the session anchor so
+      // it lands exactly where the live preview showed it, fully
+      // inside the canvas. Also promote to resizeBox when content
+      // wrapped, so corner-drag afterwards re-wraps the paragraph
+      // instead of scaling a frozen wrapped layout.
       final doc = _ref.read(documentControllerProvider);
       // Style source: prefer the live staged layer's *current*
       // style (captured above before we restored docBefore) over
@@ -692,7 +713,7 @@ class TextStyleWriter {
       final finalLayer = TextLayer(
         id: s.layerId,
         transform: s.layerBefore.transform.copyWith(
-          position: TextMetrics.centerOnCanvas(layout.size, doc),
+          position: _newAddPosition(s, layout.size, doc),
           size: layout.size,
         ),
         content: trimmed,
@@ -776,6 +797,21 @@ class TextStyleWriter {
     _restoreSelection(s);
   }
 
+  /// Placement for a live NEW-add re-measure: centre [size] on the
+  /// session's insertion anchor (the visible-viewport centre captured
+  /// at [beginAddText]), clamped inside the document — the same
+  /// shared P2-12 rule the shape / sticker / image inserts use. The
+  /// doc-centre fallback is defensive only: every isNew session
+  /// carries an anchor, and edit sessions never re-position.
+  Offset _newAddPosition(_LiveSession s, Size size, EditorDocument doc) {
+    final docSize = Size(doc.width, doc.height);
+    return ViewportController.insertPositionFor(
+      visibleCentre: s.insertCentre ?? docSize.center(Offset.zero),
+      layerSize: size,
+      docSize: docSize,
+    );
+  }
+
   void _restoreSelection(_LiveSession s) {
     final selCtrl = _ref.read(selectionControllerProvider.notifier);
     final prior = s.selectionBefore;
@@ -801,6 +837,7 @@ class _LiveSession {
     required this.selectionBefore,
     required this.isNew,
     required this.scaleAtBegin,
+    required this.insertCentre,
   });
 
   /// Document state before the session began. Restored verbatim on
@@ -832,6 +869,14 @@ class _LiveSession {
   /// `resizeBox` layers (where the box width is the wrap column,
   /// not a scale).
   final double scaleAtBegin;
+
+  /// Canvas-space anchor a NEW layer's box grows around: the centre
+  /// of the viewport visible at [TextStyleWriter.beginAddText] time
+  /// (ux-audit P2-12 — new text lands where the user is looking, not
+  /// at the document centre). Captured once so the box never jumps
+  /// mid-session however the re-measures land. `null` for edit
+  /// sessions, which never re-position the user's layer.
+  final Offset? insertCentre;
 }
 
 /// Snapshot kept for the duration of a slider-drag style edit.

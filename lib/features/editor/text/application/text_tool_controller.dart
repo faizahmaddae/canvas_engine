@@ -620,10 +620,11 @@ class TextToolController extends Notifier<TextSession> {
   /// is selected or the selection is not a [TextLayer].
   void beginEditText() => _writer.beginEditText();
 
-  /// Begin adding a new text layer. Stages an empty layer at the canvas
-  /// center sized for one line of the current default style and
-  /// selects it so the user immediately sees the bounding box appear
-  /// where their text will land. Returns the staged layer id.
+  /// Begin adding a new text layer. Stages an empty layer at the
+  /// visible-viewport centre (clamped inside the canvas) sized for
+  /// one line of the current default style and selects it so the user
+  /// immediately sees the bounding box appear where their text will
+  /// land. Returns the staged layer id.
   ///
   /// On cancel / empty commit the staged layer is removed and the
   /// previous selection is restored.

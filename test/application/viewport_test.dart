@@ -630,4 +630,120 @@ void main() {
       expect(layer.transform.position, const Offset(123, 456));
     });
   });
+
+  // ux-audit P2-12: insertion flows read the visible canvas rect so
+  // new layers land where the user is looking. These pin the mapping
+  // and the shared placement rule.
+  group('visibleCanvasRect', () {
+    test('null before any fit has seeded pane geometry', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      expect(
+        c.read(viewportControllerProvider.notifier).visibleCanvasRect,
+        isNull,
+        reason: 'headless / pre-first-frame controllers have no pane',
+      );
+    });
+
+    test('fitted viewport: spans the pane and centres on the document', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final n = c.read(viewportControllerProvider.notifier);
+      n.fit(
+        screenSize: const Size(800, 400),
+        canvasSize: const Size(1000, 1000),
+        padding: 0,
+      );
+      // scale 0.4, translation (200, 0): the pane maps to canvas-space
+      // x ∈ [-500, 1500], y ∈ [0, 1000] — centred on the document.
+      final rect = n.visibleCanvasRect!;
+      expect(rect.left, closeTo(-500, 1e-9));
+      expect(rect.top, closeTo(0, 1e-9));
+      expect(rect.width, closeTo(2000, 1e-9));
+      expect(rect.height, closeTo(1000, 1e-9));
+      expect(rect.center.dx, closeTo(500, 1e-9));
+      expect(rect.center.dy, closeTo(500, 1e-9));
+    });
+
+    test('tracks zoom and pan through the live transform', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final n = c.read(viewportControllerProvider.notifier);
+      n.fit(
+        screenSize: const Size(1000, 1000),
+        canvasSize: const Size(500, 500),
+        padding: 0,
+      );
+      // scale 2, t (0,0) → zoom ×2 about screen (200,200) gives scale 4,
+      // t (-200,-200) (pinned above): visible = [50,300]×[50,300].
+      n.zoomBy(2.0, const Offset(200, 200));
+      expect(n.visibleCanvasRect, const Rect.fromLTWH(50, 50, 250, 250));
+      // A screen-space pan of (-100, 0) slides the window right by
+      // 100/scale = 25 canvas px.
+      n.panBy(const Offset(-100, 0));
+      expect(n.visibleCanvasRect, const Rect.fromLTWH(75, 50, 250, 250));
+    });
+  });
+
+  group('ViewportController.insertPositionFor', () {
+    test('centres the layer on the visible centre when it fits', () {
+      expect(
+        ViewportController.insertPositionFor(
+          visibleCentre: const Offset(300, 220),
+          layerSize: const Size(70, 70),
+          docSize: const Size(400, 300),
+        ),
+        const Offset(265, 185),
+      );
+    });
+
+    test('doc-centre anchor reproduces the historical centred insert', () {
+      // At the default fitted viewport the visible centre IS the
+      // document centre, so untouched viewports keep old geometry.
+      expect(
+        ViewportController.insertPositionFor(
+          visibleCentre: const Offset(200, 150),
+          layerSize: const Size(80, 80),
+          docSize: const Size(400, 300),
+        ),
+        const Offset(160, 110),
+      );
+    });
+
+    test('clamps so the layer lands fully inside the document', () {
+      // Visible centre near the corner: half the layer would hang off
+      // the document — snap to the edge instead.
+      expect(
+        ViewportController.insertPositionFor(
+          visibleCentre: const Offset(390, 10),
+          layerSize: const Size(100, 100),
+          docSize: const Size(400, 300),
+        ),
+        const Offset(300, 0),
+      );
+      // Pasteboard framing: the visible centre is entirely outside the
+      // document — nearest fully-inside placement wins.
+      expect(
+        ViewportController.insertPositionFor(
+          visibleCentre: const Offset(-500, -500),
+          layerSize: const Size(100, 100),
+          docSize: const Size(400, 300),
+        ),
+        Offset.zero,
+      );
+    });
+
+    test('oversized axis falls back to document-centring', () {
+      // A layer wider than the document keeps the historical centred
+      // (negative) x; the fitting axis still clamps normally.
+      expect(
+        ViewportController.insertPositionFor(
+          visibleCentre: const Offset(10, 10),
+          layerSize: const Size(600, 80),
+          docSize: const Size(400, 300),
+        ),
+        const Offset(-100, 0),
+      );
+    });
+  });
 }
