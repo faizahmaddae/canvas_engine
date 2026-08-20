@@ -279,13 +279,14 @@ class _LayerTile extends ConsumerWidget {
                 selectionControllerProvider.notifier,
               );
               selectionCtl.toggle(layer.id);
-              // Existing rule: the mode ends when membership can no
-              // longer form a group (mirrors the editor's commit-tick
-              // prune listener at < 2).
-              if (ref.read(selectionControllerProvider).selectedIds.length <
-                  2) {
-                ref.read(selectionModeProvider.notifier).exitMulti();
-              }
+              // Membership edits never end the mode (ux-audit P2-5).
+              // This row used to exitMulti below 2 members while the
+              // equivalent canvas toggle kept the mode armed — two
+              // surfaces, two lifetimes, and the canvas one was
+              // invisible. The unified rule: multi stays armed at ANY
+              // count until an explicit exit (chip ✕, tap-on-empty,
+              // system Back), and the chip stays on screen the whole
+              // time, so a mode that toggles taps is never a secret.
               return;
             }
             ref.read(selectionControllerProvider.notifier).select(layer.id);

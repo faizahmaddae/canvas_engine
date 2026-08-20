@@ -19,6 +19,9 @@ import 'package:flutter_test/flutter_test.dart';
 ///   * long-press on a layer enters multi mode and selects that
 ///     layer;
 ///   * single-tap in multi mode toggles a layer in/out;
+///   * the mode stays armed — and its exit chip visible — at ANY
+///     member count (0/1/2+) until an explicit exit (ux-audit P2-5:
+///     the below-2 rule is unified across canvas and drawer);
 ///   * tap on empty canvas in multi mode exits the mode and clears;
 ///   * tap-cycling is suppressed while in multi mode.
 void main() {
@@ -145,7 +148,8 @@ void main() {
   });
 
   group('multi-select mode taps', () {
-    testWidgets('tap on a layer toggles it in/out', (tester) async {
+    testWidgets('tap on a layer toggles it in/out; the mode and its chip '
+        'survive every count (ux-audit P2-5)', (tester) async {
       final container = await buildEditor(tester);
       addRect(
         container,
@@ -160,27 +164,58 @@ void main() {
         size: const Size(80, 80),
       );
       await tester.pump();
+      final chip = find.byKey(const ValueKey('multi-select-exit-chip'));
 
-      // Enter multi mode via empty long-press.
+      // Enter multi mode via empty long-press: armed at count 0 — the
+      // chip (the mode's presence signal AND exit affordance) is
+      // already up.
       await longPress(tester, toScreen(container, const Offset(350, 350)));
       expect(container.read(selectionModeProvider), SelectionMode.multi);
+      expect(chip, findsOneWidget);
 
       await tap(tester, toScreen(container, const Offset(90, 90)));
       expect(container.read(selectionControllerProvider).selectedIds, ['a']);
+      expect(
+        container.read(selectionModeProvider),
+        SelectionMode.multi,
+        reason: 'reaching count 1 on the way UP must not end the mode',
+      );
+      expect(chip, findsOneWidget);
 
       await tap(tester, toScreen(container, const Offset(240, 90)));
       expect(container.read(selectionControllerProvider).selectedIds, [
         'a',
         'b',
       ]);
+      expect(chip, findsOneWidget);
 
-      // Toggle 'a' off.
+      // Toggle 'a' off — dropping to 1 member keeps the mode armed
+      // and the chip visible: membership edits never end the mode,
+      // only an explicit exit does (unified below-2 rule).
       await tap(tester, toScreen(container, const Offset(90, 90)));
       expect(
         container.read(selectionControllerProvider).selectedIds,
         ['b'],
         reason: 'tap on a selected layer toggles it out',
       );
+      expect(container.read(selectionModeProvider), SelectionMode.multi);
+      expect(chip, findsOneWidget);
+
+      // Toggle 'b' off too — even at count 0 the mode stays armed and
+      // visibly so; the next tap still TOGGLES (adds) rather than
+      // replacing, which is what makes group-building from zero work.
+      await tap(tester, toScreen(container, const Offset(240, 90)));
+      expect(container.read(selectionControllerProvider).hasSelection, isFalse);
+      expect(container.read(selectionModeProvider), SelectionMode.multi);
+      expect(chip, findsOneWidget);
+
+      await tap(tester, toScreen(container, const Offset(90, 90)));
+      expect(
+        container.read(selectionControllerProvider).selectedIds,
+        ['a'],
+        reason: 'armed at count 0, a layer tap toggles IN — not select',
+      );
+      expect(container.read(selectionModeProvider), SelectionMode.multi);
     });
 
     testWidgets('tap on empty canvas exits mode AND clears selection', (
@@ -209,6 +244,11 @@ void main() {
         container.read(selectionControllerProvider).hasSelection,
         isFalse,
         reason: 'tap on empty also clears selection',
+      );
+      expect(
+        find.byKey(const ValueKey('multi-select-exit-chip')),
+        findsNothing,
+        reason: 'the chip exists exactly while the mode is armed',
       );
     });
   });

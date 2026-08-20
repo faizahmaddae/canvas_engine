@@ -149,17 +149,21 @@ List<Widget> buildCanvasChrome({
     // was removed. Cropping now happens in the
     // full-screen [CropModeOverlay] mounted by the
     // [EditorScreen] above this canvas.
-    // Minimal multi-select mode indicator. Renders only
-    // when the user has explicitly entered the mode via
-    // long-press. A tiny chip in the top-left corner
-    // tells the user "you are in multi-select" + the
-    // current count, so toggling-on-tap behaviour is
-    // never invisible.
     // Mask-edit chrome: region scrim/outline, drag
     // handles, and the bottom strip. Mounted above
     // every other chrome piece it replaces.
     if (maskEditActive) MaskEditOverlay(viewport: viewport),
-    const _MultiSelectModeChip(),
+    // Multi-select mode indicator: renders whenever the
+    // mode is armed (ux-audit P2-5) — the mode rewrites
+    // what every canvas tap means, so the chip is its
+    // presence signal at ANY member count, ۰ and ۱
+    // included. It yields only to a mask session, which
+    // absorbs every canvas pointer (contract §5 row 1):
+    // no tap can toggle while one is open, and the chip
+    // returns — mode still armed — the moment the
+    // session ends. Crop needs no gate: its full-screen
+    // overlay mounts above this whole stack.
+    if (!maskEditActive) const _MultiSelectModeChip(),
   ];
 }
 
@@ -688,6 +692,15 @@ Widget buildQuickCapsule({
       if (ref.watch(canvasChromeSuppressedProvider)) {
         return const SizedBox.shrink();
       }
+      // Multi-select mode rewrites every canvas tap into membership
+      // toggling; a floating pill of single-selection accelerators
+      // hovering over the one remaining member both contradicts that
+      // grammar and STEALS the toggle tap for whatever pill it lands
+      // on — the member becomes un-removable by tap (found by the
+      // P2-5 cross-surface lifetime test).
+      if (ref.watch(selectionModeProvider) == SelectionMode.multi) {
+        return const SizedBox.shrink();
+      }
       return QuickCapsule(layer: selectedLayer, viewport: viewport);
     },
   );
@@ -706,23 +719,29 @@ Widget buildQuickCapsule({
 ///
 /// The whole capsule is one tap target (44dp floor via a transparent
 /// halo, ModeDoneButton's pattern) and the trailing ✕ is what makes
-/// it read as dismissible. Exit keeps the PRIMARY selection and drops
-/// to single mode — the same landing state the editor's own <2-member
-/// prune rule produces. Long-press-to-enter and tap-on-empty-to-exit
-/// keep working unchanged; this is the discoverable path.
+/// it read as dismissible. Exit keeps the PRIMARY selection (when one
+/// exists) and drops to single mode. Long-press-to-enter and
+/// tap-on-empty-to-exit keep working unchanged; this is the
+/// discoverable path.
 class _MultiSelectModeChip extends ConsumerWidget {
   const _MultiSelectModeChip();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Gated on the DOCK's own derivation, and labelled with the same
-    // count it uses. Watching `selectionMode` alone let the chip
-    // outlive the state it describes: a selection can name layers that
-    // no longer exist (an undo, a delete), and the chip announced
-    // «چندانتخاب · ۱۰» over a six-layer document while the dock —
-    // which has always filtered — correctly showed the single
-    // surviving layer's own tools.
-    if (ref.watch(editorToolModeProvider) != EditorToolMode.multi) {
+    // Presence gates on the MODE FLAG itself — the thing that rewrites
+    // tap semantics — not on the dock's derivation, which needs >1
+    // actionable member. Gating on the dock left the armed mode
+    // completely invisible at 0–1 members while canvas taps kept
+    // TOGGLING membership: no chip, no exit affordance (ux-audit
+    // P2-5). The ghost-count bug that motivated the dock gate is
+    // solved by the LABEL instead: [actionableSelectionCountProvider]
+    // filters dead ids and the protected base photo, so the chip can
+    // never again announce «چندانتخاب · ۱۰» over a six-layer document
+    // — at worst it shows «۰» or «۱», which are now honest, reachable
+    // states of the armed mode. The dock keeps its own derivation:
+    // single-layer tools for one member are fine; the chip, not the
+    // dock, is the mode indicator.
+    if (ref.watch(selectionModeProvider) != SelectionMode.multi) {
       return const SizedBox.shrink();
     }
     final count = ref.watch(actionableSelectionCountProvider);
@@ -742,8 +761,9 @@ class _MultiSelectModeChip extends ConsumerWidget {
             borderRadius: BorderRadius.circular(999),
             onTap: () {
               HapticFeedback.selectionClick().catchError((_) {});
-              // Keep the primary, drop the rest, leave the mode —
-              // matching what the <2-member flows land on.
+              // Keep the primary, drop the rest, leave the mode. At
+              // count 0 (armed from an empty long-press) there is no
+              // primary — the exit is just the mode ending.
               final primary = ref.read(selectionControllerProvider).selectedId;
               ref.read(selectionModeProvider.notifier).exitMulti();
               if (primary != null) {

@@ -127,13 +127,16 @@ class EditorScreen extends ConsumerWidget {
     });
     ref.listen<int>(documentCommitVersionProvider, (prev, next) {
       if (prev == next) return;
-      final pruned = ref
+      // Prune only — deliberately NO multi-mode collapse here
+      // (ux-audit P2-5). The mode stays armed at any member count
+      // until an explicit exit, and the chip — gated on the mode
+      // flag, labelled with the actionable count — stays visible
+      // through the prune. The count-triggered exit this listener
+      // used to carry was one of three divergent below-2 rules, and
+      // it only ever fired on a commit tick, never on a user toggle.
+      ref
           .read(selectionControllerProvider.notifier)
           .pruneMissing(ref.read(documentControllerProvider));
-      if (!pruned) return;
-      if (ref.read(selectionControllerProvider).selectedIds.length < 2) {
-        ref.read(selectionModeProvider.notifier).exitMulti();
-      }
     });
     // Selection-change seam: when the user picks a different layer
     // (or deselects to empty), collapse every object-tool's
@@ -853,11 +856,11 @@ class EditorScreen extends ConsumerWidget {
   Future<void> _startTextInputFlow(BuildContext context, WidgetRef ref) async {
     ref.read(paintToolControllerProvider.notifier).closePanel();
     final textCtrl = ref.read(textToolControllerProvider.notifier);
-    // Stage an empty text layer at the canvas center so the user sees
-    // the bounding box appear as soon as the sheet opens — typing then
-    // streams content into that staged layer in real time. Cancel /
-    // empty input removes it; non-empty input commits a single
-    // AddLayerCommand on apply.
+    // Stage an empty text layer at the visible-viewport centre so the
+    // user sees the bounding box appear as soon as the sheet opens —
+    // typing then streams content into that staged layer in real time.
+    // Cancel / empty input removes it; non-empty input commits a
+    // single AddLayerCommand on apply.
     textCtrl.beginAddText();
     // Flip the composer-open flag so EditorCanvas hides selection
     // handles, transform HUD, floating contextual toolbars and the
@@ -889,11 +892,26 @@ class EditorScreen extends ConsumerWidget {
     }
   }
 
-  Offset _centerInDoc(WidgetRef ref, Size size) {
+  /// Canvas-space position for a newly-inserted layer of [size]:
+  /// centred on the point of the document the user is currently
+  /// looking at — the visible-viewport centre — clamped so the layer
+  /// lands fully inside the document whenever it fits (ux-audit
+  /// P2-12: the old doc-centre insert dropped new layers off-screen
+  /// when the user was zoomed into a corner, and the unchanged canvas
+  /// invited duplicate taps). At the default fitted viewport the pane
+  /// centre IS the document centre, so untouched viewports keep the
+  /// historical geometry exactly. Falls back to the document centre
+  /// when no fit has seeded the viewport yet (first frame, tests).
+  Offset _insertPositionFor(WidgetRef ref, Size size) {
     final doc = ref.read(documentControllerProvider);
-    return Offset(
-      doc.width / 2 - size.width / 2,
-      doc.height / 2 - size.height / 2,
+    final docSize = Size(doc.width, doc.height);
+    final visible = ref
+        .read(viewportControllerProvider.notifier)
+        .visibleCanvasRect;
+    return ViewportController.insertPositionFor(
+      visibleCentre: visible?.center ?? docSize.center(Offset.zero),
+      layerSize: size,
+      docSize: docSize,
     );
   }
 
@@ -982,7 +1000,7 @@ class EditorScreen extends ConsumerWidget {
     final layer = ImageLayer(
       id: id,
       transform: LayerTransform(
-        position: _centerInDoc(ref, fitted),
+        position: _insertPositionFor(ref, fitted),
         size: fitted,
       ),
       source: ImageSource.file(stablePath),
@@ -1038,7 +1056,10 @@ class EditorScreen extends ConsumerWidget {
         : liveDoc.backgroundColor;
     final layer = ShapeLayer(
       id: id,
-      transform: LayerTransform(position: _centerInDoc(ref, size), size: size),
+      transform: LayerTransform(
+        position: _insertPositionFor(ref, size),
+        size: size,
+      ),
       kind: kind,
       fillColor: ShapeDefaults.fillColorForCanvas(canvasBackground, kind),
       // RoundedRectangle is a picker shortcut for "rectangle that
@@ -1131,7 +1152,10 @@ class EditorScreen extends ConsumerWidget {
     final size = CanvasSizing.scaleSize(const Size(240, 240), liveDoc);
     final layer = TextLayer(
       id: id,
-      transform: LayerTransform(position: _centerInDoc(ref, size), size: size),
+      transform: LayerTransform(
+        position: _insertPositionFor(ref, size),
+        size: size,
+      ),
       content: glyph,
       kind: TextLayerKind.emojiSticker,
       style: const TextStyleSpec(
