@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../canvas/application/canvas_tool_controller.dart';
 import '../crop/application/crop_controller.dart';
+import '../engine/modules/paint/paint_layer.dart';
 import '../image/application/image_tool_controller.dart';
 import '../paint/application/paint_tool_controller.dart';
 import '../shape/application/shape_tool_controller.dart';
 import '../sticker/application/sticker_tool_controller.dart';
 import '../text/application/text_tool_controller.dart';
 import 'context_toolbar_controller.dart';
+import 'document_controller.dart';
 import 'editing_controller.dart';
 import 'mask_edit_controller.dart';
 import 'selection_controller.dart';
@@ -180,9 +182,16 @@ void dismissActiveEditing(WidgetRef ref) {
 /// Excluded on purpose:
 ///   * Canvas tool — it has no selection so a selection change
 ///     should not collapse it; only an explicit dismiss should.
-///   * Paint tool — it is mode-scoped (its `openSlot` configures
-///     the next stroke, not a selected layer); selection changes
-///     are unrelated to paint sheet visibility.
+///   * Paint tool, while the selection stays paint-shaped — a paint
+///     sheet FOLLOWS its target instead of closing (§10.5 N):
+///     committing a stroke selects it, so closing here would slam a
+///     sheet the user is drawing with after every stroke, and
+///     reselecting another stroke retargets the open sheet (the
+///     scope chip names the switch). Only a selection landing on a
+///     NON-paint layer exits paint — the mode derivation puts
+///     `panelOpen` above the selected layer's type, so leaving the
+///     session armed would keep the paint dock mounted over a text
+///     or image selection made from the layers drawer.
 ///   * Text mode `panelOpen` — text mode itself is preserved so
 ///     re-tapping a text layer keeps the user in text mode without
 ///     having to re-enter it. Only the per-selection sheet/slot
@@ -194,6 +203,16 @@ void closeObjectSubPanels(WidgetRef ref) {
   // the session's own exit restores the user to, so collapsing them
   // mid-session would strand Done/Cancel with nothing to return to.
   if (maskSessionOwnsDismissal(ref)) return;
+  final selection = ref.read(selectionControllerProvider);
+  if (selection.hasSelection) {
+    final ids = selection.selectedIds;
+    final single = ids.length == 1
+        ? ref.read(documentControllerProvider).layerById(ids.first)
+        : null;
+    if (single is! PaintLayer) {
+      ref.read(paintToolControllerProvider.notifier).closePanel();
+    }
+  }
   ref.read(contextToolbarControllerProvider.notifier).closePanel();
   ref.read(imageToolControllerProvider.notifier).closePanel();
   ref.read(shapeToolControllerProvider.notifier).closePanel();
