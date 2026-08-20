@@ -16,7 +16,6 @@ import '../../text/presentation/text_direction_mode_picker.dart';
 import '../../../../app/ui/app_modal_sheet.dart';
 import '../../text/presentation/text_edit_flow.dart';
 import '../../text/presentation/text_resize_mode_picker.dart';
-import 'controls/toggle_segment.dart';
 import 'layer_actions.dart';
 import '../../../../app/theme/app_icons.dart';
 
@@ -32,9 +31,13 @@ import '../../../../app/theme/app_icons.dart';
 ///   1. Edit text (text)            7. Bring forward / Send backward
 ///   2. Align → context panel       8. Lock/Unlock (ACTION icon)
 ///   3. Opacity → context panel     9. Resize behavior (text/shape/paint)
-///   4. B/I/U inline row (text)    10. Text direction (text)
-///   5. Rename                     11. Layers → end drawer
-///   6. Duplicate                  12. Delete (danger)
+///   5. Rename                     10. Text direction (text)
+///   6. Duplicate                  11. Layers → end drawer
+///                                 12. Delete (danger)
+///
+/// (Row 4 was the B/I/U inline toggle row; it moved to the استایل
+/// dock panel — live toggles need a visible canvas, not a full scrim.
+/// Numbering kept so the row-order tests read against history.)
 ///
 /// Multi-selection renders the batch variant: count header + Align +
 /// batch Duplicate / Lock / Delete (each ONE CompositeCommand → one
@@ -197,12 +200,10 @@ class _LayerOverflowSheet extends StatelessWidget {
               .open(ContextToolPanel.opacity);
         }),
       ),
-      // 4 — B/I/U inline segmented row
-      if (textLayer != null) ...[
-        const Divider(height: 1),
-        _InlineStyleToggleRow(layer: textLayer, parentRef: parentRef),
-        const Divider(height: 1),
-      ],
+      // (B/I/U moved to the استایل panel — a dock panel is a live
+      // surface with the canvas visible, which is what document-
+      // mutating toggles need; here they mutated behind a full scrim
+      // in a list where every other row pops-then-acts. ux-audit P3-2)
       // 5 — Rename
       ListTile(
         leading: const Icon(AppIcons.rename),
@@ -525,84 +526,6 @@ class _ResizeModeToggleRowState extends State<_ResizeModeToggleRow> {
         setState(() => _isScale = !_isScale);
         widget.onChanged(_isScale);
       },
-    );
-  }
-}
-
-/// Bold / Italic / Underline as ONE inline segmented row — replaces
-/// the three full-height list rows (~168dp → ~44dp). Toggles stay
-/// inline (no sheet dismissal) so the user can flip several flags.
-///
-/// Owns its flag state locally, seeded from the layer at open time:
-/// the modal sheet mounts under the root navigator which can sit
-/// outside the editor `ProviderScope` in some embedder
-/// configurations, so watching providers here is not reliable —
-/// writes still go through [TextToolController] via the parent ref.
-class _InlineStyleToggleRow extends StatefulWidget {
-  const _InlineStyleToggleRow({required this.layer, required this.parentRef});
-
-  final TextLayer layer;
-  final WidgetRef parentRef;
-
-  @override
-  State<_InlineStyleToggleRow> createState() => _InlineStyleToggleRowState();
-}
-
-class _InlineStyleToggleRowState extends State<_InlineStyleToggleRow> {
-  late bool _bold = widget.layer.style.isBold;
-  late bool _italic = widget.layer.style.italic;
-  late bool _underline = widget.layer.style.underline;
-
-  TextToolController get _ctrl =>
-      widget.parentRef.read(textToolControllerProvider.notifier);
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Center(
-        child: ToggleSegmentGroup(
-          children: [
-            Semantics(
-              label: l10n.boldAction,
-              button: true,
-              child: ToggleSegment(
-                icon: AppIcons.bold,
-                selected: _bold,
-                onTap: () {
-                  setState(() => _bold = !_bold);
-                  _ctrl.setBold(_bold);
-                },
-              ),
-            ),
-            Semantics(
-              label: l10n.italicAction,
-              button: true,
-              child: ToggleSegment(
-                icon: AppIcons.textItalic,
-                selected: _italic,
-                onTap: () {
-                  setState(() => _italic = !_italic);
-                  _ctrl.setItalic(_italic);
-                },
-              ),
-            ),
-            Semantics(
-              label: l10n.underlineAction,
-              button: true,
-              child: ToggleSegment(
-                icon: AppIcons.textUnderline,
-                selected: _underline,
-                onTap: () {
-                  setState(() => _underline = !_underline);
-                  _ctrl.setUnderline(_underline);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

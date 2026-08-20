@@ -143,7 +143,6 @@ void main() {
       find.text('Edit text'),
       find.text('Align'),
       find.text('Opacity'),
-      find.byIcon(AppIcons.bold), // B/I/U inline row
       find.text('Rename'),
       find.text('Duplicate'),
       find.text('Bring forward'),
@@ -168,6 +167,10 @@ void main() {
     }
     // No Layers row: this host passed no onOpenLayers callback.
     expect(find.text('Layers'), findsNothing);
+    // No B/I/U row: live document-mutating toggles moved to the
+    // استایل dock panel where the canvas is visible (audit P3-2) —
+    // every row left in this sheet pops-then-acts.
+    expect(find.byIcon(AppIcons.bold), findsNothing);
     // Direction subtitle reflects the layer's current mode.
     expect(find.text('Right to left'), findsOneWidget);
   });

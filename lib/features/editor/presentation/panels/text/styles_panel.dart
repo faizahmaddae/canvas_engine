@@ -8,9 +8,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../app/theme/app_icons.dart';
 import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../l10n/l10n.dart';
+import '../../widgets/controls/toggle_segment.dart';
 import 'effect_sections.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../text/domain/text_style_presets.dart';
@@ -112,7 +114,7 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!sectionOpen)
+        if (!sectionOpen) ...[
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: _StylesRow(
@@ -128,6 +130,49 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
                   .readableOnCanvas,
             ),
           ),
+          const SizedBox(height: 10),
+          // Inline B/I/U. THIS panel is their home: a dock panel is a
+          // live surface with the canvas visible, so a toggle that
+          // mutates the document reads as what it is. They used to
+          // live in the «⋯» overflow sheet, mutating live behind a
+          // full scrim in a list where every other row pops-then-acts
+          // (ux-audit P3-2) — one list, two grammars. Reads straight
+          // off the layer (no local flags): the write round-trips
+          // through the command and the rebuilt layer flips the chip.
+          Center(
+            child: ToggleSegmentGroup(
+              children: [
+                Semantics(
+                  label: context.l10n.boldAction,
+                  button: true,
+                  child: ToggleSegment(
+                    icon: AppIcons.bold,
+                    selected: layer.style.isBold,
+                    onTap: () => ctrl.setBold(!layer.style.isBold),
+                  ),
+                ),
+                Semantics(
+                  label: context.l10n.italicAction,
+                  button: true,
+                  child: ToggleSegment(
+                    icon: AppIcons.textItalic,
+                    selected: layer.style.italic,
+                    onTap: () => ctrl.setItalic(!layer.style.italic),
+                  ),
+                ),
+                Semantics(
+                  label: context.l10n.underlineAction,
+                  button: true,
+                  child: ToggleSegment(
+                    icon: AppIcons.textUnderline,
+                    selected: layer.style.underline,
+                    onTap: () => ctrl.setUnderline(!layer.style.underline),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         _EffectChipsRow(
           open: _openEffect,
