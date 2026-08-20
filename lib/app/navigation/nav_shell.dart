@@ -52,36 +52,47 @@ class _NavShellState extends ConsumerState<NavShell> {
     final l10n = context.l10n;
     Widget tab(int i, Widget Function() builder) =>
         _visited.contains(i) ? builder() : const SizedBox.shrink();
-    return Scaffold(
-      body: IndexedStack(
-        index: index,
-        children: [
-          tab(0, () => const HomeScreen()),
-          tab(1, () => const _TemplatesTab()),
-          tab(2, () => const _ProjectsTab()),
-        ],
-      ),
-      bottomNavigationBar: BottomTabBar(
-        currentIndex: index,
-        onSelect: (value) =>
-            ref.read(navShellIndexProvider.notifier).select(value),
-        items: [
-          BottomTabItem(
-            icon: AppIcons.homeTab,
-            activeIcon: AppIcons.homeTab,
-            label: l10n.navHomeTab,
-          ),
-          BottomTabItem(
-            icon: AppIcons.templatesTab,
-            activeIcon: AppIcons.gridView,
-            label: l10n.templatesTitle,
-          ),
-          BottomTabItem(
-            icon: AppIcons.projectsTab,
-            activeIcon: AppIcons.projectsTab,
-            label: l10n.navProjectsTab,
-          ),
-        ],
+    // Android bottom-nav convention: system Back returns to the start
+    // destination (Home) before it may exit the app. Without this the
+    // tabs were one flat route and Back from Templates/Projects left
+    // the app cold (ux-audit P3-17).
+    return PopScope(
+      canPop: index == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        ref.read(navShellIndexProvider.notifier).select(0);
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: index,
+          children: [
+            tab(0, () => const HomeScreen()),
+            tab(1, () => const _TemplatesTab()),
+            tab(2, () => const _ProjectsTab()),
+          ],
+        ),
+        bottomNavigationBar: BottomTabBar(
+          currentIndex: index,
+          onSelect: (value) =>
+              ref.read(navShellIndexProvider.notifier).select(value),
+          items: [
+            BottomTabItem(
+              icon: AppIcons.homeTab,
+              activeIcon: AppIcons.homeTab,
+              label: l10n.navHomeTab,
+            ),
+            BottomTabItem(
+              icon: AppIcons.templatesTab,
+              activeIcon: AppIcons.gridView,
+              label: l10n.templatesTitle,
+            ),
+            BottomTabItem(
+              icon: AppIcons.projectsTab,
+              activeIcon: AppIcons.projectsTab,
+              label: l10n.navProjectsTab,
+            ),
+          ],
+        ),
       ),
     );
   }
