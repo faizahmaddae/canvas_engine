@@ -1565,12 +1565,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copyColorTooltip => 'Copy color code';
 
   @override
-  String get toolLabel => 'Tool';
-
-  @override
-  String get chooseToolTitle => 'Choose a tool';
-
-  @override
   String get thinOption => 'Thin';
 
   @override
@@ -1607,15 +1601,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get drawGroup => 'Draw';
-
-  @override
-  String get shapesGroup => 'Shapes';
-
-  @override
-  String get effectsGroup => 'Effects';
-
-  @override
   String get penTool => 'Pen';
 
   @override
@@ -1631,25 +1616,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dottedOption => 'Dotted';
 
   @override
-  String get dashDotOption => 'Dash dot';
-
-  @override
   String get eraserTool => 'Eraser';
 
   @override
-  String get eraseStrokesTool => 'Erase strokes';
+  String get adjustStrokesTool => 'Select';
 
   @override
-  String get newShortLabel => 'New';
+  String get paintEraserHint => 'Tap or drag over strokes to erase them';
 
   @override
-  String get newStrokeTool => 'New stroke';
-
-  @override
-  String get nextStrokeScope => 'Next stroke';
-
-  @override
-  String get editingStrokeScope => 'Editing this stroke';
+  String get paintTapStrokeHint => 'Tap a stroke to edit it';
 
   @override
   String get squareLabel => 'Square';

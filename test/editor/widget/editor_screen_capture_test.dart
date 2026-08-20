@@ -11,7 +11,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:canvas_engine/app/theme/app_icons.dart';
 import 'package:canvas_engine/app/theme/app_theme.dart';
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/editor_session.dart';
@@ -25,6 +24,8 @@ import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.d
 import 'package:canvas_engine/features/editor/engine/commands/shape_commands.dart';
 import 'package:canvas_engine/features/editor/engine/core/background_fill.dart';
 import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
+import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
+import 'package:canvas_engine/features/editor/paint/domain/paint_tool_type.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/shape/application/shape_tool_controller.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
@@ -80,6 +81,9 @@ ProviderContainer _sampleEditor({
   bool withLookPanel = false,
   bool withGradientFill = false,
   bool withPaintSelected = false,
+  bool withPaintArmed = false,
+  PaintToolType paintTool = PaintToolType.freestyle,
+  String? paintOpenSlot,
   bool withCanvasPanel = false,
   bool withCropSession = false,
   bool withMultiSelect = false,
@@ -176,6 +180,39 @@ ProviderContainer _sampleEditor({
       ),
     );
     container.read(selectionControllerProvider.notifier).select('paint-1');
+  }
+  if (withPaintArmed) {
+    // The Draw tile's entry path: arms freestyle immediately — the
+    // armed-drawing baseline every workflow starts from. A committed,
+    // UNselected stroke keeps the canvas honest about what drawing
+    // over existing work looks like.
+    ctrl.execute(
+      AddLayerCommand(
+        PaintLayer(
+          id: 'paint-stroke-bg',
+          transform: const LayerTransform(
+            position: Offset(200, 280),
+            size: Size(680, 320),
+          ),
+          kind: PaintKind.freestyle,
+          normalizedPoints: const [
+            Offset(0, 0.8),
+            Offset(0.2, 0.2),
+            Offset(0.45, 0.9),
+            Offset(0.7, 0.1),
+            Offset(1, 0.6),
+          ],
+          strokeColor: const Color(0xFFB3541E),
+          strokeWidth: 12,
+        ),
+      ),
+    );
+    container.read(paintToolControllerProvider.notifier).selectTool(paintTool);
+    if (paintOpenSlot != null) {
+      container
+          .read(paintToolControllerProvider.notifier)
+          .openSlot(paintOpenSlot);
+    }
   }
   if (withGradientFill) {
     // The sample shape, re-filled with a gradient + its Style panel
@@ -279,6 +316,9 @@ void main() {
     bool withLookPanel = false,
     bool withGradientFill = false,
     bool withPaintSelected = false,
+    bool withPaintArmed = false,
+    PaintToolType paintTool = PaintToolType.freestyle,
+    String? paintOpenSlot,
     bool withCanvasPanel = false,
     bool withCropSession = false,
     bool withMultiSelect = false,
@@ -300,6 +340,9 @@ void main() {
       withLookPanel: withLookPanel,
       withGradientFill: withGradientFill,
       withPaintSelected: withPaintSelected,
+      withPaintArmed: withPaintArmed,
+      paintTool: paintTool,
+      paintOpenSlot: paintOpenSlot,
       withCanvasPanel: withCanvasPanel,
       withCropSession: withCropSession,
       withMultiSelect: withMultiSelect,
@@ -385,6 +428,9 @@ void main() {
     bool withLookPanel = false,
     bool withGradientFill = false,
     bool withPaintSelected = false,
+    bool withPaintArmed = false,
+    PaintToolType paintTool = PaintToolType.freestyle,
+    String? paintOpenSlot,
     bool withCanvasPanel = false,
     bool withCropSession = false,
     bool withMultiSelect = false,
@@ -401,6 +447,9 @@ void main() {
       withLookPanel: withLookPanel,
       withGradientFill: withGradientFill,
       withPaintSelected: withPaintSelected,
+      withPaintArmed: withPaintArmed,
+      paintTool: paintTool,
+      paintOpenSlot: paintOpenSlot,
       withCanvasPanel: withCanvasPanel,
       withCropSession: withCropSession,
       withMultiSelect: withMultiSelect,
@@ -544,7 +593,7 @@ void main() {
     );
   });
 
-  testWidgets('EditorScreen visual capture — paint size panel, light', (
+  testWidgets('EditorScreen visual capture — paint pen sheet, light', (
     tester,
   ) async {
     await capture(
@@ -553,16 +602,15 @@ void main() {
       fileName: 'editor_paint_size_light.png',
       withPaintSelected: true,
       interact: (t) async {
-        // Opens the Size sheet on the selected stroke — the redesign
-        // onto PresetSliderControl: StrokeHero above a live readout +
-        // preset chips + the always-visible fine-tune slider.
-        await t.tap(find.byIcon(AppIcons.strokeWeight));
+        // The bench's size pill opens the pen sheet (size + opacity)
+        // bound to the selected stroke.
+        await t.tap(find.byKey(const ValueKey('paint-pill-size')));
         await t.pumpAndSettle();
       },
     );
   });
 
-  testWidgets('EditorScreen visual capture — paint size panel, dark', (
+  testWidgets('EditorScreen visual capture — paint pen sheet, dark', (
     tester,
   ) async {
     await capture(
@@ -571,11 +619,54 @@ void main() {
       fileName: 'editor_paint_size_dark.png',
       withPaintSelected: true,
       interact: (t) async {
-        await t.tap(find.byIcon(AppIcons.strokeWeight));
+        await t.tap(find.byKey(const ValueKey('paint-pill-size')));
         await t.pumpAndSettle();
       },
     );
   });
+
+  // Paint workflow states a drawing session actually passes through:
+  // entry (pen armed, drawing-ready), the colour sheet, and the shape
+  // slot's options sheet. The adjust posture is the existing
+  // editor_paint_restyle variant.
+  for (final brightness in [Brightness.light, Brightness.dark]) {
+    final suffix = brightness == Brightness.dark ? 'dark' : 'light';
+    testWidgets('EditorScreen visual capture — paint entry, $suffix', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: brightness,
+        fileName: 'editor_paint_entry_$suffix.png',
+        withPaintArmed: true,
+      );
+    });
+
+    testWidgets('EditorScreen visual capture — paint shape sheet, $suffix', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: brightness,
+        fileName: 'editor_paint_shape_$suffix.png',
+        withPaintArmed: true,
+        paintTool: PaintToolType.polygon,
+        paintOpenSlot: 'shape',
+      );
+    });
+
+    testWidgets('EditorScreen visual capture — paint colour, $suffix', (
+      tester,
+    ) async {
+      await capture(
+        tester,
+        brightness: brightness,
+        fileName: 'editor_paint_color_$suffix.png',
+        withPaintArmed: true,
+        paintOpenSlot: 'color',
+      );
+    });
+  }
 
   testWidgets('EditorScreen visual capture — gradient fill, light', (
     tester,

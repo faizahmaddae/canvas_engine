@@ -324,7 +324,9 @@ class QuickCapsule extends ConsumerWidget {
           ),
           onTap: () {
             EditorHaptics.tap();
-            ctrl.toggleSlot('size');
+            // The bench's pen sheet owns size (+ opacity) since the
+            // 2026-08 redesign; the old standalone 'size' slot died.
+            ctrl.toggleSlot('pen');
           },
         ),
       ];

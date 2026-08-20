@@ -2996,18 +2996,6 @@ abstract class AppLocalizations {
   /// **'Copy color code'**
   String get copyColorTooltip;
 
-  /// No description provided for @toolLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Tool'**
-  String get toolLabel;
-
-  /// No description provided for @chooseToolTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a tool'**
-  String get chooseToolTitle;
-
   /// No description provided for @thinOption.
   ///
   /// In en, this message translates to:
@@ -3068,24 +3056,6 @@ abstract class AppLocalizations {
   /// **'{count} sides'**
   String sidesCount(int count);
 
-  /// No description provided for @drawGroup.
-  ///
-  /// In en, this message translates to:
-  /// **'Draw'**
-  String get drawGroup;
-
-  /// No description provided for @shapesGroup.
-  ///
-  /// In en, this message translates to:
-  /// **'Shapes'**
-  String get shapesGroup;
-
-  /// No description provided for @effectsGroup.
-  ///
-  /// In en, this message translates to:
-  /// **'Effects'**
-  String get effectsGroup;
-
   /// No description provided for @penTool.
   ///
   /// In en, this message translates to:
@@ -3116,47 +3086,29 @@ abstract class AppLocalizations {
   /// **'Dotted'**
   String get dottedOption;
 
-  /// No description provided for @dashDotOption.
-  ///
-  /// In en, this message translates to:
-  /// **'Dash dot'**
-  String get dashDotOption;
-
   /// No description provided for @eraserTool.
   ///
   /// In en, this message translates to:
   /// **'Eraser'**
   String get eraserTool;
 
-  /// No description provided for @eraseStrokesTool.
+  /// No description provided for @adjustStrokesTool.
   ///
   /// In en, this message translates to:
-  /// **'Erase strokes'**
-  String get eraseStrokesTool;
+  /// **'Select'**
+  String get adjustStrokesTool;
 
-  /// No description provided for @newShortLabel.
+  /// No description provided for @paintEraserHint.
   ///
   /// In en, this message translates to:
-  /// **'New'**
-  String get newShortLabel;
+  /// **'Tap or drag over strokes to erase them'**
+  String get paintEraserHint;
 
-  /// No description provided for @newStrokeTool.
+  /// No description provided for @paintTapStrokeHint.
   ///
   /// In en, this message translates to:
-  /// **'New stroke'**
-  String get newStrokeTool;
-
-  /// No description provided for @nextStrokeScope.
-  ///
-  /// In en, this message translates to:
-  /// **'Next stroke'**
-  String get nextStrokeScope;
-
-  /// No description provided for @editingStrokeScope.
-  ///
-  /// In en, this message translates to:
-  /// **'Editing this stroke'**
-  String get editingStrokeScope;
+  /// **'Tap a stroke to edit it'**
+  String get paintTapStrokeHint;
 
   /// No description provided for @squareLabel.
   ///

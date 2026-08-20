@@ -1567,12 +1567,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get copyColorTooltip => 'کپی کد رنگ';
 
   @override
-  String get toolLabel => 'ابزار';
-
-  @override
-  String get chooseToolTitle => 'انتخاب ابزار';
-
-  @override
   String get thinOption => 'نازک';
 
   @override
@@ -1609,15 +1603,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get drawGroup => 'نقاشی';
-
-  @override
-  String get shapesGroup => 'شکل‌ها';
-
-  @override
-  String get effectsGroup => 'جلوه‌ها';
-
-  @override
   String get penTool => 'قلم';
 
   @override
@@ -1633,25 +1618,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get dottedOption => 'نقطه‌چین';
 
   @override
-  String get dashDotOption => 'خط و نقطه';
-
-  @override
   String get eraserTool => 'پاک‌کن';
 
   @override
-  String get eraseStrokesTool => 'پاک‌کردن خط‌ها';
+  String get adjustStrokesTool => 'انتخاب';
 
   @override
-  String get newShortLabel => 'جدید';
+  String get paintEraserHint => 'برای پاک‌کردن، روی خط‌ها بزنید یا بکشید';
 
   @override
-  String get newStrokeTool => 'خط جدید';
-
-  @override
-  String get nextStrokeScope => 'خط بعدی';
-
-  @override
-  String get editingStrokeScope => 'ویرایش این خط';
+  String get paintTapStrokeHint => 'برای ویرایش، روی یک خط بزنید';
 
   @override
   String get squareLabel => 'مربع';

@@ -54,8 +54,8 @@ import '../image/presentation/image_shadow_body.dart';
 import '../image/presentation/image_shape_body.dart';
 import '../paint/application/paint_tool_controller.dart';
 import '../paint/domain/paint_tool_type.dart';
+import '../paint/presentation/paint_bench.dart';
 import '../paint/presentation/paint_mode_expansion.dart';
-import '../paint/presentation/paint_mode_toolbar.dart';
 import '../shape/application/shape_tool_controller.dart';
 import '../shape/presentation/shape_border_body.dart';
 import '../shape/presentation/shape_shadow_body.dart';
@@ -379,8 +379,13 @@ class EditorScreen extends ConsumerWidget {
                   modeKey: dock.modeKey,
                   expanded: dock.expanded,
                   expandedKey: dock.expandedKey,
+                  // The bench is two rows (style + rack); every other
+                  // mode keeps the standard strip height.
+                  height: dock.paintOpen
+                      ? PaintBench.dockHeight(dockContext)
+                      : null,
                   child: dock.paintOpen
-                      ? const PaintModeToolbar()
+                      ? const PaintBench()
                       : dock.textMode
                       ? const TextModeToolbar()
                       : dock.multiSelected

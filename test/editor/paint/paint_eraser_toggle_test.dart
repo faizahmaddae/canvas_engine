@@ -10,8 +10,8 @@
 
 import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
 import 'package:canvas_engine/features/editor/paint/domain/paint_tool_type.dart';
-import 'package:canvas_engine/features/editor/paint/presentation/paint_mode_toolbar.dart';
-import 'package:canvas_engine/features/editor/paint/presentation/paint_tool_specs.dart';
+import 'package:canvas_engine/features/editor/paint/domain/paint_bench_slot.dart';
+import 'package:canvas_engine/features/editor/paint/presentation/paint_bench.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -83,27 +83,25 @@ void main() {
     });
   });
 
-  group('strip composition', () {
-    test('the eraser is reachable from every drawing tool', () {
+  group('rack composition', () {
+    test('the eraser is a permanent rack slot, one tap from any tool', () {
+      // The bench's rack is fixed — no capability matrix can hide it.
+      expect(PaintBenchSlot.values, contains(PaintBenchSlot.eraser));
       for (final tool in PaintToolType.values) {
-        final allowed = allowedPaintSlotsFor(tool);
+        final c = harness();
+        final ctrl = c.read(paintToolControllerProvider.notifier);
+        ctrl.selectTool(tool);
+        ctrl.armBenchSlot(PaintBenchSlot.eraser);
         expect(
-          allowed,
-          contains('eraser'),
+          active(c),
+          PaintToolType.eraser,
           reason: '$tool should not need a panel to reach the eraser',
         );
       }
     });
 
-    test('but it is NOT in the sibling-swipe order', () {
-      // It has no sheet. Paging onto it would open nothing and swap
-      // the user's tool mid-swipe.
-      for (final tool in PaintToolType.values) {
-        expect(
-          PaintModeToolbar.toolIdsFor(tool: tool),
-          isNot(contains('eraser')),
-        );
-      }
+    test('it has no options sheet — tap-again must not open anything', () {
+      expect(PaintBench.sheetFor(PaintBenchSlot.eraser), isNull);
     });
   });
 }
