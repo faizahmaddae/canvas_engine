@@ -372,14 +372,20 @@ class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
   // Both existed only to compensate for the hand-rolled strip this
   // tray used to render.
 
-  Future<void> _openCustomPicker() async {
+  /// [initial] is the STAGED colour — the one the input field, the
+  /// pill dot and the shelf are rendering — captured by the caller
+  /// from the same [stagedComposerStyle] they all read. It must never
+  /// be `session.defaultStyle.color`: during a live add/edit session
+  /// `applyStyle` writes the selected layer only, so the session
+  /// default stays untouched white and the wheel would open (and emit
+  /// its first drag) on a colour the screen isn't showing (P2-9).
+  Future<void> _openCustomPicker(Color initial) async {
     final ctrl = ref.read(textToolControllerProvider.notifier);
-    final session = ref.read(textToolControllerProvider);
     // The shared picker sheet — live, undimmed, recents handled
     // inside; nothing to restore or re-commit on close.
     await showColorPickerSheet(
       context,
-      initial: session.defaultStyle.color,
+      initial: initial,
       onLiveChange: ctrl.setColor,
       title: context.l10n.textColorTitle,
     );
@@ -467,7 +473,9 @@ class _AddTextQuickStyleBarState extends ConsumerState<_AddTextQuickStyleBar> {
                               ctrl.setColor(c.withValues(alpha: style.color.a)),
                         ),
                         const SizedBox(height: 10),
-                        _MoreColorButton(onTap: _openCustomPicker),
+                        _MoreColorButton(
+                          onTap: () => _openCustomPicker(style.color),
+                        ),
                       ],
                     ),
                   ),

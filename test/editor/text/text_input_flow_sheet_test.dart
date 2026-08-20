@@ -15,11 +15,19 @@
 // Driven through the public `showTextInputFlowSheet` entry so we
 // exercise the same code path the editor uses.
 
+import 'package:canvas_engine/features/color_picker/presentation/color_picker_body.dart';
+import 'package:canvas_engine/features/editor/application/document_controller.dart';
+import 'package:canvas_engine/features/editor/application/live_overlay_controller.dart';
+import 'package:canvas_engine/features/editor/application/selection_controller.dart';
+import 'package:canvas_engine/features/editor/engine/commands/transform_commands.dart';
+import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
+import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
 import 'package:canvas_engine/features/editor/text/presentation/text_input_flow_sheet.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Opens the composer and returns a tuple of `(resultFuture)` wrapped in
 /// a single-element record so the outer awaits don't flatten the inner
@@ -259,4 +267,126 @@ void main() {
     expect(field.textDirection, TextDirection.rtl);
     expect(field.textAlign, TextAlign.right);
   });
+
+  testWidgets(
+    '"More colours" opens the picker on the staged colour after a swatch '
+    'pick, not on session.defaultStyle (audit P2-9)',
+    (tester) async {
+      // The tray renders the shared ColorShelf, which reads the
+      // app-wide recents store.
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      // A live add/edit session means a SELECTED TextLayer: style
+      // writes land on that layer and `session.defaultStyle` stays the
+      // untouched TextStyleSpec white — exactly the split that made
+      // seeding the picker from the default open the wheel on a colour
+      // the screen wasn't showing.
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final docCtrl = container.read(documentControllerProvider.notifier);
+      docCtrl.newDocument(width: 400, height: 300);
+      docCtrl.execute(
+        AddLayerCommand(
+          TextLayer(
+            id: 'text-1',
+            transform: const LayerTransform(
+              position: Offset(40, 40),
+              size: Size(320, 120),
+            ),
+            content: 'سلام',
+            style: const TextStyleSpec(color: Color(0xFF22C55E)),
+          ),
+        ),
+      );
+      container.read(selectionControllerProvider.notifier).select('text-1');
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Builder(
+              builder: (ctx) => Scaffold(
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showTextInputFlowSheet(
+                        ctx,
+                        initial: 'سلام',
+                        title: 'Edit text',
+                        confirmLabel: 'Done',
+                      );
+                    },
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      // Open the colour tray and pick the red palette swatch.
+      await tester.tap(find.byKey(const ValueKey('add-text-color-pill')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final swatch = find.byKey(const ValueKey('color-picker-swatch-EF4444'));
+      await tester.ensureVisible(swatch);
+      await tester.pump();
+      await tester.tap(swatch);
+      await tester.pump();
+
+      // The colour on screen = the staged (selected) layer's style,
+      // read from the same rendered document `stagedComposerStyle`
+      // uses. Swatch taps preserve the working alpha, so this is the
+      // opaque palette red.
+      final stagedColor =
+          (container.read(renderedDocumentProvider).layerById('text-1')!
+                  as TextLayer)
+              .style
+              .color;
+      expect(
+        stagedColor.toARGB32(),
+        0xFFEF4444,
+        reason: 'sanity: the swatch pick must restyle the selected layer',
+      );
+      expect(
+        container
+            .read(textToolControllerProvider)
+            .defaultStyle
+            .color
+            .toARGB32(),
+        isNot(stagedColor.toARGB32()),
+        reason:
+            'precondition: with a layer selected the session default must '
+            'NOT take the pick — otherwise this test cannot tell the two '
+            'seeds apart',
+      );
+
+      final more = find.byKey(const ValueKey('add-text-more-colors'));
+      await tester.ensureVisible(more);
+      await tester.pump();
+      await tester.tap(more);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final body = tester.widget<ColorPickerBody>(find.byType(ColorPickerBody));
+      expect(
+        body.initial.toARGB32(),
+        stagedColor.toARGB32(),
+        reason:
+            'The picker must open on the colour the composer is showing '
+            '(the staged style), not session.defaultStyle: a live session '
+            'never writes the default, so the old seed opened the wheel on '
+            'untouched white and the first drag emitted a colour derived '
+            'from the wrong HSV (audit P2-9).',
+      );
+    },
+  );
 }
