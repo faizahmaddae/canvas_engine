@@ -167,6 +167,11 @@ void main() {
     // tapping it rather than trusting it to land on-screen.
     await tester.ensureVisible(find.text('Adjust precisely'));
     await tester.pumpAndSettle();
+    // Image border still hides its slider behind the disclosure —
+    // only paint Size moved onto the always-visible PresetSliderControl.
+    await tester.tap(find.text('Adjust precisely'));
+    await tester.pumpAndSettle();
+
     final versionBefore = container.read(documentCommitVersionProvider);
     final slider = find.byType(Slider);
     expect(slider, findsOneWidget);
