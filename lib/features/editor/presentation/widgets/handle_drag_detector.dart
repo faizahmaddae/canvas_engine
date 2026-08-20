@@ -31,6 +31,7 @@ class HandleDragDetector extends StatelessWidget {
     super.key,
     this.child,
     required this.onDrag,
+    this.onTap,
     this.behavior = HitTestBehavior.opaque,
   });
 
@@ -41,6 +42,19 @@ class HandleDragDetector extends StatelessWidget {
   final HitTestBehavior behavior;
   final void Function(Offset globalPointer, DragPhase phase) onDrag;
 
+  /// Fired after [DragPhase.end] when the claimed pointer never moved
+  /// past [kTouchSlop] — a true tap on the handle's touch halo.
+  ///
+  /// The eager claim means the halo eats taps it never uses: a
+  /// sub-slop press is a zero-delta session whose end commits nothing.
+  /// On a small or zoomed-out layer the four 48dp halos blanket the
+  /// whole body, so WITHOUT this hook the layer becomes un-tappable —
+  /// no cycle, no double-tap-to-edit on small text, no multi-select
+  /// toggle. Callers forward it to the same tap route the body
+  /// surface re-injects into. Optional: crop's handles keep eating
+  /// taps (a tap means nothing there).
+  final void Function(Offset globalPointer)? onTap;
+
   @override
   Widget build(BuildContext context) {
     return RawGestureDetector(
@@ -49,7 +63,9 @@ class HandleDragDetector extends StatelessWidget {
         _HandleDragRecognizer:
             GestureRecognizerFactoryWithHandlers<_HandleDragRecognizer>(
               () => _HandleDragRecognizer(),
-              (instance) => instance.onDrag = onDrag,
+              (instance) => instance
+                ..onDrag = onDrag
+                ..onTap = onTap,
             ),
       },
       child: SizedBox.expand(
@@ -85,9 +101,16 @@ class HandleDragDetector extends StatelessWidget {
 ///     state inside the recogniser avoids an extra widget-state field.
 class _HandleDragRecognizer extends OneSequenceGestureRecognizer {
   void Function(Offset globalPointer, DragPhase phase)? onDrag;
+  void Function(Offset globalPointer)? onTap;
 
   int? _activePointer;
   Offset _lastGlobalPosition = Offset.zero;
+  Offset _downGlobalPosition = Offset.zero;
+
+  /// Whether the pointer ever left the tap slop during this sequence.
+  /// Measured against the maximum excursion, not the release point, so
+  /// a drag that returns to its origin still counts as a drag.
+  bool _movedPastSlop = false;
 
   @override
   void addAllowedPointer(PointerDownEvent event) {
@@ -99,6 +122,8 @@ class _HandleDragRecognizer extends OneSequenceGestureRecognizer {
     }
     _activePointer = event.pointer;
     _lastGlobalPosition = event.position;
+    _downGlobalPosition = event.position;
+    _movedPastSlop = false;
     startTrackingPointer(event.pointer, event.transform);
 
     // Claim the arena immediately. Any competing tap / scale / long-press
@@ -116,10 +141,17 @@ class _HandleDragRecognizer extends OneSequenceGestureRecognizer {
 
     if (event is PointerMoveEvent) {
       _lastGlobalPosition = event.position;
+      if ((event.position - _downGlobalPosition).distance > kTouchSlop) {
+        _movedPastSlop = true;
+      }
       onDrag?.call(event.position, DragPhase.update);
     } else if (event is PointerUpEvent) {
       _lastGlobalPosition = event.position;
       onDrag?.call(event.position, DragPhase.end);
+      // A sub-slop press-and-release is a tap the eager claim stole
+      // from every ancestor recogniser: the zero-delta session above
+      // committed nothing, so hand the tap to whoever wants it.
+      if (!_movedPastSlop) onTap?.call(event.position);
       _finish(event.pointer);
     } else if (event is PointerCancelEvent) {
       onDrag?.call(_lastGlobalPosition, DragPhase.end);

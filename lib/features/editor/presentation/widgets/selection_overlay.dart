@@ -325,6 +325,7 @@ class LayerSelectionOverlay extends StatelessWidget {
             _PositionedHandle(
               center: tl,
               debugLabel: 'topLeft',
+              onTap: onBodyTap,
               onDrag: (p, phase) =>
                   onHandle(InteractionHandle.topLeft, p, phase),
               child: _CornerGlyph(
@@ -335,6 +336,7 @@ class LayerSelectionOverlay extends StatelessWidget {
             _PositionedHandle(
               center: tr,
               debugLabel: 'topRight',
+              onTap: onBodyTap,
               onDrag: (p, phase) =>
                   onHandle(InteractionHandle.topRight, p, phase),
               child: _CornerGlyph(
@@ -345,6 +347,7 @@ class LayerSelectionOverlay extends StatelessWidget {
             _PositionedHandle(
               center: bl,
               debugLabel: 'bottomLeft',
+              onTap: onBodyTap,
               onDrag: (p, phase) =>
                   onHandle(InteractionHandle.bottomLeft, p, phase),
               child: _CornerGlyph(
@@ -355,6 +358,7 @@ class LayerSelectionOverlay extends StatelessWidget {
             _PositionedHandle(
               center: br,
               debugLabel: 'bottomRight',
+              onTap: onBodyTap,
               onDrag: (p, phase) =>
                   onHandle(InteractionHandle.bottomRight, p, phase),
               child: _CornerGlyph(
@@ -370,6 +374,7 @@ class LayerSelectionOverlay extends StatelessWidget {
             _PositionedHandle(
               center: rotateKnob,
               debugLabel: 'rotateKnob',
+              onTap: onBodyTap,
               onDrag: (p, phase) =>
                   onHandle(InteractionHandle.rotate, p, phase),
               child: _RotateGlyph(
@@ -473,12 +478,20 @@ class _PositionedHandle extends StatelessWidget {
     required this.child,
     required this.onDrag,
     required this.debugLabel,
+    this.onTap,
   });
 
   final Offset center;
   final Widget child;
   final String debugLabel;
   final void Function(Offset globalPointer, DragPhase phase) onDrag;
+
+  /// Sub-slop taps on the 48dp halo forward here (the same route the
+  /// body surface re-injects into). On a small or zoomed-out layer the
+  /// four halos blanket the whole body — without this, such a layer is
+  /// un-tappable: no cycling, no double-tap-to-edit small text, no
+  /// multi-select toggle-off.
+  final void Function(Offset globalPointer)? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -492,6 +505,7 @@ class _PositionedHandle extends StatelessWidget {
         cursor: SystemMouseCursors.grab,
         child: HandleDragDetector(
           onDrag: onDrag,
+          onTap: onTap,
           child: _HitBoxVisual(debugLabel: debugLabel, child: child),
         ),
       ),
@@ -1437,6 +1451,7 @@ class GroupSelectionOverlay extends StatelessWidget {
           _PositionedHandle(
             center: tl,
             debugLabel: 'group-topLeft',
+            onTap: onBodyTap,
             onDrag: (p, phase) => onHandle(InteractionHandle.topLeft, p, phase),
             child: _CornerGlyph(
               color: color,
@@ -1448,6 +1463,7 @@ class GroupSelectionOverlay extends StatelessWidget {
           _PositionedHandle(
             center: tr,
             debugLabel: 'group-topRight',
+            onTap: onBodyTap,
             onDrag: (p, phase) =>
                 onHandle(InteractionHandle.topRight, p, phase),
             child: _CornerGlyph(
@@ -1458,6 +1474,7 @@ class GroupSelectionOverlay extends StatelessWidget {
           _PositionedHandle(
             center: bl,
             debugLabel: 'group-bottomLeft',
+            onTap: onBodyTap,
             onDrag: (p, phase) =>
                 onHandle(InteractionHandle.bottomLeft, p, phase),
             child: _CornerGlyph(
@@ -1468,6 +1485,7 @@ class GroupSelectionOverlay extends StatelessWidget {
           _PositionedHandle(
             center: br,
             debugLabel: 'group-bottomRight',
+            onTap: onBodyTap,
             onDrag: (p, phase) =>
                 onHandle(InteractionHandle.bottomRight, p, phase),
             child: _CornerGlyph(
@@ -1481,6 +1499,7 @@ class GroupSelectionOverlay extends StatelessWidget {
           _PositionedHandle(
             center: rotateKnob,
             debugLabel: 'group-rotateKnob',
+            onTap: onBodyTap,
             onDrag: (p, phase) => onHandle(InteractionHandle.rotate, p, phase),
             child: _RotateGlyph(
               color: color,
