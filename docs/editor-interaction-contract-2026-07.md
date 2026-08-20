@@ -96,7 +96,10 @@ entries, regardless of how close in time. Mechanics:
 
 Rules: every affordance maps to exactly one level; E3 always
 implies E1; the Done pill is E2 (it must also close that mode's
-panels — E1 — before clearing); a canvas-panel must obey E3
+panels — E1 — before clearing); the paint rack's adjust slot is a
+*posture switch inside the mode*, not an exit level (it un-arms the
+tool and keeps the mode; the Done pill stays the only paint E2 —
+2026-08 redesign); a canvas-panel must obey E3
 (tap-empty closes it and it must NOT resurrect on the next
 deselect — tb2 10/16 fixes the known violation). Crop's Done/Cancel
 restore `priorSelectionId`; Filters/Adjust entered from the main
@@ -307,26 +310,42 @@ Unlike P, an N control has no absent or unavailable state (10.3):
 one of its two named targets always exists, so N controls are
 always present and always live — there is nothing to dim and no
 precondition to explain. The requirement N carries instead is
-disclosure: because the same tile, sheet and value can mean either
-"defaults for the stroke you're about to draw" or "the stroke you
-already drew," a control must state at the surface which one is
-live right now. `PaintModeInlineExpansion`'s scope chip does this —
-«خط بعدی» (next-authored) versus «ویرایش این خط» (bound) — and the
-strip's own tiles follow the same predicate for their label/value/
-capability set (`PaintStyleView.isRestyling`), so the sheet and the
-strip that opened it never disagree about which target is live.
+disclosure: because the same control can mean either "defaults for
+the stroke you're about to draw" or "the stroke you already drew,"
+the surface must make the live target legible. *(Amended by the
+paint redesign, 2026-08 — `docs/paint-redesign-2026-08.md`: the
+disclosure is now structural, not captional. Paint mode has two
+visibly distinct postures — a drawing posture with a tool armed on
+the rack, and an adjust posture with none — and the posture itself
+states the target, so the per-sheet scope chips «خط بعدی»/«ویرایش
+این خط» are retired.)*
 
-Resolution order is static, not searched: the bound target wins
-whenever a selection exists, full stop — an armed tool does not
-override it. This is what lets a tool stay armed for continuous
-authoring while the layer just authored is immediately restylable:
-every path that ARMS a tool clears the selection first, so a
-selection can only coexist with an armed tool in the one case this
-scope exists to serve. A fresh A command's OWN content is still
-drawn from the author defaults directly, never through the bound
-target, so a stale selection can never leak into what gets authored
-next.
+Reads resolve statically, not by search: the bound target wins
+whenever a selection exists — an armed tool does not override what
+the controls *display*. Every path that ARMS a tool clears the
+selection first, so a selection can only coexist with an armed tool
+when authoring itself created it (commit auto-selects, and a
+two-point tool's tap can select — §10 A). A fresh A command's OWN
+content is still drawn from the author defaults directly, never
+through the bound target, so a stale selection can never leak into
+what gets authored next.
 
-Pinning suites: `paint_restyle_dock_test.dart` ("a paint-layer
-selection wins over an armed tool"), `paint_stroke_controller_test.dart`
-("commitDot selects the layer it just added, tool stays armed").
+**Write rule (amended 2026-08).** Both write targets are still
+named in advance — no searching, no chooser — but which of them a
+write reaches depends on the posture:
+
+- **Armed (drawing posture):** a style write targets the bound
+  layer (ONE undoable command) *and* the author defaults (session
+  state, no undo entry) in the same gesture. Rationale: with
+  auto-select-on-commit, the pre-amendment either/or rule meant
+  "draw, recolor, draw again" left the pen on the previous ink —
+  the stroke on screen changed while the next stroke came out
+  stale. A pen that is being re-inked keeps the ink.
+- **Unarmed (adjust posture):** a style write targets the bound
+  layer only. Editing an old annotation does not re-ink the pen.
+  With nothing selected there is nothing to write; the bench says
+  so (hint row), which satisfies 10.3 without a dimmed control.
+
+Pinning suites: `paint_tool_controller_test.dart` (write-rule
+truth table), `paint_stroke_controller_test.dart` ("commitDot
+selects the layer it just added, tool stays armed").
