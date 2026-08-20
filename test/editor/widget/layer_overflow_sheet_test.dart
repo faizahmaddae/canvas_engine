@@ -27,13 +27,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:canvas_engine/app/theme/app_icons.dart';
 
-ShapeLayer _shape(String id) => ShapeLayer(
+ShapeLayer _shape(String id, {bool locked = false}) => ShapeLayer(
   id: id,
   transform: const LayerTransform(
     position: Offset(40, 40),
     size: Size(120, 80),
   ),
   kind: ShapeKind.rectangle,
+  locked: locked,
 );
 
 TextLayer _text(String id) => TextLayer(
@@ -280,6 +281,31 @@ void main() {
     );
   });
 
+  // Audit P2-7: the Align row used to stay live for a locked layer and
+  // route to a panel whose every tile silently no-oped. The row must
+  // read from the controller's own eligibility rule — the same greyed
+  // treatment the base-photo and reorder gates already use.
+  testWidgets('locked layer: Align row disabled and routes nowhere', (
+    tester,
+  ) async {
+    final layer = _shape('frozen', locked: true);
+    final container = _containerWith([layer]);
+    addTearDown(container.dispose);
+    container.read(selectionControllerProvider.notifier).select('frozen');
+
+    await tester.pumpWidget(_host(container, layer));
+    await _open(tester);
+
+    final row = tester.widget<ListTile>(find.widgetWithText(ListTile, 'Align'));
+    expect(row.enabled, isFalse);
+
+    await tester.tap(find.text('Align'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsOneWidget, reason: 'sheet stays up');
+    expect(container.read(contextToolbarControllerProvider), isNull);
+  });
+
   testWidgets('rename action commits a custom layer name', (tester) async {
     final layer = _shape('shape-1');
     final container = _containerWith([layer]);
@@ -443,6 +469,90 @@ void main() {
       expect(
         container.read(documentControllerProvider).layers.map((l) => l.id),
         ['a', 'b', 'c'],
+      );
+    });
+
+    // Audit P2-7: batch Align had no gate at all — an all-locked or
+    // effectively-single batch opened six live tiles that did nothing.
+    testWidgets('all-locked batch: Align row disabled', (tester) async {
+      final a = _shape('a', locked: true);
+      final b = _shape('b', locked: true);
+      final container = _containerWith([a, b]);
+      addTearDown(container.dispose);
+      container.read(selectionControllerProvider.notifier).selectMany([
+        'a',
+        'b',
+      ]);
+
+      await tester.pumpWidget(_host(container, b, selectedLayers: [a, b]));
+      await _open(tester);
+
+      final row = tester.widget<ListTile>(
+        find.widgetWithText(ListTile, 'Align'),
+      );
+      expect(row.enabled, isFalse);
+
+      await tester.tap(find.text('Align'));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(container.read(contextToolbarControllerProvider), isNull);
+    });
+
+    testWidgets('mixed pair with one movable member: Align row disabled', (
+      tester,
+    ) async {
+      // `align()` bails below two ELIGIBLE members, so a pair with one
+      // locked layer strands the movable one — the row must say so.
+      final a = _shape('a');
+      final frozen = _shape('frozen', locked: true);
+      final container = _containerWith([a, frozen]);
+      addTearDown(container.dispose);
+      container.read(selectionControllerProvider.notifier).selectMany([
+        'a',
+        'frozen',
+      ]);
+
+      await tester.pumpWidget(
+        _host(container, frozen, selectedLayers: [a, frozen]),
+      );
+      await _open(tester);
+
+      final row = tester.widget<ListTile>(
+        find.widgetWithText(ListTile, 'Align'),
+      );
+      expect(row.enabled, isFalse);
+    });
+
+    testWidgets('mixed batch with two movable members keeps Align live', (
+      tester,
+    ) async {
+      final a = _shape('a');
+      final b = _shape('b');
+      final frozen = _shape('frozen', locked: true);
+      final container = _containerWith([a, b, frozen]);
+      addTearDown(container.dispose);
+      container.read(selectionControllerProvider.notifier).selectMany([
+        'a',
+        'b',
+        'frozen',
+      ]);
+
+      await tester.pumpWidget(
+        _host(container, frozen, selectedLayers: [a, b, frozen]),
+      );
+      await _open(tester);
+
+      final row = tester.widget<ListTile>(
+        find.widgetWithText(ListTile, 'Align'),
+      );
+      expect(row.enabled, isTrue);
+
+      await tester.tap(find.text('Align'));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(
+        container.read(contextToolbarControllerProvider),
+        ContextToolPanel.align,
       );
     });
 

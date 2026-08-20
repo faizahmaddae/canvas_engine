@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/l10n.dart';
+import '../../application/alignment_controller.dart';
 import '../../application/context_toolbar_controller.dart';
 import '../../application/document_controller.dart';
 import '../../engine/core/editor_layer.dart';
@@ -146,17 +147,20 @@ class _LayerOverflowSheet extends StatelessWidget {
     final paintLayer = layer is PaintLayer ? layer as PaintLayer : null;
     final canForward = LayerActions.canBringForward(parentRef, layer);
     final canBackward = LayerActions.canSendBackward(parentRef, layer);
-    // Align moves a layer, and the protected base photo does not move:
-    // it IS the canvas, so "align to canvas" is meaningless for it by
-    // construction, and every other surface already refuses to shift it
-    // (hit-testing skips it, InteractionController declines drag/resize/
-    // rotate, AlignmentController bails on `locked`). Rendering the row
-    // live gave the user six buttons that silently did nothing — worse
-    // than an unavailable row, because it looks like it worked. Greyed
-    // out, the same treatment the reorder rows above already use.
-    final canAlign = !parentRef
-        .read(documentControllerProvider)
-        .isProtectedBasePhoto(layer.id);
+    // Align moves a layer, and AlignmentController refuses layers that
+    // cannot move: locked ones, and the protected base photo (it IS
+    // the canvas, so "align to canvas" is meaningless for it by
+    // construction — hit-testing skips it, InteractionController
+    // declines drag/resize/rotate). Rendering the row live in those
+    // states gave the user six buttons that silently did nothing —
+    // worse than an unavailable row, because it looks like it worked
+    // (audit P2-7). Greyed out instead, the same treatment the reorder
+    // rows above already use — and gated by THE eligibility rule the
+    // controller commits through, so row and command cannot drift.
+    final canAlign = AlignmentEligibility.of(
+      parentRef.read(documentControllerProvider),
+      [layer],
+    ).canAlign;
 
     return [
       // 1 — Edit text
@@ -368,6 +372,15 @@ class _LayerOverflowSheet extends StatelessWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final allLocked = selectedLayers.every((l) => l.locked);
+    // Align/distribute drop ineligible (locked / non-movable) members,
+    // so an all-locked batch — or a mixed one with a single movable
+    // member — would open a panel whose every tile silently no-ops
+    // (audit P2-7). Same grammar as the single-layer row: disabled at
+    // the source, from the controller's own eligibility rule.
+    final canAlign = AlignmentEligibility.of(
+      parentRef.read(documentControllerProvider),
+      selectedLayers,
+    ).canAlign;
 
     return [
       // Count header — identifies the batch the rows below act on.
@@ -377,14 +390,17 @@ class _LayerOverflowSheet extends StatelessWidget {
       ),
       // Align (canonical row 2)
       ListTile(
+        enabled: canAlign,
         leading: const Icon(AppIcons.alignLeft),
         title: Text(l10n.alignAction),
-        trailing: const Icon(AppIcons.drillIn),
-        onTap: () => _popThen(context, () {
-          parentRef
-              .read(contextToolbarControllerProvider.notifier)
-              .open(ContextToolPanel.align);
-        }),
+        trailing: canAlign ? const Icon(AppIcons.drillIn) : null,
+        onTap: !canAlign
+            ? null
+            : () => _popThen(context, () {
+                parentRef
+                    .read(contextToolbarControllerProvider.notifier)
+                    .open(ContextToolPanel.align);
+              }),
       ),
       // Batch duplicate (canonical row 6) — one composite, clones
       // become the new multi selection.
