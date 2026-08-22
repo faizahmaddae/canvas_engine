@@ -1923,12 +1923,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formatLabel => 'Format';
 
   @override
-  String get previewShareAction => 'Preview & Share';
-
-  @override
-  String get previewSaveAction => 'Preview & Save';
-
-  @override
   String get savedToPhotoLibrary => 'Saved to your photo library';
 
   @override

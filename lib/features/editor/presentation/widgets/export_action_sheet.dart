@@ -13,7 +13,6 @@ import '../../../settings/application/settings_controller.dart';
 import '../../application/document_controller.dart';
 import '../../application/export_controller.dart';
 import '../../application/export_format.dart';
-import '../../application/export_intent.dart';
 import '../../../../app/ui/app_modal_sheet.dart';
 import '../../application/export_session.dart';
 import '../../application/export_quality.dart';
@@ -25,10 +24,11 @@ import 'section_label.dart';
 import '../../../../core/utils/editor_value_format.dart';
 import '../../../../app/theme/app_icons.dart';
 
-/// Modal export sheet. The user picks an [ExportQuality] preset and
-/// then taps **Save Image** or **Share** — both actions reuse the same
-/// selected quality, satisfying the "consistent ratio across save +
-/// share" requirement.
+/// Modal export sheet. The user configures size / quality / format and
+/// taps the single **Preview export** exit; Save and Share live on the
+/// preview screen, where the rendered file is visible. Both actions
+/// there reuse this sheet's settings, satisfying the "consistent
+/// ratio across save + share" requirement.
 ///
 /// Architecture:
 ///   * The engine ([DocumentPngExporter]) keeps its `pixelRatio`
@@ -207,45 +207,28 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                // Two exit intents. Each carries its own [ExportIntent]
-                // into the preview so the confirmation button there IS
-                // the action the user asked for here.
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        key: const ValueKey('export-sheet-share'),
-                        onPressed: _busy
-                            ? null
-                            : () => _openPreview(ExportIntent.share),
-                        icon: const Icon(AppIcons.visible),
-                        label: Text(l10n.previewShareAction),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
+                // ONE exit. The sheet used to offer «پیش‌نمایش و
+                // اشتراک» beside «پیش‌نمایش و ذخیره» — two buttons
+                // that did the same thing (render, open the preview)
+                // and asked the save-vs-share question BEFORE the
+                // user had seen the file, only for the preview to
+                // show both actions again. One decision, made once,
+                // where the result is visible: the sheet's job ends
+                // at "show me the file", and save/share live on the
+                // preview alone.
+                FilledButton.icon(
+                  key: const ValueKey('export-sheet-preview'),
+                  onPressed: _busy ? null : _openPreview,
+                  icon: const Icon(AppIcons.visible),
+                  // The door carries the room's name (previewExportTitle
+                  // is also the preview screen's title).
+                  label: Text(l10n.previewExportTitle),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: FilledButton.icon(
-                        key: const ValueKey('export-sheet-save'),
-                        onPressed: _busy
-                            ? null
-                            : () => _openPreview(ExportIntent.save),
-                        icon: const Icon(AppIcons.exportSave),
-                        label: Text(l10n.previewSaveAction),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 if (_busy) ...[
                   const SizedBox(height: 12),
@@ -260,14 +243,11 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
   }
 
   /// Render once with the current settings, then route the user to
-  /// the [ExportPreviewScreen] where they confirm Save / Share /
-  /// Cancel. The bytes are reused inside the preview — no second
-  /// render — so the user sees exactly what will be saved.
-  ///
-  /// [intent] is the exit the user tapped here; the preview promotes
-  /// it to its primary button instead of asking the same question
-  /// twice.
-  Future<void> _openPreview(ExportIntent intent) async {
+  /// the [ExportPreviewScreen] — the single place where Save / Share
+  /// is decided, with the file on screen. The bytes are reused inside
+  /// the preview — no second render — so the user sees exactly what
+  /// will be saved.
+  Future<void> _openPreview() async {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final doc = ref.read(documentControllerProvider);
@@ -287,7 +267,6 @@ class _ExportActionSheetState extends ConsumerState<ExportActionSheet> {
       pixelWidth: pixelW,
       pixelHeight: pixelH,
       jpgQuality: _format == ExportFormat.jpg ? _jpgQuality : null,
-      intent: intent,
     );
     if (!mounted || outcome == null) return;
     switch (outcome.action) {

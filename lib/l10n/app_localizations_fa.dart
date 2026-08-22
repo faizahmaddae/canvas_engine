@@ -1926,12 +1926,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get formatLabel => 'فرمت';
 
   @override
-  String get previewShareAction => 'پیش‌نمایش و اشتراک';
-
-  @override
-  String get previewSaveAction => 'پیش‌نمایش و ذخیره';
-
-  @override
   String get savedToPhotoLibrary => 'در گالری عکس ذخیره شد';
 
   @override

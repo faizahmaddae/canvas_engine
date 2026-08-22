@@ -3674,18 +3674,6 @@ abstract class AppLocalizations {
   /// **'Format'**
   String get formatLabel;
 
-  /// No description provided for @previewShareAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Preview & Share'**
-  String get previewShareAction;
-
-  /// No description provided for @previewSaveAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Preview & Save'**
-  String get previewSaveAction;
-
   /// No description provided for @savedToPhotoLibrary.
   ///
   /// In en, this message translates to:
