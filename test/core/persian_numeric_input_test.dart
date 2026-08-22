@@ -5,7 +5,7 @@
 // what the user typed and the dialog rejected it as empty.
 
 import 'package:canvas_engine/app/theme/app_theme.dart';
-import 'package:canvas_engine/app/ui/size_picker_dialog.dart';
+import 'package:canvas_engine/app/ui/size_picker_sheet.dart';
 import 'package:canvas_engine/core/utils/editor_value_format.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +38,7 @@ void main() {
     });
   });
 
-  group('SizePickerDialog custom fields', () {
+  group('SizePickerSheet custom fields', () {
     Future<void> openCustom(WidgetTester tester, Locale locale) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -50,10 +50,7 @@ void main() {
             builder: (context) => Scaffold(
               body: Center(
                 child: ElevatedButton(
-                  onPressed: () => showDialog<CanvasSize>(
-                    context: context,
-                    builder: (_) => const SizePickerDialog(),
-                  ),
+                  onPressed: () => SizePickerSheet.show(context),
                   child: const Text('open'),
                 ),
               ),
@@ -96,9 +93,9 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('size-picker-create')));
       await tester.pumpAndSettle();
 
-      // Accepted → the dialog closed. Before the fold it stayed open
+      // Accepted → the sheet closed. Before the fold it stayed open
       // with a validation error against input it had just rendered.
-      expect(find.byType(Dialog), findsNothing);
+      expect(find.byType(SizePickerSheet), findsNothing);
     });
   });
 }
