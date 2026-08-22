@@ -115,9 +115,14 @@ Pointer-owner resolution, in order, per FIRST pointer landing:
 | 2 | anywhere, 2nd finger joins | — | paint | viewport (cancel in-flight stroke) |
 | 3 | on canvas | — | paint | stroke (tap = dot; freestyle only) |
 | 4 | selected layer's chrome quad (outset) | single | any | transform session (eager) |
-| 5 | another **pointer-eligible** layer's bbox | any | not paint | select-then-move that layer (start deferred to slop) |
+| 5 | another **pointer-eligible** layer's bbox | no row-7 owner (see below) | not paint | select-then-move that layer (start deferred to slop) |
 | 6 | anywhere, 2nd finger joins, not started on chrome quad | any | any | viewport pinch |
-| 7 | empty canvas | any | any | tap→E3; drag→ movable single selection: translate it (start deferred to slop); otherwise viewport pan |
+| 7 | anywhere off the chrome quad | any | any | tap→ `handleTap` (E3 on empty canvas, else select/cycle); drag→ movable single selection: translate it (start deferred to slop); otherwise viewport pan |
+
+Rows 5 and 7 resolve in the reverse of their numbering: 7 is checked
+first and 5 applies only where 7 declines. The numbers are load-
+bearing (code and tests cite them by name), so they stay put — see
+the second amendment below.
 
 Row 7 amendment (2026-07-30, drag-anywhere): a one-finger drag from
 empty canvas or pasteboard moves the current selection when that
@@ -129,14 +134,38 @@ hold still long-presses, and a pre-slop second finger still abandons
 to the viewport pinch (row 6). A locked or hidden layer's area is
 pointer-INeligible and therefore counts as empty canvas — in a photo
 project the whole base photo is a valid drag-anywhere start. The
-retired active-transform-surface model's three failure modes stay
-solved: zoom-while-selected (row 6), drag-another-layer (row 5); the
-third — a habitual one-finger pan relocating the selection — is the
-accepted trade: pan remains one gesture away (two fingers, or
-deselect first), and multi-selections, locked/hidden selections and
-the no-selection state keep the one-finger pan. Multi-select mode is
-excluded deliberately: its tap-to-toggle grammar makes stray drags
-costlier, and a group quad is rarely hard to hit.
+retired active-transform-surface model's failure modes stay solved:
+zoom-while-selected is row 6; a habitual one-finger pan relocating
+the selection is the accepted trade — pan remains one gesture away
+(two fingers, or deselect first), and multi-selections,
+locked/hidden selections and the no-selection state keep the
+one-finger pan. Multi-select mode is excluded deliberately: its
+tap-to-toggle grammar makes stray drags costlier, and a group quad
+is rarely hard to hit.
+
+Second amendment (2026-08-22, selection-wins): drag-anywhere means
+anywhere — row 7 now outranks row 5, so a movable single selection
+owns the one-finger drag even when the finger lands on ANOTHER
+eligible layer's bbox. Row 5 survives only where no such selection
+exists to own the gesture (nothing selected, or the selection is
+multi / locked / hidden / unmovable); the row order in the table
+above is therefore read as "5 applies when 7 does not".
+
+The bug this closes: with one object selected, a finger landing
+anywhere on a neighbour walked off with the neighbour. The
+user-visible symptom is not "I grabbed the wrong object" — it is
+"my selection stopped responding", because the thing under the
+finger moves while the thing the user declared sits still. On a
+crowded canvas, where every drag either targets a small object or
+starts near one, that is most drags. Selection is the declared
+subject and a drag is a verb applied to it; the pixel the gesture
+happens to start on must not silently rebind the noun. The cost —
+grabbing a second object now takes tap-then-drag instead of one
+drag — is paid only when the user already has a selection, and
+tap-select is untouched: the claim resolves at slop, so a sub-slop
+release still falls through to the tap recognisers and selects
+whatever is under the finger. Pinned by
+`select_and_move_test.dart` ("selection-wins").
 
 Long-press (multi entry) requires deferred start — row 4 switches
 to defer-at-slop in Stage 3 (3.3) so the timer can fire on-layer.

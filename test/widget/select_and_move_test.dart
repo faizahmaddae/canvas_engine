@@ -11,27 +11,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Select-and-move + drag-anywhere under the interaction contract,
-/// §5 rows 5 and 7 (tb3 2/7; row-7 amendment 2026-07-30): a 1-finger
-/// drag STARTING on an eligible, un-selected layer's bbox selects
-/// that layer and translates it in the same gesture, and a 1-finger
-/// drag STARTING on empty canvas while a movable single selection
-/// exists translates that selection.
+/// §5 rows 5 and 7 (tb3 2/7; drag-anywhere amendment 2026-07-30;
+/// selection-wins amendment 2026-08-22).
 ///
-///   * drag on an un-selected layer  → it becomes selected + moves;
-///     the whole gesture lands as ONE undo entry (the transform
-///     commit — selection is not a document command)
-///   * sub-slop tap on it            → today's tap-select, NO move,
+/// The ordering rule, which is what most of these pin: while a
+/// movable single selection exists it OWNS the one-finger drag
+/// wherever the finger lands (row 7). Row 5 — land on a layer, select
+/// and move it in one gesture — applies only when no such selection
+/// exists to own the gesture.
+///
+///   * drag anywhere with a movable single selection → the SELECTION
+///     translates, including when the finger starts on another
+///     eligible layer's bbox, on a locked/hidden layer's bbox, or on
+///     empty canvas; one undo entry (the transform commit —
+///     selection is not a document command), viewport still
+///   * sub-slop tap on another layer → today's tap-select, NO move,
 ///     NO history entry (the lazy arena claim resolves at slop, so
-///     taps keep their native canvas-recogniser timing)
-///   * drag on empty canvas, single movable selection → translates
-///     the SELECTION (drag-anywhere), one undo entry, viewport still;
-///     a locked / hidden layer's bbox reads as empty canvas here
-///     (pointer-ineligible), so those drags also move the selection
-///   * locked / hidden SELECTION     → drag-anywhere declines;
-///     empty-canvas drag pans (the protected base photo keeps
-///     photo-project navigation)
-///   * empty selection               → same select-and-move; empty
-///     canvas still pans (row 7's fallback)
+///     taps keep their native canvas-recogniser timing) — this is
+///     the escape hatch that makes selection-wins liveable
+///   * locked / hidden / absent SELECTION → row 7 declines; row 5
+///     claims an eligible layer under the finger, else the viewport
+///     pans (the protected base photo keeps photo-project navigation)
 ///   * multi-select mode             → rows 5 + 7-drag disabled,
 ///     today's behaviour exactly
 ///   * 2nd finger before the slop claim → the sequence is abandoned
@@ -100,8 +100,9 @@ void main() {
   //   'other' at (370, 370) 60x60 — the row-5 drag target (centre
   //                                  (400, 400), far from 'sel')
 
-  testWidgets('drag starting on an un-selected layer selects it and moves it '
-      'in the same gesture, committing ONE undo entry', (tester) async {
+  testWidgets('selection-wins: a drag starting ON ANOTHER eligible layer '
+      'translates the SELECTION, never the layer under the finger, '
+      'committing ONE undo entry', (tester) async {
     final container = _setup(tester);
     container
         .read(documentControllerProvider.notifier)
@@ -113,6 +114,8 @@ void main() {
 
     final viewportBefore = container.read(viewportControllerProvider);
 
+    // Dead centre of 'other' — as unambiguous a landing on the
+    // neighbour as exists. Row 5 used to claim it; row 7 does now.
     final gesture = await tester.startGesture(
       _toScreen(container, const Offset(400, 400)),
     );
@@ -127,46 +130,57 @@ void main() {
     await gesture.moveBy(const Offset(60, 40));
     await tester.pump();
 
-    // Slop promotion: 'other' is now selected AND its translate
-    // session is live.
+    // Slop promotion drives the SELECTION. The selection itself never
+    // changes: a drag is a verb applied to the declared subject, not
+    // a way to re-declare it.
     expect(
       container.read(selectionControllerProvider).selectedId,
-      'other',
-      reason: 'Slop promotion must select the dragged layer.',
+      'sel',
+      reason: 'A drag must never re-target the selection.',
     );
     final session = container.read(interactionControllerProvider).session;
     expect(session, isNotNull);
-    expect(session!.layerId, 'other');
+    expect(session!.layerId, 'sel');
     final live = container.read(interactionControllerProvider).liveTransform;
-    expect(live!.position, isNot(const Offset(370, 370)));
+    expect(live!.position, isNot(const Offset(100, 100)));
 
     final viewportAfter = container.read(viewportControllerProvider);
     expect(
       viewportAfter.translation,
       viewportBefore.translation,
-      reason: 'Viewport must NOT pan during select-and-move.',
+      reason: 'Viewport must NOT pan during drag-anywhere.',
     );
 
     await gesture.up();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
 
-    // Committed on release.
-    final moved = container
-        .read(documentControllerProvider)
-        .layerById('other')!;
-    expect(moved.transform.position, isNot(const Offset(370, 370)));
+    // Committed on release — and the neighbour the finger sat on is
+    // exactly where it started.
+    final doc = container.read(documentControllerProvider);
+    expect(
+      doc.layerById('sel')!.transform.position,
+      isNot(const Offset(100, 100)),
+    );
+    expect(
+      doc.layerById('other')!.transform.position,
+      const Offset(370, 370),
+      reason: 'The layer under the finger must not move.',
+    );
 
     // ONE undo entry for the whole gesture: the first undo restores
-    // the position; the SECOND undo removes the layer itself (the
-    // AddLayerCommand), proving nothing else was pushed in between —
-    // the selection switch is a provider write, not a command.
+    // the position; the SECOND undo removes a layer (the
+    // AddLayerCommand), proving nothing else was pushed in between.
     final docCtl = container.read(documentControllerProvider.notifier);
     docCtl.undo();
-    final restored = container
-        .read(documentControllerProvider)
-        .layerById('other')!;
-    expect(restored.transform.position, const Offset(370, 370));
+    expect(
+      container
+          .read(documentControllerProvider)
+          .layerById('sel')!
+          .transform
+          .position,
+      const Offset(100, 100),
+    );
     docCtl.undo();
     expect(
       container.read(documentControllerProvider).layerById('other'),
@@ -175,6 +189,49 @@ void main() {
           'Second undo must pop the AddLayerCommand — exactly one '
           'entry may sit between it and the top.',
     );
+  });
+
+  testWidgets('the escape hatch: tap the neighbour first, THEN drag — the '
+      'newly selected layer moves and the old one stays', (tester) async {
+    // Selection-wins costs one gesture when the user genuinely wants
+    // a different object. This is that path, pinned: without it the
+    // rule would be a trap rather than a trade.
+    final container = _setup(tester);
+    container
+        .read(documentControllerProvider.notifier)
+        .newDocument(width: 800, height: 800);
+    _addRect(container, id: 'sel', position: const Offset(100, 100));
+    _addRect(container, id: 'other', position: const Offset(370, 370));
+    container.read(selectionControllerProvider.notifier).select('sel');
+    await _pumpEditor(tester, container);
+
+    await tester.tapAt(_toScreen(container, const Offset(400, 400)));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(container.read(selectionControllerProvider).selectedId, 'other');
+
+    final gesture = await tester.startGesture(
+      _toScreen(container, const Offset(400, 400)),
+    );
+    await tester.pump();
+    await gesture.moveBy(const Offset(60, 40));
+    await tester.pump();
+    await gesture.moveBy(const Offset(60, 40));
+    await tester.pump();
+    expect(
+      container.read(interactionControllerProvider).session?.layerId,
+      'other',
+    );
+
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+
+    final doc = container.read(documentControllerProvider);
+    expect(
+      doc.layerById('other')!.transform.position,
+      isNot(const Offset(370, 370)),
+    );
+    expect(doc.layerById('sel')!.transform.position, const Offset(100, 100));
   });
 
   testWidgets('sub-slop tap on an un-selected layer stays a tap-select: '
@@ -430,7 +487,8 @@ void main() {
 
     final viewportBefore = container.read(viewportControllerProvider);
 
-    // First finger on the un-selected layer (a row-5 candidate),
+    // First finger on the un-selected layer — a claim candidate
+    // either way (row 7 today, row 5 before selection-wins) — and the
     // second finger lands BEFORE any movement.
     final f1 = await tester.startGesture(
       _toScreen(container, const Offset(400, 400)),
@@ -471,7 +529,7 @@ void main() {
   });
 
   testWidgets('a second finger AFTER the slop claim joins the select-and-move '
-      'session and pinches the newly selected layer', (tester) async {
+      'session and pinches the layer that session owns', (tester) async {
     final container = _setup(tester);
     container
         .read(documentControllerProvider.notifier)
@@ -490,12 +548,13 @@ void main() {
     await tester.pump();
     await f1.moveBy(const Offset(40, 0));
     await tester.pump();
-    // Session is live for 'other'; the selection overlay has just
-    // remounted for it. The second finger must fall THROUGH that
-    // overlay and join the recogniser that owns the sequence.
+    // Session is live for the SELECTION even though the first finger
+    // landed on 'other'. The second finger must fall THROUGH the
+    // selection overlay and join the recogniser that owns the
+    // sequence, one Stack level below.
     expect(
       container.read(interactionControllerProvider).session?.layerId,
-      'other',
+      'sel',
     );
 
     final f2 = await tester.startGesture(
