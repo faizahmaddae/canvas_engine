@@ -24,25 +24,42 @@ class ShapeKindCatalogueSection {
 /// these sections so any consumer that just wants "all kinds in
 /// display order" stays unchanged.
 const List<ShapeKindCatalogueSection> kShapeCatalogueSections = [
+  // Basic runs family-by-family (boxes → rounds → triangles →
+  // polygons → quads → favourites) so related silhouettes sit next
+  // to each other in the grid.
   ShapeKindCatalogueSection('Basic', [
     ShapeKindCatalogueEntry(ShapeKind.rectangle, 'Rectangle'),
     ShapeKindCatalogueEntry(ShapeKind.roundedRectangle, 'Rounded'),
     ShapeKindCatalogueEntry(ShapeKind.circle, 'Circle'),
     ShapeKindCatalogueEntry(ShapeKind.oval, 'Oval'),
+    ShapeKindCatalogueEntry(ShapeKind.semicircle, 'Semicircle'),
+    ShapeKindCatalogueEntry(ShapeKind.ring, 'Ring'),
     ShapeKindCatalogueEntry(ShapeKind.triangle, 'Triangle'),
+    ShapeKindCatalogueEntry(ShapeKind.rightTriangle, 'Right triangle'),
     ShapeKindCatalogueEntry(ShapeKind.diamond, 'Diamond'),
+    ShapeKindCatalogueEntry(ShapeKind.pentagon, 'Pentagon'),
     ShapeKindCatalogueEntry(ShapeKind.hexagon, 'Hexagon'),
+    ShapeKindCatalogueEntry(ShapeKind.octagon, 'Octagon'),
+    ShapeKindCatalogueEntry(ShapeKind.parallelogram, 'Parallelogram'),
+    ShapeKindCatalogueEntry(ShapeKind.trapezoid, 'Trapezoid'),
     ShapeKindCatalogueEntry(ShapeKind.star, 'Star'),
     ShapeKindCatalogueEntry(ShapeKind.heart, 'Heart'),
   ]),
   ShapeKindCatalogueSection('Bubbles', [
     ShapeKindCatalogueEntry(ShapeKind.speechBubble, 'Speech'),
     ShapeKindCatalogueEntry(ShapeKind.quoteBubble, 'Quote'),
+    ShapeKindCatalogueEntry(ShapeKind.thoughtBubble, 'Thought'),
   ]),
   ShapeKindCatalogueSection('Symbols', [
     ShapeKindCatalogueEntry(ShapeKind.plus, 'Plus'),
     ShapeKindCatalogueEntry(ShapeKind.check, 'Check'),
     ShapeKindCatalogueEntry(ShapeKind.cross, 'Cross'),
+    ShapeKindCatalogueEntry(ShapeKind.sparkle, 'Sparkle'),
+    ShapeKindCatalogueEntry(ShapeKind.seal, 'Badge'),
+    ShapeKindCatalogueEntry(ShapeKind.bolt, 'Bolt'),
+    ShapeKindCatalogueEntry(ShapeKind.shield, 'Shield'),
+    ShapeKindCatalogueEntry(ShapeKind.crescent, 'Crescent'),
+    ShapeKindCatalogueEntry(ShapeKind.cloud, 'Cloud'),
   ]),
   ShapeKindCatalogueSection('Lines & Arrows', [
     ShapeKindCatalogueEntry(ShapeKind.line, 'Line'),

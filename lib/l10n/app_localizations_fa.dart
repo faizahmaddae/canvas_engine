@@ -1123,6 +1123,48 @@ class AppLocalizationsFa extends AppLocalizations {
   String get shapeKindArrowDown => 'فلش پایین';
 
   @override
+  String get shapeKindPentagon => 'پنج‌ضلعی';
+
+  @override
+  String get shapeKindOctagon => 'هشت‌ضلعی';
+
+  @override
+  String get shapeKindSemicircle => 'نیم‌دایره';
+
+  @override
+  String get shapeKindRightTriangle => 'مثلث قائم';
+
+  @override
+  String get shapeKindParallelogram => 'متوازی‌الاضلاع';
+
+  @override
+  String get shapeKindTrapezoid => 'ذوزنقه';
+
+  @override
+  String get shapeKindRing => 'حلقه';
+
+  @override
+  String get shapeKindSparkle => 'درخشش';
+
+  @override
+  String get shapeKindSeal => 'نشان';
+
+  @override
+  String get shapeKindBolt => 'آذرخش';
+
+  @override
+  String get shapeKindShield => 'سپر';
+
+  @override
+  String get shapeKindCrescent => 'هلال';
+
+  @override
+  String get shapeKindCloud => 'ابر';
+
+  @override
+  String get shapeKindThoughtBubble => 'فکر';
+
+  @override
   String get addPhotoAction => 'افزودن عکس';
 
   @override

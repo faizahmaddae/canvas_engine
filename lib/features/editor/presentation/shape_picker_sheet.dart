@@ -161,6 +161,20 @@ String _shapeKindLabel(AppLocalizations l10n, ShapeKind kind) {
     ShapeKind.arrowLeft => l10n.shapeKindArrowLeft,
     ShapeKind.arrowUp => l10n.shapeKindArrowUp,
     ShapeKind.arrowDown => l10n.shapeKindArrowDown,
+    ShapeKind.pentagon => l10n.shapeKindPentagon,
+    ShapeKind.octagon => l10n.shapeKindOctagon,
+    ShapeKind.semicircle => l10n.shapeKindSemicircle,
+    ShapeKind.rightTriangle => l10n.shapeKindRightTriangle,
+    ShapeKind.parallelogram => l10n.shapeKindParallelogram,
+    ShapeKind.trapezoid => l10n.shapeKindTrapezoid,
+    ShapeKind.ring => l10n.shapeKindRing,
+    ShapeKind.sparkle => l10n.shapeKindSparkle,
+    ShapeKind.seal => l10n.shapeKindSeal,
+    ShapeKind.bolt => l10n.shapeKindBolt,
+    ShapeKind.shield => l10n.shapeKindShield,
+    ShapeKind.crescent => l10n.shapeKindCrescent,
+    ShapeKind.cloud => l10n.shapeKindCloud,
+    ShapeKind.thoughtBubble => l10n.shapeKindThoughtBubble,
   };
 }
 
@@ -318,6 +332,20 @@ class _ShapePickerPreview extends StatelessWidget {
       case ShapeKind.arrowLeft:
       case ShapeKind.arrowUp:
       case ShapeKind.arrowDown:
+      case ShapeKind.pentagon:
+      case ShapeKind.octagon:
+      case ShapeKind.semicircle:
+      case ShapeKind.rightTriangle:
+      case ShapeKind.parallelogram:
+      case ShapeKind.trapezoid:
+      case ShapeKind.ring:
+      case ShapeKind.sparkle:
+      case ShapeKind.seal:
+      case ShapeKind.bolt:
+      case ShapeKind.shield:
+      case ShapeKind.crescent:
+      case ShapeKind.cloud:
+      case ShapeKind.thoughtBubble:
         return CustomPaint(
           painter: _PreviewPainter(kind: kind, color: gradient.first),
         );
@@ -374,6 +402,34 @@ class _PreviewPainter extends CustomPainter {
         return ShapePaths.arrowUp(size);
       case ShapeKind.arrowDown:
         return ShapePaths.arrowDown(size);
+      case ShapeKind.pentagon:
+        return ShapePaths.pentagon(size);
+      case ShapeKind.octagon:
+        return ShapePaths.octagon(size);
+      case ShapeKind.semicircle:
+        return ShapePaths.semicircle(size);
+      case ShapeKind.rightTriangle:
+        return ShapePaths.rightTriangle(size);
+      case ShapeKind.parallelogram:
+        return ShapePaths.parallelogram(size);
+      case ShapeKind.trapezoid:
+        return ShapePaths.trapezoid(size);
+      case ShapeKind.ring:
+        return ShapePaths.ring(size);
+      case ShapeKind.sparkle:
+        return ShapePaths.sparkle(size);
+      case ShapeKind.seal:
+        return ShapePaths.seal(size);
+      case ShapeKind.bolt:
+        return ShapePaths.bolt(size);
+      case ShapeKind.shield:
+        return ShapePaths.shield(size);
+      case ShapeKind.crescent:
+        return ShapePaths.crescent(size);
+      case ShapeKind.cloud:
+        return ShapePaths.cloud(size);
+      case ShapeKind.thoughtBubble:
+        return ShapePaths.thoughtBubble(size);
       case ShapeKind.rectangle:
       case ShapeKind.roundedRectangle:
       case ShapeKind.circle:

@@ -44,8 +44,9 @@ void main() {
       c.read(documentControllerProvider).layerById(id)! as ShapeLayer;
 
   group('ShapeKind catalogue', () {
-    test('exposes the full Phase 2 set in display order', () {
-      // Order is part of the picker contract — adjust deliberately.
+    test('exposes the Phase 2 set plus the 2026-08 growth, in order', () {
+      // Enum order is serialization history — Phase 2 first, the
+      // shape-studio growth appended (doc §2). Adjust deliberately.
       expect(ShapeKind.values, [
         ShapeKind.rectangle,
         ShapeKind.roundedRectangle,
@@ -66,6 +67,20 @@ void main() {
         ShapeKind.arrowLeft,
         ShapeKind.arrowUp,
         ShapeKind.arrowDown,
+        ShapeKind.pentagon,
+        ShapeKind.octagon,
+        ShapeKind.semicircle,
+        ShapeKind.rightTriangle,
+        ShapeKind.parallelogram,
+        ShapeKind.trapezoid,
+        ShapeKind.ring,
+        ShapeKind.sparkle,
+        ShapeKind.seal,
+        ShapeKind.bolt,
+        ShapeKind.shield,
+        ShapeKind.crescent,
+        ShapeKind.cloud,
+        ShapeKind.thoughtBubble,
       ]);
     });
 
@@ -81,21 +96,37 @@ void main() {
     });
 
     test('picker catalogue order matches the spec', () {
+      // Display order (doc §2): Basic runs family-by-family, then
+      // Bubbles, Symbols, Lines & Arrows.
       expect(kShapeCatalogue.map((e) => e.label).toList(), const [
         'Rectangle',
         'Rounded',
         'Circle',
         'Oval',
+        'Semicircle',
+        'Ring',
         'Triangle',
+        'Right triangle',
         'Diamond',
+        'Pentagon',
         'Hexagon',
+        'Octagon',
+        'Parallelogram',
+        'Trapezoid',
         'Star',
         'Heart',
         'Speech',
         'Quote',
+        'Thought',
         'Plus',
         'Check',
         'Cross',
+        'Sparkle',
+        'Badge',
+        'Bolt',
+        'Shield',
+        'Crescent',
+        'Cloud',
         'Line',
         'Arrow right',
         'Arrow left',

@@ -62,6 +62,16 @@ void main() {
         ShapeKind.plus,
         ShapeKind.check,
         ShapeKind.cross,
+        // 2026-08 growth (shape studio doc §2): fixed-silhouette
+        // kinds lock; container / free-form kinds stay free.
+        ShapeKind.pentagon,
+        ShapeKind.octagon,
+        ShapeKind.ring,
+        ShapeKind.sparkle,
+        ShapeKind.seal,
+        ShapeKind.bolt,
+        ShapeKind.shield,
+        ShapeKind.crescent,
       };
       for (final k in ShapeKind.values) {
         expect(

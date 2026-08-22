@@ -2138,6 +2138,90 @@ abstract class AppLocalizations {
   /// **'Arrow down'**
   String get shapeKindArrowDown;
 
+  /// No description provided for @shapeKindPentagon.
+  ///
+  /// In en, this message translates to:
+  /// **'Pentagon'**
+  String get shapeKindPentagon;
+
+  /// No description provided for @shapeKindOctagon.
+  ///
+  /// In en, this message translates to:
+  /// **'Octagon'**
+  String get shapeKindOctagon;
+
+  /// No description provided for @shapeKindSemicircle.
+  ///
+  /// In en, this message translates to:
+  /// **'Semicircle'**
+  String get shapeKindSemicircle;
+
+  /// No description provided for @shapeKindRightTriangle.
+  ///
+  /// In en, this message translates to:
+  /// **'Right triangle'**
+  String get shapeKindRightTriangle;
+
+  /// No description provided for @shapeKindParallelogram.
+  ///
+  /// In en, this message translates to:
+  /// **'Parallelogram'**
+  String get shapeKindParallelogram;
+
+  /// No description provided for @shapeKindTrapezoid.
+  ///
+  /// In en, this message translates to:
+  /// **'Trapezoid'**
+  String get shapeKindTrapezoid;
+
+  /// No description provided for @shapeKindRing.
+  ///
+  /// In en, this message translates to:
+  /// **'Ring'**
+  String get shapeKindRing;
+
+  /// No description provided for @shapeKindSparkle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sparkle'**
+  String get shapeKindSparkle;
+
+  /// No description provided for @shapeKindSeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Badge'**
+  String get shapeKindSeal;
+
+  /// No description provided for @shapeKindBolt.
+  ///
+  /// In en, this message translates to:
+  /// **'Bolt'**
+  String get shapeKindBolt;
+
+  /// No description provided for @shapeKindShield.
+  ///
+  /// In en, this message translates to:
+  /// **'Shield'**
+  String get shapeKindShield;
+
+  /// No description provided for @shapeKindCrescent.
+  ///
+  /// In en, this message translates to:
+  /// **'Crescent'**
+  String get shapeKindCrescent;
+
+  /// No description provided for @shapeKindCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud'**
+  String get shapeKindCloud;
+
+  /// No description provided for @shapeKindThoughtBubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Thought'**
+  String get shapeKindThoughtBubble;
+
   /// No description provided for @addPhotoAction.
   ///
   /// In en, this message translates to:

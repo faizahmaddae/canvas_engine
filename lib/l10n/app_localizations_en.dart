@@ -1122,6 +1122,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shapeKindArrowDown => 'Arrow down';
 
   @override
+  String get shapeKindPentagon => 'Pentagon';
+
+  @override
+  String get shapeKindOctagon => 'Octagon';
+
+  @override
+  String get shapeKindSemicircle => 'Semicircle';
+
+  @override
+  String get shapeKindRightTriangle => 'Right triangle';
+
+  @override
+  String get shapeKindParallelogram => 'Parallelogram';
+
+  @override
+  String get shapeKindTrapezoid => 'Trapezoid';
+
+  @override
+  String get shapeKindRing => 'Ring';
+
+  @override
+  String get shapeKindSparkle => 'Sparkle';
+
+  @override
+  String get shapeKindSeal => 'Badge';
+
+  @override
+  String get shapeKindBolt => 'Bolt';
+
+  @override
+  String get shapeKindShield => 'Shield';
+
+  @override
+  String get shapeKindCrescent => 'Crescent';
+
+  @override
+  String get shapeKindCloud => 'Cloud';
+
+  @override
+  String get shapeKindThoughtBubble => 'Thought';
+
+  @override
   String get addPhotoAction => 'Add photo';
 
   @override

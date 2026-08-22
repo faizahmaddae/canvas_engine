@@ -1105,9 +1105,19 @@ class EditorScreen extends ConsumerWidget {
         return const Size(80, 280);
       case ShapeKind.speechBubble:
       case ShapeKind.quoteBubble:
+      case ShapeKind.thoughtBubble:
         // Bubbles read better as a wide rectangle so the body has
         // room for text the user is likely to add on top.
         return const Size(280, 200);
+      case ShapeKind.parallelogram:
+      case ShapeKind.trapezoid:
+      case ShapeKind.cloud:
+        // Wide free-form quads / the cloud land in their natural
+        // landscape proportion instead of a square.
+        return const Size(280, 180);
+      case ShapeKind.semicircle:
+        // A dome is half a circle — half the height, too.
+        return const Size(260, 130);
       case ShapeKind.rectangle:
       case ShapeKind.roundedRectangle:
       case ShapeKind.oval:
@@ -1120,6 +1130,15 @@ class EditorScreen extends ConsumerWidget {
       case ShapeKind.plus:
       case ShapeKind.check:
       case ShapeKind.cross:
+      case ShapeKind.pentagon:
+      case ShapeKind.octagon:
+      case ShapeKind.rightTriangle:
+      case ShapeKind.ring:
+      case ShapeKind.sparkle:
+      case ShapeKind.seal:
+      case ShapeKind.bolt:
+      case ShapeKind.shield:
+      case ShapeKind.crescent:
         return const Size(220, 220);
     }
   }
