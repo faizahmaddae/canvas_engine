@@ -121,6 +121,10 @@ class _SourceAspectProbeState extends ConsumerState<_SourceAspectProbe> {
         final aspect = info.image.height > 0
             ? info.image.width / info.image.height
             : null;
+        final pixels = Size(
+          info.image.width.toDouble(),
+          info.image.height.toDouble(),
+        );
         info.dispose();
         if (aspect == null || !mounted) return;
         // DEFERRED, and that is the whole point.
@@ -138,7 +142,9 @@ class _SourceAspectProbeState extends ConsumerState<_SourceAspectProbe> {
         // behave identically.
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          ref.read(cropControllerProvider.notifier).setSourceAspect(aspect);
+          ref
+              .read(cropControllerProvider.notifier)
+              .setSourceAspect(aspect, pixelSize: pixels);
         });
       },
       // Unresolvable source (missing file, dead URL): stay silent —
@@ -441,9 +447,30 @@ class _CropFrameLayer extends ConsumerStatefulWidget {
 
 enum _Handle { tl, tr, bl, br, t, r, b, l, body }
 
-class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
+class _CropFrameLayerState extends ConsumerState<_CropFrameLayer>
+    with SingleTickerProviderStateMixin {
   Rect? _dragStartDraft;
   Offset? _dragStartGlobal;
+
+  /// 0 = resting, 1 = a handle is under the finger.
+  ///
+  /// Drives everything that should only exist *while framing*: the
+  /// thirds guides, the deeper scrim, and the pixel readout. A crop
+  /// frame that permanently draws its own grid competes with the
+  /// photograph the user is trying to judge; one that never draws it
+  /// gives no composition help at the moment it is wanted. Tying both
+  /// to the drag is the resolution every pro crop tool converged on.
+  late final AnimationController _focus = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 180),
+    reverseDuration: const Duration(milliseconds: 260),
+  );
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
 
   /// Screen pixels one draft unit spans on each axis.
   ///
@@ -476,135 +503,162 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(cropControllerProvider);
-    final tokens = AppTokens.of(context);
     final frame = _draftToScreen(session.draftCrop, session.displayBasis);
-    // Corners use the shared 48dp handle target; edge affordances
-    // stay elongated bars so the two are distinguishable by touch.
+    // Corners keep the shared 48dp handle target; edges stay
+    // elongated so the two are distinguishable by touch. What changed
+    // is that the affordances are now PAINTED (see
+    // [_CropFramePainter]) instead of being widget children of these
+    // detectors — that is what lets a corner bracket sit flush on the
+    // frame line, thick enough to read over any photo, while the
+    // finger target around it stays 48dp and centred.
     const handleHit = EngineConstants.handleTouchSize;
-    const handleDot = EngineConstants.handleVisualSize;
     const edgeHitMain = 56.0;
     const edgeHitCross = 28.0;
-    const edgeBarMain = 26.0;
-    const edgeBarCross = 4.0;
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: IgnorePointer(
-            child: CustomPaint(
-              painter: _CropScrimPainter(
-                frame: frame,
-                // Mask-edit's scrim value: dark enough to read the
-                // frame, light enough that the pixels you are about
-                // to discard are still legible.
-                scrimColor: Colors.black.withValues(alpha: 0.45),
-                outlineColor: tokens.accent,
+    return AnimatedBuilder(
+      animation: _focus,
+      builder: (context, _) {
+        final focus = Curves.easeOut.transform(_focus.value);
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _CropFramePainter(frame: frame, focus: focus),
+                ),
               ),
             ),
-          ),
-        ),
-        Positioned.fromRect(
-          rect: frame,
-          child: HandleDragDetector(
-            onDrag: (gp, phase) => _onHandle(_Handle.body, gp, phase),
-          ),
-        ),
-        // ── Edge handles (T / B / L / R) ──────────────────────
-        // Centered on the midpoint of each edge. Single-axis drag
-        // keeps free crops natural and, when an aspect is locked,
-        // resizes the perpendicular axis symmetrically around the
-        // opposite edge — matching iOS Photos / Instagram.
-        Positioned(
-          left: frame.center.dx - edgeHitMain / 2,
-          top: frame.top - edgeHitCross / 2,
-          width: edgeHitMain,
-          height: edgeHitCross,
-          child: HandleDragDetector(
-            onDrag: (gp, phase) => _onHandle(_Handle.t, gp, phase),
-            child: Center(
-              child: _EdgeBar(
-                width: edgeBarMain,
-                height: edgeBarCross,
-                color: tokens.accent,
+            Positioned.fromRect(
+              rect: frame,
+              child: HandleDragDetector(
+                onDrag: (gp, phase) => _onHandle(_Handle.body, gp, phase),
               ),
             ),
-          ),
-        ),
-        Positioned(
-          left: frame.center.dx - edgeHitMain / 2,
-          top: frame.bottom - edgeHitCross / 2,
-          width: edgeHitMain,
-          height: edgeHitCross,
-          child: HandleDragDetector(
-            onDrag: (gp, phase) => _onHandle(_Handle.b, gp, phase),
-            child: Center(
-              child: _EdgeBar(
-                width: edgeBarMain,
-                height: edgeBarCross,
-                color: tokens.accent,
+            // ── Edge handles (T / B / L / R) ──────────────────────
+            // Centered on the midpoint of each edge. Single-axis drag
+            // keeps free crops natural and, when an aspect is locked,
+            // resizes the perpendicular axis symmetrically around the
+            // opposite edge — matching iOS Photos / Instagram.
+            Positioned(
+              left: frame.center.dx - edgeHitMain / 2,
+              top: frame.top - edgeHitCross / 2,
+              width: edgeHitMain,
+              height: edgeHitCross,
+              child: HandleDragDetector(
+                onDrag: (gp, phase) => _onHandle(_Handle.t, gp, phase),
               ),
             ),
-          ),
-        ),
-        Positioned(
-          left: frame.left - edgeHitCross / 2,
-          top: frame.center.dy - edgeHitMain / 2,
-          width: edgeHitCross,
-          height: edgeHitMain,
-          child: HandleDragDetector(
-            onDrag: (gp, phase) => _onHandle(_Handle.l, gp, phase),
-            child: Center(
-              child: _EdgeBar(
-                width: edgeBarCross,
-                height: edgeBarMain,
-                color: tokens.accent,
+            Positioned(
+              left: frame.center.dx - edgeHitMain / 2,
+              top: frame.bottom - edgeHitCross / 2,
+              width: edgeHitMain,
+              height: edgeHitCross,
+              child: HandleDragDetector(
+                onDrag: (gp, phase) => _onHandle(_Handle.b, gp, phase),
               ),
             ),
-          ),
-        ),
-        Positioned(
-          left: frame.right - edgeHitCross / 2,
-          top: frame.center.dy - edgeHitMain / 2,
-          width: edgeHitCross,
-          height: edgeHitMain,
-          child: HandleDragDetector(
-            onDrag: (gp, phase) => _onHandle(_Handle.r, gp, phase),
-            child: Center(
-              child: _EdgeBar(
-                width: edgeBarCross,
-                height: edgeBarMain,
-                color: tokens.accent,
+            Positioned(
+              left: frame.left - edgeHitCross / 2,
+              top: frame.center.dy - edgeHitMain / 2,
+              width: edgeHitCross,
+              height: edgeHitMain,
+              child: HandleDragDetector(
+                onDrag: (gp, phase) => _onHandle(_Handle.l, gp, phase),
               ),
             ),
-          ),
-        ),
-        for (final entry in <MapEntry<_Handle, Offset>>[
-          MapEntry(_Handle.tl, frame.topLeft),
-          MapEntry(_Handle.tr, frame.topRight),
-          MapEntry(_Handle.bl, frame.bottomLeft),
-          MapEntry(_Handle.br, frame.bottomRight),
-        ])
-          Positioned(
-            left: entry.value.dx - handleHit / 2,
-            top: entry.value.dy - handleHit / 2,
-            width: handleHit,
-            height: handleHit,
-            child: HandleDragDetector(
-              onDrag: (gp, phase) => _onHandle(entry.key, gp, phase),
-              child: Center(
+            Positioned(
+              left: frame.right - edgeHitCross / 2,
+              top: frame.center.dy - edgeHitMain / 2,
+              width: edgeHitCross,
+              height: edgeHitMain,
+              child: HandleDragDetector(
+                onDrag: (gp, phase) => _onHandle(_Handle.r, gp, phase),
+              ),
+            ),
+            for (final entry in <MapEntry<_Handle, Offset>>[
+              MapEntry(_Handle.tl, frame.topLeft),
+              MapEntry(_Handle.tr, frame.topRight),
+              MapEntry(_Handle.bl, frame.bottomLeft),
+              MapEntry(_Handle.br, frame.bottomRight),
+            ])
+              Positioned(
+                left: entry.value.dx - handleHit / 2,
+                top: entry.value.dy - handleHit / 2,
+                width: handleHit,
+                height: handleHit,
+                child: HandleDragDetector(
+                  onDrag: (gp, phase) => _onHandle(entry.key, gp, phase),
+                ),
+              ),
+            if (focus > 0.01) _readout(context, session, frame, focus),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Pixel readout that rides the frame while it is being dragged.
+  ///
+  /// The one fact a crop screen can state without inventing anything:
+  /// how many real source pixels the current frame keeps. It sits
+  /// above the frame, flipping inside when the frame is near the top
+  /// edge, so it never leaves the pane.
+  Widget _readout(
+    BuildContext context,
+    CropSession session,
+    Rect frame,
+    double focus,
+  ) {
+    final px = session.draftPixelSize;
+    if (px == null) return const SizedBox.shrink();
+    final values = EditorValueFormat.of(context);
+    final w = values.digits(px.width.round());
+    final h = values.digits(px.height.round());
+    const bandWidth = 200.0;
+    const above = 42.0;
+    final top = frame.top > above + 8 ? frame.top - above : frame.top + 12;
+    return Positioned(
+      left: frame.center.dx - bandWidth / 2,
+      top: top,
+      width: bandWidth,
+      child: IgnorePointer(
+        child: Opacity(
+          opacity: focus,
+          child: Center(
+            child: Semantics(
+              key: const ValueKey('crop-live-readout'),
+              label: context.l10n.cropOutputSizeLabel(w, h),
+              child: ExcludeSemantics(
                 child: Container(
-                  width: handleDot,
-                  height: handleDot,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: tokens.accent, width: 2),
+                    // Deliberately NOT a token surface: this chip
+                    // floats over the photograph, so it has to carry
+                    // its own contrast in both themes rather than
+                    // borrow the app's.
+                    color: Colors.black.withValues(alpha: 0.62),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Text(
+                    '$w × $h',
+                    textDirection: TextDirection.ltr,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-      ],
+        ),
+      ),
     );
   }
 
@@ -615,6 +669,7 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
       case DragPhase.start:
         _dragStartDraft = session.draftCrop;
         _dragStartGlobal = globalPos;
+        _focus.forward();
         EditorHaptics.tap();
         return;
       case DragPhase.update:
@@ -661,6 +716,7 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
       case DragPhase.end:
         _dragStartDraft = null;
         _dragStartGlobal = null;
+        _focus.reverse();
         return;
     }
   }
@@ -680,100 +736,207 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer> {
   };
 }
 
-/// Visual edge-handle bar. Small pill anchored on the crop frame
-/// edge, mirrored in styling to the corner dots.
-class _EdgeBar extends StatelessWidget {
-  const _EdgeBar({
-    required this.width,
-    required this.height,
-    required this.color,
-  });
-  final double width;
-  final double height;
-  final Color color;
+/// Scrim + frame + affordances, in one pass.
+///
+/// **Why white and black instead of tokens.** Every other surface in
+/// the app paints on a themed ground, so it reads tokens. This one
+/// paints on *the user's photograph* — an unknown ground that changes
+/// per pixel. The saffron accent that carries the app's identity on
+/// cream and ink disappears over a saffron-ish sunset, and the 1.5dp
+/// accent hairline this replaces was doing exactly that. A white mark
+/// with a black under-shadow is the photographic convention because
+/// it is the one pair that survives any image.
+///
+/// **Corner brackets, not dots.** The old 14dp dot said "generic
+/// selection"; a bracket that traces the corner says "this is the
+/// frame of the picture". The bracket is also self-documenting about
+/// which way the corner moves.
+class _CropFramePainter extends CustomPainter {
+  _CropFramePainter({required this.frame, required this.focus});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(2),
-        border: Border.all(color: color, width: 1),
-      ),
-    );
-  }
-}
-
-class _CropScrimPainter extends CustomPainter {
-  _CropScrimPainter({
-    required this.frame,
-    required this.scrimColor,
-    required this.outlineColor,
-  });
   final Rect frame;
-  final Color scrimColor;
-  final Color outlineColor;
+
+  /// 0 while resting, 1 while a handle is held. Deepens the scrim and
+  /// fades the thirds guides in.
+  final double focus;
+
+  static const double _bracketArm = 24.0;
+  static const double _bracketWeight = 3.0;
+  static const double _edgeBarLength = 28.0;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final dim = Paint()..color = scrimColor;
+    final dim = Paint()
+      ..color = Colors.black.withValues(
+        // Resting scrim stays readable — the pixels you are about to
+        // discard are still part of the decision. It deepens while
+        // framing so the keep-area separates at the moment of choice.
+        alpha: 0.42 + 0.20 * focus,
+      );
     final outer = Path()..addRect(Offset.zero & size);
     final inner = Path()..addRect(frame);
     canvas.drawPath(Path.combine(PathOperation.difference, outer, inner), dim);
-    final stroke = Paint()
-      ..color = outlineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawRect(frame, stroke);
-    final guide = Paint()
-      ..color = outlineColor.withValues(alpha: 0.35)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
-    for (var i = 1; i < 3; i++) {
-      final dx = frame.left + frame.width * i / 3;
-      final dy = frame.top + frame.height * i / 3;
-      canvas.drawLine(Offset(dx, frame.top), Offset(dx, frame.bottom), guide);
-      canvas.drawLine(Offset(frame.left, dy), Offset(frame.right, dy), guide);
+
+    // Thirds guides: absent at rest, present while framing.
+    if (focus > 0.01) {
+      final guide = Paint()
+        ..color = Colors.white.withValues(alpha: 0.55 * focus)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8;
+      for (var i = 1; i < 3; i++) {
+        final dx = frame.left + frame.width * i / 3;
+        final dy = frame.top + frame.height * i / 3;
+        canvas.drawLine(Offset(dx, frame.top), Offset(dx, frame.bottom), guide);
+        canvas.drawLine(Offset(frame.left, dy), Offset(frame.right, dy), guide);
+      }
     }
+
+    // Frame line: a soft dark under-stroke so the white one holds on
+    // a blown-out sky as well as on a dark ground.
+    canvas.drawRect(
+      frame,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5,
+    );
+    canvas.drawRect(
+      frame,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.92)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+
+    // Affordances sit just inside the line so their outer edge is
+    // flush with it; the arm shortens on a tiny frame so two brackets
+    // never meet in the middle of an edge.
+    final arm = math.min(_bracketArm, frame.shortestSide / 3);
+    final inset = frame.deflate(_bracketWeight / 2);
+    final marks = Path();
+    // Corners: L-brackets.
+    marks
+      ..moveTo(inset.left, inset.top + arm)
+      ..lineTo(inset.left, inset.top)
+      ..lineTo(inset.left + arm, inset.top)
+      ..moveTo(inset.right - arm, inset.top)
+      ..lineTo(inset.right, inset.top)
+      ..lineTo(inset.right, inset.top + arm)
+      ..moveTo(inset.left, inset.bottom - arm)
+      ..lineTo(inset.left, inset.bottom)
+      ..lineTo(inset.left + arm, inset.bottom)
+      ..moveTo(inset.right - arm, inset.bottom)
+      ..lineTo(inset.right, inset.bottom)
+      ..lineTo(inset.right, inset.bottom - arm);
+    // Edge midpoints: short bars, only while they can't collide with
+    // the corner brackets.
+    final barX = math.min(_edgeBarLength, frame.width - arm * 2 - 8);
+    final barY = math.min(_edgeBarLength, frame.height - arm * 2 - 8);
+    if (barX > 8) {
+      marks
+        ..moveTo(frame.center.dx - barX / 2, inset.top)
+        ..lineTo(frame.center.dx + barX / 2, inset.top)
+        ..moveTo(frame.center.dx - barX / 2, inset.bottom)
+        ..lineTo(frame.center.dx + barX / 2, inset.bottom);
+    }
+    if (barY > 8) {
+      marks
+        ..moveTo(inset.left, frame.center.dy - barY / 2)
+        ..lineTo(inset.left, frame.center.dy + barY / 2)
+        ..moveTo(inset.right, frame.center.dy - barY / 2)
+        ..lineTo(inset.right, frame.center.dy + barY / 2);
+    }
+    canvas.drawPath(
+      marks,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.28)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = _bracketWeight + 2
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+    canvas.drawPath(
+      marks,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = _bracketWeight
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _CropScrimPainter old) =>
-      old.frame != frame ||
-      old.scrimColor != scrimColor ||
-      old.outlineColor != outlineColor;
+  bool shouldRepaint(covariant _CropFramePainter old) =>
+      old.frame != frame || old.focus != focus;
 }
 
 // =============================================================
 // Bottom card — aspect chips + Reset
 // =============================================================
 
-class _CropBottomBar extends ConsumerWidget {
+class _CropBottomBar extends ConsumerStatefulWidget {
   const _CropBottomBar({required this.layer});
   final ImageLayer layer;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CropBottomBar> createState() => _CropBottomBarState();
+}
+
+class _CropBottomBarState extends ConsumerState<_CropBottomBar> {
+  /// Which way the ratio presets are pointing. `null` until the first
+  /// build picks the source's own orientation as the starting point —
+  /// a portrait photo should open offering portrait ratios.
+  ///
+  /// Presentation-only on purpose: it changes which ratio the next tap
+  /// applies and how the chips are labelled, never the document, so it
+  /// has no business in [CropSession] (or in serialization).
+  bool? _portrait;
+
+  @override
+  Widget build(BuildContext context) {
     final session = ref.watch(cropControllerProvider);
     final ctrl = ref.read(cropControllerProvider.notifier);
     final tokens = AppTokens.of(context);
+    final layer = widget.layer;
     final layerH = layer.transform.size.height;
     final layerAspect = layerH == 0 ? 1.0 : layer.transform.size.width / layerH;
+    final sourceAspect = session.sourceAspect ?? layerAspect;
+    final portrait = _portrait ?? (sourceAspect < 1);
     // Ratio labels are numbers, so they follow the same digit rule as
     // every other value in the editor: Persian digits under fa. They
     // were the last ASCII numerals left in the Persian UI, sitting one
     // row away from «عمودی ۴:۵» in the size picker.
     final values = EditorValueFormat.of(context);
+    // Ratios are declared once, landscape-major, and the orientation
+    // switch transposes BOTH the applied ratio and the printed label.
+    // The old strip listed 4:5 and 5:4, 16:9 and 9:16 as unrelated
+    // chips — seven items that overflowed the row and still could not
+    // express a portrait "Original". One axis of meaning (which
+    // shape) and one switch (which way up) covers strictly more
+    // ground in fewer targets, and the labels rewriting themselves on
+    // the tap is what teaches the switch.
+    final ratios = <({int a, int b})>[
+      (a: 1, b: 1),
+      (a: 5, b: 4),
+      (a: 3, b: 2),
+      (a: 16, b: 9),
+    ];
+    String ratioLabel(int a, int b) =>
+        values.mapDigits(portrait ? '$b:$a' : '$a:$b');
     final presets = <_AspectChip>[
-      _AspectChip(label: context.l10n.freeOption, aspect: null),
-      _AspectChip(label: context.l10n.originalOption, aspect: layerAspect),
-      _AspectChip(label: values.mapDigits('1:1'), aspect: 1),
-      _AspectChip(label: values.mapDigits('4:5'), aspect: 4 / 5),
-      _AspectChip(label: values.mapDigits('5:4'), aspect: 5 / 4),
-      _AspectChip(label: values.mapDigits('16:9'), aspect: 16 / 9),
-      _AspectChip(label: values.mapDigits('9:16'), aspect: 9 / 16),
+      _AspectChip(label: context.l10n.freeOption, aspect: null, free: true),
+      _AspectChip(
+        label: context.l10n.originalOption,
+        // "Original" means the picture's own shape; standing it the
+        // other way up is a legitimate crop, so it transposes too.
+        aspect: portrait == (layerAspect < 1) ? layerAspect : 1 / layerAspect,
+      ),
+      for (final r in ratios)
+        _AspectChip(
+          label: ratioLabel(r.a, r.b),
+          aspect: portrait ? r.b / r.a : r.a / r.b,
+        ),
     ];
     // Floating control card, mask-edit grammar: a rounded [surface]
     // slab inset from the edges rather than a full-bleed bar, so the
@@ -788,11 +951,11 @@ class _CropBottomBar extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           elevation: 4,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
+            padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ── Row 1: aspect chip scroll strip ──────────────
+                // ── Row 1: orientation switch + ratio strip ──────
                 // Height scales with the text. At a flat 38dp the chip
                 // stayed 38dp while the glyphs grew, so at 1.3x the
                 // final ی of «اصلی» was sheared to a stub — Persian
@@ -800,54 +963,113 @@ class _CropBottomBar extends ConsumerWidget {
                 // eats. Also lifts the chip off its 38dp floor toward
                 // the 44dp target.
                 SizedBox(
-                  height: MediaQuery.textScalerOf(context).scale(44),
-                  child: ListView.separated(
-                    key: const ValueKey('crop-aspect-strip'),
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: presets.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 10),
-                    itemBuilder: (_, i) {
-                      final p = presets[i];
-                      final selected = _aspectMatches(
-                        session.aspectRatio,
-                        p.aspect,
-                      );
-                      return _ChipButton(
-                        label: p.label,
-                        selected: selected,
+                  height: MediaQuery.textScalerOf(context).scale(50),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 12),
+                      _OrientationSwitch(
+                        portrait: portrait,
                         onTap: () {
                           EditorHaptics.tap();
-                          ctrl.setAspectRatio(p.aspect);
+                          final next = !portrait;
+                          setState(() => _portrait = next);
+                          // A locked ratio follows the switch
+                          // immediately — otherwise the labels would
+                          // say one thing and the frame another.
+                          final current = session.aspectRatio;
+                          if (current != null && current > 0) {
+                            ctrl.setAspectRatio(1 / current);
+                          }
                         },
-                      );
-                    },
+                      ),
+                      const SizedBox(width: 10),
+                      Container(width: 1, height: 22, color: tokens.border),
+                      Expanded(
+                        child: ShaderMask(
+                          // The strip scrolls, and at rest the last
+                          // chip was cut mid-glyph against a hard
+                          // edge — which reads as a rendering fault,
+                          // not as "there is more". A fade says
+                          // "keep going" in the language every
+                          // scrolling rail in the app already uses.
+                          shaderCallback: (rect) => const LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              Color(0x00000000),
+                              Color(0xFF000000),
+                              Color(0xFF000000),
+                              Color(0x00000000),
+                            ],
+                            stops: [0.0, 0.05, 0.94, 1.0],
+                          ).createShader(rect),
+                          blendMode: BlendMode.dstIn,
+                          child: ListView.separated(
+                            key: const ValueKey('crop-aspect-strip'),
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            itemCount: presets.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(width: 8),
+                            itemBuilder: (_, i) {
+                              final p = presets[i];
+                              final selected = _aspectMatches(
+                                session.aspectRatio,
+                                p.aspect,
+                              );
+                              return _ChipButton(
+                                label: p.label,
+                                aspect: p.aspect,
+                                free: p.free,
+                                selected: selected,
+                                onTap: () {
+                                  EditorHaptics.tap();
+                                  ctrl.setAspectRatio(p.aspect);
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                // ── Row 2: Reset crop (centered, secondary) ──────
-                const SizedBox(height: 10),
-                TextButton.icon(
-                  onPressed: () {
-                    EditorHaptics.tap();
-                    ctrl.resetCrop();
-                  },
-                  icon: const Icon(AppIcons.reset, size: 16),
-                  label: Text(
-                    context.l10n.restoreImageAction,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    foregroundColor: tokens.textSecondary,
-                    minimumSize: const Size(140, 44),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(22),
-                      side: BorderSide(color: tokens.borderStrong, width: 1),
-                    ),
+                // ── Row 2: restore + what the crop will produce ──
+                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 8, end: 16),
+                  child: Row(
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {
+                          EditorHaptics.tap();
+                          ctrl.resetCrop();
+                        },
+                        icon: const Icon(AppIcons.reset, size: 16),
+                        label: Text(
+                          context.l10n.restoreImageAction,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: tokens.textSecondary,
+                          minimumSize: const Size(44, 44),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      // The resting home of the drag readout: the
+                      // frame answers "which pixels", this answers
+                      // "how many". Absent — never «۰ × ۰» — until
+                      // the bitmap resolves (contract §10.3).
+                      _SizeReadout(size: session.draftPixelSize),
+                    ],
                   ),
                 ),
               ],
@@ -866,18 +1088,213 @@ class _CropBottomBar extends ConsumerWidget {
 }
 
 class _AspectChip {
-  const _AspectChip({required this.label, required this.aspect});
+  const _AspectChip({
+    required this.label,
+    required this.aspect,
+    this.free = false,
+  });
   final String label;
   final double? aspect;
+
+  /// The unconstrained preset. Same `aspect: null` as "no ratio",
+  /// but it draws a different specimen, so it is flagged rather than
+  /// inferred.
+  final bool free;
+}
+
+/// Orientation switch that stands the ratio presets on end.
+///
+/// Deliberately a *state* control, not a toggle-with-two-labels: the
+/// glyph IS the current orientation, and the chip labels next to it
+/// rewrite themselves when it changes, so the effect is legible
+/// before and after the tap.
+class _OrientationSwitch extends StatelessWidget {
+  const _OrientationSwitch({required this.portrait, required this.onTap});
+  final bool portrait;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Semantics(
+      button: true,
+      label: context.l10n.cropOrientationAction,
+      onTap: onTap,
+      child: ExcludeSemantics(
+        child: Material(
+          key: const ValueKey('crop-orientation-toggle'),
+          color: tokens.surfaceMuted,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: onTap,
+            child: Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: tokens.borderStrong, width: 1),
+              ),
+              child: AnimatedRotation(
+                // The glyph is drawn portrait; a quarter turn is the
+                // sanctioned way to land the landscape reading (see
+                // AppIcons.aspectPortrait), and animating the turn is
+                // what makes the switch's meaning obvious.
+                turns: portrait ? 0 : 0.25,
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                child: Icon(
+                  AppIcons.aspectPortrait,
+                  size: 20,
+                  color: tokens.textPrimary,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "How many pixels this crop keeps", in the card's status line.
+class _SizeReadout extends StatelessWidget {
+  const _SizeReadout({required this.size});
+  final Size? size;
+
+  @override
+  Widget build(BuildContext context) {
+    final px = size;
+    if (px == null) return const SizedBox.shrink();
+    final tokens = AppTokens.of(context);
+    final values = EditorValueFormat.of(context);
+    final w = values.digits(px.width.round());
+    final h = values.digits(px.height.round());
+    return Semantics(
+      key: const ValueKey('crop-size-readout'),
+      label: context.l10n.cropOutputSizeLabel(w, h),
+      child: ExcludeSemantics(
+        child: Text(
+          '$w × $h',
+          // The pair is a dimension, not prose: it reads
+          // width-then-height in every locale, so it is pinned LTR
+          // the same way the editor's other value readouts are.
+          textDirection: TextDirection.ltr,
+          style: TextStyle(
+            color: tokens.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The specimen a ratio chip carries: an outline drawn at the ratio
+/// the chip applies, so the row can be read by shape before it is
+/// read by number — and so "Original" and "Free", which have no
+/// number, still say something.
+class _RatioSpecimen extends StatelessWidget {
+  const _RatioSpecimen({
+    required this.aspect,
+    required this.free,
+    required this.color,
+  });
+  final double? aspect;
+  final bool free;
+  final Color color;
+
+  static const double _extent = 17.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = (aspect == null || !aspect!.isFinite || aspect! <= 0)
+        ? 1.0
+        : aspect!;
+    final w = r >= 1 ? _extent : _extent * r;
+    final h = r >= 1 ? _extent / r : _extent;
+    return SizedBox(
+      width: _extent,
+      height: _extent,
+      child: Center(
+        // The SIZE has to come from a box, not from `CustomPaint.size`
+        // — that field is only consulted when the constraints are
+        // unbounded, so inside this fixed 17dp cell every specimen
+        // painted as a square and the row said nothing.
+        child: SizedBox(
+          width: w,
+          height: h,
+          child: CustomPaint(
+            painter: _RatioSpecimenPainter(color: color, dashed: free),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RatioSpecimenPainter extends CustomPainter {
+  _RatioSpecimenPainter({required this.color, required this.dashed});
+  final Color color;
+
+  /// Free crop: a dashed edge, the universal "not fixed".
+  final bool dashed;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height).deflate(0.7);
+    if (!dashed) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(2)),
+        paint,
+      );
+      return;
+    }
+    const dash = 3.0;
+    const gap = 2.5;
+    void run(Offset from, Offset to) {
+      final total = (to - from).distance;
+      if (total <= 0) return;
+      final step = (to - from) / total;
+      var t = 0.0;
+      while (t < total) {
+        final end = math.min(t + dash, total);
+        canvas.drawLine(from + step * t, from + step * end, paint);
+        t = end + gap;
+      }
+    }
+
+    run(rect.topLeft, rect.topRight);
+    run(rect.topRight, rect.bottomRight);
+    run(rect.bottomRight, rect.bottomLeft);
+    run(rect.bottomLeft, rect.topLeft);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RatioSpecimenPainter old) =>
+      old.color != color || old.dashed != dashed;
 }
 
 class _ChipButton extends StatelessWidget {
   const _ChipButton({
     required this.label,
+    required this.aspect,
+    required this.free,
     required this.selected,
     required this.onTap,
   });
   final String label;
+  final double? aspect;
+  final bool free;
   final bool selected;
   final VoidCallback onTap;
 
@@ -918,15 +1335,26 @@ class _ChipButton extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: selected ? tokens.onBrand : tokens.textPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  letterSpacing: 0.1,
-                ),
+              padding: const EdgeInsetsDirectional.fromSTEB(10, 8, 14, 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _RatioSpecimen(
+                    aspect: aspect,
+                    free: free,
+                    color: selected ? tokens.onBrand : tokens.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: selected ? tokens.onBrand : tokens.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

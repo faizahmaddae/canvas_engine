@@ -581,6 +581,8 @@
   "resetCropAction": "بازنشانی برش",
   "cropImageAction": "برش تصویر",
   "restoreImageAction": "بازیابی تصویر",
+  "cropOrientationAction": "چرخش نسبت",
+  "cropOutputSizeLabel": "اندازه برش {width} در {height} پیکسل",
   "freeOption": "آزاد",
   "exportDesignTitle": "خروجی گرفتن از طرح",
   "previewExportTitle": "پیش‌نمایش خروجی",

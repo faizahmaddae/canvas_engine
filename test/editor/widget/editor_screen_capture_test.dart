@@ -571,6 +571,34 @@ void main() {
     );
   });
 
+  testWidgets('EditorScreen visual capture — crop framing (drag held)', (
+    tester,
+  ) async {
+    // The crop frame has two visual states and the resting one is the
+    // boring half: the thirds guides, the deepened scrim and the pixel
+    // readout only exist while a handle is under the finger. Capturing
+    // that needs a gesture that is still DOWN when the boundary is
+    // rasterised, so this variant starts a drag and never lifts it —
+    // the tear-down disposes the whole tree anyway.
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'editor_crop_framing_light.png',
+      withCropSession: true,
+      interact: (tester) async {
+        // The frame body is the one target whose position needs no
+        // geometry maths — it fills the frame, and a body drag arms
+        // exactly the same focus state a handle drag does.
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.byType(CropModeOverlay)),
+        );
+        await tester.pump(const Duration(milliseconds: 16));
+        await gesture.moveBy(const Offset(24, 32));
+        await tester.pump(const Duration(milliseconds: 200));
+      },
+    );
+  });
+
   testWidgets('EditorScreen visual capture — paint restyle, light', (
     tester,
   ) async {

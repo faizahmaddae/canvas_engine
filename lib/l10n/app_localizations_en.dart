@@ -1868,6 +1868,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreImageAction => 'Restore image';
 
   @override
+  String get cropOrientationAction => 'Swap orientation';
+
+  @override
+  String cropOutputSizeLabel(String width, String height) {
+    return 'Crop size $width by $height pixels';
+  }
+
+  @override
   String get freeOption => 'Free';
 
   @override

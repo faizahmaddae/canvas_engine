@@ -3572,6 +3572,18 @@ abstract class AppLocalizations {
   /// **'Restore image'**
   String get restoreImageAction;
 
+  /// No description provided for @cropOrientationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap orientation'**
+  String get cropOrientationAction;
+
+  /// No description provided for @cropOutputSizeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop size {width} by {height} pixels'**
+  String cropOutputSizeLabel(String width, String height);
+
   /// No description provided for @freeOption.
   ///
   /// In en, this message translates to:

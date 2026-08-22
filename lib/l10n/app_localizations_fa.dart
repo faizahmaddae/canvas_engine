@@ -1871,6 +1871,14 @@ class AppLocalizationsFa extends AppLocalizations {
   String get restoreImageAction => 'بازیابی تصویر';
 
   @override
+  String get cropOrientationAction => 'چرخش نسبت';
+
+  @override
+  String cropOutputSizeLabel(String width, String height) {
+    return 'اندازه برش $width در $height پیکسل';
+  }
+
+  @override
   String get freeOption => 'آزاد';
 
   @override
