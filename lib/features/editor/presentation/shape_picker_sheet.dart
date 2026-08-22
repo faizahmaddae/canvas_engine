@@ -80,13 +80,16 @@ Future<ShapeKind?> pickShapeKind(
                   ),
                 ),
               ),
+              // Four columns since the 2026-08 growth: 33 tiles at
+              // three per row was an eleven-row scroll. The preview
+              // scales down to keep the tile's silhouette-first look.
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 3,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.95,
+                crossAxisCount: 4,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 0.92,
                 children: [
                   for (final entry in _pickerEntriesForSection(l10n, tokens, s))
                     _ShapePickerTile(
@@ -227,22 +230,22 @@ class _ShapePickerTile extends StatelessWidget {
               width: selected ? 1.4 : 0.5,
             ),
           ),
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
-                width: 56,
-                height: 56,
+                width: 42,
+                height: 42,
                 child: _ShapePickerPreview(kind: kind, gradient: gradient),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: selected ? tokens.accent : tokens.textPrimary,
                   letterSpacing: -0.1,
@@ -308,7 +311,7 @@ class _ShapePickerPreview extends StatelessWidget {
         // Squashed pill so the picker preview reads as an oval at a
         // glance — distinct from the circle tile beside it.
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 9),
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: paint,
