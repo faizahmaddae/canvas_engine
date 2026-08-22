@@ -318,39 +318,8 @@ class _CropCanvas extends ConsumerWidget {
     // ratio resolves we mirror the layer box + its fit, which is the
     // basis commit falls back to.
     final previewAspect = session.sourceAspect ?? (layerW / layerH);
-    double imgW = paneW;
-    double imgH = imgW / previewAspect;
-    if (imgH > paneH) {
-      imgH = paneH;
-      imgW = imgH * previewAspect;
-    }
-    // Center image within the asymmetric pane (shifted slightly upward).
-    final offsetY = paddingSide + (paneH - imgH) / 2;
-    final imageRect = Rect.fromLTWH(
-      (available.width - imgW) / 2,
-      offsetY,
-      imgW,
-      imgH,
-    );
-    return Stack(
-      children: [
-        Positioned.fromRect(
-          rect: imageRect,
-          child: IgnorePointer(
-            child: _SourcePreview(
-              layer: layer,
-              // `contain` inside an exactly source-shaped box is a
-              // no-op scale; it only guards against rounding when the
-              // aspect is still the layer's fallback.
-              fit: session.sourceAspect == null ? layer.fit : BoxFit.contain,
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: _CropFrameLayer(layer: layer, imageRect: imageRect),
-        ),
-      ],
-    );
+    final pane = Rect.fromLTWH(paddingSide, paddingSide, paneW, paneH);
+    return _CropStage(layer: layer, pane: pane, previewAspect: previewAspect);
   }
 }
 
@@ -436,62 +405,159 @@ class _CropUnavailableImage extends StatelessWidget {
 // Crop frame — scrim, handles, gestures
 // =============================================================
 
-class _CropFrameLayer extends ConsumerStatefulWidget {
-  const _CropFrameLayer({required this.layer, required this.imageRect});
+/// The framing stage: positions the source preview, the frame, the
+/// handles, and owns the two motions that make crop feel like a
+/// camera rather than a marquee tool:
+///
+///   * **The photo moves, the frame holds.** The settled layout maps
+///     the draft onto the largest rect of its aspect the pane can
+///     hold, and derives where the source bitmap must sit for the
+///     draft to land there. Pinch and pan therefore move the *photo*
+///     under a stationary frame — the draft is updated inversely —
+///     which is the grammar every camera-roll crop trained users on.
+///   * **Zoom-to-fill settle.** While a handle is dragged the photo
+///     freezes and the frame follows the finger (you are cutting the
+///     picture). On release the layout tweens from the frozen mapping
+///     to the settled one, so the new frame glides out to fill the
+///     pane and the photo scales up under it. Aspect chips, reset and
+///     the orientation switch ride the same tween.
+///
+/// The draft/commit math is untouched: this widget only changes how
+/// the session's draft is *mapped to the screen*, never what it means.
+class _CropStage extends ConsumerStatefulWidget {
+  const _CropStage({
+    required this.layer,
+    required this.pane,
+    required this.previewAspect,
+  });
   final ImageLayer layer;
-  final Rect imageRect;
+
+  /// Region of the canvas the frame is allowed to occupy (the
+  /// available area minus the gesture-safe paddings).
+  final Rect pane;
+
+  /// Aspect (w/h) the source preview is drawn at — the bitmap's own
+  /// ratio once resolved, the layer box's until then.
+  final double previewAspect;
 
   @override
-  ConsumerState<_CropFrameLayer> createState() => _CropFrameLayerState();
+  ConsumerState<_CropStage> createState() => _CropStageState();
 }
 
-enum _Handle { tl, tr, bl, br, t, r, b, l, body }
+enum _Handle { tl, tr, bl, br, t, r, b, l }
 
-class _CropFrameLayerState extends ConsumerState<_CropFrameLayer>
-    with SingleTickerProviderStateMixin {
+class _CropStageState extends ConsumerState<_CropStage>
+    with TickerProviderStateMixin {
   Rect? _dragStartDraft;
   Offset? _dragStartGlobal;
 
-  /// 0 = resting, 1 = a handle is under the finger.
+  /// Frozen image mapping while a handle drag is live, and the clamp
+  /// the drag obeys (source bounds ∩ pane, so the frame can neither
+  /// leave the photo nor leave the screen).
+  Rect? _frozenImage;
+  Rect? _dragBounds;
+
+  /// Pinch/pan bookkeeping — incremental, so every update applies the
+  /// delta since the last one through the *current* mapping and the
+  /// clamps stay honest at the edges.
+  bool _pinchActive = false;
+  double _lastScale = 1;
+  Offset _lastFocal = Offset.zero;
+
+  /// Image rect the last build actually displayed — the "from" of any
+  /// settle tween, whatever motion produced it.
+  Rect? _displayedImage;
+  Rect? _lastPane;
+
+  /// 0 = resting, 1 = a handle or the photo is under the finger.
   ///
   /// Drives everything that should only exist *while framing*: the
   /// thirds guides, the deeper scrim, and the pixel readout. A crop
   /// frame that permanently draws its own grid competes with the
   /// photograph the user is trying to judge; one that never draws it
   /// gives no composition help at the moment it is wanted. Tying both
-  /// to the drag is the resolution every pro crop tool converged on.
+  /// to the gesture is the resolution every pro crop tool converged on.
   late final AnimationController _focus = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 180),
     reverseDuration: const Duration(milliseconds: 260),
   );
 
+  /// The zoom-to-fill tween. One controller, one Rect pair: the frame
+  /// is derived from the animated image rect, so a single tween moves
+  /// both together and they can never drift apart mid-flight.
+  late final AnimationController _settle = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 280),
+  );
+  late final Animation<double> _settleCurve = CurvedAnimation(
+    parent: _settle,
+    curve: Curves.easeOutCubic,
+  );
+  Rect? _settleFrom;
+  Rect? _settleTo;
+
   @override
   void dispose() {
     _focus.dispose();
+    _settle.dispose();
     super.dispose();
   }
 
-  /// Screen pixels one draft unit spans on each axis.
-  ///
-  /// The preview covers the whole source while the draft is
-  /// normalised over the displayed window, so a draft unit is only
-  /// part of the pane — [CropSession.displayBasis] is the conversion.
-  /// When the two spaces coincide this is exactly the image rect.
-  Size _draftUnit(Rect basis) => Size(
-    widget.imageRect.width * basis.width,
-    widget.imageRect.height * basis.height,
+  // ── Layout mapping ────────────────────────────────────────────
+
+  /// Largest rect of the draft's on-screen aspect that fits the pane —
+  /// where the frame rests whenever nothing is being dragged.
+  Rect _settledFrame(CropSession s) {
+    final b = s.displayBasis;
+    final d = s.draftCrop;
+    final dw = d.width * b.width;
+    final dh = d.height * b.height;
+    if (dw <= 0 || dh <= 0) return widget.pane;
+    final aspect = dw * widget.previewAspect / dh;
+    final pane = widget.pane;
+    double w = pane.width;
+    double h = w / aspect;
+    if (h > pane.height) {
+      h = pane.height;
+      w = h * aspect;
+    }
+    return Rect.fromCenter(center: pane.center, width: w, height: h);
+  }
+
+  /// Where the source bitmap must be drawn for [s]'s draft to land
+  /// exactly on [frame].
+  Rect _imageFor(CropSession s, Rect frame) {
+    final b = s.displayBasis;
+    final d = s.draftCrop;
+    final dw = d.width * b.width;
+    final dh = d.height * b.height;
+    if (dw <= 0 || dh <= 0) return frame;
+    final imgW = frame.width / dw;
+    final imgH = frame.height / dh;
+    return Rect.fromLTWH(
+      frame.left - (b.left + d.left * b.width) * imgW,
+      frame.top - (b.top + d.top * b.height) * imgH,
+      imgW,
+      imgH,
+    );
+  }
+
+  Rect _settledImage(CropSession s) => _imageFor(s, _settledFrame(s));
+
+  /// Screen pixels one draft unit spans on each axis under [image].
+  Size _draftUnit(Rect basis, Rect image) =>
+      Size(image.width * basis.width, image.height * basis.height);
+
+  /// Top-left of the draft's origin in screen space under [image].
+  Offset _draftOrigin(Rect basis, Rect image) => Offset(
+    image.left + basis.left * image.width,
+    image.top + basis.top * image.height,
   );
 
-  /// Top-left of the draft's origin in screen space.
-  Offset _draftOrigin(Rect basis) => Offset(
-    widget.imageRect.left + basis.left * widget.imageRect.width,
-    widget.imageRect.top + basis.top * widget.imageRect.height,
-  );
-
-  Rect _draftToScreen(Rect d, Rect basis) {
-    final o = _draftOrigin(basis);
-    final u = _draftUnit(basis);
+  Rect _draftToScreen(Rect d, Rect basis, Rect image) {
+    final o = _draftOrigin(basis, image);
+    final u = _draftUnit(basis, image);
     return Rect.fromLTRB(
       o.dx + d.left * u.width,
       o.dy + d.top * u.height,
@@ -500,101 +566,256 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer>
     );
   }
 
+  Rect _screenRectToDraft(Rect r, Rect basis, Rect image) {
+    final o = _draftOrigin(basis, image);
+    final u = _draftUnit(basis, image);
+    if (u.width <= 0 || u.height <= 0) return ImageLayer.fullCrop;
+    return Rect.fromLTRB(
+      (r.left - o.dx) / u.width,
+      (r.top - o.dy) / u.height,
+      (r.right - o.dx) / u.width,
+      (r.bottom - o.dy) / u.height,
+    );
+  }
+
+  Offset _screenToDraft(Offset p, Rect basis, Rect image) {
+    final o = _draftOrigin(basis, image);
+    final u = _draftUnit(basis, image);
+    if (u.width <= 0 || u.height <= 0) return Offset.zero;
+    return Offset((p.dx - o.dx) / u.width, (p.dy - o.dy) / u.height);
+  }
+
+  static bool _close(Rect a, Rect b) =>
+      (a.left - b.left).abs() < 0.5 &&
+      (a.top - b.top).abs() < 0.5 &&
+      (a.right - b.right).abs() < 0.5 &&
+      (a.bottom - b.bottom).abs() < 0.5;
+
+  void _animateSettle({required Rect from, required Rect to}) {
+    if (_close(from, to)) return;
+    _settleFrom = from;
+    _settleTo = to;
+    _settle.forward(from: 0);
+  }
+
+  /// Draft/basis changes that arrive from *outside* a live gesture —
+  /// aspect chips, Restore, the orientation switch — settle with the
+  /// same tween a handle release uses, so every path into a new frame
+  /// shares one motion. A basis change (the source just resolved) and
+  /// a pane change snap instead: there is no previous layout worth
+  /// animating from.
+  void _onSessionChange(CropSession? prev, CropSession next) {
+    if (prev == null || !next.active) return;
+    if (_frozenImage != null || _pinchActive) return;
+    if (prev.displayBasis != next.displayBasis) {
+      _settle.stop();
+      return;
+    }
+    if (prev.draftCrop == next.draftCrop) return;
+    final from = _displayedImage;
+    if (from == null) return;
+    _animateSettle(from: from, to: _settledImage(next));
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen(cropControllerProvider, _onSessionChange);
     final session = ref.watch(cropControllerProvider);
-    final frame = _draftToScreen(session.draftCrop, session.displayBasis);
+    if (_lastPane != widget.pane) {
+      _lastPane = widget.pane;
+      _settle.stop();
+    }
     // Corners keep the shared 48dp handle target; edges stay
-    // elongated so the two are distinguishable by touch. What changed
-    // is that the affordances are now PAINTED (see
-    // [_CropFramePainter]) instead of being widget children of these
-    // detectors — that is what lets a corner bracket sit flush on the
-    // frame line, thick enough to read over any photo, while the
-    // finger target around it stays 48dp and centred.
+    // elongated so the two are distinguishable by touch. The
+    // affordances are PAINTED (see [_CropFramePainter]) instead of
+    // being widget children of these detectors — that is what lets a
+    // corner bracket sit flush on the frame line, thick enough to
+    // read over any photo, while the finger target around it stays
+    // 48dp and centred.
     const handleHit = EngineConstants.handleTouchSize;
     const edgeHitMain = 56.0;
     const edgeHitCross = 28.0;
 
     return AnimatedBuilder(
-      animation: _focus,
+      animation: Listenable.merge([_focus, _settle]),
       builder: (context, _) {
         final focus = Curves.easeOut.transform(_focus.value);
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: _CropFramePainter(frame: frame, focus: focus),
+        // Displayed mapping, in priority order: frozen under a live
+        // handle drag; the settle tween while it flies; the derived
+        // settled layout otherwise (which is also the pinch/pan path —
+        // there the frame is invariant and deriving per frame IS the
+        // photo tracking the fingers).
+        final Rect image;
+        final frozen = _frozenImage;
+        if (frozen != null) {
+          image = frozen;
+        } else if (_settle.isAnimating &&
+            _settleFrom != null &&
+            _settleTo != null) {
+          image = Rect.lerp(_settleFrom, _settleTo, _settleCurve.value)!;
+        } else {
+          image = _settledImage(session);
+        }
+        _displayedImage = image;
+        final frame = _draftToScreen(
+          session.draftCrop,
+          session.displayBasis,
+          image,
+        );
+        return ClipRect(
+          // Expand: the stage fills whatever the canvas pane gives it.
+          // Without this the Stack sizes to its non-positioned
+          // children — and the readout's "absent" state is a plain
+          // SizedBox.shrink, which collapsed the whole stage to 0×0
+          // under the pane's loose constraints.
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fromRect(
+                rect: image,
+                child: IgnorePointer(
+                  child: _SourcePreview(
+                    layer: widget.layer,
+                    // `contain` inside an exactly source-shaped box is
+                    // a no-op scale; it only guards against rounding
+                    // when the aspect is still the layer's fallback.
+                    fit: session.sourceAspect == null
+                        ? widget.layer.fit
+                        : BoxFit.contain,
+                  ),
                 ),
               ),
-            ),
-            Positioned.fromRect(
-              rect: frame,
-              child: HandleDragDetector(
-                onDrag: (gp, phase) => _onHandle(_Handle.body, gp, phase),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _CropFramePainter(frame: frame, focus: focus),
+                  ),
+                ),
               ),
-            ),
-            // ── Edge handles (T / B / L / R) ──────────────────────
-            // Centered on the midpoint of each edge. Single-axis drag
-            // keeps free crops natural and, when an aspect is locked,
-            // resizes the perpendicular axis symmetrically around the
-            // opposite edge — matching iOS Photos / Instagram.
-            Positioned(
-              left: frame.center.dx - edgeHitMain / 2,
-              top: frame.top - edgeHitCross / 2,
-              width: edgeHitMain,
-              height: edgeHitCross,
-              child: HandleDragDetector(
-                onDrag: (gp, phase) => _onHandle(_Handle.t, gp, phase),
+              // The photo surface: pinch to zoom, drag to pan — the
+              // frame holds still. Sits under the handle detectors,
+              // which claim their pointers on touch-down, so a finger
+              // on a handle can never be stolen by the pan.
+              Positioned.fill(
+                child: GestureDetector(
+                  key: const ValueKey('crop-photo-surface'),
+                  behavior: HitTestBehavior.opaque,
+                  onScaleStart: _onScaleStart,
+                  onScaleUpdate: _onScaleUpdate,
+                  onScaleEnd: _onScaleEnd,
+                ),
               ),
-            ),
-            Positioned(
-              left: frame.center.dx - edgeHitMain / 2,
-              top: frame.bottom - edgeHitCross / 2,
-              width: edgeHitMain,
-              height: edgeHitCross,
-              child: HandleDragDetector(
-                onDrag: (gp, phase) => _onHandle(_Handle.b, gp, phase),
-              ),
-            ),
-            Positioned(
-              left: frame.left - edgeHitCross / 2,
-              top: frame.center.dy - edgeHitMain / 2,
-              width: edgeHitCross,
-              height: edgeHitMain,
-              child: HandleDragDetector(
-                onDrag: (gp, phase) => _onHandle(_Handle.l, gp, phase),
-              ),
-            ),
-            Positioned(
-              left: frame.right - edgeHitCross / 2,
-              top: frame.center.dy - edgeHitMain / 2,
-              width: edgeHitCross,
-              height: edgeHitMain,
-              child: HandleDragDetector(
-                onDrag: (gp, phase) => _onHandle(_Handle.r, gp, phase),
-              ),
-            ),
-            for (final entry in <MapEntry<_Handle, Offset>>[
-              MapEntry(_Handle.tl, frame.topLeft),
-              MapEntry(_Handle.tr, frame.topRight),
-              MapEntry(_Handle.bl, frame.bottomLeft),
-              MapEntry(_Handle.br, frame.bottomRight),
-            ])
+              // ── Edge handles (T / B / L / R) ──────────────────────
+              // Centered on the midpoint of each edge. Single-axis drag
+              // keeps free crops natural and, when an aspect is locked,
+              // resizes the perpendicular axis symmetrically around the
+              // opposite edge — matching iOS Photos / Instagram.
               Positioned(
-                left: entry.value.dx - handleHit / 2,
-                top: entry.value.dy - handleHit / 2,
-                width: handleHit,
-                height: handleHit,
+                left: frame.center.dx - edgeHitMain / 2,
+                top: frame.top - edgeHitCross / 2,
+                width: edgeHitMain,
+                height: edgeHitCross,
                 child: HandleDragDetector(
-                  onDrag: (gp, phase) => _onHandle(entry.key, gp, phase),
+                  onDrag: (gp, phase) => _onHandle(_Handle.t, gp, phase),
                 ),
               ),
-            if (focus > 0.01) _readout(context, session, frame, focus),
-          ],
+              Positioned(
+                left: frame.center.dx - edgeHitMain / 2,
+                top: frame.bottom - edgeHitCross / 2,
+                width: edgeHitMain,
+                height: edgeHitCross,
+                child: HandleDragDetector(
+                  onDrag: (gp, phase) => _onHandle(_Handle.b, gp, phase),
+                ),
+              ),
+              Positioned(
+                left: frame.left - edgeHitCross / 2,
+                top: frame.center.dy - edgeHitMain / 2,
+                width: edgeHitCross,
+                height: edgeHitMain,
+                child: HandleDragDetector(
+                  onDrag: (gp, phase) => _onHandle(_Handle.l, gp, phase),
+                ),
+              ),
+              Positioned(
+                left: frame.right - edgeHitCross / 2,
+                top: frame.center.dy - edgeHitMain / 2,
+                width: edgeHitCross,
+                height: edgeHitMain,
+                child: HandleDragDetector(
+                  onDrag: (gp, phase) => _onHandle(_Handle.r, gp, phase),
+                ),
+              ),
+              for (final entry in <MapEntry<_Handle, Offset>>[
+                MapEntry(_Handle.tl, frame.topLeft),
+                MapEntry(_Handle.tr, frame.topRight),
+                MapEntry(_Handle.bl, frame.bottomLeft),
+                MapEntry(_Handle.br, frame.bottomRight),
+              ])
+                Positioned(
+                  left: entry.value.dx - handleHit / 2,
+                  top: entry.value.dy - handleHit / 2,
+                  width: handleHit,
+                  height: handleHit,
+                  child: HandleDragDetector(
+                    onDrag: (gp, phase) => _onHandle(entry.key, gp, phase),
+                  ),
+                ),
+              if (focus > 0.01) _readout(context, session, frame, focus),
+            ],
+          ),
         );
       },
     );
+  }
+
+  // ── Pinch / pan: the photo under the frame ────────────────────
+
+  void _onScaleStart(ScaleStartDetails details) {
+    if (_frozenImage != null) return;
+    _settle.stop();
+    _pinchActive = true;
+    _lastScale = 1;
+    _lastFocal = details.localFocalPoint;
+    _focus.forward();
+  }
+
+  void _onScaleUpdate(ScaleUpdateDetails details) {
+    if (!_pinchActive) return;
+    final ctrl = ref.read(cropControllerProvider.notifier);
+    final session = ref.read(cropControllerProvider);
+    final image = _settledImage(session);
+    final basis = session.displayBasis;
+    final unit = _draftUnit(basis, image);
+    if (unit.width <= 0 || unit.height <= 0) return;
+    final delta = details.localFocalPoint - _lastFocal;
+    final scaleInc = _lastScale <= 0 ? 1.0 : details.scale / _lastScale;
+    _lastFocal = details.localFocalPoint;
+    _lastScale = details.scale;
+    final bounds = session.draftBounds;
+    // The photo follows the fingers, so the window moves the OTHER
+    // way — a pan right shows pixels further left.
+    var next = CropController.translate(
+      session.draftCrop,
+      -delta.dx / unit.width,
+      -delta.dy / unit.height,
+      bounds: bounds,
+    );
+    if (scaleInc != 1.0) {
+      next = CropController.zoom(
+        next,
+        scale: scaleInc,
+        focal: _screenToDraft(details.localFocalPoint, basis, image),
+        bounds: bounds,
+      );
+    }
+    ctrl.updateDraft(next);
+  }
+
+  void _onScaleEnd(ScaleEndDetails details) {
+    if (!_pinchActive) return;
+    _pinchActive = false;
+    _focus.reverse();
   }
 
   /// Pixel readout that rides the frame while it is being dragged.
@@ -669,54 +890,77 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer>
       case DragPhase.start:
         _dragStartDraft = session.draftCrop;
         _dragStartGlobal = globalPos;
+        // Freeze the mapping: while the finger is cutting the picture
+        // the photo must hold still, so the frame — not the layout —
+        // is what follows the drag. Grabbing a handle mid-settle
+        // freezes the tween where it is.
+        _settle.stop();
+        final image = _displayedImage ?? _settledImage(session);
+        _frozenImage = image;
+        // The frame may grow no further than the photo (source
+        // bounds) and no further than the pane (it must stay on
+        // screen — the settle brings the photo to it afterwards).
+        final paneDraft = _screenRectToDraft(
+          widget.pane,
+          session.displayBasis,
+          image,
+        );
+        final src = session.draftBounds;
+        final clamped = Rect.fromLTRB(
+          math.max(src.left, paneDraft.left),
+          math.max(src.top, paneDraft.top),
+          math.min(src.right, paneDraft.right),
+          math.min(src.bottom, paneDraft.bottom),
+        );
+        _dragBounds = (clamped.width > 0 && clamped.height > 0) ? clamped : src;
         _focus.forward();
         EditorHaptics.tap();
         return;
       case DragPhase.update:
         final start = _dragStartDraft;
         final origin = _dragStartGlobal;
-        if (start == null || origin == null) return;
-        final unit = _draftUnit(session.displayBasis);
+        final image = _frozenImage;
+        if (start == null || origin == null || image == null) return;
+        final unit = _draftUnit(session.displayBasis, image);
         if (unit.width <= 0 || unit.height <= 0) return;
         final dxNorm = (globalPos.dx - origin.dx) / unit.width;
         final dyNorm = (globalPos.dy - origin.dy) / unit.height;
-        // The frame roams the whole source, not just the window the
-        // layer displays — that is what keeps crop non-destructive.
-        final bounds = session.draftBounds;
-        Rect next;
-        if (h == _Handle.body) {
-          next = CropController.translate(
-            start,
-            dxNorm,
-            dyNorm,
-            bounds: bounds,
-          );
-        } else {
-          // Aspect is stored in image-pixel space; convert to
-          // normalised-space aspect so the handle drag stays
-          // visually locked on a non-square layer.
-          final aspectImage = session.aspectRatio;
-          // Same denominator the preset chips use — the draft unit
-          // box, not the layer box. See CropSession.draftUnitAspect.
-          final layerAspect = session.draftUnitAspect;
-          final aspectNorm = (aspectImage == null || layerAspect <= 0)
-              ? null
-              : aspectImage / layerAspect;
-          next = CropController.resize(
-            start,
-            handle: _toPublicHandle(h),
-            dx: dxNorm,
-            dy: dyNorm,
-            aspect: aspectNorm,
-            bounds: bounds,
-          );
-        }
+        // Aspect is stored in image-pixel space; convert to
+        // normalised-space aspect so the handle drag stays
+        // visually locked on a non-square layer.
+        final aspectImage = session.aspectRatio;
+        // Same denominator the preset chips use — the draft unit
+        // box, not the layer box. See CropSession.draftUnitAspect.
+        final layerAspect = session.draftUnitAspect;
+        final aspectNorm = (aspectImage == null || layerAspect <= 0)
+            ? null
+            : aspectImage / layerAspect;
+        final next = CropController.resize(
+          start,
+          handle: _toPublicHandle(h),
+          dx: dxNorm,
+          dy: dyNorm,
+          aspect: aspectNorm,
+          bounds: _dragBounds ?? session.draftBounds,
+        );
         ctrl.updateDraft(next);
         return;
       case DragPhase.end:
         _dragStartDraft = null;
         _dragStartGlobal = null;
+        _dragBounds = null;
+        final image = _frozenImage;
+        _frozenImage = null;
         _focus.reverse();
+        // Zoom-to-fill: fly from the frozen mapping to the settled
+        // one, so the frame the user just cut glides out to fill the
+        // pane while the photo scales up underneath it.
+        if (image != null) {
+          _animateSettle(
+            from: image,
+            to: _settledImage(ref.read(cropControllerProvider)),
+          );
+        }
         return;
     }
   }
@@ -730,9 +974,6 @@ class _CropFrameLayerState extends ConsumerState<_CropFrameLayer>
     _Handle.b => CropHandle.b,
     _Handle.l => CropHandle.l,
     _Handle.r => CropHandle.r,
-    // body has no public handle counterpart; callers must
-    // route body drags to CropController.translate directly.
-    _Handle.body => CropHandle.tl,
   };
 }
 

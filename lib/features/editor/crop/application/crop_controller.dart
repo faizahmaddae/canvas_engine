@@ -652,6 +652,38 @@ class CropController extends Notifier<CropSession> {
     required double layerAspect,
   }) => fitAspect(bounds: bounds, aspect: aspect, layerAspect: layerAspect);
 
+  /// Scale the window [r] for a pinch of factor [scale] about [focal]
+  /// (draft coordinates): pinching the *photo* out by 2× shrinks the
+  /// window to half, so the window scales by `1/scale`.
+  ///
+  /// Aspect-preserving by construction — the window scales uniformly —
+  /// which is what lets a locked ratio survive a pinch without any
+  /// re-fitting. The factor is capped so the window neither outgrows
+  /// [bounds] nor lets its short side fall under [minNorm], and the
+  /// result is translate-clamped back inside [bounds], so the photo
+  /// stops at the frame edge instead of tearing away from it.
+  static Rect zoom(
+    Rect r, {
+    required double scale,
+    required Offset focal,
+    Rect bounds = ImageLayer.fullCrop,
+  }) {
+    if (!scale.isFinite || scale <= 0) return r;
+    if (r.width <= 0 || r.height <= 0) return r;
+    var f = 1 / scale;
+    final maxF = math.min(bounds.width / r.width, bounds.height / r.height);
+    final minF = minNorm / math.min(r.width, r.height);
+    if (maxF < minF) return r;
+    f = f.clamp(minF, maxF);
+    final next = Rect.fromLTWH(
+      focal.dx + (r.left - focal.dx) * f,
+      focal.dy + (r.top - focal.dy) * f,
+      r.width * f,
+      r.height * f,
+    );
+    return translate(next, 0, 0, bounds: bounds);
+  }
+
   /// Translate [r] by ([dx], [dy]) in normalised units, clamping the
   /// result so the rect stays fully inside [bounds].
   ///
