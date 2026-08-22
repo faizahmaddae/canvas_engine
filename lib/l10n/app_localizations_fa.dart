@@ -501,7 +501,7 @@ class AppLocalizationsFa extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
-    return 'چندانتخاب · $countString';
+    return 'چندانتخاب • $countString';
   }
 
   @override
@@ -1987,7 +1987,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String customSizeChip(String size) {
-    return 'سفارشی · $size';
+    return 'سفارشی • $size';
   }
 
   @override
@@ -2257,6 +2257,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String histMultiLayer(String base, String count) {
-    return '$base · $count لایه';
+    return '$base • $count لایه';
   }
 }

@@ -1037,7 +1037,7 @@ abstract class AppLocalizations {
   /// No description provided for @multiSelectCount.
   ///
   /// In en, this message translates to:
-  /// **'Multi-select · {count}'**
+  /// **'Multi-select • {count}'**
   String multiSelectCount(int count);
 
   /// No description provided for @multiSelectExit.
@@ -3779,7 +3779,7 @@ abstract class AppLocalizations {
   /// No description provided for @customSizeChip.
   ///
   /// In en, this message translates to:
-  /// **'Custom · {size}'**
+  /// **'Custom • {size}'**
   String customSizeChip(String size);
 
   /// No description provided for @originalSizeQuality.
@@ -4307,7 +4307,7 @@ abstract class AppLocalizations {
   /// No description provided for @histMultiLayer.
   ///
   /// In en, this message translates to:
-  /// **'{base} · {count} layers'**
+  /// **'{base} • {count} layers'**
   String histMultiLayer(String base, String count);
 }
 

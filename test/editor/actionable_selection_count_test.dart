@@ -1,7 +1,7 @@
 // A selection can outlive the layers it names — an undo, a delete, a
 // document swap. The dock's mode derivation has always filtered those
 // out; the multi-select chip and the layers-panel header did not, and
-// on a real document the chip announced «چندانتخاب · ۱۰» over six
+// on a real document the chip announced «چندانتخاب • ۱۰» over six
 // layers with one of them selected while the dock correctly showed
 // that single layer's own tools. One derivation now feeds all three.
 

@@ -84,7 +84,7 @@ class SettingsScreen extends ConsumerWidget {
             title: l10n.defaultExportQualityTitle,
             subtitle:
                 '${_exportQualityLabel(l10n, settings.defaultExportQuality)} '
-                '· ${settings.defaultExportQuality.multiplier}',
+                '• ${settings.defaultExportQuality.multiplier}',
             onTap: () => _openQualityPicker(context, ref, settings),
           ),
           const SizedBox(height: 8),
@@ -264,7 +264,7 @@ String _contentLanguagesLabel(
   return [
     if (selected.contains(TemplateLanguage.english)) l10n.languageEnglish,
     if (selected.contains(TemplateLanguage.persian)) l10n.languagePersian,
-  ].join(' · ');
+  ].join(' • ');
 }
 
 String _enabledCategoriesLabel(
@@ -277,7 +277,7 @@ String _enabledCategoriesLabel(
   return [
     for (final category in kHomeTemplateGoalCategories)
       if (selected.contains(category)) _categoryLabel(l10n, category),
-  ].join(' · ');
+  ].join(' • ');
 }
 
 String _categoryLabel(AppLocalizations l10n, TemplateCategory category) =>

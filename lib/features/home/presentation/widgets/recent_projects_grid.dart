@@ -282,7 +282,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                             // well in light/dark.
                             // Measured, not ellipsised. A card in the
                             // 2-up grid has ~150dp for this line and
-                            // «۱۰۸۰ × ۱۳۵۰  ·  ۲۹ دقیقه پیش» needs far
+                            // «۱۰۸۰ × ۱۳۵۰  •  ۲۹ دقیقه پیش» needs far
                             // more, so SOMETHING has to go. Ellipsis
                             // picks the wrong victim either way: one
                             // `Text` cut the time mid-word, and making
@@ -305,7 +305,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                                       _sizeComponent(p.width),
                                       _sizeComponent(p.height),
                                     );
-                                final full = '$size \u00B7 $relative';
+                                final full = '$size \u2022 $relative';
                                 return Text(
                                   textFits(
                                         context,

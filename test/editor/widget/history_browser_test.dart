@@ -433,7 +433,7 @@ void main() {
         'Align left 3 layers',
         formatCount: (n) => const ['۰', '۱', '۲', '۳'][n],
       );
-      expect(out, 'تراز چپ · ۳ لایه');
+      expect(out, 'تراز چپ • ۳ لایه');
     });
   });
 }

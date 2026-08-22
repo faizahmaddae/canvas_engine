@@ -108,7 +108,7 @@ void main() {
     expect(stripped, contains('۱۹۲۰ × ۱۰۸۰'));
     expect(
       stripped,
-      isNot(contains('·')),
+      isNot(contains('•')),
       reason: 'the separator only appears when the time came with it',
     );
   });
@@ -117,7 +117,7 @@ void main() {
     await pump(tester, p: project(width: 1080, height: 1350), width: 560);
     final stripped = stripBidi(allText(tester));
     expect(stripped, contains('۱۰۸۰ × ۱۳۵۰'));
-    expect(stripped, contains('·'));
+    expect(stripped, contains('•'));
   });
 
   testWidgets('the dimension pair is never truncated', (tester) async {

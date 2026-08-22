@@ -158,7 +158,7 @@
   "layerKindGeneric": "Layer",
   "layerAutoName": "{kind} {index}",
   "@layerAutoName": {"placeholders": {"kind": {"type": "String"}, "index": {"type": "int", "format": "decimalPattern"}}},
-  "multiSelectCount": "Multi-select · {count}",
+  "multiSelectCount": "Multi-select • {count}",
   "@multiSelectCount": {"placeholders": {"count": {"type": "int", "format": "decimalPattern"}}},
   "multiSelectExit": "Exit multi-select",
   "longPressCanvasMultiSelectHint": "Long-press canvas to select multiple layers.",
@@ -644,7 +644,7 @@
   "maximumDimensionEitherSide": "Maximum is {dimension} on either side.",
   "@maximumDimensionEitherSide": {"placeholders": {"dimension": {"type": "String"}}},
   "useSizeAction": "Use size",
-  "customSizeChip": "Custom · {size}",
+  "customSizeChip": "Custom • {size}",
   "@customSizeChip": {"placeholders": {"size": {"type": "String"}}},
   "originalSizeQuality": "Original size",
   "highQuality": "High quality",
@@ -733,6 +733,6 @@
   "histAlignBottom": "Align bottom",
   "histDistributeH": "Distribute horizontally",
   "histDistributeV": "Distribute vertically",
-  "histMultiLayer": "{base} · {count} layers",
+  "histMultiLayer": "{base} • {count} layers",
   "@histMultiLayer": {"placeholders": {"base": {"type": "String"}, "count": {"type": "String"}}}
 }
