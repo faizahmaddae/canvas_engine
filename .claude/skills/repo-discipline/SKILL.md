@@ -137,8 +137,8 @@ There is no golden/emulator infra. Design review comes from RepaintBoundary
 | Surface | Test | Writes |
 |---|---|---|
 | Editor | `test/editor/widget/editor_screen_capture_test.dart` | `editor_{light,dark}.png` + selection/panel/filters/font-panel variants |
-| Home / nav shell | `test/app/navigation/nav_shell_capture_test.dart` | `home_{light,dark}.png` |
-| Size picker | `test/widget/size_picker_dialog_capture_test.dart` | `size_picker_dialog.png` |
+| Home / nav shell | `test/app/navigation/nav_shell_capture_test.dart` | `home_{light,dark}.png`, `home_draft_{light,dark}.png`, `home_desk_{light,dark}.png` |
+| Size picker | `test/widget/size_picker_sheet_capture_test.dart` | `size_picker_sheet_{light,dark}.png` |
 
 Workflow: run the relevant test with plain `flutter test <path>`, then **open
 and actually look at both light and dark PNGs**. Extend the existing capture
