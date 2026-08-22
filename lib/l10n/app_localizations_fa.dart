@@ -338,7 +338,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeSuggestedTitle => 'پیشنهادی';
 
   @override
-  String get homeRecentNewTile => 'جدید';
+  String get homeContinueTitle => 'ادامهٔ کار';
 
   @override
   String get recentTitle => 'کارهای اخیر';

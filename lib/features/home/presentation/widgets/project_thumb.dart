@@ -103,38 +103,29 @@ class ProjectThumb extends StatelessWidget {
 /// "nothing in it" were indistinguishable, and a real design read as
 /// empty. A cached PNG is an optimisation; the document is the truth,
 /// and a preview should never be MORE wrong than the data allows.
-class ProjectPreview extends ConsumerWidget {
+class ProjectPreview extends StatelessWidget {
   const ProjectPreview({super.key, required this.project});
 
   final Project project;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tokens = AppTokens.of(context);
-    // Neutral "page" colour behind the preview (paper-muted in light,
-    // ink-muted in dark) — lets a letterboxed portrait or landscape
-    // canvas breathe instead of being hard-cropped.
-    final canvasBg = tokens.surfaceMuted;
-
-    if (isEmptyDesignJson(project.documentJson)) {
-      return ColoredBox(
-        color: canvasBg,
-        child: EmptyDesignPlaceholder(name: project.name),
-      );
-    }
-
+  Widget build(BuildContext context) {
     // Only trust a cached PNG if it exists AND was produced by the
     // current renderer. Older PNGs baked an opaque white backdrop and
     // would mis-represent any coloured or transparent canvas.
     final thumb = project.thumbnailPath;
     final pngIsFresh =
+        !isEmptyDesignJson(project.documentJson) &&
         thumb != null &&
         project.thumbnailVersion >= Project.currentThumbnailVersion &&
         File(thumb).existsSync();
 
     if (pngIsFresh) {
       return ColoredBox(
-        color: canvasBg,
+        // Neutral "page" colour behind the preview (paper-muted in
+        // light, ink-muted in dark) — lets a letterboxed portrait or
+        // landscape canvas breathe instead of being hard-cropped.
+        color: AppTokens.of(context).surfaceMuted,
         child: Padding(
           padding: const EdgeInsets.all(6),
           child: Image.file(
@@ -153,13 +144,47 @@ class ProjectPreview extends ConsumerWidget {
       );
     }
 
+    return DocumentJsonPreview(
+      documentJson: project.documentJson,
+      name: project.name,
+    );
+  }
+}
+
+/// Steps 1, 3 and 4 of the cascade, addressable by raw JSON so the
+/// draft journal — which has a serialized document but no [Project]
+/// record — previews through the same code as every saved project.
+class DocumentJsonPreview extends ConsumerWidget {
+  const DocumentJsonPreview({
+    super.key,
+    required this.documentJson,
+    required this.name,
+  });
+
+  final String documentJson;
+
+  /// Display name for the empty-design placeholder.
+  final String name;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = AppTokens.of(context);
+    final canvasBg = tokens.surfaceMuted;
+
+    if (isEmptyDesignJson(documentJson)) {
+      return ColoredBox(
+        color: canvasBg,
+        child: EmptyDesignPlaceholder(name: name),
+      );
+    }
+
     // Null on the first frame, before the directory future lands; the
     // decode then falls back to a raw one until it resolves.
     final importedImagesDir = ref
         .watch(importedImagesDirectoryProvider)
         .value
         ?.path;
-    final doc = _tryDecode(project.documentJson, importedImagesDir);
+    final doc = _tryDecode(documentJson, importedImagesDir);
     if (doc != null) {
       return ColoredBox(
         color: canvasBg,
@@ -256,97 +281,4 @@ class EmptyDesignPlaceholder extends StatelessWidget {
       ),
     );
   }
-}
-
-/// The dashed «جدید» tile closing the rail — same footprint as a
-/// [ProjectThumb], dashed hairline border, saffron plus + caption.
-class NewProjectTile extends StatelessWidget {
-  const NewProjectTile({
-    super.key,
-    required this.label,
-    required this.onTap,
-    this.width = 110,
-    this.height = 140,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-  final double width;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = AppTokens.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: width,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CustomPaint(
-              painter: _DashedBorderPainter(
-                color: tokens.border,
-                radius: AppRadii.button,
-              ),
-              child: SizedBox(
-                width: width,
-                height: height,
-                child: Center(
-                  child: Icon(AppIcons.add, size: 24, color: tokens.accent),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypeScale.caption.copyWith(color: tokens.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Dashed rounded-rect border. Flutter's [Border] has no dash
-/// support, so the tile paints its own: the rounded-rect path is
-/// measured and stroked dash-by-dash.
-class _DashedBorderPainter extends CustomPainter {
-  const _DashedBorderPainter({required this.color, required this.radius});
-
-  final Color color;
-  final double radius;
-
-  static const _dash = 5.0;
-  static const _gap = 4.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          // Half-stroke inset keeps the dashes fully inside the tile.
-          Rect.fromLTWH(0.6, 0.6, size.width - 1.2, size.height - 1.2),
-          Radius.circular(radius),
-        ),
-      );
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        canvas.drawPath(metric.extractPath(distance, distance + _dash), paint);
-        distance += _dash + _gap;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DashedBorderPainter old) =>
-      old.color != color || old.radius != radius;
 }

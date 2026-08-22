@@ -7,13 +7,13 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../core/utils/editor_value_format.dart';
 import '../../../../core/utils/text_measure.dart';
 import '../../../../core/utils/user_error.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../../../app/ui/app_modal_sheet.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/project_delete_service.dart';
 import '../../application/project_store.dart';
 import '../../domain/project.dart';
 import 'project_thumb.dart' show ProjectPreview;
+import 'relative_time.dart';
 import '../../../../app/theme/app_icons.dart';
 
 const _uuid = Uuid();
@@ -211,7 +211,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
     final tokens = AppTokens.of(context);
     final l10n = context.l10n;
     final p = widget.project;
-    final relativeTime = _relativeTime(l10n, p.lastModified);
+    final relative = relativeTime(l10n, p.lastModified);
 
     return AnimatedScale(
       scale: _pressed ? 0.97 : 1,
@@ -301,7 +301,7 @@ class _ProjectCardState extends ConsumerState<ProjectCard> {
                                       _sizeComponent(p.width),
                                       _sizeComponent(p.height),
                                     );
-                                final full = '$size \u00B7 $relativeTime';
+                                final full = '$size \u00B7 $relative';
                                 return Text(
                                   textFits(
                                         context,
@@ -725,15 +725,3 @@ class _ErrorBox extends StatelessWidget {
 /// itself on its own card as `1350 × 1080`. One composer, one fix.
 num _sizeComponent(double v) =>
     v == v.roundToDouble() ? v.toInt() : double.parse(v.toStringAsFixed(1));
-
-String _relativeTime(AppLocalizations l10n, DateTime t) {
-  final now = DateTime.now();
-  final diff = now.difference(t);
-  if (diff.inMinutes < 1) return l10n.justNow;
-  if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
-  if (diff.inHours < 24 && now.day == t.day) return l10n.hoursAgo(diff.inHours);
-  if (diff.inDays < 2) return l10n.yesterday;
-  if (diff.inDays < 7) return l10n.daysAgo(diff.inDays);
-  if (diff.inDays < 30) return l10n.weeksAgo((diff.inDays / 7).floor());
-  return l10n.monthsAgo((diff.inDays / 30).floor());
-}

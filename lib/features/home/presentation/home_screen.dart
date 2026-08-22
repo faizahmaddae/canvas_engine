@@ -11,11 +11,12 @@ import '../../editor/application/project_recovery_service.dart';
 import '../application/project_store.dart';
 import '../../settings/application/settings_controller.dart';
 import '../../templates/application/template_repository_provider.dart';
+import '../domain/project.dart';
 import 'home_actions.dart';
+import 'widgets/continue_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/quick_action_card.dart';
 import 'widgets/recent_projects_section.dart';
-import 'widgets/resume_draft_card.dart';
 import 'widgets/suggested_templates_rail.dart';
 import '../../../app/theme/app_icons.dart';
 
@@ -162,7 +163,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final contentLanguages = ref.watch(contentLanguagesProvider);
     final enabledCategories = ref.watch(enabledCategoriesProvider);
     final recentProjects = ref.watch(projectStoreProvider);
-    final hasRecentProjects = recentProjects.value?.isNotEmpty ?? false;
+    // The desk's hero slot holds the most recent act: a pending
+    // unsaved draft outranks the newest saved project, and the rail
+    // below skips the newest only when the hero is the one showing it.
+    final latestProject = recentProjects.value?.firstOrNull;
+    final showDraftHero = _pendingDraftJson != null;
+    final showProjectHero = !showDraftHero && latestProject != null;
 
     return Scaffold(
       backgroundColor: AppTokens.of(context).pageBg,
@@ -175,12 +181,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
             if (_pendingDraftJson case final String draftJson)
               SliverToBoxAdapter(
-                child: ResumeDraftCard(
+                child: ContinueCard.draft(
                   key: const ValueKey('home-resume-draft'),
+                  draftJson: draftJson,
                   draftName: _pendingDraftName,
                   onResume: () => _resumeDraft(draftJson),
                   onNotNow: _dismissDraftOffer,
                   onDeleteDraft: () => unawaited(_deleteDraft()),
+                ),
+              )
+            else if (latestProject case final Project latest)
+              SliverToBoxAdapter(
+                child: ContinueCard.project(
+                  key: const ValueKey('home-continue-project'),
+                  project: latest,
+                  onOpen: () => actions.openProject(latest),
                 ),
               ),
             // Create row (redesign doc §3): two equal cards, the
@@ -214,11 +229,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            if (hasRecentProjects) ...[
+            if (recentProjects.value?.isNotEmpty ?? false) ...[
               const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
               SliverToBoxAdapter(
                 child: RecentProjectsSection(
-                  onCreate: actions.createNew,
+                  skipNewest: showProjectHero,
                   onOpen: actions.openProject,
                   // Launcher rails jump to their tab instead of
                   // pushing duplicate routes (navigation doc).

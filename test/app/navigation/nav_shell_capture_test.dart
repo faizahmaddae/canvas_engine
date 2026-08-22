@@ -10,7 +10,9 @@ import 'dart:ui' as ui;
 
 import 'package:canvas_engine/app/navigation/nav_shell.dart';
 import 'package:canvas_engine/app/theme/app_theme.dart';
+import 'package:canvas_engine/features/editor/engine/serialization/document_codec.dart';
 import 'package:canvas_engine/features/home/application/project_store.dart';
+import 'package:canvas_engine/features/home/domain/project.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -95,11 +97,58 @@ void main() {
     });
   }
 
+  /// A saved-project set for the desk variant: the newest becomes the
+  /// continue hero, the rest fill the rail. Distinct timestamps keep
+  /// the newest-first order deterministic; distinct canvas ratios show
+  /// the hero's honest-ratio pane doing its job.
+  Future<void> seedProjects(WidgetTester tester, ProviderContainer c) async {
+    EditorDocument doc(double w, double h, Color fill) => EditorDocument(
+      layers: [
+        ShapeLayer(
+          id: 'seed-$w-$h',
+          transform: LayerTransform(
+            position: Offset(w * 0.25, h * 0.25),
+            size: Size(w * 0.5, h * 0.5),
+          ),
+          kind: ShapeKind.circle,
+          fillColor: fill,
+        ),
+      ],
+      width: w,
+      height: h,
+    );
+    final now = DateTime.now();
+    final seeds = [
+      ('پوستر نوروز', 1080.0, 1350.0, const Color(0xFFE5A044)),
+      ('استوری فروش', 1080.0, 1920.0, const Color(0xFFC96A72)),
+      ('بنر یوتیوب', 1920.0, 1080.0, const Color(0xFF3E8D87)),
+    ];
+    await tester.runAsync(() async {
+      await c.read(projectStoreProvider.future);
+      for (final (i, (name, w, h, fill)) in seeds.indexed) {
+        await c
+            .read(projectStoreProvider.notifier)
+            .upsert(
+              Project(
+                id: 'seed-$i',
+                name: name,
+                width: w,
+                height: h,
+                createdAt: now.subtract(Duration(hours: i + 1)),
+                lastModified: now.subtract(Duration(hours: i + 1)),
+                documentJson: DocumentCodec.encode(doc(w, h, fill)),
+              ),
+            );
+      }
+    });
+  }
+
   Future<void> capture(
     WidgetTester tester, {
     required Brightness brightness,
     required String fileName,
     bool withDraft = false,
+    bool withProjects = false,
   }) async {
     if (withDraft) await seedDraft(tester);
     tester.view.physicalSize = const Size(440, 956);
@@ -110,6 +159,11 @@ void main() {
     });
 
     final dir = tempProjectsDir();
+    final container = ProviderContainer(
+      overrides: [projectsDirectoryProvider.overrideWith((ref) async => dir)],
+    );
+    addTearDown(container.dispose);
+    if (withProjects) await seedProjects(tester, container);
     final boundaryKey = GlobalKey();
     // The draft offer resolves in a post-frame callback that reads the
     // journal off disk. Real IO never completes in the fake-async zone,
@@ -117,8 +171,8 @@ void main() {
     // `runAsync` — draining afterwards is too late, the read was
     // already started in the wrong zone.
     Future<void> pumpTree() => tester.pumpWidget(
-      ProviderScope(
-        overrides: [projectsDirectoryProvider.overrideWith((ref) async => dir)],
+      UncontrolledProviderScope(
+        container: container,
         child: RepaintBoundary(
           key: boundaryKey,
           child: MaterialApp(
@@ -213,6 +267,26 @@ void main() {
       brightness: Brightness.dark,
       fileName: 'home_draft_dark.png',
       withDraft: true,
+    );
+  });
+
+  testWidgets('NavShell visual capture — populated desk, light', (
+    tester,
+  ) async {
+    await capture(
+      tester,
+      brightness: Brightness.light,
+      fileName: 'home_desk_light.png',
+      withProjects: true,
+    );
+  });
+
+  testWidgets('NavShell visual capture — populated desk, dark', (tester) async {
+    await capture(
+      tester,
+      brightness: Brightness.dark,
+      fileName: 'home_desk_dark.png',
+      withProjects: true,
     );
   });
 }

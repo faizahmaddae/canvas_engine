@@ -10,26 +10,37 @@ import '../../application/project_store.dart';
 import '../../domain/project.dart';
 import 'project_thumb.dart';
 
-/// Recent work on Home, v2 (home redesign doc §4): «کارهای اخیر» +
-/// a horizontal rail of [ProjectThumb]s ending in the dashed «جدید»
-/// tile.
+/// Recent work on Home: «کارهای اخیر» + a horizontal rail of
+/// [ProjectThumb]s.
+///
+/// The rail is the desk's second row — the continue hero above it
+/// already shows the newest project at recognisable size, so with
+/// [skipNewest] the rail starts from the second-newest and the same
+/// design never appears twice on one screen. The dashed «جدید» tile
+/// died with the hero's arrival: it duplicated the create row sitting
+/// 150dp above it, and its prime start-edge slot belongs to actual
+/// work.
 ///
 /// When there is nothing to show — fresh user, store still loading,
-/// or a load error — the section renders NOTHING. No empty rail, no
-/// skeleton: Home stays calm and the templates below carry the
-/// screen (errors are logged, never displayed here).
+/// hero already holding the only project, or a load error — the
+/// section renders NOTHING. No empty rail, no skeleton: Home stays
+/// calm and the templates below carry the screen (errors are logged,
+/// never displayed here).
 class RecentProjectsSection extends ConsumerWidget {
   const RecentProjectsSection({
     super.key,
-    required this.onCreate,
     required this.onOpen,
     required this.onSeeAll,
+    this.skipNewest = false,
     this.previewLimit = 8,
   });
 
-  final VoidCallback onCreate;
   final void Function(Project) onOpen;
   final VoidCallback onSeeAll;
+
+  /// True when the continue hero above the rail is already showing the
+  /// newest project, which the rail must then not repeat.
+  final bool skipNewest;
 
   /// Maximum thumbs rendered in the rail. The rest are accessed via
   /// «مشاهده همه» so Home stays scannable.
@@ -49,12 +60,13 @@ class RecentProjectsSection extends ConsumerWidget {
       );
     }
     final list = projects.value ?? const <Project>[];
-    if (list.isEmpty) return const SizedBox.shrink();
+    final rest = skipNewest && list.isNotEmpty ? list.sublist(1) : list;
+    if (rest.isEmpty) return const SizedBox.shrink();
 
-    final shown = list.length > previewLimit
-        ? list.sublist(0, previewLimit)
-        : list;
-    final showSeeAll = list.length > previewLimit;
+    final shown = rest.length > previewLimit
+        ? rest.sublist(0, previewLimit)
+        : rest;
+    final showSeeAll = rest.length > previewLimit;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,19 +119,10 @@ class RecentProjectsSection extends ConsumerWidget {
             padding: const EdgeInsetsDirectional.symmetric(
               horizontal: AppSpacing.pageGutter,
             ),
-            itemCount: shown.length + 1,
+            itemCount: shown.length,
             separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
             itemBuilder: (context, index) {
-              // «جدید» leads the rail (navigation doc): first item =
-              // the start edge, which RTL puts on the right.
-              if (index == 0) {
-                return NewProjectTile(
-                  key: const ValueKey('home-recent-new-tile'),
-                  label: l10n.homeRecentNewTile,
-                  onTap: onCreate,
-                );
-              }
-              final project = shown[index - 1];
+              final project = shown[index];
               return ProjectThumb(
                 key: ValueKey('home-recent-${project.id}'),
                 project: project,

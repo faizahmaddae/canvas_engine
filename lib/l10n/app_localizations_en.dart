@@ -338,7 +338,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSuggestedTitle => 'Suggested';
 
   @override
-  String get homeRecentNewTile => 'New';
+  String get homeContinueTitle => 'Continue working';
 
   @override
   String get recentTitle => 'Recent work';

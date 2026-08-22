@@ -734,11 +734,11 @@ abstract class AppLocalizations {
   /// **'Suggested'**
   String get homeSuggestedTitle;
 
-  /// No description provided for @homeRecentNewTile.
+  /// No description provided for @homeContinueTitle.
   ///
   /// In en, this message translates to:
-  /// **'New'**
-  String get homeRecentNewTile;
+  /// **'Continue working'**
+  String get homeContinueTitle;
 
   /// No description provided for @recentTitle.
   ///
