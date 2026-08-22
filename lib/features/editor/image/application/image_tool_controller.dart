@@ -8,7 +8,6 @@ import '../../toolbar/domain/sibling_swipe_strategy.dart';
 /// `isPanel: false` means the chip participates in the strip but
 /// does not open a dock panel:
 ///   * [crop] — opens the full-screen `CropModeOverlay`.
-///   * [selective] — opens the on-canvas mask-edit mode.
 ///   * [replace] — one-shot picker action.
 ///
 /// Rendered strip order lives in [kImageStripOrder] — NOT in this
@@ -21,8 +20,6 @@ enum ImageToolSlot {
   shape,
   border,
   shadow,
-  effects,
-  selective(isPanel: false),
   replace(isPanel: false);
 
   const ImageToolSlot({this.isPanel = true});
@@ -65,8 +62,6 @@ const List<DockStripEntry<ImageToolSlot>> kImageStripOrder =
       DockStripEntry.slot(ImageToolSlot.replace),
       DockStripEntry.action('more'),
       DockStripEntry.slot(ImageToolSlot.shape),
-      DockStripEntry.slot(ImageToolSlot.effects),
-      DockStripEntry.slot(ImageToolSlot.selective),
     ];
 
 /// Display order of every Image dock slot (action chips excluded)

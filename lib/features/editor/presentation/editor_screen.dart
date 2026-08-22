@@ -48,7 +48,6 @@ import '../image/presentation/image_border_body.dart';
 import '../image/presentation/image_look_body.dart';
 import 'widgets/history_browser_sheet.dart';
 import '../image/presentation/image_mode_toolbar.dart';
-import '../image/presentation/image_effects_body.dart';
 import 'sticker_picker_sheet.dart';
 import '../image/presentation/image_shadow_body.dart';
 import '../image/presentation/image_shape_body.dart';
@@ -699,16 +698,12 @@ class EditorScreen extends ConsumerWidget {
         case ImageToolSlot.shadow:
           expanded = ImageShadowBody(layer: selectedImageLayer);
           expandedKey = 'image-shadow:${selectedImageLayer.id}';
-        case ImageToolSlot.effects:
-          expanded = ImageEffectsBody(layer: selectedImageLayer);
-          expandedKey = 'image-effects:${selectedImageLayer.id}';
         case ImageToolSlot.crop:
-        case ImageToolSlot.selective:
         case ImageToolSlot.replace:
         case null:
-          // 'crop' opens the full-screen CropModeOverlay,
-          // 'selective' the on-canvas mask-edit mode, and 'replace'
-          // is a one-shot picker. None owns an inline dock body.
+          // 'crop' opens the full-screen CropModeOverlay and
+          // 'replace' is a one-shot picker. Neither owns an inline
+          // dock body.
           break;
       }
     } else if (shapeSelected) {

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/context_toolbar_controller.dart';
-import '../../application/mask_edit_controller.dart';
 import '../../crop/application/crop_controller.dart';
 import '../../engine/modules/image/image_layer.dart';
 import '../../presentation/widgets/layer_overflow_sheet.dart';
@@ -168,6 +167,10 @@ class ImageModeToolbar extends ConsumerWidget {
               .openCrop(layer.id, priorSelectionId: layer.id);
         },
       ),
+      // Selective masking and the effects list now live INSIDE the
+      // Look panel (image-studio §3): the mask section sits below
+      // the effects it masks, so its precondition is visible instead
+      // of narrated by a strip snackbar.
       ImageToolSlot.shape => ToolbarSlot(
         id: ImageToolSlot.shape.name,
         icon: AppIcons.squareShape,
@@ -176,72 +179,6 @@ class ImageModeToolbar extends ConsumerWidget {
         onTap: () {
           contextCtrl.closePanel();
           imageCtrl.toggleSlot(ImageToolSlot.shape);
-        },
-      ),
-      // Selective masking used to be a tonal button at the bottom of
-      // the Effects panel — three taps deep, and invisible unless you
-      // already knew the panel existed. It is the layer's second
-      // spatial edit (crop being the first), so it earns a strip tile.
-      // Capability guard: a mask with nothing to mask is a lying
-      // control — but a DISABLED tile is a dead one (§10.3): it does
-      // not fire onTap, so it can neither explain itself nor offer a
-      // way out. Like Crop and Look with no photo (tb12), the tile
-      // renders dimmed while the stack is empty and STAYS tappable;
-      // the tap names the precondition and offers the Look panel,
-      // which is where effects are added.
-      ImageToolSlot.selective => ToolbarSlot(
-        id: ImageToolSlot.selective.name,
-        icon: AppIcons.selectiveMask,
-        label: l10n.selectiveMaskLabel,
-        tier: SlotTier.tier2,
-        availableBuilder: () => layer.effects.effects.isNotEmpty,
-        unavailableHint: l10n.toolNeedsEffectHint,
-        onTap: () {
-          if (layer.effects.effects.isEmpty) {
-            // Precondition unmet: explain and offer recovery instead
-            // of opening a mode that would mask nothing. Panels stay
-            // as they are — the user may be inside Look mid-recovery.
-            final messenger = ScaffoldMessenger.of(context);
-            messenger.hideCurrentSnackBar();
-            messenger.showSnackBar(
-              SnackBar(
-                content: Text(l10n.addEffectToMaskHint),
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 4),
-                action: SnackBarAction(
-                  label: l10n.lookTool,
-                  onPressed: () {
-                    contextCtrl.closePanel();
-                    // Guarded like _openLook: an unguarded toggle
-                    // would CLOSE an already-open Look panel.
-                    if (ref.read(imageToolControllerProvider).openSlot !=
-                        ImageToolSlot.look) {
-                      imageCtrl.toggleSlot(ImageToolSlot.look);
-                    }
-                  },
-                ),
-              ),
-            );
-            return;
-          }
-          EditorHaptics.tap();
-          contextCtrl.closePanel();
-          // The mode's chrome replaces the dock; leaving openSlot set
-          // would re-mount a stale panel on exit.
-          imageCtrl.closePanel();
-          ref
-              .read(maskEditControllerProvider.notifier)
-              .open(layer.id, priorSelectionId: layer.id);
-        },
-      ),
-      ImageToolSlot.effects => ToolbarSlot(
-        id: ImageToolSlot.effects.name,
-        icon: AppIcons.effects,
-        label: l10n.effectsTool,
-        tier: SlotTier.tier2,
-        onTap: () {
-          contextCtrl.closePanel();
-          imageCtrl.toggleSlot(ImageToolSlot.effects);
         },
       ),
     };

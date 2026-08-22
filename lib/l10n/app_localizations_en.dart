@@ -1138,9 +1138,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toolNeedsPhotoHint => 'Needs a visible photo';
 
   @override
-  String get toolNeedsEffectHint => 'Needs at least one effect';
-
-  @override
   String get cropActionVerb => 'crop';
 
   @override
@@ -1738,19 +1735,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vignetteSubtitle => 'Soft radial darkening from the centre';
 
   @override
-  String get noEffectsApplied => 'No effects applied.';
-
-  @override
-  String get openLookToAddEffectHint => 'Open Look to add one.';
-
-  @override
   String get selectiveMaskLabel => 'Selective';
 
   @override
   String get selectiveMaskHint => 'Limit the stack to a region of the layer';
-
-  @override
-  String get addEffectToMaskHint => 'Add an effect to mask selectively.';
 
   @override
   String get maskPresetOff => 'Off';

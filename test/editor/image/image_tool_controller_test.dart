@@ -19,13 +19,13 @@ void main() {
       // enum declaration order (style→shape→border→shadow→…); it now
       // derives from kImageStripOrder, i.e. what the user sees.
       // tb4 1/14 collapsed style/adjust/filters into one `look`
-      // panel, so the walk is five slots long now.
+      // panel, and the image-studio redesign (§3) moved the effects
+      // list inside it, so the walk is four slots long now.
       expect(kImagePanelSlotOrder, const [
         ImageToolSlot.look,
         ImageToolSlot.border,
         ImageToolSlot.shadow,
         ImageToolSlot.shape,
-        ImageToolSlot.effects,
       ]);
     });
 

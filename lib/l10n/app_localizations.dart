@@ -2162,12 +2162,6 @@ abstract class AppLocalizations {
   /// **'Needs a visible photo'**
   String get toolNeedsPhotoHint;
 
-  /// No description provided for @toolNeedsEffectHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Needs at least one effect'**
-  String get toolNeedsEffectHint;
-
   /// No description provided for @cropActionVerb.
   ///
   /// In en, this message translates to:
@@ -3326,18 +3320,6 @@ abstract class AppLocalizations {
   /// **'Soft radial darkening from the centre'**
   String get vignetteSubtitle;
 
-  /// No description provided for @noEffectsApplied.
-  ///
-  /// In en, this message translates to:
-  /// **'No effects applied.'**
-  String get noEffectsApplied;
-
-  /// No description provided for @openLookToAddEffectHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Look to add one.'**
-  String get openLookToAddEffectHint;
-
   /// No description provided for @selectiveMaskLabel.
   ///
   /// In en, this message translates to:
@@ -3349,12 +3331,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Limit the stack to a region of the layer'**
   String get selectiveMaskHint;
-
-  /// No description provided for @addEffectToMaskHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Add an effect to mask selectively.'**
-  String get addEffectToMaskHint;
 
   /// No description provided for @maskPresetOff.
   ///

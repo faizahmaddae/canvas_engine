@@ -228,8 +228,6 @@ void main() {
         editorContainer(select: 'img-1', imageSlot: ImageToolSlot.border),
     'image-slot:shadow': () =>
         editorContainer(select: 'img-1', imageSlot: ImageToolSlot.shadow),
-    'image-slot:effects': () =>
-        editorContainer(select: 'img-1', imageSlot: ImageToolSlot.effects),
     'shape-selected': () => editorContainer(select: 'shape-1'),
     'shape-slot:style': () =>
         editorContainer(select: 'shape-1', shapeSlot: ShapeToolSlot.style),
