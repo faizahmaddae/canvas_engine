@@ -183,11 +183,13 @@ void main() {
     await pumpEditor(tester, container);
 
     expectMinimalAppBar();
-    // Printed labels are one word (a tile gives them 60dp); the full
-    // phrase is what a screen reader gets. See dock_label_fit_test.
+    // The bench's aspect track prints one-word labels; the broken
+    // source surfaces as the specimen chip's «Relink», and opacity
+    // is the fact cluster's percentage zone (the value IS the
+    // label).
     expect(find.text('Crop'), findsOneWidget);
     expect(find.text('Relink'), findsOneWidget);
-    expect(find.text('Opacity'), findsOneWidget);
+    expect(find.byKey(const ValueKey('image-pill-opacity')), findsOneWidget);
   });
 
   testWidgets('the Layers icon raises the drawer directly', (tester) async {

@@ -75,12 +75,7 @@ void main() {
         ctrl.toggleSlot(start);
         for (var i = 0; i < ImageToolSlot.values.length + 2; i++) {
           ctrl.openNextSlot();
-          final reached = c.read(imageToolControllerProvider).openSlot!;
-          expect(
-            reached.isPanel,
-            isTrue,
-            reason: 'reached non-panel slot $reached from $start',
-          );
+          expect(c.read(imageToolControllerProvider).openSlot, isNotNull);
         }
         ctrl.closePanel();
       }
@@ -90,7 +85,7 @@ void main() {
   group('ImageToolSlot.tryByName', () {
     test('returns the matching slot for a known name', () {
       expect(ImageToolSlot.tryByName('look'), ImageToolSlot.look);
-      expect(ImageToolSlot.tryByName('crop'), ImageToolSlot.crop);
+      expect(ImageToolSlot.tryByName('style'), ImageToolSlot.style);
     });
 
     test('returns null for unknown / null', () {

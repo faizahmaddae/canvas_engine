@@ -47,7 +47,7 @@ import '../image/application/main_strip_image_entry.dart';
 import '../image/presentation/image_look_body.dart';
 import '../image/presentation/image_style_body.dart';
 import 'widgets/history_browser_sheet.dart';
-import '../image/presentation/image_mode_toolbar.dart';
+import '../image/presentation/image_studio_bench.dart';
 import 'sticker_picker_sheet.dart';
 import '../paint/application/paint_tool_controller.dart';
 import '../paint/domain/paint_tool_type.dart';
@@ -391,6 +391,8 @@ class EditorScreen extends ConsumerWidget {
                       ? PaintBench.dockHeight(dockContext)
                       : dock.textMode
                       ? TextStudioBench.dockHeight(dockContext)
+                      : dock.selectedImageLayer != null && !dock.multiSelected
+                      ? ImageStudioBench.dockHeight(dockContext)
                       : null,
                   child: dock.paintOpen
                       ? const PaintBench()
@@ -405,7 +407,7 @@ class EditorScreen extends ConsumerWidget {
                       : dock.selectedStickerLayer != null
                       ? StickerModeToolbar(layer: dock.selectedStickerLayer!)
                       : dock.selectedImageLayer != null
-                      ? ImageModeToolbar(layer: dock.selectedImageLayer!)
+                      ? ImageStudioBench(layer: dock.selectedImageLayer!)
                       : dock.selectedShapeLayer != null
                       ? ShapeModeToolbar(
                           layer: dock.selectedShapeLayer!,
@@ -690,12 +692,7 @@ class EditorScreen extends ConsumerWidget {
         case ImageToolSlot.style:
           expanded = ImageStyleBody(layer: selectedImageLayer);
           expandedKey = 'image-style:${selectedImageLayer.id}';
-        case ImageToolSlot.crop:
-        case ImageToolSlot.replace:
         case null:
-          // 'crop' opens the full-screen CropModeOverlay and
-          // 'replace' is a one-shot picker. Neither owns an inline
-          // dock body.
           break;
       }
     } else if (shapeSelected) {

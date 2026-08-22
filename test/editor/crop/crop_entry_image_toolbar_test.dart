@@ -6,13 +6,12 @@ import 'package:canvas_engine/features/editor/engine/commands/transform_commands
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/image/application/image_tool_controller.dart';
-import 'package:canvas_engine/features/editor/image/presentation/image_mode_toolbar.dart';
+import 'package:canvas_engine/features/editor/image/presentation/image_studio_bench.dart';
 import 'package:canvas_engine/features/editor/crop/presentation/crop_mode_overlay.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:canvas_engine/app/theme/app_icons.dart';
 
 /// Widget tests for the image-toolbar Crop entry-point. Verifies
 /// that tapping the Crop tab opens the centralised crop session
@@ -42,7 +41,7 @@ void main() {
 
   tearDown(() => container.dispose());
 
-  testWidgets('image-toolbar Crop tab opens the centralised CropSession', (
+  testWidgets('image-bench Crop segment opens the centralised CropSession', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -53,7 +52,7 @@ void main() {
             body: SizedBox(
               width: 800,
               height: 120,
-              child: ImageModeToolbar(layer: layer),
+              child: ImageStudioBench(layer: layer),
             ),
           ),
         ),
@@ -62,22 +61,17 @@ void main() {
 
     expect(container.read(cropControllerProvider).active, isFalse);
 
-    final cropFinder = find.byIcon(AppIcons.cropTool);
-    await tester.scrollUntilVisible(cropFinder, 80);
-    await tester.tap(cropFinder);
+    await tester.tap(find.byKey(const ValueKey('image-aspect-crop')));
     await tester.pump();
 
     final s = container.read(cropControllerProvider);
     expect(s.active, isTrue);
     expect(s.layerId, 'img1');
-    // The legacy dock-slot path must NOT have been taken.
-    expect(
-      container.read(imageToolControllerProvider).openSlot,
-      isNot(ImageToolSlot.crop),
-    );
+    // Crop is a bench action, not a dock slot — no sheet may open.
+    expect(container.read(imageToolControllerProvider).openSlot, isNull);
   });
 
-  testWidgets('image toolbar labels crop and replace as image actions', (
+  testWidgets('image bench labels crop and replace as image actions', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(480, 900);
@@ -95,7 +89,7 @@ void main() {
             body: SizedBox(
               width: 480,
               height: 140,
-              child: ImageModeToolbar(layer: layer),
+              child: ImageStudioBench(layer: layer),
             ),
           ),
         ),
@@ -104,13 +98,14 @@ void main() {
 
     expect(find.text('Crop'), findsOneWidget);
     expect(find.text('Replace'), findsOneWidget);
-    expect(find.text('Opacity'), findsOneWidget);
     expect(find.text('More'), findsOneWidget);
+    // Opacity is the fact cluster's percentage zone, not a labelled
+    // tile — the value IS the label.
+    expect(find.byKey(const ValueKey('image-pill-opacity')), findsOneWidget);
+    expect(find.text('100%'), findsOneWidget);
   });
 
-  testWidgets('image toolbar uses short Persian primary labels', (
-    tester,
-  ) async {
+  testWidgets('image bench uses short Persian primary labels', (tester) async {
     tester.view.physicalSize = const Size(520, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -129,7 +124,7 @@ void main() {
             body: SizedBox(
               width: 520,
               height: 140,
-              child: ImageModeToolbar(layer: layer),
+              child: ImageStudioBench(layer: layer),
             ),
           ),
         ),
@@ -138,7 +133,7 @@ void main() {
 
     expect(find.text('فیلتر'), findsOneWidget);
     expect(find.text('سبک'), findsOneWidget);
-    expect(find.text('شفافیت'), findsOneWidget);
+    expect(find.text('برش'), findsOneWidget);
     expect(find.text('جایگزین'), findsOneWidget);
     expect(find.text('بیشتر'), findsOneWidget);
     expect(find.text('جایگزینی تصویر'), findsNothing);
@@ -146,7 +141,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('image-toolbar Opacity opens compact context panel state', (
+  testWidgets('image-bench opacity zone opens compact context panel state', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -157,16 +152,14 @@ void main() {
             body: SizedBox(
               width: 480,
               height: 140,
-              child: ImageModeToolbar(layer: layer),
+              child: ImageStudioBench(layer: layer),
             ),
           ),
         ),
       ),
     );
 
-    final opacityFinder = find.byIcon(AppIcons.opacity);
-    await tester.scrollUntilVisible(opacityFinder, 80);
-    await tester.tap(opacityFinder);
+    await tester.tap(find.byKey(const ValueKey('image-pill-opacity')));
     await tester.pumpAndSettle();
 
     expect(find.byType(BottomSheet), findsNothing);
@@ -177,7 +170,7 @@ void main() {
     expect(container.read(imageToolControllerProvider).openSlot, isNull);
   });
 
-  testWidgets('broken image toolbar labels replacement as Relink image', (
+  testWidgets('broken image bench labels the specimen as Relink', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(480, 900);
@@ -198,7 +191,7 @@ void main() {
             body: SizedBox(
               width: 480,
               height: 140,
-              child: ImageModeToolbar(layer: broken),
+              child: ImageStudioBench(layer: broken),
             ),
           ),
         ),
