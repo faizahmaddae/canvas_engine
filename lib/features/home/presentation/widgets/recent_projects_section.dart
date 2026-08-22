@@ -94,11 +94,15 @@ class RecentProjectsSection extends ConsumerWidget {
                   onPressed: onSeeAll,
                   style: TextButton.styleFrom(
                     foregroundColor: tokens.accentText,
-                    textStyle: AppTypeScale.caption.copyWith(
+                  ),
+                  // Typography rides on the CHILD, never on
+                  // ButtonStyle.textStyle — see AppTypeScale's doc.
+                  child: Text(
+                    l10n.seeAllAction,
+                    style: AppTypeScale.caption.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  child: Text(l10n.seeAllAction),
                 ),
             ],
           ),

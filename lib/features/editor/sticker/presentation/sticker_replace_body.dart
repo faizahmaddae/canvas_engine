@@ -49,7 +49,17 @@ class StickerReplaceBody extends ConsumerWidget {
             child: FilledButton.icon(
               onPressed: () => _replace(context, ref),
               icon: const Icon(AppIcons.replace),
-              label: Text(context.l10n.chooseAnotherStickerAction),
+              // Typography rides on the LABEL, never on
+              // ButtonStyle.textStyle — a bare TextStyle there replaces
+              // the theme's button style and takes the locale-aware
+              // family with it.
+              label: Text(
+                context.l10n.chooseAnotherStickerAction,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
               style: FilledButton.styleFrom(
                 backgroundColor: tokens.brand,
                 foregroundColor: tokens.onBrand,
@@ -59,10 +69,6 @@ class StickerReplaceBody extends ConsumerWidget {
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(999),
-                ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
                 ),
               ),
             ),

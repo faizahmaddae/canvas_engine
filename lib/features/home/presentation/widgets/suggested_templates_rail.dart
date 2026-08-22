@@ -131,13 +131,15 @@ class SuggestedTemplatesRail extends StatelessWidget {
               TextButton(
                 key: const ValueKey('home-templates-see-all'),
                 onPressed: onSeeAll,
-                style: TextButton.styleFrom(
-                  foregroundColor: tokens.accentText,
-                  textStyle: AppTypeScale.caption.copyWith(
+                style: TextButton.styleFrom(foregroundColor: tokens.accentText),
+                // Typography rides on the CHILD, never on
+                // ButtonStyle.textStyle — see AppTypeScale's doc.
+                child: Text(
+                  l10n.seeAllAction,
+                  style: AppTypeScale.caption.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                child: Text(l10n.seeAllAction),
               ),
             ],
           ),

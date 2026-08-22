@@ -98,11 +98,15 @@ class RecentProjectsGrid extends ConsumerWidget {
                       vertical: 4,
                     ),
                     foregroundColor: tokens.accentText,
-                    textStyle: AppTypeScale.caption.copyWith(
+                  ),
+                  // Typography rides on the CHILD, never on
+                  // ButtonStyle.textStyle — see AppTypeScale's doc.
+                  child: Text(
+                    l10n.seeAllAction,
+                    style: AppTypeScale.caption.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  child: Text(l10n.seeAllAction),
                 ),
             ],
           ),
@@ -685,13 +689,13 @@ class _CompactEmpty extends StatelessWidget {
           const SizedBox(width: 12),
           TextButton(
             onPressed: onCreate,
-            style: TextButton.styleFrom(
-              foregroundColor: tokens.accentText,
-              textStyle: AppTypeScale.caption.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+            style: TextButton.styleFrom(foregroundColor: tokens.accentText),
+            // Typography rides on the CHILD, never on
+            // ButtonStyle.textStyle — see AppTypeScale's doc.
+            child: Text(
+              l10n.createAction,
+              style: AppTypeScale.caption.copyWith(fontWeight: FontWeight.w700),
             ),
-            child: Text(l10n.createAction),
           ),
         ],
       ),
