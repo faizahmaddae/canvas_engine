@@ -37,7 +37,7 @@ RTL order:
   specimen→composer. Broken sources show the relink label the
   replace flow already computes.
 * **Fact cluster** — one bordered two-zone cluster (text bench's
-  type-cluster grammar): the **size zone** (source pixel dims,
+  type-cluster grammar): the **size zone** (the layer's canvas size,
   tabular digits, LTR-pinned) opens Crop — the tool that changes the
   number shown; the **opacity zone** («۸۰٪») toggles the existing
   opacity `ContextToolPanel`. No more full-tile شفافیت.
@@ -51,7 +51,7 @@ grammar), each segment carrying its state as badges:
 |---|---|---|
 | **برش** | `CropModeOverlay` (priorSelection = layer, unchanged) | — |
 | **نما** | Look sheet | active filter name ≠ none as a dot; dot when adjustments/vignette live |
-| **استایل** | Style sheet | dots for shape ≠ original, border on, shadow on |
+| **سبک** | Style sheet | dots for shape ≠ original, border on, shadow on |
 | **بیشتر** | layer overflow sheet | — |
 
 ## 3. Sheet consolidation
@@ -77,7 +77,7 @@ The strip's «انتخابی» tile and its snackbar recovery die: the mask
 section now sits physically below the effects it masks, so the
 precondition is visible instead of narrated.
 
-### استایل merges the silhouette sheets
+### سبک merges the silhouette sheets
 
 Shape, Border and Shadow were three sheets answering one question —
 how the photo's silhouette is dressed. One Style sheet now holds:

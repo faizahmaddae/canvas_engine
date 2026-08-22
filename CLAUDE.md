@@ -124,7 +124,11 @@ drawing vs adjust postures, the §10.5 write rule — required reading
 before touching anything under `lib/features/editor/paint/`), and
 `text-studio-redesign-2026-08.md` (the Text Studio: composer style
 rail, identity-row bench, font room — required reading before
-touching anything under `lib/features/editor/text/`).
+touching anything under `lib/features/editor/text/`), and
+`image-studio-redesign-2026-08.md` (the Image Studio: specimen/fact
+identity row, four-segment aspect track, the Look/Style two-sheet
+consolidation — required reading before touching anything under
+`lib/features/editor/image/`).
 
 The editor's toolbar and tool-interaction system was rebuilt in July
 2026: `editor-interaction-contract-2026-07.md` is **binding** for any
