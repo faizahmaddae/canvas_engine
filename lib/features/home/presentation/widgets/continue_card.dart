@@ -7,6 +7,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/ui/app_modal_sheet.dart';
+import '../../../../app/ui/thumb_ratio.dart';
 import '../../../../l10n/l10n.dart';
 import '../../domain/project.dart';
 import 'project_thumb.dart';
@@ -82,12 +83,6 @@ class ContinueCard extends StatelessWidget {
   /// tall enough that a design is recognisable at arm's length, short
   /// enough that the create row stays above the fold.
   static const double _previewHeight = 132;
-
-  /// Honest-ratio bounds for the preview pane: a 9:16 story still
-  /// reads tall and a 16:9 thumbnail still reads wide, but neither
-  /// extreme may starve the title column of its minimum width.
-  static const double _minRatio = 0.62;
-  static const double _maxRatio = 1.5;
 
   /// Widest the pane may go as a share of the card's inner width. On a
   /// 320dp screen a square canvas at full [_previewHeight] would eat
@@ -170,8 +165,9 @@ class ContinueCard extends StatelessWidget {
         ? l10n.unsavedBadge
         : relativeTime(l10n, project!.lastModified);
     final open = _isDraft ? onResume! : onOpen!;
-    final ratioWidth =
-        _previewHeight * _ratio.clamp(_minRatio, _maxRatio).toDouble();
+    // Shared honest-ratio band (thumb_ratio.dart) — the hero and both
+    // rails size tiles by the same rule.
+    final ratioWidth = thumbWidthFor(height: _previewHeight, ratio: _ratio);
 
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(

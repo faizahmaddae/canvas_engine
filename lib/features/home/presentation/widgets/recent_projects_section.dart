@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../app/ui/thumb_ratio.dart';
 import '../../../../core/utils/user_error.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/project_store.dart';
@@ -123,9 +124,16 @@ class RecentProjectsSection extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
             itemBuilder: (context, index) {
               final project = shown[index];
+              // Honest ratio: the tile is the canvas's own shape, so a
+              // square project reads square instead of floating in the
+              // letterbox bands of a one-size portrait card.
               return ProjectThumb(
                 key: ValueKey('home-recent-${project.id}'),
                 project: project,
+                width: thumbWidthFor(
+                  height: 140,
+                  ratio: project.width / project.height,
+                ),
                 onTap: () => onOpen(project),
               );
             },

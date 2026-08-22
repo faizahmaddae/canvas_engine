@@ -187,4 +187,36 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byKey(const ValueKey('home-recent-p1')), findsOneWidget);
   });
+
+  testWidgets('thumbs take the canvas\'s own shape — a square project is '
+      'a square tile, not a portrait card with letterbox bands', (
+    tester,
+  ) async {
+    final t = DateTime.now().subtract(const Duration(minutes: 5));
+    await pumpSection(
+      tester,
+      projects: [
+        // seed() makes 1080×1080; this one is a 9:16 story.
+        seed(id: 'square', name: 'Square'),
+        Project(
+          id: 'story',
+          name: 'Story',
+          width: 1080,
+          height: 1920,
+          createdAt: t,
+          lastModified: t,
+          documentJson: '{}',
+        ),
+      ],
+    );
+
+    final squareW = tester
+        .getSize(find.byKey(const ValueKey('home-recent-square')))
+        .width;
+    final storyW = tester
+        .getSize(find.byKey(const ValueKey('home-recent-story')))
+        .width;
+    expect(squareW, moreOrLessEquals(140, epsilon: 0.01));
+    expect(storyW, moreOrLessEquals(140 * 0.62, epsilon: 0.01));
+  });
 }

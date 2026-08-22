@@ -203,4 +203,25 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(TemplateThumb), findsNWidgets(4));
   });
+
+  testWidgets('tiles take their format\'s shape: a story reads tall, a '
+      'video cover reads wide', (tester) async {
+    await pump(
+      tester,
+      templates: [
+        template(id: 'a-story', category: TemplateCategory.instagramStory),
+        template(id: 'a-quote', category: TemplateCategory.poetryPost),
+        template(id: 'a-video', category: TemplateCategory.youtubeThumbnail),
+      ],
+    );
+
+    double widthOf(String id) =>
+        tester.getSize(find.byKey(ValueKey('home-template-$id'))).width;
+
+    // 9:16 clamps at the narrow floor, 1:1 is square, 16:9 clamps at
+    // the wide ceiling — three visibly different silhouettes.
+    expect(widthOf('a-story'), moreOrLessEquals(150 * 0.62, epsilon: 0.01));
+    expect(widthOf('a-quote'), moreOrLessEquals(150, epsilon: 0.01));
+    expect(widthOf('a-video'), moreOrLessEquals(150 * 1.5, epsilon: 0.01));
+  });
 }
