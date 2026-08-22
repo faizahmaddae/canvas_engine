@@ -116,8 +116,8 @@ void main() {
   // strip, so after it moved to second the strip drew a hairline on
   // both sides of it — three group boundaries where the grammar has
   // one, before the trailing shape/effects/selective group.
-  group('the real image strip has exactly one group boundary', () {
-    testWidgets('ImageModeToolbar renders one hairline', (tester) async {
+  group('the real image strip is one group since the Style merge', () {
+    testWidgets('ImageModeToolbar renders no hairline', (tester) async {
       tester.view.physicalSize = const Size(1400, 200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -153,8 +153,10 @@ void main() {
 
       expect(
         _hairlineFinder(),
-        findsOneWidget,
-        reason: 'tier is group membership, not decoration',
+        findsNothing,
+        reason:
+            'the Style merge folded the tier-2 group into sheets; '
+            'every remaining slot is core, so no boundary exists',
       );
     });
   });

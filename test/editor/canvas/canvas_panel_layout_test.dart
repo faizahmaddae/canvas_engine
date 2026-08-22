@@ -185,8 +185,10 @@ void main() {
       await tester.pump();
 
       expect(
-        find.text('Some layers are outside the canvas now — '
-            'drag them back in.'),
+        find.text(
+          'Some layers are outside the canvas now — '
+          'drag them back in.',
+        ),
         findsOneWidget,
         reason: 'the audit-documented silent consequence must be surfaced',
       );
@@ -285,9 +287,14 @@ void main() {
     testWidgets('the gradient chip discloses presets; the angle appears '
         'only once a gradient is installed', (tester) async {
       final c = await pump(tester);
-      expect(find.byKey(const ValueKey('canvas-gradient-preset-0')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('canvas-gradient-preset-0')),
+        findsNothing,
+      );
 
-      await tester.ensureVisible(find.byKey(const ValueKey('canvas-bg-gradient')));
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('canvas-bg-gradient')),
+      );
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('canvas-bg-gradient')));
       await tester.pumpAndSettle();

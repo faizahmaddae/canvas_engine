@@ -104,22 +104,16 @@ class ImageModeToolbar extends ConsumerWidget {
           imageCtrl.toggleSlot(ImageToolSlot.look);
         },
       ),
-      ImageToolSlot.border => ToolbarSlot(
-        id: ImageToolSlot.border.name,
-        icon: AppIcons.borderTool,
-        label: l10n.borderTool,
+      // Shape, Border and Shadow merged into one «سبک» sheet
+      // (image-studio §3): three sheets, one question — how the
+      // silhouette is dressed.
+      ImageToolSlot.style => ToolbarSlot(
+        id: ImageToolSlot.style.name,
+        icon: AppIcons.stylePresets,
+        label: l10n.styleTool,
         onTap: () {
           contextCtrl.closePanel();
-          imageCtrl.toggleSlot(ImageToolSlot.border);
-        },
-      ),
-      ImageToolSlot.shadow => ToolbarSlot(
-        id: ImageToolSlot.shadow.name,
-        icon: AppIcons.shadowTool,
-        label: l10n.shadowTool,
-        onTap: () {
-          contextCtrl.closePanel();
-          imageCtrl.toggleSlot(ImageToolSlot.shadow);
+          imageCtrl.toggleSlot(ImageToolSlot.style);
         },
       ),
       ImageToolSlot.replace => ToolbarSlot(
@@ -165,20 +159,6 @@ class ImageModeToolbar extends ConsumerWidget {
           ref
               .read(cropControllerProvider.notifier)
               .openCrop(layer.id, priorSelectionId: layer.id);
-        },
-      ),
-      // Selective masking and the effects list now live INSIDE the
-      // Look panel (image-studio §3): the mask section sits below
-      // the effects it masks, so its precondition is visible instead
-      // of narrated by a strip snackbar.
-      ImageToolSlot.shape => ToolbarSlot(
-        id: ImageToolSlot.shape.name,
-        icon: AppIcons.squareShape,
-        label: l10n.shapeTool,
-        tier: SlotTier.tier2,
-        onTap: () {
-          contextCtrl.closePanel();
-          imageCtrl.toggleSlot(ImageToolSlot.shape);
         },
       ),
     };

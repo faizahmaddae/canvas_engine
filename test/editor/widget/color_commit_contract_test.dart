@@ -20,7 +20,7 @@ import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.d
 import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
-import 'package:canvas_engine/features/editor/image/presentation/image_border_body.dart';
+import 'package:canvas_engine/features/editor/image/presentation/image_style_body.dart';
 import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
 import 'package:canvas_engine/features/editor/shape/presentation/shape_style_body.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
@@ -310,7 +310,7 @@ void main() {
             child: MaterialApp(
               home: Scaffold(
                 body: SingleChildScrollView(
-                  child: ImageBorderBody(layer: layer),
+                  child: ImageBorderSection(layer: layer),
                 ),
               ),
             ),

@@ -44,13 +44,11 @@ import '../engine/modules/text/text_layer.dart';
 import '../image/application/image_target.dart';
 import '../image/application/image_tool_controller.dart';
 import '../image/application/main_strip_image_entry.dart';
-import '../image/presentation/image_border_body.dart';
 import '../image/presentation/image_look_body.dart';
+import '../image/presentation/image_style_body.dart';
 import 'widgets/history_browser_sheet.dart';
 import '../image/presentation/image_mode_toolbar.dart';
 import 'sticker_picker_sheet.dart';
-import '../image/presentation/image_shadow_body.dart';
-import '../image/presentation/image_shape_body.dart';
 import '../paint/application/paint_tool_controller.dart';
 import '../paint/domain/paint_tool_type.dart';
 import '../paint/presentation/paint_bench.dart';
@@ -686,18 +684,12 @@ class EditorScreen extends ConsumerWidget {
         imageToolControllerProvider.select((s) => s.openSlot),
       );
       switch (imageOpenSlot) {
-        case ImageToolSlot.shape:
-          expanded = ImageShapeBody(layer: selectedImageLayer);
-          expandedKey = 'image-shape:${selectedImageLayer.id}';
         case ImageToolSlot.look:
           expanded = ImageLookBody(layer: selectedImageLayer);
           expandedKey = 'image-look:${selectedImageLayer.id}';
-        case ImageToolSlot.border:
-          expanded = ImageBorderBody(layer: selectedImageLayer);
-          expandedKey = 'image-border:${selectedImageLayer.id}';
-        case ImageToolSlot.shadow:
-          expanded = ImageShadowBody(layer: selectedImageLayer);
-          expandedKey = 'image-shadow:${selectedImageLayer.id}';
+        case ImageToolSlot.style:
+          expanded = ImageStyleBody(layer: selectedImageLayer);
+          expandedKey = 'image-style:${selectedImageLayer.id}';
         case ImageToolSlot.crop:
         case ImageToolSlot.replace:
         case null:

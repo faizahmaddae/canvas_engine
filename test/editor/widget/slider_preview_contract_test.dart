@@ -22,7 +22,7 @@ import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.d
 import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/image/presentation/image_look_body.dart';
-import 'package:canvas_engine/features/editor/image/presentation/image_border_body.dart';
+import 'package:canvas_engine/features/editor/image/presentation/image_style_body.dart';
 import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
 import 'package:canvas_engine/features/editor/paint/domain/paint_tool_type.dart';
 import 'package:canvas_engine/features/editor/paint/presentation/bodies/paint_pen_body.dart';
@@ -158,7 +158,7 @@ void main() {
       'commits the last previewed value', (tester) async {
     final layer = makeImageLayer();
     final container = makeContainer(layer);
-    await pumpBody(tester, container, ImageBorderBody(layer: layer));
+    await pumpBody(tester, container, ImageBorderSection(layer: layer));
 
     // The colour grid above this disclosure is tall and its run gap is
     // now derived from the available width, so its height is not a

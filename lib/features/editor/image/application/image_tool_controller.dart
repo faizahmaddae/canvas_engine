@@ -17,9 +17,7 @@ import '../../toolbar/domain/sibling_swipe_strategy.dart';
 enum ImageToolSlot {
   look,
   crop(isPanel: false),
-  shape,
-  border,
-  shadow,
+  style,
   replace(isPanel: false);
 
   const ImageToolSlot({this.isPanel = true});
@@ -56,12 +54,10 @@ const List<DockStripEntry<ImageToolSlot>> kImageStripOrder =
     <DockStripEntry<ImageToolSlot>>[
       DockStripEntry.slot(ImageToolSlot.look),
       DockStripEntry.slot(ImageToolSlot.crop),
-      DockStripEntry.slot(ImageToolSlot.border),
-      DockStripEntry.slot(ImageToolSlot.shadow),
+      DockStripEntry.slot(ImageToolSlot.style),
       DockStripEntry.action('opacity'),
       DockStripEntry.slot(ImageToolSlot.replace),
       DockStripEntry.action('more'),
-      DockStripEntry.slot(ImageToolSlot.shape),
     ];
 
 /// Display order of every Image dock slot (action chips excluded)

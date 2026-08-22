@@ -92,7 +92,7 @@ class BorderPanelAdapter<L extends EditorLayer> {
 }
 
 /// Shared "Border" sub-tool panel body for any layer type with a
-/// [BorderPanelAdapter]. Unifies `ShapeBorderBody`/`ImageBorderBody`
+/// [BorderPanelAdapter]. Unifies `ShapeBorderBody`/image's `ImageBorderSection`
 /// (Phase 4 plan §4.2) behind explicit adapter hooks rather than a
 /// straight merge, since the two panels have real behavioural
 /// divergences (see [BorderPanelAdapter]'s doc).

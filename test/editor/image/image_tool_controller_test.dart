@@ -23,9 +23,7 @@ void main() {
       // list inside it, so the walk is four slots long now.
       expect(kImagePanelSlotOrder, const [
         ImageToolSlot.look,
-        ImageToolSlot.border,
-        ImageToolSlot.shadow,
-        ImageToolSlot.shape,
+        ImageToolSlot.style,
       ]);
     });
 

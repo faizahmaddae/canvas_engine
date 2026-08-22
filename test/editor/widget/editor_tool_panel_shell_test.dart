@@ -250,10 +250,10 @@ void main() {
 
       container
           .read(imageToolControllerProvider.notifier)
-          .toggleSlot(ImageToolSlot.shape);
+          .toggleSlot(ImageToolSlot.style);
       expect(
         container.read(imageToolControllerProvider).openSlot,
-        equals(ImageToolSlot.shape),
+        equals(ImageToolSlot.style),
       );
 
       expect(find.text('Shape'), findsOneWidget);

@@ -54,7 +54,7 @@ void main() {
       final c = harness();
       c
           .read(imageToolControllerProvider.notifier)
-          .toggleSlot(ImageToolSlot.border);
+          .toggleSlot(ImageToolSlot.style);
       expect(c.read(editorBackStepProvider), EditorBackStep.closePanels);
 
       c.read(imageToolControllerProvider.notifier).closePanel();

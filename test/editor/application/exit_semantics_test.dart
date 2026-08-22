@@ -264,7 +264,7 @@ void main() {
       // The user moves to a sibling panel — they now own image mode.
       container
           .read(imageToolControllerProvider.notifier)
-          .toggleSlot(ImageToolSlot.border);
+          .toggleSlot(ImageToolSlot.style);
       await settle(tester);
       container.read(imageToolControllerProvider.notifier).closePanel();
       await settle(tester);

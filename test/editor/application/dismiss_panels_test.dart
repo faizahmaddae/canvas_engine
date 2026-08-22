@@ -52,7 +52,7 @@ void main() {
     // Open all four panels.
     ref
         .read(imageToolControllerProvider.notifier)
-        .toggleSlot(ImageToolSlot.border);
+        .toggleSlot(ImageToolSlot.style);
     ref
         .read(shapeToolControllerProvider.notifier)
         .toggleSlot(ShapeToolSlot.shadow);
@@ -96,7 +96,7 @@ void main() {
 
       ref
           .read(imageToolControllerProvider.notifier)
-          .toggleSlot(ImageToolSlot.border);
+          .toggleSlot(ImageToolSlot.style);
       ref
           .read(shapeToolControllerProvider.notifier)
           .toggleSlot(ShapeToolSlot.shadow);

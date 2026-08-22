@@ -10,7 +10,7 @@ import '../../../../app/theme/app_icons.dart';
 /// Expanded panel body for the Shape sub-tool's "Shadow" tab.
 ///
 /// Thin [ShadowPanelAdapter] wiring around the shared
-/// [LayerShadowBody] (Phase 4 plan §4.1) — mirrors [ImageShadowBody]
+/// [LayerShadowBody] (Phase 4 plan §4.1) — mirrors the image Style sheet's shadow section
 /// one-to-one so users only learn the shadow grammar once.
 class ShapeShadowBody extends StatelessWidget {
   const ShapeShadowBody({super.key, required this.layer});

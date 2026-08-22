@@ -137,8 +137,7 @@ void main() {
     );
 
     expect(find.text('فیلتر'), findsOneWidget);
-    expect(find.text('کادر'), findsOneWidget);
-    expect(find.text('سایه'), findsOneWidget);
+    expect(find.text('سبک'), findsOneWidget);
     expect(find.text('شفافیت'), findsOneWidget);
     expect(find.text('جایگزین'), findsOneWidget);
     expect(find.text('بیشتر'), findsOneWidget);
