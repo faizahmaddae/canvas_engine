@@ -57,7 +57,7 @@ import '../paint/presentation/paint_size_rail.dart';
 import '../shape/application/shape_tool_controller.dart';
 import '../shape/presentation/shape_border_body.dart';
 import '../shape/presentation/shape_shadow_body.dart';
-import '../shape/presentation/shape_mode_toolbar.dart';
+import '../shape/presentation/shape_studio_bench.dart';
 import '../shape/presentation/shape_style_body.dart';
 import 'shape_picker_sheet.dart';
 import '../sticker/application/sticker_tool_controller.dart';
@@ -393,6 +393,8 @@ class EditorScreen extends ConsumerWidget {
                       ? TextStudioBench.dockHeight(dockContext)
                       : dock.selectedImageLayer != null && !dock.multiSelected
                       ? ImageStudioBench.dockHeight(dockContext)
+                      : dock.selectedShapeLayer != null && !dock.multiSelected
+                      ? ShapeStudioBench.dockHeight(dockContext)
                       : null,
                   child: dock.paintOpen
                       ? const PaintBench()
@@ -409,7 +411,7 @@ class EditorScreen extends ConsumerWidget {
                       : dock.selectedImageLayer != null
                       ? ImageStudioBench(layer: dock.selectedImageLayer!)
                       : dock.selectedShapeLayer != null
-                      ? ShapeModeToolbar(
+                      ? ShapeStudioBench(
                           layer: dock.selectedShapeLayer!,
                           onReplaceTap: () => _openReplaceShapePicker(
                             context,
@@ -709,7 +711,6 @@ class EditorScreen extends ConsumerWidget {
         case ShapeToolSlot.shadow:
           expanded = ShapeShadowBody(layer: selectedShapeLayer);
           expandedKey = 'shape-shadow:${selectedShapeLayer.id}';
-        case ShapeToolSlot.replace:
         case null:
           break;
       }
@@ -839,7 +840,7 @@ class EditorScreen extends ConsumerWidget {
   }
 
   /// Selected layer when it's a [ShapeLayer], else `null`. Used to
-  /// swap in [ShapeModeToolbar] for shape-specific sub-tools.
+  /// swap in [ShapeStudioBench] for shape-specific sub-tools.
   ShapeLayer? _selectedShapeLayer(WidgetRef ref) {
     final layer = _selectedMergedLayer(ref);
     return layer is ShapeLayer ? layer : null;

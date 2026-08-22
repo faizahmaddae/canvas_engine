@@ -128,9 +128,12 @@ class _ShapeStyleBodyState extends ConsumerState<ShapeStyleBody> {
     // can become a perfect pill but never invert into nonsense.
     final maxRadius = (shorterSide / 2).clamp(0.0, 9999.0);
 
+    // Titled رنگ, not سبک: the bench's aspect segment says رنگ, and
+    // the door and the room must carry the same name (the bench
+    // family's coherence rule).
     return ShapePanelShell(
-      title: context.l10n.styleTool,
-      icon: AppIcons.styleTool,
+      title: context.l10n.colorLabel,
+      icon: AppIcons.colorTool,
       headerValue: EditorValueFormat.of(
         context,
       ).percent((layer.fillOpacity * 100).round()),

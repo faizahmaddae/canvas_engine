@@ -127,7 +127,7 @@ List<_ShapePickerEntry> _pickerEntriesForSection(
     for (var i = 0; i < entries.length; i++)
       _ShapePickerEntry(
         entries[i].kind,
-        _shapeKindLabel(l10n, entries[i].kind),
+        shapeKindLabel(l10n, entries[i].kind),
         i.isEven ? [a, b] : [b, a],
       ),
   ];
@@ -143,7 +143,10 @@ String _shapeSectionLabel(AppLocalizations l10n, int sectionIndex) {
   };
 }
 
-String _shapeKindLabel(AppLocalizations l10n, ShapeKind kind) {
+/// Localized display name for a [ShapeKind] — shared by the picker
+/// tiles and the Shape Studio bench's specimen chip so the two
+/// surfaces can never disagree about what a shape is called.
+String shapeKindLabel(AppLocalizations l10n, ShapeKind kind) {
   return switch (kind) {
     ShapeKind.rectangle => l10n.shapeKindRectangle,
     ShapeKind.roundedRectangle => l10n.shapeKindRoundedRectangle,
