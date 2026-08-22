@@ -92,7 +92,7 @@ grammar):
 
 | segment | opens | badge |
 |---|---|---|
-| **رنگ** | Style panel (fill / fill-opacity / radius) | dot when the fill is a gradient |
+| **رنگ** | the colour panel (fill / fill-opacity / radius; retitled رنگ from سبک so the door and the room carry the same name) | dot when the fill is a gradient |
 | **کادر** | Border panel | stroke-colour dot when a border is live |
 | **سایه** | Shadow panel | shadow-colour dot when a shadow is live |
 | **بیشتر** | layer overflow sheet | — |

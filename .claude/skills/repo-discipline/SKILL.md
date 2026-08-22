@@ -49,6 +49,7 @@ it and the traps the law doesn't mention.
 | Editor chrome / toolbars / panels | `docs/editor-redesign-2026-07.md`, `docs/editor-phase2-toolbar-system-2026-07.md` |
 | Text tool | `docs/text-studio-redesign-2026-08.md` (current: composer rail, studio bench, font room) + `docs/text-tool-redesign-2026-07.md` (history) |
 | Image tool (`lib/features/editor/image/`) | `docs/image-studio-redesign-2026-08.md` (bench: specimen + fact cluster + aspect track; Look owns effects + selective mask; Style merges shape/border/shadow) |
+| Shape tool (`lib/features/editor/shape/`, `engine/modules/shape/`) | `docs/shape-studio-redesign-2026-08.md` (33-kind catalogue + registration recipe; four-column picker; bench: specimen + size/resize-lock + opacity cluster + رنگ/کادر/سایه/بیشتر track) |
 | Editor UI primitives (`lib/features/editor/ui/`) | `docs/phase4-ui-foundation-plan-2026-07.md` — its §1 non-goals are binding: chip-grammar unification and SlotStrip migration are PARKED; do not "clean them up" in passing |
 | Tokens / theme / any app-shell visual | `docs/design-direction-v2-calligraphy-2026-07.md` (current identity; violet anywhere is a bug) |
 | NavShell / tabs / Home | `docs/app-navigation-home-ia-2026-07.md` + `docs/home-screen-redesign-2026-07.md`. Core invariant: Home is a bounded launcher — its length never grows with content |
