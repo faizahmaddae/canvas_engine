@@ -8,15 +8,17 @@ import '../../../../l10n/l10n.dart';
 import '../../../templates/domain/template.dart';
 import '../../../templates/presentation/template_presentation_order.dart';
 
-/// «پیشنهادی» on the Home launcher (navigation doc): a single
-/// HORIZONTAL rail of curated [TemplateThumb]s with «مشاهده همه»
-/// jumping to the Templates tab. Replaces the old vertical grid —
-/// the launcher shows a fixed-height teaser no matter how big the
-/// catalog grows; browsing lives in the tab.
+/// «پیشنهادِ امروز» on the Home launcher: a single HORIZONTAL rail of
+/// curated [TemplateThumb]s with «مشاهده همه» jumping to the
+/// Templates tab. The launcher shows a fixed-height teaser no matter
+/// how big the catalog grows; browsing lives in the tab.
 ///
-/// Filter logic is unchanged: only templates from enabled categories
-/// and the user's content languages appear, in the same curated
-/// order the grid used.
+/// Living, not static: the rail draws a date-seeded selection from
+/// the top of the curated order ([dailyTemplateShelf]), so the shelf
+/// is stable within a day and different tomorrow — the screen keeps
+/// the promise its own headline makes. Filter logic is unchanged:
+/// only templates from enabled categories and the user's content
+/// languages ever enter the pool.
 class SuggestedTemplatesRail extends StatelessWidget {
   const SuggestedTemplatesRail({
     super.key,
@@ -25,6 +27,7 @@ class SuggestedTemplatesRail extends StatelessWidget {
     required List<Template> templates,
     this.contentLanguages,
     this.enabledCategories,
+    this.today,
   }) : _templates = templates;
 
   /// Maximum thumbs on the rail — a curated teaser, not a catalog.
@@ -51,6 +54,10 @@ class SuggestedTemplatesRail extends StatelessWidget {
   final Set<TemplateCategory>? enabledCategories;
   final List<Template> _templates;
 
+  /// The day the shelf is seeded with. Null means the device's today;
+  /// tests inject a fixed date so the selection is deterministic.
+  final DateTime? today;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -71,9 +78,11 @@ class SuggestedTemplatesRail extends StatelessWidget {
       preferredIds: kHomeRecommendedTemplateIds,
       categoryPriority: _categoryPriority,
     );
-    final shown = ordered.length > previewLimit
-        ? ordered.sublist(0, previewLimit)
-        : ordered;
+    final shown = dailyTemplateShelf(
+      ordered: ordered,
+      date: today ?? DateTime.now(),
+      count: previewLimit,
+    );
 
     if (shown.isEmpty) return const SizedBox.shrink();
 

@@ -302,7 +302,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeWelcomeTitle => 'امروز چه بسازیم؟';
 
   @override
-  String get homeWelcomeSubtitle => 'از یک قالب شروع کن یا طرحی تازه بساز.';
+  String get greetingMorning => 'صبح بخیر';
+
+  @override
+  String get greetingNoon => 'ظهر بخیر';
+
+  @override
+  String get greetingEvening => 'عصر بخیر';
+
+  @override
+  String get greetingNight => 'شب بخیر';
 
   @override
   String get homeHeroTitle => 'با قالب آماده شروع کن';
@@ -335,7 +344,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get homeTextOnPhotoSubtitle => 'با یک چیدمان متنی آماده شروع کن';
 
   @override
-  String get homeSuggestedTitle => 'پیشنهادی';
+  String get homeSuggestedTitle => 'پیشنهادِ امروز';
 
   @override
   String get homeContinueTitle => 'ادامهٔ کار';

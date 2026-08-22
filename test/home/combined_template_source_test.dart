@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:canvas_engine/app/ui/template_thumb.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/home/presentation/home_screen.dart';
 import 'package:canvas_engine/features/home/presentation/widgets/suggested_templates_rail.dart';
@@ -24,22 +25,11 @@ void main() {
 
       await _pumpHomeSection(tester, templates: templates);
 
-      // v2 grid: the curated leads (kHomeRecommendedTemplateIds order)
-      // fill the 2-col teaser.
-      expect(
-        find.byKey(const ValueKey('home-template-fa_story_fashion_drop')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('home-template-fa_promo_app_launch')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(
-          const ValueKey('home-template-fa_poetry_black_gold_nastaliq'),
-        ),
-        findsOneWidget,
-      );
+      // The selection is date-seeded (a different curated set each
+      // day), so this pins the WIRING, not a specific id: asset
+      // templates flow through the repository into rendered thumbs.
+      expect(find.text("Today's picks"), findsOneWidget);
+      expect(find.byType(TemplateThumb), findsWidgets);
     });
 
     testWidgets('HomeScreen renders effective provider templates', (
@@ -70,14 +60,10 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
-      expect(find.text('Suggested'), findsOneWidget);
-      expect(
-        find.byKey(
-          const ValueKey('home-template-fa_story_fashion_drop'),
-          skipOffstage: false,
-        ),
-        findsOneWidget,
-      );
+      // Wiring pin, id-agnostic (the shelf is date-seeded): the
+      // effective provider's templates reach the rail as thumbs.
+      expect(find.text("Today's picks"), findsOneWidget);
+      expect(find.byType(TemplateThumb, skipOffstage: false), findsWidgets);
     });
 
     testWidgets('Browse can search and filter combined asset templates', (

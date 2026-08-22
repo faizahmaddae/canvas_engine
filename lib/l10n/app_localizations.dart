@@ -662,11 +662,29 @@ abstract class AppLocalizations {
   /// **'What shall we make today?'**
   String get homeWelcomeTitle;
 
-  /// No description provided for @homeWelcomeSubtitle.
+  /// No description provided for @greetingMorning.
   ///
   /// In en, this message translates to:
-  /// **'Start from a template or craft something new.'**
-  String get homeWelcomeSubtitle;
+  /// **'Good morning'**
+  String get greetingMorning;
+
+  /// No description provided for @greetingNoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get greetingNoon;
+
+  /// No description provided for @greetingEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get greetingEvening;
+
+  /// No description provided for @greetingNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Good night'**
+  String get greetingNight;
 
   /// No description provided for @homeHeroTitle.
   ///
@@ -731,7 +749,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeSuggestedTitle.
   ///
   /// In en, this message translates to:
-  /// **'Suggested'**
+  /// **'Today\'s picks'**
   String get homeSuggestedTitle;
 
   /// No description provided for @homeContinueTitle.

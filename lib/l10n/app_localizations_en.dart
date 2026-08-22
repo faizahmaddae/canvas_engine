@@ -301,8 +301,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeWelcomeTitle => 'What shall we make today?';
 
   @override
-  String get homeWelcomeSubtitle =>
-      'Start from a template or craft something new.';
+  String get greetingMorning => 'Good morning';
+
+  @override
+  String get greetingNoon => 'Good afternoon';
+
+  @override
+  String get greetingEvening => 'Good evening';
+
+  @override
+  String get greetingNight => 'Good night';
 
   @override
   String get homeHeroTitle => 'Start with a template';
@@ -335,7 +343,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeTextOnPhotoSubtitle => 'Start with a designed type layout';
 
   @override
-  String get homeSuggestedTitle => 'Suggested';
+  String get homeSuggestedTitle => 'Today\'s picks';
 
   @override
   String get homeContinueTitle => 'Continue working';

@@ -3,15 +3,19 @@ import 'package:canvas_engine/app/ui/template_thumb.dart';
 import 'package:canvas_engine/features/editor/engine/core/editor_document.dart';
 import 'package:canvas_engine/features/home/presentation/widgets/suggested_templates_rail.dart';
 import 'package:canvas_engine/features/templates/domain/template.dart';
+import 'package:canvas_engine/features/templates/presentation/template_presentation_order.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Navigation doc commit 2: the launcher's «پیشنهادی» rail — one
-/// horizontal, fixed-height teaser with «مشاهده همه» delegating to
-/// the Templates tab. Filter logic (enabled categories x content
-/// languages) carried over from the old grid and pinned here.
+/// The launcher's «پیشنهادِ امروز» rail — one horizontal, fixed-height
+/// teaser with «مشاهده همه» delegating to the Templates tab. Filter
+/// logic (enabled categories x content languages) carried over from
+/// the old grid and pinned here. New with the desk redesign: the
+/// selection is date-seeded ([dailyTemplateShelf]) — stable within a
+/// day, different across days — so every test pins the date.
 void main() {
+  final fixedToday = DateTime(2026, 8, 22);
   Template template({
     required String id,
     required TemplateCategory category,
@@ -49,6 +53,7 @@ void main() {
     Set<TemplateLanguage>? contentLanguages,
     void Function(Template)? onOpen,
     VoidCallback? onSeeAll,
+    DateTime? today,
     Brightness brightness = Brightness.light,
   }) async {
     tester.view.physicalSize = const Size(800, 1600);
@@ -74,6 +79,7 @@ void main() {
               contentLanguages: contentLanguages,
               onOpen: onOpen ?? (_) {},
               onSeeAll: onSeeAll ?? () {},
+              today: today ?? fixedToday,
             ),
           ),
         ),
@@ -87,7 +93,7 @@ void main() {
   ) async {
     await pump(tester, templates: catalog);
 
-    expect(find.text('Suggested'), findsOneWidget);
+    expect(find.text("Today's picks"), findsOneWidget);
     expect(
       find.byKey(const ValueKey('home-templates-see-all')),
       findsOneWidget,
@@ -145,17 +151,51 @@ void main() {
         template(id: 's$i', category: TemplateCategory.instagramStory),
     ];
     await pump(tester, templates: many);
-    // Lazy rail: assert the cut tail never exists.
+    // The selection is date-seeded, so WHICH ids are cut depends on
+    // the pinned date — recompute the day's shelf with the same pure
+    // function and assert the rail agrees with it exactly.
+    final shelf = dailyTemplateShelf(
+      ordered: orderTemplatesForHome(templates: many),
+      date: fixedToday,
+      count: SuggestedTemplatesRail.previewLimit,
+    );
+    expect(shelf.length, SuggestedTemplatesRail.previewLimit);
+    final shownIds = shelf.map((t) => t.id).toSet();
+    final cut = many.firstWhere((t) => !shownIds.contains(t.id));
     expect(
-      find.byKey(
-        ValueKey('home-template-s${SuggestedTemplatesRail.previewLimit}'),
-        skipOffstage: false,
-      ),
+      find.byKey(ValueKey('home-template-${shelf.first.id}')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(ValueKey('home-template-${cut.id}'), skipOffstage: false),
       findsNothing,
     );
 
     await pump(tester, templates: const []);
-    expect(find.text('Suggested'), findsNothing);
+    expect(find.text("Today's picks"), findsNothing);
+  });
+
+  test('the shelf is stable within a day and changes across days', () {
+    final many = [
+      for (var i = 0; i < 15; i++)
+        template(id: 's$i', category: TemplateCategory.instagramStory),
+    ];
+    final ordered = orderTemplatesForHome(templates: many);
+    List<String> shelfIds(DateTime d) =>
+        dailyTemplateShelf(ordered: ordered, date: d).map((t) => t.id).toList();
+
+    // Same day → byte-identical selection: the shelf must not
+    // reshuffle under the user's thumb on every rebuild.
+    expect(shelfIds(fixedToday), shelfIds(fixedToday));
+
+    // Across a week of days, at least two distinct orders — the
+    // whole point of the seed. (Six independent shuffles of 15
+    // items colliding into one order is not a real possibility.)
+    final week = {
+      for (var d = 0; d < 6; d++)
+        shelfIds(fixedToday.add(Duration(days: d))).join(','),
+    };
+    expect(week.length, greaterThan(1));
   });
 
   testWidgets('dark mode renders without throwing', (tester) async {
