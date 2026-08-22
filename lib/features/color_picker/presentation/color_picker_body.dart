@@ -1116,8 +1116,18 @@ class _SwatchPreviewDot extends StatelessWidget {
 /// full), on a hairline plus the extra group gutter, and on an
 /// explicit semantics container. Never on a second visual language.
 ///
-/// Height is constant in every state, so the section can no longer
-/// appear, disappear, or resize under an `AnimatedSize`.
+/// The EMPTY store costs zero rows: six inert rings plus a seam were
+/// ~70dp of dead vertical in every panel that embeds the picker —
+/// and the picker is embedded a lot (border, shadow, fill, paint,
+/// text). At zero the shelf is just the heading (carrying the
+/// what-fills-this hint) above the palette; the reserved-slot row
+/// and its seam appear WITH the first mixed colour and the height is
+/// constant from then on. The growth moment cannot shift under a
+/// finger for the same reason the commit fence records no
+/// shift-under-finger hazard: the wheel commits with the shelf
+/// unmounted, the eyedropper commits under a full-screen overlay,
+/// and hex commits while the keyboard owns focus — and the body's
+/// `AnimatedSize` turns the one-time growth into motion, not a jump.
 class ColorShelf extends ConsumerWidget {
   const ColorShelf({super.key, required this.current, required this.onPick});
 
@@ -1213,24 +1223,27 @@ class ColorShelf extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _ShelfHeading(
-              // Shown ONLY at zero, and in the heading's trailing slot
-              // rather than where the swatches go: the empty state is
-              // the shape of the full state, pre-drawn, plus one line
-              // saying what fills it. Six empty rings would be honest
-              // about capacity and say nothing about why it is empty.
+              // The hint rides the heading's trailing slot ONLY at
+              // zero — one line saying what will appear here, instead
+              // of a whole row of inert rings holding the door open.
               hint: mine.isEmpty ? context.l10n.colorsMixedHint : null,
             ),
-            Semantics(
-              container: true,
-              label: context.l10n.recentLabel,
-              child: Center(child: row(mineCells)),
-            ),
-            SizedBox(height: gutter),
-            // The group seam: a hairline spanning the grid, with the
-            // gutter above and below doing the Gestalt work.
-            // Direction-agnostic, and it costs one token.
-            Container(height: 1, color: tokens.border),
-            SizedBox(height: gutter),
+            // The reserved-slot row and its seam exist only once
+            // there is at least one mixed colour to anchor them (see
+            // the class doc — the empty store costs zero rows).
+            if (mine.isNotEmpty) ...[
+              Semantics(
+                container: true,
+                label: context.l10n.recentLabel,
+                child: Center(child: row(mineCells)),
+              ),
+              SizedBox(height: gutter),
+              // The group seam: a hairline spanning the grid, with the
+              // gutter above and below doing the Gestalt work.
+              // Direction-agnostic, and it costs one token.
+              Container(height: 1, color: tokens.border),
+              SizedBox(height: gutter),
+            ],
             Semantics(
               container: true,
               label: context.l10n.colorsLabel,
