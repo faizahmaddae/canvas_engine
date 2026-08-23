@@ -1,10 +1,10 @@
-// Layout panel — compactness pass 2026-07: line height and letter
-// spacing are ONE always-visible slider row each (label + slider +
-// live readout on the shared EditorSliderRow), replacing the
-// expandable preset-chip cards. Cuts the panel from ~314dp to
-// ~150dp so the canvas keeps clear majority of the screen. The
-// slider IS the primary affordance now; preset values live within
-// easy reach of the track.
+// Layout panel — چیدمان: how the text sits. Alignment, line height
+// and letter spacing (the compactness-pass slider rows), plus the
+// two paragraph-level choices that used to hide behind the
+// full-scrim «بیشتر» list as pop-then-dialog rows: base direction
+// (auto/RTL/LTR) and resize behaviour (scale text / resize box) —
+// moved home by the Text Studio redesign
+// (`docs/text-studio-redesign-2026-08.md` §4).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +14,8 @@ import '../../../../../l10n/l10n.dart';
 import '../../../engine/modules/text/text_layer.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../ui/editor_slider_row.dart';
+import '../../../../../app/theme/app_tokens.dart';
+import '../../widgets/controls/connected_track.dart';
 import '../../widgets/controls/slider_row.dart';
 import '../../widgets/controls/toggle_segment.dart';
 import '../../../../../app/theme/app_icons.dart';
@@ -38,17 +40,67 @@ class LayoutPanel extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 6),
-        // Alignment — centered segmented pill. The three glyphs ARE
-        // the affordance; no duplicate "Align" label.
-        Center(
-          child: _AlignmentSegmentedControl(
-            isLeft: isLeft,
-            isCenter: isCenter,
-            isRight: isRight,
-            onLeft: () => ctrl.setAlignment(TextAlign.left),
-            onCenter: () => ctrl.setAlignment(TextAlign.center),
-            onRight: () => ctrl.setAlignment(TextAlign.right),
-          ),
+        // ONE paragraph row: alignment beside base direction — the
+        // two discrete "how the paragraph sits" choices share a row
+        // instead of alignment floating alone over a wordy chip row.
+        // Both are glyph segments; the canvas above is the live
+        // explanation, and Semantics carries the words.
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _AlignmentSegmentedControl(
+              isLeft: isLeft,
+              isCenter: isCenter,
+              isRight: isRight,
+              onLeft: () => ctrl.setAlignment(TextAlign.left),
+              onCenter: () => ctrl.setAlignment(TextAlign.center),
+              onRight: () => ctrl.setAlignment(TextAlign.right),
+            ),
+            const SizedBox(width: 14),
+            // Base paragraph direction. A discrete pick — one
+            // SetTextDirectionModeCommand per change, its own undo
+            // entry.
+            ToggleSegmentGroup(
+              children: [
+                Semantics(
+                  label: context.l10n.textDirectionAutoTitle,
+                  button: true,
+                  selected: layer.textDirectionMode == TextDirectionMode.auto,
+                  child: ToggleSegment(
+                    key: const ValueKey('layout-direction-auto'),
+                    icon: AppIcons.replace,
+                    selected: layer.textDirectionMode == TextDirectionMode.auto,
+                    onTap: () =>
+                        ctrl.setTextDirectionMode(TextDirectionMode.auto),
+                  ),
+                ),
+                Semantics(
+                  label: context.l10n.textDirectionRtlTitle,
+                  button: true,
+                  selected: layer.textDirectionMode == TextDirectionMode.rtl,
+                  child: ToggleSegment(
+                    key: const ValueKey('layout-direction-rtl'),
+                    icon: AppIcons.textDirectionRtl,
+                    selected: layer.textDirectionMode == TextDirectionMode.rtl,
+                    onTap: () =>
+                        ctrl.setTextDirectionMode(TextDirectionMode.rtl),
+                  ),
+                ),
+                Semantics(
+                  label: context.l10n.textDirectionLtrTitle,
+                  button: true,
+                  selected: layer.textDirectionMode == TextDirectionMode.ltr,
+                  child: ToggleSegment(
+                    key: const ValueKey('layout-direction-ltr'),
+                    icon: AppIcons.textDirectionLtr,
+                    selected: layer.textDirectionMode == TextDirectionMode.ltr,
+                    onTap: () =>
+                        ctrl.setTextDirectionMode(TextDirectionMode.ltr),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         EditorSliderRow(
@@ -81,7 +133,70 @@ class LayoutPanel extends ConsumerWidget {
           labelStyle: labelStyle,
           readoutStyle: readoutStyle,
         ),
+        const SizedBox(height: 8),
+        // Resize behaviour — what a corner drag means for this layer.
+        // A two-segment connected track on the slider rows' label
+        // grid, so the whole sheet keeps one left edge.
+        Row(
+          children: [
+            SizedBox(
+              width: 96,
+              child: Text(
+                context.l10n.resizeBehaviorTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: labelStyle,
+              ),
+            ),
+            Expanded(
+              child: SizedBox(
+                height: 44,
+                child: ConnectedTrack(
+                  segments: [
+                    TrackSegmentSpec(
+                      key: const ValueKey('layout-resize-scale'),
+                      semanticLabel: context.l10n.scaleTextTitle,
+                      active: layer.resizeMode == TextResizeMode.scaleText,
+                      onTap: () => ctrl.setResizeMode(TextResizeMode.scaleText),
+                      child: _trackLabel(
+                        context,
+                        context.l10n.scaleTextTitle,
+                        layer.resizeMode == TextResizeMode.scaleText,
+                      ),
+                    ),
+                    TrackSegmentSpec(
+                      key: const ValueKey('layout-resize-box'),
+                      semanticLabel: context.l10n.resizeBoxTitle,
+                      active: layer.resizeMode == TextResizeMode.resizeBox,
+                      onTap: () => ctrl.setResizeMode(TextResizeMode.resizeBox),
+                      child: _trackLabel(
+                        context,
+                        context.l10n.resizeBoxTitle,
+                        layer.resizeMode == TextResizeMode.resizeBox,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
+    );
+  }
+
+  static Widget _trackLabel(BuildContext context, String text, bool active) {
+    final tokens = AppTokens.of(context);
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: 12.5,
+        fontWeight: FontWeight.w700,
+        color: active ? tokens.accentText : tokens.textPrimary,
+        letterSpacing: 0.1,
+      ),
     );
   }
 }

@@ -32,6 +32,13 @@ final canvasChromeSuppressedProvider = Provider<bool>((ref) {
   final paintSlot = ref.watch(
     paintToolControllerProvider.select((s) => s.openSlot != null),
   );
+  // An armed paint tool owns every canvas pointer, so floating
+  // accelerators would be unreachable-but-visible chrome — and the
+  // capsule popping up over each just-committed (auto-selected)
+  // stroke made sketching feel interrupted (bench redesign 2026-08).
+  final paintArmed = ref.watch(
+    paintToolControllerProvider.select((s) => s.activeTool != null),
+  );
   final imageSlot = ref.watch(
     imageToolControllerProvider.select((s) => s.openSlot != null),
   );
@@ -52,6 +59,7 @@ final canvasChromeSuppressedProvider = Provider<bool>((ref) {
   );
   return textSheet ||
       paintSlot ||
+      paintArmed ||
       imageSlot ||
       shapeSlot ||
       stickerSlot ||

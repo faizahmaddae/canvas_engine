@@ -4,7 +4,7 @@ import 'package:canvas_engine/features/editor/engine/core/editor_layer.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
-import 'package:canvas_engine/features/editor/image/presentation/image_border_body.dart';
+import 'package:canvas_engine/features/editor/image/presentation/image_style_body.dart';
 import 'package:canvas_engine/features/editor/shape/presentation/shape_border_body.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -123,7 +123,7 @@ void main() {
     });
   });
 
-  group('ImageBorderBody — no stroked-kind gate, always full panel', () {
+  group('ImageBorderSection — no stroked-kind gate, always full panel', () {
     testWidgets('shows None chip, Colour section, and the precision '
         'slider even with no border set', (tester) async {
       final layer = makeImageLayer();
@@ -132,7 +132,7 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
-            home: Scaffold(body: ImageBorderBody(layer: layer)),
+            home: Scaffold(body: ImageBorderSection(layer: layer)),
           ),
         ),
       );
@@ -152,7 +152,7 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
-            home: Scaffold(body: ImageBorderBody(layer: layer)),
+            home: Scaffold(body: ImageBorderSection(layer: layer)),
           ),
         ),
       );

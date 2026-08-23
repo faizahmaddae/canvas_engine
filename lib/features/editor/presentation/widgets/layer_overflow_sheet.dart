@@ -11,11 +11,8 @@ import '../../engine/modules/shape/shape_layer.dart';
 import '../../engine/modules/text/text_layer.dart';
 import '../../paint/application/paint_tool_controller.dart';
 import '../../shape/application/shape_tool_controller.dart';
-import '../../text/application/text_tool_controller.dart';
-import '../../text/presentation/text_direction_mode_picker.dart';
 import '../../../../app/ui/app_modal_sheet.dart';
 import '../../text/presentation/text_edit_flow.dart';
-import '../../text/presentation/text_resize_mode_picker.dart';
 import 'layer_actions.dart';
 import 'layer_opacity_control.dart';
 import '../../../../app/theme/app_icons.dart';
@@ -286,25 +283,10 @@ class _LayerOverflowSheet extends StatelessWidget {
           LayerActions.toggleLock(parentRef, layer);
         }),
       ),
-      // 9 — Resize behavior
-      if (textLayer != null)
-        ListTile(
-          leading: Icon(textResizeModeIcon(textLayer.resizeMode)),
-          title: Text(l10n.resizeBehaviorTitle),
-          subtitle: Text(
-            localizedTextResizeModeLabel(context, textLayer.resizeMode),
-          ),
-          trailing: const Icon(AppIcons.drillIn),
-          onTap: () => _popThen(context, () async {
-            final current = textLayer.resizeMode;
-            final picked = await pickTextResizeMode(hostContext, current);
-            if (picked != null && picked != current) {
-              parentRef
-                  .read(textToolControllerProvider.notifier)
-                  .setResizeMode(picked);
-            }
-          }),
-        ),
+      // 9 — Resize behavior / text direction: for TEXT layers these
+      // moved into the bench's چیدمان sheet (Text Studio redesign) —
+      // a live panel where document-mutating choices belong, not a
+      // pop-then-dialog row behind a full scrim (the P3-2 grammar).
       if (shapeLayer != null)
         _ResizeModeToggleRow(
           initialIsScale:
@@ -323,28 +305,6 @@ class _LayerOverflowSheet extends StatelessWidget {
               .setResizeMode(
                 isScale ? PaintResizeMode.scale : PaintResizeMode.free,
               ),
-        ),
-      // 10 — Text direction
-      if (textLayer != null)
-        ListTile(
-          leading: Icon(textDirectionModeIcon(textLayer.textDirectionMode)),
-          title: Text(l10n.textDirectionTitle),
-          subtitle: Text(
-            localizedTextDirectionModeLabel(
-              context,
-              textLayer.textDirectionMode,
-            ),
-          ),
-          trailing: const Icon(AppIcons.drillIn),
-          onTap: () => _popThen(context, () async {
-            final current = textLayer.textDirectionMode;
-            final picked = await pickTextDirectionMode(hostContext, current);
-            if (picked != null && picked != current) {
-              parentRef
-                  .read(textToolControllerProvider.notifier)
-                  .setTextDirectionMode(picked);
-            }
-          }),
         ),
       // 11 — Layers drawer link
       if (onOpenLayers != null)

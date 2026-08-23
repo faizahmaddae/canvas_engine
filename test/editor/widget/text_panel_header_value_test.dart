@@ -10,6 +10,7 @@ import 'package:canvas_engine/features/editor/engine/commands/transform_commands
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
+import 'package:canvas_engine/features/editor/presentation/panels/text/size_panel.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -68,10 +69,15 @@ void main() {
   testWidgets('Size sheet shows exactly one px readout (body chip), '
       'reporting VISUAL px', (tester) async {
     final container = await pumpWithSheet(tester, 'size');
-    // The tappable body chip is the ONLY px readout — the header
-    // no longer duplicates it.
-    final pxText = find.byWidgetPredicate(
-      (w) => w is Text && RegExp(r'^\d+px$').hasMatch(w.data ?? ''),
+    // The tappable body chip is the ONLY px readout inside the
+    // sheet — the header no longer duplicates it. (The Studio
+    // Bench's identity row carries its own px pill above the dock;
+    // that is a state display, checked for agreement below.)
+    final pxText = find.descendant(
+      of: find.byType(SizeBody),
+      matching: find.byWidgetPredicate(
+        (w) => w is Text && RegExp(r'^\d+px$').hasMatch(w.data ?? ''),
+      ),
     );
     expect(pxText, findsOneWidget);
     // tb2 12/16: the readout reports VISUAL px. This layer's 120px
@@ -85,7 +91,15 @@ void main() {
         .read(textToolControllerProvider.notifier)
         .visualFontSizeOf(layer);
     expect(visual, greaterThan(48), reason: 'harness layer is up-scaled');
-    expect(find.text('${visual.round()}px'), findsOneWidget);
+    // Sheet chip and bench identity pill agree on the visual value.
+    expect(find.text('${visual.round()}px'), findsNWidgets(2));
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('text-pill-size')),
+        matching: find.text('${visual.round()}px'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('48px'), findsNothing, reason: 'raw px was the lie');
   });
 

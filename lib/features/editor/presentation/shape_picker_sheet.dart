@@ -80,13 +80,16 @@ Future<ShapeKind?> pickShapeKind(
                   ),
                 ),
               ),
+              // Four columns since the 2026-08 growth: 33 tiles at
+              // three per row was an eleven-row scroll. The preview
+              // scales down to keep the tile's silhouette-first look.
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 3,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.95,
+                crossAxisCount: 4,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 0.92,
                 children: [
                   for (final entry in _pickerEntriesForSection(l10n, tokens, s))
                     _ShapePickerTile(
@@ -124,7 +127,7 @@ List<_ShapePickerEntry> _pickerEntriesForSection(
     for (var i = 0; i < entries.length; i++)
       _ShapePickerEntry(
         entries[i].kind,
-        _shapeKindLabel(l10n, entries[i].kind),
+        shapeKindLabel(l10n, entries[i].kind),
         i.isEven ? [a, b] : [b, a],
       ),
   ];
@@ -140,7 +143,10 @@ String _shapeSectionLabel(AppLocalizations l10n, int sectionIndex) {
   };
 }
 
-String _shapeKindLabel(AppLocalizations l10n, ShapeKind kind) {
+/// Localized display name for a [ShapeKind] — shared by the picker
+/// tiles and the Shape Studio bench's specimen chip so the two
+/// surfaces can never disagree about what a shape is called.
+String shapeKindLabel(AppLocalizations l10n, ShapeKind kind) {
   return switch (kind) {
     ShapeKind.rectangle => l10n.shapeKindRectangle,
     ShapeKind.roundedRectangle => l10n.shapeKindRoundedRectangle,
@@ -161,6 +167,20 @@ String _shapeKindLabel(AppLocalizations l10n, ShapeKind kind) {
     ShapeKind.arrowLeft => l10n.shapeKindArrowLeft,
     ShapeKind.arrowUp => l10n.shapeKindArrowUp,
     ShapeKind.arrowDown => l10n.shapeKindArrowDown,
+    ShapeKind.pentagon => l10n.shapeKindPentagon,
+    ShapeKind.octagon => l10n.shapeKindOctagon,
+    ShapeKind.semicircle => l10n.shapeKindSemicircle,
+    ShapeKind.rightTriangle => l10n.shapeKindRightTriangle,
+    ShapeKind.parallelogram => l10n.shapeKindParallelogram,
+    ShapeKind.trapezoid => l10n.shapeKindTrapezoid,
+    ShapeKind.ring => l10n.shapeKindRing,
+    ShapeKind.sparkle => l10n.shapeKindSparkle,
+    ShapeKind.seal => l10n.shapeKindSeal,
+    ShapeKind.bolt => l10n.shapeKindBolt,
+    ShapeKind.shield => l10n.shapeKindShield,
+    ShapeKind.crescent => l10n.shapeKindCrescent,
+    ShapeKind.cloud => l10n.shapeKindCloud,
+    ShapeKind.thoughtBubble => l10n.shapeKindThoughtBubble,
   };
 }
 
@@ -213,22 +233,22 @@ class _ShapePickerTile extends StatelessWidget {
               width: selected ? 1.4 : 0.5,
             ),
           ),
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
-                width: 56,
-                height: 56,
+                width: 42,
+                height: 42,
                 child: _ShapePickerPreview(kind: kind, gradient: gradient),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: selected ? tokens.accent : tokens.textPrimary,
                   letterSpacing: -0.1,
@@ -294,7 +314,7 @@ class _ShapePickerPreview extends StatelessWidget {
         // Squashed pill so the picker preview reads as an oval at a
         // glance — distinct from the circle tile beside it.
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 9),
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: paint,
@@ -318,6 +338,20 @@ class _ShapePickerPreview extends StatelessWidget {
       case ShapeKind.arrowLeft:
       case ShapeKind.arrowUp:
       case ShapeKind.arrowDown:
+      case ShapeKind.pentagon:
+      case ShapeKind.octagon:
+      case ShapeKind.semicircle:
+      case ShapeKind.rightTriangle:
+      case ShapeKind.parallelogram:
+      case ShapeKind.trapezoid:
+      case ShapeKind.ring:
+      case ShapeKind.sparkle:
+      case ShapeKind.seal:
+      case ShapeKind.bolt:
+      case ShapeKind.shield:
+      case ShapeKind.crescent:
+      case ShapeKind.cloud:
+      case ShapeKind.thoughtBubble:
         return CustomPaint(
           painter: _PreviewPainter(kind: kind, color: gradient.first),
         );
@@ -374,6 +408,34 @@ class _PreviewPainter extends CustomPainter {
         return ShapePaths.arrowUp(size);
       case ShapeKind.arrowDown:
         return ShapePaths.arrowDown(size);
+      case ShapeKind.pentagon:
+        return ShapePaths.pentagon(size);
+      case ShapeKind.octagon:
+        return ShapePaths.octagon(size);
+      case ShapeKind.semicircle:
+        return ShapePaths.semicircle(size);
+      case ShapeKind.rightTriangle:
+        return ShapePaths.rightTriangle(size);
+      case ShapeKind.parallelogram:
+        return ShapePaths.parallelogram(size);
+      case ShapeKind.trapezoid:
+        return ShapePaths.trapezoid(size);
+      case ShapeKind.ring:
+        return ShapePaths.ring(size);
+      case ShapeKind.sparkle:
+        return ShapePaths.sparkle(size);
+      case ShapeKind.seal:
+        return ShapePaths.seal(size);
+      case ShapeKind.bolt:
+        return ShapePaths.bolt(size);
+      case ShapeKind.shield:
+        return ShapePaths.shield(size);
+      case ShapeKind.crescent:
+        return ShapePaths.crescent(size);
+      case ShapeKind.cloud:
+        return ShapePaths.cloud(size);
+      case ShapeKind.thoughtBubble:
+        return ShapePaths.thoughtBubble(size);
       case ShapeKind.rectangle:
       case ShapeKind.roundedRectangle:
       case ShapeKind.circle:

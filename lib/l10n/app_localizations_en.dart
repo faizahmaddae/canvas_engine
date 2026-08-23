@@ -1122,6 +1122,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shapeKindArrowDown => 'Arrow down';
 
   @override
+  String get shapeKindPentagon => 'Pentagon';
+
+  @override
+  String get shapeKindOctagon => 'Octagon';
+
+  @override
+  String get shapeKindSemicircle => 'Semicircle';
+
+  @override
+  String get shapeKindRightTriangle => 'Right triangle';
+
+  @override
+  String get shapeKindParallelogram => 'Parallelogram';
+
+  @override
+  String get shapeKindTrapezoid => 'Trapezoid';
+
+  @override
+  String get shapeKindRing => 'Ring';
+
+  @override
+  String get shapeKindSparkle => 'Sparkle';
+
+  @override
+  String get shapeKindSeal => 'Badge';
+
+  @override
+  String get shapeKindBolt => 'Bolt';
+
+  @override
+  String get shapeKindShield => 'Shield';
+
+  @override
+  String get shapeKindCrescent => 'Crescent';
+
+  @override
+  String get shapeKindCloud => 'Cloud';
+
+  @override
+  String get shapeKindThoughtBubble => 'Thought';
+
+  @override
   String get addPhotoAction => 'Add photo';
 
   @override
@@ -1136,9 +1178,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolNeedsPhotoHint => 'Needs a visible photo';
-
-  @override
-  String get toolNeedsEffectHint => 'Needs at least one effect';
 
   @override
   String get cropActionVerb => 'crop';
@@ -1311,6 +1350,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get typeSomethingHint => 'Type something…';
+
+  @override
+  String get colorTonesLabel => 'Tones';
+
+  @override
+  String get restoreOriginalColorTooltip => 'Restore original color';
 
   @override
   String get colorsLabel => 'Colors';
@@ -1565,12 +1610,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copyColorTooltip => 'Copy color code';
 
   @override
-  String get toolLabel => 'Tool';
-
-  @override
-  String get chooseToolTitle => 'Choose a tool';
-
-  @override
   String get thinOption => 'Thin';
 
   @override
@@ -1607,15 +1646,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get drawGroup => 'Draw';
-
-  @override
-  String get shapesGroup => 'Shapes';
-
-  @override
-  String get effectsGroup => 'Effects';
-
-  @override
   String get penTool => 'Pen';
 
   @override
@@ -1631,25 +1661,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dottedOption => 'Dotted';
 
   @override
-  String get dashDotOption => 'Dash dot';
-
-  @override
   String get eraserTool => 'Eraser';
 
   @override
-  String get eraseStrokesTool => 'Erase strokes';
+  String get adjustStrokesTool => 'Select';
 
   @override
-  String get newShortLabel => 'New';
+  String get paintEraserHint => 'Tap or drag over strokes to erase them';
 
   @override
-  String get newStrokeTool => 'New stroke';
-
-  @override
-  String get nextStrokeScope => 'Next stroke';
-
-  @override
-  String get editingStrokeScope => 'Editing this stroke';
+  String get paintTapStrokeHint => 'Tap a stroke to edit it';
 
   @override
   String get squareLabel => 'Square';
@@ -1756,19 +1777,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vignetteSubtitle => 'Soft radial darkening from the centre';
 
   @override
-  String get noEffectsApplied => 'No effects applied.';
-
-  @override
-  String get openLookToAddEffectHint => 'Open Look to add one.';
-
-  @override
   String get selectiveMaskLabel => 'Selective';
 
   @override
   String get selectiveMaskHint => 'Limit the stack to a region of the layer';
-
-  @override
-  String get addEffectToMaskHint => 'Add an effect to mask selectively.';
 
   @override
   String get maskPresetOff => 'Off';
@@ -1867,6 +1879,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Background only shows behind transparent or uncovered areas of your photo.';
 
   @override
+  String get rotateCanvasAction => 'Rotate canvas';
+
+  @override
+  String get layersOutsideCanvasNote =>
+      'Some layers are outside the canvas now — drag them back in.';
+
+  @override
+  String get gradientPickHint => 'Pick a gradient to use it as the background.';
+
+  @override
   String get resetCropAction => 'Reset crop';
 
   @override
@@ -1874,6 +1896,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreImageAction => 'Restore image';
+
+  @override
+  String get cropOrientationAction => 'Swap orientation';
+
+  @override
+  String cropOutputSizeLabel(String width, String height) {
+    return 'Crop size $width by $height pixels';
+  }
 
   @override
   String get freeOption => 'Free';
@@ -1891,12 +1921,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get formatLabel => 'Format';
-
-  @override
-  String get previewShareAction => 'Preview & Share';
-
-  @override
-  String get previewSaveAction => 'Preview & Save';
 
   @override
   String get savedToPhotoLibrary => 'Saved to your photo library';

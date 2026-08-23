@@ -22,12 +22,11 @@ import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.d
 import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/image/presentation/image_look_body.dart';
-import 'package:canvas_engine/features/editor/image/presentation/image_border_body.dart';
+import 'package:canvas_engine/features/editor/image/presentation/image_style_body.dart';
 import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
 import 'package:canvas_engine/features/editor/paint/domain/paint_tool_type.dart';
-import 'package:canvas_engine/features/editor/paint/presentation/bodies/paint_size_entry.dart';
+import 'package:canvas_engine/features/editor/paint/presentation/bodies/paint_pen_body.dart';
 import 'package:canvas_engine/features/editor/paint/presentation/paint_gesture_surface.dart';
-import 'package:canvas_engine/features/editor/paint/presentation/paint_size_body.dart';
 import 'package:canvas_engine/features/editor/shape/presentation/shape_style_body.dart';
 import 'package:canvas_engine/features/editor/toolbar/presentation/widgets/preset_slider_control.dart';
 import 'package:flutter/material.dart';
@@ -159,7 +158,7 @@ void main() {
       'commits the last previewed value', (tester) async {
     final layer = makeImageLayer();
     final container = makeContainer(layer);
-    await pumpBody(tester, container, ImageBorderBody(layer: layer));
+    await pumpBody(tester, container, ImageBorderSection(layer: layer));
 
     // The colour grid above this disclosure is tall and its run gap is
     // now derived from the available width, so its height is not a
@@ -371,7 +370,7 @@ void main() {
     await pumpBody(
       tester,
       container,
-      PaintSizeEntryBody(view: container.read(paintStyleViewProvider)),
+      PaintPenBody(view: container.read(paintStyleViewProvider)),
     );
 
     PaintLayer committed() =>
@@ -379,8 +378,8 @@ void main() {
             as PaintLayer;
 
     final versionBefore = container.read(documentCommitVersionProvider);
-    final slider = find.byType(Slider);
-    expect(slider, findsOneWidget);
+    // The pen sheet stacks two sliders: size first, opacity second.
+    final slider = find.byType(Slider).first;
 
     final gesture = await tester.startGesture(tester.getCenter(slider));
     await gesture.moveBy(const Offset(40, 0));
@@ -423,13 +422,13 @@ void main() {
   });
 
   // The other half of §2: the dock is a CONSUMER of the preview. A
-  // host that reads the style view once (a snapshot) renders a Size
-  // panel whose slider thumb and stroke hero stay parked at the
-  // pre-gesture width while the canvas underneath already moved. Wire
-  // the body the way the real dock does — reactively — and pin that
-  // both follow the staged value before any commit.
-  testWidgets('paint Size tracks the STAGED width live: slider thumb and '
-      'stroke hero move before the commit', (tester) async {
+  // host that reads the style view once (a snapshot) renders a pen
+  // sheet whose slider thumb stays parked at the pre-gesture width
+  // while the canvas underneath already moved. Wire the body the way
+  // the real dock does — reactively — and pin that it follows the
+  // staged value before any commit.
+  testWidgets('paint size tracks the STAGED width live: the slider thumb '
+      'moves before the commit', (tester) async {
     final layer = PaintLayer(
       id: 'p1',
       transform: const LayerTransform(
@@ -456,7 +455,7 @@ void main() {
       container,
       Consumer(
         builder: (context, ref, _) =>
-            PaintSizeEntryBody(view: ref.watch(paintStyleViewProvider)),
+            PaintPenBody(view: ref.watch(paintStyleViewProvider)),
       ),
     );
 
@@ -468,10 +467,8 @@ void main() {
             .strokeWidth;
 
     final versionBefore = container.read(documentCommitVersionProvider);
-    final slider = find.byType(Slider);
-    expect(slider, findsOneWidget);
+    final slider = find.byType(Slider).first;
     expect(tester.widget<Slider>(slider).value, 6);
-    expect(tester.widget<StrokeHero>(find.byType(StrokeHero)).width, 6);
 
     final gesture = await tester.startGesture(tester.getCenter(slider));
     await gesture.moveBy(const Offset(60, 0));
@@ -483,11 +480,6 @@ void main() {
       tester.widget<Slider>(slider).value,
       closeTo(staged, 0.001),
       reason: 'the thumb reads the staged layer, not the committed one',
-    );
-    expect(
-      tester.widget<StrokeHero>(find.byType(StrokeHero)).width,
-      closeTo(staged, 0.001),
-      reason: 'the hero previews the width the canvas is already drawing',
     );
     expect(committed().strokeWidth, 6, reason: 'committed frozen mid-drag');
     expect(container.read(documentCommitVersionProvider), versionBefore);

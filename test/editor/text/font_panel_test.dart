@@ -3,11 +3,12 @@
 // The Font panel itself is a widget, but the *decisions* the panel
 // makes — what counts as "Recommended" per script, and what sample
 // word each font is previewed with — are pure functions exposed
-// from `text_mode_toolbar.dart`. Pinning them here keeps the
+// from the font-picker modules. Pinning them here keeps the
 // designed-for visual behaviour from drifting silently.
 
+import 'package:canvas_engine/features/editor/presentation/panels/text/font_picker/cards.dart';
+import 'package:canvas_engine/features/editor/presentation/panels/text/font_picker/inline_browser.dart';
 import 'package:canvas_engine/features/editor/text/domain/font_catalog.dart';
-import 'package:canvas_engine/features/editor/text/presentation/text_mode_toolbar.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

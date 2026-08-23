@@ -10,6 +10,7 @@ import 'package:canvas_engine/features/editor/engine/commands/transform_commands
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/presentation/editor_screen.dart';
+import 'package:canvas_engine/features/editor/presentation/panels/text/size_panel.dart';
 import 'package:canvas_engine/features/editor/text/application/text_tool_controller.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -71,8 +72,17 @@ void main() {
           .style
           .fontSize;
 
-  final pxText = find.byWidgetPredicate(
-    (w) => w is Text && RegExp(r'^\d+px$').hasMatch(w.data ?? ''),
+  // Scoped to the Size sheet body: the Studio Bench's identity row
+  // legitimately shows its own px pill above the dock now.
+  final pxText = find.descendant(
+    of: find.byType(SizeBody),
+    matching: find.byWidgetPredicate(
+      (w) => w is Text && RegExp(r'^\d+px$').hasMatch(w.data ?? ''),
+    ),
+  );
+  final valueChip = find.descendant(
+    of: find.byType(SizeBody),
+    matching: find.text('96px'),
   );
 
   testWidgets('compact contract: one px readout, presets, no disclosure', (
@@ -82,7 +92,7 @@ void main() {
     // Exactly ONE px readout anywhere — the tappable value chip.
     // (The header chip and the disclosure's duplicate are gone.)
     expect(pxText, findsOneWidget);
-    expect(find.text('96px'), findsOneWidget);
+    expect(valueChip, findsOneWidget);
     // Nudge pair + presets still present.
     expect(find.bySemanticsLabel('Decrease size'), findsOneWidget);
     expect(find.bySemanticsLabel('Increase size'), findsOneWidget);
@@ -97,7 +107,7 @@ void main() {
     tester,
   ) async {
     final c = await pumpSizeSheet(tester);
-    await tester.tap(find.text('96px'));
+    await tester.tap(valueChip);
     await tester.pumpAndSettle();
     expect(find.text('Exact size'), findsOneWidget);
 
@@ -111,7 +121,7 @@ void main() {
     tester,
   ) async {
     final c = await pumpSizeSheet(tester);
-    await tester.tap(find.text('96px'));
+    await tester.tap(valueChip);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), '999999');
     await tester.tap(find.text('Apply'));

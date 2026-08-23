@@ -164,29 +164,63 @@ class EditorToolDock extends StatelessWidget {
                 // ── Chip strip ────────────────────────────────────
                 // Fixed-height row that mirrors the previous dock
                 // surface. Mode swaps slide + cross-fade in here.
-                SizedBox(
+                //
+                // ANIMATED height: the strip's height differs per
+                // mode (idle strip 80/64, the paint/text/image
+                // benches 124/108), and a bare SizedBox snapped
+                // between them — the canvas above reflowed in one
+                // frame and visibly jumped the moment a photo, text
+                // or stroke was selected. The box glides over the
+                // same 220ms as the content cross-fade, while the
+                // OverflowBox keeps the CONTENT laid out at the
+                // target height for the whole flight — squeezing the
+                // strip through intermediate heights overflowed
+                // DockToolTile's fixed column (and the transition
+                // also fires when a viewport change moves the
+                // compact breakpoint). Bottom-anchored, the content
+                // holds still against the display edge and the top
+                // edge rises like a curtain.
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: AppMotion.curve,
                   height: stripHeight,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    switchInCurve: AppMotion.curve,
-                    switchOutCurve: AppMotion.curveOut,
-                    transitionBuilder: (child, animation) {
-                      final slide = Tween<Offset>(
-                        begin: const Offset(0.06, 0),
-                        end: Offset.zero,
-                      ).animate(animation);
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(position: slide, child: child),
-                      );
-                    },
-                    layoutBuilder: (currentChild, previousChildren) {
-                      return Stack(
-                        alignment: Alignment.center,
-                        children: [...previousChildren, ?currentChild],
-                      );
-                    },
-                    child: KeyedSubtree(key: ValueKey(modeKey), child: child),
+                  child: ClipRect(
+                    child: OverflowBox(
+                      minHeight: stripHeight,
+                      maxHeight: stripHeight,
+                      alignment: Alignment.bottomCenter,
+                      child: SizedBox(
+                        height: stripHeight,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          switchInCurve: AppMotion.curve,
+                          switchOutCurve: AppMotion.curveOut,
+                          transitionBuilder: (child, animation) {
+                            final slide = Tween<Offset>(
+                              begin: const Offset(0.06, 0),
+                              end: Offset.zero,
+                            ).animate(animation);
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: slide,
+                                child: child,
+                              ),
+                            );
+                          },
+                          layoutBuilder: (currentChild, previousChildren) {
+                            return Stack(
+                              alignment: Alignment.center,
+                              children: [...previousChildren, ?currentChild],
+                            );
+                          },
+                          child: KeyedSubtree(
+                            key: ValueKey(modeKey),
+                            child: child,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],

@@ -222,14 +222,8 @@ void main() {
     'image-selected': () => editorContainer(select: 'img-1'),
     'image-slot:look': () =>
         editorContainer(select: 'img-1', imageSlot: ImageToolSlot.look),
-    'image-slot:shape': () =>
-        editorContainer(select: 'img-1', imageSlot: ImageToolSlot.shape),
-    'image-slot:border': () =>
-        editorContainer(select: 'img-1', imageSlot: ImageToolSlot.border),
-    'image-slot:shadow': () =>
-        editorContainer(select: 'img-1', imageSlot: ImageToolSlot.shadow),
-    'image-slot:effects': () =>
-        editorContainer(select: 'img-1', imageSlot: ImageToolSlot.effects),
+    'image-slot:style': () =>
+        editorContainer(select: 'img-1', imageSlot: ImageToolSlot.style),
     'shape-selected': () => editorContainer(select: 'shape-1'),
     'shape-slot:style': () =>
         editorContainer(select: 'shape-1', shapeSlot: ShapeToolSlot.style),

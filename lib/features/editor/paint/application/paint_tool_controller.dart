@@ -8,6 +8,7 @@ import '../../engine/commands/editor_command.dart';
 import '../../engine/commands/paint_commands.dart';
 import '../../engine/core/canvas_sizing.dart';
 import '../../engine/modules/paint/paint_layer.dart';
+import '../domain/paint_bench_slot.dart';
 import '../domain/paint_tool_type.dart';
 
 /// The engine kind a tool draws. `null` for the eraser, which never
@@ -54,6 +55,8 @@ class PaintSession {
     this.fillColor,
     this.blurRadius = 16.0,
     this.polygonSides = 6,
+    this.lastLineTool = PaintToolType.line,
+    this.lastShapeTool = PaintToolType.rectangle,
   });
 
   static const PaintSession initial = PaintSession();
@@ -66,17 +69,25 @@ class PaintSession {
   /// panel but not yet picked a tool, or when paint mode is dormant.
   final PaintToolType? activeTool;
 
-  /// Identifier of the quick-action slot whose inline expansion row
-  /// is currently shown above the capsule (`'tool'`, `'color'`,
-  /// `'size'`). `null` when no inline row is open.
+  /// Identifier of the open bench sheet (`'color'`, `'pen'`,
+  /// `'line'`, `'shape'`, `'blur'`), rendered in the dock's expanded
+  /// zone. `null` when no sheet is open.
   final String? openSlot;
 
-  // Future-ready stroke configuration.
+  // Author defaults — the pen's ink.
   final Color strokeColor;
   final double strokeWidth;
   final Color? fillColor;
   final double blurRadius;
   final int polygonSides;
+
+  /// The line-family variant the rack's Line slot arms (solid /
+  /// dashed / dash-dot). The slot remembers the last pick so a
+  /// dashed-line user isn't reset to solid on every re-arm.
+  final PaintToolType lastLineTool;
+
+  /// The box-family variant the rack's Shape slot arms.
+  final PaintToolType lastShapeTool;
 
   PaintSession copyWith({
     bool? panelOpen,
@@ -88,6 +99,8 @@ class PaintSession {
     Object? fillColor = _sentinel,
     double? blurRadius,
     int? polygonSides,
+    PaintToolType? lastLineTool,
+    PaintToolType? lastShapeTool,
   }) {
     return PaintSession(
       panelOpen: panelOpen ?? this.panelOpen,
@@ -102,6 +115,8 @@ class PaintSession {
           : fillColor as Color?,
       blurRadius: blurRadius ?? this.blurRadius,
       polygonSides: polygonSides ?? this.polygonSides,
+      lastLineTool: lastLineTool ?? this.lastLineTool,
+      lastShapeTool: lastShapeTool ?? this.lastShapeTool,
     );
   }
 
@@ -120,10 +135,53 @@ class PaintToolController extends Notifier<PaintSession> {
 
   /// Force the panel open without changing tool selection. Useful for
   /// programmatic entry points (e.g. context menus) that want to reveal
-  /// paint UI without committing to a tool yet.
+  /// paint UI without committing to a tool yet. With no armed tool this
+  /// is the adjust posture.
   void openPanel() {
     if (state.panelOpen) return;
     state = state.copyWith(panelOpen: true);
+  }
+
+  /// Arm the tool a rack slot stands for, or switch posture.
+  ///
+  /// The rack's single entry point: family slots (line/shape) re-arm
+  /// their remembered variant, [PaintBenchSlot.adjust] switches to the
+  /// adjust posture, everything else arms its one tool. Re-tapping the
+  /// active slot is handled by the bench itself (it opens the slot's
+  /// sheet), not here.
+  void armBenchSlot(PaintBenchSlot slot) {
+    switch (slot) {
+      case PaintBenchSlot.pen:
+        selectTool(PaintToolType.freestyle);
+      case PaintBenchSlot.line:
+        selectTool(state.lastLineTool);
+      case PaintBenchSlot.arrow:
+        selectTool(PaintToolType.arrow);
+      case PaintBenchSlot.shape:
+        selectTool(state.lastShapeTool);
+      case PaintBenchSlot.blur:
+        selectTool(PaintToolType.blur);
+      case PaintBenchSlot.eraser:
+        if (state.activeTool != PaintToolType.eraser) toggleEraser();
+      case PaintBenchSlot.adjust:
+        enterAdjust();
+    }
+  }
+
+  /// Switch to the adjust posture: no armed tool, paint mode stays.
+  ///
+  /// The paint gesture surface unmounts (`activeTool == null`), so the
+  /// canvas gets the editor's ordinary selection grammar back — tap a
+  /// stroke to select, handles, drag-to-move. The current selection is
+  /// deliberately KEPT: right after drawing, the just-committed stroke
+  /// is selected (§10 A), so one tap on the adjust slot lands with
+  /// that stroke already bound and its handles up.
+  void enterAdjust() {
+    state = state.copyWith(
+      panelOpen: true,
+      activeTool: null,
+      clearOpenSlot: true,
+    );
   }
 
   /// Hide the panel and exit paint mode.
@@ -177,7 +235,8 @@ class PaintToolController extends Notifier<PaintSession> {
   /// into an unsupported state.
   ///
   /// Also clears any layer selection so the screen-space selection
-  /// chrome (body drag, handles) can't intercept paint gestures.
+  /// chrome (body drag, handles) can't intercept paint gestures, and
+  /// records the family memory the rack's Line/Shape slots re-arm.
   void selectTool(PaintToolType tool) {
     if (!tool.available) return;
     ref.read(selectionControllerProvider.notifier).clear();
@@ -186,6 +245,8 @@ class PaintToolController extends Notifier<PaintSession> {
       panelOpen: true,
       activeTool: tool,
       clearOpenSlot: true,
+      lastLineTool: kLineFamilyTools.contains(tool) ? tool : null,
+      lastShapeTool: kShapeFamilyTools.contains(tool) ? tool : null,
     );
   }
 
@@ -219,12 +280,21 @@ class PaintToolController extends Notifier<PaintSession> {
     }
   }
 
-  /// A paint control has exactly one target (§10.5 N): with a selected
-  /// PaintLayer it restyles that bound layer; otherwise it changes the
-  /// author's defaults for the next stroke. Every plain setter shares
-  /// this branch — [onLayer] returns the command to execute, or `null`
-  /// for a no-op (unchanged value, or a kind guard rejecting it);
-  /// [onSessionDefault] runs only when nothing is bound.
+  /// The §10.5 N write rule (amended by the 2026-08 bench redesign).
+  /// Both targets are named in advance; the posture picks which a
+  /// write reaches:
+  ///
+  ///   * armed (drawing posture) — the bound layer gets ONE undoable
+  ///     command AND the author defaults take the same value (session
+  ///     state, no undo entry). The pen keeps the ink: "draw, recolor,
+  ///     draw again" must not produce a stale-colored second stroke.
+  ///   * unarmed (adjust posture) — the bound layer only. Editing an
+  ///     old annotation does not re-ink the pen.
+  ///   * nothing bound — the defaults only.
+  ///
+  /// [onLayer] returns the command to execute, or `null` for a no-op
+  /// (unchanged value, or a kind guard rejecting it — the defaults
+  /// still update while armed, so the pen never ignores its author).
   void _writeStyle({
     required EditorCommand? Function(PaintLayer layer) onLayer,
     required void Function() onSessionDefault,
@@ -235,7 +305,7 @@ class PaintToolController extends Notifier<PaintSession> {
       if (cmd != null) {
         ref.read(documentControllerProvider.notifier).execute(cmd);
       }
-      return;
+      if (state.activeTool == null) return;
     }
     onSessionDefault();
   }
@@ -299,11 +369,15 @@ class PaintToolController extends Notifier<PaintSession> {
 
   /// [pending]/[setPending] read/write the CALLER's own private field —
   /// each channel keeps its own, so an in-flight colour drag can never
-  /// be clobbered by an unrelated width or blur drag.
+  /// be clobbered by an unrelated width or blur drag. [mirrorDefaults]
+  /// is the armed-posture half of the §10.5 write rule: after the
+  /// bound layer's command lands, copy the committed value into the
+  /// author defaults (once per gesture, not per preview tick).
   void _commitStyle(
     UpdatePaintStyleCommand? pending,
-    void Function(UpdatePaintStyleCommand?) setPending,
-  ) {
+    void Function(UpdatePaintStyleCommand?) setPending, {
+    void Function(UpdatePaintStyleCommand committed)? mirrorDefaults,
+  }) {
     setPending(null);
     if (pending == null) return;
     // Clear-then-execute in one synchronous run — no flash-back frame.
@@ -312,6 +386,7 @@ class PaintToolController extends Notifier<PaintSession> {
     // pushed (§3).
     ref.read(liveOverlayProvider.notifier).clear();
     ref.read(documentControllerProvider.notifier).execute(pending);
+    if (state.activeTool != null) mirrorDefaults?.call(pending);
   }
 
   // ─── Contract §2 preview channel: stroke colour (tb2 4/16) ─────
@@ -332,6 +407,12 @@ class PaintToolController extends Notifier<PaintSession> {
   void commitStrokeColor() => _commitStyle(
     _pendingStrokeColorCommit,
     (cmd) => _pendingStrokeColorCommit = cmd,
+    mirrorDefaults: (cmd) {
+      final c = cmd.strokeColor;
+      if (c != null && state.strokeColor != c) {
+        state = state.copyWith(strokeColor: c);
+      }
+    },
   );
 
   /// Opacity is the alpha component of stroke colour, but owns its own
@@ -374,6 +455,11 @@ class PaintToolController extends Notifier<PaintSession> {
   void commitFillColor() => _commitStyle(
     _pendingFillColorCommit,
     (cmd) => _pendingFillColorCommit = cmd,
+    mirrorDefaults: (cmd) {
+      if (cmd.setFillColor && state.fillColor != cmd.fillColor) {
+        state = state.copyWith(fillColor: cmd.fillColor);
+      }
+    },
   );
 
   // ─── Contract §2 preview channel: stroke width (tb2 3/16) ──────
@@ -404,7 +490,15 @@ class PaintToolController extends Notifier<PaintSession> {
 
   void commitStrokeWidth(double width) {
     previewStrokeWidth(width);
-    _commitStyle(_pendingWidthCommit, (cmd) => _pendingWidthCommit = cmd);
+    _commitStyle(
+      _pendingWidthCommit,
+      (cmd) => _pendingWidthCommit = cmd,
+      mirrorDefaults: (_) {
+        if (state.strokeWidth != width) {
+          state = state.copyWith(strokeWidth: width);
+        }
+      },
+    );
   }
 
   void setFillColor(Color? color) => _writeStyle(
@@ -489,7 +583,17 @@ class PaintToolController extends Notifier<PaintSession> {
   void commitBlurRadius(double radius) {
     // Preset taps do not emit preview ticks.
     previewBlurRadius(radius);
-    _commitStyle(_pendingBlurCommit, (cmd) => _pendingBlurCommit = cmd);
+    _commitStyle(
+      _pendingBlurCommit,
+      (cmd) => _pendingBlurCommit = cmd,
+      // [radius] is reference px (the command's blurSigma is canvas
+      // px) — mirror the reference value the sliders speak.
+      mirrorDefaults: (_) {
+        if (state.blurRadius != radius) {
+          state = state.copyWith(blurRadius: radius);
+        }
+      },
+    );
   }
 
   UpdatePaintStyleCommand? _pendingSidesCommit;
@@ -513,7 +617,15 @@ class PaintToolController extends Notifier<PaintSession> {
   void commitPolygonSides(int sides) {
     // Preset taps have no preview ticks.
     previewPolygonSides(sides);
-    _commitStyle(_pendingSidesCommit, (cmd) => _pendingSidesCommit = cmd);
+    _commitStyle(
+      _pendingSidesCommit,
+      (cmd) => _pendingSidesCommit = cmd,
+      mirrorDefaults: (_) {
+        if (state.polygonSides != sides) {
+          state = state.copyWith(polygonSides: sides);
+        }
+      },
+    );
   }
 
   /// Polygon side count for the bound layer or the next stroke.
@@ -529,23 +641,47 @@ class PaintToolController extends Notifier<PaintSession> {
     },
   );
 
-  /// Pick a line style (solid / dashed / dotted).
-  ///
-  /// With a line-kind layer selected this restyles THAT layer — the
-  /// three styles are peers, so the switch is geometry-safe. With
-  /// nothing selected it arms the matching tool for the next stroke,
-  /// which is what the body did unconditionally before tb4 3/14 (and
-  /// why the slot had to be hidden for a selected layer).
-  void selectLineStyle(PaintToolType tool) {
+  /// Pick a line style (solid / dashed / dash-dot) — the Line slot's
+  /// in-family variant. This is a §10.5 style write, not an arming:
+  /// a bound line-kind layer restyles to the peer kind, and while a
+  /// tool is armed the armed variant (and the slot's memory) follows
+  /// WITHOUT clearing the selection — mid-sheet, dropping the binding
+  /// would visibly retarget the open sheet to the defaults. With
+  /// nothing bound and nothing armed it simply arms the variant.
+  void selectLineStyle(PaintToolType tool) =>
+      _selectFamilyVariant(tool, kLineFamilyTools);
+
+  /// Pick a shape kind (rectangle / circle / hexagon / polygon) — the
+  /// Shape slot's in-family variant. Box kinds are engine peers
+  /// ([paintKindPeers]), so the same geometry-safe restyle applies.
+  void selectShapeKind(PaintToolType tool) =>
+      _selectFamilyVariant(tool, kShapeFamilyTools);
+
+  void _selectFamilyVariant(PaintToolType tool, Set<PaintToolType> family) {
+    if (!family.contains(tool)) {
+      assert(false, 'variant $tool outside its family');
+      return;
+    }
     final layer = selectedPaintLayer();
     final kind = paintKindForTool(tool);
     if (layer != null &&
         kind != null &&
         paintKindPeers(layer.kind).contains(kind)) {
-      if (layer.kind == kind) return;
-      ref
-          .read(documentControllerProvider.notifier)
-          .execute(UpdatePaintStyleCommand(layerId: layer.id, kind: kind));
+      if (layer.kind != kind) {
+        ref
+            .read(documentControllerProvider.notifier)
+            .execute(UpdatePaintStyleCommand(layerId: layer.id, kind: kind));
+      }
+      if (state.activeTool != null) {
+        // Armed half of the write rule: the tool keeps the variant.
+        // Not through selectTool — that clears the selection.
+        state = state.copyWith(
+          activeTool: tool,
+          lastLineTool: kLineFamilyTools.contains(tool) ? tool : null,
+          lastShapeTool: kShapeFamilyTools.contains(tool) ? tool : null,
+        );
+        _lastDrawTool = tool;
+      }
       return;
     }
     selectTool(tool);
@@ -594,10 +730,10 @@ final paintToolControllerProvider =
 /// showed session state, so selecting an old stroke and opening Color
 /// showed the colour of the *next* stroke rather than the one on screen.
 ///
-/// Writers use the same target rule ([isRestyling]): selected layer OR
-/// session defaults, for any one write, so a restyle cannot leak into
-/// the next authored stroke. That does not mean the two targets are
-/// mutually exclusive over TIME — a tool can stay armed for continuous
+/// Writers follow the posture rule ([PaintToolController._writeStyle],
+/// contract §10.5 as amended 2026-08): armed writes reach the bound
+/// layer AND the author defaults; unarmed (adjust-posture) writes
+/// reach the bound layer only. A tool can stay armed for continuous
 /// drawing while the stroke just committed is selected for restyling,
 /// and each new commit reselects to the newest stroke (see
 /// [PaintStrokeController.commitDraft]). A fresh draft's own styling

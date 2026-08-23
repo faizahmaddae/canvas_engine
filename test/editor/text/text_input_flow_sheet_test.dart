@@ -1,16 +1,17 @@
-// Composer-level UX contracts for `showTextInputFlowSheet`.
+// Composer-level UX contracts for `showTextInputFlowSheet` — the
+// Studio Composer (docs/text-studio-redesign-2026-08.md §3).
 //
-// Pinpoints the rules that make Add Text feel like a focused
-// composer rather than a full editor:
-//   * Add is disabled until trimmed input is non-empty (no
+// Pinpoints the rules that make it a writing surface with the full
+// style rail rather than a bare input:
+//   * Commit is disabled until trimmed input is non-empty (no
 //     accidental empty layers from a stray tap).
-//   * Add becomes enabled the moment trimmed input is non-empty
-//     and committing pops the typed value back to the caller.
-//   * Pre-commit style strip is intentionally minimal — only Bold
-//     and the colour swatch, no italic / underline / alignment
-//     icons. Full styling lives in the post-create text panel.
-//   * The hint reads "Type something…" — drives the empty-state
-//     visual that tells the user this surface is for typing.
+//   * Commit pops the trimmed value back to the caller; the ✕
+//     cancel pops null so callers revert the staged preview.
+//   * The rail exposes the full pre-commit vocabulary: font
+//     specimen strip (+ Font Room door), quick inks + the ink dot,
+//     B/I/U, size nudges.
+//   * During a live session every rail write stages on the overlay
+//     — zero history entries until the commit seals exactly one.
 //
 // Driven through the public `showTextInputFlowSheet` entry so we
 // exercise the same code path the editor uses.
@@ -165,7 +166,7 @@ void main() {
     await tester.enterText(input, 'Should not commit');
     await tester.pump();
 
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.byKey(const ValueKey('composer-cancel')));
     await tester.pumpAndSettle();
 
     expect(
@@ -177,41 +178,38 @@ void main() {
     );
   });
 
-  testWidgets('pre-commit quick-style strip exposes only Bold + Color', (
-    tester,
-  ) async {
+  testWidgets('the style rail exposes the full pre-commit vocabulary: '
+      'font strip + Font Room door, ink dot + quick inks, B/I/U, '
+      'size nudges', (tester) async {
     await _openComposer(tester);
 
-    // Bold is present.
+    // Font strip: specimen chips + the trailing all-fonts door.
     expect(
-      find.byTooltip('Bold'),
+      find.byKey(const ValueKey('composer-font-Vazir_Regular')),
       findsOneWidget,
-      reason: 'Bold is one of the two pre-commit decisions.',
-    );
-
-    // Color swatch is present.
-    expect(
-      find.byTooltip('Color'),
-      findsOneWidget,
-      reason: 'Color is the other pre-commit decision.',
-    );
-
-    // Italic / underline are intentionally NOT in the composer —
-    // they belong to the full text panel post-create.
-    expect(
-      find.byTooltip('Italic'),
-      findsNothing,
       reason:
-          'Italic must not appear in the composer — it belongs '
-          'to the post-create text panel.',
+          'empty content stages the Persian default, so the strip must '
+          'open on the Persian list where that face can be shown selected',
     );
-    expect(
-      find.byTooltip('Underline'),
-      findsNothing,
-      reason:
-          'Underline must not appear in the composer — it belongs '
-          'to the post-create text panel.',
+    // The Font Room door rides at the end of the (virtualized)
+    // strip — drag the strip until it materializes. (Ahem renders
+    // every specimen glyph 19px square, so the strip is far wider
+    // here than with real fonts.)
+    await tester.dragUntilVisible(
+      find.byKey(const ValueKey('composer-font-all')),
+      find.byType(ListView).first,
+      const Offset(-150, 0),
     );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('composer-font-all')), findsOneWidget);
+    // Quick row anchors.
+    expect(find.byKey(const ValueKey('composer-ink-dot')), findsOneWidget);
+    expect(find.byKey(const ValueKey('composer-ink-ff000000')), findsOneWidget);
+    expect(find.byKey(const ValueKey('composer-bold')), findsOneWidget);
+    expect(find.byKey(const ValueKey('composer-italic')), findsOneWidget);
+    expect(find.byKey(const ValueKey('composer-underline')), findsOneWidget);
+    expect(find.byKey(const ValueKey('composer-size-minus')), findsOneWidget);
+    expect(find.byKey(const ValueKey('composer-size-plus')), findsOneWidget);
   });
 
   testWidgets('placeholder reads "Type something…"', (tester) async {
@@ -331,12 +329,8 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      // Open the colour tray and pick the red palette swatch.
-      await tester.tap(find.byKey(const ValueKey('add-text-color-pill')));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      final swatch = find.byKey(const ValueKey('color-picker-swatch-EF4444'));
+      // Pick the red quick ink straight off the rail.
+      final swatch = find.byKey(const ValueKey('composer-ink-ffef4444'));
       await tester.ensureVisible(swatch);
       await tester.pump();
       await tester.tap(swatch);
@@ -369,7 +363,7 @@ void main() {
             'seeds apart',
       );
 
-      final more = find.byKey(const ValueKey('add-text-more-colors'));
+      final more = find.byKey(const ValueKey('composer-ink-dot'));
       await tester.ensureVisible(more);
       await tester.pump();
       await tester.tap(more);
@@ -386,6 +380,116 @@ void main() {
             'never writes the default, so the old seed opened the wheel on '
             'untouched white and the first drag emitted a colour derived '
             'from the wrong HSV (audit P2-9).',
+      );
+    },
+  );
+
+  testWidgets(
+    'rail writes stage on the live edit session — zero history entries '
+    'until commit seals exactly one carrying face + ink + weight',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final docCtrl = container.read(documentControllerProvider.notifier);
+      docCtrl.newDocument(width: 400, height: 300);
+      docCtrl.execute(
+        AddLayerCommand(
+          TextLayer(
+            id: 'text-1',
+            transform: const LayerTransform(
+              position: Offset(40, 40),
+              size: Size(320, 120),
+            ),
+            content: 'Salam',
+            style: const TextStyleSpec(color: Color(0xFF000000)),
+          ),
+        ),
+      );
+      container.read(selectionControllerProvider.notifier).select('text-1');
+      final textCtrl = container.read(textToolControllerProvider.notifier);
+      final entries0 = docCtrl.historyTimeline.length;
+
+      // Mirror the real edit flow: session first, then the sheet.
+      textCtrl.beginEditText();
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Builder(
+              builder: (ctx) => Scaffold(
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showTextInputFlowSheet(
+                        ctx,
+                        initial: 'Salam',
+                        title: 'Edit text',
+                        confirmLabel: 'Done',
+                        onLiveChange: textCtrl.previewContent,
+                      );
+                    },
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      // Dress the text through the rail: face, ink, weight.
+      await tester.tap(find.byKey(const ValueKey('composer-font-Lobster')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('composer-ink-ffef4444')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('composer-bold')));
+      await tester.pump();
+
+      expect(
+        docCtrl.historyTimeline.length,
+        entries0,
+        reason:
+            'mid-session rail writes must stage on the overlay — history '
+            'is untouched until commit (contract §2)',
+      );
+      final staged =
+          container.read(renderedDocumentProvider).layerById('text-1')!
+              as TextLayer;
+      expect(staged.style.fontFamily, 'Lobster');
+      expect(staged.style.color.toARGB32(), 0xFFEF4444);
+      expect(staged.style.isBold, isTrue);
+
+      textCtrl.commitLiveEdit('Salam');
+      await tester.pump();
+
+      expect(
+        docCtrl.historyTimeline.length,
+        entries0 + 1,
+        reason: 'one session, one entry (§3)',
+      );
+      final committed =
+          container.read(documentControllerProvider).layerById('text-1')!
+              as TextLayer;
+      expect(committed.style.fontFamily, 'Lobster');
+      expect(committed.style.color.toARGB32(), 0xFFEF4444);
+      expect(committed.style.isBold, isTrue);
+
+      docCtrl.undo();
+      final undone =
+          container.read(documentControllerProvider).layerById('text-1')!
+              as TextLayer;
+      expect(
+        undone.style.fontFamily,
+        isNull,
+        reason: 'one undo returns the whole dressed session',
       );
     },
   );

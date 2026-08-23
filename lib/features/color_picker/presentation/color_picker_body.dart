@@ -538,8 +538,31 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
           onChangeEnd: () => _seal(recentsWorthy: true),
         ),
         const SizedBox(height: 10),
+        // Tonal ramp — one-tap tints and shades of the CURRENT hue.
+        // The SV square answers "any colour"; the ramp answers the
+        // far more common "this colour, but lighter / darker"
+        // without asking the finger to find the right corner.
+        _TonalRampRow(
+          hsv: _hsv,
+          onPick: (next) => _emit(next, committed: true, recentsWorthy: true),
+        ),
+        const SizedBox(height: 10),
         Row(
           children: [
+            // Before | after: the colour this session opened on
+            // beside the live mix. Tapping the original half
+            // restores it — the escape hatch a long wheel session
+            // never had short of undoing the whole edit.
+            _ComparePill(
+              initial: Color(_initialArgb),
+              current: _current,
+              onRestore: () {
+                EditorHaptics.tap();
+                // Not recents-worthy: restoring is un-mixing.
+                _emit(HSVColor.fromColor(Color(_initialArgb)), committed: true);
+              },
+            ),
+            const SizedBox(width: 8),
             if (_eyedropperAvailable) ...[
               _RoundIconButton(
                 key: const ValueKey('color-picker-eyedropper'),
@@ -569,6 +592,150 @@ class _ColorPickerBodyState extends ConsumerState<ColorPickerBody> {
           ],
         ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  Tonal ramp + before/after compare (custom level)
+// ─────────────────────────────────────────────────────────────────
+
+/// The ramp's (saturation, value) stops, light tint → deep shade.
+/// Six steps: enough to be useful, few enough that each is a
+/// meaningfully different tone. Hue and alpha always come from the
+/// live colour, so the ramp follows every hue-track drag.
+const List<(double, double)> _kTonalStops = <(double, double)>[
+  (0.12, 1.00),
+  (0.35, 1.00),
+  (0.60, 0.97),
+  (0.85, 0.88),
+  (0.95, 0.62),
+  (0.95, 0.38),
+];
+
+/// One-tap tints and shades of the current hue.
+class _TonalRampRow extends StatelessWidget {
+  const _TonalRampRow({required this.hsv, required this.onPick});
+
+  final HSVColor hsv;
+  final ValueChanged<HSVColor> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Semantics(
+      container: true,
+      label: context.l10n.colorTonesLabel,
+      child: SizedBox(
+        height: 36,
+        child: Row(
+          children: [
+            for (var i = 0; i < _kTonalStops.length; i++) ...[
+              if (i > 0) const SizedBox(width: 6),
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    final (s, v) = _kTonalStops[i];
+                    final tone = HSVColor.fromAHSV(hsv.alpha, hsv.hue, s, v);
+                    final toneColor = tone.toColor();
+                    return Semantics(
+                      button: true,
+                      label: colorSwatchName(context, toneColor),
+                      child: Material(
+                        color: toneColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(9),
+                          side: BorderSide(
+                            // The swatch-grammar boundary: a mid-tone
+                            // in both themes, so the white tint and
+                            // the near-black shade both keep an edge.
+                            color: tokens.textSecondary.withValues(alpha: 0.55),
+                          ),
+                        ),
+                        child: InkWell(
+                          key: ValueKey('color-picker-tone-$i'),
+                          borderRadius: BorderRadius.circular(9),
+                          onTap: () {
+                            EditorHaptics.tap();
+                            onPick(tone);
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Before | after split pill: the session's original colour beside
+/// the live mix. The original half is a button — tapping it restores
+/// the colour the picker opened on.
+class _ComparePill extends StatelessWidget {
+  const _ComparePill({
+    required this.initial,
+    required this.current,
+    required this.onRestore,
+  });
+
+  final Color initial;
+  final Color current;
+  final VoidCallback onRestore;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Semantics(
+      button: true,
+      label: context.l10n.restoreOriginalColorTooltip,
+      child: Tooltip(
+        message: context.l10n.restoreOriginalColorTooltip,
+        child: Container(
+          width: 64,
+          height: 40,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(
+              color: tokens.textSecondary.withValues(alpha: 0.55),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          // Checker under both halves so translucent colours read as
+          // translucent, same as the opacity track.
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const _CheckerPattern(),
+              Row(
+                // Stretch: both halves are paint-only boxes with no
+                // intrinsic height — centered, they collapse to zero
+                // and show bare checker.
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Material(
+                      color: initial,
+                      child: InkWell(
+                        key: const ValueKey('color-picker-compare-restore'),
+                        onTap: onRestore,
+                      ),
+                    ),
+                  ),
+                  Container(width: 1, color: tokens.surface),
+                  Expanded(
+                    child: ExcludeSemantics(child: ColoredBox(color: current)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -949,8 +1116,18 @@ class _SwatchPreviewDot extends StatelessWidget {
 /// full), on a hairline plus the extra group gutter, and on an
 /// explicit semantics container. Never on a second visual language.
 ///
-/// Height is constant in every state, so the section can no longer
-/// appear, disappear, or resize under an `AnimatedSize`.
+/// The EMPTY store costs zero rows: six inert rings plus a seam were
+/// ~70dp of dead vertical in every panel that embeds the picker —
+/// and the picker is embedded a lot (border, shadow, fill, paint,
+/// text). At zero the shelf is just the heading (carrying the
+/// what-fills-this hint) above the palette; the reserved-slot row
+/// and its seam appear WITH the first mixed colour and the height is
+/// constant from then on. The growth moment cannot shift under a
+/// finger for the same reason the commit fence records no
+/// shift-under-finger hazard: the wheel commits with the shelf
+/// unmounted, the eyedropper commits under a full-screen overlay,
+/// and hex commits while the keyboard owns focus — and the body's
+/// `AnimatedSize` turns the one-time growth into motion, not a jump.
 class ColorShelf extends ConsumerWidget {
   const ColorShelf({super.key, required this.current, required this.onPick});
 
@@ -1046,24 +1223,27 @@ class ColorShelf extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _ShelfHeading(
-              // Shown ONLY at zero, and in the heading's trailing slot
-              // rather than where the swatches go: the empty state is
-              // the shape of the full state, pre-drawn, plus one line
-              // saying what fills it. Six empty rings would be honest
-              // about capacity and say nothing about why it is empty.
+              // The hint rides the heading's trailing slot ONLY at
+              // zero — one line saying what will appear here, instead
+              // of a whole row of inert rings holding the door open.
               hint: mine.isEmpty ? context.l10n.colorsMixedHint : null,
             ),
-            Semantics(
-              container: true,
-              label: context.l10n.recentLabel,
-              child: Center(child: row(mineCells)),
-            ),
-            SizedBox(height: gutter),
-            // The group seam: a hairline spanning the grid, with the
-            // gutter above and below doing the Gestalt work.
-            // Direction-agnostic, and it costs one token.
-            Container(height: 1, color: tokens.border),
-            SizedBox(height: gutter),
+            // The reserved-slot row and its seam exist only once
+            // there is at least one mixed colour to anchor them (see
+            // the class doc — the empty store costs zero rows).
+            if (mine.isNotEmpty) ...[
+              Semantics(
+                container: true,
+                label: context.l10n.recentLabel,
+                child: Center(child: row(mineCells)),
+              ),
+              SizedBox(height: gutter),
+              // The group seam: a hairline spanning the grid, with the
+              // gutter above and below doing the Gestalt work.
+              // Direction-agnostic, and it costs one token.
+              Container(height: 1, color: tokens.border),
+              SizedBox(height: gutter),
+            ],
             Semantics(
               container: true,
               label: context.l10n.colorsLabel,

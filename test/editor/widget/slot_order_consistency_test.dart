@@ -3,9 +3,10 @@ import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.d
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
 import 'package:canvas_engine/features/editor/image/application/image_tool_controller.dart';
-import 'package:canvas_engine/features/editor/image/presentation/image_mode_toolbar.dart';
+import 'package:canvas_engine/features/editor/image/presentation/image_studio_bench.dart';
+import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:canvas_engine/features/editor/shape/application/shape_tool_controller.dart';
-import 'package:canvas_engine/features/editor/shape/presentation/shape_mode_toolbar.dart';
+import 'package:canvas_engine/features/editor/shape/presentation/shape_studio_bench.dart';
 import 'package:canvas_engine/features/editor/sticker/application/sticker_tool_controller.dart';
 import 'package:canvas_engine/features/editor/sticker/presentation/sticker_mode_toolbar.dart';
 import 'package:canvas_engine/features/editor/toolbar/presentation/slot_strip.dart';
@@ -40,7 +41,7 @@ void main() {
     return strip.slots.map((s) => s.id).toList();
   }
 
-  testWidgets('image swipe order derives from the rendered strip order', (
+  testWidgets('image swipe order follows the bench aspect-row order', (
     tester,
   ) async {
     final layer = ImageLayer(
@@ -51,31 +52,42 @@ void main() {
       ),
       source: const ImageSource.asset('assets/test.png'),
     );
-    final renderedIds = await pumpAndReadStripIds(
-      tester,
-      ImageModeToolbar(layer: layer),
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(height: 124, child: ImageStudioBench(layer: layer)),
+          ),
+        ),
+      ),
     );
+    await tester.pump();
 
-    // The strip renders the single-source list verbatim.
+    // The aspect track renders نما then سبک left-of/after برش; the
+    // swipe walk must visit the panel-bearing pair in that same
+    // visual order.
+    final lookX = tester
+        .getCenter(find.byKey(const ValueKey('image-aspect-look')))
+        .dx;
+    final styleX = tester
+        .getCenter(find.byKey(const ValueKey('image-aspect-style')))
+        .dx;
     expect(
-      renderedIds,
-      kImageStripOrder.map((e) => e.slot?.name ?? e.actionId).toList(),
+      lookX < styleX,
+      isTrue,
+      reason: 'LTR locale: look must render before style',
     );
-
-    // Swipe order == rendered order filtered to panel-bearing
-    // slots. 'opacity'/'more' are strip-only action chips and
-    // crop/replace are one-shot (isPanel: false) — none of them
-    // may be reachable by swipe.
-    final renderedPanelOrder = renderedIds
-        .map(ImageToolSlot.tryByName)
-        .whereType<ImageToolSlot>()
-        .where((s) => s.isPanel)
-        .toList();
-    expect(kImageSwipeStrategy.order, renderedPanelOrder);
-    expect(kImagePanelSlotOrder, renderedPanelOrder);
+    expect(kImageSwipeStrategy.order, kImagePanelSlotOrder);
+    expect(kImagePanelSlotOrder, const [
+      ImageToolSlot.look,
+      ImageToolSlot.style,
+    ]);
   });
 
-  testWidgets('shape swipe order derives from the rendered strip order', (
+  testWidgets('shape swipe order follows the bench aspect-row order', (
     tester,
   ) async {
     final layer = ShapeLayer(
@@ -86,23 +98,46 @@ void main() {
       ),
       kind: ShapeKind.rectangle,
     );
-    final renderedIds = await pumpAndReadStripIds(
-      tester,
-      ShapeModeToolbar(layer: layer, onReplaceTap: () {}),
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              height: 124,
+              child: ShapeStudioBench(layer: layer, onReplaceTap: () {}),
+            ),
+          ),
+        ),
+      ),
     );
+    await tester.pump();
 
+    // The aspect track renders رنگ then کادر then سایه; the swipe
+    // walk must visit the panel-bearing trio in that same visual
+    // order.
+    final styleX = tester
+        .getCenter(find.byKey(const ValueKey('shape-aspect-style')))
+        .dx;
+    final borderX = tester
+        .getCenter(find.byKey(const ValueKey('shape-aspect-border')))
+        .dx;
+    final shadowX = tester
+        .getCenter(find.byKey(const ValueKey('shape-aspect-shadow')))
+        .dx;
     expect(
-      renderedIds,
-      kShapeStripOrder.map((e) => e.slot?.name ?? e.actionId).toList(),
+      styleX < borderX && borderX < shadowX,
+      isTrue,
+      reason: 'LTR locale: style must render before border before shadow',
     );
-
-    final renderedPanelOrder = renderedIds
-        .map(ShapeToolSlot.tryByName)
-        .whereType<ShapeToolSlot>()
-        .where((s) => s.isPanel)
-        .toList();
-    expect(kShapeSwipeStrategy.order, renderedPanelOrder);
-    expect(kShapePanelSlotOrder, renderedPanelOrder);
+    expect(kShapeSwipeStrategy.order, kShapePanelSlotOrder);
+    expect(kShapePanelSlotOrder, const [
+      ShapeToolSlot.style,
+      ShapeToolSlot.border,
+      ShapeToolSlot.shadow,
+    ]);
   });
 
   testWidgets('sticker strip renders the single-source order (no swipe)', (

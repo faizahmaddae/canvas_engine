@@ -101,7 +101,9 @@ void main() {
       expect(find.textContaining('Quality'), findsNothing);
       expect(find.text('Save'), findsOneWidget);
       expect(find.text('Share'), findsOneWidget);
-      expect(find.text('Cancel'), findsOneWidget);
+      // Cancel is the header × alone — no third button restating it.
+      expect(find.text('Cancel'), findsNothing);
+      expect(find.byTooltip('Cancel'), findsOneWidget);
     });
 
     testWidgets('renders quality chip for JPG', (tester) async {
@@ -150,7 +152,8 @@ void main() {
       );
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cancel'));
+      // The header × is the single cancel affordance.
+      await tester.tap(find.byTooltip('Cancel'));
       await tester.pumpAndSettle();
       expect(popped, isNotNull);
       expect(popped!.action, ExportPreviewAction.cancel);

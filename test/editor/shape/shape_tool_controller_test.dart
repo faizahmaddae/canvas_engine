@@ -61,7 +61,9 @@ void main() {
       expect(c.read(shapeToolControllerProvider).openSlot, isNull);
     });
 
-    test('non-panel slots (replace) are unreachable by swipe', () {
+    test('swipe walk stays inside the panel order', () {
+      // Since the bench replaced the strip, every remaining slot IS a
+      // panel — the walk must simply never leave the declared order.
       final c = makeContainer();
       final ctrl = c.read(shapeToolControllerProvider.notifier);
       for (final start in kShapePanelSlotOrder) {
@@ -70,9 +72,9 @@ void main() {
           ctrl.openNextSlot();
           final reached = c.read(shapeToolControllerProvider).openSlot!;
           expect(
-            reached.isPanel,
-            isTrue,
-            reason: 'reached non-panel slot $reached from $start',
+            kShapePanelSlotOrder,
+            contains(reached),
+            reason: 'reached out-of-order slot $reached from $start',
           );
         }
         ctrl.closePanel();
@@ -83,12 +85,15 @@ void main() {
   group('ShapeToolSlot.tryByName', () {
     test('returns the matching slot for a known name', () {
       expect(ShapeToolSlot.tryByName('style'), ShapeToolSlot.style);
-      expect(ShapeToolSlot.tryByName('replace'), ShapeToolSlot.replace);
+      expect(ShapeToolSlot.tryByName('shadow'), ShapeToolSlot.shadow);
     });
 
-    test('returns null for unknown / null', () {
+    test('returns null for unknown / retired names', () {
       expect(ShapeToolSlot.tryByName(null), isNull);
       expect(ShapeToolSlot.tryByName('nope'), isNull);
+      // 'replace' retired with the strip — the bench's specimen chip
+      // owns the Replace door now.
+      expect(ShapeToolSlot.tryByName('replace'), isNull);
     });
   });
 

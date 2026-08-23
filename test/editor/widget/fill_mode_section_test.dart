@@ -186,7 +186,20 @@ void main() {
       final before = c.read(documentControllerProvider).background;
       expect(before, isA<SolidBackground>());
 
-      await tapGradient(tester);
+      // Redesigned panel: the gradient chip discloses the presets and
+      // a preset tap installs the gradient (docs/canvas-tool-redesign).
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('canvas-bg-gradient')),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('canvas-bg-gradient')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('canvas-gradient-preset-0')),
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('canvas-gradient-preset-0')));
+      await tester.pump();
       expect(
         c.read(documentControllerProvider).background,
         isA<LinearGradientBackground>(),

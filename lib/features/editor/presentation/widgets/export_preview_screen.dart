@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../l10n/l10n.dart';
 import '../../application/export_format.dart';
-import '../../application/export_intent.dart';
 import '../../application/export_session.dart';
 import '../../application/image_export_service.dart';
 import '../../canvas/presentation/widgets/canvas_checkerboard.dart';
@@ -38,11 +37,11 @@ class ExportPreviewOutcome {
 ///   * Save/Share go through [ImageExportService] (the same path the
 ///     sheet would have used), so the only behaviour difference vs
 ///     the no-preview flow is one extra confirmation tap.
-///   * The caller's [ExportIntent] *is* the primary action: the user
-///     already decided in the sheet, so the confirmation button
-///     repeats that decision rather than asking again. The other
-///     intent stays one tap away as a secondary button — changing
-///     your mind must not cost a trip back to the sheet.
+///   * This screen is THE decision point: the sheet configures and
+///     opens the preview; Save (primary) and Share (secondary) are
+///     chosen here, with the file on screen. Cancel is the header ×
+///     alone — a third button restating it made the action bar read
+///     as a second questionnaire.
 class ExportPreviewScreen extends ConsumerStatefulWidget {
   const ExportPreviewScreen({
     super.key,
@@ -51,7 +50,6 @@ class ExportPreviewScreen extends ConsumerStatefulWidget {
     required this.pixelWidth,
     required this.pixelHeight,
     this.jpgQuality,
-    this.intent = ExportIntent.save,
   }) : assert(
          format != ExportFormat.jpg || jpgQuality != null,
          'jpgQuality is required when format is JPG',
@@ -66,12 +64,6 @@ class ExportPreviewScreen extends ConsumerStatefulWidget {
   /// JPG quality as a 0.0..1.0 fraction. Null for PNG (no quality).
   final double? jpgQuality;
 
-  /// The exit the user picked in the sheet. Drives the primary
-  /// button's label, icon and action. Defaults to [ExportIntent.save]
-  /// — the historical primary — so callers that don't express an
-  /// intent get the previous layout unchanged.
-  final ExportIntent intent;
-
   /// Push the preview as a full-screen dialog and await the user's
   /// chosen action.
   static Future<ExportPreviewOutcome?> push(
@@ -81,7 +73,6 @@ class ExportPreviewScreen extends ConsumerStatefulWidget {
     required int pixelWidth,
     required int pixelHeight,
     double? jpgQuality,
-    ExportIntent intent = ExportIntent.save,
   }) {
     return Navigator.of(context).push<ExportPreviewOutcome>(
       MaterialPageRoute(
@@ -92,7 +83,6 @@ class ExportPreviewScreen extends ConsumerStatefulWidget {
           pixelWidth: pixelWidth,
           pixelHeight: pixelHeight,
           jpgQuality: jpgQuality,
-          intent: intent,
         ),
       ),
     );
@@ -325,38 +315,21 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
               ),
             ),
 
-            // Action bar. Order is Cancel · other intent · chosen
-            // intent, so the button under the user's thumb is the one
-            // they already asked for in the sheet.
+            // Action bar — the ONE decision point of the export flow:
+            // Share (quiet) beside Save (primary). No Cancel button;
+            // the header × is the single leave-without-exporting
+            // affordance. Three buttons here after two on the sheet
+            // read as being asked the same question twice.
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      key: const ValueKey('export-preview-cancel'),
-                      onPressed: _busy ? null : _onCancel,
-                      icon: const Icon(AppIcons.close),
-                      label: Text(context.l10n.cancelAction),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.25),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton.icon(
                       key: const ValueKey('export-preview-secondary'),
-                      onPressed: _busy ? null : _actionFor(_secondaryIntent),
-                      icon: Icon(_iconFor(_secondaryIntent)),
-                      label: Text(_labelFor(context, _secondaryIntent)),
+                      onPressed: _busy ? null : _onShare,
+                      icon: const Icon(AppIcons.share),
+                      label: Text(context.l10n.shareAction),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: BorderSide(
@@ -373,9 +346,9 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
                   Expanded(
                     child: FilledButton.icon(
                       key: const ValueKey('export-preview-primary'),
-                      onPressed: _busy ? null : _actionFor(widget.intent),
-                      icon: Icon(_iconFor(widget.intent)),
-                      label: Text(_labelFor(context, widget.intent)),
+                      onPressed: _busy ? null : _onSave,
+                      icon: const Icon(AppIcons.exportSave),
+                      label: Text(context.l10n.saveAction),
                       style: FilledButton.styleFrom(
                         backgroundColor: onDark.brand,
                         foregroundColor: onDark.onBrand,
@@ -395,30 +368,6 @@ class _ExportPreviewScreenState extends ConsumerState<ExportPreviewScreen> {
       ),
     );
   }
-
-  /// The intent the user did *not* pick — offered as the secondary
-  /// button so a change of mind never costs a trip back to the sheet
-  /// (and a second render of the same bytes).
-  ExportIntent get _secondaryIntent => switch (widget.intent) {
-    ExportIntent.save => ExportIntent.share,
-    ExportIntent.share => ExportIntent.save,
-  };
-
-  String _labelFor(BuildContext context, ExportIntent intent) =>
-      switch (intent) {
-        ExportIntent.save => context.l10n.saveAction,
-        ExportIntent.share => context.l10n.shareAction,
-      };
-
-  IconData _iconFor(ExportIntent intent) => switch (intent) {
-    ExportIntent.save => AppIcons.exportSave,
-    ExportIntent.share => AppIcons.share,
-  };
-
-  VoidCallback _actionFor(ExportIntent intent) => switch (intent) {
-    ExportIntent.save => _onSave,
-    ExportIntent.share => _onShare,
-  };
 
   void _onCancel() {
     Navigator.of(

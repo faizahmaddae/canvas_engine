@@ -1,4 +1,5 @@
 import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
+import 'package:canvas_engine/features/editor/paint/domain/paint_bench_slot.dart';
 import 'package:canvas_engine/features/editor/paint/domain/paint_tool_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,6 +41,65 @@ void main() {
       final s = c.read(paintToolControllerProvider);
       expect(s.panelOpen, isTrue);
       expect(s.activeTool, PaintToolType.freestyle);
+    });
+
+    test('the rack arms family slots from their remembered variant', () {
+      final c = makeContainer();
+      final ctrl = c.read(paintToolControllerProvider.notifier);
+      // Defaults: solid line, rectangle.
+      ctrl.armBenchSlot(PaintBenchSlot.line);
+      expect(
+        c.read(paintToolControllerProvider).activeTool,
+        PaintToolType.line,
+      );
+      ctrl.armBenchSlot(PaintBenchSlot.shape);
+      expect(
+        c.read(paintToolControllerProvider).activeTool,
+        PaintToolType.rectangle,
+      );
+      // Picking a variant teaches the slot.
+      ctrl.selectTool(PaintToolType.dashLine);
+      ctrl.selectTool(PaintToolType.hexagon);
+      ctrl.armBenchSlot(PaintBenchSlot.line);
+      expect(
+        c.read(paintToolControllerProvider).activeTool,
+        PaintToolType.dashLine,
+      );
+      ctrl.armBenchSlot(PaintBenchSlot.shape);
+      expect(
+        c.read(paintToolControllerProvider).activeTool,
+        PaintToolType.hexagon,
+      );
+    });
+
+    test('enterAdjust un-arms the tool, keeps the mode and the sheet '
+        'closed', () {
+      final c = makeContainer();
+      final ctrl = c.read(paintToolControllerProvider.notifier);
+      ctrl.selectTool(PaintToolType.freestyle);
+      ctrl.toggleSlot('pen');
+      ctrl.armBenchSlot(PaintBenchSlot.adjust);
+      final s = c.read(paintToolControllerProvider);
+      expect(s.panelOpen, isTrue);
+      expect(s.activeTool, isNull);
+      expect(s.openSlot, isNull);
+    });
+
+    test('re-tapping the eraser slot does not bounce back to drawing', () {
+      final c = makeContainer();
+      final ctrl = c.read(paintToolControllerProvider.notifier);
+      ctrl.selectTool(PaintToolType.freestyle);
+      ctrl.armBenchSlot(PaintBenchSlot.eraser);
+      expect(
+        c.read(paintToolControllerProvider).activeTool,
+        PaintToolType.eraser,
+      );
+      ctrl.armBenchSlot(PaintBenchSlot.eraser);
+      expect(
+        c.read(paintToolControllerProvider).activeTool,
+        PaintToolType.eraser,
+        reason: 'rack tiles arm; they do not toggle the tool away',
+      );
     });
 
     test('selectTool ignores unavailable tools', () {

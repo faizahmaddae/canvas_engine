@@ -18,7 +18,7 @@ import '../../../engine/core/editor_document.dart';
 import '../../../engine/modules/text/text_layer.dart';
 import '../../../text/application/text_tool_controller.dart';
 import '../../../ui/editor_slider_row.dart';
-import '../../widgets/controls/panel_chip.dart';
+import '../../widgets/controls/connected_track.dart';
 import '../../../../../core/utils/editor_value_format.dart';
 import '../../../../../app/theme/app_icons.dart';
 
@@ -179,32 +179,83 @@ class SizeBody extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 10),
-        WordChipRow(
-          options: presets,
-          current: style.fontSize,
-          selectedLabel: selectedLabel,
-          tolerance: tolerance,
-          onPick: (value) {
-            // Look the tapped value back up to recover its label;
-            // identical instance equality holds because the chip
-            // hands back the exact double from the same `presets`
-            // list this build computed.
-            final hit = presets.firstWhere(
-              (p) => p.value == value,
-              orElse: () => (label: '', value: value),
-            );
-            if (hit.label.isEmpty) {
-              ctrl.setFontSize(value);
-            } else {
-              ctrl.setFontSizeFromPreset(
-                size: value,
-                presetLabel: hit.label,
-                layerId: layer.id,
-              );
-            }
-          },
+        // The named sizes as ONE five-segment instrument (the studio
+        // track grammar) instead of five loose chips. Selection is
+        // nearest-match: exactly one segment highlights — the sticky
+        // pin wins, else the closest preset within [tolerance].
+        SizedBox(
+          height: 44,
+          child: ConnectedTrack(
+            segments: [
+              for (final p in presets)
+                TrackSegmentSpec(
+                  semanticLabel: p.label,
+                  active:
+                      p.label ==
+                      (selectedLabel ??
+                          _nearestLabel(presets, style.fontSize, tolerance)),
+                  // Haptic fires in the track segment (kit convention).
+                  onTap: () => ctrl.setFontSizeFromPreset(
+                    size: p.value,
+                    presetLabel: p.label,
+                    layerId: layer.id,
+                  ),
+                  child: _TrackLabel(
+                    text: p.label,
+                    active:
+                        p.label ==
+                        (selectedLabel ??
+                            _nearestLabel(presets, style.fontSize, tolerance)),
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
+    );
+  }
+
+  /// Nearest preset label to [current], or null when the closest one
+  /// is further than [tolerance] (manual edits far from any preset
+  /// clear the selection entirely).
+  static String? _nearestLabel(
+    List<({String label, double value})> presets,
+    double current,
+    double tolerance,
+  ) {
+    String? best;
+    double bestDelta = double.infinity;
+    for (final p in presets) {
+      final delta = (current - p.value).abs();
+      if (delta < bestDelta) {
+        bestDelta = delta;
+        best = p.label;
+      }
+    }
+    return bestDelta <= tolerance ? best : null;
+  }
+}
+
+/// Segment label on the shared 12.5px track type.
+class _TrackLabel extends StatelessWidget {
+  const _TrackLabel({required this.text, required this.active});
+
+  final String text;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: 12.5,
+        fontWeight: FontWeight.w700,
+        color: active ? tokens.accentText : tokens.textPrimary,
+        letterSpacing: 0.1,
+      ),
     );
   }
 }
@@ -310,19 +361,26 @@ class _SizeValueChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
+    // The bordered value-instrument look the bench's type cluster
+    // established — the chip reads as a readout you can open, not
+    // another muted lozenge.
     return Semantics(
       button: true,
       label: context.l10n.exactSizeTitle,
       child: Material(
-        color: tokens.surfaceMuted.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(10),
+        color: tokens.surface,
+        borderRadius: BorderRadius.circular(11),
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(11),
           onTap: onTap,
           child: Container(
             constraints: const BoxConstraints(minWidth: 58),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(color: tokens.border.withValues(alpha: 0.7)),
+            ),
             child: Text(
               EditorValueFormat.of(context).px(value.round()),
               style: TextStyle(

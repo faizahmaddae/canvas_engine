@@ -183,11 +183,11 @@ void main() {
     print('  → wrote ${outputDir.path}/$fileName (${bytes.length} bytes)');
   }
 
-  /// The Add-Text composer's colour tray, which renders the SAME
-  /// shelf as the picker after 2/2. Captured because it is the
-  /// surface that used to ship a second implementation — a reviewer
-  /// should be able to hold this PNG next to `color_picker_partial_*`
-  /// and see one grammar, not two.
+  /// The Studio Composer's style rail (Text Studio redesign): the
+  /// quick-ink row shares the palette head with the paint bench, and
+  /// the ink dot opens the SAME shared picker sheet — captured so a
+  /// reviewer can hold this PNG next to `color_picker_partial_*` and
+  /// see one colour grammar across surfaces.
   Future<void> captureComposer(
     WidgetTester tester, {
     required Brightness brightness,
@@ -248,13 +248,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    final pill = find.byKey(const ValueKey('add-text-color-pill'));
-    await tester.ensureVisible(pill);
-    await tester.pump();
-    await tester.tap(pill);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byType(ColorShelf), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('composer-ink-dot')),
+      findsOneWidget,
+      reason: 'the rail is the composer colour surface now',
+    );
 
     final boundary =
         composerKey.currentContext!.findRenderObject()!
@@ -275,7 +273,7 @@ void main() {
   for (final brightness in Brightness.values) {
     final name = brightness == Brightness.dark ? 'dark' : 'light';
 
-    testWidgets('add-text composer colour tray — $name', (tester) async {
+    testWidgets('add-text composer style rail — $name', (tester) async {
       await captureComposer(
         tester,
         brightness: brightness,

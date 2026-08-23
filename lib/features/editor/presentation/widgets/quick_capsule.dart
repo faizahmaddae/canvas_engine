@@ -193,7 +193,10 @@ class QuickCapsule extends ConsumerWidget {
     final l = layer;
 
     if (l is TextLayer && !l.isSticker) {
-      final ctrl = ref.read(textToolControllerProvider.notifier);
+      // Edit only. The colour dot and px readout the capsule used to
+      // carry duplicated the Studio Bench's identity row one gesture
+      // away — the exact double-surface the July one-bar doc killed
+      // (Text Studio redesign §4).
       return [
         _CapsuleItem(
           semanticLabel: l10n.editTextAction,
@@ -201,28 +204,6 @@ class QuickCapsule extends ConsumerWidget {
           onTap: () {
             EditorHaptics.tap();
             showEditTextLayerFlow(context, ref, l);
-          },
-        ),
-        _CapsuleItem(
-          semanticLabel: l10n.colorLabel,
-          child: FloatingColorDot(color: l.style.color),
-          onTap: () {
-            EditorHaptics.tap();
-            ctrl.toggleSheet('color');
-          },
-        ),
-        _CapsuleItem(
-          semanticLabel: l10n.sizeTool,
-          estWidth: 48,
-          child: Text(
-            // VISUAL px (tb2 12/16) — raw fontSize lies after
-            // corner drags on scaleText layers.
-            EditorValueFormat.of(context).px(ctrl.visualFontSizeOf(l).round()),
-            style: _readoutStyle(tokens),
-          ),
-          onTap: () {
-            EditorHaptics.tap();
-            ctrl.toggleSheet('size');
           },
         ),
       ];
@@ -324,7 +305,9 @@ class QuickCapsule extends ConsumerWidget {
           ),
           onTap: () {
             EditorHaptics.tap();
-            ctrl.toggleSlot('size');
+            // The bench's pen sheet owns size (+ opacity) since the
+            // 2026-08 redesign; the old standalone 'size' slot died.
+            ctrl.toggleSlot('pen');
           },
         ),
       ];

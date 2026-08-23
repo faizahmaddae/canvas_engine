@@ -4,9 +4,8 @@ import 'package:canvas_engine/features/editor/engine/commands/transform_commands
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/shape/shape_layer.dart';
 import 'package:canvas_engine/features/editor/engine/modules/text/text_layer.dart';
-import 'package:canvas_engine/features/editor/presentation/widgets/dock_tool_tile.dart';
 import 'package:canvas_engine/features/editor/presentation/widgets/multi_select_mode_toolbar.dart';
-import 'package:canvas_engine/features/editor/text/presentation/text_mode_toolbar.dart';
+import 'package:canvas_engine/features/editor/text/presentation/text_studio_bench.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,7 +71,7 @@ void main() {
   });
 
   testWidgets(
-    'text toolbar surfaces Persian Font Size Color Style Align More',
+    'text studio bench surfaces Persian labels and the identity row',
     (tester) async {
       tester.view.physicalSize = const Size(560, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -103,41 +102,41 @@ void main() {
       await tester.pumpWidget(
         localizedHost(
           container,
-          const SizedBox(width: 560, height: 120, child: TextModeToolbar()),
+          const SizedBox(width: 560, height: 124, child: TextStudioBench()),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('قلم'), findsOneWidget);
-      expect(find.text('اندازه'), findsOneWidget);
-      expect(find.text('رنگ'), findsOneWidget);
+      // Aspect row: three wide Persian chips, no English fallbacks.
       expect(find.text('سبک'), findsOneWidget);
-      expect(find.text('تراز'), findsOneWidget);
+      expect(find.text('چیدمان'), findsOneWidget);
       expect(find.text('بیشتر'), findsOneWidget);
-      expect(find.text('چیدمان'), findsNothing);
       expect(find.text('More actions'), findsNothing);
       expect(find.text('More'), findsNothing);
-      // Bar consolidation (2026-07): decoration tiles are gone from
-      // the bar — سایه/زمینه route through سبک's effect chips,
-      // کادر is the خط دور chip, تغییر اندازه lives under بیشتر.
-      // The strip is exactly these six tiles and never scrolls.
-      expect(find.text('سایه'), findsNothing);
-      expect(find.text('زمینه'), findsNothing);
-      expect(find.text('پس‌زمینه'), findsNothing);
-      expect(find.text('کادر'), findsNothing);
-      expect(find.text('تغییر اندازه'), findsNothing);
-      expect(find.byType(DockToolTile), findsNWidgets(6));
-      final strip = tester.state<ScrollableState>(
-        find.descendant(
-          of: find.byType(TextModeToolbar),
-          matching: find.byType(Scrollable),
-        ),
-      );
-      expect(
-        strip.position.maxScrollExtent,
-        0,
-        reason: 'the consolidated 6-tile bar must not scroll',
-      );
+      expect(find.text('Layout'), findsNothing);
+      // Identity row: specimen + font pill + size pill + ink dot —
+      // the six anonymous tiles are gone.
+      expect(find.byKey(const ValueKey('text-specimen')), findsOneWidget);
+      expect(find.byKey(const ValueKey('text-pill-font')), findsOneWidget);
+      expect(find.byKey(const ValueKey('text-pill-size')), findsOneWidget);
+      expect(find.byKey(const ValueKey('text-ink-dot')), findsOneWidget);
+      // Touch floors: every bench tap target meets the 44dp rule.
+      // The aspect segments must STRETCH to the track height — the
+      // first bench let them collapse to their 18dp intrinsic row
+      // and shipped chips too thin to touch.
+      for (final k in const [
+        'text-aspect-look',
+        'text-aspect-layout',
+        'text-aspect-more',
+        'text-ink-dot',
+        'text-specimen',
+      ]) {
+        expect(
+          tester.getSize(find.byKey(ValueKey(k))).height,
+          greaterThanOrEqualTo(44),
+          reason: '$k must meet the 44dp touch floor',
+        );
+      }
       expect(tester.takeException(), isNull);
     },
   );

@@ -44,22 +44,20 @@ import '../engine/modules/text/text_layer.dart';
 import '../image/application/image_target.dart';
 import '../image/application/image_tool_controller.dart';
 import '../image/application/main_strip_image_entry.dart';
-import '../image/presentation/image_border_body.dart';
 import '../image/presentation/image_look_body.dart';
+import '../image/presentation/image_style_body.dart';
 import 'widgets/history_browser_sheet.dart';
-import '../image/presentation/image_mode_toolbar.dart';
-import '../image/presentation/image_effects_body.dart';
+import '../image/presentation/image_studio_bench.dart';
 import 'sticker_picker_sheet.dart';
-import '../image/presentation/image_shadow_body.dart';
-import '../image/presentation/image_shape_body.dart';
 import '../paint/application/paint_tool_controller.dart';
 import '../paint/domain/paint_tool_type.dart';
+import '../paint/presentation/paint_bench.dart';
 import '../paint/presentation/paint_mode_expansion.dart';
-import '../paint/presentation/paint_mode_toolbar.dart';
+import '../paint/presentation/paint_size_rail.dart';
 import '../shape/application/shape_tool_controller.dart';
 import '../shape/presentation/shape_border_body.dart';
 import '../shape/presentation/shape_shadow_body.dart';
-import '../shape/presentation/shape_mode_toolbar.dart';
+import '../shape/presentation/shape_studio_bench.dart';
 import '../shape/presentation/shape_style_body.dart';
 import 'shape_picker_sheet.dart';
 import '../sticker/application/sticker_tool_controller.dart';
@@ -67,7 +65,7 @@ import '../sticker/presentation/sticker_mode_toolbar.dart';
 import '../text/application/text_tool_controller.dart';
 import '../text/application/add_text_composer_state.dart';
 import '../text/presentation/text_input_flow_sheet.dart';
-import '../text/presentation/text_mode_toolbar.dart';
+import '../text/presentation/text_studio_bench.dart';
 import '../toolbar/presentation/mode_done_button.dart';
 import 'widgets/editor_canvas.dart';
 import 'widgets/mask_edit_overlay.dart' show confirmAbandonMaskEdit;
@@ -361,6 +359,13 @@ class EditorScreen extends ConsumerWidget {
                     end: 8,
                     child: SafeArea(child: _ModeExitPill()),
                   ),
+                // Canvas-side stroke-width rail — floating paint
+                // chrome; renders nothing unless an inking paint
+                // tool is armed (see PaintSizeRail.visibleFor).
+                if (!cropActive && !maskEditActive && !textFlowOpen)
+                  const Positioned.fill(
+                    child: SafeArea(child: PaintSizeRailHost()),
+                  ),
                 // Centralised Crop Mode overlay — full-screen, owns the
                 // entire scaffold body when active. Mounted **last** so
                 // it paints above any residual floating rails / chrome.
@@ -379,10 +384,22 @@ class EditorScreen extends ConsumerWidget {
                   modeKey: dock.modeKey,
                   expanded: dock.expanded,
                   expandedKey: dock.expandedKey,
-                  child: dock.paintOpen
-                      ? const PaintModeToolbar()
+                  // The paint and text benches are two rows (style/
+                  // identity + rack/aspects); every other mode keeps
+                  // the standard strip height.
+                  height: dock.paintOpen
+                      ? PaintBench.dockHeight(dockContext)
                       : dock.textMode
-                      ? const TextModeToolbar()
+                      ? TextStudioBench.dockHeight(dockContext)
+                      : dock.selectedImageLayer != null && !dock.multiSelected
+                      ? ImageStudioBench.dockHeight(dockContext)
+                      : dock.selectedShapeLayer != null && !dock.multiSelected
+                      ? ShapeStudioBench.dockHeight(dockContext)
+                      : null,
+                  child: dock.paintOpen
+                      ? const PaintBench()
+                      : dock.textMode
+                      ? const TextStudioBench()
                       : dock.multiSelected
                       ? MultiSelectModeToolbar(
                           layers: dock.selectedLayersForActions,
@@ -392,9 +409,9 @@ class EditorScreen extends ConsumerWidget {
                       : dock.selectedStickerLayer != null
                       ? StickerModeToolbar(layer: dock.selectedStickerLayer!)
                       : dock.selectedImageLayer != null
-                      ? ImageModeToolbar(layer: dock.selectedImageLayer!)
+                      ? ImageStudioBench(layer: dock.selectedImageLayer!)
                       : dock.selectedShapeLayer != null
-                      ? ShapeModeToolbar(
+                      ? ShapeStudioBench(
                           layer: dock.selectedShapeLayer!,
                           onReplaceTap: () => _openReplaceShapePicker(
                             context,
@@ -644,7 +661,7 @@ class EditorScreen extends ConsumerWidget {
           'context:${contextPanel.name}:'
           '${contextPanelLayers.map((l) => l.id).join(',')}';
     } else if (textSelected && textOpenSheet != null) {
-      expanded = const TextModeSheetPanel();
+      expanded = const TextStudioSheetPanel();
       expandedKey = 'text-sheet:$textOpenSheet';
     } else if (paintOpen && paintOpenSlot != null) {
       expanded = const PaintModeInlineExpansion();
@@ -671,28 +688,13 @@ class EditorScreen extends ConsumerWidget {
         imageToolControllerProvider.select((s) => s.openSlot),
       );
       switch (imageOpenSlot) {
-        case ImageToolSlot.shape:
-          expanded = ImageShapeBody(layer: selectedImageLayer);
-          expandedKey = 'image-shape:${selectedImageLayer.id}';
         case ImageToolSlot.look:
           expanded = ImageLookBody(layer: selectedImageLayer);
           expandedKey = 'image-look:${selectedImageLayer.id}';
-        case ImageToolSlot.border:
-          expanded = ImageBorderBody(layer: selectedImageLayer);
-          expandedKey = 'image-border:${selectedImageLayer.id}';
-        case ImageToolSlot.shadow:
-          expanded = ImageShadowBody(layer: selectedImageLayer);
-          expandedKey = 'image-shadow:${selectedImageLayer.id}';
-        case ImageToolSlot.effects:
-          expanded = ImageEffectsBody(layer: selectedImageLayer);
-          expandedKey = 'image-effects:${selectedImageLayer.id}';
-        case ImageToolSlot.crop:
-        case ImageToolSlot.selective:
-        case ImageToolSlot.replace:
+        case ImageToolSlot.style:
+          expanded = ImageStyleBody(layer: selectedImageLayer);
+          expandedKey = 'image-style:${selectedImageLayer.id}';
         case null:
-          // 'crop' opens the full-screen CropModeOverlay,
-          // 'selective' the on-canvas mask-edit mode, and 'replace'
-          // is a one-shot picker. None owns an inline dock body.
           break;
       }
     } else if (shapeSelected) {
@@ -709,7 +711,6 @@ class EditorScreen extends ConsumerWidget {
         case ShapeToolSlot.shadow:
           expanded = ShapeShadowBody(layer: selectedShapeLayer);
           expandedKey = 'shape-shadow:${selectedShapeLayer.id}';
-        case ShapeToolSlot.replace:
         case null:
           break;
       }
@@ -839,7 +840,7 @@ class EditorScreen extends ConsumerWidget {
   }
 
   /// Selected layer when it's a [ShapeLayer], else `null`. Used to
-  /// swap in [ShapeModeToolbar] for shape-specific sub-tools.
+  /// swap in [ShapeStudioBench] for shape-specific sub-tools.
   ShapeLayer? _selectedShapeLayer(WidgetRef ref) {
     final layer = _selectedMergedLayer(ref);
     return layer is ShapeLayer ? layer : null;
@@ -847,7 +848,7 @@ class EditorScreen extends ConsumerWidget {
 
   /// Selected layer when it's an emoji-sticker [TextLayer], else
   /// `null`. Drives the Sticker mode toolbar; normal text layers are
-  /// excluded so they continue to route to [TextModeToolbar].
+  /// excluded so they continue to route to [TextStudioBench].
   TextLayer? _selectedStickerLayer(WidgetRef ref) {
     final layer = _selectedMergedLayer(ref);
     return (layer is TextLayer && layer.isSticker) ? layer : null;
@@ -1105,9 +1106,19 @@ class EditorScreen extends ConsumerWidget {
         return const Size(80, 280);
       case ShapeKind.speechBubble:
       case ShapeKind.quoteBubble:
+      case ShapeKind.thoughtBubble:
         // Bubbles read better as a wide rectangle so the body has
         // room for text the user is likely to add on top.
         return const Size(280, 200);
+      case ShapeKind.parallelogram:
+      case ShapeKind.trapezoid:
+      case ShapeKind.cloud:
+        // Wide free-form quads / the cloud land in their natural
+        // landscape proportion instead of a square.
+        return const Size(280, 180);
+      case ShapeKind.semicircle:
+        // A dome is half a circle — half the height, too.
+        return const Size(260, 130);
       case ShapeKind.rectangle:
       case ShapeKind.roundedRectangle:
       case ShapeKind.oval:
@@ -1120,6 +1131,15 @@ class EditorScreen extends ConsumerWidget {
       case ShapeKind.plus:
       case ShapeKind.check:
       case ShapeKind.cross:
+      case ShapeKind.pentagon:
+      case ShapeKind.octagon:
+      case ShapeKind.rightTriangle:
+      case ShapeKind.ring:
+      case ShapeKind.sparkle:
+      case ShapeKind.seal:
+      case ShapeKind.bolt:
+      case ShapeKind.shield:
+      case ShapeKind.crescent:
         return const Size(220, 220);
     }
   }

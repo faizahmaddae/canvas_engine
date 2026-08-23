@@ -1123,6 +1123,48 @@ class AppLocalizationsFa extends AppLocalizations {
   String get shapeKindArrowDown => 'فلش پایین';
 
   @override
+  String get shapeKindPentagon => 'پنج‌ضلعی';
+
+  @override
+  String get shapeKindOctagon => 'هشت‌ضلعی';
+
+  @override
+  String get shapeKindSemicircle => 'نیم‌دایره';
+
+  @override
+  String get shapeKindRightTriangle => 'مثلث قائم';
+
+  @override
+  String get shapeKindParallelogram => 'متوازی‌الاضلاع';
+
+  @override
+  String get shapeKindTrapezoid => 'ذوزنقه';
+
+  @override
+  String get shapeKindRing => 'حلقه';
+
+  @override
+  String get shapeKindSparkle => 'درخشش';
+
+  @override
+  String get shapeKindSeal => 'نشان';
+
+  @override
+  String get shapeKindBolt => 'آذرخش';
+
+  @override
+  String get shapeKindShield => 'سپر';
+
+  @override
+  String get shapeKindCrescent => 'هلال';
+
+  @override
+  String get shapeKindCloud => 'ابر';
+
+  @override
+  String get shapeKindThoughtBubble => 'فکر';
+
+  @override
   String get addPhotoAction => 'افزودن عکس';
 
   @override
@@ -1137,9 +1179,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get toolNeedsPhotoHint => 'به یک عکس قابل‌مشاهده نیاز دارد';
-
-  @override
-  String get toolNeedsEffectHint => 'به دست‌کم یک جلوه نیاز دارد';
 
   @override
   String get cropActionVerb => 'برش';
@@ -1244,7 +1283,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get stylesTool => 'سبک';
 
   @override
-  String get layoutTool => 'تراز';
+  String get layoutTool => 'چیدمان';
 
   @override
   String get resizeTool => 'تغییر اندازه';
@@ -1312,6 +1351,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get typeSomethingHint => 'چیزی بنویسید…';
+
+  @override
+  String get colorTonesLabel => 'سایه‌روشن';
+
+  @override
+  String get restoreOriginalColorTooltip => 'بازگشت به رنگ اولیه';
 
   @override
   String get colorsLabel => 'رنگ‌ها';
@@ -1567,12 +1612,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get copyColorTooltip => 'کپی کد رنگ';
 
   @override
-  String get toolLabel => 'ابزار';
-
-  @override
-  String get chooseToolTitle => 'انتخاب ابزار';
-
-  @override
   String get thinOption => 'نازک';
 
   @override
@@ -1609,15 +1648,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get drawGroup => 'نقاشی';
-
-  @override
-  String get shapesGroup => 'شکل‌ها';
-
-  @override
-  String get effectsGroup => 'جلوه‌ها';
-
-  @override
   String get penTool => 'قلم';
 
   @override
@@ -1633,25 +1663,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get dottedOption => 'نقطه‌چین';
 
   @override
-  String get dashDotOption => 'خط و نقطه';
-
-  @override
   String get eraserTool => 'پاک‌کن';
 
   @override
-  String get eraseStrokesTool => 'پاک‌کردن خط‌ها';
+  String get adjustStrokesTool => 'انتخاب';
 
   @override
-  String get newShortLabel => 'جدید';
+  String get paintEraserHint => 'برای پاک‌کردن، روی خط‌ها بزنید یا بکشید';
 
   @override
-  String get newStrokeTool => 'خط جدید';
-
-  @override
-  String get nextStrokeScope => 'خط بعدی';
-
-  @override
-  String get editingStrokeScope => 'ویرایش این خط';
+  String get paintTapStrokeHint => 'برای ویرایش، روی یک خط بزنید';
 
   @override
   String get squareLabel => 'مربع';
@@ -1758,19 +1779,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get vignetteSubtitle => 'تیره‌سازی شعاعی نرم از مرکز';
 
   @override
-  String get noEffectsApplied => 'هیچ جلوه‌ای اعمال نشده است.';
-
-  @override
-  String get openLookToAddEffectHint => 'برای اضافه کردن، «فیلتر» را باز کنید.';
-
-  @override
   String get selectiveMaskLabel => 'انتخابی';
 
   @override
   String get selectiveMaskHint => 'محدود کردن جلوه‌ها به بخشی از لایه';
-
-  @override
-  String get addEffectToMaskHint => 'برای ماسک انتخابی یک جلوه اضافه کنید.';
 
   @override
   String get maskPresetOff => 'خاموش';
@@ -1869,6 +1881,17 @@ class AppLocalizationsFa extends AppLocalizations {
       'پس‌زمینه فقط پشت بخش‌های شفاف یا پوشانده‌نشده عکس دیده می‌شود.';
 
   @override
+  String get rotateCanvasAction => 'چرخش بوم';
+
+  @override
+  String get layersOutsideCanvasNote =>
+      'برخی لایه‌ها اکنون بیرون بوم هستند؛ با کشیدن برشان گردانید.';
+
+  @override
+  String get gradientPickHint =>
+      'برای استفاده به‌عنوان پس‌زمینه، یک طیف را انتخاب کنید.';
+
+  @override
   String get resetCropAction => 'بازنشانی برش';
 
   @override
@@ -1876,6 +1899,14 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get restoreImageAction => 'بازیابی تصویر';
+
+  @override
+  String get cropOrientationAction => 'چرخش نسبت';
+
+  @override
+  String cropOutputSizeLabel(String width, String height) {
+    return 'اندازه برش $width در $height پیکسل';
+  }
 
   @override
   String get freeOption => 'آزاد';
@@ -1893,12 +1924,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get formatLabel => 'فرمت';
-
-  @override
-  String get previewShareAction => 'پیش‌نمایش و اشتراک';
-
-  @override
-  String get previewSaveAction => 'پیش‌نمایش و ذخیره';
 
   @override
   String get savedToPhotoLibrary => 'در گالری عکس ذخیره شد';

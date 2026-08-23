@@ -171,7 +171,7 @@ void main() {
       }
     });
 
-    testWidgets('the shelf reserves six slots whatever the store holds', (
+    testWidgets('the shelf costs zero rows empty, six slots once mixing', (
       tester,
     ) async {
       final container = await _openSheet(
@@ -179,14 +179,14 @@ void main() {
         initial: const Color(0xFF000000),
       );
 
-      // Empty store: six reserved slots, all of them, plus the one
-      // line explaining what fills them. The section must not
-      // collapse — its height is the same in every state.
+      // Empty store: NO reserved row at all — six inert rings were
+      // ~70dp of dead vertical in every panel embedding the picker.
+      // The heading's hint line alone says what will appear here.
       for (var i = 0; i < 6; i++) {
         expect(
           find.byKey(ValueKey('color-picker-slot-$i')),
-          findsOneWidget,
-          reason: 'slot $i must be reserved even with an empty store',
+          findsNothing,
+          reason: 'an empty store must not reserve visible slots',
         );
       }
       expect(find.text('Colors you mix land here'), findsOneWidget);

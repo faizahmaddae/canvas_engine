@@ -62,7 +62,9 @@ class ScriptTabSwitcher extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           curve: Curves.easeOutCubic,
-          height: 26,
+          // 32 (was 26): the row grew to a 40dp band so the script
+          // switch stops being the panel's thinnest target.
+          height: 32,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           alignment: Alignment.center,
           decoration: BoxDecoration(

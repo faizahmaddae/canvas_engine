@@ -55,7 +55,7 @@ class ShadowPanelAdapter<L extends EditorLayer> {
 }
 
 /// Shared "Shadow" sub-tool panel body for any layer type with a
-/// [ShadowPanelAdapter]. Unifies `ShapeShadowBody`/`ImageShadowBody`
+/// [ShadowPanelAdapter]. Unifies `ShapeShadowBody`/image's `ImageShadowSection`
 /// (Phase 4 plan §4.1) — both were byte-identical apart from the
 /// layer type, the shadow command, and the shell wrapper.
 ///

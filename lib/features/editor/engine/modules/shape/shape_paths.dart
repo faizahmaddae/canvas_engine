@@ -263,4 +263,207 @@ class ShapePaths {
       ..moveTo(w * 0.85, h * 0.15)
       ..lineTo(w * 0.15, h * 0.85);
   }
+
+  /// Regular polygon with [sides] corners inscribed in the [size]
+  /// ellipse (radii w/2 × h/2), starting at [startAngle]. Scaling to
+  /// the ellipse — rather than the shorter side's circle — keeps the
+  /// silhouette filling its box when a free-resize user stretches it.
+  static Path _regularPolygon(Size size, int sides, double startAngle) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final p = Path();
+    for (var i = 0; i < sides; i++) {
+      final theta = startAngle + i * 2 * math.pi / sides;
+      final x = cx + cx * math.cos(theta);
+      final y = cy + cy * math.sin(theta);
+      i == 0 ? p.moveTo(x, y) : p.lineTo(x, y);
+    }
+    p.close();
+    return p;
+  }
+
+  /// Regular pentagon, point up.
+  static Path pentagon(Size size) => _regularPolygon(size, 5, -math.pi / 2);
+
+  /// Regular octagon, flat top (the stop-sign orientation).
+  static Path octagon(Size size) =>
+      _regularPolygon(size, 8, -math.pi / 2 + math.pi / 8);
+
+  /// Upper half-ellipse dome with a flat bottom edge.
+  static Path semicircle(Size size) {
+    final w = size.width;
+    final h = size.height;
+    return Path()
+      ..moveTo(0, h)
+      // The full ellipse is twice the box height; sweeping the top
+      // half traces the dome from the left corner over to the right.
+      ..arcTo(Rect.fromLTWH(0, 0, w, h * 2), math.pi, math.pi, false)
+      ..close();
+  }
+
+  /// Right triangle — right angle at the bottom-left, hypotenuse
+  /// rising to the top-left corner's opposite.
+  static Path rightTriangle(Size size) {
+    return Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+  }
+
+  /// Parallelogram leaning right — top edge shifted by a fixed
+  /// fraction of the width.
+  static Path parallelogram(Size size) {
+    final w = size.width;
+    final h = size.height;
+    final skew = w * 0.22;
+    return Path()
+      ..moveTo(skew, 0)
+      ..lineTo(w, 0)
+      ..lineTo(w - skew, h)
+      ..lineTo(0, h)
+      ..close();
+  }
+
+  /// Isosceles trapezoid — top edge inset symmetrically.
+  static Path trapezoid(Size size) {
+    final w = size.width;
+    final h = size.height;
+    final inset = w * 0.22;
+    return Path()
+      ..moveTo(inset, 0)
+      ..lineTo(w - inset, 0)
+      ..lineTo(w, h)
+      ..lineTo(0, h)
+      ..close();
+  }
+
+  /// Ring / donut — the box ellipse minus a concentric inner
+  /// ellipse. Even-odd fill keeps the hole a real hole for fills,
+  /// and a stroke traces both edges of the band.
+  static Path ring(Size size) {
+    final w = size.width;
+    final h = size.height;
+    return Path()
+      ..fillType = PathFillType.evenOdd
+      ..addOval(Offset.zero & size)
+      ..addOval(Rect.fromLTWH(w * 0.19, h * 0.19, w * 0.62, h * 0.62));
+  }
+
+  /// Four-point sparkle — N/E/S/W points joined by concave
+  /// quadratics pulled toward the centre, the classic "twinkle".
+  static Path sparkle(Size size) {
+    final w = size.width;
+    final h = size.height;
+    return Path()
+      ..moveTo(w / 2, 0)
+      ..quadraticBezierTo(w * 0.60, h * 0.40, w, h / 2)
+      ..quadraticBezierTo(w * 0.60, h * 0.60, w / 2, h)
+      ..quadraticBezierTo(w * 0.40, h * 0.60, 0, h / 2)
+      ..quadraticBezierTo(w * 0.40, h * 0.40, w / 2, 0)
+      ..close();
+  }
+
+  /// Twelve-point badge burst — a shallow starburst (inner radius
+  /// 82 % of outer) scaled to the box ellipse, the classic seal /
+  /// price-badge silhouette.
+  static Path seal(Size size) {
+    const points = 12;
+    const innerFactor = 0.82;
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final p = Path();
+    const start = -math.pi / 2;
+    for (var i = 0; i < points * 2; i++) {
+      final f = i.isEven ? 1.0 : innerFactor;
+      final theta = start + i * math.pi / points;
+      final x = cx + cx * f * math.cos(theta);
+      final y = cy + cy * f * math.sin(theta);
+      i == 0 ? p.moveTo(x, y) : p.lineTo(x, y);
+    }
+    p.close();
+    return p;
+  }
+
+  /// Lightning bolt — the classic seven-point zigzag polygon.
+  static Path bolt(Size size) {
+    final w = size.width;
+    final h = size.height;
+    return Path()
+      ..moveTo(w * 0.62, 0)
+      ..lineTo(w * 0.10, h * 0.60)
+      ..lineTo(w * 0.42, h * 0.60)
+      ..lineTo(w * 0.30, h)
+      ..lineTo(w * 0.90, h * 0.38)
+      ..lineTo(w * 0.55, h * 0.38)
+      ..close();
+  }
+
+  /// Heater shield — softly-rounded top corners, sides curving to a
+  /// bottom point.
+  static Path shield(Size size) {
+    final w = size.width;
+    final h = size.height;
+    return Path()
+      ..moveTo(w / 2, h)
+      ..cubicTo(w * 0.10, h * 0.82, 0, h * 0.58, 0, h * 0.22)
+      ..lineTo(0, h * 0.10)
+      ..quadraticBezierTo(0, 0, w * 0.10, 0)
+      ..lineTo(w * 0.90, 0)
+      ..quadraticBezierTo(w, 0, w, h * 0.10)
+      ..lineTo(w, h * 0.22)
+      ..cubicTo(w, h * 0.58, w * 0.90, h * 0.82, w / 2, h)
+      ..close();
+  }
+
+  /// Crescent moon — the box ellipse minus the same ellipse shifted
+  /// right, leaving a vertical crescent with its horns opening to
+  /// the right. Boolean difference keeps the outline a single clean
+  /// curve for strokes and shadows.
+  static Path crescent(Size size) {
+    final w = size.width;
+    final full = Path()..addOval(Offset.zero & size);
+    final cutter = Path()
+      ..addOval((Offset.zero & size).shift(Offset(w * 0.38, 0)));
+    return Path.combine(PathOperation.difference, full, cutter);
+  }
+
+  /// Cloud — three overlapping bumps unioned onto a wide base pill
+  /// so the outline is one seamless silhouette (a plain multi-oval
+  /// path would show internal seams the moment a border is applied).
+  static Path cloud(Size size) {
+    final w = size.width;
+    final h = size.height;
+    Path oval(double l, double t, double ow, double oh) =>
+        Path()..addOval(Rect.fromLTWH(l * w, t * h, ow * w, oh * h));
+    final base = Path()
+      ..addRRect(
+        RRect.fromLTRBR(
+          0,
+          h * 0.50,
+          w,
+          h,
+          Radius.elliptical(w * 0.16, h * 0.25),
+        ),
+      );
+    var p = Path.combine(
+      PathOperation.union,
+      base,
+      oval(0.08, 0.30, 0.38, 0.48),
+    );
+    p = Path.combine(PathOperation.union, p, oval(0.30, 0.12, 0.44, 0.62));
+    p = Path.combine(PathOperation.union, p, oval(0.56, 0.32, 0.36, 0.46));
+    return p;
+  }
+
+  /// Thought bubble — a big oval body trailing two detached puffs
+  /// toward the bottom-left, the comic-strip thought balloon.
+  static Path thoughtBubble(Size size) {
+    final w = size.width;
+    final h = size.height;
+    return Path()
+      ..addOval(Rect.fromLTWH(0, 0, w, h * 0.72))
+      ..addOval(Rect.fromLTWH(w * 0.20, h * 0.74, w * 0.16, h * 0.14))
+      ..addOval(Rect.fromLTWH(w * 0.10, h * 0.90, w * 0.10, h * 0.09));
+  }
 }

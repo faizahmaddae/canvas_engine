@@ -9,9 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../app/theme/app_icons.dart';
+import '../../../../../app/theme/app_tokens.dart';
 import '../../../../../core/utils/haptics.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../l10n/l10n.dart';
+import '../../widgets/controls/connected_track.dart';
 import '../../widgets/controls/toggle_segment.dart';
 import 'effect_sections.dart';
 import '../../../text/application/text_tool_controller.dart';
@@ -117,7 +119,7 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!sectionOpen) ...[
+        if (!sectionOpen)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: _StylesRow(
@@ -133,54 +135,63 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
                   .readableOnCanvas,
             ),
           ),
-          const SizedBox(height: 10),
-          // Inline B/I/U. THIS panel is their home: a dock panel is a
-          // live surface with the canvas visible, so a toggle that
-          // mutates the document reads as what it is. They used to
-          // live in the «⋯» overflow sheet, mutating live behind a
-          // full scrim in a list where every other row pops-then-acts
-          // (ux-audit P3-2) — one list, two grammars. Reads straight
-          // off the layer (no local flags): the write round-trips
-          // through the command and the rebuilt layer flips the chip.
-          Center(
-            child: ToggleSegmentGroup(
-              children: [
-                Semantics(
-                  label: context.l10n.boldAction,
-                  button: true,
-                  child: ToggleSegment(
-                    icon: AppIcons.bold,
-                    selected: layer.style.isBold,
-                    onTap: () => ctrl.setBold(!layer.style.isBold),
-                  ),
-                ),
-                Semantics(
-                  label: context.l10n.italicAction,
-                  button: true,
-                  child: ToggleSegment(
-                    icon: AppIcons.textItalic,
-                    selected: layer.style.italic,
-                    onTap: () => ctrl.setItalic(!layer.style.italic),
-                  ),
-                ),
-                Semantics(
-                  label: context.l10n.underlineAction,
-                  button: true,
-                  child: ToggleSegment(
-                    icon: AppIcons.textUnderline,
-                    selected: layer.style.underline,
-                    onTap: () => ctrl.setUnderline(!layer.style.underline),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
         const SizedBox(height: 10),
-        _EffectChipsRow(
-          open: _openEffect,
-          onToggle: (c) =>
-              setState(() => _openEffect = _openEffect == c ? null : c),
+        // ONE instrument row: the B/I/U toggles beside the effects
+        // track. B/I/U's home is this live panel (ux-audit P3-2 —
+        // they used to mutate behind the «⋯» sheet's full scrim);
+        // the effects track carries each treatment's LIVE state as a
+        // colour dot, so nobody opens a section to learn nothing is
+        // on. Reads straight off the layer (no local flags): writes
+        // round-trip through the command and the rebuilt layer flips
+        // the segment.
+        SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              if (!sectionOpen) ...[
+                ToggleSegmentGroup(
+                  children: [
+                    Semantics(
+                      label: context.l10n.boldAction,
+                      button: true,
+                      child: ToggleSegment(
+                        icon: AppIcons.bold,
+                        selected: layer.style.isBold,
+                        onTap: () => ctrl.setBold(!layer.style.isBold),
+                      ),
+                    ),
+                    Semantics(
+                      label: context.l10n.italicAction,
+                      button: true,
+                      child: ToggleSegment(
+                        icon: AppIcons.textItalic,
+                        selected: layer.style.italic,
+                        onTap: () => ctrl.setItalic(!layer.style.italic),
+                      ),
+                    ),
+                    Semantics(
+                      label: context.l10n.underlineAction,
+                      button: true,
+                      child: ToggleSegment(
+                        icon: AppIcons.textUnderline,
+                        selected: layer.style.underline,
+                        onTap: () => ctrl.setUnderline(!layer.style.underline),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: _EffectsTrack(
+                  style: layer.style,
+                  open: _openEffect,
+                  onToggle: (c) =>
+                      setState(() => _openEffect = _openEffect == c ? null : c),
+                ),
+              ),
+            ],
+          ),
         ),
         // Sub-section area — grows/collapses under the chips.
         AnimatedSize(
@@ -199,43 +210,87 @@ class _StylesBodyState extends ConsumerState<StylesBody> {
   }
 }
 
-/// Category chips: خط دور · سایه · زمینه — every chip opens a real
-/// section (§10.3: no permanent disabled vocabulary; glow/gradient
-/// return with their sections).
-class _EffectChipsRow extends StatelessWidget {
-  const _EffectChipsRow({required this.open, required this.onToggle});
+/// The effects track: خط دور · سایه · زمینه as one connected
+/// instrument. Every segment opens a real section (§10.3: no
+/// permanent disabled vocabulary; glow/gradient return with their
+/// sections), and a live treatment shows its colour as a dot inside
+/// its segment — the state is readable before any section opens.
+class _EffectsTrack extends StatelessWidget {
+  const _EffectsTrack({
+    required this.style,
+    required this.open,
+    required this.onToggle,
+  });
 
+  final TextStyleSpec style;
   final _EffectCategory? open;
   final ValueChanged<_EffectCategory> onToggle;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    Widget chip(_EffectCategory c, String label) {
-      return PresetChip(
-        label: label,
-        selected: open == c,
-        onTap: () => onToggle(c),
+    final tokens = AppTokens.of(context);
+
+    Widget label(String text, bool active, Color? stateDot) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              // 12.5px is the effect-label size contract the tests
+              // key off (tb2 15/16) — dock/preset labels use 10-11px.
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: active ? tokens.accentText : tokens.textPrimary,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ),
+          if (stateDot != null) ...[
+            const SizedBox(width: 5),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: stateDot,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: tokens.border.withValues(alpha: 0.7),
+                  width: 0.5,
+                ),
+              ),
+            ),
+          ],
+        ],
       );
     }
 
-    return SizedBox(
-      // 44 (was 36): the unified PresetChip pill is kMinHitTarget
-      // tall (tb2 15/16 chip-grammar unification).
-      height: 44,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.zero,
-        children: [
-          chip(_EffectCategory.stroke, l10n.effectStrokeLabel),
-          const SizedBox(width: 6),
-          chip(_EffectCategory.shadow, l10n.shadowTool),
-          const SizedBox(width: 6),
-          // Short label (زمینه) — chip row real estate; the full
-          // word (پس‌زمینه) stays on titles like the colour sheet.
-          chip(_EffectCategory.background, l10n.bgShortLabel),
-        ],
-      ),
+    TrackSegmentSpec seg(_EffectCategory c, String text, Color? stateDot) {
+      final active = open == c;
+      return TrackSegmentSpec(
+        semanticLabel: text,
+        active: active,
+        onTap: () => onToggle(c),
+        child: label(text, active, stateDot),
+      );
+    }
+
+    return ConnectedTrack(
+      segments: [
+        seg(_EffectCategory.stroke, l10n.effectStrokeLabel, style.outlineColor),
+        seg(_EffectCategory.shadow, l10n.shadowTool, style.shadowColor),
+        // Short label (زمینه) — track real estate; the full word
+        // (پس‌زمینه) stays on titles like the colour sheet.
+        seg(
+          _EffectCategory.background,
+          l10n.bgShortLabel,
+          style.backgroundColor,
+        ),
+      ],
     );
   }
 }

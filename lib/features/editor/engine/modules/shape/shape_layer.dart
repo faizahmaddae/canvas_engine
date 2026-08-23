@@ -46,6 +46,23 @@ enum ShapeKind {
   arrowLeft,
   arrowUp,
   arrowDown,
+  // 2026-08 catalogue growth (shape studio doc §2). Appended after
+  // the Phase 2 set — enum order is serialization history; picker
+  // display order lives in the catalogue sections.
+  pentagon,
+  octagon,
+  semicircle,
+  rightTriangle,
+  parallelogram,
+  trapezoid,
+  ring,
+  sparkle,
+  seal,
+  bolt,
+  shield,
+  crescent,
+  cloud,
+  thoughtBubble,
 }
 
 /// True for kinds that paint as a stroked outline only (no fill body).
@@ -71,6 +88,20 @@ bool isStrokedShapeKind(ShapeKind k) {
     case ShapeKind.speechBubble:
     case ShapeKind.quoteBubble:
     case ShapeKind.plus:
+    case ShapeKind.pentagon:
+    case ShapeKind.octagon:
+    case ShapeKind.semicircle:
+    case ShapeKind.rightTriangle:
+    case ShapeKind.parallelogram:
+    case ShapeKind.trapezoid:
+    case ShapeKind.ring:
+    case ShapeKind.sparkle:
+    case ShapeKind.seal:
+    case ShapeKind.bolt:
+    case ShapeKind.shield:
+    case ShapeKind.crescent:
+    case ShapeKind.cloud:
+    case ShapeKind.thoughtBubble:
       return false;
   }
 }
@@ -95,6 +126,14 @@ bool isAspectLockedShapeKind(ShapeKind k) {
     case ShapeKind.plus:
     case ShapeKind.check:
     case ShapeKind.cross:
+    case ShapeKind.pentagon:
+    case ShapeKind.octagon:
+    case ShapeKind.ring:
+    case ShapeKind.sparkle:
+    case ShapeKind.seal:
+    case ShapeKind.bolt:
+    case ShapeKind.shield:
+    case ShapeKind.crescent:
       return true;
     case ShapeKind.rectangle:
     case ShapeKind.roundedRectangle:
@@ -106,6 +145,12 @@ bool isAspectLockedShapeKind(ShapeKind k) {
     case ShapeKind.arrowLeft:
     case ShapeKind.arrowUp:
     case ShapeKind.arrowDown:
+    case ShapeKind.semicircle:
+    case ShapeKind.rightTriangle:
+    case ShapeKind.parallelogram:
+    case ShapeKind.trapezoid:
+    case ShapeKind.cloud:
+    case ShapeKind.thoughtBubble:
       return false;
   }
 }
@@ -169,7 +214,15 @@ class ShapeLayer extends EditorLayer {
                    kind == ShapeKind.heart ||
                    kind == ShapeKind.plus ||
                    kind == ShapeKind.check ||
-                   kind == ShapeKind.cross)
+                   kind == ShapeKind.cross ||
+                   kind == ShapeKind.pentagon ||
+                   kind == ShapeKind.octagon ||
+                   kind == ShapeKind.ring ||
+                   kind == ShapeKind.sparkle ||
+                   kind == ShapeKind.seal ||
+                   kind == ShapeKind.bolt ||
+                   kind == ShapeKind.shield ||
+                   kind == ShapeKind.crescent)
              ? _shapeCapsAspect
              : _shapeCapsFree,
        );
@@ -450,6 +503,20 @@ class ShapeLayer extends EditorLayer {
       case ShapeKind.arrowLeft:
       case ShapeKind.arrowUp:
       case ShapeKind.arrowDown:
+      case ShapeKind.pentagon:
+      case ShapeKind.octagon:
+      case ShapeKind.semicircle:
+      case ShapeKind.rightTriangle:
+      case ShapeKind.parallelogram:
+      case ShapeKind.trapezoid:
+      case ShapeKind.ring:
+      case ShapeKind.sparkle:
+      case ShapeKind.seal:
+      case ShapeKind.bolt:
+      case ShapeKind.shield:
+      case ShapeKind.crescent:
+      case ShapeKind.cloud:
+      case ShapeKind.thoughtBubble:
         // Path / stroke based kinds use a dedicated painter so fill,
         // opacity and stroke compose correctly. The painter respects
         // the same convention as the box-based kinds: fillOpacity
@@ -780,6 +847,34 @@ class _ShapePainter extends CustomPainter {
         return ShapePaths.arrowUp(size);
       case ShapeKind.arrowDown:
         return ShapePaths.arrowDown(size);
+      case ShapeKind.pentagon:
+        return ShapePaths.pentagon(size);
+      case ShapeKind.octagon:
+        return ShapePaths.octagon(size);
+      case ShapeKind.semicircle:
+        return ShapePaths.semicircle(size);
+      case ShapeKind.rightTriangle:
+        return ShapePaths.rightTriangle(size);
+      case ShapeKind.parallelogram:
+        return ShapePaths.parallelogram(size);
+      case ShapeKind.trapezoid:
+        return ShapePaths.trapezoid(size);
+      case ShapeKind.ring:
+        return ShapePaths.ring(size);
+      case ShapeKind.sparkle:
+        return ShapePaths.sparkle(size);
+      case ShapeKind.seal:
+        return ShapePaths.seal(size);
+      case ShapeKind.bolt:
+        return ShapePaths.bolt(size);
+      case ShapeKind.shield:
+        return ShapePaths.shield(size);
+      case ShapeKind.crescent:
+        return ShapePaths.crescent(size);
+      case ShapeKind.cloud:
+        return ShapePaths.cloud(size);
+      case ShapeKind.thoughtBubble:
+        return ShapePaths.thoughtBubble(size);
       // Box-based kinds never reach the painter; keep the switch
       // exhaustive so adding a new kind forces an explicit decision.
       case ShapeKind.rectangle:
@@ -859,6 +954,34 @@ Path shapeOutlinePath(ShapeKind kind, Size size, {double cornerRadius = 0}) {
       return ShapePaths.arrowUp(size);
     case ShapeKind.arrowDown:
       return ShapePaths.arrowDown(size);
+    case ShapeKind.pentagon:
+      return ShapePaths.pentagon(size);
+    case ShapeKind.octagon:
+      return ShapePaths.octagon(size);
+    case ShapeKind.semicircle:
+      return ShapePaths.semicircle(size);
+    case ShapeKind.rightTriangle:
+      return ShapePaths.rightTriangle(size);
+    case ShapeKind.parallelogram:
+      return ShapePaths.parallelogram(size);
+    case ShapeKind.trapezoid:
+      return ShapePaths.trapezoid(size);
+    case ShapeKind.ring:
+      return ShapePaths.ring(size);
+    case ShapeKind.sparkle:
+      return ShapePaths.sparkle(size);
+    case ShapeKind.seal:
+      return ShapePaths.seal(size);
+    case ShapeKind.bolt:
+      return ShapePaths.bolt(size);
+    case ShapeKind.shield:
+      return ShapePaths.shield(size);
+    case ShapeKind.crescent:
+      return ShapePaths.crescent(size);
+    case ShapeKind.cloud:
+      return ShapePaths.cloud(size);
+    case ShapeKind.thoughtBubble:
+      return ShapePaths.thoughtBubble(size);
   }
 }
 

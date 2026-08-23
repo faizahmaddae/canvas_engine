@@ -12,7 +12,6 @@
 // hands a snapshot down cannot observe this class of staleness at all,
 // because the snapshot never changes.
 
-import 'package:canvas_engine/app/theme/app_icons.dart';
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/live_overlay_controller.dart';
 import 'package:canvas_engine/features/editor/application/selection_controller.dart';
@@ -21,9 +20,8 @@ import 'package:canvas_engine/features/editor/engine/core/canvas_sizing.dart';
 import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
 import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
-import 'package:canvas_engine/features/editor/paint/presentation/bodies/paint_size_entry.dart';
-import 'package:canvas_engine/features/editor/paint/presentation/paint_mode_toolbar.dart';
-import 'package:canvas_engine/features/editor/paint/presentation/paint_size_body.dart';
+import 'package:canvas_engine/features/editor/paint/presentation/bodies/paint_pen_body.dart';
+import 'package:canvas_engine/features/editor/paint/presentation/paint_bench.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -183,7 +181,7 @@ void main() {
 
   // ── the widgets, through the host they actually run under ─────────
 
-  Future<void> pumpReactiveSizeBody(
+  Future<void> pumpReactivePenBody(
     WidgetTester tester,
     ProviderContainer c,
   ) async {
@@ -195,9 +193,11 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
-            body: Consumer(
-              builder: (context, ref, _) =>
-                  PaintSizeEntryBody(view: ref.watch(paintStyleViewProvider)),
+            body: SingleChildScrollView(
+              child: Consumer(
+                builder: (context, ref, _) =>
+                    PaintPenBody(view: ref.watch(paintStyleViewProvider)),
+              ),
             ),
           ),
         ),
@@ -206,23 +206,21 @@ void main() {
     await tester.pump();
   }
 
+  // The pen body stacks two sliders: size first, opacity second.
+  Finder sizeSlider() => find.byType(Slider).first;
+
   double thumb(WidgetTester tester) =>
-      tester.widget<Slider>(find.byType(Slider)).value;
+      tester.widget<Slider>(sizeSlider()).value;
 
-  double hero(WidgetTester tester) =>
-      tester.widget<StrokeHero>(find.byType(StrokeHero)).width;
-
-  testWidgets('selected stroke: hero, thumb and readout move mid-drag', (
+  testWidgets('selected stroke: thumb and readout move mid-drag', (
     tester,
   ) async {
     final c = harness();
-    await pumpReactiveSizeBody(tester, c);
+    await pumpReactivePenBody(tester, c);
     expect(thumb(tester), 6);
-    expect(hero(tester), 6);
 
     final before = version(c);
-    final slider = find.byType(Slider);
-    final gesture = await tester.startGesture(tester.getCenter(slider));
+    final gesture = await tester.startGesture(tester.getCenter(sizeSlider()));
     await gesture.moveBy(const Offset(60, 0));
     await tester.pump();
 
@@ -233,7 +231,6 @@ void main() {
       width,
       reason: 'the thumb is controlled by the style view; it must follow it',
     );
-    expect(hero(tester), width);
     expect(find.text('${width.round()}px'), findsOneWidget);
     expect(committed(c).strokeWidth, 6, reason: 'committed frozen mid-drag');
     expect(version(c), before);
@@ -245,29 +242,26 @@ void main() {
     expect(c.read(liveOverlayProvider).isEmpty, isTrue);
     expect(committed(c).strokeWidth, width);
     expect(thumb(tester), width);
-    expect(hero(tester), width);
     expect(
       c.read(paintToolControllerProvider).strokeWidth,
       6,
-      reason: 'restyling a selected layer must not arm the next stroke',
+      reason: 'an adjust-posture restyle must not re-ink the pen (§10.5)',
     );
   });
 
   testWidgets('author mode: the same widgets track the session defaults '
       'with zero document commands', (tester) async {
     final c = harness(selected: false);
-    await pumpReactiveSizeBody(tester, c);
+    await pumpReactivePenBody(tester, c);
 
     final before = version(c);
-    final slider = find.byType(Slider);
-    final gesture = await tester.startGesture(tester.getCenter(slider));
+    final gesture = await tester.startGesture(tester.getCenter(sizeSlider()));
     await gesture.moveBy(const Offset(60, 0));
     await tester.pump();
 
     final width = c.read(paintToolControllerProvider).strokeWidth;
     expect(width, greaterThan(6));
     expect(thumb(tester), width);
-    expect(hero(tester), width);
     expect(c.read(liveOverlayProvider).isEmpty, isTrue);
 
     await gesture.up();
@@ -281,7 +275,7 @@ void main() {
     expect(committed(c).strokeWidth, 6);
   });
 
-  testWidgets('the strip value label moves during the gesture', (tester) async {
+  testWidgets('the bench size pill moves during the gesture', (tester) async {
     final c = harness();
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -291,13 +285,13 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const Scaffold(
-            body: SizedBox(width: 800, height: 140, child: PaintModeToolbar()),
+            body: SizedBox(width: 800, height: 140, child: PaintBench()),
           ),
         ),
       ),
     );
     await tester.pump();
-    expect(find.byIcon(AppIcons.strokeWeight), findsOneWidget);
+    expect(find.byKey(const ValueKey('paint-pill-size')), findsOneWidget);
     expect(find.text('6px'), findsOneWidget);
 
     final before = version(c);

@@ -5,14 +5,9 @@
 /// Single-tier strips render no dividers at all.
 library;
 
-import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
-import 'package:canvas_engine/features/editor/engine/modules/image/image_layer.dart';
-import 'package:canvas_engine/features/editor/image/presentation/image_mode_toolbar.dart';
 import 'package:canvas_engine/features/editor/toolbar/domain/toolbar_slot.dart';
 import 'package:canvas_engine/features/editor/toolbar/presentation/slot_strip.dart';
-import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 ToolbarSlot _slot(String id, IconData icon, SlotTier tier) =>
@@ -110,52 +105,8 @@ void main() {
     });
   });
 
-  // The synthetic cases above prove the RENDERER is data-driven. They
-  // could not catch a wrong tier ANNOTATION, and one shipped: Crop
-  // kept `tier: SlotTier.tier2` from when it sat seventh in the image
-  // strip, so after it moved to second the strip drew a hairline on
-  // both sides of it — three group boundaries where the grammar has
-  // one, before the trailing shape/effects/selective group.
-  group('the real image strip has exactly one group boundary', () {
-    testWidgets('ImageModeToolbar renders one hairline', (tester) async {
-      tester.view.physicalSize = const Size(1400, 200);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: SizedBox(
-                height: 100,
-                child: ImageModeToolbar(
-                  layer: ImageLayer(
-                    id: 'img',
-                    transform: const LayerTransform(
-                      position: Offset.zero,
-                      size: Size(400, 300),
-                    ),
-                    source: const ImageSource.asset('a.png'),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      expect(
-        _hairlineFinder(),
-        findsOneWidget,
-        reason: 'tier is group membership, not decoration',
-      );
-    });
-  });
+  // The synthetic cases above prove the RENDERER is data-driven.
+  // The image strip itself retired with the Image Studio bench
+  // (image-studio §4), so no real-strip annotation case remains —
+  // the shape/sticker strips are single-tier by construction.
 }

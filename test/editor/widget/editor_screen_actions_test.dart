@@ -157,16 +157,16 @@ void main() {
     await pumpEditor(tester, container);
 
     expectMinimalAppBar();
-    // The redesigned quick-capsule floats over the selection and
-    // carries the 'Edit text' pill again (fast in-place access; the
-    // bottom bar stays the full surface). Its own contracts live in
-    // text_quick_capsule_test.dart — here we only pin that the
-    // APP BAR stays minimal while it shows.
+    // Two 'Edit text' doors while a text layer is selected: the
+    // quick-capsule pill floating over the selection, and the Studio
+    // Bench's specimen chip in the dock. Their own contracts live in
+    // their tests — here we only pin that the APP BAR stays minimal
+    // while they show.
     expect(
       find.byWidgetPredicate(
         (w) => w is Semantics && w.properties.label == 'Edit text',
       ),
-      findsOneWidget,
+      findsNWidgets(2),
     );
   });
 
@@ -183,11 +183,13 @@ void main() {
     await pumpEditor(tester, container);
 
     expectMinimalAppBar();
-    // Printed labels are one word (a tile gives them 60dp); the full
-    // phrase is what a screen reader gets. See dock_label_fit_test.
+    // The bench's aspect track prints one-word labels; the broken
+    // source surfaces as the specimen chip's «Relink», and opacity
+    // is the fact cluster's percentage zone (the value IS the
+    // label).
     expect(find.text('Crop'), findsOneWidget);
     expect(find.text('Relink'), findsOneWidget);
-    expect(find.text('Opacity'), findsOneWidget);
+    expect(find.byKey(const ValueKey('image-pill-opacity')), findsOneWidget);
   });
 
   testWidgets('the Layers icon raises the drawer directly', (tester) async {

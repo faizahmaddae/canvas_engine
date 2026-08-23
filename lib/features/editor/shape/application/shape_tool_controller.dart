@@ -7,24 +7,16 @@ import '../../engine/modules/shape/shape_layer.dart';
 import '../../toolbar/application/dock_tool_controller.dart';
 import '../../toolbar/domain/sibling_swipe_strategy.dart';
 
-/// Every chip in `ShapeModeToolbar` that drives the shape dock.
+/// The Shape Studio's panel-bearing slots (shape studio doc §5).
 ///
-/// `isPanel: false` means the chip participates in the strip but
-/// does not open a dock panel:
-///   * [replace] — one-shot picker action.
-///
-/// Rendered strip order lives in [kShapeStripOrder]; sibling-swipe
-/// walks [kShapePanelSlotOrder], derived from that same list.
+/// Since the bench replaced the strip, ONLY panel-bearing slots
+/// remain: Replace is the bench's specimen chip, opacity is the fact
+/// cluster's percentage zone, and More is an aspect-track action —
+/// none of them are dock panels.
 enum ShapeToolSlot {
   style,
   border,
-  shadow,
-  replace(isPanel: false);
-
-  const ShapeToolSlot({this.isPanel = true});
-
-  /// Whether tapping this chip opens an inline dock panel.
-  final bool isPanel;
+  shadow;
 
   /// Safe lookup by enum name; returns `null` for unknown / legacy
   /// strings.
@@ -37,40 +29,15 @@ enum ShapeToolSlot {
   }
 }
 
-/// Single source of truth for the Shape strip: every chip, in
-/// rendered left→right order. `ShapeModeToolbar` builds its chips
-/// by iterating THIS list, and [kShapePanelSlotOrder] is derived
-/// from it — a change to one cannot drift the other.
-///
-/// The two action entries are strip-only chips outside
-/// [ShapeToolSlot]: `'opacity'` opens a `ContextToolPanel` (a
-/// different host, so it stays out of the swipe walk) and `'more'`
-/// opens the selected-layer actions sheet.
-const List<DockStripEntry<ShapeToolSlot>> kShapeStripOrder =
-    <DockStripEntry<ShapeToolSlot>>[
-      DockStripEntry.slot(ShapeToolSlot.style),
-      DockStripEntry.slot(ShapeToolSlot.border),
-      DockStripEntry.slot(ShapeToolSlot.shadow),
-      DockStripEntry.action('opacity'),
-      DockStripEntry.action('more'),
-      DockStripEntry.slot(ShapeToolSlot.replace),
-    ];
-
-/// Display order of every Shape dock slot (action chips excluded)
-/// — the [kShapeStripOrder] projection.
-final List<ShapeToolSlot> kShapeStripSlotOrder = List.unmodifiable(
-  kShapeStripOrder.map((e) => e.slot).whereType<ShapeToolSlot>(),
-);
-
-/// Panel-bearing slots in RENDERED order — drives sibling-swipe.
-/// Derived from [kShapeStripOrder]. Pinned against the pumped
-/// toolbar by `test/editor/widget/slot_order_consistency_test.dart`.
-final List<ShapeToolSlot> kShapePanelSlotOrder = List.unmodifiable(
-  kShapeStripOrder
-      .map((e) => e.slot)
-      .whereType<ShapeToolSlot>()
-      .where((s) => s.isPanel),
-);
+/// Display order of the Shape dock panels — the bench renders its
+/// aspect track from this order and sibling-swipe walks it, so the
+/// two cannot drift. Pinned against the pumped bench by
+/// `test/editor/widget/slot_order_consistency_test.dart`.
+const List<ShapeToolSlot> kShapePanelSlotOrder = <ShapeToolSlot>[
+  ShapeToolSlot.style,
+  ShapeToolSlot.border,
+  ShapeToolSlot.shadow,
+];
 
 /// Slots intentionally skipped during sibling-swipe. Empty today.
 const Set<ShapeToolSlot> kShapeSlotsExcludedFromSwipe = <ShapeToolSlot>{};
@@ -86,7 +53,8 @@ final SiblingSwipeStrategy<ShapeToolSlot> kShapeSwipeStrategy =
 typedef ShapeToolSession = DockToolSession<ShapeToolSlot>;
 
 /// Shape dock controller — the generic [DockToolController] plus
-/// the shape-only resize-mode bridge used by the floating toolbar.
+/// the shape-only resize-mode bridge used by the floating toolbar
+/// and the bench's size zone.
 class ShapeToolController extends DockToolController<ShapeToolSlot> {
   ShapeToolController() : super(swipe: kShapeSwipeStrategy);
 

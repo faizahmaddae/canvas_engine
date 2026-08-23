@@ -30,6 +30,7 @@ class CropSession {
     this.aspectRatio,
     this.originalAspect,
     this.sourceAspect,
+    this.sourcePixelSize,
     this.displayBasis = ImageLayer.fullCrop,
     this.priorSelectionId,
   });
@@ -65,6 +66,31 @@ class CropSession {
   /// aspect-preserving reshape, which is only correct for centred
   /// full-axis crops.
   final double? sourceAspect;
+
+  /// Natural size of the source BITMAP in pixels, reported alongside
+  /// [sourceAspect]. Only the crop readout uses it: multiplied through
+  /// [displayBasis] it says how many real pixels the current draft
+  /// keeps, which is the one number a crop UI can state truthfully
+  /// without guessing. `null` until the image resolves — the readout
+  /// simply stays absent then (contract §10.3: absent, not "0 × 0").
+  final Size? sourcePixelSize;
+
+  /// Pixel size of the crop the draft currently selects, or `null`
+  /// while [sourcePixelSize] is unresolved.
+  ///
+  /// [draftCrop] is normalised over [displayBasis], so composing the
+  /// two gives the source-normalised window — the exact rect
+  /// [CropController.commitCrop] persists — and scaling that by the
+  /// bitmap's own dimensions gives pixels.
+  Size? get draftPixelSize {
+    final px = sourcePixelSize;
+    if (px == null) return null;
+    final b = displayBasis;
+    final w = draftCrop.width * b.width * px.width;
+    final h = draftCrop.height * b.height * px.height;
+    if (!w.isFinite || !h.isFinite || w <= 0 || h <= 0) return null;
+    return Size(w, h);
+  }
 
   /// Source-normalised window that the draft's unit box maps onto.
   ///
@@ -147,6 +173,7 @@ class CropSession {
     Object? aspectRatio = _sentinel,
     Object? originalAspect = _sentinel,
     Object? sourceAspect = _sentinel,
+    Object? sourcePixelSize = _sentinel,
     Rect? displayBasis,
     Object? priorSelectionId = _sentinel,
   }) {
@@ -165,6 +192,9 @@ class CropSession {
       sourceAspect: identical(sourceAspect, _sentinel)
           ? this.sourceAspect
           : sourceAspect as double?,
+      sourcePixelSize: identical(sourcePixelSize, _sentinel)
+          ? this.sourcePixelSize
+          : sourcePixelSize as Size?,
       displayBasis: displayBasis ?? this.displayBasis,
       priorSelectionId: identical(priorSelectionId, _sentinel)
           ? this.priorSelectionId
@@ -239,16 +269,22 @@ class CropController extends Notifier<CropSession> {
   /// without the basis we cannot say where the currently-displayed
   /// window sits inside the source, so the frame stays confined to
   /// what the layer already shows.
-  void setSourceAspect(double aspect) {
+  /// [pixelSize] is the bitmap's own dimensions when the caller has
+  /// them; optional so the many tests that only care about the ratio
+  /// keep working, and because the readout it feeds is additive.
+  void setSourceAspect(double aspect, {Size? pixelSize}) {
     if (!state.active) return;
     if (!aspect.isFinite || aspect <= 0) return;
-    if (state.sourceAspect == aspect) return;
+    if (state.sourceAspect == aspect && state.sourcePixelSize == pixelSize) {
+      return;
+    }
     final layerId = state.layerId;
     final layer = layerId == null
         ? null
         : ref.read(documentControllerProvider).layerById(layerId);
     state = state.copyWith(
       sourceAspect: aspect,
+      sourcePixelSize: pixelSize ?? state.sourcePixelSize,
       displayBasis: layer is ImageLayer
           ? displayBasisFor(
               fit: layer.fit,
@@ -615,6 +651,38 @@ class CropController extends Notifier<CropSession> {
     required double aspect,
     required double layerAspect,
   }) => fitAspect(bounds: bounds, aspect: aspect, layerAspect: layerAspect);
+
+  /// Scale the window [r] for a pinch of factor [scale] about [focal]
+  /// (draft coordinates): pinching the *photo* out by 2× shrinks the
+  /// window to half, so the window scales by `1/scale`.
+  ///
+  /// Aspect-preserving by construction — the window scales uniformly —
+  /// which is what lets a locked ratio survive a pinch without any
+  /// re-fitting. The factor is capped so the window neither outgrows
+  /// [bounds] nor lets its short side fall under [minNorm], and the
+  /// result is translate-clamped back inside [bounds], so the photo
+  /// stops at the frame edge instead of tearing away from it.
+  static Rect zoom(
+    Rect r, {
+    required double scale,
+    required Offset focal,
+    Rect bounds = ImageLayer.fullCrop,
+  }) {
+    if (!scale.isFinite || scale <= 0) return r;
+    if (r.width <= 0 || r.height <= 0) return r;
+    var f = 1 / scale;
+    final maxF = math.min(bounds.width / r.width, bounds.height / r.height);
+    final minF = minNorm / math.min(r.width, r.height);
+    if (maxF < minF) return r;
+    f = f.clamp(minF, maxF);
+    final next = Rect.fromLTWH(
+      focal.dx + (r.left - focal.dx) * f,
+      focal.dy + (r.top - focal.dy) * f,
+      r.width * f,
+      r.height * f,
+    );
+    return translate(next, 0, 0, bounds: bounds);
+  }
 
   /// Translate [r] by ([dx], [dy]) in normalised units, clamping the
   /// result so the rect stays fully inside [bounds].

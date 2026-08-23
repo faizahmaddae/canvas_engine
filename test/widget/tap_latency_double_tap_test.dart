@@ -144,7 +144,13 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    final target = tester.getCenter(find.text('Hello'));
+    // The CANVAS render of the layer (48px) — the bench's specimen
+    // chip renders the same string at chip size in the dock.
+    final target = tester.getCenter(
+      find.byWidgetPredicate(
+        (w) => w is Text && w.data == 'Hello' && w.style?.fontSize == 48.0,
+      ),
+    );
     await tester.tapAt(target);
     await tester.pump(const Duration(milliseconds: 80));
     await tester.tapAt(target);

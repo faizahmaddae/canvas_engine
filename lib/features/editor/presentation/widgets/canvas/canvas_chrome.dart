@@ -18,7 +18,9 @@ import '../../../engine/core/editor_layer.dart';
 import '../../../engine/core/selection_state.dart';
 import '../../../engine/core/viewport_state.dart';
 import '../../../engine/interaction/group_engine.dart';
+import '../../../engine/modules/paint/paint_layer.dart';
 import '../../../image/presentation/photo_slot_badge.dart';
+import '../../../paint/application/paint_tool_controller.dart';
 import '../editor_breakpoints.dart';
 import '../mask_edit_overlay.dart';
 import '../quick_capsule.dart';
@@ -254,6 +256,19 @@ Widget buildSelectionOverlay({
         editingControllerProvider.select((id) => id == selectedLayer.id),
       );
       if (isEditing) return const SizedBox.shrink();
+      // While a paint tool is armed, the just-committed stroke stays
+      // selected as the restyle binding (§10 A) but gets NO transform
+      // chrome: the paint surface claims every canvas pointer, so
+      // handles would be present-but-inert (§10.3) — and a frame
+      // flashing up after every stroke made sketching feel
+      // interrupted. The adjust posture (no armed tool) brings the
+      // handles back. (Bench redesign 2026-08.)
+      if (selectedLayer is PaintLayer &&
+          ref.watch(
+            paintToolControllerProvider.select((s) => s.activeTool != null),
+          )) {
+        return const SizedBox.shrink();
+      }
       final live = ref.watch(
         interactionControllerProvider.select(
           (s) =>

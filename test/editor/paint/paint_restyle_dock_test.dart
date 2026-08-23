@@ -1,8 +1,10 @@
-// tb4 3/14: selecting a committed stroke opens the paint dock in
-// RESTYLE mode. The strip is keyed off the layer's kind (not off an
-// armed tool), every tile shows that layer's values, and the slots
-// that used to be hidden behind a safety guard — blur, polygon,
-// dash — now edit the layer for real.
+// tb4 3/14, reshaped by the 2026-08 bench redesign: selecting a
+// committed stroke puts the paint bench in the ADJUST posture. The
+// style row is keyed off the layer's kind (not off an armed tool),
+// shows that layer's values, and the setters that used to be hidden
+// behind a safety guard — blur, polygon, dash — edit the layer for
+// real. The write rule is posture-scoped (docs/paint-redesign-2026-08
+// §4): armed writes also re-ink the pen; adjust writes never do.
 
 import 'package:canvas_engine/features/editor/application/document_controller.dart';
 import 'package:canvas_engine/features/editor/application/editor_mode_controller.dart';
@@ -13,16 +15,13 @@ import 'package:canvas_engine/features/editor/engine/core/layer_transform.dart';
 import 'package:canvas_engine/features/editor/engine/modules/paint/paint_layer.dart';
 import 'package:canvas_engine/features/editor/paint/application/paint_tool_controller.dart';
 import 'package:canvas_engine/features/editor/paint/domain/paint_tool_type.dart';
-import 'package:canvas_engine/features/editor/paint/presentation/paint_mode_toolbar.dart';
+import 'package:canvas_engine/features/editor/paint/presentation/paint_bench.dart';
 import 'package:canvas_engine/features/editor/paint/presentation/bodies/paint_fill_body.dart';
-import 'package:canvas_engine/features/editor/paint/presentation/paint_tool_specs.dart';
-import 'package:canvas_engine/features/editor/presentation/widgets/dock_tool_tile.dart';
 import 'package:canvas_engine/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:canvas_engine/app/theme/app_icons.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -54,7 +53,7 @@ void main() {
   PaintLayer committed(ProviderContainer c) =>
       c.read(documentControllerProvider).layerById('p1') as PaintLayer;
 
-  Future<void> pumpStrip(WidgetTester tester, ProviderContainer c) async {
+  Future<void> pumpBench(WidgetTester tester, ProviderContainer c) async {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: c,
@@ -63,7 +62,7 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const Scaffold(
-            body: SizedBox(width: 800, height: 140, child: PaintModeToolbar()),
+            body: SizedBox(width: 800, height: 140, child: PaintBench()),
           ),
         ),
       ),
@@ -105,101 +104,119 @@ void main() {
       expect(view.layerKind, isNull);
     });
 
-    test('a paint-layer selection wins over an armed tool', () {
-      // Mirrors what commitDraft/commitDot do for real: the tool stays
-      // armed (continuous drawing) while the stroke just committed is
-      // selected, and the dock must restyle THAT stroke, not silently
-      // reconfigure the next one.
+    test('armed: a style write reaches the stroke AND the pen', () {
+      // §10.5 write rule as amended by the 2026-08 bench redesign
+      // (docs/paint-redesign-2026-08.md §4): while a tool is armed,
+      // the bound stroke gets the command and the author defaults
+      // take the same value — "draw, restyle, draw again" must not
+      // produce a stale second stroke.
       final c = makeContainer(PaintKind.rectangle);
       final ctrl = c.read(paintToolControllerProvider.notifier);
       ctrl.selectTool(PaintToolType.freestyle);
       c.read(selectionControllerProvider.notifier).select('p1');
-      final defaults = c.read(paintToolControllerProvider);
 
       expect(c.read(paintStyleViewProvider).layerKind, PaintKind.rectangle);
       ctrl.setStrokeWidth(31);
 
+      expect(committed(c).strokeWidth, 31);
       expect(
         c.read(paintToolControllerProvider).strokeWidth,
-        defaults.strokeWidth,
-        reason: 'next-stroke defaults must stay untouched by a restyle',
+        31,
+        reason: 'the pen keeps the ink while armed',
       );
-      expect(committed(c).strokeWidth, 31);
       expect(
         c.read(paintToolControllerProvider).activeTool,
         PaintToolType.freestyle,
         reason: 'the tool stays armed through a restyle',
       );
     });
+
+    test('adjust posture: a style write reaches the stroke only', () {
+      // The unarmed half of the amended rule: editing an old
+      // annotation does not re-ink the pen.
+      final c = makeContainer(PaintKind.rectangle);
+      final ctrl = c.read(paintToolControllerProvider.notifier);
+      ctrl.enterAdjust();
+      c.read(selectionControllerProvider.notifier).select('p1');
+      final defaults = c.read(paintToolControllerProvider);
+
+      ctrl.setStrokeWidth(31);
+
+      expect(committed(c).strokeWidth, 31);
+      expect(
+        c.read(paintToolControllerProvider).strokeWidth,
+        defaults.strokeWidth,
+        reason: 'adjust-posture writes must not touch the pen defaults',
+      );
+      expect(c.read(paintToolControllerProvider).activeTool, isNull);
+    });
   });
 
-  group('the capability matrix is the layer\'s, not a tool\'s', () {
-    test('a polygon exposes sides; a blur patch does not', () {
-      expect(allowedPaintSlotsForKind(PaintKind.polygon), contains('polygon'));
-      expect(
-        allowedPaintSlotsForKind(PaintKind.blur),
-        isNot(contains('polygon')),
-      );
-      expect(allowedPaintSlotsForKind(PaintKind.blur), contains('blur'));
-      expect(allowedPaintSlotsForKind(PaintKind.line), contains('dash'));
-      expect(
-        allowedPaintSlotsForKind(PaintKind.rectangle),
-        isNot(contains('dash')),
-      );
-      for (final kind in PaintKind.values) {
-        expect(
-          allowedPaintSlotsForKind(kind),
-          isNot(contains('eraser')),
-          reason: 'eraser changes interaction mode; it cannot restyle $kind',
-        );
-      }
-      expect(
-        PaintModeToolbar.toolIdsFor(layerKind: PaintKind.rectangle),
-        isNot(contains('tool')),
-        reason: 'New stroke is an instant action, not a swipeable sheet',
-      );
-    });
-
-    testWidgets('the polygon tile renders for a selected polygon', (
-      tester,
-    ) async {
+  group('the style row is the layer\'s, not a tool\'s', () {
+    testWidgets('a selected polygon exposes its shape pill', (tester) async {
       final c = makeContainer(PaintKind.polygon);
-      await pumpStrip(tester, c);
-      // Before tb4 3/14 a safety guard stripped this tile whenever a
-      // paint layer was selected, because the setter behind it only
-      // moved a session default.
-      expect(find.byIcon(AppIcons.polygonTool), findsOneWidget);
+      await pumpBench(tester, c);
+      // Before tb4 3/14 a safety guard stripped these controls
+      // whenever a paint layer was selected, because the setters
+      // behind them only moved a session default. The fill pill
+      // opens the shape sheet, which owns kind + sides + fill.
+      expect(find.byKey(const ValueKey('paint-pill-fill')), findsOneWidget);
+      expect(find.byKey(const ValueKey('paint-pill-size')), findsOneWidget);
     });
 
-    testWidgets('no tool picker is auto-opened over a selection', (
+    testWidgets('a selected blur patch shows the radius pill only', (
       tester,
     ) async {
+      final c = makeContainer(PaintKind.blur);
+      await pumpBench(tester, c);
+      expect(find.byKey(const ValueKey('paint-pill-blur')), findsOneWidget);
+      expect(find.byKey(const ValueKey('paint-pill-size')), findsNothing);
+      expect(find.byKey(const ValueKey('paint-ink-current')), findsNothing);
+    });
+
+    testWidgets('a selected line shows the line-style pill; a box does not', (
+      tester,
+    ) async {
+      final line = makeContainer(PaintKind.line);
+      await pumpBench(tester, line);
+      expect(find.byKey(const ValueKey('paint-pill-line')), findsOneWidget);
+
+      final box = makeContainer(PaintKind.rectangle);
+      await pumpBench(tester, box);
+      expect(find.byKey(const ValueKey('paint-pill-line')), findsNothing);
+      expect(find.byKey(const ValueKey('paint-pill-fill')), findsOneWidget);
+    });
+
+    testWidgets('nothing auto-opens over a selection', (tester) async {
       final c = makeContainer(PaintKind.rectangle);
-      await pumpStrip(tester, c);
+      await pumpBench(tester, c);
       await tester.pump(const Duration(milliseconds: 400));
       expect(
         c.read(paintToolControllerProvider).openSlot,
         isNull,
-        reason:
-            'the picker would hide the capsule and answer the wrong '
-            'question',
+        reason: 'a self-opening sheet would answer the wrong question',
       );
     });
 
-    testWidgets('selected stroke offers an explicit New stroke escape', (
-      tester,
-    ) async {
+    testWidgets('the rack marks the adjust posture and arming a pen '
+        'starts fresh', (tester) async {
       final c = makeContainer(PaintKind.rectangle);
-      await pumpStrip(tester, c);
+      await pumpBench(tester, c);
 
-      final tile = tester.widget<DockToolTile>(
-        find.byWidgetPredicate(
-          (widget) => widget is DockToolTile && widget.label == 'New',
-        ),
+      // Bound stroke, no armed tool: the adjust slot is the active one.
+      expect(c.read(paintToolControllerProvider).activeTool, isNull);
+
+      await tester.tap(find.byKey(const ValueKey('paint-rack-pen')));
+      await tester.pump();
+      expect(
+        c.read(paintToolControllerProvider).activeTool,
+        PaintToolType.freestyle,
       );
-      expect(tile.active, isFalse);
-      expect(tile.semanticLabel, 'New stroke');
-      expect(find.byIcon(AppIcons.eraserTool), findsNothing);
+      expect(
+        c.read(selectionControllerProvider).hasSelection,
+        isFalse,
+        reason: 'arming a rack tool starts a fresh stroke, not a restyle',
+      );
     });
   });
 

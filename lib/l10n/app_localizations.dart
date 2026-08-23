@@ -2138,6 +2138,90 @@ abstract class AppLocalizations {
   /// **'Arrow down'**
   String get shapeKindArrowDown;
 
+  /// No description provided for @shapeKindPentagon.
+  ///
+  /// In en, this message translates to:
+  /// **'Pentagon'**
+  String get shapeKindPentagon;
+
+  /// No description provided for @shapeKindOctagon.
+  ///
+  /// In en, this message translates to:
+  /// **'Octagon'**
+  String get shapeKindOctagon;
+
+  /// No description provided for @shapeKindSemicircle.
+  ///
+  /// In en, this message translates to:
+  /// **'Semicircle'**
+  String get shapeKindSemicircle;
+
+  /// No description provided for @shapeKindRightTriangle.
+  ///
+  /// In en, this message translates to:
+  /// **'Right triangle'**
+  String get shapeKindRightTriangle;
+
+  /// No description provided for @shapeKindParallelogram.
+  ///
+  /// In en, this message translates to:
+  /// **'Parallelogram'**
+  String get shapeKindParallelogram;
+
+  /// No description provided for @shapeKindTrapezoid.
+  ///
+  /// In en, this message translates to:
+  /// **'Trapezoid'**
+  String get shapeKindTrapezoid;
+
+  /// No description provided for @shapeKindRing.
+  ///
+  /// In en, this message translates to:
+  /// **'Ring'**
+  String get shapeKindRing;
+
+  /// No description provided for @shapeKindSparkle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sparkle'**
+  String get shapeKindSparkle;
+
+  /// No description provided for @shapeKindSeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Badge'**
+  String get shapeKindSeal;
+
+  /// No description provided for @shapeKindBolt.
+  ///
+  /// In en, this message translates to:
+  /// **'Bolt'**
+  String get shapeKindBolt;
+
+  /// No description provided for @shapeKindShield.
+  ///
+  /// In en, this message translates to:
+  /// **'Shield'**
+  String get shapeKindShield;
+
+  /// No description provided for @shapeKindCrescent.
+  ///
+  /// In en, this message translates to:
+  /// **'Crescent'**
+  String get shapeKindCrescent;
+
+  /// No description provided for @shapeKindCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud'**
+  String get shapeKindCloud;
+
+  /// No description provided for @shapeKindThoughtBubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Thought'**
+  String get shapeKindThoughtBubble;
+
   /// No description provided for @addPhotoAction.
   ///
   /// In en, this message translates to:
@@ -2161,12 +2245,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Needs a visible photo'**
   String get toolNeedsPhotoHint;
-
-  /// No description provided for @toolNeedsEffectHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Needs at least one effect'**
-  String get toolNeedsEffectHint;
 
   /// No description provided for @cropActionVerb.
   ///
@@ -2491,6 +2569,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Type something…'**
   String get typeSomethingHint;
+
+  /// No description provided for @colorTonesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tones'**
+  String get colorTonesLabel;
+
+  /// No description provided for @restoreOriginalColorTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore original color'**
+  String get restoreOriginalColorTooltip;
 
   /// No description provided for @colorsLabel.
   ///
@@ -2996,18 +3086,6 @@ abstract class AppLocalizations {
   /// **'Copy color code'**
   String get copyColorTooltip;
 
-  /// No description provided for @toolLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Tool'**
-  String get toolLabel;
-
-  /// No description provided for @chooseToolTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a tool'**
-  String get chooseToolTitle;
-
   /// No description provided for @thinOption.
   ///
   /// In en, this message translates to:
@@ -3068,24 +3146,6 @@ abstract class AppLocalizations {
   /// **'{count} sides'**
   String sidesCount(int count);
 
-  /// No description provided for @drawGroup.
-  ///
-  /// In en, this message translates to:
-  /// **'Draw'**
-  String get drawGroup;
-
-  /// No description provided for @shapesGroup.
-  ///
-  /// In en, this message translates to:
-  /// **'Shapes'**
-  String get shapesGroup;
-
-  /// No description provided for @effectsGroup.
-  ///
-  /// In en, this message translates to:
-  /// **'Effects'**
-  String get effectsGroup;
-
   /// No description provided for @penTool.
   ///
   /// In en, this message translates to:
@@ -3116,47 +3176,29 @@ abstract class AppLocalizations {
   /// **'Dotted'**
   String get dottedOption;
 
-  /// No description provided for @dashDotOption.
-  ///
-  /// In en, this message translates to:
-  /// **'Dash dot'**
-  String get dashDotOption;
-
   /// No description provided for @eraserTool.
   ///
   /// In en, this message translates to:
   /// **'Eraser'**
   String get eraserTool;
 
-  /// No description provided for @eraseStrokesTool.
+  /// No description provided for @adjustStrokesTool.
   ///
   /// In en, this message translates to:
-  /// **'Erase strokes'**
-  String get eraseStrokesTool;
+  /// **'Select'**
+  String get adjustStrokesTool;
 
-  /// No description provided for @newShortLabel.
+  /// No description provided for @paintEraserHint.
   ///
   /// In en, this message translates to:
-  /// **'New'**
-  String get newShortLabel;
+  /// **'Tap or drag over strokes to erase them'**
+  String get paintEraserHint;
 
-  /// No description provided for @newStrokeTool.
+  /// No description provided for @paintTapStrokeHint.
   ///
   /// In en, this message translates to:
-  /// **'New stroke'**
-  String get newStrokeTool;
-
-  /// No description provided for @nextStrokeScope.
-  ///
-  /// In en, this message translates to:
-  /// **'Next stroke'**
-  String get nextStrokeScope;
-
-  /// No description provided for @editingStrokeScope.
-  ///
-  /// In en, this message translates to:
-  /// **'Editing this stroke'**
-  String get editingStrokeScope;
+  /// **'Tap a stroke to edit it'**
+  String get paintTapStrokeHint;
 
   /// No description provided for @squareLabel.
   ///
@@ -3362,18 +3404,6 @@ abstract class AppLocalizations {
   /// **'Soft radial darkening from the centre'**
   String get vignetteSubtitle;
 
-  /// No description provided for @noEffectsApplied.
-  ///
-  /// In en, this message translates to:
-  /// **'No effects applied.'**
-  String get noEffectsApplied;
-
-  /// No description provided for @openLookToAddEffectHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Look to add one.'**
-  String get openLookToAddEffectHint;
-
   /// No description provided for @selectiveMaskLabel.
   ///
   /// In en, this message translates to:
@@ -3385,12 +3415,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Limit the stack to a region of the layer'**
   String get selectiveMaskHint;
-
-  /// No description provided for @addEffectToMaskHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Add an effect to mask selectively.'**
-  String get addEffectToMaskHint;
 
   /// No description provided for @maskPresetOff.
   ///
@@ -3572,6 +3596,24 @@ abstract class AppLocalizations {
   /// **'Background only shows behind transparent or uncovered areas of your photo.'**
   String get photoBackgroundHint;
 
+  /// No description provided for @rotateCanvasAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate canvas'**
+  String get rotateCanvasAction;
+
+  /// No description provided for @layersOutsideCanvasNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Some layers are outside the canvas now — drag them back in.'**
+  String get layersOutsideCanvasNote;
+
+  /// No description provided for @gradientPickHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a gradient to use it as the background.'**
+  String get gradientPickHint;
+
   /// No description provided for @resetCropAction.
   ///
   /// In en, this message translates to:
@@ -3589,6 +3631,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore image'**
   String get restoreImageAction;
+
+  /// No description provided for @cropOrientationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap orientation'**
+  String get cropOrientationAction;
+
+  /// No description provided for @cropOutputSizeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop size {width} by {height} pixels'**
+  String cropOutputSizeLabel(String width, String height);
 
   /// No description provided for @freeOption.
   ///
@@ -3619,18 +3673,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Format'**
   String get formatLabel;
-
-  /// No description provided for @previewShareAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Preview & Share'**
-  String get previewShareAction;
-
-  /// No description provided for @previewSaveAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Preview & Save'**
-  String get previewSaveAction;
 
   /// No description provided for @savedToPhotoLibrary.
   ///
