@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_motion.dart';
 import '../../../../app/theme/app_tokens.dart';
-import '../../../../app/ui/size_picker_dialog.dart';
+import '../../../../app/ui/size_picker_sheet.dart';
 import '../../../../core/utils/editor_value_format.dart';
 import '../../../../core/utils/haptics.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -441,7 +441,7 @@ class _CanvasSizeSection extends ConsumerWidget {
   Future<void> _openCustom(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     final doc = ref.read(documentControllerProvider);
-    final picked = await SizePickerDialog.show(
+    final picked = await SizePickerSheet.show(
       context,
       title: l10n.customSizeTitle,
       body: l10n.resizeCanvasBody,

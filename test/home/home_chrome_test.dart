@@ -34,7 +34,7 @@ void main() {
       expect(find.byType(SaffronDiamond), findsOneWidget);
       expect(find.text('Canvas'), findsOneWidget); // homeBrandTitle (en)
       expect(find.byIcon(AppIcons.settings), findsOneWidget);
-      // Greeting headline + subtitle present.
+      // Daypart line + headline present.
       expect(find.byType(Text), findsAtLeastNWidgets(3));
       expect(tester.takeException(), isNull);
     });
@@ -49,6 +49,40 @@ void main() {
         find.text('What shall we make today?'),
       );
       expect(headline.style?.color, AppTokens.dark.textPrimary);
+    });
+
+    // The one line on Home that admits what time it is. Boundaries:
+    // [5, 11) morning, [11, 15) noon, [15, 20) evening, else night.
+    for (final (hour, expected) in const [
+      (5, 'Good morning'),
+      (10, 'Good morning'),
+      (11, 'Good afternoon'),
+      (14, 'Good afternoon'),
+      (15, 'Good evening'),
+      (19, 'Good evening'),
+      (20, 'Good night'),
+      (3, 'Good night'),
+    ]) {
+      testWidgets('daypart greeting at ${hour}h says "$expected"', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          host(HomeHeader(now: DateTime(2026, 8, 22, hour))),
+        );
+        expect(find.text(expected), findsOneWidget);
+      });
+    }
+
+    testWidgets('the daypart line is the saffron accent, and the old '
+        'static subtitle is gone', (tester) async {
+      await tester.pumpWidget(host(HomeHeader(now: DateTime(2026, 8, 22, 9))));
+      final greeting = tester.widget<Text>(find.text('Good morning'));
+      expect(greeting.style?.color, AppTokens.light.accentText);
+      expect(
+        find.textContaining('Start from a template'),
+        findsNothing,
+        reason: 'the subtitle described the two buttons below it',
+      );
     });
   });
 

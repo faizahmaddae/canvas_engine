@@ -301,8 +301,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeWelcomeTitle => 'What shall we make today?';
 
   @override
-  String get homeWelcomeSubtitle =>
-      'Start from a template or craft something new.';
+  String get greetingMorning => 'Good morning';
+
+  @override
+  String get greetingNoon => 'Good afternoon';
+
+  @override
+  String get greetingEvening => 'Good evening';
+
+  @override
+  String get greetingNight => 'Good night';
 
   @override
   String get homeHeroTitle => 'Start with a template';
@@ -335,10 +343,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeTextOnPhotoSubtitle => 'Start with a designed type layout';
 
   @override
-  String get homeSuggestedTitle => 'Suggested';
+  String get homeSuggestedTitle => 'Today\'s picks';
 
   @override
-  String get homeRecentNewTile => 'New';
+  String get homeContinueTitle => 'Continue working';
 
   @override
   String get recentTitle => 'Recent work';
@@ -493,7 +501,7 @@ class AppLocalizationsEn extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
-    return 'Multi-select · $countString';
+    return 'Multi-select • $countString';
   }
 
   @override
@@ -1975,7 +1983,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String customSizeChip(String size) {
-    return 'Custom · $size';
+    return 'Custom • $size';
   }
 
   @override
@@ -2245,6 +2253,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String histMultiLayer(String base, String count) {
-    return '$base · $count layers';
+    return '$base • $count layers';
   }
 }

@@ -115,7 +115,10 @@ Violet is dead; if you see it, it's a bug.
 surfaces look the way they do. Most relevant for current work:
 `design-direction-v2-calligraphy-2026-07.md` (palette/type),
 `app-navigation-home-ia-2026-07.md` (launcher/browser split),
-`home-screen-redesign-2026-07.md`, `editor-redesign-2026-07.md`,
+`home-screen-redesign-2026-07.md` +
+`home-desk-redesign-2026-08.md` (the desk: continue hero, format
+sheet, daily shelf, honest rails — required reading before touching
+`lib/features/home/` or the size picker), `editor-redesign-2026-07.md`,
 `effects.md` + `effects-a3-scoped-plan-2026-07.md` (effect system,
 required reading before touching effects),
 `mask-edit-mode-design-2026-07.md`, and

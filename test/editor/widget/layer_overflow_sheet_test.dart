@@ -452,7 +452,7 @@ void main() {
       );
       await _open(tester);
 
-      expect(find.text('Multi-select · 3'), findsOneWidget);
+      expect(find.text('Multi-select • 3'), findsOneWidget);
       expect(find.text('Align'), findsOneWidget);
       expect(find.text('Duplicate'), findsOneWidget);
       expect(find.text('Lock layer'), findsOneWidget);

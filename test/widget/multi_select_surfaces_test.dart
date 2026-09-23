@@ -123,17 +123,17 @@ void main() {
 
       final chip = find.byKey(const ValueKey('multi-select-exit-chip'));
       expect(chip, findsOneWidget);
-      expect(find.text('Multi-select · 0'), findsOneWidget);
+      expect(find.text('Multi-select • 0'), findsOneWidget);
 
       c.read(selectionControllerProvider.notifier).select('a');
       await tester.pump();
       expect(chip, findsOneWidget);
-      expect(find.text('Multi-select · 1'), findsOneWidget);
+      expect(find.text('Multi-select • 1'), findsOneWidget);
 
       c.read(selectionControllerProvider.notifier).selectMany(['a', 'b']);
       await tester.pump();
       expect(chip, findsOneWidget);
-      expect(find.text('Multi-select · 2'), findsOneWidget);
+      expect(find.text('Multi-select • 2'), findsOneWidget);
 
       // And the converse: single mode renders no chip at all.
       c.read(selectionModeProvider.notifier).exitMulti();

@@ -192,7 +192,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('عددهای صحیح و مثبت وارد کنید.'), findsNothing);
-      expect(findBidiText('سفارشی · ۱۰۸۰ × ۱۰۸۰'), findsOneWidget);
+      expect(findBidiText('سفارشی • ۱۰۸۰ × ۱۰۸۰'), findsOneWidget);
     });
   });
 }

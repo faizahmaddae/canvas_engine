@@ -312,11 +312,13 @@ Widget buildSelectionOverlay({
         //     layer (the second finger may land anywhere — pinching
         //     a small object never requires both fingers inside it)
         //   * 1 finger OFF the quad → falls through to the
-        //     select-and-move surface below: another eligible
-        //     layer's bbox select-and-moves that layer (row 5);
-        //     empty canvas translates the current selection
-        //     (row 7's drag-anywhere amendment); otherwise the
-        //     viewport pans
+        //     select-and-move surface below, which translates this
+        //     selection wherever the finger landed as long as it is
+        //     movable (row 7 as amended: drag-anywhere, then
+        //     selection-wins). Only when no movable single selection
+        //     exists does the landing point decide — an eligible
+        //     layer's bbox select-and-moves that layer (row 5),
+        //     otherwise the viewport pans
         //   * 2 fingers, first OFF the quad → viewport pinch, even
         //     with a selection (row 6 — two-finger gestures ALWAYS
         //     navigate)

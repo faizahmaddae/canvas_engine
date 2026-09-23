@@ -77,11 +77,11 @@ class CanvasGestureRouter {
   /// the pair belongs to the viewport pinch, not the layer.
   final Set<int> _rawPointersDown = <int>{};
 
-  /// Claim candidate for the select-and-move surface: either the
-  /// eligible, movable, un-selected layer the pointer went down on
-  /// (row 5) or — when the pointer landed on empty canvas while a
-  /// movable single selection exists — the selected layer itself
-  /// (row 7's drag-anywhere amendment). Stashed by the
+  /// Claim candidate for the select-and-move surface: the selected
+  /// layer itself whenever a movable single selection exists (row 7's
+  /// drag-anywhere amendment, which since 2026-08 outranks row 5
+  /// everywhere), else the eligible, movable, un-selected layer the
+  /// pointer went down on (row 5). Stashed by the
   /// [SelectAndMoveSurface] claim predicate at pointer-down and
   /// consumed exactly once at [DragPhase.start] (the slop claim),
   /// which is the moment the layer becomes selected (a no-op for the
@@ -93,11 +93,11 @@ class CanvasGestureRouter {
 
   /// True while the live interaction session was started by the
   /// select-and-move surface. Disambiguates the `isActive` claim
-  /// branches: a new finger landing during a row-5 session must fall
-  /// THROUGH the selection overlay's body surface (which now belongs
-  /// to the same, freshly selected layer) so it joins the recogniser
-  /// that actually owns the in-flight pointers, one Stack level
-  /// below. Reset on session end and on OS pointer-cancel.
+  /// branches: a new finger landing during such a session must fall
+  /// THROUGH the selection overlay's body surface (which belongs to
+  /// the layer that session is already driving) so it joins the
+  /// recogniser that actually owns the in-flight pointers, one Stack
+  /// level below. Reset on session end and on OS pointer-cancel.
   bool _selectAndMoveOwnsSession = false;
 
   /// State for tap-cycling through overlapping layers.
@@ -392,19 +392,17 @@ class CanvasGestureRouter {
     );
   }
 
-  /// Claim predicate for the select-and-move surface. `true` for a
-  /// first finger landing either
+  /// Claim predicate for the select-and-move surface, in the editor's
+  /// plain single-select interaction state. Two claims, checked in
+  /// this order:
   ///
-  ///   * on an eligible, movable, un-selected layer's RAW bbox
-  ///     (row 5 — no outset: the outset ring is selection chrome and
-  ///     belongs to the selected layer's overlay), or
-  ///   * on EMPTY canvas / pasteboard while a movable single
-  ///     selection exists (row 7's drag-anywhere amendment — the
-  ///     drag translates the selection, so a small or
-  ///     finger-occluded object can be repositioned without hitting
-  ///     it precisely),
-  ///
-  /// while the editor is in plain single-select interaction state.
+  ///   * a movable single selection exists → the drag translates THAT
+  ///     selection, wherever the finger landed (row 7's drag-anywhere
+  ///     amendment, widened 2026-08 to outrank row 5);
+  ///   * otherwise, the finger is on an eligible, movable layer's RAW
+  ///     bbox → select it and move it (row 5; no outset, because the
+  ///     outset ring is selection chrome and belongs to the selected
+  ///     layer's overlay).
   bool _shouldClaimSelectAndMove(
     List<EditorLayer> layers,
     Offset globalPosition,
@@ -453,47 +451,49 @@ class CanvasGestureRouter {
         pointInChromeQuad(selectedLayer, local)) {
       return false;
     }
-    final hits = geom.hitTestAllLayers(layers, local);
-    if (hits.isEmpty) {
-      // Row 7, amended (drag-anywhere): no pointer-eligible layer
-      // under the finger — empty canvas, the pasteboard, or a
-      // locked/hidden layer's area (pointer-INeligible, so its
-      // surface reads as background; in a photo project that is the
-      // whole base photo). While a movable single selection exists,
-      // a drag here translates THAT selection instead of panning the
-      // viewport: precise grabs fail exactly when the object is
-      // small, under the finger, or the canvas is zoomed out, and
-      // deselect-then-pan / two-finger navigation both remain one
-      // gesture away. The claim is lazy (start defers to slop), so a
-      // tap here still deselects (E3) and a hold still enters
-      // multi-select — only real movement takes the pointer.
-      //
-      // The old active-transform-surface model died for three
-      // reasons (toolbar-redesign-audit §gestures); none returns
-      // here: zooming while selected stays possible (row 6 —
-      // a pre-slop second finger abandons this claim to the
-      // viewport pinch), dragging another layer still moves THAT
-      // layer (row 5 outranks this fallback), and only the
-      // remaining case — empty-space drags, where the viewport pan
-      // was the sole competitor — trades pan for selection drag.
-      // Locked (protected base photo) and hidden selections decline,
-      // so photo navigation while the base is selected keeps
-      // today's pan.
-      final sel = selectedLayer;
-      if (sel == null) return false;
-      if (sel.locked || !sel.visible || !sel.capabilities.movable) {
-        return false;
-      }
+    // Row 7, amended twice (drag-anywhere → selection-wins): while a
+    // movable single selection exists, EVERY one-finger drag on this
+    // surface translates that selection — empty canvas, the
+    // pasteboard, a locked/hidden layer's area, and (since 2026-08)
+    // another eligible layer's bbox alike.
+    //
+    // The 2026-07-30 amendment only covered pointer-INeligible
+    // ground, leaving row 5 to claim any drag that happened to start
+    // on a neighbour. That is the failure the user reported: with one
+    // object selected, a finger that lands anywhere on a second
+    // object walks off with the WRONG object, and the reported
+    // symptom is not "I grabbed the neighbour" but "my selection
+    // stopped responding" — the selected object sits still while
+    // something else slides. Selection is the user's declared
+    // subject; a drag is a verb applied to it, and the pixel the
+    // finger starts on must not silently rebind the noun. Picking a
+    // different object stays exactly one tap away, and tap-select is
+    // untouched: the claim is lazy (start defers to slop), so a
+    // sub-slop release still falls through to the canvas tap
+    // recognisers and selects whatever is under the finger.
+    //
+    // The retired active-transform-surface model's failure modes stay
+    // solved (toolbar-redesign-audit §gestures): zoom-while-selected
+    // is row 6 (a pre-slop second finger abandons this claim to the
+    // viewport pinch), and one-finger pan survives wherever no
+    // movable single selection exists — no selection, a multi
+    // selection (gated above), or a locked/hidden/unmovable one,
+    // which is what keeps photo-project navigation while the
+    // protected base photo is selected.
+    final sel = selectedLayer;
+    if (sel != null && sel.visible && !sel.locked && sel.capabilities.movable) {
       _selectAndMoveCandidate = sel;
       return true;
     }
-    // Topmost eligible layer only — the same layer a tap here would
-    // select. Deliberately NOT drilling further down: dragging must
-    // never move a layer the equivalent tap would not have picked.
-    // An eligible-but-unmovable top hit also declines the row-7
-    // fallback for the same reason: the finger is on a real object a
-    // tap would pick; moving a DIFFERENT layer under it would be a
-    // surprise.
+
+    // No selection to own the drag: row 5 — the topmost eligible
+    // layer under the finger becomes selected and moves. Topmost
+    // ONLY, the same layer a tap here would select; dragging must
+    // never move a layer the equivalent tap would not have picked, so
+    // an eligible-but-unmovable top hit declines rather than drilling
+    // to whatever sits beneath it.
+    final hits = geom.hitTestAllLayers(layers, local);
+    if (hits.isEmpty) return false;
     final top = hits.first;
     if (top.id == selection.selectedId) return false;
     if (!top.capabilities.movable) return false;

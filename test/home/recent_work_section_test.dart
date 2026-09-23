@@ -11,9 +11,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/temp_projects_dir.dart';
 
-/// Home redesign commit 3 (docs/home-screen-redesign-2026-07.md §4):
-/// the recent-work rail — ProjectThumbs ending in the dashed «جدید»
-/// tile when projects exist, NOTHING at all when the store is empty.
+/// The recent-work rail after the desk redesign: ProjectThumbs only —
+/// the dashed «جدید» tile died with the continue hero's arrival, and
+/// with [RecentProjectsSection.skipNewest] the rail starts from the
+/// second-newest project so the hero's design never appears twice.
+/// NOTHING renders when there is nothing left to show.
 void main() {
   Project seed({
     required String id,
@@ -35,8 +37,8 @@ void main() {
   Future<void> pumpSection(
     WidgetTester tester, {
     required List<Project> projects,
-    VoidCallback? onCreate,
     void Function(Project)? onOpen,
+    bool skipNewest = false,
     Brightness brightness = Brightness.light,
   }) async {
     SharedPreferences.setMockInitialValues({});
@@ -69,9 +71,9 @@ void main() {
           home: Scaffold(
             body: SingleChildScrollView(
               child: RecentProjectsSection(
-                onCreate: onCreate ?? () {},
                 onOpen: onOpen ?? (_) {},
                 onSeeAll: () {},
+                skipNewest: skipNewest,
               ),
             ),
           ),
@@ -81,7 +83,7 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('populated: renders thumbs + the dashed new tile', (
+  testWidgets('populated: renders thumbs, and no dashed tile anywhere', (
     tester,
   ) async {
     await pumpSection(
@@ -92,27 +94,19 @@ void main() {
     expect(find.text('Recent work'), findsOneWidget);
     expect(find.byKey(const ValueKey('home-recent-p1')), findsOneWidget);
     expect(find.text('Birthday card'), findsAtLeastNWidgets(1));
-    expect(find.byKey(const ValueKey('home-recent-new-tile')), findsOneWidget);
-    expect(find.text('New'), findsOneWidget); // the dashed tile caption
+    expect(find.byKey(const ValueKey('home-recent-new-tile')), findsNothing);
   });
 
-  testWidgets('tapping a thumb opens it; the new tile fires onCreate', (
-    tester,
-  ) async {
+  testWidgets('tapping a thumb opens it', (tester) async {
     Project? opened;
-    var created = false;
     await pumpSection(
       tester,
       projects: [seed(id: 'p1', name: 'Birthday card')],
       onOpen: (p) => opened = p,
-      onCreate: () => created = true,
     );
 
     await tester.tap(find.byKey(const ValueKey('home-recent-p1')));
     expect(opened?.id, 'p1');
-
-    await tester.tap(find.byKey(const ValueKey('home-recent-new-tile')));
-    expect(created, isTrue);
   });
 
   testWidgets('empty: renders nothing at all — no rail, no header', (
@@ -122,16 +116,47 @@ void main() {
 
     expect(find.text('Recent work'), findsNothing);
     expect(find.byType(ProjectThumb), findsNothing);
-    expect(find.byKey(const ValueKey('home-recent-new-tile')), findsNothing);
+  });
+
+  testWidgets('skipNewest: the newest project belongs to the hero, the '
+      'rail starts from the second', (tester) async {
+    await pumpSection(
+      tester,
+      skipNewest: true,
+      projects: [
+        seed(
+          id: 'newest',
+          name: 'On the hero',
+          ago: const Duration(minutes: 1),
+        ),
+        seed(id: 'older', name: 'On the rail', ago: const Duration(hours: 1)),
+      ],
+    );
+
+    expect(find.byKey(const ValueKey('home-recent-newest')), findsNothing);
+    expect(find.byKey(const ValueKey('home-recent-older')), findsOneWidget);
+  });
+
+  testWidgets('skipNewest with a single project: the hero holds it, the '
+      'section renders nothing', (tester) async {
+    await pumpSection(
+      tester,
+      skipNewest: true,
+      projects: [seed(id: 'only', name: 'On the hero')],
+    );
+
+    expect(find.text('Recent work'), findsNothing);
+    expect(find.byType(ProjectThumb), findsNothing);
   });
 
   testWidgets('see-all appears only past the preview limit', (tester) async {
     await pumpSection(
       tester,
+      skipNewest: true,
       projects: [
         // Distinct timestamps so the newest-first cap is
-        // deterministic: p0 newest … p8 oldest (the one cut).
-        for (var i = 0; i < 9; i++)
+        // deterministic: p0 newest (hero) … p9 oldest (the one cut).
+        for (var i = 0; i < 10; i++)
           seed(
             id: 'p$i',
             name: 'P $i',
@@ -141,21 +166,16 @@ void main() {
     );
 
     expect(find.byKey(const ValueKey('home-recent-see-all')), findsOneWidget);
-    // «جدید» leads the rail (navigation doc), then the 8 newest;
-    // the 9th project is cut. The rail is a lazy horizontal list,
-    // so drag to the end before asserting on the tail.
-    final tileX = tester
-        .getTopLeft(find.byKey(const ValueKey('home-recent-new-tile')))
-        .dx;
-    final firstProjectX = tester
-        .getTopLeft(find.byKey(const ValueKey('home-recent-p0')))
-        .dx;
-    expect(tileX, lessThan(firstProjectX), reason: 'tile leads in LTR');
+    // p0 is the hero's; the rail holds the 8 next-newest (p1…p8) and
+    // cuts p9. The rail is a lazy horizontal list, so drag to the end
+    // before asserting on the tail.
+    expect(find.byKey(const ValueKey('home-recent-p0')), findsNothing);
+    expect(find.byKey(const ValueKey('home-recent-p1')), findsOneWidget);
 
     await tester.drag(find.byType(ListView), const Offset(-900, 0));
     await tester.pump();
-    expect(find.byKey(const ValueKey('home-recent-p7')), findsOneWidget);
-    expect(find.byKey(const ValueKey('home-recent-p8')), findsNothing);
+    expect(find.byKey(const ValueKey('home-recent-p8')), findsOneWidget);
+    expect(find.byKey(const ValueKey('home-recent-p9')), findsNothing);
   });
 
   testWidgets('dark mode renders without throwing', (tester) async {
@@ -166,5 +186,37 @@ void main() {
     );
     expect(tester.takeException(), isNull);
     expect(find.byKey(const ValueKey('home-recent-p1')), findsOneWidget);
+  });
+
+  testWidgets('thumbs take the canvas\'s own shape — a square project is '
+      'a square tile, not a portrait card with letterbox bands', (
+    tester,
+  ) async {
+    final t = DateTime.now().subtract(const Duration(minutes: 5));
+    await pumpSection(
+      tester,
+      projects: [
+        // seed() makes 1080×1080; this one is a 9:16 story.
+        seed(id: 'square', name: 'Square'),
+        Project(
+          id: 'story',
+          name: 'Story',
+          width: 1080,
+          height: 1920,
+          createdAt: t,
+          lastModified: t,
+          documentJson: '{}',
+        ),
+      ],
+    );
+
+    final squareW = tester
+        .getSize(find.byKey(const ValueKey('home-recent-square')))
+        .width;
+    final storyW = tester
+        .getSize(find.byKey(const ValueKey('home-recent-story')))
+        .width;
+    expect(squareW, moreOrLessEquals(140, epsilon: 0.01));
+    expect(storyW, moreOrLessEquals(140 * 0.62, epsilon: 0.01));
   });
 }

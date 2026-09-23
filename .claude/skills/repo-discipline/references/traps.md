@@ -74,9 +74,15 @@ LEADS with Vazir so Persian glyphs render identically under an English locale
 - Default direction is RTL. Use `EdgeInsetsDirectional` /
   `PositionedDirectional` / `AlignmentDirectional`; physical-edge insets in
   app-shell code are treated as bugs.
-- Chevrons don't auto-mirror. Canonical pattern
-  (`size_picker_dialog.dart`):
-  `Directionality.of(context) == TextDirection.rtl ? Icons.chevron_left_rounded : Icons.chevron_right_rounded`.
+- **Chevrons DO auto-mirror — do not mirror them by hand.** Material's
+  `*_rounded` directional glyphs carry `matchTextDirection: true`, as does
+  `AppIcons.drillIn`, so Flutter flips them at paint time. Picking
+  `chevron_left_rounded` under RTL yourself mirrors an already-mirroring
+  glyph and the drill-in arrow ends up aimed at the screen edge — a bug this
+  repo has already shipped and fixed once. Always name the FORWARD glyph.
+  (Anything that ROTATES such a caret is the exception and must rotate the
+  other way under RTL — see `AppIcons.disclosureOpenTurns`.)
+- Custom-PAINTED arrows carry no such flag and do need manual mirroring.
 - **Deliberately NOT directional:** `PanelDirectionPad` pins its 3×3 grid to
   LTR and `PanelOffsetPad` emits physical screen-space Offsets (positive dx =
   right) regardless of ambient direction — they represent physical geometry,

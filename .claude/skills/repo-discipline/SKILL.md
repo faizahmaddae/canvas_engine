@@ -52,7 +52,8 @@ it and the traps the law doesn't mention.
 | Shape tool (`lib/features/editor/shape/`, `engine/modules/shape/`) | `docs/shape-studio-redesign-2026-08.md` (33-kind catalogue + registration recipe; four-column picker; bench: specimen + size/resize-lock + opacity cluster + رنگ/کادر/سایه/بیشتر track) |
 | Editor UI primitives (`lib/features/editor/ui/`) | `docs/phase4-ui-foundation-plan-2026-07.md` — its §1 non-goals are binding: chip-grammar unification and SlotStrip migration are PARKED; do not "clean them up" in passing |
 | Tokens / theme / any app-shell visual | `docs/design-direction-v2-calligraphy-2026-07.md` (current identity; violet anywhere is a bug) |
-| NavShell / tabs / Home | `docs/app-navigation-home-ia-2026-07.md` + `docs/home-screen-redesign-2026-07.md`. Core invariant: Home is a bounded launcher — its length never grows with content |
+| NavShell / tabs / Home | `docs/home-desk-redesign-2026-08.md` (current: continue hero, format sheet, daily shelf, honest rails) + `docs/app-navigation-home-ia-2026-07.md` + `docs/home-screen-redesign-2026-07.md` (IA + tokens; the 08 doc supersedes their layout sections). Core invariant: Home is a bounded launcher — its length never grows with content |
+| Size picker (`lib/app/ui/size_picker_sheet.dart`) | `docs/home-desk-redesign-2026-08.md` §2 — the pinned-CTA rule is binding |
 | Templates | `docs/template-product-quality-plan.md` (what to build) + `references/traps.md` §Templates in this skill (how to register) |
 
 Stale-banner warning: several docs still say "awaiting sign-off (2026-07-03)"
@@ -136,8 +137,8 @@ There is no golden/emulator infra. Design review comes from RepaintBoundary
 | Surface | Test | Writes |
 |---|---|---|
 | Editor | `test/editor/widget/editor_screen_capture_test.dart` | `editor_{light,dark}.png` + selection/panel/filters/font-panel variants |
-| Home / nav shell | `test/app/navigation/nav_shell_capture_test.dart` | `home_{light,dark}.png` |
-| Size picker | `test/widget/size_picker_dialog_capture_test.dart` | `size_picker_dialog.png` |
+| Home / nav shell | `test/app/navigation/nav_shell_capture_test.dart` | `home_{light,dark}.png`, `home_draft_{light,dark}.png`, `home_desk_{light,dark}.png` |
+| Size picker | `test/widget/size_picker_sheet_capture_test.dart` | `size_picker_sheet_{light,dark}.png` |
 
 Workflow: run the relevant test with plain `flutter test <path>`, then **open
 and actually look at both light and dark PNGs**. Extend the existing capture

@@ -662,11 +662,29 @@ abstract class AppLocalizations {
   /// **'What shall we make today?'**
   String get homeWelcomeTitle;
 
-  /// No description provided for @homeWelcomeSubtitle.
+  /// No description provided for @greetingMorning.
   ///
   /// In en, this message translates to:
-  /// **'Start from a template or craft something new.'**
-  String get homeWelcomeSubtitle;
+  /// **'Good morning'**
+  String get greetingMorning;
+
+  /// No description provided for @greetingNoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get greetingNoon;
+
+  /// No description provided for @greetingEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get greetingEvening;
+
+  /// No description provided for @greetingNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Good night'**
+  String get greetingNight;
 
   /// No description provided for @homeHeroTitle.
   ///
@@ -731,14 +749,14 @@ abstract class AppLocalizations {
   /// No description provided for @homeSuggestedTitle.
   ///
   /// In en, this message translates to:
-  /// **'Suggested'**
+  /// **'Today\'s picks'**
   String get homeSuggestedTitle;
 
-  /// No description provided for @homeRecentNewTile.
+  /// No description provided for @homeContinueTitle.
   ///
   /// In en, this message translates to:
-  /// **'New'**
-  String get homeRecentNewTile;
+  /// **'Continue working'**
+  String get homeContinueTitle;
 
   /// No description provided for @recentTitle.
   ///
@@ -1019,7 +1037,7 @@ abstract class AppLocalizations {
   /// No description provided for @multiSelectCount.
   ///
   /// In en, this message translates to:
-  /// **'Multi-select · {count}'**
+  /// **'Multi-select • {count}'**
   String multiSelectCount(int count);
 
   /// No description provided for @multiSelectExit.
@@ -3761,7 +3779,7 @@ abstract class AppLocalizations {
   /// No description provided for @customSizeChip.
   ///
   /// In en, this message translates to:
-  /// **'Custom · {size}'**
+  /// **'Custom • {size}'**
   String customSizeChip(String size);
 
   /// No description provided for @originalSizeQuality.
@@ -4289,7 +4307,7 @@ abstract class AppLocalizations {
   /// No description provided for @histMultiLayer.
   ///
   /// In en, this message translates to:
-  /// **'{base} · {count} layers'**
+  /// **'{base} • {count} layers'**
   String histMultiLayer(String base, String count);
 }
 

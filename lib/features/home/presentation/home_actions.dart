@@ -30,7 +30,7 @@ import '../../templates/presentation/templates_browse_screen.dart';
 import '../application/project_store.dart';
 import '../domain/project.dart';
 import 'recent_projects_screen.dart';
-import '../../../app/ui/size_picker_dialog.dart';
+import '../../../app/ui/size_picker_sheet.dart';
 
 const _uuid = Uuid();
 
@@ -71,7 +71,7 @@ class HomeActions {
   /// "Blank canvas" CTA: ask for a size, then seed an empty
   /// document and open the editor.
   Future<void> createNew() async {
-    final size = await SizePickerDialog.show(context);
+    final size = await SizePickerSheet.show(context);
     if (size == null || !context.mounted) return;
     _seedAndOpen(
       width: size.width,

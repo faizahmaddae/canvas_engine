@@ -4,19 +4,22 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/ui/template_thumb.dart';
+import '../../../../app/ui/thumb_ratio.dart';
 import '../../../../l10n/l10n.dart';
 import '../../../templates/domain/template.dart';
 import '../../../templates/presentation/template_presentation_order.dart';
 
-/// «پیشنهادی» on the Home launcher (navigation doc): a single
-/// HORIZONTAL rail of curated [TemplateThumb]s with «مشاهده همه»
-/// jumping to the Templates tab. Replaces the old vertical grid —
-/// the launcher shows a fixed-height teaser no matter how big the
-/// catalog grows; browsing lives in the tab.
+/// «پیشنهادِ امروز» on the Home launcher: a single HORIZONTAL rail of
+/// curated [TemplateThumb]s with «مشاهده همه» jumping to the
+/// Templates tab. The launcher shows a fixed-height teaser no matter
+/// how big the catalog grows; browsing lives in the tab.
 ///
-/// Filter logic is unchanged: only templates from enabled categories
-/// and the user's content languages appear, in the same curated
-/// order the grid used.
+/// Living, not static: the rail draws a date-seeded selection from
+/// the top of the curated order ([dailyTemplateShelf]), so the shelf
+/// is stable within a day and different tomorrow — the screen keeps
+/// the promise its own headline makes. Filter logic is unchanged:
+/// only templates from enabled categories and the user's content
+/// languages ever enter the pool.
 class SuggestedTemplatesRail extends StatelessWidget {
   const SuggestedTemplatesRail({
     super.key,
@@ -25,10 +28,33 @@ class SuggestedTemplatesRail extends StatelessWidget {
     required List<Template> templates,
     this.contentLanguages,
     this.enabledCategories,
+    this.today,
   }) : _templates = templates;
 
   /// Maximum thumbs on the rail — a curated teaser, not a catalog.
   static const int previewLimit = 10;
+
+  /// Canonical canvas ratio (w/h) per category, so each tile takes its
+  /// format's true shape: stories read tall, video covers read wide.
+  /// A presentation heuristic, not domain data — [Template] carries no
+  /// dimensions, and the category IS the format for every bundled
+  /// template. Clamped by the shared band at layout time.
+  static double _categoryRatio(TemplateCategory category) {
+    return switch (category) {
+      TemplateCategory.instagramStory || TemplateCategory.story => 9 / 16,
+      TemplateCategory.youtubeThumbnail => 16 / 9,
+      TemplateCategory.promotionalPoster ||
+      TemplateCategory.sale ||
+      TemplateCategory.business ||
+      TemplateCategory.food ||
+      TemplateCategory.event => 4 / 5,
+      TemplateCategory.poetryPost ||
+      TemplateCategory.quote ||
+      TemplateCategory.motivational ||
+      TemplateCategory.social ||
+      TemplateCategory.greeting => 1,
+    };
+  }
 
   /// Same curation priority the old recommended grid used.
   static const List<TemplateCategory> _categoryPriority = [
@@ -51,6 +77,10 @@ class SuggestedTemplatesRail extends StatelessWidget {
   final Set<TemplateCategory>? enabledCategories;
   final List<Template> _templates;
 
+  /// The day the shelf is seeded with. Null means the device's today;
+  /// tests inject a fixed date so the selection is deterministic.
+  final DateTime? today;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -71,9 +101,11 @@ class SuggestedTemplatesRail extends StatelessWidget {
       preferredIds: kHomeRecommendedTemplateIds,
       categoryPriority: _categoryPriority,
     );
-    final shown = ordered.length > previewLimit
-        ? ordered.sublist(0, previewLimit)
-        : ordered;
+    final shown = dailyTemplateShelf(
+      ordered: ordered,
+      date: today ?? DateTime.now(),
+      count: previewLimit,
+    );
 
     if (shown.isEmpty) return const SizedBox.shrink();
 
@@ -99,13 +131,15 @@ class SuggestedTemplatesRail extends StatelessWidget {
               TextButton(
                 key: const ValueKey('home-templates-see-all'),
                 onPressed: onSeeAll,
-                style: TextButton.styleFrom(
-                  foregroundColor: tokens.accentText,
-                  textStyle: AppTypeScale.caption.copyWith(
+                style: TextButton.styleFrom(foregroundColor: tokens.accentText),
+                // Typography rides on the CHILD, never on
+                // ButtonStyle.textStyle — see AppTypeScale's doc.
+                child: Text(
+                  l10n.seeAllAction,
+                  style: AppTypeScale.caption.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                child: Text(l10n.seeAllAction),
               ),
             ],
           ),
@@ -128,7 +162,10 @@ class SuggestedTemplatesRail extends StatelessWidget {
                 onTap: () => onOpen(template),
                 child: TemplateThumb(
                   template: template,
-                  width: 110,
+                  width: thumbWidthFor(
+                    height: 150,
+                    ratio: _categoryRatio(template.category),
+                  ),
                   height: 150,
                   borderRadius: 16,
                 ),

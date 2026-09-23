@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:canvas_engine/app/app.dart';
+import 'package:canvas_engine/app/ui/template_thumb.dart';
 import 'package:canvas_engine/features/home/presentation/home_screen.dart';
 import 'package:canvas_engine/features/onboarding/application/onboarding_controller.dart';
 import 'package:canvas_engine/features/onboarding/presentation/onboarding_flow.dart';
@@ -257,25 +258,25 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(390, 2200));
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
-      // v2 Home shows one curated grid instead of category strips:
-      // enabled categories surface their curated leads, disabled
-      // categories contribute nothing.
-      expect(
-        find.byKey(const ValueKey('home-template-fa_story_fashion_drop')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('home-template-en_yt_tutorial_blueprint')),
-        findsOneWidget,
-      );
+      // The shelf's selection is date-seeded, so WHICH enabled
+      // template shows varies by day — the goal filter's contract is
+      // pinned from both sides without naming a winner: the enabled
+      // categories put SOMETHING on the rail, and the disabled
+      // categories' templates never appear, on any day, even
+      // offstage.
+      expect(find.byType(TemplateThumb), findsWidgets);
       expect(
         find.byKey(
           const ValueKey('home-template-fa_poetry_black_gold_nastaliq'),
+          skipOffstage: false,
         ),
         findsNothing,
       );
       expect(
-        find.byKey(const ValueKey('home-template-fa_promo_app_launch')),
+        find.byKey(
+          const ValueKey('home-template-fa_promo_app_launch'),
+          skipOffstage: false,
+        ),
         findsNothing,
       );
     },

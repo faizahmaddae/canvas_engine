@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../domain/template.dart';
 
 const List<TemplateCategory> kTemplateBrowseCategoryOrder = [
@@ -195,6 +197,36 @@ List<Template> orderTemplatesForHome({
     preferredIds: preferredIds,
     categoryPriority: categoryPriority,
   );
+}
+
+/// Home's «پیشنهادِ امروز» selection: a date-seeded shuffle of the
+/// TOP of an already-ordered pool.
+///
+/// The launcher shelf used to show the same ten templates in the same
+/// order forever — a static poster on a screen visited every day,
+/// under a headline that says «امروز». This keeps the promise: the
+/// selection is stable within a day (no reshuffle on every rebuild)
+/// and different tomorrow.
+///
+/// Freshness must not defeat curation, so the shuffle draws only from
+/// the first [poolSize] of [ordered] — the slice the quality-batch
+/// ranking already vetted — never from the tail. `Random(seed)` is
+/// deterministic per seed on a given VM, which is all a daily teaser
+/// needs; nothing downstream persists the order.
+List<Template> dailyTemplateShelf({
+  required List<Template> ordered,
+  required DateTime date,
+  int poolSize = 20,
+  int count = 10,
+}) {
+  if (ordered.isEmpty) return const [];
+  final pool = [
+    ...(ordered.length > poolSize ? ordered.sublist(0, poolSize) : ordered),
+  ];
+  final dayOfYear = date.difference(DateTime(date.year)).inDays;
+  pool.shuffle(Random(date.year * 1000 + dayOfYear));
+  final take = pool.length > count ? pool.sublist(0, count) : pool;
+  return List.unmodifiable(take);
 }
 
 List<Template> orderTemplatesForBrowse({

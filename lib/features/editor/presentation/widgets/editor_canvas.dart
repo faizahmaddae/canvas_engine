@@ -206,10 +206,11 @@ class _EditorCanvasState extends ConsumerState<EditorCanvas>
             },
             // Background pan + pinch-to-zoom for the viewport. Layer body
             // recognisers sit deeper in the tree and win the gesture arena
-            // only when the first finger lands on the selection's chrome
-            // quad (row 4), on another eligible layer's bbox (row 5) or —
-            // drag-anywhere, row 7 as amended — on empty canvas while a
-            // movable single selection exists. What still reaches this
+            // when the first finger lands on the selection's chrome quad
+            // (row 4), anywhere at all while a movable single selection
+            // exists (row 7 as amended — drag-anywhere, then
+            // selection-wins), or, absent such a selection, on an
+            // eligible layer's bbox (row 5). What still reaches this
             // handler: every two-finger sequence (row 6 — a pre-slop
             // second finger makes the lazy surfaces abandon), and
             // one-finger drags with no selection, a multi-selection off

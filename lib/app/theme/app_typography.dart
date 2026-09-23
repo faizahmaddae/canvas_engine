@@ -16,6 +16,21 @@ import 'package:flutter/material.dart';
 /// * colour comes from `AppTokens` at the call site, since the same
 ///   role reads in `textPrimary` in one context and `textSecondary`
 ///   or `onBrand` in another.
+///
+/// **The one slot where that inheritance does NOT happen: a
+/// `ButtonStyle.textStyle`.** `ButtonStyleButton` resolves that
+/// property with `??` (never a merge) and hands the winner to
+/// `Material.textStyle`, which REPLACES the ambient `DefaultTextStyle`
+/// outright — so a role passed there arrives with `fontFamily: null`
+/// and the label falls back to the platform UI face. Persian then
+/// renders in the system font beside a screen of Vazir, which is
+/// exactly how «مشاهده همه» ended up in the wrong face on Home.
+///
+/// So: put weight/size on the button's CHILD `Text` (whose style
+/// merges into the inherited one) and leave `ButtonStyle` to colour
+/// and geometry. `AppTheme` makes the same fix from the other side for
+/// the component styles it owns — filled buttons, the nav bar and the
+/// app bar each bake `fontFamily`/`fontFamilyFallback` in by hand.
 abstract final class AppTypeScale {
   static const TextStyle display = TextStyle(
     fontSize: 44,
